@@ -24,6 +24,7 @@ import {
 	type NodeId,
 	type Notification,
 	type NotificationState,
+	UNKNOWN_STATE,
 	type ValueID,
 	type ValueMetadataNumeric,
 	getNotification,
@@ -72,6 +73,85 @@ export function handleNotificationReport(
 			});
 		}
 		return;
+	}
+
+	// Apply notification remapping from compat config
+	const remappings = node.deviceConfig?.compat?.remapNotifications;
+	if (remappings?.length) {
+		const match = remappings.find(
+			(m) =>
+				m.from.notificationType === command.notificationType
+				&& m.from.notificationEvent === command.notificationEvent,
+		);
+		if (match) {
+			ctx.logNode(node.id, {
+				message: `Notification remapped via compat flag`,
+				direction: "inbound",
+				level: "verbose",
+			});
+
+			if (match.action.type === "clear" || match.action.type === "idle") {
+				for (const target of match.action.targets) {
+					const targetNotification = getNotification(
+						target.notificationType,
+					);
+					if (!targetNotification) continue;
+
+					const targetValueConfig = getNotificationValue(
+						targetNotification,
+						target.notificationEvent,
+					);
+					if (targetValueConfig?.type !== "state") continue;
+
+					const valueId = NotificationCCValues
+						.notificationVariable(
+							targetNotification.name,
+							targetValueConfig.variableName,
+						).endpoint(command.endpointIndex);
+
+					if (match.action.type === "clear") {
+						// Only clear if the variable currently reflects this specific event,
+						// to avoid spurious updates when multiple targets share the same variable.
+						if (
+							node.valueDB.getValue(valueId)
+								=== target.notificationEvent
+						) {
+							node.valueDB.setValue(valueId, UNKNOWN_STATE);
+						}
+
+						// Special case for doorStateSimple. If the parent value
+						// gets cleared, this also needs to get cleared.
+						if (
+							target.notificationType === 0x06
+							&& (target.notificationEvent === 0x16
+								|| target.notificationEvent === 0x17)
+						) {
+							const simpleDoorStateId = NotificationCCValues
+								.deprecated_doorStateSimple
+								.endpoint(command.endpointIndex);
+							if (
+								node.valueDB.getValue(simpleDoorStateId)
+									=== target.notificationEvent
+							) {
+								node.valueDB.setValue(
+									simpleDoorStateId,
+									UNKNOWN_STATE,
+								);
+							}
+						}
+					} else {
+						node.valueDB.setValue(valueId, 0 /* idle */);
+					}
+				}
+				return;
+			} else {
+				// Normal remap: overwrite notification type and event, then fall through
+				// to normal handling.
+				const to = match.action.to;
+				command.notificationType = to.notificationType;
+				command.notificationEvent = to.notificationEvent;
+			}
+		}
 	}
 
 	const ccVersion = getEffectiveCCVersion(ctx, command);
@@ -360,7 +440,7 @@ function handleKnownNotification(
 		// Actual status
 		0x16,
 		0x17,
-		// Synthetic status with enum
+		// Synthetic status with enum (deprecated)
 		0x1600,
 		0x1601,
 	];
@@ -406,10 +486,38 @@ function handleKnownNotification(
 		// very cumbersome. Also, this is currently the only notification where the enum values
 		// extend the state value.
 
-		// To work around this, we hard-code a notification value for the door status
-		// which only includes the "legacy" states for open/closed.
+		// To work around this, we synthesize a stable door/window state that only
+		// exposes tilt after we've actually seen a tilted notification.
+		const isTilted = command.notificationEvent === 0x16
+			&& command.eventParameters === 0x01;
+		const openingStateValue = NotificationCCValues.openingState;
+		const openingStateValueId = openingStateValue.endpoint(
+			command.endpointIndex,
+		);
+		const openingStateTiltMetadata: ValueMetadataNumeric = {
+			...openingStateValue.meta,
+			states: {
+				...openingStateValue.meta.states,
+				[0x02]: "Tilted",
+			},
+		};
+		const openingStateMetadata = node.valueDB.getMetadata(
+			openingStateValueId,
+		) as ValueMetadataNumeric | undefined;
+		if (isTilted && !openingStateMetadata?.states?.[2]) {
+			node.valueDB.setMetadata(
+				openingStateValueId,
+				openingStateTiltMetadata,
+			);
+		}
 		node.valueDB.setValue(
-			NotificationCCValues.doorStateSimple.endpoint(
+			openingStateValueId,
+			command.notificationEvent === 0x17 ? 0x00 : isTilted ? 0x02 : 0x01,
+		);
+
+		// Keep the legacy compatibility value limited to the historic open/closed states.
+		node.valueDB.setValue(
+			NotificationCCValues.deprecated_doorStateSimple.endpoint(
 				command.endpointIndex,
 			),
 			command.notificationEvent === 0x17 ? 0x17 : 0x16,
@@ -419,17 +527,17 @@ function handleKnownNotification(
 		// This will only be created after receiving a notification for the tilted state.
 		// Only after it exists, it will be updated. Otherwise, we'd get phantom
 		// values, since some devices send the enum value, even when they don't support tilt.
-		const tiltValue = NotificationCCValues.doorTiltState;
+		const tiltValue = NotificationCCValues.deprecated_doorTiltState;
 		const tiltValueId = tiltValue.endpoint(command.endpointIndex);
 		let tiltValueWasCreated = node.valueDB.hasMetadata(tiltValueId);
-		if (command.eventParameters === 0x01 && !tiltValueWasCreated) {
+		if (isTilted && !tiltValueWasCreated) {
 			node.valueDB.setMetadata(tiltValueId, tiltValue.meta);
 			tiltValueWasCreated = true;
 		}
 		if (tiltValueWasCreated) {
 			node.valueDB.setValue(
 				tiltValueId,
-				command.eventParameters === 0x01 ? 0x01 : 0x00,
+				isTilted ? 0x01 : 0x00,
 			);
 		}
 	} else if (

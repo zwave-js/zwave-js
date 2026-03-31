@@ -18,6 +18,15 @@ function isFlowControl(byte: number): boolean {
 	);
 }
 
+function normalizeLine(line: string): string {
+	return line.startsWith("\r") ? line.slice(1) : line;
+}
+
+function isPromptLine(line: string): boolean {
+	const normalizedLine = normalizeLine(line).trimEnd();
+	return normalizedLine === ">" || normalizedLine.startsWith("> ");
+}
+
 export class CLIParser extends TransformStream<
 	Uint8Array,
 	ZWaveSerialFrame & { type: ZWaveSerialFrameType.CLI }
@@ -64,10 +73,17 @@ export class CLIParser extends TransformStream<
 				// When logging is involved, the log line may be output after the prompt due to a delay, e.g. "> [I] some log"
 
 				// We emit this as a message, followed by a prompt
-				if (receiveBuffer.includes("> ")) {
+				const lines = receiveBuffer.split("\n");
+				if (lines.some(isPromptLine)) {
 					// There is a prompt input, that means the output is complete
-					const output = receiveBuffer.split("\n").map(
-						(line) => line.startsWith("> ") ? line.slice(2) : line,
+					const output = lines.map(
+						(line) => {
+							if (!isPromptLine(line)) return line;
+							const normalized = normalizeLine(line);
+							return normalized.startsWith("> ")
+								? normalized.slice(2)
+								: "";
+						},
 					).join("\n").trim();
 
 					if (output) {

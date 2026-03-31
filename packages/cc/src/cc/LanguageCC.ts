@@ -20,6 +20,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -41,14 +42,14 @@ export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
 		{
 			...ValueMetadata.ReadOnlyString,
 			label: "Language code",
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"country",
 		{
 			...ValueMetadata.ReadOnlyString,
 			label: "Country code",
-		} as const,
+		},
 	),
 });
 
@@ -125,6 +126,7 @@ export class LanguageCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -133,7 +135,7 @@ export class LanguageCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {

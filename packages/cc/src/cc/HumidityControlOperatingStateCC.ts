@@ -21,6 +21,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -49,7 +50,7 @@ export const HumidityControlOperatingStateCCValues = V.defineCCValues(
 					HumidityControlOperatingState,
 				),
 				label: "Humidity control operating state",
-			} as const,
+			},
 		),
 	},
 );
@@ -128,6 +129,7 @@ export class HumidityControlOperatingStateCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -136,7 +138,7 @@ export class HumidityControlOperatingStateCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Query the current status

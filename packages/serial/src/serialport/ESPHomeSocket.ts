@@ -297,6 +297,7 @@ export function createESPHomeFactory(
 			// Start reading messages in the background
 			void (async () => {
 				try {
+					// oxlint-disable-next-line no-unmodified-loop-condition
 					while (isOpen) {
 						const { value: message, done } = await reader.read();
 						if (done) break;

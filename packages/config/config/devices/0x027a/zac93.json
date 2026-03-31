@@ -19,7 +19,7 @@
 			// https://www.support.getzooz.com/kb/article/1158-zooz-ota-firmware-files/
 			// 1.40 = SDK 7.22.0. No fixed version available yet.
 			{
-				"$if": "firmwareVersion <= 1.40",
+				"$if": "sdkVersion < 7.22.1",
 				"$import": "~/templates/master_template.json#8xx_firmware_bug_pre_7_22_1"
 			}
 		]

@@ -39,6 +39,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -69,7 +70,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyLevel,
 				label: "Current value",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"targetValue",
@@ -77,14 +78,14 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				...ValueMetadata.Level,
 				label: "Target value",
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"duration",
 			{
 				...ValueMetadata.ReadOnlyDuration,
 				label: "Remaining duration",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"restorePrevious",
@@ -94,7 +95,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				states: {
 					true: "Restore",
 				},
-			} as const,
+			},
 		),
 		...V.staticPropertyWithName(
 			"compatEvent",
@@ -102,7 +103,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Event value",
-			} as const,
+			},
 			{
 				stateful: false,
 				autoCreate: (applHost, endpoint) =>
@@ -395,6 +396,8 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				);
 
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				// Multilevel Switch commands may take some time to be executed.
 				// Therefore we try to supervise the command execution and delay the
 				// optimistic update until the final result is received.
@@ -568,6 +571,7 @@ export class MultilevelSwitchCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -576,7 +580,7 @@ export class MultilevelSwitchCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {

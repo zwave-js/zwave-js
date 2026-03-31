@@ -43,7 +43,7 @@ export const SceneActivationCCValues = V.defineCCValues(
 				min: 1,
 				label: "Scene ID",
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 			{ stateful: false },
 		),
 		...V.staticProperty(
@@ -51,7 +51,7 @@ export const SceneActivationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.Duration,
 				label: "Dimming duration",
-			} as const,
+			},
 		),
 	},
 );

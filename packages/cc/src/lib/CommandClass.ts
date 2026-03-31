@@ -18,6 +18,7 @@ import {
 	type ListenBehavior,
 	type LogNode,
 	type MessageOrCCLogEntry,
+	type MessagePriority,
 	type MessageRecord,
 	type ModifyCCs,
 	type MulticastCC,
@@ -120,6 +121,11 @@ export type InterviewContext =
 export type RefreshValuesContext = CCAPIHost<
 	CCAPINode & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
 >;
+
+export interface RefreshValuesOptions {
+	/** The priority to use for the refresh value queries */
+	priority?: MessagePriority;
+}
 
 export type PersistValuesContext =
 	& HostIDs
@@ -457,7 +463,10 @@ export class CommandClass implements CCId {
 	/**
 	 * Refreshes all dynamic values of this CC
 	 */
-	public async refreshValues(_ctx: RefreshValuesContext): Promise<void> {
+	public async refreshValues(
+		_ctx: RefreshValuesContext,
+		_options?: RefreshValuesOptions,
+	): Promise<void> {
 		// This needs to be overwritten per command class. In the default implementation, don't do anything
 	}
 

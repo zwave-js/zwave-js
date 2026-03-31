@@ -22,6 +22,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -172,8 +173,14 @@ export class AlarmSensorCC extends CommandClass {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 
-		// Skip the interview in favor of Notification CC if possible
-		if (endpoint.supportsCC(CommandClasses.Notification)) {
+		// Skip the interview in favor of Notification CC if possible,
+		// but only if the device supports Notification CC v2+. Version 1
+		// doesn't provide information about supported notification types,
+		// so we still need to interview Alarm Sensor CC for those devices.
+		if (
+			endpoint.supportsCC(CommandClasses.Notification)
+			&& endpoint.getCCVersion(CommandClasses.Notification) >= 2
+		) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message:
@@ -236,6 +243,7 @@ export class AlarmSensorCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -244,7 +252,7 @@ export class AlarmSensorCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const supportedSensorTypes: readonly AlarmSensorType[] =

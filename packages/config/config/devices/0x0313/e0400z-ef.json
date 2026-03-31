@@ -53,6 +53,71 @@
 			"defaultValue": 255
 		}
 	],
+	"compat": {
+		"remapNotifications": [
+			// This device uses manual (un)lock operation events to communicate the door handle state.
+			// This is not ideal, so we remap them to the Door handle state variable.
+
+			// Manual lock operation -> Door handle is closed
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 1
+				},
+				"to": {
+					"notificationType": 6,
+					"notificationEvent": 25
+				}
+			},
+			// Manual unlock operation -> Door handle is open
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 2
+				},
+				"to": {
+					"notificationType": 6,
+					"notificationEvent": 24
+				}
+			},
+			// Manual not fully locked operation -> Clear door handle state (unknown)
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 7
+				},
+				"clear": [
+					{
+						"notificationType": 6,
+						"notificationEvent": 24
+					},
+					{
+						"notificationType": 6,
+						"notificationEvent": 25
+					}
+				]
+			},
+			// =================================================================
+			// Also it uses the unknown notification event (0xfe) to indicate an unknown
+			// Door/window state:
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 254
+				},
+				"clear": [
+					{
+						"notificationType": 6,
+						"notificationEvent": 22
+					},
+					{
+						"notificationType": 6,
+						"notificationEvent": 23
+					}
+				]
+			}
+		]
+	},
 	"metadata": {
 		"inclusion": "To add or remove the eHandle ConnectSense for windows in the\nsmart home central control unit, proceed as follows:\n6\n6\n8173\nferTor 13\nadtallendorf\n8\nmax.\n360°\n7\n29\nEnglish\n1. Follow the instructions of your smart home central control unit\nand start the process of adding or removing.\n2. Using the Allen key, press the hidden button in the recess on the\nback of the wireless unit three times in quick succession (within\none second), (steps 3-4).\n3. The successful start and the progress of adding (Add) or removing\n(Remove) e can be tracked in your smart home central\ncontrol unit.\n4. Your smart home central control unit may ask you to enter a\nfive-digit PIN number. You will find this on the sticker with QR\ncode. It is the underlined sequence of numbers.\n5. A successful addition (Add) is displayed in your smart home\ncentral control unit.\n6. The handle signals that it is ready for calibration by continuous\nrapid flashing of the green LED.\n7. Follow the further instructions for installation (Chapter 11) and\ncalibration (Chapter 6.2)",
 		"exclusion": "To add or remove the eHandle ConnectSense for windows in the\nsmart home central control unit, proceed as follows:\n6\n6\n8173\nferTor 13\nadtallendorf\n8\nmax.\n360°\n7\n29\nEnglish\n1. Follow the instructions of your smart home central control unit\nand start the process of adding or removing.\n2. Using the Allen key, press the hidden button in the recess on the\nback of the wireless unit three times in quick succession (within\none second), (steps 3-4).\n3. The successful start and the progress of adding (Add) or removing\n(Remove) e can be tracked in your smart home central\ncontrol unit.\n4. Your smart home central control unit may ask you to enter a\nfive-digit PIN number. You will find this on the sticker with QR\ncode. It is the underlined sequence of numbers.\n5. A successful addition (Add) is displayed in your smart home\ncentral control unit.\n6. The handle signals that it is ready for calibration by continuous\nrapid flashing of the green LED.\n7. Follow the further instructions for installation (Chapter 11) and\ncalibration (Chapter 6.2)",

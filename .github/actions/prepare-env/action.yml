@@ -29,6 +29,6 @@ runs:
         yarn bootstrap
 
     - name: TurboRepo local server
-      uses: felixmosh/turborepo-gh-artifacts@v3.1.1
+      uses: felixmosh/turborepo-gh-artifacts@v4.0.0
       with:
         repo-token: ${{ inputs.githubToken }}

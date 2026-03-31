@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/eslint-plugin",
-  "version": "15.21.0",
+  "version": "15.22.1",
   "description": "zwave-js: custom ESLint rules",
   "private": true,
   "keywords": [],
@@ -31,17 +31,16 @@
     "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "bootstrap": "yarn build",
     "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
-    "@types/eslint": "^9.6.1",
-    "@typescript-eslint/utils": "^8.54.0",
+    "@typescript-eslint/utils": "^8.57.1",
+    "@typescript/native-preview": "7.0.0-dev.20260318.1",
     "@zwave-js/core": "workspace:*",
-    "eslint-compat-utils": "^0.6.5",
-    "eslint-plugin-jsonc": "^2.21.0",
+    "eslint-plugin-jsonc": "^3.1.2",
     "typescript": "5.9.3"
   }
 }

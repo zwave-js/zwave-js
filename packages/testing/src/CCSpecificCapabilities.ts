@@ -63,6 +63,11 @@ export interface NotificationCCCapabilities {
 	notificationTypesAndEvents: Record<number, number[]>;
 }
 
+export interface NodeNamingAndLocationCCCapabilities {
+	name?: string;
+	location?: string;
+}
+
 export interface MeterCCCapabilities {
 	meterType: number;
 	supportedScales: number[];
@@ -98,6 +103,8 @@ export interface MultilevelSensorCCCapabilities {
 export interface MultilevelSwitchCCCapabilities {
 	defaultValue?: MaybeUnknown<number>;
 	primarySwitchType: SwitchType;
+	/** Full travel time from 0 to 99 in milliseconds. Default: 0 (instant) */
+	travelTime?: number;
 }
 
 export interface SoundSwitchCCCapabilities {
@@ -111,6 +118,8 @@ export interface SoundSwitchCCCapabilities {
 
 export interface WindowCoveringCCCapabilities {
 	supportedParameters: WindowCoveringParameter[];
+	/** Full travel time from 0 to 99 in milliseconds. Default: 5000 */
+	travelTime?: number;
 }
 
 export interface EnergyProductionCCCapabilities {
@@ -174,6 +183,7 @@ export interface ScheduleEntryLockCCCapabilities {
 export type CCSpecificCapabilities = {
 	[CommandClasses.Configuration]: ConfigurationCCCapabilities;
 	[CommandClasses.Notification]: NotificationCCCapabilities;
+	[0x77 /* Node Naming and Location */]: NodeNamingAndLocationCCCapabilities;
 	[48 /* Binary Sensor */]: BinarySensorCCCapabilities;
 	[0x25 /* Binary Switch */]: BinarySwitchCCCapabilities;
 	[49 /* Multilevel Sensor */]: MultilevelSensorCCCapabilities;

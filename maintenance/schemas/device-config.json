@@ -162,6 +162,26 @@
 			"description": "Used to import another config file or parts thereof",
 			"pattern": "^((?<dir>((?:~/)?[\\w\\d_\\.-]+/)+)?(?<filename>[\\w\\d_-]+\\.json))?(?<selector>#([\\w\\d\\[\\]_-]+/)*[\\w\\d\\[\\]_-]+)?$"
 		},
+		"remapNotificationsTarget": {
+			"type": "object",
+			"properties": {
+				"notificationType": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 255
+				},
+				"notificationEvent": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 255
+				}
+			},
+			"additionalProperties": false,
+			"required": [
+				"notificationType",
+				"notificationEvent"
+			]
+		},
 		"condition": {
 			"type": "string",
 			"description": "A condition that must be fulfilled for this entry to exit."
@@ -662,6 +682,70 @@
 							},
 							{
 								"required": ["$import"]
+							}
+						]
+					},
+					"minItems": 1,
+					"additionalItems": false
+				},
+				"remapNotifications": {
+					"description": "Is used to remap notification events to different notification events or variables",
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"$import": { "$ref": "#/definitions/import" },
+							"from": {
+								"type": "object",
+								"properties": {
+									"notificationType": {
+										"type": "integer",
+										"minimum": 0,
+										"maximum": 255
+									},
+									"notificationEvent": {
+										"type": "integer",
+										"minimum": 0,
+										"maximum": 255
+									}
+								},
+								"additionalProperties": false,
+								"required": [
+									"notificationType",
+									"notificationEvent"
+								]
+							},
+							"to": {
+								"$ref": "#/definitions/remapNotificationsTarget"
+							},
+							"clear": {
+								"type": "array",
+								"items": {
+									"$ref": "#/definitions/remapNotificationsTarget"
+								},
+								"minItems": 1
+							},
+							"idle": {
+								"type": "array",
+								"items": {
+									"$ref": "#/definitions/remapNotificationsTarget"
+								},
+								"minItems": 1
+							}
+						},
+						"additionalProperties": false,
+						"oneOf": [
+							{
+								"required": ["$import"]
+							},
+							{
+								"required": ["from", "to"]
+							},
+							{
+								"required": ["from", "clear"]
+							},
+							{
+								"required": ["from", "idle"]
 							}
 						]
 					},

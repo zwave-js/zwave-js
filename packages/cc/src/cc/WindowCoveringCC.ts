@@ -37,6 +37,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -127,7 +128,7 @@ export const WindowCoveringCCValues = V.defineCCValues(
 				ccSpecific: {
 					parameter,
 				},
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeUp",
@@ -305,6 +306,8 @@ export class WindowCoveringCCAPI extends CCAPI {
 			).endpoint(this.endpoint.index);
 
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				// Window Covering commands may take some time to be executed.
 				// Therefore we try to supervise the command execution and delay the
 				// optimistic update until the final result is received.
@@ -602,6 +605,7 @@ ${
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -610,7 +614,7 @@ ${
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const parameters: number[] = this.getValue(

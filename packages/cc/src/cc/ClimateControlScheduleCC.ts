@@ -50,7 +50,7 @@ export const ClimateControlScheduleCCValues = V.defineCCValues(
 				...ValueMetadata.Number,
 				label: "Override type",
 				states: enumValuesToMetadataStates(ScheduleOverrideType),
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"overrideState",
@@ -58,7 +58,7 @@ export const ClimateControlScheduleCCValues = V.defineCCValues(
 				...ValueMetadata.Number,
 				label: "Override state",
 				min: -12.8,
-			} as const,
+			},
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
@@ -72,7 +72,7 @@ export const ClimateControlScheduleCCValues = V.defineCCValues(
 			(weekday: Weekday) => ({
 				...ValueMetadata.Any,
 				label: `Schedule (${getEnumMemberName(Weekday, weekday)})`,
-			} as const),
+			}),
 		),
 	},
 );

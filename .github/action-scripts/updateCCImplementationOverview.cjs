@@ -4,7 +4,6 @@
 /// <reference path="../bot-scripts/types.d.ts" />
 
 const c = require("ansi-colors");
-const exec = require("@actions/exec");
 
 const ISSUE_NUMBER = 6;
 
@@ -12,6 +11,7 @@ const ISSUE_NUMBER = 6;
  * @param {{github: Github, context: Context}} param
  */
 async function main(param) {
+	const { exec } = await import("@actions/exec");
 	const { github, context } = param;
 
 	let ccTable = "";
@@ -23,7 +23,7 @@ async function main(param) {
 		},
 	};
 
-	await exec.exec(
+	await exec(
 		"yarn",
 		["run", "implemented_ccs", "--flavor=github"],
 		options,

@@ -602,12 +602,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 			// Figure out if optimistic value updates, both for the actual value
 			// and related values, should be performed:
-			// Whether updating optimistically is even an option for this value/API/device
-			const canUpdateOptimistically = api.isSetValueOptimistic(valueId)
-				// Check if the device class supports optimistic value updates
-				&& (endpointInstance.deviceClass?.specific
-					.supportsOptimisticValueUpdate
-					?? true);
+			const isAPIOptimistic = api.isSetValueOptimistic(valueId);
+
+			// Whether the device class is slow (e.g. motors, window coverings)
+			const isSlowDeviceClass = endpointInstance.deviceClass?.specific
+				.supportsOptimisticValueUpdate === false;
 			// Whether the device has at least started executing the command
 			const supervisedAndAccepted = supervisedCommandSucceeded(result);
 			// Whether the device has completed the command successfully
@@ -620,14 +619,17 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				!this.driver.options.disableOptimisticValueUpdate
 				&& result == undefined;
 
-			// The actual value may be updated optimistically once the command has started
-			const shouldUpdateActualValueOptimistically =
-				canUpdateOptimistically
+			// The actual value may be updated optimistically once the command has started.
+			const shouldUpdateActualValueOptimistically = isAPIOptimistic
+				// For slow device classes, this is only allowed when the value is a
+				// target value that is distinct from the current physical state.
+				&& (!isSlowDeviceClass || hooks?.isSplitStateTargetValue)
 				&& (supervisedAndAccepted
 					|| unsupervisedAndOptimisticValueUpdateEnabled);
 			// Related values may only be updated optimistically once the command has completed successfully
-			const shouldUpdateRelatedValuesOptimistically =
-				canUpdateOptimistically
+			const shouldUpdateRelatedValuesOptimistically = isAPIOptimistic
+				// And only for fast device classes
+				&& !isSlowDeviceClass
 				&& (supervisedAndCompletedSuccessfully
 					|| unsupervisedAndOptimisticValueUpdateEnabled);
 
@@ -677,9 +679,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 						supervisedAndCompletedSuccessfully,
 					);
 				}
-
-				const isSlowDeviceClass = endpointInstance.deviceClass?.specific
-					.supportsOptimisticValueUpdate === false;
 
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
@@ -798,10 +797,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				valueId.commandClass
 			] as CCAPI
 		).withOptions({
-			// We do not want to delay more important communication by polling, so give it
-			// the lowest priority and don't retry unless overwritten by the options
+			// We do not want to delay more important communication by polling, so...
+			// ...don't retry
 			maxSendAttempts: 1,
-			priority: MessagePriority.Poll,
+			// ...and give it the lowest priority for user interactions
+			priority: MessagePriority.NodeQuery,
+			// ...unless overwritten by the options
 			...sendCommandOptions,
 		});
 
@@ -2215,7 +2216,10 @@ protocol version:      ${this.protocolVersion}`;
 				});
 
 				try {
-					await cc.refreshValues(this.driver);
+					await cc.refreshValues(
+						this.driver,
+						{ priority: MessagePriority.Poll },
+					);
 				} catch (e) {
 					this.driver.controllerLog.logNode(this.id, {
 						message: `failed to refresh values for ${
