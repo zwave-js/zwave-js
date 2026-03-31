@@ -37,6 +37,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -145,7 +146,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 			ccSpecific: {
 				indicatorId: 0,
 			},
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"identify",
@@ -155,8 +156,8 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 			states: {
 				true: "Identify",
 			},
-		} as const,
-		{ minVersion: 3 } as const,
+		},
+		{ minVersion: 3 },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"supportedPropertyIDs",
@@ -184,7 +185,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 				propertyId,
 			},
 		}),
-		{ minVersion: 2 } as const,
+		{ minVersion: 2 },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"timeout",
@@ -200,14 +201,14 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 				indicatorId,
 			},
 		}),
-		{ minVersion: 3 } as const,
+		{ minVersion: 3 },
 	),
 	...V.dynamicPropertyWithName(
 		"indicatorDescription",
 		(indicatorId: number) => indicatorId,
 		({ property }) => typeof property === "number",
 		undefined,
-		{ internal: true, minVersion: 4 } as const,
+		{ internal: true, minVersion: 4 },
 	),
 });
 
@@ -857,6 +858,7 @@ export class IndicatorCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -865,7 +867,7 @@ export class IndicatorCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		if (api.version === 1) {

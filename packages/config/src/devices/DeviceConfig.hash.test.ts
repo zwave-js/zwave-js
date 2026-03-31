@@ -12,7 +12,7 @@ let configManager: ConfigManager;
 let testConfig: DeviceConfig;
 let proprietaryConfig: DeviceConfig;
 
-beforeAll(async (t) => {
+beforeAll(async () => {
 	configManager = new ConfigManager({
 		deviceConfigPriorityDir: path.join(__dirname, "__fixtures/hash"),
 	});

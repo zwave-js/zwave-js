@@ -2,6 +2,8 @@ import {
 	type CommandClass,
 	Security2CC,
 	Security2CCMessageEncapsulation,
+	VersionCCCapabilitiesGet,
+	VersionCCCapabilitiesReport,
 	VersionCCCommandClassGet,
 	VersionCCCommandClassReport,
 	VersionCCGet,
@@ -32,6 +34,7 @@ import {
 } from "./mockCCBehaviors/MultiChannel.js";
 import { MultilevelSensorCCBehaviors } from "./mockCCBehaviors/MultilevelSensor.js";
 import { MultilevelSwitchCCBehaviors } from "./mockCCBehaviors/MultilevelSwitch.js";
+import { NodeNamingAndLocationCCBehaviors } from "./mockCCBehaviors/NodeNamingAndLocation.js";
 import { NotificationCCBehaviors } from "./mockCCBehaviors/Notification.js";
 import { ScheduleEntryLockCCBehaviors } from "./mockCCBehaviors/ScheduleEntryLock.js";
 import {
@@ -43,6 +46,7 @@ import {
 	Security2CCHooks,
 } from "./mockCCBehaviors/Security2.js";
 import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch.js";
+import { SupervisionCCHooks } from "./mockCCBehaviors/Supervision.js";
 import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
 import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
 import { ThermostatSetpointCCBehaviors } from "./mockCCBehaviors/ThermostatSetpoint.js";
@@ -121,6 +125,19 @@ const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 	},
 };
 
+const respondToVersionCCCapabilitiesGet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof VersionCCCapabilitiesGet) {
+			const cc = new VersionCCCapabilitiesReport({
+				nodeId: controller.ownNodeId,
+				endpointIndex: receivedCC.endpointIndex,
+				supportsZWaveSoftwareGet: false,
+			});
+			return { action: "sendCC", cc };
+		}
+	},
+};
+
 const respondToZWavePlusCCGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof ZWavePlusCCGet) {
@@ -182,8 +199,11 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...MultiChannelCCHooks,
 		...MultiChannelCCBehaviors,
 
+		...SupervisionCCHooks,
+
 		respondToVersionCCGet,
 		respondToVersionCCCommandClassGet,
+		respondToVersionCCCapabilitiesGet,
 
 		respondToZWavePlusCCGet,
 		respondToS2ZWavePlusCCGet,
@@ -199,6 +219,7 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...MeterCCBehaviors,
 		...MultilevelSensorCCBehaviors,
 		...MultilevelSwitchCCBehaviors,
+		...NodeNamingAndLocationCCBehaviors,
 		...NotificationCCBehaviors,
 		...ScheduleEntryLockCCBehaviors,
 		...SoundSwitchCCBehaviors,

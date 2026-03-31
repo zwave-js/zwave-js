@@ -63,8 +63,8 @@
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
 		"allowed": [
-			{"value": 0},
-			{"range": [5, 255]}
+			{ "value": 0 },
+			{ "range": [5, 255] }
 		],
 		"defaultValue": 255,
 		"unsigned": true,
@@ -99,8 +99,8 @@
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
 		"allowed": [
-			{"value": 0},
-			{"range": [5, 255]}
+			{ "value": 0 },
+			{ "range": [5, 255] }
 		],
 		"defaultValue": 255,
 		"unsigned": true,
@@ -135,8 +135,8 @@
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
 		"allowed": [
-			{"value": 0},
-			{"range": [5, 255]}
+			{ "value": 0 },
+			{ "range": [5, 255] }
 		],
 		"defaultValue": 255,
 		"unsigned": true,
@@ -171,8 +171,8 @@
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
 		"allowed": [
-			{"value": 0},
-			{"range": [5, 255]}
+			{ "value": 0 },
+			{ "range": [5, 255] }
 		],
 		"defaultValue": 255,
 		"unsigned": true,

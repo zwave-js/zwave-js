@@ -63,6 +63,7 @@ import {
 	InvalidCC,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -107,17 +108,39 @@ export const NotificationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Alarm Type",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"alarmLevel",
 			{
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Alarm Level",
-			} as const,
+			},
 		),
+		// Synthetic notification variable to simplify working with Open/Close/Tilted states
 		...V.staticPropertyAndKeyWithName(
-			"doorStateSimple",
+			"openingState",
+			"Access Control",
+			"Opening state",
+			{
+				// Must be a number for compatibility reasons
+				...ValueMetadata.ReadOnlyUInt8,
+				label: "Opening state",
+				states: {
+					[0x00]: "Closed",
+					[0x01]: "Open",
+				},
+				ccSpecific: {
+					notificationType: 0x06,
+				},
+			},
+			{
+				autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
+			},
+		),
+		// Previous attempts at fixing the door state mess, but only made things worse.
+		...V.staticPropertyAndKeyWithName(
+			"deprecated_doorStateSimple",
 			"Access Control",
 			"Door state (simple)",
 			{
@@ -131,13 +154,14 @@ export const NotificationCCValues = V.defineCCValues(
 				ccSpecific: {
 					notificationType: 0x06,
 				},
-			} as const,
+			},
 			{
-				autoCreate: shouldAutoCreateSimpleDoorSensorValue,
-			} as const,
+				autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
+			},
 		),
+		// Previous attempts at fixing the door state mess, but only made things worse.
 		...V.staticPropertyAndKeyWithName(
-			"doorTiltState",
+			"deprecated_doorTiltState",
 			"Access Control",
 			"Door tilt state",
 			{
@@ -151,11 +175,11 @@ export const NotificationCCValues = V.defineCCValues(
 				ccSpecific: {
 					notificationType: 0x06,
 				},
-			} as const,
+			},
 			{
 				// This is created when the tilt state is first received.
 				autoCreate: false,
-			} as const,
+			},
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"supportedNotificationEvents",
@@ -182,7 +206,7 @@ export const NotificationCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { notificationType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"unknownNotificationVariable",
@@ -195,7 +219,7 @@ export const NotificationCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyUInt8,
 				label: `${notificationName}: Unknown value`,
 				ccSpecific: { notificationType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"notificationVariable",
@@ -211,7 +235,7 @@ export const NotificationCCValues = V.defineCCValues(
 	},
 );
 
-export function shouldAutoCreateSimpleDoorSensorValue(
+export function shouldAutoCreateSyntheticDoorSensorValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -557,6 +581,19 @@ export class NotificationCC extends CommandClass {
 			.getValue(NotificationCCValues.notificationMode.id);
 	}
 
+	/** Returns the supported notification events for a given notification type */
+	public static getSupportedNotificationEvents(
+		ctx: GetValueDB,
+		node: NodeId,
+		type: number,
+	): MaybeNotKnown<readonly number[]> {
+		return ctx
+			.getValueDB(node.id)
+			.getValue(
+				NotificationCCValues.supportedNotificationEvents(type).id,
+			);
+	}
+
 	public async interview(
 		ctx: InterviewContext,
 	): Promise<void> {
@@ -693,7 +730,6 @@ export class NotificationCC extends CommandClass {
 				for (let i = 0; i < supportedNotificationTypes.length; i++) {
 					const type = supportedNotificationTypes[i];
 					const name = supportedNotificationNames[i];
-					const notification = getNotification(type);
 
 					// Enable reports for each notification type
 					ctx.logNode(node.id, {
@@ -702,45 +738,6 @@ export class NotificationCC extends CommandClass {
 						direction: "outbound",
 					});
 					await api.set(type, true);
-
-					// Set the value to idle if possible and there is no value yet
-					if (notification) {
-						const events = supportedNotificationEvents.get(type);
-						if (events) {
-							// Find all variables that are supported by this node and have an idle state
-							for (
-								const variable of notification.variables
-									.filter((v) => !!v.idle)
-							) {
-								if (
-									[...variable.states.keys()].some((key) =>
-										events.includes(key)
-									)
-								) {
-									const value = NotificationCCValues
-										.notificationVariable(
-											notification.name,
-											variable.name,
-										);
-
-									// Set the value to idle if it has no value yet
-									// TODO: GH#1028
-									// * do this only if the last update was more than 5 minutes ago
-									// * schedule an auto-idle if the last update was less than 5 minutes ago but before the current applHost start
-									if (
-										this.getValue(ctx, value)
-											== undefined
-									) {
-										this.setValue(
-											ctx,
-											value,
-											0, /* idle */
-										);
-									}
-								}
-							}
-						}
-					}
 				}
 			}
 		}
@@ -751,31 +748,169 @@ export class NotificationCC extends CommandClass {
 			this.ensureMetadata(ctx, NotificationCCValues.alarmLevel);
 		}
 
-		// Also create metadata for values mapped through compat config
+		// Create metadata and internal values for alarm mappings
+		this.applyAlarmMappingCompat(ctx);
+
+		// Apply notification remappings
+		this.applyNotificationRemappings(ctx);
+
+		// Set idle values from (potentially remapped) supported events
+		this.initNotificationIdleValues(ctx);
+
+		// Remember that the interview is complete
+		this.setInterviewComplete(ctx, true);
+	}
+
+	/**
+	 * Applies the `alarmMapping` compat flag by adding metadata and supported notification
+	 * types/events for the alarm mapping targets.
+	 */
+	private applyAlarmMappingCompat(
+		ctx: InterviewContext,
+	): void {
 		const mappings = ctx.getDeviceConfig?.(this.nodeId as number)
 			?.compat?.alarmMapping;
-		if (mappings) {
-			// Find all mappings to a valid notification variable
-			const supportedNotifications = new Map<number, Set<number>>();
-			for (const { to } of mappings) {
-				const notification = getNotification(to.notificationType);
-				if (!notification) continue;
-				const valueConfig = getNotificationValue(
-					notification,
-					to.notificationEvent,
+		if (!mappings) return;
+
+		// Find all mappings to a valid notification variable
+		const supportedNotifications = new Map<number, Set<number>>();
+		for (const { to } of mappings) {
+			const notification = getNotification(to.notificationType);
+			if (!notification) continue;
+			const valueConfig = getNotificationValue(
+				notification,
+				to.notificationEvent,
+			);
+
+			// Remember supported notification types and events to create the internal values later
+			if (!supportedNotifications.has(to.notificationType)) {
+				supportedNotifications.set(
+					to.notificationType,
+					new Set(),
+				);
+			}
+			const supportedNotificationTypesSet = supportedNotifications
+				.get(to.notificationType)!;
+			supportedNotificationTypesSet.add(to.notificationEvent);
+
+			if (valueConfig?.type !== "state") continue;
+
+			const notificationValue = NotificationCCValues
+				.notificationVariable(
+					notification.name,
+					valueConfig.variableName,
 				);
 
-				// Remember supported notification types and events to create the internal values later
-				if (!supportedNotifications.has(to.notificationType)) {
-					supportedNotifications.set(
-						to.notificationType,
-						new Set(),
-					);
-				}
-				const supportedNotificationTypesSet = supportedNotifications
-					.get(to.notificationType)!;
-				supportedNotificationTypesSet.add(to.notificationEvent);
+			// Create or update the metadata
+			const metadata = getNotificationValueMetadata(
+				this.getMetadata(ctx, notificationValue),
+				notification,
+				valueConfig,
+			);
+			this.setMetadata(ctx, notificationValue, metadata);
+		}
 
+		// Remember supported notification types and events in the cache
+		this.setValue(
+			ctx,
+			NotificationCCValues.supportedNotificationTypes,
+			[...supportedNotifications.keys()],
+		);
+		for (const [type, events] of supportedNotifications) {
+			this.setValue(
+				ctx,
+				NotificationCCValues.supportedNotificationEvents(type),
+				[...events],
+			);
+		}
+	}
+
+	/**
+	 * Applies the `remapNotifications` compat flag by modifying the supported notification
+	 * types/events in cache and creating metadata for remapping targets.
+	 */
+	private applyNotificationRemappings(
+		ctx: InterviewContext,
+	): void {
+		const remappings = ctx.getDeviceConfig?.(this.nodeId as number)
+			?.compat?.remapNotifications;
+		if (!remappings?.length) return;
+
+		ctx.logNode(this.nodeId as number, {
+			message: `Applying notification remapping compat flag...`,
+			direction: "none",
+			level: "verbose",
+		});
+
+		// Load current supported types and events from cache
+		const supportedTypes = new Set<number>(
+			this.getValue<readonly number[]>(
+				ctx,
+				NotificationCCValues.supportedNotificationTypes,
+			) ?? [],
+		);
+
+		const supportedEvents = new Map<number, Set<number>>();
+		for (const type of supportedTypes) {
+			const events = NotificationCC.getSupportedNotificationEvents(
+				ctx,
+				this.getNode(ctx)!,
+				type,
+			);
+			if (events) {
+				supportedEvents.set(type, new Set(events));
+			}
+		}
+
+		for (const mapping of remappings) {
+			// Remove the original event from supported events
+			const fromEvents = supportedEvents.get(
+				mapping.from.notificationType,
+			);
+			if (fromEvents) {
+				fromEvents.delete(mapping.from.notificationEvent);
+				if (fromEvents.size === 0) {
+					supportedEvents.delete(mapping.from.notificationType);
+					supportedTypes.delete(mapping.from.notificationType);
+				}
+			}
+
+			// Only add target events for normal remaps
+			if (mapping.action.type === "remap") {
+				const to = mapping.action.to;
+				supportedTypes.add(to.notificationType);
+				if (!supportedEvents.has(to.notificationType)) {
+					supportedEvents.set(to.notificationType, new Set());
+				}
+				supportedEvents.get(to.notificationType)!.add(
+					to.notificationEvent,
+				);
+			}
+		}
+
+		// Persist updated supported types and events
+		this.setValue(
+			ctx,
+			NotificationCCValues.supportedNotificationTypes,
+			[...supportedTypes],
+		);
+		for (const [type, events] of supportedEvents) {
+			this.setValue(
+				ctx,
+				NotificationCCValues.supportedNotificationEvents(type),
+				[...events],
+			);
+		}
+
+		// Rebuild metadata for all supported events (since we may have removed
+		// some events and added others, the previous metadata may be stale)
+		for (const [type, events] of supportedEvents) {
+			const notification = getNotification(type);
+			if (!notification) continue;
+
+			let isFirst = true;
+			for (const value of events) {
+				const valueConfig = getNotificationValue(notification, value);
 				if (valueConfig?.type !== "state") continue;
 
 				const notificationValue = NotificationCCValues
@@ -784,52 +919,82 @@ export class NotificationCC extends CommandClass {
 						valueConfig.variableName,
 					);
 
-				// Create or update the metadata
 				const metadata = getNotificationValueMetadata(
-					this.getMetadata(ctx, notificationValue),
+					isFirst
+						? undefined
+						: this.getMetadata(ctx, notificationValue),
 					notification,
 					valueConfig,
 				);
 				this.setMetadata(ctx, notificationValue, metadata);
 
-				// Set the value to idle if it has no value yet
-				if (valueConfig.idle) {
+				isFirst = false;
+			}
+		}
+	}
+
+	/**
+	 * Sets idle values for all supported notification variables that have an idle state
+	 * and don't have a value yet.
+	 */
+	private initNotificationIdleValues(
+		ctx: InterviewContext,
+	): void {
+		const supportedTypes = this.getValue<readonly number[]>(
+			ctx,
+			NotificationCCValues.supportedNotificationTypes,
+		) ?? [];
+
+		for (const type of supportedTypes) {
+			const notification = getNotification(type);
+			if (!notification) continue;
+
+			// Reads supported events from cache so it works correctly
+			// after compat remappings have been applied.
+			const events = NotificationCC.getSupportedNotificationEvents(
+				ctx,
+				this.getNode(ctx)!,
+				type,
+			);
+			if (!events) continue;
+
+			// Find all variables that are supported by this node and have an idle state
+			for (
+				const variable of notification.variables
+					.filter((v) => !!v.idle)
+			) {
+				if (
+					[...variable.states.keys()].some((key) =>
+						events.includes(key)
+					)
+				) {
+					const value = NotificationCCValues
+						.notificationVariable(
+							notification.name,
+							variable.name,
+						);
+
+					// Set the value to idle if it has no value yet
 					// TODO: GH#1028
 					// * do this only if the last update was more than 5 minutes ago
 					// * schedule an auto-idle if the last update was less than 5 minutes ago but before the current applHost start
 					if (
-						this.getValue(ctx, notificationValue) == undefined
+						this.getValue(ctx, value) == undefined
 					) {
 						this.setValue(
 							ctx,
-							notificationValue,
+							value,
 							0, /* idle */
 						);
 					}
 				}
 			}
-
-			// Remember supported notification types and events in the cache
-			this.setValue(
-				ctx,
-				NotificationCCValues.supportedNotificationTypes,
-				[...supportedNotifications.keys()],
-			);
-			for (const [type, events] of supportedNotifications) {
-				this.setValue(
-					ctx,
-					NotificationCCValues.supportedNotificationEvents(type),
-					[...events],
-				);
-			}
 		}
-
-		// Remember that the interview is complete
-		this.setInterviewComplete(ctx, true);
 	}
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -838,7 +1003,7 @@ export class NotificationCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Load supported notification types and events from cache
@@ -1090,14 +1255,12 @@ export class NotificationCCReport extends NotificationCC {
 					isArray(supportedNotificationTypes)
 					&& supportedNotificationTypes.includes(this.alarmType)
 				) {
-					const supportedNotificationEvents = this.getValue<
-						readonly number[]
-					>(
-						ctx,
-						NotificationCCValues.supportedNotificationEvents(
+					const supportedNotificationEvents = NotificationCC
+						.getSupportedNotificationEvents(
+							ctx,
+							this.getNode(ctx)!,
 							this.alarmType,
-						),
-					);
+						);
 					if (
 						isArray(supportedNotificationEvents)
 						&& supportedNotificationEvents.includes(this.alarmLevel)

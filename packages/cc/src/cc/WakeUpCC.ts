@@ -49,7 +49,7 @@ export const WakeUpCCValues = V.defineCCValues(CommandClasses["Wake Up"], {
 		{
 			...ValueMetadata.ReadOnly,
 			label: "Node ID of the controller",
-		} as const,
+		},
 		{
 			supportsEndpoints: false,
 		},
@@ -59,7 +59,7 @@ export const WakeUpCCValues = V.defineCCValues(CommandClasses["Wake Up"], {
 		{
 			...ValueMetadata.UInt24,
 			label: "Wake Up interval",
-		} as const,
+		},
 		{
 			supportsEndpoints: false,
 		},

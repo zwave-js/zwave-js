@@ -1,7 +1,6 @@
 ---
-name: Implement Z-Wave Command Class
+name: implement-zwave-cc
 description: Guide for implementing new Z-Wave Command Classes (CCs) in zwave-js
-version: 1.0.0
 ---
 
 # Implementing Z-Wave Command Classes
