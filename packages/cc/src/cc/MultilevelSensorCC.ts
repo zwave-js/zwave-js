@@ -47,6 +47,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -97,7 +98,7 @@ export const MultilevelSensorCCValues = V.defineCCValues(
 				// Just the base metadata, to be extended using a config manager
 				...ValueMetadata.ReadOnlyNumber,
 				label: sensorTypeName,
-			} as const),
+			}),
 		),
 	},
 );
@@ -479,6 +480,7 @@ export class MultilevelSensorCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -487,7 +489,7 @@ export class MultilevelSensorCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 		const valueDB = this.getValueDB(ctx);
 

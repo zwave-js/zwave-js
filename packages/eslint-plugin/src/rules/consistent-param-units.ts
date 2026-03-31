@@ -82,7 +82,6 @@ export const consistentParamUnits: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				"Ensures that no forbidden units are used in config parameters.",

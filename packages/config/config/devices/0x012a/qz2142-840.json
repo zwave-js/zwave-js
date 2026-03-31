@@ -36,6 +36,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 4,
 			"unit": "minutes",
@@ -45,6 +46,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "timer.auto_on",
 			"label": "Auto On Timer",
 			"valueSize": 4,
 			"minValue": 0,

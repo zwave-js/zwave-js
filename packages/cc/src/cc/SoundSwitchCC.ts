@@ -61,7 +61,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				states: {
 					0: "default",
 				},
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"toneId",
@@ -69,7 +69,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				label: "Play Tone",
 				valueChangeOptions: ["volume"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"defaultVolume",
@@ -79,7 +79,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				max: 100,
 				unit: "%",
 				label: "Default volume",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"defaultToneId",
@@ -88,7 +88,7 @@ export const SoundSwitchCCValues = V.defineCCValues(
 				min: 1,
 				max: 254,
 				label: "Default tone ID",
-			} as const,
+			},
 		),
 	},
 );
@@ -461,8 +461,13 @@ duration: ${info.duration} seconds`;
 		// Remember tone count and info on the tone ID metadata
 		this.setMetadata(ctx, SoundSwitchCCValues.toneId, {
 			...SoundSwitchCCValues.toneId.meta,
+			allowed: [
+				{ value: 0 },
+				{ from: 1, to: toneCount },
+				{ value: 0xff },
+			],
 			min: 0,
-			max: toneCount,
+			max: 0xff,
 			states: {
 				0: "off",
 				...metadataStates,

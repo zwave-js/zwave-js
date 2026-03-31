@@ -1,30 +1,12 @@
 {
-	"basic_set_value": {
-		"label": "Basic Set Value",
-		"description": "Allowable range: 0-99, 255",
-		"valueSize": 1,
-		"minValue": 0,
-		"maxValue": 255,
-		"defaultValue": 255,
-		"unsigned": true,
-		"options": [
-			{
-				"label": "Off",
-				"value": 0
-			},
-			{
-				"label": "Last Brightness",
-				"value": 255
-			}
-		]
-	},
 	"association_basic_set_value": {
-		"description": "Allowable range: 0-99, 255",
 		"valueSize": 1,
-		"minValue": 0,
-		"maxValue": 255,
 		"defaultValue": 255,
 		"unsigned": true,
+		"allowed": [
+			{ "range": [0, 99] },
+			{ "value": 255 }
+		],
 		"options": [
 			{
 				"label": "Value of parameter 2 (Basic Set Value)",
@@ -37,6 +19,7 @@
 		]
 	},
 	"battery_report_interval_30m": {
+		"$purpose": "reporting_interval.battery",
 		"label": "Battery Report Interval",
 		"valueSize": 1,
 		"unit": "30 minutes",

@@ -1,9 +1,5 @@
-import { refreshMetadataStringsFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
-import {
-	DeviceConfig,
-	fixBrokenDeviceConfigHash,
-	parseDeviceConfigHash,
-} from "@zwave-js/config";
+import { refreshConfigParamMetadataFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
+import { DeviceConfig, parseDeviceConfigHash } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 import { cacheKeys } from "../../driver/NetworkCache.js";
@@ -29,8 +25,9 @@ export interface NodeDeviceConfig {
 	get deviceDatabaseUrl(): MaybeNotKnown<string>;
 
 	/**
-	 * Returns whether the device config for this node has changed since the last interview.
-	 * If it has, the node likely needs to be re-interviewed for the changes to be picked up.
+	 * Returns whether the device config for this node has changed since the last interview
+	 * in a way that affects interview behavior (compat flags, association settings, proprietary config).
+	 * Changes to configuration parameter metadata are applied dynamically and do not require re-interview.
 	 */
 	hasDeviceConfigChanged(): MaybeNotKnown<boolean>;
 
@@ -94,8 +91,9 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 	}
 
 	/**
-	 * Returns whether the device config for this node has changed since the last interview.
-	 * If it has, the node likely needs to be re-interviewed for the changes to be picked up.
+	 * Returns whether the device config for this node has changed since the last interview
+	 * in a way that affects interview behavior (compat flags, association settings, proprietary config).
+	 * Changes to configuration parameter metadata are applied dynamically and do not require re-interview.
 	 */
 	public hasDeviceConfigChanged(): MaybeNotKnown<boolean> {
 		// We can't know if the node is not fully interviewed
@@ -219,21 +217,10 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 				if (parsed) {
 					cachedHashVersion = parsed.version;
 				}
-
-				if (parsed?.version === 2) {
-					// Some Z-Wave JS versions had an issue where the optional "hidden"
-					// property was included in the hashable, causing incorrect hashes.
-					this.cachedDeviceConfigHash =
-						await fixBrokenDeviceConfigHash(
-							this.cachedDeviceConfigHash,
-						);
-				}
 			}
 			// Use that version for comparison purposes if possible
-			this._currentDeviceConfigHash = await this.deviceConfig.getHash(
-				cachedHashVersion as any,
-			);
-			// default to requiring an upgrade if the version cannot be parsed
+			this._currentDeviceConfigHash = await this.deviceConfig.getHash();
+			// and default to requiring an upgrade if the version could not be parsed
 			cachedHashVersion ??= 0;
 		}
 
@@ -251,9 +238,11 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 				this._currentDeviceConfigHash = this.cachedDeviceConfigHash;
 			}
 
-			// Starting from version 2, we apply labels and descriptions from the device config dynamically
+			// Apply all param metadata from the device config dynamically.
+			// This handles updates to existing params, addition of new params,
+			// and removal/hiding of old params.
 			for (const ep of this.getAllEndpoints()) {
-				refreshMetadataStringsFromConfigFile(
+				refreshConfigParamMetadataFromConfigFile(
 					this.driver,
 					this.id,
 					ep.index,

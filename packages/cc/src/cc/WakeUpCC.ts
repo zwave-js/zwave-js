@@ -49,7 +49,7 @@ export const WakeUpCCValues = V.defineCCValues(CommandClasses["Wake Up"], {
 		{
 			...ValueMetadata.ReadOnly,
 			label: "Node ID of the controller",
-		} as const,
+		},
 		{
 			supportsEndpoints: false,
 		},
@@ -59,7 +59,7 @@ export const WakeUpCCValues = V.defineCCValues(CommandClasses["Wake Up"], {
 		{
 			...ValueMetadata.UInt24,
 			label: "Wake Up interval",
-		} as const,
+		},
 		{
 			supportsEndpoints: false,
 		},
@@ -526,10 +526,18 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 			},
 			{
 				...ValueMetadata.WriteOnlyUInt24,
-				min: this.minWakeUpInterval,
+				allowed: [
+					{ value: 0 },
+					{
+						from: this.minWakeUpInterval,
+						to: this.maxWakeUpInterval,
+						step: this.wakeUpIntervalSteps,
+					},
+				],
+				min: 0,
 				max: this.maxWakeUpInterval,
-				steps: this.wakeUpIntervalSteps,
 				default: this.defaultWakeUpInterval,
+				states: { 0: "Disabled" },
 			},
 		);
 

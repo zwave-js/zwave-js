@@ -27,6 +27,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -63,7 +64,7 @@ export const BinarySensorCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { sensorType },
-			} as const),
+			}),
 		),
 	},
 );
@@ -247,6 +248,7 @@ export class BinarySensorCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -255,7 +257,7 @@ export class BinarySensorCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Query (all of) the sensor's current value(s)
@@ -325,11 +327,35 @@ export class BinarySensorCC extends CommandClass {
 		ctx: GetValueDB,
 		value: number,
 	): boolean {
-		this.setValue(
-			ctx,
-			BinarySensorCCValues.state(BinarySensorType.Any),
-			value > 0,
-		);
+		// Prefer setting an existing value to avoid creating a spurious "Any" sensor type.
+		// Check for the Any type first (backwards compat), then the first one that
+		// already exists in the value DB. Fall back to Any if none exist.
+		const valueDB = this.getValueDB(ctx);
+		const anyValueId = BinarySensorCCValues.state(BinarySensorType.Any)
+			.endpoint(this.endpointIndex);
+
+		let sensorType: BinarySensorType;
+		if (valueDB.hasMetadata(anyValueId)) {
+			sensorType = BinarySensorType.Any;
+		} else {
+			const existingSensorTypes = valueDB
+				.getAllMetadata(CommandClasses["Binary Sensor"])
+				.filter((v) =>
+					v.endpoint === this.endpointIndex
+					&& BinarySensorCCValues.state.is(v)
+				)
+				.map((v) =>
+					(v.metadata as {
+						ccSpecific?: { sensorType?: BinarySensorType };
+					})?.ccSpecific?.sensorType
+				)
+				.filter((t): t is BinarySensorType => t != undefined)
+				.toSorted((a, b) => a - b);
+			sensorType = existingSensorTypes[0] ?? BinarySensorType.Any;
+		}
+
+		const binarySensorValue = BinarySensorCCValues.state(sensorType);
+		this.setValue(ctx, binarySensorValue, value > 0);
 		return true;
 	}
 }

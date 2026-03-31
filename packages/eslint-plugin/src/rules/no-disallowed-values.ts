@@ -1,9 +1,9 @@
-import type { AllowedConfigValue } from "@zwave-js/core";
+import type { AllowedValue } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
 import { type JSONCRule, isValueAllowed, parseAllowedField } from "../utils.js";
 
 function getAllowedEntriesAndRange(node: AST.JSONObjectExpression): {
-	allowedEntries: AllowedConfigValue[];
+	allowedEntries: AllowedValue[];
 	hasExplicitAllowed: boolean;
 	minValue: number | undefined;
 	maxValue: number | undefined;
@@ -104,7 +104,6 @@ export const noDisallowedDefaultValue: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				"Ensures that defaultValue is within the allowed range",
@@ -204,7 +203,6 @@ export const noDisallowedOptionValues: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				"Ensures that option values are within the allowed range",

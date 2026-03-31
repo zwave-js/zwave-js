@@ -106,6 +106,7 @@
 		"typescript/no-unnecessary-boolean-literal-compare": "off", // Technically a good rule, but causes a bit too much noise/inconsistency
 		"typescript/no-unnecessary-type-arguments": "off", // explicit > implicit
 		"eslint/preserve-caught-error": "off", // TODO: For now this is okay, but we should really enable this
+		"eslint/no-shadow": "off", // Too much noise
 		// "pedantic"
 		"typescript/no-deprecated": "off", // Causes false-positives: https://github.com/oxc-project/oxc/issues/15594
 		// "perf"
@@ -219,7 +220,7 @@
 		// "unused-imports/no-unused-imports": "error", // Plugin not available in Oxlint
 
 		// ========= Unicorn Plugin Rules =========
-		"unicorn/prefer-array-find": ["error", { "checkFromLast": true }],
+		"unicorn/prefer-array-find": "error",
 		"unicorn/prefer-array-flat-map": "error",
 		"unicorn/prefer-array-flat": "error",
 		"unicorn/prefer-array-index-of": "error",

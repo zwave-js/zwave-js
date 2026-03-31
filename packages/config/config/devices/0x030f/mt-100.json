@@ -16,6 +16,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "motion_sensitivity",
 			"label": "Sensitivity Level Setting",
 			"description": "This parameter defines the sensitivity of PIR detector",
 			"valueSize": 1,
@@ -36,20 +37,10 @@
 		},
 		{
 			"#": "3",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Level",
 			"description": "value when PIR detector is triggered and Basic Set command sent",
-			"valueSize": 1,
-			"unit": "%",
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "On",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "4",
@@ -82,6 +73,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Retrigger Interval Setting",
 			"description": "Interval of being re-triggered after the PIR detector has been triggered.",
 			"valueSize": 1,

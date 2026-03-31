@@ -52,6 +52,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °(C/F)",
@@ -67,6 +68,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -93,11 +95,12 @@
 		{
 			"#": "4",
 			"label": "Automatic Reporting Interval",
-			"description": "Allowable Range: 30-65535",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 65535,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 65535] }
+			],
 			"defaultValue": 43200,
 			"unsigned": true,
 			"options": [
@@ -124,13 +127,9 @@
 		},
 		{
 			"#": "10",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "High Temperature Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "6",
@@ -149,13 +148,9 @@
 		},
 		{
 			"#": "9",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Low Temperature Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "7",
@@ -184,13 +179,9 @@
 		},
 		{
 			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "High Humidity Trigger Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "8",
@@ -209,13 +200,9 @@
 		},
 		{
 			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Low Humidity Trigger Basic Set Value",
-			"description": "Allowable Range: 0-99, 255.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "13",
@@ -228,6 +215,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 2,
 			"unit": "0.1 °(C/F)",
@@ -237,6 +225,7 @@
 		},
 		{
 			"#": "15",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Calibration",
 			"valueSize": 1,
 			"unit": "%",

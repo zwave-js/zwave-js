@@ -54,7 +54,6 @@ export const noMisspelledNames: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				`Prevents some common misspellings in labels and descriptions`,

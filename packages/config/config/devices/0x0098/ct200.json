@@ -89,6 +89,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"description": "This value determines the reporting threshold",
 			"valueSize": 1,
@@ -245,6 +246,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"minValue": -6,

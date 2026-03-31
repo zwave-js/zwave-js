@@ -97,6 +97,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness",
 			"valueSize": 1,
 			"minValue": 1,
@@ -105,6 +106,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness",
 			"valueSize": 1,
 			"minValue": 2,
@@ -296,6 +298,7 @@
 		},
 		{
 			"#": "16",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Meter Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",

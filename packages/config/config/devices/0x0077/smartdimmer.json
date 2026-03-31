@@ -27,6 +27,7 @@
 	"paramInformation": [
 		{
 			"#": "0",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dim Level",
 			"valueSize": 1,
 			"minValue": 0,

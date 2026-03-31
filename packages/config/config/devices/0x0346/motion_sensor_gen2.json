@@ -98,6 +98,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Detection Sensitivity",
 			"description": "0 = lowest, 4 = highest",
 			"valueSize": 1,

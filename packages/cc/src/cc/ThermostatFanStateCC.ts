@@ -22,6 +22,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -49,7 +50,7 @@ export const ThermostatFanStateCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyUInt8,
 				states: enumValuesToMetadataStates(ThermostatFanState),
 				label: "Thermostat fan state",
-			} as const,
+			},
 		),
 	},
 );
@@ -126,6 +127,7 @@ export class ThermostatFanStateCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -134,7 +136,7 @@ export class ThermostatFanStateCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Query the current status

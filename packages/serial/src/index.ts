@@ -14,7 +14,7 @@ export type * from "./serialport/Bindings.js";
 export * from "./serialport/LegacyBindingWrapper.js";
 export * from "./serialport/ZWaveSerialPortImplementation.js";
 export * from "./serialport/ZWaveSerialStream.js";
-export * from "./serialport/ZWaveSocketOptions.js";
+export type * from "./serialport/ZWaveSocketOptions.js";
 export * from "./serialport/definitions.js";
 export * from "./zniffer/ZnifferSerialStream.js";
 

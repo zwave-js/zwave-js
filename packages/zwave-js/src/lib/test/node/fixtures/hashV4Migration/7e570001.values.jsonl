@@ -1,0 +1,8 @@
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"productId\"}","v":1,"ts":1770632902231}
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"productType\"}","v":1,"ts":1770632902231}
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"manufacturerId\"}","v":65534,"ts":1770632902232}
+{"k":"{\"nodeId\":2,\"commandClass\":114,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1770632902232}
+{"k":"{\"nodeId\":2,\"commandClass\":134,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1770632903457}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":\"isParamInformationFromConfig\"}","v":true,"ts":1770632903461}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":1}","v":50,"ts":1770632903506}
+{"k":"{\"nodeId\":2,\"commandClass\":112,\"endpoint\":0,\"property\":\"interviewComplete\"}","v":true,"ts":1770632903507}

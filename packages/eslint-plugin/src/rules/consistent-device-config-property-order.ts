@@ -1,4 +1,3 @@
-import type { AST as ESLintAST } from "eslint";
 import type { AST } from "jsonc-eslint-parser";
 import { type JSONCRule, paramInfoPropertyOrder } from "../utils.js";
 
@@ -30,12 +29,8 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 				if (isSomePropertyOutOfOrder) {
 					const propsWithComments = properties.map(([index, p]) => {
 						const comments = {
-							leading: context.sourceCode.getCommentsBefore(
-								p as any,
-							),
-							trailing: context.sourceCode.getCommentsAfter(
-								p as any,
-							),
+							leading: context.sourceCode.getCommentsBefore(p),
+							trailing: context.sourceCode.getCommentsAfter(p),
 						};
 						return {
 							index,
@@ -52,7 +47,7 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 						const wronglyAttributedComments = cur.comments.leading
 							.filter(
 								(c) =>
-									c.loc?.start.line
+									c.loc.start.line
 										=== prev.property.loc.end.line,
 							);
 						prev.comments.trailing.push(
@@ -66,11 +61,11 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 					const withRanges = propsWithComments.map((prop) => {
 						const start = Math.min(
 							prop.property.range[0],
-							...prop.comments.leading.map((c) => c.range![0]),
+							...prop.comments.leading.map((c) => c.range[0]),
 						);
 						const end = Math.max(
 							prop.property.range[1],
-							...prop.comments.trailing.map((c) => c.range![1]),
+							...prop.comments.trailing.map((c) => c.range[1]),
 						);
 						return {
 							...prop,
@@ -91,11 +86,11 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 					) => a.index - b.index).map((prop) => {
 						const start = Math.min(
 							prop.property.range[0],
-							...prop.comments.leading.map((c) => c.range![0]),
+							...prop.comments.leading.map((c) => c.range[0]),
 						);
 						const end = Math.max(
 							prop.property.range[1],
-							...prop.comments.trailing.map((c) => c.range![1]),
+							...prop.comments.trailing.map((c) => c.range[1]),
 						);
 						return {
 							...prop,
@@ -137,7 +132,7 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 						desiredText += part2;
 					}
 
-					const replaceRange: ESLintAST.Range = [
+					const replaceRange: [number, number] = [
 						withRanges[0].start,
 						withRanges.at(-1)!.end,
 					];
@@ -158,7 +153,6 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description:
 				"Ensures consistent ordering of properties in configuration parameter definitions",

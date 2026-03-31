@@ -44,6 +44,7 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"description": "Adjust motion sensitivity where 10 is the most sensitive setting.",
 			"valueSize": 1,
@@ -75,6 +76,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "motion_clear_delay",
 			"label": "Re-Trigger Interval",
 			"description": "Delay before the sensor reports no motion after detecting the last motion activity (add 5 seconds to entered value).",
 			"valueSize": 2,
@@ -92,6 +94,7 @@
 		{
 			"#": "6",
 			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Lux Reporting Frequency",
 			"valueSize": 2,
 			"unit": "minutes",

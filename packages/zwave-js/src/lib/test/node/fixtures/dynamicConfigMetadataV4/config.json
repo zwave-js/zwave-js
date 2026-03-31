@@ -1,0 +1,61 @@
+{
+	"manufacturer": "Z-Wave JS",
+	"manufacturerId": "0xfffe",
+	"label": "Dynamic Metadata Test",
+	"description": "Test device for dynamic config metadata updates",
+	"devices": [
+		{
+			"productType": "0x0002",
+			"productId": "0x0002"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Updated label",
+			"description": "Updated description",
+			"valueSize": 1,
+			"minValue": 10,
+			"maxValue": 200,
+			"defaultValue": 75,
+			"unit": "minutes"
+		},
+		{
+			"#": "3",
+			"label": "Param to be hidden",
+			"hidden": true,
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0
+		},
+		{
+			"#": "4",
+			"label": "Param staying visible",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1000,
+			"defaultValue": 100
+		},
+		{
+			"#": "5",
+			"label": "Previously hidden param",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 5
+		},
+		{
+			"#": "6",
+			"label": "Newly added param",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 99,
+			"defaultValue": 42
+		}
+	]
+}

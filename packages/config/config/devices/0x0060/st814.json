@@ -43,11 +43,13 @@
 		{
 			"#": "2",
 			"label": "Temperature Trigger ON Value",
-			"description": "Temperature level when a ON command is sent out. Allowable range -20..50, 99.",
+			"description": "Temperature level when a ON command is sent out.",
 			"valueSize": 1,
 			"unit": "°C/F",
-			"minValue": -20,
-			"maxValue": 99,
+			"allowed": [
+				{ "range": [-20, 50] },
+				{ "value": 99 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -59,11 +61,13 @@
 		{
 			"#": "3",
 			"label": "Temperature Trigger OFF Value",
-			"description": "Temperature level when a OFF command is sent out. Allowable range -20..50, 99.",
+			"description": "Temperature level when a OFF command is sent out.",
 			"valueSize": 1,
 			"unit": "°C/F",
-			"minValue": -20,
-			"maxValue": 99,
+			"allowed": [
+				{ "range": [-20, 50] },
+				{ "value": 99 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -75,11 +79,13 @@
 		{
 			"#": "4",
 			"label": "Humidity Trigger ON Value",
-			"description": "Humidity level when a ON command is sent out. Allowable range 20..90, 99.",
+			"description": "Humidity level when a ON command is sent out.",
 			"valueSize": 1,
 			"unit": "%rH",
-			"minValue": 20,
-			"maxValue": 99,
+			"allowed": [
+				{ "range": [20, 90] },
+				{ "value": 99 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -91,11 +97,13 @@
 		{
 			"#": "5",
 			"label": "Humidity Trigger OFF Value",
-			"description": "Humidity level when a OFF command is sent out. Allowable range 20..90, 99.",
+			"description": "Humidity level when a OFF command is sent out.",
 			"valueSize": 1,
 			"unit": "%rH",
-			"minValue": 20,
-			"maxValue": 99,
+			"allowed": [
+				{ "range": [20, 90] },
+				{ "value": 99 }
+			],
 			"defaultValue": 99,
 			"options": [
 				{
@@ -139,11 +147,13 @@
 		{
 			"#": "8",
 			"label": "Auto Report Humidity",
-			"description": "Sets the humidity change causing a sensor report. Allowable range: 0, 5..70.",
+			"description": "Sets the humidity change causing a sensor report.",
 			"valueSize": 1,
 			"unit": "%rH",
-			"minValue": 0,
-			"maxValue": 70,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 70] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{

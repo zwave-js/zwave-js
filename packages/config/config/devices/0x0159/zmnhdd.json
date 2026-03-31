@@ -169,6 +169,7 @@
 		},
 		{
 			"#": "11",
+			"$purpose": "timer.auto_off",
 			"label": "Automatic Turning Off Output After Set Time",
 			"description": "Auto OFF enabled with defined time, step is 1 second.",
 			"valueSize": 2,
@@ -178,6 +179,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "timer.auto_on",
 			"label": "Automatic Turning on Output After Set Time",
 			"description": "Auto ON enabled with defined time, step is 1 second.",
 			"valueSize": 2,
@@ -219,15 +221,18 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"description": "Set value is percentage, set value from 0 - 100 = 0% - 100%.",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 5
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval",
 			"description": "Set value means time interval (0 – 32767) in seconds.",
 			"valueSize": 2,
@@ -237,6 +242,7 @@
 		},
 		{
 			"#": "60",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dimming Value",
 			"description": "Minimum dimming value is set by entered value.",
 			"valueSize": 1,
@@ -246,6 +252,7 @@
 		},
 		{
 			"#": "61",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dimming Value",
 			"description": "Maximum dimming value is set by entered value.",
 			"valueSize": 1,
@@ -384,6 +391,7 @@
 		},
 		{
 			"#": "110",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"description": "Offset to actual measured value",
 			"valueSize": 2,
@@ -393,9 +401,10 @@
 		},
 		{
 			"#": "120",
-			"label": "Digital Temperature Sensor Reporting",
-			"description": "Module reports measured temperature on defined temperature change",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
+			"unit": "°C",
 			"minValue": 0,
 			"maxValue": 127,
 			"defaultValue": 5

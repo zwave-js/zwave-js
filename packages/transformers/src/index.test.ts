@@ -5,7 +5,7 @@ import { beforeAll, test } from "vitest";
 const fixturesDir = path.join(__dirname, "../test/fixtures");
 const files: string[] = [];
 
-beforeAll(async (t) => {
+beforeAll(async () => {
 	const spawn = (await import("nano-spawn")).default;
 	await spawn("yarn", ["run", "pretest"], { cwd: __dirname });
 	const jsFiles = (await fs.readdir(fixturesDir)).filter(

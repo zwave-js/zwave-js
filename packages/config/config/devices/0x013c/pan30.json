@@ -51,6 +51,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
 			"unit": "5 seconds",
@@ -81,7 +82,7 @@
 		},
 		{
 			"#": "3",
-			"label": "Power Reporting Threshold: Limit",
+			"label": "Overcurrent Alert Threshold",
 			"valueSize": 2,
 			"unit": ".01 A",
 			"minValue": 10,
@@ -89,39 +90,8 @@
 			"defaultValue": 750
 		},
 		{
-			"#": "7",
-			"label": "Power Reporting Threshold: Change",
-			"valueSize": 1,
-			"unit": "%",
-			"minValue": 0,
-			"maxValue": 4,
-			"defaultValue": 1,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				},
-				{
-					"label": "5%",
-					"value": 1
-				},
-				{
-					"label": "10%",
-					"value": 2
-				},
-				{
-					"label": "15%",
-					"value": 3
-				},
-				{
-					"label": "20%",
-					"value": 4
-				}
-			]
-		},
-		{
 			"#": "4",
-			"label": "kWh Reporting Threshold: Limit",
+			"label": "Load Caution: Energy Threshold",
 			"valueSize": 2,
 			"unit": "kWh",
 			"minValue": 1,
@@ -152,6 +122,38 @@
 		{
 			"#": "6",
 			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev_on"
+		},
+		{
+			"#": "7",
+			"$purpose": "reporting_threshold.power",
+			"label": "Power Reporting Threshold: Change",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 4,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "5%",
+					"value": 1
+				},
+				{
+					"label": "10%",
+					"value": 2
+				},
+				{
+					"label": "15%",
+					"value": 3
+				},
+				{
+					"label": "20%",
+					"value": 4
+				}
+			]
 		}
 	],
 	"metadata": {

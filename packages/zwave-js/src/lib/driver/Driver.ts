@@ -323,6 +323,7 @@ const defaultOptions: ZWaveOptions = {
 		refreshValue: 5000, // Default should handle most slow devices until we have a better solution
 		refreshValueAfterTransition: 1000, // To account for delays in the device
 		serialAPIStarted: 5000,
+		pollTime: 10000, // PollTime SHOULD be 10 seconds + CommandTime as per the spec
 	},
 	attempts: {
 		openSerialPort: 10,
@@ -416,6 +417,15 @@ function checkOptions(options: ZWaveOptions): void {
 	if (options.timeouts.sendDataCallback < 10000) {
 		throw new ZWaveError(
 			`The Send Data Callback timeout must be at least 10000 milliseconds!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.timeouts.pollTime < 1000
+		|| options.timeouts.pollTime > 30000
+	) {
+		throw new ZWaveError(
+			`The Poll Time must be between 1000 and 30000 milliseconds!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
@@ -907,6 +917,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	// Timers for delayed transaction re-queuing
 	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
+	// Poll timing state per the Z-Wave specification.
+	// After any transaction completes, we must wait at least pollTime
+	// before starting the next poll transaction.
+	private _lastTransactionEnd: number = 0;
+	// CommandTime is measured from when the poll command is sent to when
+	// the successful transmit report is received. The required wait before
+	// the next poll is pollTime + commandTime.
+	private _lastPollCommandTime: number = 0;
+	private _pollDelayTimer: Timer | undefined;
+
 	/** Gives access to the transaction queues, ordered by priority */
 	private get queues(): TransactionQueue[] {
 		return [this.immediateQueue, this.queue];
@@ -958,6 +978,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		}
 		this.requeueTimers.clear();
+
+		// Clear the poll delay timer
+		this._pollDelayTimer?.clear();
+		this._pollDelayTimer = undefined;
 
 		// The queues might not have been initialized yet
 		for (const queue of this.queues) {
@@ -2631,12 +2655,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Make sure to handle the pending messages as quickly as possible
 		if (oldStatus === NodeStatus.Asleep) {
-			void this.reduceQueues(({ message }) => {
+			void this.reduceQueues((transaction, source) => {
+				const { message } = transaction;
 				// Ignore messages that are not for this node
 				if (message.getNodeId() !== node.id) return { type: "keep" };
 				// Resolve pings, so we don't need to send them (we know the node is awake)
 				if (messageIsPing(message)) {
 					return { type: "resolve", message: undefined };
+				}
+				// Don't interfere with active transactions where the sending portion
+				// is already complete (e.g. waiting for a response from the node,
+				// or verifying non-supervised S2 delivery)
+				if (
+					source === "active"
+					&& transaction.parts.current?.completedTimestamp
+				) {
+					return { type: "keep" };
 				}
 				// Re-queue all other transactions for this node, so they get added in front of the others
 				return { type: "requeue" };
@@ -3980,6 +4014,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...[...this.requeueTimers.values()].flatMap(
 					(t) => [...t.values()],
 				),
+				this._pollDelayTimer,
 			]
 		) {
 			timeout?.clear();
@@ -6582,6 +6617,24 @@ ${handlers.length} left`,
 		// Pings may always be sent
 		if (messageIsPing(message)) return true;
 
+		// Enforce polling timing requirements from the spec.
+		// After a poll transaction completes, wait at least 10 seconds before starting the next one.
+		if (transaction.priority === MessagePriority.Poll) {
+			const elapsed = Date.now() - this._lastTransactionEnd;
+			const requiredDelay = this._options.timeouts.pollTime
+				+ this._lastPollCommandTime;
+			if (elapsed < requiredDelay) {
+				// Schedule a re-trigger of the queue when the delay has elapsed
+				if (!this._pollDelayTimer) {
+					this._pollDelayTimer = setTimer(() => {
+						this._pollDelayTimer = undefined;
+						this.queue.trigger();
+					}, requiredDelay - elapsed).unref();
+				}
+				return false;
+			}
+		}
+
 		return (
 			targetNode.status !== NodeStatus.Asleep
 			|| (!targetNode.supportsCC(CommandClasses["Wake Up"])
@@ -6610,6 +6663,9 @@ ${handlers.length} left`,
 			}
 			this.markQueueBusy(queue, true);
 
+			const isPoll = transaction.priority === MessagePriority.Poll;
+			const pollStart = isPoll ? Date.now() : undefined;
+
 			let error: ZWaveError | undefined;
 			try {
 				await this.executeTransaction(transaction);
@@ -6617,6 +6673,18 @@ ${handlers.length} left`,
 				error = e as ZWaveError;
 			} finally {
 				queue.finalizeTransaction();
+			}
+
+			// Per spec, PollTime MUST NOT be less than 1 second + CommandTime after any
+			// command, including failed ones. Track when the last transaction ended.
+			this._lastTransactionEnd = Date.now();
+			if (isPoll) {
+				// CommandTime is measured from when the poll was first sent to when the
+				// transmit report was received. For simplicity, we approximate it as the
+				// full transaction duration, which includes retransmissions in case of failure
+				// but also the time it takes the node to respond. So we tend to wait a bit
+				// longer than necessary.
+				this._lastPollCommandTime = Date.now() - pollStart!;
 			}
 
 			// Handle errors after clearing the current transaction.
@@ -8305,21 +8373,23 @@ ${handlers.length} left`,
 
 		// Sends a node to sleep if it has no more messages.
 		const sendNodeToSleep = (
-			node: ZWaveNodeBase & NodeSchedulePoll & NodeWakeup,
+			node: ZWaveNodeBase & NodeSchedulePoll & NodeValues & NodeWakeup,
 		): void => {
 			this.sendNodeToSleepTimers.delete(node.id);
 			if (!this.hasPendingMessages(node)) {
 				void node.sendNoMoreInformation().catch(() => {
 					/* ignore errors */
 				});
+			} else {
+				// There are still pending messages. Retry in a bit,
+				// in case the remaining transactions don't trigger
+				// debounceSendNodeToSleep when they complete.
+				this.debounceSendNodeToSleep(node);
 			}
 		};
 
-		// If a sleeping node has no messages pending (and supports the Wake Up CC), we may send it back to sleep
-		if (
-			node.supportsCC(CommandClasses["Wake Up"])
-			&& !this.hasPendingMessages(node)
-		) {
+		// If a sleeping node supports the Wake Up CC, we may send it back to sleep
+		if (node.supportsCC(CommandClasses["Wake Up"])) {
 			const wakeUpInterval = node.getValue<number>(
 				WakeUpCCValues.wakeUpInterval.id,
 			);
@@ -9056,7 +9126,9 @@ integrity: ${update.integrity}`;
 			};
 			return result;
 		} finally {
-			await this.leaveBootloader();
+			if (this._options.bootloaderMode !== "stay") {
+				await this.leaveBootloader();
+			}
 			this._otwFirmwareUpdateInProgress = false;
 		}
 	}

@@ -119,11 +119,13 @@
 		{
 			"#": "10",
 			"label": "Method to Disable Alarm",
-			"description": "Allowable range: 10-255 - Sets the method to disable the alarm or alarm duration",
+			"description": "Sets the method to disable the alarm or alarm duration",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 255,
+			"allowed": [
+				{ "range": [0, 1] },
+				{ "range": [10, 255] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -164,7 +166,6 @@
 		{
 			"#": "82[0xff000000]",
 			"label": "Night Light (Enable): Hour",
-			"description": "Allowable range: 0-23",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 23,
@@ -173,7 +174,6 @@
 		{
 			"#": "82[0xff0000]",
 			"label": "Night Light (Enable): Minute",
-			"description": "Allowable range: 0-59",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 59,
@@ -182,7 +182,6 @@
 		{
 			"#": "82[0xff00]",
 			"label": "Night Light (Disable): Hour",
-			"description": "Allowable range: 0-23",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 23,
@@ -191,7 +190,6 @@
 		{
 			"#": "82[0xff]",
 			"label": "Night Light (Disable): Minute",
-			"description": "Allowable range: 0-59",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 59,

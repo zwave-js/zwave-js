@@ -78,6 +78,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current Report Threshold",
 			"description": "Change in current consumption that triggers a report",
 			"valueSize": 2,

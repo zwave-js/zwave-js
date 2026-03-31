@@ -9,5 +9,5 @@ export * from "./devices/DeviceMetadata.js";
 export * from "./devices/EndpointConfig.js";
 export * from "./devices/ParamInformation.js";
 export * from "./devices/SceneConfig.js";
-export * from "./devices/shared.js";
+export type * from "./devices/shared.js";
 export type * from "./traits.js";

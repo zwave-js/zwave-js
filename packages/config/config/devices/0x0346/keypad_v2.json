@@ -172,6 +172,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Battery Low Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -230,7 +231,6 @@
 		{
 			"#": "22",
 			"label": "System Security Mode Display",
-			"description": "Allowable range: 1-600",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 601,
@@ -277,6 +277,7 @@
 		{
 			"#": "26",
 			"$if": "firmwareVersion >= 1.18",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Sensor Timeout",
 			"valueSize": 1,
 			"unit": "seconds",

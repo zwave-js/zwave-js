@@ -246,6 +246,7 @@
 		},
 		{
 			"#": "20",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Time Interval",
 			"description": "Time interval between consecutive reports of temperature",
 			"valueSize": 2,

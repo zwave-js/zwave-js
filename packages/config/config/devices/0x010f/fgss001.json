@@ -141,6 +141,7 @@
 		},
 		{
 			"#": "73",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Measurement Compensation",
 			"valueSize": 2,
 			"minValue": -1000,

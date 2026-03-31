@@ -72,7 +72,7 @@
 		{
 			"#": "39",
 			"$if": "firmwareVersion >= 2.0",
-			"$import": "templates/aeotec_template.json#low_battery_threshold",
+			"$import": "templates/aeotec_template.json#reporting_threshold.low_battery",
 			"minValue": 5,
 			"defaultValue": 20
 		},
