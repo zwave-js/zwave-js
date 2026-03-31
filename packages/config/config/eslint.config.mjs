@@ -15,7 +15,7 @@
 // @ts-check
 
 import zjs from "@zwave-js/eslint-plugin";
-import jsonc from "jsonc-eslint-parser";
+import jsoncPlugin from "eslint-plugin-jsonc";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,10 +32,9 @@ export default [
 		files: [glob],
 		plugins: {
 			"@zwave-js": zjs,
+			jsonc: jsoncPlugin,
 		},
-		languageOptions: {
-			parser: jsonc,
-		},
+		language: "jsonc/jsonc",
 		rules: {
 			"@zwave-js/auto-unsigned": "error",
 			"@zwave-js/consistent-config-string-case": "error",

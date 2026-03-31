@@ -29,6 +29,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -51,7 +52,7 @@ export const LockCCValues = V.defineCCValues(CommandClasses.Lock, {
 			...ValueMetadata.Boolean,
 			label: "Locked",
 			description: "Whether the lock is locked",
-		} as const,
+		},
 	),
 });
 
@@ -153,6 +154,7 @@ export class LockCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -161,7 +163,7 @@ export class LockCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {

@@ -8,6 +8,7 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type SupervisionResult,
+	type ValueID,
 	ValueMetadata,
 	type WithAddress,
 	ZWaveError,
@@ -36,7 +37,9 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	SET_VALUE,
+	SET_VALUE_HOOKS,
 	type SetValueImplementation,
+	type SetValueImplementationHooksFactory,
 	throwMissingPropertyKey,
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
@@ -48,6 +51,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -113,8 +117,8 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 		{
 			...ValueMetadata.ReadOnlyNumber,
 			label: "Keypad Mode",
-		} as const,
-		{ minVersion: 2 } as const,
+		},
+		{ minVersion: 2 },
 	),
 	...V.staticProperty(
 		"adminCode",
@@ -123,11 +127,20 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 			label: "Admin Code",
 			minLength: 4,
 			maxLength: 10,
-		} as const,
+		},
 		{
 			minVersion: 2,
 			secret: true,
-		} as const,
+		},
+	),
+	...V.staticPropertyWithName(
+		"_deprecated_masterCode",
+		"masterCode",
+		undefined,
+		{
+			internal: true,
+			autoCreate: false,
+		},
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"userIdStatus",
@@ -138,7 +151,7 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 		(userId: number) => ({
 			...ValueMetadata.Number,
 			label: `User ID status (${userId})`,
-		} as const),
+		}),
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"userCode",
@@ -398,15 +411,62 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 				throwUnsupportedProperty(this.ccId, property);
 			}
 
-			// Verify the change after a short delay, unless the command was supervised and successful
-			if (this.isSinglecast() && !supervisedCommandSucceeded(result)) {
-				this.schedulePoll({ property, propertyKey }, value, {
-					transition: "fast",
-				});
-			}
-
 			return result;
 		};
+	}
+
+	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
+		{ property, propertyKey },
+		value,
+	) => {
+		const valueId = {
+			commandClass: this.ccId,
+			endpoint: this.endpoint.index,
+			property,
+			propertyKey,
+		};
+
+		if (
+			UserCodeCCValues.keypadMode.is(valueId)
+			|| UserCodeCCValues.adminCode.is(valueId)
+			// Support devices that were interviewed before the rename to adminCode
+			|| UserCodeCCValues._deprecated_masterCode.is(valueId)
+		) {
+			// Keypad mode, admin/master code should update immediately.
+			// Optimistically update when supervised successfully, otherwise verify
+			// For the deprecated masterCode, the canonical target is adminCode
+			return {
+				forceVerifyChanges: () => true,
+				verifyChanges: (result) => {
+					if (supervisedCommandSucceeded(result)) {
+						this.tryGetValueDB()?.setValue(valueId, value);
+					} else if (this.isSinglecast()) {
+						this.schedulePoll(valueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		} else if (
+			UserCodeCCValues.userCode.is(valueId)
+			|| UserCodeCCValues.userIdStatus.is(valueId)
+		) {
+			// Simply verify the change in any case
+			return {
+				forceVerifyChanges: () => true,
+				verifyChanges: (_result) => {
+					if (this.isSinglecast()) {
+						this.schedulePoll(valueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		}
+	};
+
+	public isSetValueOptimistic(_valueId: ValueID): boolean {
+		return false; // Always verify changes, do not assume changes were applied
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
@@ -942,7 +1002,10 @@ export class UserCodeCC extends CommandClass {
 		// Synchronize user codes and settings
 		await this.refreshValues(
 			ctx,
-			ctx.getInterviewOptions()?.queryAllUserCodes ?? false,
+			{
+				queryAllUserCodes: ctx.getInterviewOptions()?.queryAllUserCodes
+					?? false,
+			},
 		);
 
 		// Remember that the interview is complete
@@ -951,17 +1014,18 @@ export class UserCodeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void>;
 
 	/** @internal */
 	public async refreshValues(
 		ctx: RefreshValuesContext,
-		queryAllUserCodes: boolean,
+		options: RefreshValuesOptions & { queryAllUserCodes: boolean },
 	): Promise<void>;
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
-		queryAllUserCodes: boolean = false,
+		options?: RefreshValuesOptions & { queryAllUserCodes: boolean },
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -970,8 +1034,10 @@ export class UserCodeCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
+
+		const { queryAllUserCodes = false } = options ?? {};
 
 		const supportsAdminCode: boolean = UserCodeCC.supportsAdminCodeCached(
 			ctx,

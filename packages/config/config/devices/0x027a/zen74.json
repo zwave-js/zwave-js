@@ -44,6 +44,22 @@
 			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x"
 		},
 		{
+			"#": "7[0x01]",
+			"$import": "templates/zooz_template.json#control_device_trigger_physical"
+		},
+		{
+			"#": "7[0x02]",
+			"$import": "templates/zooz_template.json#control_device_trigger_3way"
+		},
+		{
+			"#": "7[0x04]",
+			"$import": "templates/zooz_template.json#control_device_trigger_zwave"
+		},
+		{
+			"#": "7[0x08]",
+			"$import": "templates/zooz_template.json#control_device_trigger_timer"
+		},
+		{
 			"#": "8",
 			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		},

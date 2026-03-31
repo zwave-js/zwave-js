@@ -39,7 +39,6 @@ export const noUselessDescription: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description: `Disallows "empty" and useless descriptions`,
 		},

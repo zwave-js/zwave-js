@@ -1,6 +1,27 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 
+function parseCommandList(output: string): [string, string][] {
+	const commands: [string, string][] = [];
+	for (const line of output.trim().split("\n")) {
+		const match = line.match(
+			/^\s*([A-Za-z][A-Za-z0-9_]*)\s{2,}(.*?)\s*$/,
+		);
+		if (match) {
+			commands.push([match[1], match[2]]);
+		} else if (commands.length > 0) {
+			// Continuation line — append to the previous command's description
+			let trimmed = line.trim();
+			if (trimmed) {
+				// "[" indicates an argument description
+				if (trimmed.startsWith("[")) trimmed = " " + trimmed;
+				commands.at(-1)![1] += trimmed;
+			}
+		}
+	}
+	return commands;
+}
+
 /** Encapsulates information about the currently active bootloader */
 export class EndDeviceCLI {
 	public constructor(
@@ -21,20 +42,22 @@ export class EndDeviceCLI {
 	}
 
 	public async executeCommand(command: string): Promise<string | undefined> {
-		if (!this.commands.has(command)) {
+		const normalizedCommand = command.trim();
+		const commandName = normalizedCommand.split(/\s+/, 1)[0];
+		if (!this.commands.has(commandName)) {
 			throw new ZWaveError(
-				`Unknown CLI command ${command}`,
+				`Unknown CLI command ${normalizedCommand}`,
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
 		const response = this.expectMessage();
-		await this.writeSerial(Bytes.from(command.trim() + "\r\n", "ascii"));
+		await this.writeSerial(Bytes.from(normalizedCommand + "\r\n", "ascii"));
 		let ret = await response;
 		if (!ret) return;
 
 		// Successful commands echo the command itself, followed by a line break
-		if (ret.startsWith(command.trim() + "\r\n")) {
-			ret = ret.slice(command.length + 2);
+		if (ret.startsWith(normalizedCommand + "\r\n")) {
+			ret = ret.slice(normalizedCommand.length + 2);
 		}
 		ret = ret.trim();
 		// Most commands prefix their response with the log level, usually "[I] "
@@ -52,16 +75,6 @@ export class EndDeviceCLI {
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
-		const commands = commandList.trim()
-			.split("\n")
-			.map((line) => line.trim())
-			.map((line) =>
-				line.split(/\s+/, 2).map((part) => part.trim()) as [
-					string,
-					string,
-				]
-			)
-			.filter((parts) => parts.every((part) => !!part));
-		this._commands = new Map(commands);
+		this._commands = new Map(parseCommandList(commandList));
 	}
 }

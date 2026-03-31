@@ -233,10 +233,9 @@ export async function getAvailableFirmwareUpdatesBulk(
 			requestQueue = new PQueue({ concurrency: 2 });
 		}
 
-		const requestResult = await requestQueue.add(() =>
+		const { data: result, expiry } = await requestQueue.add(() =>
 			makeRequest<FirmwareUpdateBulkInfo[]>(url, config)
 		);
-		const { data: result, expiry } = requestResult!;
 
 		for (const deviceResponse of result) {
 			// Find the original device info to get the RF region

@@ -32,6 +32,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -56,8 +57,8 @@ export const ThermostatFanModeCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.Boolean,
 				label: "Thermostat fan turned off",
-			} as const,
-			{ minVersion: 3 } as const,
+			},
+			{ minVersion: 3 },
 		),
 		...V.staticPropertyWithName(
 			"fanMode",
@@ -66,7 +67,7 @@ export const ThermostatFanModeCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				states: enumValuesToMetadataStates(ThermostatFanMode),
 				label: "Thermostat fan mode",
-			} as const,
+			},
 		),
 		...V.staticPropertyWithName(
 			"supportedFanModes",
@@ -293,6 +294,7 @@ export class ThermostatFanModeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -301,7 +303,7 @@ export class ThermostatFanModeCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Query the current status

@@ -34,6 +34,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -62,7 +63,7 @@ export const SceneControllerConfigurationCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				label: `Associated Scene ID (${groupId})`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
@@ -74,7 +75,7 @@ export const SceneControllerConfigurationCCValues = V.defineCCValues(
 			(groupId: number) => ({
 				...ValueMetadata.Duration,
 				label: `Dimming duration (${groupId})`,
-			} as const),
+			}),
 		),
 	},
 );
@@ -416,6 +417,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -424,7 +426,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const groupCount = SceneControllerConfigurationCC.getGroupCountCached(

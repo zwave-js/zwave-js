@@ -7,9 +7,18 @@ export function createWebSerialPortFactory(
 	let writer: WritableStreamDefaultWriter<BytesView> | undefined;
 
 	const sink: UnderlyingSink<BytesView> = {
-		close() {
+		async close() {
 			writer?.releaseLock();
-			port.close();
+			// Cancel and release the reader lock before returning. The port
+			// itself is intentionally not closed here — its lifecycle is managed
+			// externally. If sink.close() called port.close() while source.start()
+			// still holds the reader lock it would throw "Cannot cancel a locked
+			// stream", and closing the port here would also prevent the binding
+			// from being reused across driver restarts.
+			const r = reader;
+			reader = undefined;
+			await r?.cancel();
+			r?.releaseLock();
 		},
 		async write(chunk) {
 			writer ??= port.writable!.getWriter();

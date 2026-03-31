@@ -31,6 +31,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -58,7 +59,7 @@ export const HumidityControlModeCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				states: enumValuesToMetadataStates(HumidityControlMode),
 				label: "Humidity control mode",
-			} as const,
+			},
 		),
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
 	},
@@ -248,6 +249,7 @@ export class HumidityControlModeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -256,7 +258,7 @@ export class HumidityControlModeCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Query the current status

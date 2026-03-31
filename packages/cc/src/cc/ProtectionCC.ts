@@ -36,6 +36,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -65,8 +66,8 @@ export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
 			min: 1,
 			max: MAX_NODES,
 			label: "Node ID with exclusive control",
-		} as const,
-		{ minVersion: 2 } as const,
+		},
+		{ minVersion: 2 },
 	),
 	...V.staticPropertyWithName(
 		"localProtectionState",
@@ -75,7 +76,7 @@ export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
 			...ValueMetadata.Number,
 			label: "Local protection state",
 			states: enumValuesToMetadataStates(LocalProtectionState),
-		} as const,
+		},
 	),
 	...V.staticPropertyWithName(
 		"rfProtectionState",
@@ -84,16 +85,16 @@ export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
 			...ValueMetadata.Number,
 			label: "RF protection state",
 			states: enumValuesToMetadataStates(RFProtectionState),
-		} as const,
-		{ minVersion: 2 } as const,
+		},
+		{ minVersion: 2 },
 	),
 	...V.staticProperty(
 		"timeout",
 		{
 			...ValueMetadata.Timeout,
 			label: "RF protection timeout",
-		} as const,
-		{ minVersion: 2 } as const,
+		},
+		{ minVersion: 2 },
 	),
 	...V.staticProperty("supportsExclusiveControl", undefined, {
 		internal: true,
@@ -419,6 +420,7 @@ RF protection states:    ${
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -427,7 +429,7 @@ RF protection states:    ${
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const supportsExclusiveControl = !!this.getValue(

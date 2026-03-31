@@ -442,6 +442,36 @@
 			}
 		]
 	},
+	// Separate out the bitmask for controlling associated devices into
+	// individual parameters for better clarity in the UI
+	// [0x01] Physical tap of the device
+	// [0x02] Physical tap of connected 3-way switch
+	// [0x04] Z-Wave control of the switch
+	// [0x08] Timer trigger
+	"control_device_trigger_physical": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Control Associated Devices: Local Control",
+		"description": "Whether locally controlling the device should cause it to control its associated devices.",
+		"defaultValue": 1
+	},
+	"control_device_trigger_3way": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Control Associated Devices: 3-Way Switch",
+		"description": "Whether using the connected 3-way switch should cause the device to control its associated devices.",
+		"defaultValue": 1
+	},
+	"control_device_trigger_zwave": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Control Associated Devices: Z-Wave Commands",
+		"description": "Whether controlling the device through Z-Wave commands should cause it to control its associated devices.",
+		"defaultValue": 1
+	},
+	"control_device_trigger_timer": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Control Associated Devices: Timer",
+		"description": "Whether a timer trigger should cause the device to control its associated devices.",
+		"defaultValue": 1
+	},
 	"dimmer_ramp_rate": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
 		"$purpose": "dimming_duration.manual",
