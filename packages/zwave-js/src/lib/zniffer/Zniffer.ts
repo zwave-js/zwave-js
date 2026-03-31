@@ -68,6 +68,7 @@ import {
 	ZnifferStartResponse,
 	ZnifferStopRequest,
 	ZnifferStopResponse,
+	isZWaveSerialBindingFactory,
 	isZWaveSerialPortImplementation,
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
@@ -237,6 +238,7 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		if (
 			typeof port !== "string"
 			&& !isZWaveSerialPortImplementation(port)
+			&& !isZWaveSerialBindingFactory(port)
 		) {
 			throw new ZWaveError(
 				`The port must be a string or a valid custom serial port implementation!`,

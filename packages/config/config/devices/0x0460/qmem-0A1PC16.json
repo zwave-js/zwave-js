@@ -6,8 +6,14 @@
 	"devices": [
 		{
 			"productType": "0x0007",
-			"productId": "0x0081",
-			"zwaveAllianceId": 5078
+			"productId": "0x0081"
+		},
+		{
+			// In firmware version 12.0, the product type was mistakenly
+			// changed to 0x0004:
+			// https://github.com/QubinoHelp/Shelly_Wave_FW_OTA/issues/8#issuecomment-4153013931
+			"productType": "0x0004",
+			"productId": "0x0081"
 		}
 	],
 	"firmwareVersion": {

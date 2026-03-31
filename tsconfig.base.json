@@ -6,6 +6,9 @@
 		"incremental": true,
 		"declaration": true,
 		"declarationMap": true,
+		// Import __esDecorate and similar helpers instead of inlining them into each file
+		// Due to the high usage of decorators, this amounts to several megabytes of code
+		"importHelpers": true,
 
 		"noEmitOnError": true,
 		"removeComments": false,
@@ -16,7 +19,6 @@
 		"pretty": true,
 		"types": ["node"],
 		"noErrorTruncation": true,
-
 		// Look up source files instead of type definitions while developing
 		// From: https://colinhacks.com/essays/live-types-typescript-monorepo
 		"customConditions": ["@@dev"]

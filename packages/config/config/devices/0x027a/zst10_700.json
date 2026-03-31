@@ -17,11 +17,11 @@
 		// 700/800 series firmware bugs that affect multiple controllers
 		"comments": [
 			{
-				"$if": "firmwareVersion < 7.17.2",
+				"$if": "sdkVersion < 7.17.2",
 				"$import": "~/templates/master_template.json#7xx_firmware_bug_pre_7_17_2"
 			},
 			{
-				"$if": "firmwareVersion >= 7.19.1 && firmwareVersion <= 7.21.3",
+				"$if": "sdkVersion >= 7.19.1 && sdkVersion <= 7.21.3",
 				"$import": "~/templates/master_template.json#7xx_firmware_bug_7_19_to_7_21_3"
 			}
 		]

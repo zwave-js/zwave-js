@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/transformers",
-  "version": "15.21.0",
+  "version": "15.22.1",
   "description": "zwave-js: compile-time transformers",
   "private": true,
   "keywords": [],
@@ -34,7 +34,7 @@
     "node": ">= 20"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json --pretty",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "bootstrap": "yarn build",
     "pretest": "tsx --conditions=@@dev test/pretest.ts",
@@ -42,11 +42,12 @@
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260318.1",
     "del-cli": "^7.0.0",
     "nano-spawn": "^2.0.0",
     "ts-morph": "^27.0.2",
-    "tsx": "^4.20.5",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }

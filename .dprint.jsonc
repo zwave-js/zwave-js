@@ -65,9 +65,9 @@
 		".yarnrc.yml",
 	],
 	"plugins": [
-		"https://plugins.dprint.dev/typescript-0.95.13.wasm",
-		"https://plugins.dprint.dev/json-0.21.1.wasm",
-		"https://plugins.dprint.dev/markdown-0.20.0.wasm",
-		"https://plugins.dprint.dev/prettier-0.62.0.json@80fefd1450bfd3f469590cc6a3f40f6ace26974f948b9602124f486036fbdfab",
+		"https://plugins.dprint.dev/typescript-0.95.15.wasm",
+		"https://plugins.dprint.dev/json-0.21.3.wasm",
+		"https://plugins.dprint.dev/markdown-0.21.1.wasm",
+		"https://plugins.dprint.dev/prettier-0.67.0.json@7a864f83de170ad92f27df81366955606f87ea95b00d0de7263f061e72345f87",
 	],
 }

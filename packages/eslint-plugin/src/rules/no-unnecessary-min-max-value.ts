@@ -94,7 +94,6 @@ export const noUnnecessaryMinMaxValue: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description: "Ensures that min/maxValue are not used unnecessarily",
 		},

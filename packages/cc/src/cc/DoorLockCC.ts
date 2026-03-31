@@ -36,6 +36,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -63,7 +64,7 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 			...ValueMetadata.UInt8,
 			label: "Target lock mode",
 			states: enumValuesToMetadataStates(DoorLockMode),
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"currentMode",
@@ -71,15 +72,15 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 			...ValueMetadata.ReadOnlyUInt8,
 			label: "Current lock mode",
 			states: enumValuesToMetadataStates(DoorLockMode),
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"duration",
 		{
 			...ValueMetadata.ReadOnlyDuration,
 			label: "Remaining duration until target lock mode",
-		} as const,
-		{ minVersion: 3 } as const,
+		},
+		{ minVersion: 3 },
 	),
 	...V.staticProperty("supportedOutsideHandles", undefined, {
 		internal: true,
@@ -90,14 +91,14 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.Any,
 			label: "Which outside handles can open the door (configuration)",
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"outsideHandlesCanOpenDoor",
 		{
 			...ValueMetadata.ReadOnly,
 			label: "Which outside handles can open the door (actual status)",
-		} as const,
+		},
 	),
 	...V.staticProperty("supportedInsideHandles", undefined, {
 		internal: true,
@@ -108,14 +109,14 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.Any,
 			label: "Which inside handles can open the door (configuration)",
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"insideHandlesCanOpenDoor",
 		{
 			...ValueMetadata.ReadOnly,
 			label: "Which inside handles can open the door (actual status)",
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"operationType",
@@ -123,21 +124,21 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 			...ValueMetadata.UInt8,
 			label: "Lock operation type",
 			states: enumValuesToMetadataStates(DoorLockOperationType),
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"lockTimeoutConfiguration",
 		{
 			...ValueMetadata.UInt16,
 			label: "Duration of timed mode in seconds",
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"lockTimeout",
 		{
 			...ValueMetadata.ReadOnlyUInt16,
 			label: "Seconds until lock mode times out",
-		} as const,
+		},
 	),
 	...V.staticProperty("autoRelockSupported", undefined, {
 		internal: true,
@@ -148,11 +149,11 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.UInt16,
 			label: "Duration in seconds until lock returns to secure state",
-		} as const,
+		},
 		{
 			minVersion: 4,
 			autoCreate: shouldAutoCreateAutoRelockConfigValue,
-		} as const,
+		},
 	),
 	...V.staticProperty("holdAndReleaseSupported", undefined, {
 		internal: true,
@@ -163,11 +164,11 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.UInt16,
 			label: "Duration in seconds the latch stays retracted",
-		} as const,
+		},
 		{
 			minVersion: 4,
 			autoCreate: shouldAutoCreateHoldAndReleaseConfigValue,
-		} as const,
+		},
 	),
 	...V.staticProperty("twistAssistSupported", undefined, {
 		internal: true,
@@ -178,11 +179,11 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.Boolean,
 			label: "Twist Assist enabled",
-		} as const,
+		},
 		{
 			minVersion: 4,
 			autoCreate: shouldAutoCreateTwistAssistConfigValue,
-		} as const,
+		},
 	),
 	...V.staticProperty("blockToBlockSupported", undefined, {
 		internal: true,
@@ -193,11 +194,11 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.Boolean,
 			label: "Block-to-block functionality enabled",
-		} as const,
+		},
 		{
 			minVersion: 4,
 			autoCreate: shouldAutoCreateBlockToBlockConfigValue,
-		} as const,
+		},
 	),
 	...V.staticProperty("latchSupported", undefined, { internal: true }),
 	...V.staticProperty(
@@ -205,10 +206,10 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.ReadOnly,
 			label: "Current status of the latch",
-		} as const,
+		},
 		{
 			autoCreate: shouldAutoCreateLatchStatusValue,
-		} as const,
+		},
 	),
 	...V.staticProperty("boltSupported", undefined, { internal: true }),
 	...V.staticProperty(
@@ -216,10 +217,10 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.ReadOnly,
 			label: "Current status of the bolt",
-		} as const,
+		},
 		{
 			autoCreate: shouldAutoCreateBoltStatusValue,
-		} as const,
+		},
 	),
 	...V.staticProperty("doorSupported", undefined, { internal: true }),
 	...V.staticProperty(
@@ -227,10 +228,10 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 		{
 			...ValueMetadata.ReadOnly,
 			label: "Current status of the door",
-		} as const,
+		},
 		{
 			autoCreate: shouldAutoCreateDoorStatusValue,
-		} as const,
+		},
 	),
 });
 
@@ -705,6 +706,7 @@ supports block to block:   ${resp.blockToBlockSupported}`;
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -713,7 +715,7 @@ supports block to block:   ${resp.blockToBlockSupported}`;
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {

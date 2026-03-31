@@ -510,7 +510,6 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description: "Ensures that the allowed field has a valid structure",
 		},

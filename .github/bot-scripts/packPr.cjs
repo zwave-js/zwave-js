@@ -3,7 +3,6 @@
 // @ts-check
 /// <reference path="../bot-scripts/types.d.ts" />
 
-const exec = require("@actions/exec");
 const semver = require("semver");
 
 const options = {
@@ -15,6 +14,7 @@ const options = {
  * @param {{github: Github, context: Context}} param
  */
 async function main(param) {
+	const { exec } = await import("@actions/exec");
 	const { github, context } = param;
 
 	const npmToken = /** @type {string} */ (process.env.NPM_TOKEN);
@@ -32,14 +32,14 @@ async function main(param) {
 	let newVersion;
 	try {
 		// Build it
-		await exec.exec("yarn", ["run", "build"]);
+		await exec("yarn", ["run", "build"]);
 
 		// Configure git
-		await exec.exec("git", ["config", "user.email", "bot@zwave-js.io"]);
-		await exec.exec("git", ["config", "user.name", "Z-Wave JS Bot"]);
+		await exec("git", ["config", "user.email", "bot@zwave-js.io"]);
+		await exec("git", ["config", "user.name", "Z-Wave JS Bot"]);
 
 		// Configure npm login
-		await exec.exec("yarn", ["config", "set", "npmAuthToken", npmToken]);
+		await exec("yarn", ["config", "set", "npmAuthToken", npmToken]);
 
 		// Figure out the next version
 		newVersion = `${
@@ -50,16 +50,16 @@ async function main(param) {
 		}-pr-${pr}-${mergeCommitSha.slice(0, 7)}`;
 
 		// Bump versions
-		await exec.exec(
+		await exec(
 			"yarn",
 			`workspaces foreach --all version ${newVersion} --deferred`.split(
 				" ",
 			),
 		);
-		await exec.exec("yarn", ["version", "apply", "--all"]);
+		await exec("yarn", ["version", "apply", "--all"]);
 
 		// and release changed packages
-		await exec.exec(
+		await exec(
 			"yarn",
 			`workspaces foreach --all -vti --no-private npm publish --tolerate-republish --tag next`
 				.split(
