@@ -162,7 +162,7 @@
     "@zwave-js/maintenance": "workspace:*",
     "del-cli": "^7.0.0",
     "mockdate": "^3.0.5",
-    "sinon": "^21.0.1",
+    "sinon": "^21.0.3",
     "tsx": "^4.21.0",
     "vitest": "^4.1.0"
   }
