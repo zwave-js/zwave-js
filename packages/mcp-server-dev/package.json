@@ -40,7 +40,7 @@
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@types/node": "^20.19.35",
-    "@typescript/native-preview": "7.0.0-dev.20260318.1",
+    "@typescript/native-preview": "7.0.0-dev.20260324.1",
     "nano-spawn": "^2.0.0"
   },
   "scripts": {
