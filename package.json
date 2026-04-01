@@ -84,7 +84,7 @@
     "nano-spawn": "^2.0.0",
     "openai": "^5.12.2",
     "oxlint": "^1.56.0",
-    "oxlint-tsgolint": "^0.17.1",
+    "oxlint-tsgolint": "^0.17.3",
     "p-queue": "^9.1.0",
     "reflect-metadata": "^0.2.2",
     "semver": "^7.7.2",
