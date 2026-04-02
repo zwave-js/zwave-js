@@ -2254,10 +2254,10 @@ export function registerCCs(): void {
 	void ThermostatOperatingStateCC;
 	void ThermostatOperatingStateCCReport;
 	void ThermostatOperatingStateCCGet;
-	void ThermostatOperatingStateCCLoggingSupportedGet;
 	void ThermostatOperatingStateCCLoggingSupportedReport;
-	void ThermostatOperatingStateCCLoggingGet;
+	void ThermostatOperatingStateCCLoggingSupportedGet;
 	void ThermostatOperatingStateCCLoggingReport;
+	void ThermostatOperatingStateCCLoggingGet;
 	void ThermostatSetbackCC;
 	void ThermostatSetbackCCSet;
 	void ThermostatSetbackCCReport;

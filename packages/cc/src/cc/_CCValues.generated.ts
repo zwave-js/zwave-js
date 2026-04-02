@@ -49,9 +49,7 @@ import {
 	ThermostatOperatingState,
 	ThermostatSetpointType,
 	type UserCredentialKeyLockerEntryType,
-	UserCredentialRule,
-	UserCredentialType,
-	UserCredentialUserType,
+	type UserCredentialType,
 	type ValveId,
 	Weekday,
 	WindowCoveringParameter,
@@ -9494,13 +9492,7 @@ export const UserCredentialCCValues = Object.freeze({
 					propertyKey: propertyKey,
 				} as const),
 				get meta() {
-					return {
-						...ValueMetadata.ReadOnlyUInt8,
-						label: `User type (${userId})`,
-						states: enumValuesToMetadataStates(
-							UserCredentialUserType,
-						),
-					} as const;
+					return ValueMetadata.Any;
 				},
 			};
 		},
@@ -9513,7 +9505,7 @@ export const UserCredentialCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: false,
 				stateful: true,
@@ -9540,10 +9532,7 @@ export const UserCredentialCCValues = Object.freeze({
 					propertyKey: propertyKey,
 				} as const),
 				get meta() {
-					return {
-						...ValueMetadata.Boolean,
-						label: `Active (${userId})`,
-					} as const;
+					return ValueMetadata.Any;
 				},
 			};
 		},
@@ -9556,7 +9545,7 @@ export const UserCredentialCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: false,
 				stateful: true,
@@ -9583,11 +9572,7 @@ export const UserCredentialCCValues = Object.freeze({
 					propertyKey: propertyKey,
 				} as const),
 				get meta() {
-					return {
-						...ValueMetadata.ReadOnlyUInt8,
-						label: `Credential rule (${userId})`,
-						states: enumValuesToMetadataStates(UserCredentialRule),
-					} as const;
+					return ValueMetadata.Any;
 				},
 			};
 		},
@@ -9600,7 +9585,7 @@ export const UserCredentialCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: false,
 				stateful: true,
@@ -9627,10 +9612,7 @@ export const UserCredentialCCValues = Object.freeze({
 					propertyKey: propertyKey,
 				} as const),
 				get meta() {
-					return {
-						...ValueMetadata.ReadOnlyUInt16,
-						label: `Expiring timeout minutes (${userId})`,
-					} as const;
+					return ValueMetadata.Any;
 				},
 			};
 		},
@@ -9643,7 +9625,7 @@ export const UserCredentialCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: false,
 				stateful: true,
@@ -9670,10 +9652,7 @@ export const UserCredentialCCValues = Object.freeze({
 					propertyKey: propertyKey,
 				} as const),
 				get meta() {
-					return {
-						...ValueMetadata.ReadOnlyString,
-						label: `User name (${userId})`,
-					} as const;
+					return ValueMetadata.Any;
 				},
 			};
 		},
@@ -9686,7 +9665,7 @@ export const UserCredentialCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: false,
 				stateful: true,
@@ -9913,15 +9892,7 @@ export const UserCredentialCCValues = Object.freeze({
 					propertyKey: propertyKey,
 				} as const),
 				get meta() {
-					return {
-						...ValueMetadata.ReadOnlyBuffer,
-						label: `Credential (user ${userId}, ${
-							getEnumMemberName(
-								UserCredentialType,
-								type,
-							)
-						}, slot ${slot})`,
-					} as const;
+					return ValueMetadata.Any;
 				},
 			};
 		},
@@ -9934,7 +9905,7 @@ export const UserCredentialCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: true,
 				stateful: true,
@@ -9959,13 +9930,10 @@ export const UserCredentialCCValues = Object.freeze({
 				&& valueId.propertyKey == undefined;
 		},
 		get meta() {
-			return {
-				...ValueMetadata.String,
-				label: "Admin PIN Code",
-			} as const;
+			return ValueMetadata.Any;
 		},
 		options: {
-			internal: false,
+			internal: true,
 			minVersion: 1,
 			secret: true,
 			stateful: true,
