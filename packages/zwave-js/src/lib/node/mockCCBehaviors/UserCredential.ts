@@ -1,5 +1,4 @@
 import {
-	UserCredentialActiveState,
 	UserCredentialAdminCodeOperationResult,
 	UserCredentialCredentialReportType,
 	UserCredentialKeyLockerEntryType,
@@ -112,7 +111,7 @@ const StateKeys = {
 
 interface UserState {
 	userType: UserCredentialUserType;
-	activeState: UserCredentialActiveState;
+	active: boolean;
 	credentialRule: UserCredentialRule;
 	expiringTimeoutMinutes: number;
 	nameEncoding: UserCredentialNameEncoding;
@@ -423,7 +422,7 @@ function buildUserChecksumData(
 	const headerLen = 5 + nameBytes.length;
 	const header = new Bytes(headerLen);
 	header[0] = user.userType;
-	header[1] = user.activeState;
+	header[1] = user.active ? 1 : 0;
 	header[2] = user.credentialRule;
 	header[3] = user.nameEncoding;
 	header[4] = nameBytes.length;
@@ -677,7 +676,7 @@ const respondToUserGet: MockNodeBehavior = {
 						modifierType: UserCredentialModifierType.DoesNotExist,
 						modifierNodeId: 0,
 						userType: UserCredentialUserType.General,
-						activeState: UserCredentialActiveState.OccupiedDisabled,
+						active: false,
 						credentialRule: UserCredentialRule.Single,
 						expiringTimeoutMinutes: 0,
 						nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -706,7 +705,7 @@ const respondToUserGet: MockNodeBehavior = {
 					modifierType: UserCredentialModifierType.DoesNotExist,
 					modifierNodeId: 0,
 					userType: UserCredentialUserType.General,
-					activeState: UserCredentialActiveState.OccupiedDisabled,
+					active: false,
 					credentialRule: UserCredentialRule.Single,
 					expiringTimeoutMinutes: 0,
 					nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -723,7 +722,7 @@ const respondToUserGet: MockNodeBehavior = {
 				modifierType: user.modifierType,
 				modifierNodeId: user.modifierNodeId,
 				userType: user.userType,
-				activeState: user.activeState,
+				active: user.active,
 				credentialRule: user.credentialRule,
 				expiringTimeoutMinutes: user.expiringTimeoutMinutes,
 				nameEncoding: user.nameEncoding,
@@ -768,7 +767,7 @@ const respondToUserSet: MockNodeBehavior = {
 					modifierType: UserCredentialModifierType.ZWave,
 					modifierNodeId: controller.ownNodeId,
 					userType: UserCredentialUserType.General,
-					activeState: UserCredentialActiveState.OccupiedDisabled,
+					active: false,
 					credentialRule: UserCredentialRule.Single,
 					expiringTimeoutMinutes: 0,
 					nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -802,7 +801,7 @@ const respondToUserSet: MockNodeBehavior = {
 				modifierType: UserCredentialModifierType.ZWave,
 				modifierNodeId: controller.ownNodeId,
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedDisabled,
+				active: false,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -871,7 +870,7 @@ const respondToUserSet: MockNodeBehavior = {
 					modifierType: existingUser.modifierType,
 					modifierNodeId: existingUser.modifierNodeId,
 					userType: existingUser.userType,
-					activeState: existingUser.activeState,
+					active: existingUser.active,
 					credentialRule: existingUser.credentialRule,
 					expiringTimeoutMinutes: existingUser.expiringTimeoutMinutes,
 					nameEncoding: existingUser.nameEncoding,
@@ -896,7 +895,7 @@ const respondToUserSet: MockNodeBehavior = {
 					modifierType: UserCredentialModifierType.DoesNotExist,
 					modifierNodeId: 0,
 					userType: UserCredentialUserType.General,
-					activeState: UserCredentialActiveState.OccupiedDisabled,
+					active: false,
 					credentialRule: UserCredentialRule.Single,
 					expiringTimeoutMinutes: 0,
 					nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -913,8 +912,8 @@ const respondToUserSet: MockNodeBehavior = {
 
 		// CC:0083.01.05.11.042: If User Type is Expiring, Expiring Timeout
 		// Minutes MUST be non-zero.
-		const activeState = setCC.activeState
-			?? UserCredentialActiveState.OccupiedEnabled;
+		const active = setCC.active
+			?? true;
 		let expiringTimeoutMinutes = setCC.expiringTimeoutMinutes ?? 0;
 		if (
 			userType === UserCredentialUserType.Expiring
@@ -931,8 +930,8 @@ const respondToUserSet: MockNodeBehavior = {
 				modifierNodeId: existingUser?.modifierNodeId ?? 0,
 				userType: existingUser?.userType
 					?? UserCredentialUserType.General,
-				activeState: existingUser?.activeState
-					?? UserCredentialActiveState.OccupiedDisabled,
+				active: existingUser?.active
+					?? false,
 				credentialRule: existingUser?.credentialRule
 					?? UserCredentialRule.Single,
 				expiringTimeoutMinutes: existingUser?.expiringTimeoutMinutes
@@ -968,7 +967,7 @@ const respondToUserSet: MockNodeBehavior = {
 
 		const newUser: UserState = {
 			userType,
-			activeState,
+			active,
 			credentialRule,
 			expiringTimeoutMinutes,
 			nameEncoding,
@@ -983,7 +982,7 @@ const respondToUserSet: MockNodeBehavior = {
 		if (existingUser) {
 			if (
 				existingUser.userType === newUser.userType
-				&& existingUser.activeState === newUser.activeState
+				&& existingUser.active === newUser.active
 				&& existingUser.credentialRule === newUser.credentialRule
 				&& existingUser.expiringTimeoutMinutes
 					=== newUser.expiringTimeoutMinutes
@@ -1004,7 +1003,7 @@ const respondToUserSet: MockNodeBehavior = {
 					modifierType: existingUser.modifierType,
 					modifierNodeId: existingUser.modifierNodeId,
 					userType: existingUser.userType,
-					activeState: existingUser.activeState,
+					active: existingUser.active,
 					credentialRule: existingUser.credentialRule,
 					expiringTimeoutMinutes: existingUser.expiringTimeoutMinutes,
 					nameEncoding: existingUser.nameEncoding,
@@ -1037,7 +1036,7 @@ const respondToUserSet: MockNodeBehavior = {
 			modifierType: newUser.modifierType,
 			modifierNodeId: newUser.modifierNodeId,
 			userType: newUser.userType,
-			activeState: newUser.activeState,
+			active: newUser.active,
 			credentialRule: newUser.credentialRule,
 			expiringTimeoutMinutes: newUser.expiringTimeoutMinutes,
 			nameEncoding: newUser.nameEncoding,

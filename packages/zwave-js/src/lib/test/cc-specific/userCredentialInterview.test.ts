@@ -1,5 +1,4 @@
 import {
-	UserCredentialActiveState,
 	type UserCredentialCapability,
 	type UserCredentialKeyLockerEntryCapability,
 	UserCredentialKeyLockerEntryType,
@@ -255,7 +254,7 @@ integrationTest(
 		customSetup: async (_driver, _controller, mockNode) => {
 			mockNode.state.set("UserCredential_user_1", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -272,7 +271,7 @@ integrationTest(
 
 			mockNode.state.set("UserCredential_user_3", {
 				userType: UserCredentialUserType.Expiring,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 60,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -492,7 +491,7 @@ integrationTest(
 		customSetup: async (_driver, _controller, mockNode) => {
 			mockNode.state.set("UserCredential_user_1", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -575,7 +574,7 @@ integrationTest(
 		customSetup: async (_driver, _controller, mockNode) => {
 			mockNode.state.set("UserCredential_user_1", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -703,7 +702,7 @@ integrationTest(
 		customSetup: async (_driver, _controller, mockNode) => {
 			mockNode.state.set("UserCredential_user_1", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -909,7 +908,7 @@ integrationTest(
 		customSetup: async (_driver, _controller, mockNode) => {
 			mockNode.state.set("UserCredential_user_1", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -1009,7 +1008,7 @@ integrationTest(
 			// User 2
 			mockNode.state.set("UserCredential_user_2", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
@@ -1027,7 +1026,7 @@ integrationTest(
 			// User 5 (gap at 3, 4)
 			mockNode.state.set("UserCredential_user_5", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,

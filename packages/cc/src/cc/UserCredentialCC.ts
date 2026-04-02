@@ -53,7 +53,6 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import {
-	UserCredentialActiveState,
 	UserCredentialAdminCodeOperationResult,
 	type UserCredentialCapability,
 	UserCredentialCommand,
@@ -160,18 +159,15 @@ export const UserCredentialCCValues = V.defineCCValues(
 			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
-			"userActiveState",
-			"userActiveState",
+			"userActive",
+			"userActive",
 			(userId: number) => userId,
 			({ property, propertyKey }) =>
-				property === "userActiveState"
+				property === "userActive"
 				&& typeof propertyKey === "number",
 			(userId: number) => ({
-				...ValueMetadata.ReadOnlyUInt8,
-				label: `Active state (${userId})`,
-				states: enumValuesToMetadataStates(
-					UserCredentialActiveState,
-				),
+				...ValueMetadata.Boolean,
+				label: `Active (${userId})`,
 			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
@@ -495,7 +491,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 				"modifierNodeId",
 				"userId",
 				"userType",
-				"activeState",
+				"active",
 				"credentialRule",
 				"expiringTimeoutMinutes",
 				"nameEncoding",
@@ -1234,7 +1230,7 @@ export class UserCredentialCC extends CommandClass {
 	): void {
 		// Remove all per-user values
 		this.removeValue(ctx, UserCredentialCCValues.userType(userId));
-		this.removeValue(ctx, UserCredentialCCValues.userActiveState(userId));
+		this.removeValue(ctx, UserCredentialCCValues.userActive(userId));
 		this.removeValue(ctx, UserCredentialCCValues.credentialRule(userId));
 		this.removeValue(
 			ctx,
@@ -1919,7 +1915,7 @@ export type UserCredentialCCUserSetOptions =
 			operationType:
 				| UserCredentialOperationType.Add
 				| UserCredentialOperationType.Modify;
-			activeState?: UserCredentialActiveState;
+			active?: boolean;
 			credentialRule?: UserCredentialRule;
 			nameEncoding?: UserCredentialNameEncoding;
 			userName?: string;
@@ -1940,7 +1936,7 @@ export type UserCredentialCCUserSetOptions =
 		| {
 			operationType: UserCredentialOperationType.Delete;
 			userType?: undefined;
-			activeState?: undefined;
+			active?: undefined;
 			credentialRule?: undefined;
 			expiringTimeoutMinutes?: undefined;
 			nameEncoding?: undefined;
@@ -1960,7 +1956,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 
 		if (options.operationType !== UserCredentialOperationType.Delete) {
 			this.userType = options.userType;
-			this.activeState = options.activeState;
+			this.active = options.active;
 			this.credentialRule = options.credentialRule;
 			this.expiringTimeoutMinutes = options.expiringTimeoutMinutes;
 			this.nameEncoding = options.nameEncoding;
@@ -1971,7 +1967,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	public operationType: UserCredentialOperationType;
 	public userId: number;
 	public userType: UserCredentialUserType | undefined;
-	public activeState: UserCredentialActiveState | undefined;
+	public active: boolean | undefined;
 	public credentialRule: UserCredentialRule | undefined;
 	public expiringTimeoutMinutes: number | undefined;
 	public nameEncoding: UserCredentialNameEncoding | undefined;
@@ -2004,7 +2000,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		}
 
 		const userType: UserCredentialUserType = raw.payload[3];
-		const activeState: UserCredentialActiveState = raw.payload[4] & 0b1111;
+		const active = !!(raw.payload[4] & 0b1);
 		const credentialRule: UserCredentialRule = raw.payload[5];
 		const expiringTimeoutMinutes = raw.payload.readUInt16BE(6);
 		const nameEncoding: UserCredentialNameEncoding = raw.payload[8] & 0b111;
@@ -2028,7 +2024,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 				userId,
 				userType,
 				expiringTimeoutMinutes,
-				activeState,
+				active,
 				credentialRule,
 				nameEncoding,
 				userName,
@@ -2040,7 +2036,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 			operationType,
 			userId,
 			userType,
-			activeState,
+			active,
 			credentialRule,
 			nameEncoding,
 			userName,
@@ -2062,9 +2058,9 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		if (this.activeState == undefined) {
+		if (this.active == undefined) {
 			throw new ZWaveError(
-				`${this.constructor.name}: active state must be set for Add/Modify operations`,
+				`${this.constructor.name}: The active flag must be set for Add/Modify operations`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -2100,7 +2096,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		this.payload[0] = this.operationType & 0b11;
 		this.payload.writeUInt16BE(this.userId, 1);
 		this.payload[3] = this.userType;
-		this.payload[4] = this.activeState & 0b1111;
+		this.payload[4] = this.active ? 0b1 : 0;
 		this.payload[5] = credentialRule;
 		this.payload.writeUInt16BE(expiringTimeoutMinutes, 6);
 		this.payload[8] = nameEncoding & 0b111;
@@ -2125,11 +2121,8 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 				this.userType,
 			);
 		}
-		if (this.activeState != undefined) {
-			message["active state"] = getEnumMemberName(
-				UserCredentialActiveState,
-				this.activeState,
-			);
+		if (this.active != undefined) {
+			message["active"] = this.active;
 		}
 		if (this.credentialRule != undefined) {
 			message["credential rule"] = getEnumMemberName(
@@ -2161,7 +2154,7 @@ export interface UserCredentialCCUserReportOptions {
 	modifierNodeId: number;
 	userId: number;
 	userType: UserCredentialUserType;
-	activeState: UserCredentialActiveState;
+	active: boolean;
 	credentialRule: UserCredentialRule;
 	expiringTimeoutMinutes: number;
 	nameEncoding: UserCredentialNameEncoding;
@@ -2180,7 +2173,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		this.modifierNodeId = options.modifierNodeId;
 		this.userId = options.userId;
 		this.userType = options.userType;
-		this.activeState = options.activeState;
+		this.active = options.active;
 		this.credentialRule = options.credentialRule;
 		this.expiringTimeoutMinutes = options.expiringTimeoutMinutes;
 		this.nameEncoding = options.nameEncoding;
@@ -2198,7 +2191,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		const modifierNodeId = raw.payload.readUInt16BE(4);
 		const userId = raw.payload.readUInt16BE(6);
 		const userType: UserCredentialUserType = raw.payload[8];
-		const activeState: UserCredentialActiveState = raw.payload[9] & 0b1111;
+		const active = !!(raw.payload[9] & 0b1);
 		const credentialRule: UserCredentialRule = raw.payload[10];
 		const expiringTimeoutMinutes = raw.payload.readUInt16BE(11);
 
@@ -2226,7 +2219,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 			modifierNodeId,
 			userId,
 			userType,
-			activeState,
+			active,
 			credentialRule,
 			expiringTimeoutMinutes,
 			nameEncoding,
@@ -2240,7 +2233,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	public readonly modifierNodeId: number;
 	public readonly userId: number;
 	public readonly userType: UserCredentialUserType;
-	public readonly activeState: UserCredentialActiveState;
+	public readonly active: boolean;
 	public readonly credentialRule: UserCredentialRule;
 	public readonly expiringTimeoutMinutes: number;
 	public readonly nameEncoding: UserCredentialNameEncoding;
@@ -2260,7 +2253,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		this.payload.writeUInt16BE(this.modifierNodeId, 4);
 		this.payload.writeUInt16BE(this.userId, 6);
 		this.payload[8] = this.userType;
-		this.payload[9] = this.activeState & 0b1111;
+		this.payload[9] = this.active ? 0b1 : 0;
 		this.payload[10] = this.credentialRule;
 		this.payload.writeUInt16BE(this.expiringTimeoutMinutes, 11);
 		this.payload[13] = this.nameEncoding & 0b111;
@@ -2289,7 +2282,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 			);
 			this.removeValue(
 				ctx,
-				UserCredentialCCValues.userActiveState(userId),
+				UserCredentialCCValues.userActive(userId),
 			);
 			this.removeValue(
 				ctx,
@@ -2337,12 +2330,12 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		);
 		this.ensureMetadata(
 			ctx,
-			UserCredentialCCValues.userActiveState(userId),
+			UserCredentialCCValues.userActive(userId),
 		);
 		this.setValue(
 			ctx,
-			UserCredentialCCValues.userActiveState(userId),
-			this.activeState,
+			UserCredentialCCValues.userActive(userId),
+			this.active,
 		);
 		this.ensureMetadata(
 			ctx,
@@ -2404,10 +2397,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 					UserCredentialUserType,
 					this.userType,
 				),
-				"active state": getEnumMemberName(
-					UserCredentialActiveState,
-					this.activeState,
-				),
+				active: this.active,
 				"credential rule": getEnumMemberName(
 					UserCredentialRule,
 					this.credentialRule,

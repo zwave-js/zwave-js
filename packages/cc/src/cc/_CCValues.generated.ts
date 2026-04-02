@@ -48,7 +48,6 @@ import {
 	ThermostatMode,
 	ThermostatOperatingState,
 	ThermostatSetpointType,
-	UserCredentialActiveState,
 	type UserCredentialKeyLockerEntryType,
 	UserCredentialRule,
 	UserCredentialType,
@@ -9523,9 +9522,9 @@ export const UserCredentialCCValues = Object.freeze({
 			} as const satisfies CCValueOptions,
 		},
 	),
-	userActiveState: Object.assign(
+	userActive: Object.assign(
 		(userId: number) => {
-			const property = "userActiveState";
+			const property = "userActive";
 			const propertyKey = userId;
 
 			return {
@@ -9542,11 +9541,8 @@ export const UserCredentialCCValues = Object.freeze({
 				} as const),
 				get meta() {
 					return {
-						...ValueMetadata.ReadOnlyUInt8,
-						label: `Active state (${userId})`,
-						states: enumValuesToMetadataStates(
-							UserCredentialActiveState,
-						),
+						...ValueMetadata.Boolean,
+						label: `Active (${userId})`,
 					} as const;
 				},
 			};
@@ -9556,7 +9552,7 @@ export const UserCredentialCCValues = Object.freeze({
 				return valueId.commandClass
 						=== CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
-						property === "userActiveState"
+						property === "userActive"
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {

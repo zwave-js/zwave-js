@@ -195,7 +195,7 @@ customSetup: async (driver, controller, mockNode) => {
 	// Pre-populate a user on the mock node (UserCredential CC)
 	mockNode.state.set("UserCredential_user_1", {
 		userType: UserCredentialUserType.General,
-		activeState: UserCredentialActiveState.OccupiedEnabled,
+		active: true,
 		credentialRule: UserCredentialRule.Single,
 		expiringTimeoutMinutes: 0,
 		nameEncoding: UserCredentialNameEncoding.ASCII,

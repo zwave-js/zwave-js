@@ -1672,11 +1672,6 @@ export enum UserCredentialUserType {
 	RemoteOnly = 0x09,
 }
 
-export enum UserCredentialActiveState {
-	OccupiedDisabled = 0x00,
-	OccupiedEnabled = 0x01,
-}
-
 export enum UserCredentialRule {
 	Single = 0x01,
 	Dual = 0x02,

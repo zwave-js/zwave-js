@@ -182,7 +182,6 @@ Use `customSetup` to seed mock node state before the interview discovers it:
 
 ```typescript
 import {
-	UserCredentialActiveState,
 	UserCredentialModifierType,
 	UserCredentialNameEncoding,
 	UserCredentialRule,
@@ -224,7 +223,7 @@ integrationTest(
 			// Pre-populate user 1
 			mockNode.state.set("UserCredential_user_1", {
 				userType: UserCredentialUserType.General,
-				activeState: UserCredentialActiveState.OccupiedEnabled,
+				active: true,
 				credentialRule: UserCredentialRule.Single,
 				expiringTimeoutMinutes: 0,
 				nameEncoding: UserCredentialNameEncoding.ASCII,
