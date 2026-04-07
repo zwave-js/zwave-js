@@ -58,37 +58,37 @@
 			"#": "8",
 			"$import": "templates/homeseer_template.json#range_sensitivity",
 			"label": "Range 150-225cm (4.9-7.3ft) Sensitivity",
-			"defaultValue": 50
+			"defaultValue": 0
 		},
 		{
 			"#": "9",
 			"$import": "templates/homeseer_template.json#range_sensitivity",
 			"label": "Range 225-300cm (7.3-9.8ft) Sensitivity",
-			"defaultValue": 50
+			"defaultValue": 0
 		},
 		{
 			"#": "10",
 			"$import": "templates/homeseer_template.json#range_sensitivity",
 			"label": "Range 300-375cm (9.8-12.3ft) Sensitivity",
-			"defaultValue": 90
+			"defaultValue": 0
 		},
 		{
 			"#": "11",
 			"$import": "templates/homeseer_template.json#range_sensitivity",
 			"label": "Range 375-450cm (12.3-14.7ft) Sensitivity",
-			"defaultValue": 90
+			"defaultValue": 0
 		},
 		{
 			"#": "12",
 			"$import": "templates/homeseer_template.json#range_sensitivity",
 			"label": "Range 450-525cm (14.7-17.2ft) Sensitivity",
-			"defaultValue": 90
+			"defaultValue": 0
 		},
 		{
 			"#": "13",
 			"$import": "templates/homeseer_template.json#range_sensitivity",
 			"label": "Range 525-600cm (17.2-19.6ft) Sensitivity",
-			"defaultValue": 90
+			"defaultValue": 0
 		},
 		{
 			"#": "20",
