@@ -601,9 +601,7 @@ export class AccessControlMixin extends EndpointBase
 				data: result.credentialData,
 			};
 		} else if (this._usesUserCodeCC) {
-			if (type !== this._ucCredentialType || slot !== 1) {
-				return undefined;
-			}
+			if (slot !== 1) return undefined;
 			const api = this._ucAPI();
 			const result = await api.get(userId);
 			if (!result) return undefined;
@@ -734,7 +732,7 @@ export class AccessControlMixin extends EndpointBase
 				credentialData,
 			});
 		} else if (this._usesUserCodeCC) {
-			if (type !== this._ucCredentialType || slot !== 1) {
+			if (slot !== 1) {
 				throw new ZWaveError(
 					"This node only supports a single credential in slot 1",
 					ZWaveErrorCodes.Argument_Invalid,
@@ -799,7 +797,7 @@ export class AccessControlMixin extends EndpointBase
 				credentialSlot: slot,
 			});
 		} else if (this._usesUserCodeCC) {
-			if (type !== this._ucCredentialType || slot !== 1) {
+			if (slot !== 1) {
 				throw new ZWaveError(
 					"This node only supports a single credential in slot 1",
 					ZWaveErrorCodes.Argument_Invalid,
@@ -1007,7 +1005,7 @@ export class AccessControlMixin extends EndpointBase
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
-		if (type !== this._ucCredentialType || slot !== 1) return undefined;
+		if (slot !== 1) return undefined;
 		const status = this._getValue<UserIDStatus>(
 			UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
 		);
