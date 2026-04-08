@@ -48,6 +48,7 @@ import {
 	UserCredentialCredentialReportType,
 	type UserCredentialKeyLockerEntryCapability,
 	UserCredentialKeyLockerEntryType,
+	UserCredentialLearnStatus,
 	UserCredentialModifierType,
 	UserCredentialNameEncoding,
 	UserCredentialOperationType,
@@ -2973,7 +2974,7 @@ export class UserCredentialCCCredentialLearnCancel extends UserCredentialCC {}
 
 // @publicAPI
 export interface UserCredentialCCCredentialLearnReportOptions {
-	learnStatus: number;
+	learnStatus: UserCredentialLearnStatus;
 	userId: number;
 	credentialType: UserCredentialType;
 	credentialSlot: number;
@@ -3016,7 +3017,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 		});
 	}
 
-	public readonly learnStatus: number;
+	public readonly learnStatus: UserCredentialLearnStatus;
 	public readonly userId: number;
 	public readonly credentialType: UserCredentialType;
 	public readonly credentialSlot: number;
@@ -3036,7 +3037,10 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"learn status": this.learnStatus,
+				"learn status": getEnumMemberName(
+					UserCredentialLearnStatus,
+					this.learnStatus,
+				),
 				"user ID": this.userId,
 				"credential type": getEnumMemberName(
 					UserCredentialType,

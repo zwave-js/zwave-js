@@ -7,6 +7,7 @@ import type {
 	MultilevelSwitchCommand,
 	Powerlevel,
 	PowerlevelTestStatus,
+	UserCredentialLearnStatus,
 	UserCredentialType,
 	Weekday,
 } from "@zwave-js/cc";
@@ -282,7 +283,7 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 			credentialType: UserCredentialType;
 			credentialSlot: number;
 			stepsRemaining: number;
-			stepCount: number;
+			status: UserCredentialLearnStatus;
 		},
 	) => void;
 	"credential learn completed": (
@@ -291,6 +292,7 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 			userId: number;
 			credentialType: UserCredentialType;
 			credentialSlot: number;
+			status: UserCredentialLearnStatus;
 			success: boolean;
 		},
 	) => void;

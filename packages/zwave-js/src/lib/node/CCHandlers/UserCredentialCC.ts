@@ -1,5 +1,6 @@
 import {
 	UserCredentialCredentialReportType,
+	UserCredentialLearnStatus,
 	UserCredentialUserReportType,
 } from "@zwave-js/cc";
 import {
@@ -88,16 +89,15 @@ export function handleUserCredentialCredentialLearnReport(
 			credentialType: report.credentialType,
 			credentialSlot: report.credentialSlot,
 			stepsRemaining: report.stepsRemaining,
-			// learnStatus encodes the total step count for in-progress reports
-			stepCount: report.learnStatus,
+			status: report.learnStatus,
 		});
 	} else {
 		node.emit("credential learn completed", endpoint, {
 			userId: report.userId,
 			credentialType: report.credentialType,
 			credentialSlot: report.credentialSlot,
-			// learnStatus 0 = success
-			success: report.learnStatus === 0,
+			status: report.learnStatus,
+			success: report.learnStatus === UserCredentialLearnStatus.Success,
 		});
 	}
 }

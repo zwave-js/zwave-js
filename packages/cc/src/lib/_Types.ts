@@ -1715,6 +1715,17 @@ export enum UserCredentialCredentialReportType {
 	DuplicateAdminPINCode = 0x0a,
 }
 
+export enum UserCredentialLearnStatus {
+	Started = 0x00,
+	Success = 0x01,
+	AlreadyInProgress = 0x02,
+	EndedNotDueToTimeout = 0x03,
+	Timeout = 0x04,
+	StepRetry = 0x05,
+	InvalidAddOperationType = 0xfe,
+	InvalidModifyOperationType = 0xff,
+}
+
 export enum UserCredentialModifierType {
 	DoesNotExist = 0x00,
 	Unknown = 0x01,
