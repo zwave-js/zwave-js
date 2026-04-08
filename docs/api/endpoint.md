@@ -290,3 +290,489 @@ readonly version: number
 ```
 
 Retrieves the version of the given CommandClass this endpoint implements.
+
+## Credential management
+
+Z-Wave JS provides a unified API for managing users and credentials on access control devices such as door locks. This API transparently supports both the **User Credential CC** and the legacy **User Code CC**, abstracting away the differences between the two.
+
+> [!NOTE] For nodes using the **User Code CC**, only a subset of the functionality is available. Each user supports a single credential in slot 1, user names and credential rules are not supported, and credential learning is unavailable.
+
+> [!NOTE] Methods that read data return `undefined` when the endpoint does not support access control. Methods that write data will throw if neither the **User Credential CC** nor the **User Code CC** is supported.
+
+### Querying capabilities
+
+#### `getUserCapabilitiesCached`
+
+```ts
+getUserCapabilitiesCached(): UserCapabilities | undefined
+```
+
+Returns user-related capabilities of the endpoint. This method uses cached information from the most recent interview.
+
+<!-- #import UserCapabilities from "zwave-js" -->
+
+```ts
+interface UserCapabilities {
+	maxUsers: number;
+	supportedUserTypes: readonly UserCredentialUserType[];
+	maxUserNameLength: number | undefined;
+	supportedCredentialRules: readonly UserCredentialRule[];
+}
+```
+
+#### `getCredentialCapabilitiesCached`
+
+```ts
+getCredentialCapabilitiesCached(): CredentialCapabilities | undefined
+```
+
+Returns credential-related capabilities of the endpoint. This method uses cached information from the most recent interview.
+
+<!-- #import CredentialCapabilities from "zwave-js" -->
+
+```ts
+interface CredentialCapabilities {
+	supportedCredentialTypes: ReadonlyMap<
+		UserCredentialType,
+		UserCredentialCapability
+	>;
+	supportsAdminCode: boolean;
+	supportsAdminCodeDeactivation: boolean;
+}
+```
+
+Each entry in `supportedCredentialTypes` maps a `UserCredentialType` to its capabilities:
+
+<!-- #import UserCredentialCapability from "@zwave-js/cc" -->
+
+```ts
+type UserCredentialCapability =
+	& {
+		numberOfCredentialSlots: number;
+		minCredentialLength: number;
+		maxCredentialLength: number;
+		maxCredentialHashLength: number;
+	}
+	& (
+		| {
+			supportsCredentialLearn: true;
+			credentialLearnRecommendedTimeout: number;
+			credentialLearnNumberOfSteps: number;
+		}
+		| {
+			supportsCredentialLearn: false;
+		}
+	);
+```
+
+### Managing users
+
+#### `getUser`
+
+```ts
+getUser(userId: number): Promise<UserData | undefined>
+```
+
+Returns the data for the user with the given ID. Returns `undefined` if the user does not exist.
+
+> [!NOTE] This communicates with the node to retrieve fresh information.
+
+#### `getUserCached`
+
+```ts
+getUserCached(userId: number): UserData | undefined
+```
+
+Returns the data for the user with the given ID. Returns `undefined` if the user does not exist.
+
+> [!NOTE] This method uses cached information from the most recent interview.
+
+<!-- #import UserData from "zwave-js" -->
+
+```ts
+interface UserData {
+	userId: number;
+	active: boolean;
+	userType: UserCredentialUserType;
+	userName?: string;
+	credentialRule?: UserCredentialRule;
+	expiringTimeoutMinutes?: number;
+}
+```
+
+#### `getUsers`
+
+```ts
+getUsers(): Promise<UserData[]>
+```
+
+Returns the data for all configured users.
+
+> [!NOTE] This communicates with the node to retrieve fresh information.
+
+#### `getUsersCached`
+
+```ts
+getUsersCached(): UserData[]
+```
+
+Returns the data for all configured users.
+
+> [!NOTE] This method uses cached information from the most recent interview.
+
+#### `setUser`
+
+```ts
+setUser(userId: number, options: SetUserOptions): Promise<SupervisionResult | undefined>
+```
+
+Creates or updates the user with the given ID. Whether a user is created or modified is determined automatically based on whether the user already exists.
+
+<!-- #import SetUserOptions from "zwave-js" -->
+
+```ts
+interface SetUserOptions {
+	active?: boolean;
+	userType?: UserCredentialUserType;
+	userName?: string;
+	credentialRule?: UserCredentialRule;
+	/** Required when userType is Expiring */
+	expiringTimeoutMinutes?: number;
+}
+```
+
+#### `deleteUser`
+
+```ts
+deleteUser(userId: number): Promise<SupervisionResult | undefined>
+```
+
+Deletes the user with the given ID and all of their credentials.
+
+#### `deleteAllUsers`
+
+```ts
+deleteAllUsers(): Promise<SupervisionResult | undefined>
+```
+
+Deletes all users and their credentials.
+
+### Managing credentials
+
+#### `getCredential`
+
+```ts
+getCredential(
+	userId: number,
+	type: UserCredentialType,
+	slot: number,
+): Promise<CredentialData | undefined>
+```
+
+Returns the data for a specific credential. Returns `undefined` if the credential does not exist. Throws if the credential slot is out of range.
+
+> [!NOTE] This communicates with the node to retrieve fresh information.
+
+#### `getCredentialCached`
+
+```ts
+getCredentialCached(
+	userId: number,
+	type: UserCredentialType,
+	slot: number,
+): CredentialData | undefined
+```
+
+Returns the data for a specific credential. Returns `undefined` if the credential does not exist. Throws if the credential slot is out of range.
+
+> [!NOTE] This method uses cached information from the most recent interview.
+
+<!-- #import CredentialData from "zwave-js" -->
+
+```ts
+interface CredentialData {
+	userId: number;
+	type: UserCredentialType;
+	slot: number;
+	data?: string | Uint8Array;
+}
+```
+
+#### `getCredentials`
+
+```ts
+getCredentials(userId: number): Promise<CredentialData[]>
+```
+
+Returns all credentials for the given user.
+
+> [!NOTE] This communicates with the node to retrieve fresh information.
+
+#### `getCredentialsCached`
+
+```ts
+getCredentialsCached(userId: number): CredentialData[]
+```
+
+Returns all credentials for the given user.
+
+> [!NOTE] This method uses cached information from the most recent interview.
+
+#### `setCredential`
+
+```ts
+setCredential(
+	userId: number,
+	type: UserCredentialType,
+	slot: number,
+	data: string | Uint8Array,
+): Promise<SupervisionResult | undefined>
+```
+
+Creates or updates a credential for the given user. Whether a credential is created or modified is determined automatically based on whether the credential already exists. Throws if the credential slot is out of range.
+
+#### `deleteCredential`
+
+```ts
+deleteCredential(
+	userId: number,
+	type: UserCredentialType,
+	slot: number,
+): Promise<SupervisionResult | undefined>
+```
+
+Deletes the given credential. Throws if the credential slot is out of range.
+
+> [!NOTE] For nodes using the **User Code CC**, deleting a credential also deletes the associated user, because User Code CC does not distinguish between users and their credentials.
+
+### Credential learning
+
+Some devices support learning credentials directly from user input (e.g. scanning a fingerprint on a biometric lock). This functionality is only available on nodes using the **User Credential CC** and will throw on other nodes.
+
+Whether a credential type supports learning can be determined from the `supportsCredentialLearn` property of its `UserCredentialCapability`.
+
+#### `startCredentialLearn`
+
+```ts
+startCredentialLearn(
+	userId: number,
+	type: UserCredentialType,
+	slot: number,
+	timeout?: number,
+): Promise<SupervisionResult | undefined>
+```
+
+Starts a learn process for the given credential slot, allowing a user to input a credential directly on the device. The `timeout` parameter specifies how long (in seconds) the device should wait for the user to input the credential. If omitted, the device's recommended timeout for the credential type is used.
+
+Progress and completion of the learn process are reported through the [`"credential learn progress"`](#quotcredential-learn-progressquot) and [`"credential learn completed"`](#quotcredential-learn-completedquot) events.
+
+#### `cancelCredentialLearn`
+
+```ts
+cancelCredentialLearn(): Promise<SupervisionResult | undefined>
+```
+
+Cancels an ongoing credential learn process.
+
+### Admin code
+
+Devices that support an admin code allow configuring a code that can be used for administrative functions. Whether this is supported can be determined using `getCredentialCapabilitiesCached()`:
+
+```ts
+const caps = endpoint.getCredentialCapabilitiesCached();
+if (caps?.supportsAdminCode) {
+	// Admin code is supported
+}
+```
+
+#### `getAdminCode`
+
+```ts
+getAdminCode(): Promise<string | undefined>
+```
+
+Retrieves the admin code from the node.
+
+#### `setAdminCode`
+
+```ts
+setAdminCode(code: string): Promise<SupervisionResult | undefined>
+```
+
+Sets the admin code on the node.
+
+### Credential management events
+
+The following events are emitted on the `ZWaveNode` instance when users or credentials are changed, either through Z-Wave JS or locally on the device.
+
+#### `"user added"` / `"user modified"`
+
+```ts
+(endpoint: Endpoint, args: UserData) => void
+```
+
+A user was added or modified. The `args` object contains the user data after the change.
+
+#### `"user deleted"`
+
+```ts
+(endpoint: Endpoint, args: UserDeletedArgs) => void
+```
+
+A user and all of their credentials were deleted.
+
+<!-- #import UserDeletedArgs from "zwave-js" -->
+
+```ts
+interface UserDeletedArgs {
+	userId: number;
+}
+```
+
+#### `"credential added"` / `"credential modified"`
+
+```ts
+(endpoint: Endpoint, args: CredentialChangedArgs) => void
+```
+
+A credential was added or modified. The `args` object contains the credential data after the change:
+
+<!-- #import CredentialChangedArgs from "zwave-js" -->
+
+```ts
+interface CredentialChangedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	data?: string | Uint8Array;
+}
+```
+
+#### `"credential deleted"`
+
+```ts
+(endpoint: Endpoint, args: CredentialDeletedArgs) => void
+```
+
+A credential was deleted.
+
+<!-- #import CredentialDeletedArgs from "zwave-js" -->
+
+```ts
+interface CredentialDeletedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+}
+```
+
+#### `"credential learn progress"`
+
+```ts
+(endpoint: Endpoint, args: CredentialLearnProgressArgs) => void
+```
+
+Progress was made during a credential learn process (e.g. one of several fingerprint scans was completed).
+
+<!-- #import CredentialLearnProgressArgs from "zwave-js" -->
+
+```ts
+interface CredentialLearnProgressArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	stepsRemaining: number;
+	status: UserCredentialLearnStatus;
+}
+```
+
+Progress was made during a credential learn process (e.g. one of several fingerprint scans was completed).
+
+#### `"credential learn completed"`
+
+```ts
+(endpoint: Endpoint, args: CredentialLearnCompletedArgs) => void
+```
+
+A credential learn process has finished. The `success` property indicates whether the learned credential was stored successfully.
+
+<!-- #import CredentialLearnCompletedArgs from "zwave-js" -->
+
+```ts
+interface CredentialLearnCompletedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	status: UserCredentialLearnStatus;
+	success: boolean;
+}
+```
+
+A credential learn process has finished. The `success` property indicates whether the learned credential was stored successfully.
+
+### Credential management enums
+
+#### `UserCredentialType`
+
+<!-- #import UserCredentialType from "@zwave-js/cc" -->
+
+```ts
+enum UserCredentialType {
+	PINCode = 0x01,
+	Password = 0x02,
+	RFIDCode = 0x03,
+	BLE = 0x04,
+	NFC = 0x05,
+	UWB = 0x06,
+	EyeBiometric = 0x07,
+	FaceBiometric = 0x08,
+	FingerBiometric = 0x09,
+	HandBiometric = 0x0a,
+	UnspecifiedBiometric = 0x0b,
+}
+```
+
+#### `UserCredentialUserType`
+
+<!-- #import UserCredentialUserType from "@zwave-js/cc" -->
+
+```ts
+enum UserCredentialUserType {
+	General = 0x00,
+	Programming = 0x03,
+	NonAccess = 0x04,
+	Duress = 0x05,
+	Disposable = 0x06,
+	Expiring = 0x07,
+	RemoteOnly = 0x09,
+}
+```
+
+#### `UserCredentialRule`
+
+<!-- #import UserCredentialRule from "@zwave-js/cc" -->
+
+```ts
+enum UserCredentialRule {
+	Single = 0x01,
+	Dual = 0x02,
+	Triple = 0x03,
+}
+```
+
+#### `UserCredentialLearnStatus`
+
+<!-- #import UserCredentialLearnStatus from "@zwave-js/cc" -->
+
+```ts
+enum UserCredentialLearnStatus {
+	Started = 0x00,
+	Success = 0x01,
+	AlreadyInProgress = 0x02,
+	EndedNotDueToTimeout = 0x03,
+	Timeout = 0x04,
+	StepRetry = 0x05,
+	InvalidAddOperationType = 0xfe,
+	InvalidModifyOperationType = 0xff,
+}
+```

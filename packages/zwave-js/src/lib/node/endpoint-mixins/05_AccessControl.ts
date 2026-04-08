@@ -599,6 +599,8 @@ export class AccessControlMixin extends EndpointBase
 		type: UserCredentialType,
 		slot: number,
 	): Promise<CredentialData | undefined> {
+		this._assertValidSlot(type, slot);
+
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
 			const result = await api.getCredential(userId, type, slot);
@@ -610,7 +612,6 @@ export class AccessControlMixin extends EndpointBase
 				data: result.credentialData,
 			};
 		} else if (this._usesUserCodeCC) {
-			if (slot !== 1) return undefined;
 			const api = this._ucAPI();
 			const result = await api.get(userId);
 			if (!result) return undefined;
@@ -630,6 +631,8 @@ export class AccessControlMixin extends EndpointBase
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
+		this._assertValidSlot(type, slot);
+
 		if (this._usesUserCredentialCC) {
 			return this._getCredentialCached_U3C(userId, type, slot);
 		} else if (this._usesUserCodeCC) {
@@ -725,6 +728,8 @@ export class AccessControlMixin extends EndpointBase
 		slot: number,
 		data: string | Uint8Array,
 	): Promise<SupervisionResult | undefined> {
+		this._assertValidSlot(type, slot);
+
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
 			const existing = this._getCredentialCached_U3C(userId, type, slot);
@@ -741,12 +746,6 @@ export class AccessControlMixin extends EndpointBase
 				credentialData,
 			});
 		} else if (this._usesUserCodeCC) {
-			if (slot !== 1) {
-				throw new ZWaveError(
-					"This node only supports a single credential in slot 1",
-					ZWaveErrorCodes.Argument_Invalid,
-				);
-			}
 			const api = this._ucAPI();
 
 			// Determine the current status; default to Enabled for new users
@@ -797,6 +796,8 @@ export class AccessControlMixin extends EndpointBase
 		type: UserCredentialType,
 		slot: number,
 	): Promise<SupervisionResult | undefined> {
+		this._assertValidSlot(type, slot);
+
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
 			return api.setCredential({
@@ -806,12 +807,6 @@ export class AccessControlMixin extends EndpointBase
 				credentialSlot: slot,
 			});
 		} else if (this._usesUserCodeCC) {
-			if (slot !== 1) {
-				throw new ZWaveError(
-					"This node only supports a single credential in slot 1",
-					ZWaveErrorCodes.Argument_Invalid,
-				);
-			}
 			// User Code CC ties each user to their code, so clearing
 			// the credential also deletes the user
 			const existed = this._getCredentialCached_UC(userId, type, slot)
@@ -846,6 +841,8 @@ export class AccessControlMixin extends EndpointBase
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
+
+		this._assertValidSlot(type, slot);
 
 		const existing = this._getCredentialCached_U3C(userId, type, slot);
 		const operationType = existing
@@ -1013,6 +1010,19 @@ export class AccessControlMixin extends EndpointBase
 		);
 		for (const vid of credentialValues) {
 			valueDB.removeValue(vid);
+		}
+	}
+
+	private _assertValidSlot(type: UserCredentialType, slot: number): void {
+		const caps = this.getCredentialCapabilitiesCached()
+			?.supportedCredentialTypes.get(type);
+		if (!caps || slot < 1 || slot > caps.numberOfCredentialSlots) {
+			throw new ZWaveError(
+				`Credential slot ${slot} is out of range for credential type ${
+					getEnumMemberName(UserCredentialType, type)
+				}`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
 		}
 	}
 

@@ -236,11 +236,37 @@ export interface ZWaveNodeValueEventCallbacks {
 	"value notification": ZWaveNodeValueNotificationCallback;
 }
 
+export interface UserDeletedArgs {
+	userId: number;
+}
+
 export interface CredentialChangedArgs {
 	userId: number;
 	credentialType: UserCredentialType;
 	credentialSlot: number;
 	data?: string | Uint8Array;
+}
+
+export interface CredentialDeletedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+}
+
+export interface CredentialLearnProgressArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	stepsRemaining: number;
+	status: UserCredentialLearnStatus;
+}
+
+export interface CredentialLearnCompletedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	status: UserCredentialLearnStatus;
+	success: boolean;
 }
 
 export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
@@ -259,7 +285,7 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	"node info received": (node: ZWaveNode) => void;
 	"user added": (endpoint: Endpoint, args: UserData) => void;
 	"user modified": (endpoint: Endpoint, args: UserData) => void;
-	"user deleted": (endpoint: Endpoint, args: { userId: number }) => void;
+	"user deleted": (endpoint: Endpoint, args: UserDeletedArgs) => void;
 	"credential added": (
 		endpoint: Endpoint,
 		args: CredentialChangedArgs,
@@ -270,31 +296,15 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	) => void;
 	"credential deleted": (
 		endpoint: Endpoint,
-		args: {
-			userId: number;
-			credentialType: UserCredentialType;
-			credentialSlot: number;
-		},
+		args: CredentialDeletedArgs,
 	) => void;
 	"credential learn progress": (
 		endpoint: Endpoint,
-		args: {
-			userId: number;
-			credentialType: UserCredentialType;
-			credentialSlot: number;
-			stepsRemaining: number;
-			status: UserCredentialLearnStatus;
-		},
+		args: CredentialLearnProgressArgs,
 	) => void;
 	"credential learn completed": (
 		endpoint: Endpoint,
-		args: {
-			userId: number;
-			credentialType: UserCredentialType;
-			credentialSlot: number;
-			status: UserCredentialLearnStatus;
-			success: boolean;
-		},
+		args: CredentialLearnCompletedArgs,
 	) => void;
 }
 
