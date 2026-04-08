@@ -13,12 +13,14 @@ import {
 } from "@zwave-js/cc/UserCredentialCC";
 import {
 	CommandClasses,
+	type MaybeNotKnown,
 	type SupervisionResult,
+	type ValueID,
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import { DeviceConfigMixin } from "./80_DeviceConfig.js";
+import { EndpointBase } from "./00_Base.js";
 
 export interface UserCapabilities {
 	maxUsers: number;
@@ -60,16 +62,16 @@ export interface SetUserOptions {
 	expiringTimeoutMinutes?: number;
 }
 
-/** Defines functionality of Z-Wave nodes related to managing users and credentials for access control */
-export interface NodeAccessControl {
+/** Defines functionality of Z-Wave endpoints related to managing users and credentials for access control */
+export interface EndpointAccessControl {
 	/**
-	 * Returns the user-related capabilities of this node.
+	 * Returns the user-related capabilities of this endpoint.
 	 * This method uses cached information from the most recent interview.
 	 */
 	getUserCapabilitiesCached(): UserCapabilities | undefined;
 
 	/**
-	 * Returns the credential-related capabilities of this node.
+	 * Returns the credential-related capabilities of this endpoint.
 	 * This method uses cached information from the most recent interview.
 	 */
 	getCredentialCapabilitiesCached(): CredentialCapabilities | undefined;
@@ -213,9 +215,14 @@ function isPINOnly(supportedASCIIChars: string | undefined): boolean {
 		&& PIN_CHARS.test(supportedASCIIChars);
 }
 
-export abstract class AccessControlMixin extends DeviceConfigMixin
-	implements NodeAccessControl
+export class AccessControlMixin extends EndpointBase
+	implements EndpointAccessControl
 {
+	/** Read a cached value from the node's value DB */
+	private _getValue<T = unknown>(valueId: ValueID): MaybeNotKnown<T> {
+		return this.tryGetNode()?.getValue(valueId);
+	}
+
 	// FIXME: This is technically not correct. A node could support both CCs,
 	// and we may have to decide which one to use, or switch between them on
 	// the fly using Version CC / migration.
@@ -235,22 +242,28 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 	{
 		if (this._usesUserCredentialCC) {
 			return {
-				maxUsers: this.getValue<number>(
-					UserCredentialCCValues.supportedUsers.id,
+				maxUsers: this._getValue<number>(
+					UserCredentialCCValues.supportedUsers.endpoint(this.index),
 				) ?? 0,
-				supportedUserTypes: this.getValue<UserCredentialUserType[]>(
-					UserCredentialCCValues.supportedUserTypes.id,
+				supportedUserTypes: this._getValue<UserCredentialUserType[]>(
+					UserCredentialCCValues.supportedUserTypes.endpoint(
+						this.index,
+					),
 				) ?? [],
-				maxUserNameLength: this.getValue<number>(
-					UserCredentialCCValues.maxUserNameLength.id,
+				maxUserNameLength: this._getValue<number>(
+					UserCredentialCCValues.maxUserNameLength.endpoint(
+						this.index,
+					),
 				) ?? undefined,
-				supportedCredentialRules: this.getValue<UserCredentialRule[]>(
-					UserCredentialCCValues.supportedCredentialRules.id,
+				supportedCredentialRules: this._getValue<UserCredentialRule[]>(
+					UserCredentialCCValues.supportedCredentialRules.endpoint(
+						this.index,
+					),
 				) ?? [],
 			};
 		} else if (this._usesUserCodeCC) {
-			const supportedStatuses = this.getValue<UserIDStatus[]>(
-				UserCodeCCValues.supportedUserIDStatuses.id,
+			const supportedStatuses = this._getValue<UserIDStatus[]>(
+				UserCodeCCValues.supportedUserIDStatuses.endpoint(this.index),
 			) ?? [];
 			const supportedUserTypes: UserCredentialUserType[] = [
 				UserCredentialUserType.General,
@@ -262,8 +275,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 			}
 
 			return {
-				maxUsers: this.getValue<number>(
-					UserCodeCCValues.supportedUsers.id,
+				maxUsers: this._getValue<number>(
+					UserCodeCCValues.supportedUsers.endpoint(this.index),
 				) ?? 0,
 				supportedUserTypes,
 				// User Code CC does not support user names or credential rules
@@ -279,8 +292,10 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		| undefined
 	{
 		if (this._usesUserCredentialCC) {
-			const supportedTypes = this.getValue<UserCredentialType[]>(
-				UserCredentialCCValues.supportedCredentialTypes.id,
+			const supportedTypes = this._getValue<UserCredentialType[]>(
+				UserCredentialCCValues.supportedCredentialTypes.endpoint(
+					this.index,
+				),
 			) ?? [];
 
 			const credentialTypes = new Map<
@@ -288,19 +303,25 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				UserCredentialCapability
 			>();
 			for (const type of supportedTypes) {
-				const cap = this.getValue<UserCredentialCapability>(
-					UserCredentialCCValues.credentialCapabilities(type).id,
+				const cap = this._getValue<UserCredentialCapability>(
+					UserCredentialCCValues.credentialCapabilities(type)
+						.endpoint(
+							this.index,
+						),
 				);
 				if (cap) credentialTypes.set(type, cap);
 			}
 
 			return {
 				supportedCredentialTypes: credentialTypes,
-				supportsAdminCode: this.getValue<boolean>(
-					UserCredentialCCValues.supportsAdminCode.id,
+				supportsAdminCode: this._getValue<boolean>(
+					UserCredentialCCValues.supportsAdminCode.endpoint(
+						this.index,
+					),
 				) ?? false,
-				supportsAdminCodeDeactivation: this.getValue<boolean>(
-					UserCredentialCCValues.supportsAdminCodeDeactivation.id,
+				supportsAdminCodeDeactivation: this._getValue<boolean>(
+					UserCredentialCCValues.supportsAdminCodeDeactivation
+						.endpoint(this.index),
 				) ?? false,
 			};
 		} else if (this._usesUserCodeCC) {
@@ -322,11 +343,13 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 
 			return {
 				supportedCredentialTypes: credentialTypes,
-				supportsAdminCode: this.getValue<boolean>(
-					UserCodeCCValues.supportsAdminCode.id,
+				supportsAdminCode: this._getValue<boolean>(
+					UserCodeCCValues.supportsAdminCode.endpoint(this.index),
 				) ?? false,
-				supportsAdminCodeDeactivation: this.getValue<boolean>(
-					UserCodeCCValues.supportsAdminCodeDeactivation.id,
+				supportsAdminCodeDeactivation: this._getValue<boolean>(
+					UserCodeCCValues.supportsAdminCodeDeactivation.endpoint(
+						this.index,
+					),
 				) ?? false,
 			};
 		}
@@ -411,8 +434,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 
 	public getUsersCached(): UserData[] {
 		if (this._usesUserCredentialCC) {
-			const maxUsers = this.getValue<number>(
-				UserCredentialCCValues.supportedUsers.id,
+			const maxUsers = this._getValue<number>(
+				UserCredentialCCValues.supportedUsers.endpoint(this.index),
 			) ?? 0;
 			const users: UserData[] = [];
 			for (let userId = 1; userId <= maxUsers; userId++) {
@@ -421,8 +444,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 			}
 			return users;
 		} else if (this._usesUserCodeCC) {
-			const maxUsers = this.getValue<number>(
-				UserCodeCCValues.supportedUsers.id,
+			const maxUsers = this._getValue<number>(
+				UserCodeCCValues.supportedUsers.endpoint(this.index),
 			) ?? 0;
 			const users: UserData[] = [];
 			for (let userId = 1; userId <= maxUsers; userId++) {
@@ -494,8 +517,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 
 			// User Code CC requires sending the code along with every status
 			// change, so we re-send the existing code to preserve it
-			const existingCode = this.getValue<string>(
-				UserCodeCCValues.userCode(userId).id,
+			const existingCode = this._getValue<string>(
+				UserCodeCCValues.userCode(userId).endpoint(this.index),
 			) ?? "";
 
 			const result = await api.set(
@@ -503,12 +526,15 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				status as number,
 				existingCode,
 			);
-			const userData: UserData = { userId, active, userType };
-			this._emit(
-				existing ? "user modified" : "user added",
-				this as any,
-				userData,
-			);
+			const node = this.tryGetNode();
+			if (node) {
+				const userData: UserData = { userId, active, userType };
+				node.emit(
+					existing ? "user modified" : "user added",
+					this,
+					userData,
+				);
+			}
 			return result;
 		}
 		this._throwNoAccessControl();
@@ -530,12 +556,15 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
 			if (existed) {
-				this._emit("user deleted", this as any, { userId });
-				this._emit("credential deleted", this as any, {
-					userId,
-					credentialType: this._ucCredentialType,
-					credentialSlot: 1,
-				});
+				const node = this.tryGetNode();
+				if (node) {
+					node.emit("user deleted", this, { userId });
+					node.emit("credential deleted", this, {
+						userId,
+						credentialType: this._ucCredentialType,
+						credentialSlot: 1,
+					});
+				}
 			}
 			return result;
 		}
@@ -644,13 +673,18 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 	public getCredentialsCached(userId: number): CredentialData[] {
 		if (this._usesUserCredentialCC) {
 			const credentials: CredentialData[] = [];
-			const supportedTypes = this.getValue<UserCredentialType[]>(
-				UserCredentialCCValues.supportedCredentialTypes.id,
+			const supportedTypes = this._getValue<UserCredentialType[]>(
+				UserCredentialCCValues.supportedCredentialTypes.endpoint(
+					this.index,
+				),
 			) ?? [];
 
 			for (const type of supportedTypes) {
-				const cap = this.getValue<UserCredentialCapability>(
-					UserCredentialCCValues.credentialCapabilities(type).id,
+				const cap = this._getValue<UserCredentialCapability>(
+					UserCredentialCCValues.credentialCapabilities(type)
+						.endpoint(
+							this.index,
+						),
 				);
 				if (!cap) continue;
 				for (
@@ -709,8 +743,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 			const api = this._ucAPI();
 
 			// Determine the current status; default to Enabled for new users
-			let status = this.getValue<UserIDStatus>(
-				UserCodeCCValues.userIdStatus(userId).id,
+			let status = this._getValue<UserIDStatus>(
+				UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
 			);
 			if (
 				status == undefined
@@ -733,16 +767,19 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				status as number,
 				codeData,
 			);
-			this._emit(
-				existingCred ? "credential modified" : "credential added",
-				this as any,
-				{
-					userId,
-					credentialType: type,
-					credentialSlot: slot,
-					data,
-				},
-			);
+			const node = this.tryGetNode();
+			if (node) {
+				node.emit(
+					existingCred ? "credential modified" : "credential added",
+					this,
+					{
+						userId,
+						credentialType: type,
+						credentialSlot: slot,
+						data,
+					},
+				);
+			}
 			return result;
 		}
 		this._throwNoAccessControl();
@@ -775,12 +812,15 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
 			if (existed) {
-				this._emit("credential deleted", this as any, {
-					userId,
-					credentialType: type,
-					credentialSlot: slot,
-				});
-				this._emit("user deleted", this as any, { userId });
+				const node = this.tryGetNode();
+				if (node) {
+					node.emit("credential deleted", this, {
+						userId,
+						credentialType: type,
+						credentialSlot: slot,
+					});
+					node.emit("user deleted", this, { userId });
+				}
 			}
 			return result;
 		}
@@ -858,8 +898,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 
 	/** Returns the credential type to use for User Code CC based on supported characters */
 	private get _ucCredentialType(): UserCredentialType {
-		const supportedASCIIChars = this.getValue<string>(
-			UserCodeCCValues.supportedASCIIChars.id,
+		const supportedASCIIChars = this._getValue<string>(
+			UserCodeCCValues.supportedASCIIChars.endpoint(this.index),
 		);
 		return isPINOnly(supportedASCIIChars)
 			? UserCredentialType.PINCode
@@ -913,25 +953,29 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 	}
 
 	private _getUserCached_U3C(userId: number): UserData | undefined {
-		const userType = this.getValue<UserCredentialUserType>(
-			UserCredentialCCValues.userType(userId).id,
+		const userType = this._getValue<UserCredentialUserType>(
+			UserCredentialCCValues.userType(userId).endpoint(this.index),
 		);
 		if (userType == undefined) return undefined;
 
 		return {
 			userId,
-			active: this.getValue<boolean>(
-				UserCredentialCCValues.userActive(userId).id,
+			active: this._getValue<boolean>(
+				UserCredentialCCValues.userActive(userId).endpoint(this.index),
 			) ?? false,
 			userType,
-			userName: this.getValue<string>(
-				UserCredentialCCValues.userName(userId).id,
+			userName: this._getValue<string>(
+				UserCredentialCCValues.userName(userId).endpoint(this.index),
 			) ?? undefined,
-			credentialRule: this.getValue<UserCredentialRule>(
-				UserCredentialCCValues.credentialRule(userId).id,
+			credentialRule: this._getValue<UserCredentialRule>(
+				UserCredentialCCValues.credentialRule(userId).endpoint(
+					this.index,
+				),
 			) ?? undefined,
-			expiringTimeoutMinutes: this.getValue<number>(
-				UserCredentialCCValues.expiringTimeoutMinutes(userId).id,
+			expiringTimeoutMinutes: this._getValue<number>(
+				UserCredentialCCValues.expiringTimeoutMinutes(userId).endpoint(
+					this.index,
+				),
 			) || undefined,
 		};
 	}
@@ -941,16 +985,18 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
-		const data = this.getValue<Uint8Array>(
-			UserCredentialCCValues.credential(userId, type, slot).id,
+		const data = this._getValue<Uint8Array>(
+			UserCredentialCCValues.credential(userId, type, slot).endpoint(
+				this.index,
+			),
 		);
 		if (data == undefined) return undefined;
 		return { userId, type, slot, data };
 	}
 
 	private _getUserCached_UC(userId: number): UserData | undefined {
-		const status = this.getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(userId).id,
+		const status = this._getValue<UserIDStatus>(
+			UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
 		);
 		if (status == undefined) return undefined;
 		return this._mapUserCodeStatusToUserData(userId, status);
@@ -962,8 +1008,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		slot: number,
 	): CredentialData | undefined {
 		if (type !== this._ucCredentialType || slot !== 1) return undefined;
-		const status = this.getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(userId).id,
+		const status = this._getValue<UserIDStatus>(
+			UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
 		);
 		if (
 			status == undefined
@@ -972,8 +1018,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		) {
 			return undefined;
 		}
-		const data = this.getValue<string>(
-			UserCodeCCValues.userCode(userId).id,
+		const data = this._getValue<string>(
+			UserCodeCCValues.userCode(userId).endpoint(this.index),
 		);
 		if (data == undefined) return undefined;
 		return { userId, type, slot, data };

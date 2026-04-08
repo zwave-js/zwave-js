@@ -24,16 +24,18 @@ export function handleUserCredentialUserReport(
 	node: ZWaveNode,
 	report: UserCredentialCCUserReport,
 ): void {
+	const endpoint = node.getEndpoint(report.endpointIndex) ?? node;
+
 	// Trust the reportType from the device
 	switch (report.reportType) {
 		case UserCredentialUserReportType.UserAdded:
-			node.emit("user added", node, buildUserArgs(report));
+			node.emit("user added", endpoint, buildUserArgs(report));
 			break;
 		case UserCredentialUserReportType.UserModified:
-			node.emit("user modified", node, buildUserArgs(report));
+			node.emit("user modified", endpoint, buildUserArgs(report));
 			break;
 		case UserCredentialUserReportType.UserDeleted:
-			node.emit("user deleted", node, {
+			node.emit("user deleted", endpoint, {
 				userId: report.userId,
 			});
 			break;
@@ -44,10 +46,12 @@ export function handleUserCredentialCredentialReport(
 	node: ZWaveNode,
 	report: UserCredentialCCCredentialReport,
 ): void {
+	const endpoint = node.getEndpoint(report.endpointIndex) ?? node;
+
 	// Trust the reportType from the device
 	switch (report.reportType) {
 		case UserCredentialCredentialReportType.CredentialAdded:
-			node.emit("credential added", node, {
+			node.emit("credential added", endpoint, {
 				userId: report.userId,
 				credentialType: report.credentialType,
 				credentialSlot: report.credentialSlot,
@@ -55,7 +59,7 @@ export function handleUserCredentialCredentialReport(
 			});
 			break;
 		case UserCredentialCredentialReportType.CredentialModified:
-			node.emit("credential modified", node, {
+			node.emit("credential modified", endpoint, {
 				userId: report.userId,
 				credentialType: report.credentialType,
 				credentialSlot: report.credentialSlot,
@@ -63,7 +67,7 @@ export function handleUserCredentialCredentialReport(
 			});
 			break;
 		case UserCredentialCredentialReportType.CredentialDeleted:
-			node.emit("credential deleted", node, {
+			node.emit("credential deleted", endpoint, {
 				userId: report.userId,
 				credentialType: report.credentialType,
 				credentialSlot: report.credentialSlot,
@@ -76,8 +80,10 @@ export function handleUserCredentialCredentialLearnReport(
 	node: ZWaveNode,
 	report: UserCredentialCCCredentialLearnReport,
 ): void {
+	const endpoint = node.getEndpoint(report.endpointIndex) ?? node;
+
 	if (report.stepsRemaining > 0) {
-		node.emit("credential learn progress", node, {
+		node.emit("credential learn progress", endpoint, {
 			userId: report.userId,
 			credentialType: report.credentialType,
 			credentialSlot: report.credentialSlot,
@@ -86,7 +92,7 @@ export function handleUserCredentialCredentialLearnReport(
 			stepCount: report.learnStatus,
 		});
 	} else {
-		node.emit("credential learn completed", node, {
+		node.emit("credential learn completed", endpoint, {
 			userId: report.userId,
 			credentialType: report.credentialType,
 			credentialSlot: report.credentialSlot,

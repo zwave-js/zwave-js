@@ -1,3 +1,3 @@
-import { AccessControlMixin } from "./85_AccessControl.js";
+import { DeviceConfigMixin } from "./80_DeviceConfig.js";
 
-export abstract class ZWaveNodeMixins extends AccessControlMixin {}
+export abstract class ZWaveNodeMixins extends DeviceConfigMixin {}

@@ -25,7 +25,7 @@ import type { AllOrNone, BytesView } from "@zwave-js/shared";
 import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
-import type { UserData } from "./mixins/85_AccessControl.js";
+import type { UserData } from "./endpoint-mixins/05_AccessControl.js";
 
 export {
 	EntryControlDataTypes,
@@ -256,16 +256,19 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	"interview stage completed": (node: ZWaveNode, stageName: string) => void;
 	"interview started": (node: ZWaveNode) => void;
 	"node info received": (node: ZWaveNode) => void;
-	"user added": (node: ZWaveNode, args: UserData) => void;
-	"user modified": (node: ZWaveNode, args: UserData) => void;
-	"user deleted": (node: ZWaveNode, args: { userId: number }) => void;
-	"credential added": (node: ZWaveNode, args: CredentialChangedArgs) => void;
+	"user added": (endpoint: Endpoint, args: UserData) => void;
+	"user modified": (endpoint: Endpoint, args: UserData) => void;
+	"user deleted": (endpoint: Endpoint, args: { userId: number }) => void;
+	"credential added": (
+		endpoint: Endpoint,
+		args: CredentialChangedArgs,
+	) => void;
 	"credential modified": (
-		node: ZWaveNode,
+		endpoint: Endpoint,
 		args: CredentialChangedArgs,
 	) => void;
 	"credential deleted": (
-		node: ZWaveNode,
+		endpoint: Endpoint,
 		args: {
 			userId: number;
 			credentialType: UserCredentialType;
@@ -273,7 +276,7 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 		},
 	) => void;
 	"credential learn progress": (
-		node: ZWaveNode,
+		endpoint: Endpoint,
 		args: {
 			userId: number;
 			credentialType: UserCredentialType;
@@ -283,7 +286,7 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 		},
 	) => void;
 	"credential learn completed": (
-		node: ZWaveNode,
+		endpoint: Endpoint,
 		args: {
 			userId: number;
 			credentialType: UserCredentialType;
