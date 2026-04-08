@@ -18,6 +18,7 @@ import {
 	type ValueID,
 	ZWaveError,
 	ZWaveErrorCodes,
+	isUnsupervisedOrSucceeded,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { EndpointBase } from "./00_Base.js";
@@ -545,10 +546,14 @@ export class AccessControlMixin extends EndpointBase
 	): Promise<SupervisionResult | undefined> {
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
-			return api.setUser({
+			const result = await api.setUser({
 				operationType: UserCredentialOperationType.Delete,
 				userId,
 			});
+			if (isUnsupervisedOrSucceeded(result)) {
+				this._purgeCachedCredentials(userId);
+			}
+			return result;
 		} else if (this._usesUserCodeCC) {
 			// User Code CC ties each user to their code, so clearing
 			// the code implicitly deletes the user and vice versa
@@ -574,10 +579,14 @@ export class AccessControlMixin extends EndpointBase
 	public async deleteAllUsers(): Promise<SupervisionResult | undefined> {
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
-			return api.setUser({
+			const result = await api.setUser({
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
 			});
+			if (isUnsupervisedOrSucceeded(result)) {
+				this._purgeAllCachedUsersAndCredentials();
+			}
+			return result;
 		} else if (this._usesUserCodeCC) {
 			const api = this._ucAPI();
 			return api.clear(0);
@@ -960,6 +969,51 @@ export class AccessControlMixin extends EndpointBase
 		}
 
 		return { userId, active, userType };
+	}
+
+	/** Removes cached credential values for a given user from the value DB */
+	private _purgeCachedCredentials(userId: number): void {
+		const valueDB = this.tryGetNode()?.valueDB;
+		if (!valueDB) return;
+		const credentialValues = valueDB.findValues(
+			(vid) =>
+				UserCredentialCCValues.credential.is(vid)
+				&& (vid.propertyKey as number >> 24) === userId,
+		);
+		for (const vid of credentialValues) {
+			valueDB.removeValue(vid);
+		}
+	}
+
+	/** Removes all cached user and credential values from the value DB */
+	private _purgeAllCachedUsersAndCredentials(): void {
+		const valueDB = this.tryGetNode()?.valueDB;
+		if (!valueDB) return;
+
+		const maxUsers = this._getValue<number>(
+			UserCredentialCCValues.supportedUsers.endpoint(this.index),
+		) ?? 0;
+		for (let userId = 1; userId <= maxUsers; userId++) {
+			for (
+				const value of [
+					UserCredentialCCValues.userType(userId),
+					UserCredentialCCValues.userActive(userId),
+					UserCredentialCCValues.credentialRule(userId),
+					UserCredentialCCValues.expiringTimeoutMinutes(userId),
+					UserCredentialCCValues.userName(userId),
+				]
+			) {
+				valueDB.removeValue(value.endpoint(this.index));
+			}
+		}
+
+		// Remove all credential values
+		const credentialValues = valueDB.findValues(
+			(vid) => UserCredentialCCValues.credential.is(vid),
+		);
+		for (const vid of credentialValues) {
+			valueDB.removeValue(vid);
+		}
 	}
 
 	private _throwNoAccessControl(): never {

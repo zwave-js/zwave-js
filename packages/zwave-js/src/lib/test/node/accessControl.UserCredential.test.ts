@@ -1,4 +1,5 @@
 import {
+	SupervisionCommand,
 	type UserCredentialCapability,
 	UserCredentialCredentialReportType,
 	UserCredentialModifierType,
@@ -20,6 +21,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import {
+	type MockNodeBehavior,
 	MockZWaveFrameType,
 	ccCaps,
 	createMockZWaveRequestFrame,
@@ -842,6 +844,187 @@ integrationTest(
 					errorMessage: "Should have sent AdminPinCodeGet",
 				},
 			);
+		},
+	},
+);
+
+const defaultDeleteTestCaps = {
+	ccId: CommandClasses["User Credential"],
+	isSupported: true,
+	version: 1,
+	numberOfSupportedUsers: 10,
+	supportedCredentialRules: [UserCredentialRule.Single],
+	maxUserNameLength: 32,
+	supportsAllUsersChecksum: false,
+	supportsUserChecksum: false,
+	supportsAdminCode: false,
+	supportedCredentialTypes: new Map([
+		[UserCredentialType.PINCode, defaultPINCapability],
+	]),
+};
+
+/** Creates a user and credential via the API, waits for the reports to be cached */
+async function populateUserAndCredential(
+	node: Parameters<Parameters<typeof integrationTest>[1]["testBody"]>[2],
+) {
+	const userCreated = createDeferredPromise<void>();
+	node.once("user added", () => userCreated.resolve());
+	await node.setUser(1, {
+		active: true,
+		userType: UserCredentialUserType.General,
+		userName: "Test",
+	});
+	await userCreated;
+
+	const credCreated = createDeferredPromise<void>();
+	node.once("credential added", () => credCreated.resolve());
+	await node.setCredential(1, UserCredentialType.PINCode, 1, "1234");
+	await credCreated;
+}
+
+integrationTest(
+	"deleteUser purges cached credentials (unsupervised)",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			// Verify data is cached
+			t.expect(node.getUserCached(1)).toBeDefined();
+			t.expect(node.getCredentialsCached(1).length).toBe(1);
+
+			const deleted = createDeferredPromise<void>();
+			node.once("user deleted", () => deleted.resolve());
+			await node.deleteUser(1);
+			await deleted;
+
+			// User values are purged by the CC report handler,
+			// credentials must be purged by the AccessControl mixin
+			t.expect(node.getUserCached(1)).toBeUndefined();
+			t.expect(node.getCredentialsCached(1).length).toBe(0);
+		},
+	},
+);
+
+integrationTest(
+	"deleteUser does not purge cached credentials on supervised failure",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				CommandClasses.Supervision,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			// Only reject supervised Delete operations
+			const rejectSupervisedUserDelete: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCredentialCCUserSet
+						&& receivedCC.operationType
+							=== UserCredentialOperationType.Delete
+						&& receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
+					) {
+						return { action: "fail" };
+					}
+				},
+			};
+			mockNode.defineBehavior(rejectSupervisedUserDelete);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			t.expect(node.getUserCached(1)).toBeDefined();
+			t.expect(node.getCredentialsCached(1).length).toBe(1);
+
+			await node.deleteUser(1);
+
+			// Supervised command failed — cache must remain intact
+			t.expect(node.getUserCached(1)).toBeDefined();
+			t.expect(node.getCredentialsCached(1).length).toBe(1);
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllUsers purges all cached users and credentials (unsupervised)",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			t.expect(node.getUsersCached().length).toBe(1);
+			t.expect(node.getCredentialsCached(1).length).toBe(1);
+
+			// deleteAllUsers returns after the API call completes;
+			// the purge happens synchronously before returning
+			await node.deleteAllUsers();
+
+			t.expect(node.getUsersCached().length).toBe(0);
+			t.expect(node.getCredentialsCached(1).length).toBe(0);
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllUsers does not purge on supervised failure",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				CommandClasses.Supervision,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			const rejectSupervisedUserDelete: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCredentialCCUserSet
+						&& receivedCC.operationType
+							=== UserCredentialOperationType.Delete
+						&& receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
+					) {
+						return { action: "fail" };
+					}
+				},
+			};
+			mockNode.defineBehavior(rejectSupervisedUserDelete);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			t.expect(node.getUsersCached().length).toBe(1);
+			t.expect(node.getCredentialsCached(1).length).toBe(1);
+
+			await node.deleteAllUsers();
+
+			// Supervised command failed — cache must remain intact
+			t.expect(node.getUsersCached().length).toBe(1);
+			t.expect(node.getCredentialsCached(1).length).toBe(1);
 		},
 	},
 );
