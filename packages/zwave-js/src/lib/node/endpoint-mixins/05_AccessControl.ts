@@ -19,7 +19,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { EndpointBase } from "./00_Base.js";
 
 export interface UserCapabilities {
@@ -184,7 +184,7 @@ export interface EndpointAccessControl {
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
-		timeout: number,
+		timeout?: number,
 	): Promise<SupervisionResult | undefined>;
 
 	/**
@@ -829,7 +829,7 @@ export class AccessControlMixin extends EndpointBase
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
-		timeout: number,
+		timeout?: number,
 	): Promise<SupervisionResult | undefined> {
 		if (!this._usesUserCredentialCC) {
 			throw new ZWaveError(
@@ -837,12 +837,31 @@ export class AccessControlMixin extends EndpointBase
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
+
+		const existing = this._getCredentialCached_U3C(userId, type, slot);
+		const operationType = existing
+			? UserCredentialOperationType.Modify
+			: UserCredentialOperationType.Add;
+
+		timeout ??= this.getCredentialCapabilitiesCached()
+			?.supportedCredentialTypes
+			.get(type)?.credentialLearnRecommendedTimeout;
+
+		if (timeout == undefined) {
+			throw new ZWaveError(
+				`Credential learning is not supported for credential type ${
+					getEnumMemberName(UserCredentialType, type)
+				}`,
+				ZWaveErrorCodes.CC_NotSupported,
+			);
+		}
+
 		const api = this._u3cAPI();
 		return api.startCredentialLearn({
 			userId,
 			credentialType: type,
 			credentialSlot: slot,
-			operationType: UserCredentialOperationType.Add,
+			operationType,
 			learnTimeout: timeout,
 		});
 	}

@@ -545,7 +545,12 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		);
 		if (caps && !caps.supportsCredentialLearn) {
 			throw new ZWaveError(
-				`Credential learning is not supported for credential type ${options.credentialType}`,
+				`Credential learning is not supported for credential type ${
+					getEnumMemberName(
+						UserCredentialType,
+						options.credentialType,
+					)
+				}`,
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
