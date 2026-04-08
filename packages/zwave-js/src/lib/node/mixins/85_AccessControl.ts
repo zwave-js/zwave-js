@@ -64,21 +64,9 @@ export interface SetUserOptions {
 export interface NodeAccessControl {
 	/**
 	 * Returns the user-related capabilities of this node.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	getUserCapabilities(): Promise<UserCapabilities | undefined>;
-
-	/**
-	 * Returns the user-related capabilities of this node.
 	 * This method uses cached information from the most recent interview.
 	 */
 	getUserCapabilitiesCached(): UserCapabilities | undefined;
-
-	/**
-	 * Returns the credential-related capabilities of this node.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	getCredentialCapabilities(): Promise<CredentialCapabilities | undefined>;
 
 	/**
 	 * Returns the credential-related capabilities of this node.
@@ -217,10 +205,17 @@ export interface NodeAccessControl {
 	setAdminCode(code: string): Promise<SupervisionResult | undefined>;
 }
 
+const PIN_CHARS = /^[0-9]+$/;
+
+/** Whether the supported ASCII characters indicate a PIN-only device */
+function isPINOnly(supportedASCIIChars: string | undefined): boolean {
+	return supportedASCIIChars != undefined
+		&& PIN_CHARS.test(supportedASCIIChars);
+}
+
 export abstract class AccessControlMixin extends DeviceConfigMixin
 	implements NodeAccessControl
 {
-
 	// FIXME: This is technically not correct. A node could support both CCs,
 	// and we may have to decide which one to use, or switch between them on
 	// the fly using Version CC / migration.
@@ -232,45 +227,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 	private get _usesUserCodeCC(): boolean {
 		return !this._usesUserCredentialCC
 			&& this.supportsCC(CommandClasses["User Code"]);
-	}
-
-
-	public async getUserCapabilities(): Promise<
-		UserCapabilities | undefined
-	> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
-			const result = await api.getUserCapabilities();
-			if (!result) return undefined;
-			return {
-				maxUsers: result.numberOfSupportedUsers,
-				supportedUserTypes: result.supportedUserTypes,
-				maxUserNameLength: result.maxUserNameLength,
-				supportedCredentialRules: result.supportedCredentialRules,
-			};
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
-			const maxUsers = await api.getUsersCount();
-			const caps = await api.getCapabilities();
-			const supportedUserTypes: UserCredentialUserType[] = [
-				UserCredentialUserType.General,
-			];
-			// User Code CC has no concept of user types, but the Messaging
-			// status is the closest equivalent to a NonAccess user
-			if (
-				caps?.supportedUserIDStatuses?.includes(UserIDStatus.Messaging)
-			) {
-				supportedUserTypes.push(UserCredentialUserType.NonAccess);
-			}
-			return {
-				maxUsers: maxUsers ?? 0,
-				supportedUserTypes,
-				// User Code CC does not support user names or credential rules
-				maxUserNameLength: undefined,
-				supportedCredentialRules: [UserCredentialRule.Single],
-			};
-		}
-		return undefined;
 	}
 
 	public getUserCapabilitiesCached():
@@ -318,45 +274,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		return undefined;
 	}
 
-	public async getCredentialCapabilities(): Promise<
-		CredentialCapabilities | undefined
-	> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
-			const result = await api.getCredentialCapabilities();
-			if (!result) return undefined;
-			return {
-				supportedCredentialTypes: result.credentialTypes,
-				supportsAdminCode: result.supportsAdminCode,
-				supportsAdminCodeDeactivation:
-					result.supportsAdminCodeDeactivation,
-			};
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
-			const caps = await api.getCapabilities();
-			// User Code CC only supports a single PIN code per user
-			// with a length of 4-10 digits (CC:0063.01.01.11.006)
-			const credentialTypes = new Map<
-				UserCredentialType,
-				UserCredentialCapability
-			>();
-			credentialTypes.set(UserCredentialType.PINCode, {
-				numberOfCredentialSlots: 1,
-				minCredentialLength: 4,
-				maxCredentialLength: 10,
-				maxCredentialHashLength: 0,
-				supportsCredentialLearn: false,
-			});
-			return {
-				supportedCredentialTypes: credentialTypes,
-				supportsAdminCode: caps?.supportsAdminCode ?? false,
-				supportsAdminCodeDeactivation:
-					caps?.supportsAdminCodeDeactivation ?? false,
-			};
-		}
-		return undefined;
-	}
-
 	public getCredentialCapabilitiesCached():
 		| CredentialCapabilities
 		| undefined
@@ -387,13 +304,15 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				) ?? false,
 			};
 		} else if (this._usesUserCodeCC) {
-			// User Code CC only supports a single PIN code per user
-			// with a length of 4-10 digits (CC:0063.01.01.11.006)
+			// User Code CC only supports a single credential per user
+			// with a length of 4-10 characters (CC:0063.01.01.11.006).
+			// Despite the spec calling them "PIN codes", v1 devices often
+			// accept arbitrary characters. Use the widest matching type.
 			const credentialTypes = new Map<
 				UserCredentialType,
 				UserCredentialCapability
 			>();
-			credentialTypes.set(UserCredentialType.PINCode, {
+			credentialTypes.set(this._ucCredentialType, {
 				numberOfCredentialSlots: 1,
 				minCredentialLength: 4,
 				maxCredentialLength: 10,
@@ -413,7 +332,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		}
 		return undefined;
 	}
-
 
 	public async getUser(userId: number): Promise<UserData | undefined> {
 		if (this._usesUserCredentialCC) {
@@ -615,7 +533,7 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				this._emit("user deleted", this as any, { userId });
 				this._emit("credential deleted", this as any, {
 					userId,
-					credentialType: UserCredentialType.PINCode,
+					credentialType: this._ucCredentialType,
 					credentialSlot: 1,
 				});
 			}
@@ -638,7 +556,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		this._throwNoAccessControl();
 	}
 
-
 	public async getCredential(
 		userId: number,
 		type: UserCredentialType,
@@ -655,7 +572,7 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				data: result.credentialData,
 			};
 		} else if (this._usesUserCodeCC) {
-			if (type !== UserCredentialType.PINCode || slot !== 1) {
+			if (type !== this._ucCredentialType || slot !== 1) {
 				return undefined;
 			}
 			const api = this._ucAPI();
@@ -716,7 +633,7 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		} else if (this._usesUserCodeCC) {
 			const cred = await this.getCredential(
 				userId,
-				UserCredentialType.PINCode,
+				this._ucCredentialType,
 				1,
 			);
 			return cred ? [cred] : [];
@@ -753,7 +670,7 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		} else if (this._usesUserCodeCC) {
 			const cred = this._getCredentialCached_UC(
 				userId,
-				UserCredentialType.PINCode,
+				this._ucCredentialType,
 				1,
 			);
 			return cred ? [cred] : [];
@@ -783,9 +700,9 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				credentialData,
 			});
 		} else if (this._usesUserCodeCC) {
-			if (type !== UserCredentialType.PINCode || slot !== 1) {
+			if (type !== this._ucCredentialType || slot !== 1) {
 				throw new ZWaveError(
-					"This node only supports PINCode credentials in slot 1",
+					"This node only supports a single credential in slot 1",
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
@@ -845,9 +762,9 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 				credentialSlot: slot,
 			});
 		} else if (this._usesUserCodeCC) {
-			if (type !== UserCredentialType.PINCode || slot !== 1) {
+			if (type !== this._ucCredentialType || slot !== 1) {
 				throw new ZWaveError(
-					"This node only supports PINCode credentials in slot 1",
+					"This node only supports a single credential in slot 1",
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
@@ -905,7 +822,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		return api.cancelCredentialLearn();
 	}
 
-
 	public async getAdminCode(): Promise<string | undefined> {
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
@@ -930,7 +846,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		this._throwNoAccessControl();
 	}
 
-
 	private _ucAPI(): UserCodeCCAPI {
 		return this.commandClasses["User Code"] as unknown as UserCodeCCAPI;
 	}
@@ -939,6 +854,16 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		return this.commandClasses[
 			"User Credential"
 		] as unknown as UserCredentialCCAPI;
+	}
+
+	/** Returns the credential type to use for User Code CC based on supported characters */
+	private get _ucCredentialType(): UserCredentialType {
+		const supportedASCIIChars = this.getValue<string>(
+			UserCodeCCValues.supportedASCIIChars.id,
+		);
+		return isPINOnly(supportedASCIIChars)
+			? UserCredentialType.PINCode
+			: UserCredentialType.Password;
 	}
 
 	/** Maps User Code CC's UserIDStatus to the unified active/userType model */
@@ -987,7 +912,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		);
 	}
 
-
 	private _getUserCached_U3C(userId: number): UserData | undefined {
 		const userType = this.getValue<UserCredentialUserType>(
 			UserCredentialCCValues.userType(userId).id,
@@ -1024,7 +948,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		return { userId, type, slot, data };
 	}
 
-
 	private _getUserCached_UC(userId: number): UserData | undefined {
 		const status = this.getValue<UserIDStatus>(
 			UserCodeCCValues.userIdStatus(userId).id,
@@ -1038,8 +961,7 @@ export abstract class AccessControlMixin extends DeviceConfigMixin
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
-		// User Code CC only has one PIN code per user
-		if (type !== UserCredentialType.PINCode || slot !== 1) return undefined;
+		if (type !== this._ucCredentialType || slot !== 1) return undefined;
 		const status = this.getValue<UserIDStatus>(
 			UserCodeCCValues.userIdStatus(userId).id,
 		);
