@@ -535,6 +535,20 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			UserCredentialCommand.CredentialLearnStart,
 		);
 
+		// The node will ignore the command if credential learning is not
+		// supported for this credential type (CC:0083.01.0F.11.004)
+		const caps = UserCredentialCC.getCredentialCapabilitiesCached(
+			this.host,
+			this.endpoint,
+			options.credentialType,
+		);
+		if (caps && !caps.supportsCredentialLearn) {
+			throw new ZWaveError(
+				`Credential learning is not supported for credential type ${options.credentialType}`,
+				ZWaveErrorCodes.CC_NotSupported,
+			);
+		}
+
 		const cc = new UserCredentialCCCredentialLearnStart({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
@@ -642,6 +656,24 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			UserCredentialCommand,
 			UserCredentialCommand.AdminPinCodeSet,
 		);
+
+		// Deactivating the admin code (empty string) requires ACD support,
+		// otherwise the node may ignore the command (CC:0083.01.1A.13.003)
+		if (options.pinCode.length === 0) {
+			const supportsDeactivation = this.tryGetValueDB()?.getValue<
+				boolean
+			>(
+				UserCredentialCCValues.supportsAdminCodeDeactivation.endpoint(
+					this.endpoint.index,
+				),
+			);
+			if (supportsDeactivation === false) {
+				throw new ZWaveError(
+					"This node does not support deactivating the Admin Code",
+					ZWaveErrorCodes.CC_NotSupported,
+				);
+			}
+		}
 
 		const cc = new UserCredentialCCAdminPinCodeSet({
 			nodeId: this.endpoint.nodeId,

@@ -45,7 +45,7 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// User capabilities
-			const userCaps = node.getUserCapabilities();
+			const userCaps = node.getUserCapabilitiesCached();
 			t.expect(userCaps).toBeDefined();
 			t.expect(userCaps!.maxUsers).toBe(10);
 			t.expect(userCaps!.supportedUserTypes).toStrictEqual([
@@ -58,7 +58,7 @@ integrationTest(
 			]);
 
 			// Credential capabilities
-			const credCaps = node.getCredentialCapabilities();
+			const credCaps = node.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
 			t.expect(credCaps!.supportsAdminCode).toBe(true);
 			t.expect(credCaps!.supportsAdminCodeDeactivation).toBe(true);
@@ -97,7 +97,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const caps = node.getUserCapabilities();
+			const caps = node.getUserCapabilitiesCached();
 			t.expect(caps!.supportedUserTypes).toStrictEqual([
 				UserCredentialUserType.General,
 			]);
@@ -110,7 +110,7 @@ integrationTest(
 // =============================================================================
 
 integrationTest(
-	"getUser maps UserIDStatus to active + userType correctly",
+	"getUserCached maps UserIDStatus to active + userType correctly",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -149,35 +149,35 @@ integrationTest(
 			node.valueDB.setValue(UserCodeCCValues.userCode(3).id, "9999");
 
 			// User 1: Enabled -> active: true, userType: General
-			const user1 = node.getUser(1);
+			const user1 = node.getUserCached(1);
 			t.expect(user1).toBeDefined();
 			t.expect(user1!.active).toBe(true);
 			t.expect(user1!.userType).toBe(UserCredentialUserType.General);
 
 			// User 2: Disabled -> active: false, userType: General
-			const user2 = node.getUser(2);
+			const user2 = node.getUserCached(2);
 			t.expect(user2).toBeDefined();
 			t.expect(user2!.active).toBe(false);
 			t.expect(user2!.userType).toBe(UserCredentialUserType.General);
 
 			// User 3: Messaging -> active: true, userType: NonAccess
-			const user3 = node.getUser(3);
+			const user3 = node.getUserCached(3);
 			t.expect(user3).toBeDefined();
 			t.expect(user3!.active).toBe(true);
 			t.expect(user3!.userType).toBe(UserCredentialUserType.NonAccess);
 
 			// User 4: not set -> undefined
-			t.expect(node.getUser(4)).toBeUndefined();
+			t.expect(node.getUserCached(4)).toBeUndefined();
 
 			// getUsers should return 3 users
-			const users = node.getUsers();
+			const users = node.getUsersCached();
 			t.expect(users.length).toBe(3);
 		},
 	},
 );
 
 integrationTest(
-	"getCredentials maps each User Code CC user to a single PINCode credential",
+	"getCredentialsCached maps each User Code CC user to a single PINCode credential",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -203,14 +203,14 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
 
-			const creds = node.getCredentials(1);
+			const creds = node.getCredentialsCached(1);
 			t.expect(creds.length).toBe(1);
 			t.expect(creds[0].type).toBe(UserCredentialType.PINCode);
 			t.expect(creds[0].slot).toBe(1);
 			t.expect(creds[0].data).toBe("1234");
 
 			// Non-existent user has no credentials
-			t.expect(node.getCredentials(2).length).toBe(0);
+			t.expect(node.getCredentialsCached(2).length).toBe(0);
 		},
 	},
 );

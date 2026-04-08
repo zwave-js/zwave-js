@@ -88,7 +88,7 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// User capabilities
-			const userCaps = node.getUserCapabilities();
+			const userCaps = node.getUserCapabilitiesCached();
 			t.expect(userCaps).toBeDefined();
 			t.expect(userCaps!.maxUsers).toBe(20);
 			t.expect(userCaps!.maxUserNameLength).toBe(64);
@@ -103,7 +103,7 @@ integrationTest(
 			]);
 
 			// Credential capabilities
-			const credCaps = node.getCredentialCapabilities();
+			const credCaps = node.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
 			t.expect(credCaps!.supportsAdminCode).toBe(true);
 			t.expect(credCaps!.supportsAdminCodeDeactivation).toBe(true);
@@ -133,7 +133,7 @@ integrationTest(
 // =============================================================================
 
 integrationTest(
-	"getUser and getCredentials return data set via the unified API",
+	"getUserCached and getCredentialsCached return data set via the unified API",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -179,18 +179,18 @@ integrationTest(
 			await credCreated;
 
 			// Now verify reads return the correct data
-			const user = node.getUser(1);
+			const user = node.getUserCached(1);
 			t.expect(user).toBeDefined();
 			t.expect(user!.active).toBe(true);
 			t.expect(user!.userType).toBe(UserCredentialUserType.General);
 			t.expect(user!.userName).toBe("Alice");
 
-			t.expect(node.getUser(2)).toBeUndefined();
+			t.expect(node.getUserCached(2)).toBeUndefined();
 
-			const users = node.getUsers();
+			const users = node.getUsersCached();
 			t.expect(users.length).toBe(1);
 
-			const creds = node.getCredentials(1);
+			const creds = node.getCredentialsCached(1);
 			t.expect(creds.length).toBe(1);
 			t.expect(creds[0].type).toBe(UserCredentialType.PINCode);
 			t.expect(creds[0].slot).toBe(1);

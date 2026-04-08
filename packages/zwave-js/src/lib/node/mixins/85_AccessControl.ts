@@ -60,8 +60,166 @@ export interface SetUserOptions {
 	expiringTimeoutMinutes?: number;
 }
 
-export abstract class AccessControlMixin extends DeviceConfigMixin {
-	// ── Backend selection ─────────────────────────────────────────
+/** Defines functionality of Z-Wave nodes related to managing users and credentials for access control */
+export interface NodeAccessControl {
+	/**
+	 * Returns the user-related capabilities of this node.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	getUserCapabilities(): Promise<UserCapabilities | undefined>;
+
+	/**
+	 * Returns the user-related capabilities of this node.
+	 * This method uses cached information from the most recent interview.
+	 */
+	getUserCapabilitiesCached(): UserCapabilities | undefined;
+
+	/**
+	 * Returns the credential-related capabilities of this node.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	getCredentialCapabilities(): Promise<CredentialCapabilities | undefined>;
+
+	/**
+	 * Returns the credential-related capabilities of this node.
+	 * This method uses cached information from the most recent interview.
+	 */
+	getCredentialCapabilitiesCached(): CredentialCapabilities | undefined;
+
+	/**
+	 * Returns the data for the user with the given ID.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	getUser(userId: number): Promise<UserData | undefined>;
+
+	/**
+	 * Returns the data for the user with the given ID.
+	 * This method uses cached information from the most recent interview.
+	 */
+	getUserCached(userId: number): UserData | undefined;
+
+	/**
+	 * Returns the data for all configured users.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	getUsers(): Promise<UserData[]>;
+
+	/**
+	 * Returns the data for all configured users.
+	 * This method uses cached information from the most recent interview.
+	 */
+	getUsersCached(): UserData[];
+
+	/**
+	 * Creates or updates the user with the given ID.
+	 * This communicates with the node.
+	 */
+	setUser(
+		userId: number,
+		options: SetUserOptions,
+	): Promise<SupervisionResult | undefined>;
+
+	/**
+	 * Deletes the user with the given ID and all of their credentials.
+	 * This communicates with the node.
+	 */
+	deleteUser(userId: number): Promise<SupervisionResult | undefined>;
+
+	/**
+	 * Deletes all users and their credentials.
+	 * This communicates with the node.
+	 */
+	deleteAllUsers(): Promise<SupervisionResult | undefined>;
+
+	/**
+	 * Returns the data for a specific credential.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	getCredential(
+		userId: number,
+		type: UserCredentialType,
+		slot: number,
+	): Promise<CredentialData | undefined>;
+
+	/**
+	 * Returns the data for a specific credential.
+	 * This method uses cached information from the most recent interview.
+	 */
+	getCredentialCached(
+		userId: number,
+		type: UserCredentialType,
+		slot: number,
+	): CredentialData | undefined;
+
+	/**
+	 * Returns all credentials for the given user.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	getCredentials(userId: number): Promise<CredentialData[]>;
+
+	/**
+	 * Returns all credentials for the given user.
+	 * This method uses cached information from the most recent interview.
+	 */
+	getCredentialsCached(userId: number): CredentialData[];
+
+	/**
+	 * Creates or updates a credential for the given user.
+	 * This communicates with the node.
+	 */
+	setCredential(
+		userId: number,
+		type: UserCredentialType,
+		slot: number,
+		data: string | Uint8Array,
+	): Promise<SupervisionResult | undefined>;
+
+	/**
+	 * Deletes the given credential.
+	 * This communicates with the node.
+	 */
+	deleteCredential(
+		userId: number,
+		type: UserCredentialType,
+		slot: number,
+	): Promise<SupervisionResult | undefined>;
+
+	/**
+	 * Starts a learn process for the given credential slot, allowing a user
+	 * to input a credential directly on the device.
+	 * Only supported on nodes using the User Credential CC.
+	 * This communicates with the node.
+	 */
+	startCredentialLearn(
+		userId: number,
+		type: UserCredentialType,
+		slot: number,
+		timeout: number,
+	): Promise<SupervisionResult | undefined>;
+
+	/**
+	 * Cancels an ongoing credential learn process.
+	 * Only supported on nodes using the User Credential CC.
+	 * This communicates with the node.
+	 */
+	cancelCredentialLearn(): Promise<SupervisionResult | undefined>;
+
+	/**
+	 * Retrieves the admin code from the node.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	getAdminCode(): Promise<string | undefined>;
+
+	/**
+	 * Sets the admin code on the node.
+	 * This communicates with the node.
+	 */
+	setAdminCode(code: string): Promise<SupervisionResult | undefined>;
+}
+
+export abstract class AccessControlMixin extends DeviceConfigMixin
+	implements NodeAccessControl
+{
 
 	// FIXME: This is technically not correct. A node could support both CCs,
 	// and we may have to decide which one to use, or switch between them on
@@ -76,48 +234,284 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 			&& this.supportsCC(CommandClasses["User Code"]);
 	}
 
-	// ── Capabilities ─────────────────────────────────────────────
 
-	public getUserCapabilities():
+	public async getUserCapabilities(): Promise<
+		UserCapabilities | undefined
+	> {
+		if (this._usesUserCredentialCC) {
+			const api = this._u3cAPI();
+			const result = await api.getUserCapabilities();
+			if (!result) return undefined;
+			return {
+				maxUsers: result.numberOfSupportedUsers,
+				supportedUserTypes: result.supportedUserTypes,
+				maxUserNameLength: result.maxUserNameLength,
+				supportedCredentialRules: result.supportedCredentialRules,
+			};
+		} else if (this._usesUserCodeCC) {
+			const api = this._ucAPI();
+			const maxUsers = await api.getUsersCount();
+			const caps = await api.getCapabilities();
+			const supportedUserTypes: UserCredentialUserType[] = [
+				UserCredentialUserType.General,
+			];
+			// User Code CC has no concept of user types, but the Messaging
+			// status is the closest equivalent to a NonAccess user
+			if (
+				caps?.supportedUserIDStatuses?.includes(UserIDStatus.Messaging)
+			) {
+				supportedUserTypes.push(UserCredentialUserType.NonAccess);
+			}
+			return {
+				maxUsers: maxUsers ?? 0,
+				supportedUserTypes,
+				// User Code CC does not support user names or credential rules
+				maxUserNameLength: undefined,
+				supportedCredentialRules: [UserCredentialRule.Single],
+			};
+		}
+		return undefined;
+	}
+
+	public getUserCapabilitiesCached():
 		| UserCapabilities
 		| undefined
 	{
 		if (this._usesUserCredentialCC) {
-			return this._getUserCapabilities_U3C();
+			return {
+				maxUsers: this.getValue<number>(
+					UserCredentialCCValues.supportedUsers.id,
+				) ?? 0,
+				supportedUserTypes: this.getValue<UserCredentialUserType[]>(
+					UserCredentialCCValues.supportedUserTypes.id,
+				) ?? [],
+				maxUserNameLength: this.getValue<number>(
+					UserCredentialCCValues.maxUserNameLength.id,
+				) ?? undefined,
+				supportedCredentialRules: this.getValue<UserCredentialRule[]>(
+					UserCredentialCCValues.supportedCredentialRules.id,
+				) ?? [],
+			};
 		} else if (this._usesUserCodeCC) {
-			return this._getUserCapabilities_UC();
+			const supportedStatuses = this.getValue<UserIDStatus[]>(
+				UserCodeCCValues.supportedUserIDStatuses.id,
+			) ?? [];
+			const supportedUserTypes: UserCredentialUserType[] = [
+				UserCredentialUserType.General,
+			];
+			// User Code CC has no concept of user types, but the Messaging
+			// status is the closest equivalent to a NonAccess user
+			if (supportedStatuses.includes(UserIDStatus.Messaging)) {
+				supportedUserTypes.push(UserCredentialUserType.NonAccess);
+			}
+
+			return {
+				maxUsers: this.getValue<number>(
+					UserCodeCCValues.supportedUsers.id,
+				) ?? 0,
+				supportedUserTypes,
+				// User Code CC does not support user names or credential rules
+				maxUserNameLength: undefined,
+				supportedCredentialRules: [UserCredentialRule.Single],
+			};
 		}
 		return undefined;
 	}
 
-	public getCredentialCapabilities():
+	public async getCredentialCapabilities(): Promise<
+		CredentialCapabilities | undefined
+	> {
+		if (this._usesUserCredentialCC) {
+			const api = this._u3cAPI();
+			const result = await api.getCredentialCapabilities();
+			if (!result) return undefined;
+			return {
+				supportedCredentialTypes: result.credentialTypes,
+				supportsAdminCode: result.supportsAdminCode,
+				supportsAdminCodeDeactivation:
+					result.supportsAdminCodeDeactivation,
+			};
+		} else if (this._usesUserCodeCC) {
+			const api = this._ucAPI();
+			const caps = await api.getCapabilities();
+			// User Code CC only supports a single PIN code per user
+			// with a length of 4-10 digits (CC:0063.01.01.11.006)
+			const credentialTypes = new Map<
+				UserCredentialType,
+				UserCredentialCapability
+			>();
+			credentialTypes.set(UserCredentialType.PINCode, {
+				numberOfCredentialSlots: 1,
+				minCredentialLength: 4,
+				maxCredentialLength: 10,
+				maxCredentialHashLength: 0,
+				supportsCredentialLearn: false,
+			});
+			return {
+				supportedCredentialTypes: credentialTypes,
+				supportsAdminCode: caps?.supportsAdminCode ?? false,
+				supportsAdminCodeDeactivation:
+					caps?.supportsAdminCodeDeactivation ?? false,
+			};
+		}
+		return undefined;
+	}
+
+	public getCredentialCapabilitiesCached():
 		| CredentialCapabilities
 		| undefined
 	{
 		if (this._usesUserCredentialCC) {
-			return this._getCredentialCapabilities_U3C();
+			const supportedTypes = this.getValue<UserCredentialType[]>(
+				UserCredentialCCValues.supportedCredentialTypes.id,
+			) ?? [];
+
+			const credentialTypes = new Map<
+				UserCredentialType,
+				UserCredentialCapability
+			>();
+			for (const type of supportedTypes) {
+				const cap = this.getValue<UserCredentialCapability>(
+					UserCredentialCCValues.credentialCapabilities(type).id,
+				);
+				if (cap) credentialTypes.set(type, cap);
+			}
+
+			return {
+				supportedCredentialTypes: credentialTypes,
+				supportsAdminCode: this.getValue<boolean>(
+					UserCredentialCCValues.supportsAdminCode.id,
+				) ?? false,
+				supportsAdminCodeDeactivation: this.getValue<boolean>(
+					UserCredentialCCValues.supportsAdminCodeDeactivation.id,
+				) ?? false,
+			};
 		} else if (this._usesUserCodeCC) {
-			return this._getCredentialCapabilities_UC();
+			// User Code CC only supports a single PIN code per user
+			// with a length of 4-10 digits (CC:0063.01.01.11.006)
+			const credentialTypes = new Map<
+				UserCredentialType,
+				UserCredentialCapability
+			>();
+			credentialTypes.set(UserCredentialType.PINCode, {
+				numberOfCredentialSlots: 1,
+				minCredentialLength: 4,
+				maxCredentialLength: 10,
+				maxCredentialHashLength: 0,
+				supportsCredentialLearn: false,
+			});
+
+			return {
+				supportedCredentialTypes: credentialTypes,
+				supportsAdminCode: this.getValue<boolean>(
+					UserCodeCCValues.supportsAdminCode.id,
+				) ?? false,
+				supportsAdminCodeDeactivation: this.getValue<boolean>(
+					UserCodeCCValues.supportsAdminCodeDeactivation.id,
+				) ?? false,
+			};
 		}
 		return undefined;
 	}
 
-	// ── User management ──────────────────────────────────────────
 
-	public getUser(userId: number): UserData | undefined {
+	public async getUser(userId: number): Promise<UserData | undefined> {
 		if (this._usesUserCredentialCC) {
-			return this._getUser_U3C(userId);
+			const api = this._u3cAPI();
+			const result = await api.getUser(userId);
+			if (!result?.userId) return undefined;
+			return {
+				userId: result.userId,
+				active: result.active ?? false,
+				userType: result.userType ?? UserCredentialUserType.General,
+				userName: result.userName ?? undefined,
+				credentialRule: result.credentialRule ?? undefined,
+				expiringTimeoutMinutes: result.expiringTimeoutMinutes
+					|| undefined,
+			};
 		} else if (this._usesUserCodeCC) {
-			return this._getUser_UC(userId);
+			const api = this._ucAPI();
+			const result = await api.get(userId);
+			if (!result) return undefined;
+			return this._mapUserCodeStatusToUserData(
+				userId,
+				result.userIdStatus,
+			);
 		}
 		return undefined;
 	}
 
-	public getUsers(): UserData[] {
+	public getUserCached(userId: number): UserData | undefined {
 		if (this._usesUserCredentialCC) {
-			return this._getUsers_U3C();
+			return this._getUserCached_U3C(userId);
 		} else if (this._usesUserCodeCC) {
-			return this._getUsers_UC();
+			return this._getUserCached_UC(userId);
+		}
+		return undefined;
+	}
+
+	public async getUsers(): Promise<UserData[]> {
+		if (this._usesUserCredentialCC) {
+			const api = this._u3cAPI();
+			const users: UserData[] = [];
+			// Iterate using nextUserId, starting from 0 to get the first user
+			let nextUserId = 0;
+			do {
+				const result = await api.getUser(nextUserId);
+				if (!result?.userId) break;
+				users.push({
+					userId: result.userId,
+					active: result.active ?? false,
+					userType: result.userType
+						?? UserCredentialUserType.General,
+					userName: result.userName ?? undefined,
+					credentialRule: result.credentialRule ?? undefined,
+					expiringTimeoutMinutes: result.expiringTimeoutMinutes
+						|| undefined,
+				});
+				nextUserId = result.nextUserId;
+			} while (nextUserId > 0);
+			return users;
+		} else if (this._usesUserCodeCC) {
+			const api = this._ucAPI();
+			const maxUsers = await api.getUsersCount();
+			if (!maxUsers) return [];
+			const users: UserData[] = [];
+			for (let userId = 1; userId <= maxUsers; userId++) {
+				const result = await api.get(userId);
+				if (!result) continue;
+				const user = this._mapUserCodeStatusToUserData(
+					userId,
+					result.userIdStatus,
+				);
+				if (user) users.push(user);
+			}
+			return users;
+		}
+		return [];
+	}
+
+	public getUsersCached(): UserData[] {
+		if (this._usesUserCredentialCC) {
+			const maxUsers = this.getValue<number>(
+				UserCredentialCCValues.supportedUsers.id,
+			) ?? 0;
+			const users: UserData[] = [];
+			for (let userId = 1; userId <= maxUsers; userId++) {
+				const user = this._getUserCached_U3C(userId);
+				if (user) users.push(user);
+			}
+			return users;
+		} else if (this._usesUserCodeCC) {
+			const maxUsers = this.getValue<number>(
+				UserCodeCCValues.supportedUsers.id,
+			) ?? 0;
+			const users: UserData[] = [];
+			for (let userId = 1; userId <= maxUsers; userId++) {
+				const user = this._getUserCached_UC(userId);
+				if (user) users.push(user);
+			}
+			return users;
 		}
 		return [];
 	}
@@ -127,9 +521,77 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		options: SetUserOptions,
 	): Promise<SupervisionResult | undefined> {
 		if (this._usesUserCredentialCC) {
-			return this._setUser_U3C(userId, options);
+			const api = this._u3cAPI();
+			const existing = this._getUserCached_U3C(userId);
+			const operationType = existing
+				? UserCredentialOperationType.Modify
+				: UserCredentialOperationType.Add;
+
+			const userType = options.userType
+				?? existing?.userType
+				?? UserCredentialUserType.General;
+
+			if (userType === UserCredentialUserType.Expiring) {
+				return api.setUser({
+					operationType,
+					userId,
+					active: options.active ?? existing?.active ?? true,
+					userType,
+					expiringTimeoutMinutes: options.expiringTimeoutMinutes
+						?? existing?.expiringTimeoutMinutes
+						?? 0,
+					credentialRule: options.credentialRule
+						?? existing?.credentialRule,
+					userName: options.userName ?? existing?.userName,
+				});
+			}
+
+			return api.setUser({
+				operationType,
+				userId,
+				active: options.active ?? existing?.active ?? true,
+				userType,
+				credentialRule: options.credentialRule
+					?? existing?.credentialRule,
+				userName: options.userName ?? existing?.userName,
+			});
 		} else if (this._usesUserCodeCC) {
-			return this._setUser_UC(userId, options);
+			const api = this._ucAPI();
+			const existing = this._getUserCached_UC(userId);
+
+			const active = options.active ?? existing?.active ?? true;
+			const userType = options.userType
+				?? existing?.userType
+				?? UserCredentialUserType.General;
+
+			// Reverse the unified active/userType model back to UserIDStatus
+			let status: UserIDStatus;
+			if (!active) {
+				status = UserIDStatus.Disabled;
+			} else if (userType === UserCredentialUserType.NonAccess) {
+				status = UserIDStatus.Messaging;
+			} else {
+				status = UserIDStatus.Enabled;
+			}
+
+			// User Code CC requires sending the code along with every status
+			// change, so we re-send the existing code to preserve it
+			const existingCode = this.getValue<string>(
+				UserCodeCCValues.userCode(userId).id,
+			) ?? "";
+
+			const result = await api.set(
+				userId,
+				status as number,
+				existingCode,
+			);
+			const userData: UserData = { userId, active, userType };
+			this._emit(
+				existing ? "user modified" : "user added",
+				this as any,
+				userData,
+			);
+			return result;
 		}
 		this._throwNoAccessControl();
 	}
@@ -144,7 +606,9 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 				userId,
 			});
 		} else if (this._usesUserCodeCC) {
-			const existed = this._getUser_UC(userId) != undefined;
+			// User Code CC ties each user to their code, so clearing
+			// the code implicitly deletes the user and vice versa
+			const existed = this._getUserCached_UC(userId) != undefined;
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
 			if (existed) {
@@ -174,26 +638,125 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		this._throwNoAccessControl();
 	}
 
-	// ── Credential management ────────────────────────────────────
 
-	public getCredential(
+	public async getCredential(
+		userId: number,
+		type: UserCredentialType,
+		slot: number,
+	): Promise<CredentialData | undefined> {
+		if (this._usesUserCredentialCC) {
+			const api = this._u3cAPI();
+			const result = await api.getCredential(userId, type, slot);
+			if (!result?.credentialSlot) return undefined;
+			return {
+				userId: result.userId,
+				type: result.credentialType,
+				slot: result.credentialSlot,
+				data: result.credentialData,
+			};
+		} else if (this._usesUserCodeCC) {
+			if (type !== UserCredentialType.PINCode || slot !== 1) {
+				return undefined;
+			}
+			const api = this._ucAPI();
+			const result = await api.get(userId);
+			if (!result) return undefined;
+			if (
+				result.userIdStatus === UserIDStatus.Available
+				|| result.userIdStatus === UserIDStatus.StatusNotAvailable
+			) {
+				return undefined;
+			}
+			return { userId, type, slot, data: result.userCode };
+		}
+		return undefined;
+	}
+
+	public getCredentialCached(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
 		if (this._usesUserCredentialCC) {
-			return this._getCredential_U3C(userId, type, slot);
+			return this._getCredentialCached_U3C(userId, type, slot);
 		} else if (this._usesUserCodeCC) {
-			return this._getCredential_UC(userId, type, slot);
+			return this._getCredentialCached_UC(userId, type, slot);
 		}
 		return undefined;
 	}
 
-	public getCredentials(userId: number): CredentialData[] {
+	public async getCredentials(userId: number): Promise<CredentialData[]> {
 		if (this._usesUserCredentialCC) {
-			return this._getCredentials_U3C(userId);
+			const api = this._u3cAPI();
+			const credentials: CredentialData[] = [];
+			// Iterate using nextCredentialType/nextCredentialSlot,
+			// starting from type 0 / slot 0 to get the first credential
+			let nextCredType: UserCredentialType = UserCredentialType.None;
+			let nextCredSlot = 0;
+			do {
+				const result = await api.getCredential(
+					userId,
+					nextCredType,
+					nextCredSlot,
+				);
+				if (!result?.credentialSlot) break;
+				credentials.push({
+					userId: result.userId,
+					type: result.credentialType,
+					slot: result.credentialSlot,
+					data: result.credentialData,
+				});
+				nextCredType = result.nextCredentialType;
+				nextCredSlot = result.nextCredentialSlot;
+			} while (
+				nextCredType !== UserCredentialType.None
+				|| nextCredSlot !== 0
+			);
+			return credentials;
 		} else if (this._usesUserCodeCC) {
-			return this._getCredentials_UC(userId);
+			const cred = await this.getCredential(
+				userId,
+				UserCredentialType.PINCode,
+				1,
+			);
+			return cred ? [cred] : [];
+		}
+		return [];
+	}
+
+	public getCredentialsCached(userId: number): CredentialData[] {
+		if (this._usesUserCredentialCC) {
+			const credentials: CredentialData[] = [];
+			const supportedTypes = this.getValue<UserCredentialType[]>(
+				UserCredentialCCValues.supportedCredentialTypes.id,
+			) ?? [];
+
+			for (const type of supportedTypes) {
+				const cap = this.getValue<UserCredentialCapability>(
+					UserCredentialCCValues.credentialCapabilities(type).id,
+				);
+				if (!cap) continue;
+				for (
+					let slot = 1;
+					slot <= cap.numberOfCredentialSlots;
+					slot++
+				) {
+					const cred = this._getCredentialCached_U3C(
+						userId,
+						type,
+						slot,
+					);
+					if (cred) credentials.push(cred);
+				}
+			}
+			return credentials;
+		} else if (this._usesUserCodeCC) {
+			const cred = this._getCredentialCached_UC(
+				userId,
+				UserCredentialType.PINCode,
+				1,
+			);
+			return cred ? [cred] : [];
 		}
 		return [];
 	}
@@ -205,9 +768,65 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		data: string | Uint8Array,
 	): Promise<SupervisionResult | undefined> {
 		if (this._usesUserCredentialCC) {
-			return this._setCredential_U3C(userId, type, slot, data);
+			const api = this._u3cAPI();
+			const existing = this._getCredentialCached_U3C(userId, type, slot);
+			const credentialData = typeof data === "string"
+				? Bytes.from(data, "utf-8")
+				: Bytes.from(data);
+			return api.setCredential({
+				operationType: existing
+					? UserCredentialOperationType.Modify
+					: UserCredentialOperationType.Add,
+				userId,
+				credentialType: type,
+				credentialSlot: slot,
+				credentialData,
+			});
 		} else if (this._usesUserCodeCC) {
-			return this._setCredential_UC(userId, type, slot, data);
+			if (type !== UserCredentialType.PINCode || slot !== 1) {
+				throw new ZWaveError(
+					"This node only supports PINCode credentials in slot 1",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			const api = this._ucAPI();
+
+			// Determine the current status; default to Enabled for new users
+			let status = this.getValue<UserIDStatus>(
+				UserCodeCCValues.userIdStatus(userId).id,
+			);
+			if (
+				status == undefined
+				|| status === UserIDStatus.Available
+			) {
+				status = UserIDStatus.Enabled;
+			}
+
+			const existingCred = this._getCredentialCached_UC(
+				userId,
+				type,
+				slot,
+			);
+
+			const codeData = typeof data === "string"
+				? data
+				: Bytes.from(data);
+			const result = await api.set(
+				userId,
+				status as number,
+				codeData,
+			);
+			this._emit(
+				existingCred ? "credential modified" : "credential added",
+				this as any,
+				{
+					userId,
+					credentialType: type,
+					credentialSlot: slot,
+					data,
+				},
+			);
+			return result;
 		}
 		this._throwNoAccessControl();
 	}
@@ -232,7 +851,9 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
-			const existed = this._getCredential_UC(userId, type, slot)
+			// User Code CC ties each user to their code, so clearing
+			// the credential also deletes the user
+			const existed = this._getCredentialCached_UC(userId, type, slot)
 				!= undefined;
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
@@ -284,7 +905,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		return api.cancelCredentialLearn();
 	}
 
-	// ── Admin code ───────────────────────────────────────────────
 
 	public async getAdminCode(): Promise<string | undefined> {
 		if (this._usesUserCredentialCC) {
@@ -310,7 +930,6 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		this._throwNoAccessControl();
 	}
 
-	// ── Internal: API helpers ────────────────────────────────────
 
 	private _ucAPI(): UserCodeCCAPI {
 		return this.commandClasses["User Code"] as unknown as UserCodeCCAPI;
@@ -322,6 +941,45 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		] as unknown as UserCredentialCCAPI;
 	}
 
+	/** Maps User Code CC's UserIDStatus to the unified active/userType model */
+	private _mapUserCodeStatusToUserData(
+		userId: number,
+		status: UserIDStatus,
+	): UserData | undefined {
+		// These statuses indicate no user is configured for this slot
+		if (
+			status === UserIDStatus.Available
+			|| status === UserIDStatus.StatusNotAvailable
+			|| status === UserIDStatus.PassageMode
+		) {
+			return undefined;
+		}
+
+		let active: boolean;
+		let userType: UserCredentialUserType;
+		switch (status) {
+			case UserIDStatus.Enabled:
+				active = true;
+				userType = UserCredentialUserType.General;
+				break;
+			case UserIDStatus.Disabled:
+				active = false;
+				userType = UserCredentialUserType.General;
+				break;
+			// Messaging is the closest User Code CC equivalent to NonAccess
+			case UserIDStatus.Messaging:
+				active = true;
+				userType = UserCredentialUserType.NonAccess;
+				break;
+			default:
+				active = true;
+				userType = UserCredentialUserType.General;
+				break;
+		}
+
+		return { userId, active, userType };
+	}
+
 	private _throwNoAccessControl(): never {
 		throw new ZWaveError(
 			"This node does not support managing users or credentials",
@@ -329,53 +987,8 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		);
 	}
 
-	// ── Internal: User Credential CC (U3C) backend ───────────────
 
-	private _getUserCapabilities_U3C(): UserCapabilities {
-		return {
-			maxUsers: this.getValue<number>(
-				UserCredentialCCValues.supportedUsers.id,
-			) ?? 0,
-			supportedUserTypes: this.getValue<UserCredentialUserType[]>(
-				UserCredentialCCValues.supportedUserTypes.id,
-			) ?? [],
-			maxUserNameLength: this.getValue<number>(
-				UserCredentialCCValues.maxUserNameLength.id,
-			) ?? undefined,
-			supportedCredentialRules: this.getValue<UserCredentialRule[]>(
-				UserCredentialCCValues.supportedCredentialRules.id,
-			) ?? [],
-		};
-	}
-
-	private _getCredentialCapabilities_U3C(): CredentialCapabilities {
-		const supportedTypes = this.getValue<UserCredentialType[]>(
-			UserCredentialCCValues.supportedCredentialTypes.id,
-		) ?? [];
-
-		const credentialTypes = new Map<
-			UserCredentialType,
-			UserCredentialCapability
-		>();
-		for (const type of supportedTypes) {
-			const cap = this.getValue<UserCredentialCapability>(
-				UserCredentialCCValues.credentialCapabilities(type).id,
-			);
-			if (cap) credentialTypes.set(type, cap);
-		}
-
-		return {
-			supportedCredentialTypes: credentialTypes,
-			supportsAdminCode: this.getValue<boolean>(
-				UserCredentialCCValues.supportsAdminCode.id,
-			) ?? false,
-			supportsAdminCodeDeactivation: this.getValue<boolean>(
-				UserCredentialCCValues.supportsAdminCodeDeactivation.id,
-			) ?? false,
-		};
-	}
-
-	private _getUser_U3C(userId: number): UserData | undefined {
+	private _getUserCached_U3C(userId: number): UserData | undefined {
 		const userType = this.getValue<UserCredentialUserType>(
 			UserCredentialCCValues.userType(userId).id,
 		);
@@ -399,58 +1012,7 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		};
 	}
 
-	private _getUsers_U3C(): UserData[] {
-		const maxUsers = this.getValue<number>(
-			UserCredentialCCValues.supportedUsers.id,
-		) ?? 0;
-		const users: UserData[] = [];
-		for (let userId = 1; userId <= maxUsers; userId++) {
-			const user = this._getUser_U3C(userId);
-			if (user) users.push(user);
-		}
-		return users;
-	}
-
-	private async _setUser_U3C(
-		userId: number,
-		options: SetUserOptions,
-	): Promise<SupervisionResult | undefined> {
-		const api = this._u3cAPI();
-		const existing = this._getUser_U3C(userId);
-		const operationType = existing
-			? UserCredentialOperationType.Modify
-			: UserCredentialOperationType.Add;
-
-		const userType = options.userType
-			?? existing?.userType
-			?? UserCredentialUserType.General;
-
-		if (userType === UserCredentialUserType.Expiring) {
-			return api.setUser({
-				operationType,
-				userId,
-				active: options.active ?? existing?.active ?? true,
-				userType,
-				expiringTimeoutMinutes: options.expiringTimeoutMinutes
-					?? existing?.expiringTimeoutMinutes
-					?? 0,
-				credentialRule: options.credentialRule
-					?? existing?.credentialRule,
-				userName: options.userName ?? existing?.userName,
-			});
-		}
-
-		return api.setUser({
-			operationType,
-			userId,
-			active: options.active ?? existing?.active ?? true,
-			userType,
-			credentialRule: options.credentialRule ?? existing?.credentialRule,
-			userName: options.userName ?? existing?.userName,
-		});
-	}
-
-	private _getCredential_U3C(
+	private _getCredentialCached_U3C(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
@@ -462,185 +1024,21 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		return { userId, type, slot, data };
 	}
 
-	private _getCredentials_U3C(userId: number): CredentialData[] {
-		const credentials: CredentialData[] = [];
-		const supportedTypes = this.getValue<UserCredentialType[]>(
-			UserCredentialCCValues.supportedCredentialTypes.id,
-		) ?? [];
 
-		for (const type of supportedTypes) {
-			const cap = this.getValue<UserCredentialCapability>(
-				UserCredentialCCValues.credentialCapabilities(type).id,
-			);
-			if (!cap) continue;
-			for (let slot = 1; slot <= cap.numberOfCredentialSlots; slot++) {
-				const cred = this._getCredential_U3C(userId, type, slot);
-				if (cred) credentials.push(cred);
-			}
-		}
-		return credentials;
-	}
-
-	private async _setCredential_U3C(
-		userId: number,
-		type: UserCredentialType,
-		slot: number,
-		data: string | Uint8Array,
-	): Promise<SupervisionResult | undefined> {
-		const api = this._u3cAPI();
-		const existing = this._getCredential_U3C(userId, type, slot);
-		const credentialData = typeof data === "string"
-			? Bytes.from(data, "utf-8")
-			: Bytes.from(data);
-		return api.setCredential({
-			operationType: existing
-				? UserCredentialOperationType.Modify
-				: UserCredentialOperationType.Add,
-			userId,
-			credentialType: type,
-			credentialSlot: slot,
-			credentialData,
-		});
-	}
-
-	// ── Internal: User Code CC backend ───────────────────────────
-
-	private _getUserCapabilities_UC(): UserCapabilities {
-		const supportedStatuses = this.getValue<UserIDStatus[]>(
-			UserCodeCCValues.supportedUserIDStatuses.id,
-		) ?? [];
-		const supportedUserTypes: UserCredentialUserType[] = [
-			UserCredentialUserType.General,
-		];
-		if (supportedStatuses.includes(UserIDStatus.Messaging)) {
-			supportedUserTypes.push(UserCredentialUserType.NonAccess);
-		}
-
-		return {
-			maxUsers: this.getValue<number>(
-				UserCodeCCValues.supportedUsers.id,
-			) ?? 0,
-			supportedUserTypes,
-			maxUserNameLength: undefined,
-			supportedCredentialRules: [UserCredentialRule.Single],
-		};
-	}
-
-	private _getCredentialCapabilities_UC(): CredentialCapabilities {
-		const credentialTypes = new Map<
-			UserCredentialType,
-			UserCredentialCapability
-		>();
-		credentialTypes.set(UserCredentialType.PINCode, {
-			numberOfCredentialSlots: 1,
-			minCredentialLength: 4,
-			maxCredentialLength: 10,
-			maxCredentialHashLength: 0,
-			supportsCredentialLearn: false,
-		});
-
-		return {
-			supportedCredentialTypes: credentialTypes,
-			supportsAdminCode: this.getValue<boolean>(
-				UserCodeCCValues.supportsAdminCode.id,
-			) ?? false,
-			supportsAdminCodeDeactivation: this.getValue<boolean>(
-				UserCodeCCValues.supportsAdminCodeDeactivation.id,
-			) ?? false,
-		};
-	}
-
-	private _getUser_UC(userId: number): UserData | undefined {
+	private _getUserCached_UC(userId: number): UserData | undefined {
 		const status = this.getValue<UserIDStatus>(
 			UserCodeCCValues.userIdStatus(userId).id,
 		);
-		if (
-			status == undefined
-			|| status === UserIDStatus.Available
-			|| status === UserIDStatus.StatusNotAvailable
-			|| status === UserIDStatus.PassageMode
-		) {
-			return undefined;
-		}
-
-		let active: boolean;
-		let userType: UserCredentialUserType;
-		switch (status) {
-			case UserIDStatus.Enabled:
-				active = true;
-				userType = UserCredentialUserType.General;
-				break;
-			case UserIDStatus.Disabled:
-				active = false;
-				userType = UserCredentialUserType.General;
-				break;
-			case UserIDStatus.Messaging:
-				active = true;
-				userType = UserCredentialUserType.NonAccess;
-				break;
-			default:
-				active = true;
-				userType = UserCredentialUserType.General;
-				break;
-		}
-
-		return { userId, active, userType };
+		if (status == undefined) return undefined;
+		return this._mapUserCodeStatusToUserData(userId, status);
 	}
 
-	private _getUsers_UC(): UserData[] {
-		const maxUsers = this.getValue<number>(
-			UserCodeCCValues.supportedUsers.id,
-		) ?? 0;
-		const users: UserData[] = [];
-		for (let userId = 1; userId <= maxUsers; userId++) {
-			const user = this._getUser_UC(userId);
-			if (user) users.push(user);
-		}
-		return users;
-	}
-
-	private async _setUser_UC(
-		userId: number,
-		options: SetUserOptions,
-	): Promise<SupervisionResult | undefined> {
-		const api = this._ucAPI();
-		const existing = this._getUser_UC(userId);
-
-		const active = options.active ?? existing?.active ?? true;
-		const userType = options.userType
-			?? existing?.userType
-			?? UserCredentialUserType.General;
-
-		// Map back to UserIDStatus
-		let status: UserIDStatus;
-		if (!active) {
-			status = UserIDStatus.Disabled;
-		} else if (userType === UserCredentialUserType.NonAccess) {
-			status = UserIDStatus.Messaging;
-		} else {
-			status = UserIDStatus.Enabled;
-		}
-
-		// We need the existing code to set the status
-		const existingCode = this.getValue<string>(
-			UserCodeCCValues.userCode(userId).id,
-		) ?? "";
-
-		const result = await api.set(userId, status as number, existingCode);
-		const userData: UserData = { userId, active, userType };
-		this._emit(
-			existing ? "user modified" : "user added",
-			this as any,
-			userData,
-		);
-		return result;
-	}
-
-	private _getCredential_UC(
+	private _getCredentialCached_UC(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
+		// User Code CC only has one PIN code per user
 		if (type !== UserCredentialType.PINCode || slot !== 1) return undefined;
 		const status = this.getValue<UserIDStatus>(
 			UserCodeCCValues.userIdStatus(userId).id,
@@ -657,58 +1055,5 @@ export abstract class AccessControlMixin extends DeviceConfigMixin {
 		);
 		if (data == undefined) return undefined;
 		return { userId, type, slot, data };
-	}
-
-	private _getCredentials_UC(userId: number): CredentialData[] {
-		const cred = this._getCredential_UC(
-			userId,
-			UserCredentialType.PINCode,
-			1,
-		);
-		return cred ? [cred] : [];
-	}
-
-	private async _setCredential_UC(
-		userId: number,
-		type: UserCredentialType,
-		slot: number,
-		data: string | Uint8Array,
-	): Promise<SupervisionResult | undefined> {
-		if (type !== UserCredentialType.PINCode || slot !== 1) {
-			throw new ZWaveError(
-				"This node only supports PINCode credentials in slot 1",
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-		const api = this._ucAPI();
-
-		// Determine the current status; default to Enabled for new users
-		let status = this.getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(userId).id,
-		);
-		if (
-			status == undefined
-			|| status === UserIDStatus.Available
-		) {
-			status = UserIDStatus.Enabled;
-		}
-
-		const existingCred = this._getCredential_UC(userId, type, slot);
-
-		const codeData = typeof data === "string"
-			? data
-			: Bytes.from(data);
-		const result = await api.set(userId, status as number, codeData);
-		this._emit(
-			existingCred ? "credential modified" : "credential added",
-			this as any,
-			{
-				userId,
-				credentialType: type,
-				credentialSlot: slot,
-				data,
-			},
-		);
-		return result;
 	}
 }
