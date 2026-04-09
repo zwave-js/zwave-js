@@ -19,6 +19,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	isUnsupervisedOrSucceeded,
+	supervisedCommandSucceeded,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { EndpointBase } from "./00_Base.js";
@@ -500,6 +501,9 @@ export class AccessControlMixin extends EndpointBase
 		} else if (this._usesUserCodeCC) {
 			const api = this._ucAPI();
 			const existing = this._getUserCached_UC(userId);
+			const existingStatus = this._getValue<UserIDStatus>(
+				UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
+			);
 
 			const active = options.active ?? existing?.active ?? true;
 			const userType = options.userType
@@ -520,21 +524,50 @@ export class AccessControlMixin extends EndpointBase
 			// change, so we re-send the existing code to preserve it
 			const existingCode = this._getValue<string>(
 				UserCodeCCValues.userCode(userId).endpoint(this.index),
-			) ?? "";
+			);
+			if (!existingCode) {
+				throw new ZWaveError(
+					"User Code CC requires a credential to be set before modifying the user. Use setCredential() first.",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
 
 			const result = await api.set(
 				userId,
 				status as number,
 				existingCode,
 			);
-			const node = this.tryGetNode();
-			if (node) {
-				const userData: UserData = { userId, active, userType };
-				node.emit(
-					existing ? "user modified" : "user added",
-					this,
-					userData,
-				);
+			if (result == undefined) {
+				// Unsupervised - verify the change
+				const verified = await api.get(userId);
+				const verifiedStatus = verified?.userIdStatus;
+				if (
+					verifiedStatus != undefined
+					&& verifiedStatus !== existingStatus
+					&& verifiedStatus !== UserIDStatus.Available
+				) {
+					const node = this.tryGetNode();
+					if (node) {
+						const userData: UserData = { userId, active, userType };
+						node.emit(
+							existing
+								? "user modified"
+								: "user added",
+							this,
+							userData,
+						);
+					}
+				}
+			} else if (supervisedCommandSucceeded(result)) {
+				const node = this.tryGetNode();
+				if (node) {
+					const userData: UserData = { userId, active, userType };
+					node.emit(
+						existing ? "user modified" : "user added",
+						this,
+						userData,
+					);
+				}
 			}
 			return result;
 		}
@@ -560,7 +593,24 @@ export class AccessControlMixin extends EndpointBase
 			const existed = this._getUserCached_UC(userId) != undefined;
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
-			if (existed) {
+			if (result == undefined) {
+				// Unsupervised - verify the change
+				const verified = await api.get(userId);
+				if (
+					existed
+					&& verified?.userIdStatus === UserIDStatus.Available
+				) {
+					const node = this.tryGetNode();
+					if (node) {
+						node.emit("user deleted", this, { userId });
+						node.emit("credential deleted", this, {
+							userId,
+							credentialType: this._ucCredentialType,
+							credentialSlot: 1,
+						});
+					}
+				}
+			} else if (supervisedCommandSucceeded(result) && existed) {
 				const node = this.tryGetNode();
 				if (node) {
 					node.emit("user deleted", this, { userId });
@@ -589,7 +639,14 @@ export class AccessControlMixin extends EndpointBase
 			return result;
 		} else if (this._usesUserCodeCC) {
 			const api = this._ucAPI();
-			return api.clear(0);
+			const result = await api.clear(0);
+			// Verifying all users being deleted is unrealistic
+			// since there can be up to 65535 users. So we just
+			// assume it worked when the command was not supervised.
+			if (isUnsupervisedOrSucceeded(result)) {
+				this._purgeAllCachedUserCodes();
+			}
+			return result;
 		}
 		this._throwNoAccessControl();
 	}
@@ -749,15 +806,15 @@ export class AccessControlMixin extends EndpointBase
 			const api = this._ucAPI();
 
 			// Determine the current status; default to Enabled for new users
-			let status = this._getValue<UserIDStatus>(
+			const existingStatus = this._getValue<UserIDStatus>(
 				UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
 			);
-			if (
-				status == undefined
-				|| status === UserIDStatus.Available
-			) {
-				status = UserIDStatus.Enabled;
-			}
+			const status = (
+					existingStatus == undefined
+					|| existingStatus === UserIDStatus.Available
+				)
+				? UserIDStatus.Enabled
+				: existingStatus;
 
 			const existingCred = this._getCredentialCached_UC(
 				userId,
@@ -773,18 +830,47 @@ export class AccessControlMixin extends EndpointBase
 				status as number,
 				codeData,
 			);
-			const node = this.tryGetNode();
-			if (node) {
-				node.emit(
-					existingCred ? "credential modified" : "credential added",
-					this,
-					{
-						userId,
-						credentialType: type,
-						credentialSlot: slot,
-						data,
-					},
-				);
+			if (result == undefined) {
+				// Unsupervised - verify the change
+				const verified = await api.get(userId);
+				const verifiedStatus = verified?.userIdStatus;
+				if (
+					verifiedStatus != undefined
+					&& verifiedStatus !== existingStatus
+					&& verifiedStatus !== UserIDStatus.Available
+				) {
+					const node = this.tryGetNode();
+					if (node) {
+						node.emit(
+							existingCred
+								? "credential modified"
+								: "credential added",
+							this,
+							{
+								userId,
+								credentialType: type,
+								credentialSlot: slot,
+								data,
+							},
+						);
+					}
+				}
+			} else if (supervisedCommandSucceeded(result)) {
+				const node = this.tryGetNode();
+				if (node) {
+					node.emit(
+						existingCred
+							? "credential modified"
+							: "credential added",
+						this,
+						{
+							userId,
+							credentialType: type,
+							credentialSlot: slot,
+							data,
+						},
+					);
+				}
 			}
 			return result;
 		}
@@ -813,7 +899,24 @@ export class AccessControlMixin extends EndpointBase
 				!= undefined;
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
-			if (existed) {
+			if (result == undefined) {
+				// Unsupervised - verify the change
+				const verified = await api.get(userId);
+				if (
+					existed
+					&& verified?.userIdStatus === UserIDStatus.Available
+				) {
+					const node = this.tryGetNode();
+					if (node) {
+						node.emit("credential deleted", this, {
+							userId,
+							credentialType: type,
+							credentialSlot: slot,
+						});
+						node.emit("user deleted", this, { userId });
+					}
+				}
+			} else if (supervisedCommandSucceeded(result) && existed) {
 				const node = this.tryGetNode();
 				if (node) {
 					node.emit("credential deleted", this, {
@@ -974,7 +1077,9 @@ export class AccessControlMixin extends EndpointBase
 		if (!valueDB) return;
 		const credentialValues = valueDB.findValues(
 			(vid) =>
-				UserCredentialCCValues.credential.is(vid)
+				(UserCredentialCCValues.credential.is(vid)
+					|| UserCredentialCCValues.credentialModifierType.is(vid)
+					|| UserCredentialCCValues.credentialModifierNodeId.is(vid))
 				&& (vid.propertyKey as number >> 24) === userId,
 		);
 		for (const vid of credentialValues) {
@@ -998,6 +1103,9 @@ export class AccessControlMixin extends EndpointBase
 					UserCredentialCCValues.credentialRule(userId),
 					UserCredentialCCValues.expiringTimeoutMinutes(userId),
 					UserCredentialCCValues.userName(userId),
+					UserCredentialCCValues.userModifierType(userId),
+					UserCredentialCCValues.userModifierNodeId(userId),
+					UserCredentialCCValues.userChecksum(userId),
 				]
 			) {
 				valueDB.removeValue(value.endpoint(this.index));
@@ -1006,9 +1114,27 @@ export class AccessControlMixin extends EndpointBase
 
 		// Remove all credential values
 		const credentialValues = valueDB.findValues(
-			(vid) => UserCredentialCCValues.credential.is(vid),
+			(vid) =>
+				UserCredentialCCValues.credential.is(vid)
+				|| UserCredentialCCValues.credentialModifierType.is(vid)
+				|| UserCredentialCCValues.credentialModifierNodeId.is(vid),
 		);
 		for (const vid of credentialValues) {
+			valueDB.removeValue(vid);
+		}
+	}
+
+	/** Removes all cached user code status and code values from the value DB */
+	private _purgeAllCachedUserCodes(): void {
+		const valueDB = this.tryGetNode()?.valueDB;
+		if (!valueDB) return;
+
+		const values = valueDB.findValues(
+			(vid) =>
+				UserCodeCCValues.userIdStatus.is(vid)
+				|| UserCodeCCValues.userCode.is(vid),
+		);
+		for (const vid of values) {
 			valueDB.removeValue(vid);
 		}
 	}
