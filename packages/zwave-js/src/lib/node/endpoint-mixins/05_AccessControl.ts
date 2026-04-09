@@ -209,12 +209,15 @@ export interface EndpointAccessControl {
 	setAdminCode(code: string): Promise<SupervisionResult | undefined>;
 }
 
-const PIN_CHARS = /^[0-9]+$/;
+const NON_PIN_CHARS = /[^0-9]/;
 
-/** Whether the supported ASCII characters indicate a PIN-only device */
-function isPINOnly(supportedASCIIChars: string | undefined): boolean {
+/**
+ * Whether the supported ASCII characters indicate a non-PIN device.
+ * When unknown (V1 nodes), defaults to PIN-only per the spec.
+ */
+function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 	return supportedASCIIChars != undefined
-		&& PIN_CHARS.test(supportedASCIIChars);
+		&& NON_PIN_CHARS.test(supportedASCIIChars);
 }
 
 export class AccessControlMixin extends EndpointBase
@@ -840,10 +843,7 @@ export class AccessControlMixin extends EndpointBase
 			let succeeded: boolean;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				const verifiedStatus = verified?.userIdStatus;
-				succeeded = verifiedStatus != undefined
-					&& verifiedStatus !== existingStatus
-					&& verifiedStatus !== UserIDStatus.Available;
+				succeeded = verified?.userCode === codeData;
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
 			}
@@ -1010,9 +1010,9 @@ export class AccessControlMixin extends EndpointBase
 		const supportedASCIIChars = this._getValue<string>(
 			UserCodeCCValues.supportedASCIIChars.endpoint(this.index),
 		);
-		return isPINOnly(supportedASCIIChars)
-			? UserCredentialType.PINCode
-			: UserCredentialType.Password;
+		return supportsNonPINChars(supportedASCIIChars)
+			? UserCredentialType.Password
+			: UserCredentialType.PINCode;
 	}
 
 	/** Maps User Code CC's UserIDStatus to the unified active/userType model */
