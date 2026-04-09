@@ -354,13 +354,14 @@ type UserCredentialCapability =
 		maxCredentialHashLength: number;
 	}
 	& (
-		| {
+		{
 			supportsCredentialLearn: true;
 			credentialLearnRecommendedTimeout: number;
 			credentialLearnNumberOfSteps: number;
-		}
-		| {
+		} | {
 			supportsCredentialLearn: false;
+			credentialLearnRecommendedTimeout?: undefined;
+			credentialLearnNumberOfSteps?: undefined;
 		}
 	);
 ```
@@ -436,7 +437,6 @@ interface SetUserOptions {
 	userType?: UserCredentialUserType;
 	userName?: string;
 	credentialRule?: UserCredentialRule;
-	/** Required when userType is Expiring */
 	expiringTimeoutMinutes?: number;
 }
 ```
@@ -718,6 +718,7 @@ A credential learn process has finished. The `success` property indicates whethe
 
 ```ts
 enum UserCredentialType {
+	None = 0x00,
 	PINCode = 0x01,
 	Password = 0x02,
 	RFIDCode = 0x03,
@@ -729,6 +730,7 @@ enum UserCredentialType {
 	FingerBiometric = 0x09,
 	HandBiometric = 0x0a,
 	UnspecifiedBiometric = 0x0b,
+	DESFire = 0x0c,
 }
 ```
 
