@@ -397,7 +397,7 @@ export class AccessControlMixin extends EndpointBase
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
 			const users: UserData[] = [];
-			// Iterate using nextUserId, starting from 0 to get the first user
+			// Requesting userId 0 gives us the first user
 			let nextUserId = 0;
 			do {
 				const result = await api.getUser(nextUserId);
@@ -419,15 +419,41 @@ export class AccessControlMixin extends EndpointBase
 			const api = this._ucAPI();
 			const maxUsers = await api.getUsersCount();
 			if (!maxUsers) return [];
+
 			const users: UserData[] = [];
-			for (let userId = 1; userId <= maxUsers; userId++) {
-				const result = await api.get(userId);
-				if (!result) continue;
-				const user = this._mapUserCodeStatusToUserData(
-					userId,
-					result.userIdStatus,
-				);
-				if (user) users.push(user);
+			const supportsBulk = !!this._getValue<boolean>(
+				UserCodeCCValues.supportsMultipleUserCodeReport.endpoint(
+					this.index,
+				),
+			);
+
+			if (supportsBulk) {
+				let nextUserId = 1;
+				while (nextUserId > 0 && nextUserId <= maxUsers) {
+					const response = await api.get(nextUserId, true);
+					if (!response) break;
+					users.push(
+						...response.userCodes
+							.map((entry) =>
+								this._mapUserCodeStatusToUserData(
+									entry.userId,
+									entry.userIdStatus,
+								)
+							)
+							.filter((u) => u != undefined),
+					);
+					nextUserId = response.nextUserId;
+				}
+			} else {
+				for (let userId = 1; userId <= maxUsers; userId++) {
+					const result = await api.get(userId);
+					if (!result) continue;
+					const user = this._mapUserCodeStatusToUserData(
+						userId,
+						result.userIdStatus,
+					);
+					if (user) users.push(user);
+				}
 			}
 			return users;
 		}
@@ -537,28 +563,18 @@ export class AccessControlMixin extends EndpointBase
 				status as number,
 				existingCode,
 			);
+			let succeeded: boolean;
 			if (result == undefined) {
 				// Unsupervised - verify the change
 				const verified = await api.get(userId);
 				const verifiedStatus = verified?.userIdStatus;
-				if (
-					verifiedStatus != undefined
+				succeeded = verifiedStatus != undefined
 					&& verifiedStatus !== existingStatus
-					&& verifiedStatus !== UserIDStatus.Available
-				) {
-					const node = this.tryGetNode();
-					if (node) {
-						const userData: UserData = { userId, active, userType };
-						node.emit(
-							existing
-								? "user modified"
-								: "user added",
-							this,
-							userData,
-						);
-					}
-				}
-			} else if (supervisedCommandSucceeded(result)) {
+					&& verifiedStatus !== UserIDStatus.Available;
+			} else {
+				succeeded = supervisedCommandSucceeded(result);
+			}
+			if (succeeded) {
 				const node = this.tryGetNode();
 				if (node) {
 					const userData: UserData = { userId, active, userType };
@@ -593,24 +609,16 @@ export class AccessControlMixin extends EndpointBase
 			const existed = this._getUserCached_UC(userId) != undefined;
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
+			let succeeded: boolean;
 			if (result == undefined) {
 				// Unsupervised - verify the change
 				const verified = await api.get(userId);
-				if (
-					existed
-					&& verified?.userIdStatus === UserIDStatus.Available
-				) {
-					const node = this.tryGetNode();
-					if (node) {
-						node.emit("user deleted", this, { userId });
-						node.emit("credential deleted", this, {
-							userId,
-							credentialType: this._ucCredentialType,
-							credentialSlot: 1,
-						});
-					}
-				}
-			} else if (supervisedCommandSucceeded(result) && existed) {
+				succeeded = existed
+					&& verified?.userIdStatus === UserIDStatus.Available;
+			} else {
+				succeeded = supervisedCommandSucceeded(result) && existed;
+			}
+			if (succeeded) {
 				const node = this.tryGetNode();
 				if (node) {
 					node.emit("user deleted", this, { userId });
@@ -702,8 +710,7 @@ export class AccessControlMixin extends EndpointBase
 		if (this._usesUserCredentialCC) {
 			const api = this._u3cAPI();
 			const credentials: CredentialData[] = [];
-			// Iterate using nextCredentialType/nextCredentialSlot,
-			// starting from type 0 / slot 0 to get the first credential
+			// Starting from type 0 / slot 0 gives us the first credential for the user
 			let nextCredType: UserCredentialType = UserCredentialType.None;
 			let nextCredSlot = 0;
 			do {
@@ -830,32 +837,17 @@ export class AccessControlMixin extends EndpointBase
 				status as number,
 				codeData,
 			);
+			let succeeded: boolean;
 			if (result == undefined) {
-				// Unsupervised - verify the change
 				const verified = await api.get(userId);
 				const verifiedStatus = verified?.userIdStatus;
-				if (
-					verifiedStatus != undefined
+				succeeded = verifiedStatus != undefined
 					&& verifiedStatus !== existingStatus
-					&& verifiedStatus !== UserIDStatus.Available
-				) {
-					const node = this.tryGetNode();
-					if (node) {
-						node.emit(
-							existingCred
-								? "credential modified"
-								: "credential added",
-							this,
-							{
-								userId,
-								credentialType: type,
-								credentialSlot: slot,
-								data,
-							},
-						);
-					}
-				}
-			} else if (supervisedCommandSucceeded(result)) {
+					&& verifiedStatus !== UserIDStatus.Available;
+			} else {
+				succeeded = supervisedCommandSucceeded(result);
+			}
+			if (succeeded) {
 				const node = this.tryGetNode();
 				if (node) {
 					node.emit(
@@ -899,24 +891,15 @@ export class AccessControlMixin extends EndpointBase
 				!= undefined;
 			const api = this._ucAPI();
 			const result = await api.clear(userId);
+			let succeeded: boolean;
 			if (result == undefined) {
-				// Unsupervised - verify the change
 				const verified = await api.get(userId);
-				if (
-					existed
-					&& verified?.userIdStatus === UserIDStatus.Available
-				) {
-					const node = this.tryGetNode();
-					if (node) {
-						node.emit("credential deleted", this, {
-							userId,
-							credentialType: type,
-							credentialSlot: slot,
-						});
-						node.emit("user deleted", this, { userId });
-					}
-				}
-			} else if (supervisedCommandSucceeded(result) && existed) {
+				succeeded = existed
+					&& verified?.userIdStatus === UserIDStatus.Available;
+			} else {
+				succeeded = supervisedCommandSucceeded(result) && existed;
+			}
+			if (succeeded) {
 				const node = this.tryGetNode();
 				if (node) {
 					node.emit("credential deleted", this, {
