@@ -313,6 +313,7 @@ function printOverload(method: MethodDeclaration): string {
 
 async function processCCDocFile(
 	file: SourceFile,
+	dtsFile: SourceFile,
 ): Promise<{ generatedIndex: string; generatedSidebar: any } | undefined> {
 	const APIClass = file
 		.getClasses()
@@ -412,7 +413,7 @@ ${
 
 	// List defined value IDs
 	const valueIDsConst = (() => {
-		for (const stmt of file.getVariableStatements()) {
+		for (const stmt of dtsFile.getVariableStatements()) {
 			if (!stmt.hasExportKeyword()) continue;
 			for (const decl of stmt.getDeclarations()) {
 				if (decl.getName()?.endsWith("CCValues")) {
@@ -711,8 +712,14 @@ export async function processCC(
 ): Promise<{ generatedIndex: string; generatedSidebar: any } | undefined> {
 	const program = getProgram();
 	const sourceFile = program.getSourceFileOrThrow(filename);
+	const dtsFile = program.addSourceFileAtPath(
+		filename.replace("/src/", "/build/esm/").replace(
+			/(?<!\.d)\.ts$/,
+			".d.ts",
+		),
+	);
 	try {
-		return await processCCDocFile(sourceFile);
+		return await processCCDocFile(sourceFile, dtsFile);
 	} catch (e: any) {
 		throw new Error(`Error processing CC file: ${filename}\n${e.stack}`);
 	}
