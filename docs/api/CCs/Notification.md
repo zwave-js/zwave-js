@@ -93,7 +93,7 @@ async getSupportedEvents(
 - **min. value:** 0
 - **max. value:** 255
 
-### `doorStateSimple`
+### `deprecated_doorStateSimple`
 
 ```ts
 {
@@ -114,7 +114,7 @@ async getSupportedEvents(
 - **min. value:** 0
 - **max. value:** 255
 
-### `doorTiltState`
+### `deprecated_doorTiltState`
 
 ```ts
 {
@@ -152,6 +152,27 @@ async getSupportedEvents(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"any"`
+
+### `openingState`
+
+```ts
+{
+	commandClass: CommandClasses.Notification,
+	endpoint: number,
+	property: "Access Control",
+	propertyKey: "Opening state",
+}
+```
+
+- **label:** Opening state
+- **min. CC version:** 1
+- **readable:** true
+- **writeable:** false
+- **stateful:** true
+- **secret:** false
+- **value type:** `"number"`
+- **min. value:** 0
+- **max. value:** 255
 
 ### `unknownNotificationType(notificationType: number)`
 

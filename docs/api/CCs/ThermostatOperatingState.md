@@ -10,6 +10,29 @@
 async get(): Promise<MaybeNotKnown<ThermostatOperatingState>>;
 ```
 
+### `getSupportedLoggingTypes`
+
+```ts
+async getSupportedLoggingTypes(): Promise<
+	MaybeNotKnown<readonly ThermostatOperatingState[]>
+>;
+```
+
+### `getLogging`
+
+```ts
+async getLogging(
+	states: ThermostatOperatingState[],
+): Promise<
+	MaybeNotKnown<
+		ReadonlyMap<
+			ThermostatOperatingState,
+			ThermostatOperatingStateLoggingData
+		>
+	>
+>;
+```
+
 ## Thermostat Operating State CC values
 
 ### `operatingState`

@@ -87,6 +87,7 @@
     - [Time CC](api/CCs/Time.md)
     - [Time Parameters CC](api/CCs/TimeParameters.md)
     - [User Code CC](api/CCs/UserCode.md)
+    - [User Credential CC](api/CCs/UserCredential.md)
     - [Version CC](api/CCs/Version.md)
     - [Wake Up CC](api/CCs/WakeUp.md)
     - [Window Covering CC](api/CCs/WindowCovering.md)
