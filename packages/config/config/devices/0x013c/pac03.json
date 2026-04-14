@@ -1,0 +1,19 @@
+{
+	"manufacturer": "Philio Technology Corp",
+	"manufacturerId": "0x013c",
+	"label": "PAC03",
+	"description": "Z-Wave Mitsubishi IT Communication Adapter",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0059"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"manual": "https://github.com/user-attachments/files/26695340/PAC03.manual-V1-20180913.pdf"
+	}
+}
