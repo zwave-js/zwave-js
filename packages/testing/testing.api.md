@@ -13,6 +13,9 @@ import { CommandClasses } from '@zwave-js/core';
 import { CommandClassInfo } from '@zwave-js/core';
 import type { ConfigValue } from '@zwave-js/core';
 import type { ConfigValueFormat } from '@zwave-js/core';
+import type { DoorHandleStatus } from '@zwave-js/cc';
+import type { DoorLockMode } from '@zwave-js/cc';
+import type { DoorLockOperationType } from '@zwave-js/cc';
 import { FunctionType } from '@zwave-js/serial';
 import type { KeypadMode } from '@zwave-js/cc';
 import { KeyPair } from '@zwave-js/shared/bindings';
@@ -27,6 +30,13 @@ import { SecurityManagers } from '@zwave-js/core';
 import type { SwitchType } from '@zwave-js/cc';
 import type { ThermostatMode } from '@zwave-js/cc';
 import type { ThermostatSetpointType } from '@zwave-js/cc';
+import type { UserCredentialCapability } from '@zwave-js/cc';
+import type { UserCredentialKeyLockerEntryCapability } from '@zwave-js/cc';
+import type { UserCredentialKeyLockerEntryType } from '@zwave-js/cc';
+import type { UserCredentialNameEncoding } from '@zwave-js/cc';
+import type { UserCredentialRule } from '@zwave-js/cc';
+import type { UserCredentialType } from '@zwave-js/cc';
+import type { UserCredentialUserType } from '@zwave-js/cc';
 import type { UserIDStatus } from '@zwave-js/cc';
 import type { WindowCoveringParameter } from '@zwave-js/cc';
 import { ZWaveApiVersion } from '@zwave-js/core';
@@ -67,8 +77,11 @@ export type CCIdToCapabilities<T extends CommandClasses = CommandClasses> = T ex
 export type CCSpecificCapabilities = {
     [CommandClasses.Configuration]: ConfigurationCCCapabilities;
     [CommandClasses.Notification]: NotificationCCCapabilities;
+    [0x77]: NodeNamingAndLocationCCCapabilities;
     [48]: BinarySensorCCCapabilities;
     [0x25]: BinarySwitchCCCapabilities;
+    [0x62]: DoorLockCCCapabilities;
+    [0x76]: LockCCCapabilities;
     [49]: MultilevelSensorCCCapabilities;
     [0x26]: MultilevelSwitchCCCapabilities;
     [51]: ColorSwitchCCCapabilities;
@@ -79,6 +92,7 @@ export type CCSpecificCapabilities = {
     [67]: ThermostatSetpointCCCapabilities;
     [99]: UserCodeCCCapabilities;
     [78]: ScheduleEntryLockCCCapabilities;
+    [0x83]: UserCredentialCCCapabilities;
     [CommandClasses.Meter]: MeterCCCapabilities;
     [CommandClasses.Indicator]: IndicatorCCCapabilities;
 };
@@ -126,6 +140,35 @@ export function createMockZWaveRequestFrame(payload: CommandClass | (() => Promi
 //
 // @public (undocumented)
 export type CreateMockZWaveRequestFrameOptions = Partial<Omit<MockZWaveRequestFrame, "direction" | "payload">>;
+
+// Warning: (ae-missing-release-tag) "DoorLockCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface DoorLockCCCapabilities {
+    // (undocumented)
+    autoRelockSupported?: boolean;
+    // (undocumented)
+    blockToBlockSupported?: boolean;
+    // (undocumented)
+    boltSupported?: boolean;
+    // (undocumented)
+    doorSupported?: boolean;
+    // (undocumented)
+    holdAndReleaseSupported?: boolean;
+    // (undocumented)
+    latchSupported?: boolean;
+    // (undocumented)
+    supportedDoorLockModes: DoorLockMode[];
+    // (undocumented)
+    supportedInsideHandles?: DoorHandleStatus;
+    // (undocumented)
+    supportedOperationTypes: DoorLockOperationType[];
+    // (undocumented)
+    supportedOutsideHandles?: DoorHandleStatus;
+    travelTime?: number;
+    // (undocumented)
+    twistAssistSupported?: boolean;
+}
 
 // Warning: (ae-missing-release-tag) "EnergyProductionCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -202,6 +245,13 @@ export interface LazyMockZWaveRequestFrame {
     repeaters: number[];
     // (undocumented)
     type: MockZWaveFrameType.Request;
+}
+
+// Warning: (ae-missing-release-tag) "LockCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface LockCCCapabilities {
+    travelTime?: number;
 }
 
 // Warning: (ae-missing-release-tag) "MeterCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -498,6 +548,7 @@ export class MockNode {
     get s2Pin(): string;
     // (undocumented)
     securityManagers: SecurityManagers;
+    sendResponse(receivedCC: CommandClass, response: MockNodeResponse, frame?: MockZWaveRequestFrame): Promise<void>;
     sendToController(frame: LazyMockZWaveFrame): Promise<MockZWaveAckFrame | undefined>;
     readonly state: Map<string, unknown>;
 }
@@ -558,6 +609,7 @@ export type MockNodeResponse = {
     action: "stop";
 } | {
     action: "ok";
+    durationMs?: number;
 } | {
     action: "fail";
 };
@@ -619,6 +671,17 @@ export interface MultilevelSwitchCCCapabilities {
     defaultValue?: MaybeUnknown<number>;
     // (undocumented)
     primarySwitchType: SwitchType;
+    travelTime?: number;
+}
+
+// Warning: (ae-missing-release-tag) "NodeNamingAndLocationCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface NodeNamingAndLocationCCCapabilities {
+    // (undocumented)
+    location?: string;
+    // (undocumented)
+    name?: string;
 }
 
 // Warning: (ae-missing-release-tag) "NodePendingInclusion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -718,12 +781,45 @@ export interface UserCodeCCCapabilities {
     supportsUserCodeChecksum?: boolean;
 }
 
+// Warning: (ae-missing-release-tag) "UserCredentialCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UserCredentialCCCapabilities {
+    // (undocumented)
+    maxUserNameLength: number;
+    // (undocumented)
+    numberOfSupportedUsers: number;
+    // (undocumented)
+    supportedCredentialRules: UserCredentialRule[];
+    // (undocumented)
+    supportedCredentialTypes: Map<UserCredentialType, UserCredentialCapability>;
+    // (undocumented)
+    supportedKeyLockerEntryTypes?: Map<UserCredentialKeyLockerEntryType, UserCredentialKeyLockerEntryCapability>;
+    // (undocumented)
+    supportedUserNameEncodings?: UserCredentialNameEncoding[];
+    // (undocumented)
+    supportedUserTypes?: UserCredentialUserType[];
+    // (undocumented)
+    supportsAdminCode?: boolean;
+    // (undocumented)
+    supportsAdminCodeDeactivation?: boolean;
+    // (undocumented)
+    supportsAllUsersChecksum?: boolean;
+    // (undocumented)
+    supportsCredentialChecksum?: boolean;
+    // (undocumented)
+    supportsUserChecksum?: boolean;
+    // (undocumented)
+    supportsUserSchedule?: boolean;
+}
+
 // Warning: (ae-missing-release-tag) "WindowCoveringCCCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export interface WindowCoveringCCCapabilities {
     // (undocumented)
     supportedParameters: WindowCoveringParameter[];
+    travelTime?: number;
 }
 
 // (No @packageDocumentation comment for this package)

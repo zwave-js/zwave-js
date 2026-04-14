@@ -5,6 +5,7 @@
 ```ts
 
 import { AllOrNone } from '@zwave-js/shared';
+import { AllowedValue } from '@zwave-js/core';
 import { APIMethodsOf } from '@zwave-js/cc';
 import { AssociationAddress } from '@zwave-js/cc';
 import { AssociationCheckResult } from '@zwave-js/cc';
@@ -172,6 +173,7 @@ import { SetSecurityClass } from '@zwave-js/core';
 import { SetValueAPIOptions } from '@zwave-js/cc';
 import { SetValueResult } from '@zwave-js/cc';
 import { SpecificDeviceClass } from '@zwave-js/core';
+import { SupervisionResult } from '@zwave-js/core';
 import { SupportsCC } from '@zwave-js/core';
 import { Switchpoint } from '@zwave-js/cc';
 import { TaskScheduler as TaskScheduler_2 } from '@zwave-js/waddle';
@@ -183,6 +185,11 @@ import { tryUnzipFirmwareFile } from '@zwave-js/core';
 import { TXReport } from '@zwave-js/core';
 import { TypedEventTarget } from '@zwave-js/shared';
 import { UnknownZWaveChipType } from '@zwave-js/core';
+import { UserCredentialCapability } from '@zwave-js/cc';
+import type { UserCredentialLearnStatus } from '@zwave-js/cc';
+import { UserCredentialRule } from '@zwave-js/cc';
+import { UserCredentialType } from '@zwave-js/cc';
+import { UserCredentialUserType } from '@zwave-js/cc';
 import { UserPreferences } from '@zwave-js/cc';
 import type { ValueAddedArgs } from '@zwave-js/core';
 import { ValueDB } from '@zwave-js/core';
@@ -213,6 +220,8 @@ import { ZWavePlusRoleType } from '@zwave-js/cc';
 import { ZWaveSerialBindingFactory } from '@zwave-js/serial';
 import { ZWaveSerialPortImplementation } from '@zwave-js/serial';
 import type { ZWaveSerialStream } from '@zwave-js/serial';
+
+export { AllowedValue }
 
 // Warning: (ae-missing-release-tag) "BeamFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -366,6 +375,90 @@ export type CorruptedFrame = {
     payload: BytesView;
 };
 
+// Warning: (ae-missing-release-tag) "CredentialCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CredentialCapabilities {
+    // (undocumented)
+    supportedCredentialTypes: ReadonlyMap<UserCredentialType, UserCredentialCapability>;
+    // (undocumented)
+    supportsAdminCode: boolean;
+    // (undocumented)
+    supportsAdminCodeDeactivation: boolean;
+}
+
+// Warning: (ae-missing-release-tag) "CredentialChangedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CredentialChangedArgs {
+    // (undocumented)
+    credentialSlot: number;
+    // (undocumented)
+    credentialType: UserCredentialType;
+    // (undocumented)
+    data?: string | Uint8Array;
+    // (undocumented)
+    userId: number;
+}
+
+// Warning: (ae-missing-release-tag) "CredentialData" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CredentialData {
+    // (undocumented)
+    data?: string | Uint8Array;
+    // (undocumented)
+    slot: number;
+    // (undocumented)
+    type: UserCredentialType;
+    // (undocumented)
+    userId: number;
+}
+
+// Warning: (ae-missing-release-tag) "CredentialDeletedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CredentialDeletedArgs {
+    // (undocumented)
+    credentialSlot: number;
+    // (undocumented)
+    credentialType: UserCredentialType;
+    // (undocumented)
+    userId: number;
+}
+
+// Warning: (ae-missing-release-tag) "CredentialLearnCompletedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CredentialLearnCompletedArgs {
+    // (undocumented)
+    credentialSlot: number;
+    // (undocumented)
+    credentialType: UserCredentialType;
+    // (undocumented)
+    status: UserCredentialLearnStatus;
+    // (undocumented)
+    success: boolean;
+    // (undocumented)
+    userId: number;
+}
+
+// Warning: (ae-missing-release-tag) "CredentialLearnProgressArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface CredentialLearnProgressArgs {
+    // (undocumented)
+    credentialSlot: number;
+    // (undocumented)
+    credentialType: UserCredentialType;
+    // (undocumented)
+    status: UserCredentialLearnStatus;
+    // (undocumented)
+    stepsRemaining: number;
+    // (undocumented)
+    userId: number;
+}
+
 export { DataRate }
 
 // Warning: (ae-missing-release-tag) "DateAndTime" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -420,7 +513,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     checkForConfigUpdates(silent?: boolean): Promise<string | undefined>;
     // Warning: (ae-forgotten-export) The symbol "EndDeviceCLI" needs to be exported by the entry point index.d.ts
     get cli(): EndDeviceCLI;
-    computeNetCCPayloadSize(commandOrMsg: CommandClass | (SendDataRequest | SendDataBridgeRequest) & ContainsCC, ignoreEncapsulation?: boolean): number;
+    computeNetCCPayloadSize(commandOrMsg: CommandClass | ((SendDataRequest | SendDataBridgeRequest) & ContainsCC), ignoreEncapsulation?: boolean): number;
     // (undocumented)
     get configManager(): ConfigManager;
     // (undocumented)
@@ -437,7 +530,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     enterBootloader(): Promise<void>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    static enumerateSerialPorts({ local, remote, }?: {
+    static enumerateSerialPorts(input?: {
         local?: boolean;
         remote?: boolean;
     }): Promise<string[]>;
@@ -646,45 +739,11 @@ export type EditableZWaveOptions = Expand<Pick<PartialZWaveOptions, "attempts" |
     userAgent?: Record<string, string | null | undefined>;
 }>;
 
+// Warning: (ae-forgotten-export) The symbol "EndpointMixins" needs to be exported by the entry point index.d.ts
 // Warning: (ae-missing-release-tag) "Endpoint" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public
-export class Endpoint implements EndpointId, SupportsCC, ControlsCC, IsCCSecure, ModifyCCs, GetCCs {
-    constructor(
-    nodeId: number,
-    driver: Driver,
-    index: number, deviceClass?: DeviceClass, supportedCCs?: CommandClasses[]);
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    addCC(cc: CommandClasses, info: Partial<CommandClassInfo>): void;
-    buildCCInterviewGraph(skipCCs: CommandClasses[]): GraphNode<CommandClasses>[];
-    get commandClasses(): CCAPIs;
-    controlsCC(cc: CommandClasses): boolean;
-    createCCInstance<T extends CommandClass>(cc: CommandClasses | CCConstructor<T>): T | undefined;
-    createCCInstanceUnsafe<T extends CommandClass>(cc: CommandClasses | CCConstructor<T>): T | undefined;
-    // (undocumented)
-    get deviceClass(): MaybeNotKnown<DeviceClass>;
-    protected set deviceClass(deviceClass: MaybeNotKnown<DeviceClass>);
-    protected readonly driver: Driver;
-    get endpointLabel(): string | undefined;
-    // (undocumented)
-    getCCs(): Iterable<[ccId: CommandClasses, info: CommandClassInfo]>;
-    getCCVersion(cc: CommandClasses): number;
-    getSupportedCCInstances(): readonly CommandClass[];
-    readonly index: number;
-    get installerIcon(): MaybeNotKnown<number>;
-    invokeCCAPI<CC extends CCNameOrId, TMethod extends keyof TAPI, TAPI extends Record<string, (...args: any[]) => any> = CommandClasses extends CC ? any : Omit<CCNameOrId, CommandClasses> extends CC ? any : APIMethodsOf<CC>>(cc: CC, method: TMethod, ...args: Parameters<TAPI[TMethod]>): ReturnType<TAPI[TMethod]>;
-    isCCSecure(cc: CommandClasses): boolean;
-    maySupportBasicCC(): boolean;
-    readonly nodeId: number;
-    removeCC(cc: CommandClasses): void;
-    protected reset(): void;
-    supportsCC(cc: CommandClasses): boolean;
-    supportsCCAPI(cc: CCNameOrId): boolean;
-    tryGetNode(): ZWaveNode | undefined;
-    get userIcon(): MaybeNotKnown<number>;
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "IZWaveEndpoint"
-    readonly virtual = false;
-    wasCCRemovedViaConfig(cc: CommandClasses): boolean;
+// @public (undocumented)
+export class Endpoint extends EndpointMixins {
 }
 
 export { EntryControlDataTypes }
@@ -1557,6 +1616,22 @@ export { SerialAPISetupCommand }
 
 export { SetbackState }
 
+// Warning: (ae-missing-release-tag) "SetUserOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SetUserOptions {
+    // (undocumented)
+    active?: boolean;
+    // (undocumented)
+    credentialRule?: UserCredentialRule;
+    // (undocumented)
+    expiringTimeoutMinutes?: number;
+    // (undocumented)
+    userName?: string;
+    // (undocumented)
+    userType?: UserCredentialUserType;
+}
+
 // Warning: (ae-missing-release-tag) "SmartStartProvisioningEntry" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1569,6 +1644,46 @@ export { TranslatedValueID }
 export { tryUnzipFirmwareFile }
 
 export { TXReport }
+
+// Warning: (ae-missing-release-tag) "UserCapabilities" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UserCapabilities {
+    // (undocumented)
+    maxUserNameLength: number | undefined;
+    // (undocumented)
+    maxUsers: number;
+    // (undocumented)
+    supportedCredentialRules: readonly UserCredentialRule[];
+    // (undocumented)
+    supportedUserTypes: readonly UserCredentialUserType[];
+}
+
+// Warning: (ae-missing-release-tag) "UserData" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UserData {
+    // (undocumented)
+    active: boolean;
+    // (undocumented)
+    credentialRule?: UserCredentialRule;
+    // (undocumented)
+    expiringTimeoutMinutes?: number;
+    // (undocumented)
+    userId: number;
+    // (undocumented)
+    userName?: string;
+    // (undocumented)
+    userType: UserCredentialUserType;
+}
+
+// Warning: (ae-missing-release-tag) "UserDeletedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UserDeletedArgs {
+    // (undocumented)
+    userId: number;
+}
 
 export { ValueID }
 
@@ -2208,6 +2323,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 // @public (undocumented)
 export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
     // (undocumented)
+    "credential added": (endpoint: Endpoint, args: CredentialChangedArgs) => void;
+    // (undocumented)
+    "credential deleted": (endpoint: Endpoint, args: CredentialDeletedArgs) => void;
+    // (undocumented)
+    "credential learn completed": (endpoint: Endpoint, args: CredentialLearnCompletedArgs) => void;
+    // (undocumented)
+    "credential learn progress": (endpoint: Endpoint, args: CredentialLearnProgressArgs) => void;
+    // (undocumented)
+    "credential modified": (endpoint: Endpoint, args: CredentialChangedArgs) => void;
+    // (undocumented)
     "firmware update finished": ZWaveNodeFirmwareUpdateFinishedCallback;
     // (undocumented)
     "firmware update progress": ZWaveNodeFirmwareUpdateProgressCallback;
@@ -2221,6 +2346,12 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
     "interview started": (node: ZWaveNode) => void;
     // (undocumented)
     "node info received": (node: ZWaveNode) => void;
+    // (undocumented)
+    "user added": (endpoint: Endpoint, args: UserData) => void;
+    // (undocumented)
+    "user deleted": (endpoint: Endpoint, args: UserDeletedArgs) => void;
+    // (undocumented)
+    "user modified": (endpoint: Endpoint, args: UserData) => void;
     // (undocumented)
     "wake up": ZWaveNodeStatusChangeCallback;
     // (undocumented)
@@ -2243,7 +2374,7 @@ export type ZWaveNodeEvents = Extract<keyof ZWaveNodeEventCallbacks, string>;
 // Warning: (ae-missing-release-tag) "zWaveNodeEvents" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const zWaveNodeEvents: readonly ["notification", "interview failed", "firmware update progress", "firmware update finished", "wake up", "sleep", "dead", "alive", "interview completed", "ready", "interview stage completed", "interview started", "value added", "value updated", "value removed", "metadata updated", "value notification"];
+export const zWaveNodeEvents: readonly ["notification", "interview failed", "firmware update progress", "firmware update finished", "wake up", "sleep", "dead", "alive", "interview completed", "ready", "interview stage completed", "interview started", "value added", "value updated", "value removed", "metadata updated", "value notification", "user added", "user modified", "user deleted", "credential added", "credential modified", "credential deleted", "credential learn progress", "credential learn completed"];
 
 // Warning: (ae-missing-release-tag) "ZWaveNodeFirmwareUpdateFinishedCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2556,6 +2687,7 @@ export interface ZWaveOptions {
         refreshValue: number;
         refreshValueAfterTransition: number;
         serialAPIStarted: number;
+        pollTime: number;
     };
     userAgent?: Record<string, string>;
     vendor?: {
@@ -2573,23 +2705,15 @@ export * from "@zwave-js/cc";
 
 // Warnings were encountered during analysis:
 //
-// /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:101:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
+// /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:109:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // src/lib/controller/Controller.ts:914:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
-// src/lib/driver/Driver.ts:1047:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:5264:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:6899:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
-// src/lib/driver/Driver.ts:7373:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7374:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7416:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7417:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:7572:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:8630:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/Driver.ts:8633:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
-// src/lib/driver/ZWaveOptions.ts:370:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2196:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:738:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/zniffer/Zniffer.ts:739:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:1071:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/driver/Driver.ts:7648:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/ZWaveOptions.ts:376:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/node/Node.ts:2251:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:740:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
 

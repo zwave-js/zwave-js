@@ -9,6 +9,7 @@ import { BytesView } from '@zwave-js/shared';
 import type { Database } from '@zwave-js/shared/bindings';
 import { DeflateOptions } from 'fflate';
 import type { ExpectStatic } from 'vitest';
+import { InflateOptions } from 'fflate';
 import { JSONObject } from '@zwave-js/shared';
 import { KeyPair } from '@zwave-js/shared/bindings';
 import type { TransformableInfo } from 'logform';
@@ -25,6 +26,22 @@ export const actuatorCCs: readonly CommandClasses[];
 //
 // @public
 export const allCCs: readonly CommandClasses[];
+
+// Warning: (ae-missing-release-tag) "AllowedConfigValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public @deprecated (undocumented)
+export type AllowedConfigValue = AllowedValue;
+
+// Warning: (ae-missing-release-tag) "AllowedValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type AllowedValue = {
+    value: number;
+} | {
+    from: number;
+    to: number;
+    step?: number;
+};
 
 // Warning: (ae-missing-release-tag) "applicationCCs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -490,13 +507,9 @@ export function computePRK(ecdhSharedSecret: BytesView, pubKeyA: BytesView, pubK
 // Warning: (ae-missing-release-tag) "ConfigurationMetadata" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export interface ConfigurationMetadata extends ValueMetadataAny {
-    // (undocumented)
-    allowManualEntry?: boolean;
+export interface ConfigurationMetadata extends ValueMetadataNumeric {
     // (undocumented)
     default?: ConfigValue;
-    // (undocumented)
-    description?: string;
     // (undocumented)
     destructive?: boolean;
     // (undocumented)
@@ -506,19 +519,15 @@ export interface ConfigurationMetadata extends ValueMetadataAny {
     // (undocumented)
     isFromConfig?: boolean;
     // (undocumented)
-    label?: string;
-    // (undocumented)
     max?: ConfigValue;
     // (undocumented)
     min?: ConfigValue;
     // (undocumented)
+    purpose?: string;
+    // (undocumented)
     recommended?: ConfigValue;
     // (undocumented)
     requiresReInclusion?: boolean;
-    // (undocumented)
-    states?: Record<number, string>;
-    // (undocumented)
-    unit?: string;
     // (undocumented)
     valueSize?: number;
 }
@@ -690,7 +699,7 @@ export function CRC16_CCITT(data: BytesView, startValue?: number): number;
 // Warning: (ae-missing-release-tag) "createReflectionDecorator" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function createReflectionDecorator<TBase extends abstract new (...args: any) => any, TArgs extends any[], TValue, TConstructor extends Constructor<InstanceType<TBase>> = Constructor<InstanceType<TBase>>>({ name, valueFromArgs, constructorLookupKey, }: CreateReflectionDecoratorOptions<TBase, TArgs, TValue, TConstructor>): ReflectionDecorator<TBase, TArgs, TValue, TConstructor>;
+export function createReflectionDecorator<TBase extends abstract new (...args: any) => any, TArgs extends any[], TValue, TConstructor extends Constructor<InstanceType<TBase>> = Constructor<InstanceType<TBase>>>(input: CreateReflectionDecoratorOptions<TBase, TArgs, TValue, TConstructor>): ReflectionDecorator<TBase, TArgs, TValue, TConstructor>;
 
 // Warning: (ae-missing-release-tag) "CreateReflectionDecoratorOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -704,7 +713,7 @@ export interface CreateReflectionDecoratorOptions<TBase extends abstract new (..
 // Warning: (ae-missing-release-tag) "createReflectionDecoratorPair" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function createReflectionDecoratorPair<TBase extends abstract new (...args: any) => any, TSuperArgs extends [any], TSubArgs extends [any], TConstructor extends Constructor<InstanceType<TBase>> = Constructor<InstanceType<TBase>>>({ superName, subName, }: CreateReflectionDecoratorPairOptions): ReflectionDecoratorPair<TBase, TSuperArgs, TSubArgs, TConstructor>;
+export function createReflectionDecoratorPair<TBase extends abstract new (...args: any) => any, TSuperArgs extends [any], TSubArgs extends [any], TConstructor extends Constructor<InstanceType<TBase>> = Constructor<InstanceType<TBase>>>(input: CreateReflectionDecoratorPairOptions): ReflectionDecoratorPair<TBase, TSuperArgs, TSubArgs, TConstructor>;
 
 // Warning: (ae-missing-release-tag) "CreateReflectionDecoratorPairOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -717,7 +726,7 @@ export interface CreateReflectionDecoratorPairOptions {
 // Warning: (ae-missing-release-tag) "createSimpleReflectionDecorator" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function createSimpleReflectionDecorator<TBase extends abstract new (...args: any) => any, TArgs extends [any], TConstructor extends Constructor<InstanceType<TBase>> = Constructor<InstanceType<TBase>>>({ name, }: CreateSimpleReflectionDecoratorOptions): SimpleReflectionDecorator<TBase, TArgs, TConstructor>;
+export function createSimpleReflectionDecorator<TBase extends abstract new (...args: any) => any, TArgs extends [any], TConstructor extends Constructor<InstanceType<TBase>> = Constructor<InstanceType<TBase>>>(input: CreateSimpleReflectionDecoratorOptions): SimpleReflectionDecorator<TBase, TArgs, TConstructor>;
 
 // Warning: (ae-missing-release-tag) "CreateSimpleReflectionDecoratorOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -729,7 +738,7 @@ export interface CreateSimpleReflectionDecoratorOptions {
 // Warning: (ae-missing-release-tag) "createValuelessReflectionDecorator" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function createValuelessReflectionDecorator<TBase extends abstract new (...args: any) => any>({ name, }: CreateValuelessReflectionDecoratorOptions): ValuelessReflectionDecorator<TBase>;
+export function createValuelessReflectionDecorator<TBase extends abstract new (...args: any) => any>(input: CreateValuelessReflectionDecoratorOptions): ValuelessReflectionDecorator<TBase>;
 
 // Warning: (ae-missing-release-tag) "CreateValuelessReflectionDecoratorOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1292,7 +1301,7 @@ export function getDefaultDSTInfo(defaultOffset?: number): DSTInfo;
 // Warning: (ae-missing-release-tag) "getDirectionPrefix" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function getDirectionPrefix(direction: DataDirection): "« " | "» " | "  ";
+export function getDirectionPrefix(direction: DataDirection): "  " | "« " | "» ";
 
 // Warning: (ae-missing-release-tag) "getDSTInfo" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1808,10 +1817,24 @@ export interface IndicatorProperty extends IndicatorPropertyDefinition {
     readonly id: number;
 }
 
+// Warning: (ae-missing-release-tag) "inferMinMaxStepsFromAllowed" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function inferMinMaxStepsFromAllowed(entries: readonly AllowedValue[]): {
+    min: number;
+    max: number;
+    steps?: number;
+} | undefined;
+
 // Warning: (ae-missing-release-tag) "InferStateMachineTransitions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export type InferStateMachineTransitions<T extends StateMachine<any, any, any>> = T extends StateMachine<infer S, infer I, infer E> ? StateMachineTransitionMap<S, I, E | undefined> : never;
+
+// Warning: (ae-missing-release-tag) "inflateSync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function inflateSync(data: BytesView, opts?: InflateOptions): BytesView;
 
 // Warning: (ae-missing-release-tag) "IntegerLimits" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1990,6 +2013,11 @@ export function isUnsupervisedOrSucceeded(result: SupervisionResult | undefined)
 //
 // @public (undocumented)
 export function isValidDSK(dsk: string): boolean;
+
+// Warning: (ae-missing-release-tag) "isValueAllowed" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function isValueAllowed(value: number, entries: readonly AllowedValue[]): boolean;
 
 // Warning: (ae-missing-release-tag) "isValueID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2799,7 +2827,7 @@ export function parseTLV(qr: string): {
 // Warning: (ae-missing-release-tag) "parseTLVData" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function parseTLVData(type: ProvisioningInformationType, data: string): ProvisioningInformation_ProductType | ProvisioningInformation_ProductId | ProvisioningInformation_MaxInclusionRequestInterval | ProvisioningInformation_UUID16 | ProvisioningInformation_SupportedProtocols | undefined;
+export function parseTLVData(type: ProvisioningInformationType, data: string): ProvisioningInformation_MaxInclusionRequestInterval | ProvisioningInformation_ProductId | ProvisioningInformation_ProductType | ProvisioningInformation_SupportedProtocols | ProvisioningInformation_UUID16 | undefined;
 
 // Warning: (ae-missing-release-tag) "PhysicalNodes" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3280,7 +3308,7 @@ export class SecurityManager {
     // Warning: (ae-forgotten-export) The symbol "NonceEntry" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    setNonce(id: number | NonceKey, entry: NonceEntry, { free }?: SetNonceOptions): void;
+    setNonce(id: number | NonceKey, entry: NonceEntry, input?: SetNonceOptions): void;
 }
 
 // Warning: (ae-missing-release-tag) "SecurityManager2" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4018,308 +4046,308 @@ export const ValueMetadata: {
         readonly writeable: true;
     }>;
     ReadOnly: Readonly<{
-        readonly writeable: false;
         readonly type: "any";
         readonly readable: true;
+        readonly writeable: false;
     }>;
     WriteOnly: Readonly<{
-        readonly readable: false;
         readonly type: "any";
         readonly writeable: true;
+        readonly readable: false;
     }>;
     Number: Readonly<{
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     ReadOnlyNumber: Readonly<{
+        readonly readable: true;
         readonly writeable: false;
         readonly type: "number";
-        readonly readable: true;
     }>;
     WriteOnlyNumber: Readonly<{
+        readonly writeable: true;
         readonly readable: false;
         readonly type: "number";
-        readonly writeable: true;
     }>;
     UInt8: Readonly<{
         readonly min: 0;
         readonly max: 255;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     UInt16: Readonly<{
         readonly min: 0;
         readonly max: 65535;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     UInt24: Readonly<{
         readonly min: 0;
         readonly max: 16777215;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     UInt32: Readonly<{
         readonly min: 0;
         readonly max: 4294967295;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     Int8: Readonly<{
         readonly min: -128;
         readonly max: 127;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     Int16: Readonly<{
         readonly min: -32768;
         readonly max: 32767;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     Int24: Readonly<{
         readonly min: -8388608;
         readonly max: 8388607;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     Int32: Readonly<{
         readonly min: -2147483648;
         readonly max: 2147483647;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
     }>;
     ReadOnlyUInt8: Readonly<{
-        readonly writeable: false;
         readonly min: 0;
         readonly max: 255;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     ReadOnlyUInt16: Readonly<{
-        readonly writeable: false;
         readonly min: 0;
         readonly max: 65535;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     ReadOnlyUInt24: Readonly<{
-        readonly writeable: false;
         readonly min: 0;
         readonly max: 16777215;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     ReadOnlyUInt32: Readonly<{
-        readonly writeable: false;
         readonly min: 0;
         readonly max: 4294967295;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     ReadOnlyInt8: Readonly<{
-        readonly writeable: false;
         readonly min: -128;
         readonly max: 127;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     ReadOnlyInt16: Readonly<{
-        readonly writeable: false;
         readonly min: -32768;
         readonly max: 32767;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     ReadOnlyInt24: Readonly<{
-        readonly writeable: false;
         readonly min: -8388608;
         readonly max: 8388607;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     ReadOnlyInt32: Readonly<{
-        readonly writeable: false;
         readonly min: -2147483648;
         readonly max: 2147483647;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
     }>;
     WriteOnlyUInt8: Readonly<{
-        readonly readable: false;
         readonly min: 0;
         readonly max: 255;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     WriteOnlyUInt16: Readonly<{
-        readonly readable: false;
         readonly min: 0;
         readonly max: 65535;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     WriteOnlyUInt24: Readonly<{
-        readonly readable: false;
         readonly min: 0;
         readonly max: 16777215;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     WriteOnlyUInt32: Readonly<{
-        readonly readable: false;
         readonly min: 0;
         readonly max: 4294967295;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     WriteOnlyInt8: Readonly<{
-        readonly readable: false;
         readonly min: -128;
         readonly max: 127;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     WriteOnlyInt16: Readonly<{
-        readonly readable: false;
         readonly min: -32768;
         readonly max: 32767;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     WriteOnlyInt24: Readonly<{
-        readonly readable: false;
         readonly min: -8388608;
         readonly max: 8388607;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     WriteOnlyInt32: Readonly<{
-        readonly readable: false;
         readonly min: -2147483648;
         readonly max: 2147483647;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
     }>;
     Level: Readonly<{
-        readonly max: 99;
         readonly min: 0;
-        readonly type: "number";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "number";
+        readonly max: 99;
     }>;
     ReadOnlyLevel: Readonly<{
-        readonly writeable: false;
-        readonly max: 99;
         readonly min: 0;
-        readonly type: "number";
         readonly readable: true;
+        readonly writeable: false;
+        readonly type: "number";
+        readonly max: 99;
     }>;
     WriteOnlyLevel: Readonly<{
-        readonly readable: false;
-        readonly max: 99;
         readonly min: 0;
-        readonly type: "number";
         readonly writeable: true;
+        readonly readable: false;
+        readonly type: "number";
+        readonly max: 99;
     }>;
     Boolean: Readonly<{
-        readonly type: "boolean";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "boolean";
     }>;
     ReadOnlyBoolean: Readonly<{
+        readonly readable: true;
         readonly writeable: false;
         readonly type: "boolean";
-        readonly readable: true;
     }>;
     WriteOnlyBoolean: Readonly<{
+        readonly writeable: true;
         readonly readable: false;
         readonly type: "boolean";
-        readonly writeable: true;
     }>;
     String: Readonly<{
-        readonly type: "string";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "string";
     }>;
     ReadOnlyString: Readonly<{
+        readonly readable: true;
         readonly writeable: false;
         readonly type: "string";
-        readonly readable: true;
     }>;
     WriteOnlyString: Readonly<{
+        readonly writeable: true;
         readonly readable: false;
         readonly type: "string";
-        readonly writeable: true;
     }>;
     Color: Readonly<{
-        readonly type: "color";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "color";
     }>;
     ReadOnlyColor: Readonly<{
+        readonly readable: true;
         readonly writeable: false;
         readonly type: "color";
-        readonly readable: true;
     }>;
     WriteOnlyColor: Readonly<{
+        readonly writeable: true;
         readonly readable: false;
         readonly type: "color";
-        readonly writeable: true;
     }>;
     Duration: Readonly<{
-        readonly type: "duration";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "duration";
     }>;
     ReadOnlyDuration: Readonly<{
+        readonly readable: true;
         readonly writeable: false;
         readonly type: "duration";
-        readonly readable: true;
     }>;
     WriteOnlyDuration: Readonly<{
+        readonly writeable: true;
         readonly readable: false;
         readonly type: "duration";
-        readonly writeable: true;
     }>;
     Timeout: Readonly<{
-        readonly type: "timeout";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "timeout";
     }>;
     ReadOnlyTimeout: Readonly<{
+        readonly readable: true;
         readonly writeable: false;
         readonly type: "timeout";
-        readonly readable: true;
     }>;
     WriteOnlyTimeout: Readonly<{
+        readonly writeable: true;
         readonly readable: false;
         readonly type: "timeout";
-        readonly writeable: true;
     }>;
     Buffer: Readonly<{
-        readonly type: "buffer";
         readonly readable: true;
         readonly writeable: true;
+        readonly type: "buffer";
     }>;
     ReadOnlyBuffer: Readonly<{
+        readonly readable: true;
         readonly writeable: false;
         readonly type: "buffer";
-        readonly readable: true;
     }>;
     WriteOnlyBuffer: Readonly<{
+        writeable: true;
         readable: false;
         type: "buffer";
-        writeable: true;
     }>;
 };
 
@@ -4376,6 +4404,7 @@ export interface ValueMetadataDuration extends ValueMetadataAny {
 //
 // @public (undocumented)
 export interface ValueMetadataNumeric extends ValueMetadataAny {
+    allowed?: readonly AllowedValue[];
     allowManualEntry?: boolean;
     default?: number;
     max?: number;
@@ -4625,11 +4654,11 @@ export function zwaveDataRateToString(rate: ZWaveDataRate): string;
 // @public
 export class ZWaveError extends Error {
     constructor(message: string, code: ZWaveErrorCodes,
-    context?: unknown | undefined,
+    context?: unknown,
     transactionSource?: string | undefined);
     // (undocumented)
     readonly code: ZWaveErrorCodes;
-    readonly context?: unknown | undefined;
+    readonly context?: unknown;
     // (undocumented)
     readonly message: string;
     readonly transactionSource?: string | undefined;
