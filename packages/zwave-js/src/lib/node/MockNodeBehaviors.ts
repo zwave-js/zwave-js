@@ -24,8 +24,10 @@ import { BinarySensorCCBehaviors } from "./mockCCBehaviors/BinarySensor.js";
 import { BinarySwitchCCBehaviors } from "./mockCCBehaviors/BinarySwitch.js";
 import { ColorSwitchCCBehaviors } from "./mockCCBehaviors/ColorSwitch.js";
 import { ConfigurationCCBehaviors } from "./mockCCBehaviors/Configuration.js";
+import { DoorLockCCBehaviors } from "./mockCCBehaviors/DoorLock.js";
 import { EnergyProductionCCBehaviors } from "./mockCCBehaviors/EnergyProduction.js";
 import { IndicatorCCBehaviors } from "./mockCCBehaviors/Indicator.js";
+import { LockCCBehaviors } from "./mockCCBehaviors/Lock.js";
 import { ManufacturerSpecificCCBehaviors } from "./mockCCBehaviors/ManufacturerSpecific.js";
 import { MeterCCBehaviors } from "./mockCCBehaviors/Meter.js";
 import {
@@ -214,7 +216,9 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...BinarySwitchCCBehaviors,
 		...ColorSwitchCCBehaviors,
 		...ConfigurationCCBehaviors,
+		...DoorLockCCBehaviors,
 		...EnergyProductionCCBehaviors,
+		...LockCCBehaviors,
 		...IndicatorCCBehaviors,
 		...ManufacturerSpecificCCBehaviors,
 		...MeterCCBehaviors,

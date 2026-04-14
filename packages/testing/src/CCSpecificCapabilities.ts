@@ -1,5 +1,8 @@
 import type {
 	ColorComponent,
+	DoorHandleStatus,
+	DoorLockMode,
+	DoorLockOperationType,
 	KeypadMode,
 	SwitchType,
 	ThermostatMode,
@@ -47,6 +50,35 @@ export interface ConfigurationCCCapabilities {
 		isAdvanced?: boolean;
 		altersCapabilities?: boolean;
 	}[];
+}
+
+export interface LockCCCapabilities {
+	/**
+	 * Time in milliseconds for the lock to travel.
+	 * Set to 0 to lock/unlock instantly.
+	 * Default: 0
+	 */
+	travelTime?: number;
+}
+
+export interface DoorLockCCCapabilities {
+	supportedOperationTypes: DoorLockOperationType[];
+	supportedDoorLockModes: DoorLockMode[];
+	supportedOutsideHandles?: DoorHandleStatus;
+	supportedInsideHandles?: DoorHandleStatus;
+	doorSupported?: boolean;
+	boltSupported?: boolean;
+	latchSupported?: boolean;
+	blockToBlockSupported?: boolean;
+	twistAssistSupported?: boolean;
+	holdAndReleaseSupported?: boolean;
+	autoRelockSupported?: boolean;
+	/**
+	 * Time in milliseconds for the lock to travel.
+	 * Set to 0 to lock/unlock instantly.
+	 * Default: 0
+	 */
+	travelTime?: number;
 }
 
 export interface ColorSwitchCCCapabilities {
@@ -215,6 +247,8 @@ export type CCSpecificCapabilities = {
 	[0x77 /* Node Naming and Location */]: NodeNamingAndLocationCCCapabilities;
 	[48 /* Binary Sensor */]: BinarySensorCCCapabilities;
 	[0x25 /* Binary Switch */]: BinarySwitchCCCapabilities;
+	[0x62 /* Door Lock */]: DoorLockCCCapabilities;
+	[0x76 /* Lock */]: LockCCCapabilities;
 	[49 /* Multilevel Sensor */]: MultilevelSensorCCCapabilities;
 	[0x26 /* Multilevel Switch */]: MultilevelSwitchCCCapabilities;
 	[51 /* Color Switch */]: ColorSwitchCCCapabilities;

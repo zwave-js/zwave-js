@@ -7,8 +7,6 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
@@ -194,16 +192,14 @@ export class LockCCSet extends LockCC {
 		this.locked = options.locked;
 	}
 
-	public static from(_raw: CCRaw, _ctx: CCParsingContext): LockCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+	public static from(raw: CCRaw, ctx: CCParsingContext): LockCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const locked = raw.payload[0] === 1;
 
-		// return new LockCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			locked,
+		});
 	}
 
 	public locked: boolean;
@@ -249,6 +245,11 @@ export class LockCCReport extends LockCC {
 	}
 
 	public readonly locked: boolean;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.locked ? 1 : 0]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
