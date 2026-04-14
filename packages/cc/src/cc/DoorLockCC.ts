@@ -8,6 +8,7 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type SupervisionResult,
+	SupervisionStatus,
 	ValueMetadata,
 	type WithAddress,
 	ZWaveError,
@@ -27,7 +28,9 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	SET_VALUE,
+	SET_VALUE_HOOKS,
 	type SetValueImplementation,
+	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
 } from "../lib/API.js";
@@ -350,21 +353,7 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 						typeof value,
 					);
 				}
-				const result = await this.set(value);
-
-				// Verify the current value after a delay, unless the command was supervised and successful
-				if (supervisedCommandSucceeded(result)) {
-					this.getValueDB().setValue(
-						DoorLockCCValues.currentMode.endpoint(
-							this.endpoint.index,
-						),
-						value,
-					);
-				} else {
-					this.schedulePoll({ property }, value);
-				}
-
-				return result;
+				return this.set(value);
 			} else if (
 				typeof property === "string"
 				&& configurationSetParameters.includes(property as any)
@@ -409,6 +398,64 @@ export class DoorLockCCAPI extends PhysicalCCAPI {
 			}
 		};
 	}
+
+	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
+		{ property },
+		value,
+	) => {
+		if (property === "targetMode" && typeof value === "number") {
+			const targetMode = value;
+			const currentModeValueId = DoorLockCCValues.currentMode.endpoint(
+				this.endpoint.index,
+			);
+
+			return {
+				isSplitStateTargetValue: true,
+				supervisionDelayedUpdates: true,
+				optimisticallyUpdateRelatedValues: (
+					_supervisedAndSuccessful,
+				) => {
+					this.tryGetValueDB()?.setValue(
+						currentModeValueId,
+						targetMode,
+					);
+				},
+				supervisionOnSuccess: () => {
+					this.tryGetValueDB()?.setValue(
+						currentModeValueId,
+						targetMode,
+					);
+				},
+				supervisionOnFailure: async () => {
+					try {
+						await this.get();
+					} catch {
+						// ignore
+					}
+				},
+				verifyChanges: async (result) => {
+					switch (result?.status) {
+						case SupervisionStatus.Success:
+						case SupervisionStatus.Working:
+							return;
+						case SupervisionStatus.Fail:
+						case SupervisionStatus.NoSupport:
+							try {
+								await this.get();
+							} catch {
+								// ignore
+							}
+							return;
+						default:
+							this.schedulePoll(
+								{ property: "currentMode" },
+								targetMode,
+							);
+					}
+				},
+			};
+		}
+	};
 
 	protected get [POLL_VALUE](): PollValueImplementation {
 		return async function(this: DoorLockCCAPI, { property }) {
