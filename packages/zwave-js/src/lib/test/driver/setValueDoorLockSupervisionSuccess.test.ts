@@ -13,7 +13,6 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"Door Lock setValue: immediate supervised Success updates currentMode without verification",
 	{
-
 		// debug: true,
 
 		nodeCapabilities: {

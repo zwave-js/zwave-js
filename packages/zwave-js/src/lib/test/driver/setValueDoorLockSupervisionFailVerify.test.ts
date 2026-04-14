@@ -3,7 +3,6 @@ import {
 	DoorLockCCOperationReport,
 	DoorLockCCOperationSet,
 	DoorLockMode,
-	DoorLockOperationType,
 	SupervisionCCGet,
 	SupervisionCCReport,
 } from "@zwave-js/cc";
@@ -20,7 +19,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"Door Lock setValue: targetMode optimistic, verify on final supervision Fail",
 	{
-		debug: true,
+		// debug: true,
 
 		nodeCapabilities: {
 			commandClasses: [
