@@ -90,7 +90,7 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// User capabilities
-			const userCaps = node.getUserCapabilitiesCached();
+			const userCaps = node.accessControl.getUserCapabilitiesCached();
 			t.expect(userCaps).toBeDefined();
 			t.expect(userCaps!.maxUsers).toBe(20);
 			t.expect(userCaps!.maxUserNameLength).toBe(64);
@@ -105,7 +105,8 @@ integrationTest(
 			]);
 
 			// Credential capabilities
-			const credCaps = node.getCredentialCapabilitiesCached();
+			const credCaps = node.accessControl
+				.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
 			t.expect(credCaps!.supportsAdminCode).toBe(true);
 			t.expect(credCaps!.supportsAdminCodeDeactivation).toBe(true);
@@ -163,7 +164,7 @@ integrationTest(
 			// the mock's response has been processed and cached.
 			const userCreated = createDeferredPromise<void>();
 			node.once("user added", () => userCreated.resolve());
-			await node.setUser(1, {
+			await node.accessControl.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
@@ -172,7 +173,7 @@ integrationTest(
 
 			const credCreated = createDeferredPromise<void>();
 			node.once("credential added", () => credCreated.resolve());
-			await node.setCredential(
+			await node.accessControl.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -181,18 +182,18 @@ integrationTest(
 			await credCreated;
 
 			// Now verify reads return the correct data
-			const user = node.getUserCached(1);
+			const user = node.accessControl.getUserCached(1);
 			t.expect(user).toBeDefined();
 			t.expect(user!.active).toBe(true);
 			t.expect(user!.userType).toBe(UserCredentialUserType.General);
 			t.expect(user!.userName).toBe("Alice");
 
-			t.expect(node.getUserCached(2)).toBeUndefined();
+			t.expect(node.accessControl.getUserCached(2)).toBeUndefined();
 
-			const users = node.getUsersCached();
+			const users = node.accessControl.getUsersCached();
 			t.expect(users.length).toBe(1);
 
-			const creds = node.getCredentialsCached(1);
+			const creds = node.accessControl.getCredentialsCached(1);
 			t.expect(creds.length).toBe(1);
 			t.expect(creds[0].type).toBe(UserCredentialType.PINCode);
 			t.expect(creds[0].slot).toBe(1);
@@ -567,7 +568,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.setUser(1, {
+			await node.accessControl.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Charlie",
@@ -612,7 +613,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.setCredential(
+			await node.accessControl.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -662,7 +663,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.deleteUser(5);
+			await node.accessControl.deleteUser(5);
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -704,7 +705,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.deleteAllUsers();
+			await node.accessControl.deleteAllUsers();
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -746,7 +747,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.deleteCredential(
+			await node.accessControl.deleteCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -794,7 +795,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.setAdminCode("9876");
+			await node.accessControl.setAdminCode("9876");
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -833,7 +834,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.getAdminCode();
+			await node.accessControl.getAdminCode();
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -869,7 +870,7 @@ async function populateUserAndCredential(
 ) {
 	const userCreated = createDeferredPromise<void>();
 	node.once("user added", () => userCreated.resolve());
-	await node.setUser(1, {
+	await node.accessControl.setUser(1, {
 		active: true,
 		userType: UserCredentialUserType.General,
 		userName: "Test",
@@ -878,7 +879,12 @@ async function populateUserAndCredential(
 
 	const credCreated = createDeferredPromise<void>();
 	node.once("credential added", () => credCreated.resolve());
-	await node.setCredential(1, UserCredentialType.PINCode, 1, "1234");
+	await node.accessControl.setCredential(
+		1,
+		UserCredentialType.PINCode,
+		1,
+		"1234",
+	);
 	await credCreated;
 }
 
@@ -896,18 +902,18 @@ integrationTest(
 			await populateUserAndCredential(node);
 
 			// Verify data is cached
-			t.expect(node.getUserCached(1)).toBeDefined();
-			t.expect(node.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl.getUserCached(1)).toBeDefined();
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
 
 			const deleted = createDeferredPromise<void>();
 			node.once("user deleted", () => deleted.resolve());
-			await node.deleteUser(1);
+			await node.accessControl.deleteUser(1);
 			await deleted;
 
 			// User values are purged by the CC report handler,
 			// credentials must be purged by the AccessControl mixin
-			t.expect(node.getUserCached(1)).toBeUndefined();
-			t.expect(node.getCredentialsCached(1).length).toBe(0);
+			t.expect(node.accessControl.getUserCached(1)).toBeUndefined();
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(0);
 		},
 	},
 );
@@ -946,14 +952,14 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await populateUserAndCredential(node);
 
-			t.expect(node.getUserCached(1)).toBeDefined();
-			t.expect(node.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl.getUserCached(1)).toBeDefined();
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
 
-			await node.deleteUser(1);
+			await node.accessControl.deleteUser(1);
 
 			// Supervised command failed — cache must remain intact
-			t.expect(node.getUserCached(1)).toBeDefined();
-			t.expect(node.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl.getUserCached(1)).toBeDefined();
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
 		},
 	},
 );
@@ -971,15 +977,15 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await populateUserAndCredential(node);
 
-			t.expect(node.getUsersCached().length).toBe(1);
-			t.expect(node.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl.getUsersCached().length).toBe(1);
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
 
 			// deleteAllUsers returns after the API call completes;
 			// the purge happens synchronously before returning
-			await node.deleteAllUsers();
+			await node.accessControl.deleteAllUsers();
 
-			t.expect(node.getUsersCached().length).toBe(0);
-			t.expect(node.getCredentialsCached(1).length).toBe(0);
+			t.expect(node.accessControl.getUsersCached().length).toBe(0);
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(0);
 		},
 	},
 );
@@ -1017,14 +1023,14 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await populateUserAndCredential(node);
 
-			t.expect(node.getUsersCached().length).toBe(1);
-			t.expect(node.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl.getUsersCached().length).toBe(1);
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
 
-			await node.deleteAllUsers();
+			await node.accessControl.deleteAllUsers();
 
 			// Supervised command failed — cache must remain intact
-			t.expect(node.getUsersCached().length).toBe(1);
-			t.expect(node.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl.getUsersCached().length).toBe(1);
+			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
 		},
 	},
 );

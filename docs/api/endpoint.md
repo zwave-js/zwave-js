@@ -295,6 +295,15 @@ Retrieves the version of the given CommandClass this endpoint implements.
 
 Z-Wave JS provides a unified API for managing users and credentials on access control devices such as door locks. This API transparently supports both the **User Credential CC** and the legacy **User Code CC**, abstracting away the differences between the two.
 
+The credential management API is accessed via the `accessControl` property on endpoints and nodes. Before accessing it, use `endpoint.supportsFeature` to check for support:
+
+```ts
+// Check if the endpoint supports access control
+if (endpoint.supportsFeature(DeviceFeatures.AccessControl)) {
+	const user = await endpoint.accessControl.getUser(1);
+}
+```
+
 > [!NOTE] For nodes using the **User Code CC**, only a subset of the functionality is available. Each user supports a single credential in slot 1, user names and credential rules are not supported, and credential learning is unavailable.
 
 > [!NOTE] Methods that read data return `undefined` when the endpoint does not support access control. Methods that write data will throw if neither the **User Credential CC** nor the **User Code CC** is supported.
@@ -579,7 +588,7 @@ Cancels an ongoing credential learn process.
 Devices that support an admin code allow configuring a code that can be used for administrative functions. Whether this is supported can be determined using `getCredentialCapabilitiesCached()`:
 
 ```ts
-const caps = endpoint.getCredentialCapabilitiesCached();
+const caps = endpoint.accessControl.getCredentialCapabilitiesCached();
 if (caps?.supportsAdminCode) {
 	// Admin code is supported
 }

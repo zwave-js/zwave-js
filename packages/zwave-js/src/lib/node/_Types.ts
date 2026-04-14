@@ -26,7 +26,7 @@ import type { AllOrNone, BytesView } from "@zwave-js/shared";
 import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
-import type { UserData } from "./endpoint-mixins/05_AccessControl.js";
+import type { UserData } from "./feature-apis/AccessControl.js";
 
 export {
 	EntryControlDataTypes,

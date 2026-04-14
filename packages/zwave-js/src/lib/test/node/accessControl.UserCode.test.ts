@@ -45,7 +45,7 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// User capabilities
-			const userCaps = node.getUserCapabilitiesCached();
+			const userCaps = node.accessControl.getUserCapabilitiesCached();
 			t.expect(userCaps).toBeDefined();
 			t.expect(userCaps!.maxUsers).toBe(10);
 			t.expect(userCaps!.supportedUserTypes).toStrictEqual([
@@ -58,7 +58,8 @@ integrationTest(
 			]);
 
 			// Credential capabilities
-			const credCaps = node.getCredentialCapabilitiesCached();
+			const credCaps = node.accessControl
+				.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
 			t.expect(credCaps!.supportsAdminCode).toBe(true);
 			t.expect(credCaps!.supportsAdminCodeDeactivation).toBe(true);
@@ -97,7 +98,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const caps = node.getUserCapabilitiesCached();
+			const caps = node.accessControl.getUserCapabilitiesCached();
 			t.expect(caps!.supportedUserTypes).toStrictEqual([
 				UserCredentialUserType.General,
 			]);
@@ -149,28 +150,28 @@ integrationTest(
 			node.valueDB.setValue(UserCodeCCValues.userCode(3).id, "9999");
 
 			// User 1: Enabled -> active: true, userType: General
-			const user1 = node.getUserCached(1);
+			const user1 = node.accessControl.getUserCached(1);
 			t.expect(user1).toBeDefined();
 			t.expect(user1!.active).toBe(true);
 			t.expect(user1!.userType).toBe(UserCredentialUserType.General);
 
 			// User 2: Disabled -> active: false, userType: General
-			const user2 = node.getUserCached(2);
+			const user2 = node.accessControl.getUserCached(2);
 			t.expect(user2).toBeDefined();
 			t.expect(user2!.active).toBe(false);
 			t.expect(user2!.userType).toBe(UserCredentialUserType.General);
 
 			// User 3: Messaging -> active: true, userType: NonAccess
-			const user3 = node.getUserCached(3);
+			const user3 = node.accessControl.getUserCached(3);
 			t.expect(user3).toBeDefined();
 			t.expect(user3!.active).toBe(true);
 			t.expect(user3!.userType).toBe(UserCredentialUserType.NonAccess);
 
 			// User 4: not set -> undefined
-			t.expect(node.getUserCached(4)).toBeUndefined();
+			t.expect(node.accessControl.getUserCached(4)).toBeUndefined();
 
 			// getUsers should return 3 users
-			const users = node.getUsersCached();
+			const users = node.accessControl.getUsersCached();
 			t.expect(users.length).toBe(3);
 		},
 	},
@@ -203,14 +204,14 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
 
-			const creds = node.getCredentialsCached(1);
+			const creds = node.accessControl.getCredentialsCached(1);
 			t.expect(creds.length).toBe(1);
 			t.expect(creds[0].type).toBe(UserCredentialType.PINCode);
 			t.expect(creds[0].slot).toBe(1);
 			t.expect(creds[0].data).toBe("1234");
 
 			// Non-existent user has no credentials
-			t.expect(node.getCredentialsCached(2).length).toBe(0);
+			t.expect(node.accessControl.getCredentialsCached(2).length).toBe(0);
 		},
 	},
 );
@@ -245,7 +246,7 @@ integrationTest(
 				(_node, args) => credEvent.resolve(args),
 			);
 
-			await node.setCredential(
+			await node.accessControl.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -295,7 +296,7 @@ integrationTest(
 				(_node, args) => credEvent.resolve(args),
 			);
 
-			await node.setCredential(
+			await node.accessControl.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -347,7 +348,7 @@ integrationTest(
 				(_node, args) => credEvent.resolve(args),
 			);
 
-			await node.deleteUser(1);
+			await node.accessControl.deleteUser(1);
 
 			t.expect(await userEvent).toMatchObject({ userId: 1 });
 			t.expect(await credEvent).toMatchObject({
@@ -384,7 +385,7 @@ integrationTest(
 			node.on("credential deleted", () => eventEmitted = true);
 
 			// User 5 is within range but was never set
-			await node.deleteUser(5);
+			await node.accessControl.deleteUser(5);
 
 			// Give the driver time to process
 			await new Promise((resolve) => setTimeout(resolve, 100));
@@ -417,7 +418,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.setCredential(
+			await node.accessControl.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -460,7 +461,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.setCredential(
+			await node.accessControl.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -506,7 +507,7 @@ integrationTest(
 			const userEvent = createDeferredPromise<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
 
-			await node.setUser(1, {
+			await node.accessControl.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 			});
@@ -553,7 +554,7 @@ integrationTest(
 				(_node, args) => credEvent.resolve(args),
 			);
 
-			await node.deleteCredential(
+			await node.accessControl.deleteCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -588,7 +589,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.deleteAllUsers();
+			await node.accessControl.deleteAllUsers();
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -629,8 +630,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// Set admin code, then read it back
-			await node.setAdminCode("9999");
-			const code = await node.getAdminCode();
+			await node.accessControl.setAdminCode("9999");
+			const code = await node.accessControl.getAdminCode();
 			t.expect(code).toBe("9999");
 		},
 	},
@@ -659,7 +660,7 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
 
-			await node.setUser(1, {
+			await node.accessControl.setUser(1, {
 				active: false,
 				userType: UserCredentialUserType.General,
 			});
@@ -706,7 +707,7 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
 
-			await node.deleteCredential(
+			await node.accessControl.deleteCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -749,7 +750,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.setAdminCode("9999");
+			await node.accessControl.setAdminCode("9999");
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -784,7 +785,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.getAdminCode();
+			await node.accessControl.getAdminCode();
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -818,7 +819,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.deleteUser(1);
+			await node.accessControl.deleteUser(1);
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>

@@ -13,16 +13,14 @@ import {
 } from "@zwave-js/cc/UserCredentialCC";
 import {
 	CommandClasses,
-	type MaybeNotKnown,
 	type SupervisionResult,
-	type ValueID,
 	ZWaveError,
 	ZWaveErrorCodes,
 	isUnsupervisedOrSucceeded,
 	supervisedCommandSucceeded,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
-import { EndpointBase } from "./00_Base.js";
+import { FeatureAPI } from "./FeatureAPI.js";
 
 export interface UserCapabilities {
 	maxUsers: number;
@@ -64,151 +62,6 @@ export interface SetUserOptions {
 	expiringTimeoutMinutes?: number;
 }
 
-/** Defines functionality of Z-Wave endpoints related to managing users and credentials for access control */
-export interface EndpointAccessControl {
-	/**
-	 * Returns the user-related capabilities of this endpoint.
-	 * This method uses cached information from the most recent interview.
-	 */
-	getUserCapabilitiesCached(): UserCapabilities | undefined;
-
-	/**
-	 * Returns the credential-related capabilities of this endpoint.
-	 * This method uses cached information from the most recent interview.
-	 */
-	getCredentialCapabilitiesCached(): CredentialCapabilities | undefined;
-
-	/**
-	 * Returns the data for the user with the given ID.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	getUser(userId: number): Promise<UserData | undefined>;
-
-	/**
-	 * Returns the data for the user with the given ID.
-	 * This method uses cached information from the most recent interview.
-	 */
-	getUserCached(userId: number): UserData | undefined;
-
-	/**
-	 * Returns the data for all configured users.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	getUsers(): Promise<UserData[]>;
-
-	/**
-	 * Returns the data for all configured users.
-	 * This method uses cached information from the most recent interview.
-	 */
-	getUsersCached(): UserData[];
-
-	/**
-	 * Creates or updates the user with the given ID.
-	 * This communicates with the node.
-	 */
-	setUser(
-		userId: number,
-		options: SetUserOptions,
-	): Promise<SupervisionResult | undefined>;
-
-	/**
-	 * Deletes the user with the given ID and all of their credentials.
-	 * This communicates with the node.
-	 */
-	deleteUser(userId: number): Promise<SupervisionResult | undefined>;
-
-	/**
-	 * Deletes all users and their credentials.
-	 * This communicates with the node.
-	 */
-	deleteAllUsers(): Promise<SupervisionResult | undefined>;
-
-	/**
-	 * Returns the data for a specific credential.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	getCredential(
-		userId: number,
-		type: UserCredentialType,
-		slot: number,
-	): Promise<CredentialData | undefined>;
-
-	/**
-	 * Returns the data for a specific credential.
-	 * This method uses cached information from the most recent interview.
-	 */
-	getCredentialCached(
-		userId: number,
-		type: UserCredentialType,
-		slot: number,
-	): CredentialData | undefined;
-
-	/**
-	 * Returns all credentials for the given user.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	getCredentials(userId: number): Promise<CredentialData[]>;
-
-	/**
-	 * Returns all credentials for the given user.
-	 * This method uses cached information from the most recent interview.
-	 */
-	getCredentialsCached(userId: number): CredentialData[];
-
-	/**
-	 * Creates or updates a credential for the given user.
-	 * This communicates with the node.
-	 */
-	setCredential(
-		userId: number,
-		type: UserCredentialType,
-		slot: number,
-		data: string | Uint8Array,
-	): Promise<SupervisionResult | undefined>;
-
-	/**
-	 * Deletes the given credential.
-	 * This communicates with the node.
-	 */
-	deleteCredential(
-		userId: number,
-		type: UserCredentialType,
-		slot: number,
-	): Promise<SupervisionResult | undefined>;
-
-	/**
-	 * Starts a learn process for the given credential slot, allowing a user
-	 * to input a credential directly on the device.
-	 * Only supported on nodes using the User Credential CC.
-	 * This communicates with the node.
-	 */
-	startCredentialLearn(
-		userId: number,
-		type: UserCredentialType,
-		slot: number,
-		timeout?: number,
-	): Promise<SupervisionResult | undefined>;
-
-	/**
-	 * Cancels an ongoing credential learn process.
-	 * Only supported on nodes using the User Credential CC.
-	 * This communicates with the node.
-	 */
-	cancelCredentialLearn(): Promise<SupervisionResult | undefined>;
-
-	/**
-	 * Retrieves the admin code from the node.
-	 * This communicates with the node to retrieve fresh information.
-	 */
-	getAdminCode(): Promise<string | undefined>;
-
-	/**
-	 * Sets the admin code on the node.
-	 * This communicates with the node.
-	 */
-	setAdminCode(code: string): Promise<SupervisionResult | undefined>;
-}
-
 const NON_PIN_CHARS = /[^0-9]/;
 
 /**
@@ -220,55 +73,57 @@ function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 		&& NON_PIN_CHARS.test(supportedASCIIChars);
 }
 
-export class AccessControlMixin extends EndpointBase
-	implements EndpointAccessControl
-{
-	/** Read a cached value from the node's value DB */
-	private _getValue<T = unknown>(valueId: ValueID): MaybeNotKnown<T> {
-		return this.tryGetNode()?.getValue(valueId);
-	}
-
+/** High-level API for managing users and credentials on access control devices */
+export class AccessControlAPI extends FeatureAPI {
 	// FIXME: This is technically not correct. A node could support both CCs,
 	// and we may have to decide which one to use, or switch between them on
 	// the fly using Version CC / migration.
 	// This is not implemented yet, so checking for U3C first is fine for now.
-	private get _usesUserCredentialCC(): boolean {
-		return this.supportsCC(CommandClasses["User Credential"]);
+	get #usesUserCredentialCC(): boolean {
+		return this.endpoint.supportsCC(CommandClasses["User Credential"]);
 	}
 
-	private get _usesUserCodeCC(): boolean {
-		return !this._usesUserCredentialCC
-			&& this.supportsCC(CommandClasses["User Code"]);
+	get #usesUserCodeCC(): boolean {
+		return !this.#usesUserCredentialCC
+			&& this.endpoint.supportsCC(CommandClasses["User Code"]);
 	}
 
+	/**
+	 * Returns the user-related capabilities of this endpoint.
+	 * This method uses cached information from the most recent interview.
+	 */
 	public getUserCapabilitiesCached():
 		| UserCapabilities
 		| undefined
 	{
-		if (this._usesUserCredentialCC) {
+		if (this.#usesUserCredentialCC) {
 			return {
-				maxUsers: this._getValue<number>(
-					UserCredentialCCValues.supportedUsers.endpoint(this.index),
+				maxUsers: this.getValue<number>(
+					UserCredentialCCValues.supportedUsers.endpoint(
+						this.endpoint.index,
+					),
 				) ?? 0,
-				supportedUserTypes: this._getValue<UserCredentialUserType[]>(
+				supportedUserTypes: this.getValue<UserCredentialUserType[]>(
 					UserCredentialCCValues.supportedUserTypes.endpoint(
-						this.index,
+						this.endpoint.index,
 					),
 				) ?? [],
-				maxUserNameLength: this._getValue<number>(
+				maxUserNameLength: this.getValue<number>(
 					UserCredentialCCValues.maxUserNameLength.endpoint(
-						this.index,
+						this.endpoint.index,
 					),
 				) ?? undefined,
-				supportedCredentialRules: this._getValue<UserCredentialRule[]>(
+				supportedCredentialRules: this.getValue<UserCredentialRule[]>(
 					UserCredentialCCValues.supportedCredentialRules.endpoint(
-						this.index,
+						this.endpoint.index,
 					),
 				) ?? [],
 			};
-		} else if (this._usesUserCodeCC) {
-			const supportedStatuses = this._getValue<UserIDStatus[]>(
-				UserCodeCCValues.supportedUserIDStatuses.endpoint(this.index),
+		} else if (this.#usesUserCodeCC) {
+			const supportedStatuses = this.getValue<UserIDStatus[]>(
+				UserCodeCCValues.supportedUserIDStatuses.endpoint(
+					this.endpoint.index,
+				),
 			) ?? [];
 			const supportedUserTypes: UserCredentialUserType[] = [
 				UserCredentialUserType.General,
@@ -280,8 +135,10 @@ export class AccessControlMixin extends EndpointBase
 			}
 
 			return {
-				maxUsers: this._getValue<number>(
-					UserCodeCCValues.supportedUsers.endpoint(this.index),
+				maxUsers: this.getValue<number>(
+					UserCodeCCValues.supportedUsers.endpoint(
+						this.endpoint.index,
+					),
 				) ?? 0,
 				supportedUserTypes,
 				// User Code CC does not support user names or credential rules
@@ -292,14 +149,18 @@ export class AccessControlMixin extends EndpointBase
 		return undefined;
 	}
 
+	/**
+	 * Returns the credential-related capabilities of this endpoint.
+	 * This method uses cached information from the most recent interview.
+	 */
 	public getCredentialCapabilitiesCached():
 		| CredentialCapabilities
 		| undefined
 	{
-		if (this._usesUserCredentialCC) {
-			const supportedTypes = this._getValue<UserCredentialType[]>(
+		if (this.#usesUserCredentialCC) {
+			const supportedTypes = this.getValue<UserCredentialType[]>(
 				UserCredentialCCValues.supportedCredentialTypes.endpoint(
-					this.index,
+					this.endpoint.index,
 				),
 			) ?? [];
 
@@ -308,10 +169,10 @@ export class AccessControlMixin extends EndpointBase
 				UserCredentialCapability
 			>();
 			for (const type of supportedTypes) {
-				const cap = this._getValue<UserCredentialCapability>(
+				const cap = this.getValue<UserCredentialCapability>(
 					UserCredentialCCValues.credentialCapabilities(type)
 						.endpoint(
-							this.index,
+							this.endpoint.index,
 						),
 				);
 				if (cap) credentialTypes.set(type, cap);
@@ -319,17 +180,17 @@ export class AccessControlMixin extends EndpointBase
 
 			return {
 				supportedCredentialTypes: credentialTypes,
-				supportsAdminCode: this._getValue<boolean>(
+				supportsAdminCode: this.getValue<boolean>(
 					UserCredentialCCValues.supportsAdminCode.endpoint(
-						this.index,
+						this.endpoint.index,
 					),
 				) ?? false,
-				supportsAdminCodeDeactivation: this._getValue<boolean>(
+				supportsAdminCodeDeactivation: this.getValue<boolean>(
 					UserCredentialCCValues.supportsAdminCodeDeactivation
-						.endpoint(this.index),
+						.endpoint(this.endpoint.index),
 				) ?? false,
 			};
-		} else if (this._usesUserCodeCC) {
+		} else if (this.#usesUserCodeCC) {
 			// User Code CC only supports a single credential per user
 			// with a length of 4-10 characters (CC:0063.01.01.11.006).
 			// Despite the spec calling them "PIN codes", v1 devices often
@@ -338,7 +199,7 @@ export class AccessControlMixin extends EndpointBase
 				UserCredentialType,
 				UserCredentialCapability
 			>();
-			credentialTypes.set(this._ucCredentialType, {
+			credentialTypes.set(this.#ucCredentialType, {
 				numberOfCredentialSlots: 1,
 				minCredentialLength: 4,
 				maxCredentialLength: 10,
@@ -348,12 +209,14 @@ export class AccessControlMixin extends EndpointBase
 
 			return {
 				supportedCredentialTypes: credentialTypes,
-				supportsAdminCode: this._getValue<boolean>(
-					UserCodeCCValues.supportsAdminCode.endpoint(this.index),
+				supportsAdminCode: this.getValue<boolean>(
+					UserCodeCCValues.supportsAdminCode.endpoint(
+						this.endpoint.index,
+					),
 				) ?? false,
-				supportsAdminCodeDeactivation: this._getValue<boolean>(
+				supportsAdminCodeDeactivation: this.getValue<boolean>(
 					UserCodeCCValues.supportsAdminCodeDeactivation.endpoint(
-						this.index,
+						this.endpoint.index,
 					),
 				) ?? false,
 			};
@@ -361,9 +224,13 @@ export class AccessControlMixin extends EndpointBase
 		return undefined;
 	}
 
+	/**
+	 * Returns the data for the user with the given ID.
+	 * This communicates with the node to retrieve fresh information.
+	 */
 	public async getUser(userId: number): Promise<UserData | undefined> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			const result = await api.getUser(userId);
 			if (!result?.userId) return undefined;
 			return {
@@ -375,11 +242,11 @@ export class AccessControlMixin extends EndpointBase
 				expiringTimeoutMinutes: result.expiringTimeoutMinutes
 					|| undefined,
 			};
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
 			const result = await api.get(userId);
 			if (!result) return undefined;
-			return this._mapUserCodeStatusToUserData(
+			return this.#mapUserCodeStatusToUserData(
 				userId,
 				result.userIdStatus,
 			);
@@ -387,18 +254,26 @@ export class AccessControlMixin extends EndpointBase
 		return undefined;
 	}
 
+	/**
+	 * Returns the data for the user with the given ID.
+	 * This method uses cached information from the most recent interview.
+	 */
 	public getUserCached(userId: number): UserData | undefined {
-		if (this._usesUserCredentialCC) {
-			return this._getUserCached_U3C(userId);
-		} else if (this._usesUserCodeCC) {
-			return this._getUserCached_UC(userId);
+		if (this.#usesUserCredentialCC) {
+			return this.#getUserCached_U3C(userId);
+		} else if (this.#usesUserCodeCC) {
+			return this.#getUserCached_UC(userId);
 		}
 		return undefined;
 	}
 
+	/**
+	 * Returns the data for all configured users.
+	 * This communicates with the node to retrieve fresh information.
+	 */
 	public async getUsers(): Promise<UserData[]> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			const users: UserData[] = [];
 			// Requesting userId 0 gives us the first user
 			let nextUserId = 0;
@@ -418,15 +293,15 @@ export class AccessControlMixin extends EndpointBase
 				nextUserId = result.nextUserId;
 			} while (nextUserId > 0);
 			return users;
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
 			const maxUsers = await api.getUsersCount();
 			if (!maxUsers) return [];
 
 			const users: UserData[] = [];
-			const supportsBulk = !!this._getValue<boolean>(
+			const supportsBulk = !!this.getValue<boolean>(
 				UserCodeCCValues.supportsMultipleUserCodeReport.endpoint(
-					this.index,
+					this.endpoint.index,
 				),
 			);
 
@@ -438,7 +313,7 @@ export class AccessControlMixin extends EndpointBase
 					users.push(
 						...response.userCodes
 							.map((entry) =>
-								this._mapUserCodeStatusToUserData(
+								this.#mapUserCodeStatusToUserData(
 									entry.userId,
 									entry.userIdStatus,
 								)
@@ -451,7 +326,7 @@ export class AccessControlMixin extends EndpointBase
 				for (let userId = 1; userId <= maxUsers; userId++) {
 					const result = await api.get(userId);
 					if (!result) continue;
-					const user = this._mapUserCodeStatusToUserData(
+					const user = this.#mapUserCodeStatusToUserData(
 						userId,
 						result.userIdStatus,
 					);
@@ -463,24 +338,30 @@ export class AccessControlMixin extends EndpointBase
 		return [];
 	}
 
+	/**
+	 * Returns the data for all configured users.
+	 * This method uses cached information from the most recent interview.
+	 */
 	public getUsersCached(): UserData[] {
-		if (this._usesUserCredentialCC) {
-			const maxUsers = this._getValue<number>(
-				UserCredentialCCValues.supportedUsers.endpoint(this.index),
+		if (this.#usesUserCredentialCC) {
+			const maxUsers = this.getValue<number>(
+				UserCredentialCCValues.supportedUsers.endpoint(
+					this.endpoint.index,
+				),
 			) ?? 0;
 			const users: UserData[] = [];
 			for (let userId = 1; userId <= maxUsers; userId++) {
-				const user = this._getUserCached_U3C(userId);
+				const user = this.#getUserCached_U3C(userId);
 				if (user) users.push(user);
 			}
 			return users;
-		} else if (this._usesUserCodeCC) {
-			const maxUsers = this._getValue<number>(
-				UserCodeCCValues.supportedUsers.endpoint(this.index),
+		} else if (this.#usesUserCodeCC) {
+			const maxUsers = this.getValue<number>(
+				UserCodeCCValues.supportedUsers.endpoint(this.endpoint.index),
 			) ?? 0;
 			const users: UserData[] = [];
 			for (let userId = 1; userId <= maxUsers; userId++) {
-				const user = this._getUserCached_UC(userId);
+				const user = this.#getUserCached_UC(userId);
 				if (user) users.push(user);
 			}
 			return users;
@@ -488,13 +369,17 @@ export class AccessControlMixin extends EndpointBase
 		return [];
 	}
 
+	/**
+	 * Creates or updates the user with the given ID.
+	 * This communicates with the node.
+	 */
 	public async setUser(
 		userId: number,
 		options: SetUserOptions,
 	): Promise<SupervisionResult | undefined> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
-			const existing = this._getUserCached_U3C(userId);
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
+			const existing = this.#getUserCached_U3C(userId);
 			const operationType = existing
 				? UserCredentialOperationType.Modify
 				: UserCredentialOperationType.Add;
@@ -527,11 +412,13 @@ export class AccessControlMixin extends EndpointBase
 					?? existing?.credentialRule,
 				userName: options.userName ?? existing?.userName,
 			});
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
-			const existing = this._getUserCached_UC(userId);
-			const existingStatus = this._getValue<UserIDStatus>(
-				UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
+			const existing = this.#getUserCached_UC(userId);
+			const existingStatus = this.getValue<UserIDStatus>(
+				UserCodeCCValues.userIdStatus(userId).endpoint(
+					this.endpoint.index,
+				),
 			);
 
 			const active = options.active ?? existing?.active ?? true;
@@ -551,8 +438,10 @@ export class AccessControlMixin extends EndpointBase
 
 			// User Code CC requires sending the code along with every status
 			// change, so we re-send the existing code to preserve it
-			const existingCode = this._getValue<string>(
-				UserCodeCCValues.userCode(userId).endpoint(this.index),
+			const existingCode = this.getValue<string>(
+				UserCodeCCValues.userCode(userId).endpoint(
+					this.endpoint.index,
+				),
 			);
 			if (!existingCode) {
 				throw new ZWaveError(
@@ -578,39 +467,43 @@ export class AccessControlMixin extends EndpointBase
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				const node = this.tryGetNode();
+				const node = this.endpoint.tryGetNode();
 				if (node) {
 					const userData: UserData = { userId, active, userType };
 					node.emit(
 						existing ? "user modified" : "user added",
-						this,
+						this.endpoint as any,
 						userData,
 					);
 				}
 			}
 			return result;
 		}
-		this._throwNoAccessControl();
+		this.#throwNoAccessControl();
 	}
 
+	/**
+	 * Deletes the user with the given ID and all of their credentials.
+	 * This communicates with the node.
+	 */
 	public async deleteUser(
 		userId: number,
 	): Promise<SupervisionResult | undefined> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			const result = await api.setUser({
 				operationType: UserCredentialOperationType.Delete,
 				userId,
 			});
 			if (isUnsupervisedOrSucceeded(result)) {
-				this._purgeCachedCredentials(userId);
+				this.#purgeCachedCredentials(userId);
 			}
 			return result;
-		} else if (this._usesUserCodeCC) {
+		} else if (this.#usesUserCodeCC) {
 			// User Code CC ties each user to their code, so clearing
 			// the code implicitly deletes the user and vice versa
-			const existed = this._getUserCached_UC(userId) != undefined;
-			const api = this._ucAPI();
+			const existed = this.#getUserCached_UC(userId) != undefined;
+			const api = this.#ucAPI();
 			const result = await api.clear(userId);
 			let succeeded: boolean;
 			if (result == undefined) {
@@ -622,55 +515,63 @@ export class AccessControlMixin extends EndpointBase
 				succeeded = supervisedCommandSucceeded(result) && existed;
 			}
 			if (succeeded) {
-				const node = this.tryGetNode();
+				const node = this.endpoint.tryGetNode();
 				if (node) {
-					node.emit("user deleted", this, { userId });
-					node.emit("credential deleted", this, {
+					node.emit("user deleted", this.endpoint as any, { userId });
+					node.emit("credential deleted", this.endpoint as any, {
 						userId,
-						credentialType: this._ucCredentialType,
+						credentialType: this.#ucCredentialType,
 						credentialSlot: 1,
 					});
 				}
 			}
 			return result;
 		}
-		this._throwNoAccessControl();
+		this.#throwNoAccessControl();
 	}
 
+	/**
+	 * Deletes all users and their credentials.
+	 * This communicates with the node.
+	 */
 	public async deleteAllUsers(): Promise<SupervisionResult | undefined> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			const result = await api.setUser({
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
 			});
 			if (isUnsupervisedOrSucceeded(result)) {
-				this._purgeAllCachedUsersAndCredentials();
+				this.#purgeAllCachedUsersAndCredentials();
 			}
 			return result;
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
 			const result = await api.clear(0);
 			// Verifying all users being deleted is unrealistic
 			// since there can be up to 65535 users. So we just
 			// assume it worked when the command was not supervised.
 			if (isUnsupervisedOrSucceeded(result)) {
-				this._purgeAllCachedUserCodes();
+				this.#purgeAllCachedUserCodes();
 			}
 			return result;
 		}
-		this._throwNoAccessControl();
+		this.#throwNoAccessControl();
 	}
 
+	/**
+	 * Returns the data for a specific credential.
+	 * This communicates with the node to retrieve fresh information.
+	 */
 	public async getCredential(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): Promise<CredentialData | undefined> {
-		this._assertValidSlot(type, slot);
+		this.#assertValidSlot(type, slot);
 
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			const result = await api.getCredential(userId, type, slot);
 			if (!result?.credentialSlot) return undefined;
 			return {
@@ -679,8 +580,8 @@ export class AccessControlMixin extends EndpointBase
 				slot: result.credentialSlot,
 				data: result.credentialData,
 			};
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
 			const result = await api.get(userId);
 			if (!result) return undefined;
 			if (
@@ -694,24 +595,32 @@ export class AccessControlMixin extends EndpointBase
 		return undefined;
 	}
 
+	/**
+	 * Returns the data for a specific credential.
+	 * This method uses cached information from the most recent interview.
+	 */
 	public getCredentialCached(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
-		this._assertValidSlot(type, slot);
+		this.#assertValidSlot(type, slot);
 
-		if (this._usesUserCredentialCC) {
-			return this._getCredentialCached_U3C(userId, type, slot);
-		} else if (this._usesUserCodeCC) {
-			return this._getCredentialCached_UC(userId, type, slot);
+		if (this.#usesUserCredentialCC) {
+			return this.#getCredentialCached_U3C(userId, type, slot);
+		} else if (this.#usesUserCodeCC) {
+			return this.#getCredentialCached_UC(userId, type, slot);
 		}
 		return undefined;
 	}
 
+	/**
+	 * Returns all credentials for the given user.
+	 * This communicates with the node to retrieve fresh information.
+	 */
 	public async getCredentials(userId: number): Promise<CredentialData[]> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			const credentials: CredentialData[] = [];
 			// Starting from type 0 / slot 0 gives us the first credential for the user
 			let nextCredType: UserCredentialType = UserCredentialType.None;
@@ -736,10 +645,10 @@ export class AccessControlMixin extends EndpointBase
 				|| nextCredSlot !== 0
 			);
 			return credentials;
-		} else if (this._usesUserCodeCC) {
+		} else if (this.#usesUserCodeCC) {
 			const cred = await this.getCredential(
 				userId,
-				this._ucCredentialType,
+				this.#ucCredentialType,
 				1,
 			);
 			return cred ? [cred] : [];
@@ -747,20 +656,24 @@ export class AccessControlMixin extends EndpointBase
 		return [];
 	}
 
+	/**
+	 * Returns all credentials for the given user.
+	 * This method uses cached information from the most recent interview.
+	 */
 	public getCredentialsCached(userId: number): CredentialData[] {
-		if (this._usesUserCredentialCC) {
+		if (this.#usesUserCredentialCC) {
 			const credentials: CredentialData[] = [];
-			const supportedTypes = this._getValue<UserCredentialType[]>(
+			const supportedTypes = this.getValue<UserCredentialType[]>(
 				UserCredentialCCValues.supportedCredentialTypes.endpoint(
-					this.index,
+					this.endpoint.index,
 				),
 			) ?? [];
 
 			for (const type of supportedTypes) {
-				const cap = this._getValue<UserCredentialCapability>(
+				const cap = this.getValue<UserCredentialCapability>(
 					UserCredentialCCValues.credentialCapabilities(type)
 						.endpoint(
-							this.index,
+							this.endpoint.index,
 						),
 				);
 				if (!cap) continue;
@@ -769,7 +682,7 @@ export class AccessControlMixin extends EndpointBase
 					slot <= cap.numberOfCredentialSlots;
 					slot++
 				) {
-					const cred = this._getCredentialCached_U3C(
+					const cred = this.#getCredentialCached_U3C(
 						userId,
 						type,
 						slot,
@@ -778,10 +691,10 @@ export class AccessControlMixin extends EndpointBase
 				}
 			}
 			return credentials;
-		} else if (this._usesUserCodeCC) {
-			const cred = this._getCredentialCached_UC(
+		} else if (this.#usesUserCodeCC) {
+			const cred = this.#getCredentialCached_UC(
 				userId,
-				this._ucCredentialType,
+				this.#ucCredentialType,
 				1,
 			);
 			return cred ? [cred] : [];
@@ -789,17 +702,21 @@ export class AccessControlMixin extends EndpointBase
 		return [];
 	}
 
+	/**
+	 * Creates or updates a credential for the given user.
+	 * This communicates with the node.
+	 */
 	public async setCredential(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 		data: string | Uint8Array,
 	): Promise<SupervisionResult | undefined> {
-		this._assertValidSlot(type, slot);
+		this.#assertValidSlot(type, slot);
 
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
-			const existing = this._getCredentialCached_U3C(userId, type, slot);
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
+			const existing = this.#getCredentialCached_U3C(userId, type, slot);
 			const credentialData = typeof data === "string"
 				? Bytes.from(data, "utf-8")
 				: Bytes.from(data);
@@ -812,12 +729,14 @@ export class AccessControlMixin extends EndpointBase
 				credentialSlot: slot,
 				credentialData,
 			});
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
 
 			// Determine the current status; default to Enabled for new users
-			const existingStatus = this._getValue<UserIDStatus>(
-				UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
+			const existingStatus = this.getValue<UserIDStatus>(
+				UserCodeCCValues.userIdStatus(userId).endpoint(
+					this.endpoint.index,
+				),
 			);
 			const status = (
 					existingStatus == undefined
@@ -826,7 +745,7 @@ export class AccessControlMixin extends EndpointBase
 				? UserIDStatus.Enabled
 				: existingStatus;
 
-			const existingCred = this._getCredentialCached_UC(
+			const existingCred = this.#getCredentialCached_UC(
 				userId,
 				type,
 				slot,
@@ -848,13 +767,13 @@ export class AccessControlMixin extends EndpointBase
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				const node = this.tryGetNode();
+				const node = this.endpoint.tryGetNode();
 				if (node) {
 					node.emit(
 						existingCred
 							? "credential modified"
 							: "credential added",
-						this,
+						this.endpoint as any,
 						{
 							userId,
 							credentialType: type,
@@ -866,30 +785,34 @@ export class AccessControlMixin extends EndpointBase
 			}
 			return result;
 		}
-		this._throwNoAccessControl();
+		this.#throwNoAccessControl();
 	}
 
+	/**
+	 * Deletes the given credential.
+	 * This communicates with the node.
+	 */
 	public async deleteCredential(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): Promise<SupervisionResult | undefined> {
-		this._assertValidSlot(type, slot);
+		this.#assertValidSlot(type, slot);
 
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			return api.setCredential({
 				operationType: UserCredentialOperationType.Delete,
 				userId,
 				credentialType: type,
 				credentialSlot: slot,
 			});
-		} else if (this._usesUserCodeCC) {
+		} else if (this.#usesUserCodeCC) {
 			// User Code CC ties each user to their code, so clearing
 			// the credential also deletes the user
-			const existed = this._getCredentialCached_UC(userId, type, slot)
+			const existed = this.#getCredentialCached_UC(userId, type, slot)
 				!= undefined;
-			const api = this._ucAPI();
+			const api = this.#ucAPI();
 			const result = await api.clear(userId);
 			let succeeded: boolean;
 			if (result == undefined) {
@@ -900,37 +823,43 @@ export class AccessControlMixin extends EndpointBase
 				succeeded = supervisedCommandSucceeded(result) && existed;
 			}
 			if (succeeded) {
-				const node = this.tryGetNode();
+				const node = this.endpoint.tryGetNode();
 				if (node) {
-					node.emit("credential deleted", this, {
+					node.emit("credential deleted", this.endpoint as any, {
 						userId,
 						credentialType: type,
 						credentialSlot: slot,
 					});
-					node.emit("user deleted", this, { userId });
+					node.emit("user deleted", this.endpoint as any, { userId });
 				}
 			}
 			return result;
 		}
-		this._throwNoAccessControl();
+		this.#throwNoAccessControl();
 	}
 
+	/**
+	 * Starts a learn process for the given credential slot, allowing a user
+	 * to input a credential directly on the device.
+	 * Only supported on nodes using the User Credential CC.
+	 * This communicates with the node.
+	 */
 	public async startCredentialLearn(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 		timeout?: number,
 	): Promise<SupervisionResult | undefined> {
-		if (!this._usesUserCredentialCC) {
+		if (!this.#usesUserCredentialCC) {
 			throw new ZWaveError(
 				"This node does not support learning credentials",
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
 
-		this._assertValidSlot(type, slot);
+		this.#assertValidSlot(type, slot);
 
-		const existing = this._getCredentialCached_U3C(userId, type, slot);
+		const existing = this.#getCredentialCached_U3C(userId, type, slot);
 		const operationType = existing
 			? UserCredentialOperationType.Modify
 			: UserCredentialOperationType.Add;
@@ -948,7 +877,7 @@ export class AccessControlMixin extends EndpointBase
 			);
 		}
 
-		const api = this._u3cAPI();
+		const api = this.#u3cAPI();
 		return api.startCredentialLearn({
 			userId,
 			credentialType: type,
@@ -958,57 +887,71 @@ export class AccessControlMixin extends EndpointBase
 		});
 	}
 
+	/**
+	 * Cancels an ongoing credential learn process.
+	 * Only supported on nodes using the User Credential CC.
+	 * This communicates with the node.
+	 */
 	public async cancelCredentialLearn(): Promise<
 		SupervisionResult | undefined
 	> {
-		if (!this._usesUserCredentialCC) {
+		if (!this.#usesUserCredentialCC) {
 			throw new ZWaveError(
 				"This node does not support learning credentials",
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
-		const api = this._u3cAPI();
+		const api = this.#u3cAPI();
 		return api.cancelCredentialLearn();
 	}
 
+	/**
+	 * Retrieves the admin code from the node.
+	 * This communicates with the node to retrieve fresh information.
+	 */
 	public async getAdminCode(): Promise<string | undefined> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			return api.getAdminPinCode();
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
 			return api.getAdminCode();
 		}
 		return undefined;
 	}
 
+	/**
+	 * Sets the admin code on the node.
+	 * This communicates with the node.
+	 */
 	public async setAdminCode(
 		code: string,
 	): Promise<SupervisionResult | undefined> {
-		if (this._usesUserCredentialCC) {
-			const api = this._u3cAPI();
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
 			return api.setAdminPinCode({ pinCode: code });
-		} else if (this._usesUserCodeCC) {
-			const api = this._ucAPI();
+		} else if (this.#usesUserCodeCC) {
+			const api = this.#ucAPI();
 			return api.setAdminCode(code);
 		}
-		this._throwNoAccessControl();
+		this.#throwNoAccessControl();
 	}
 
-	private _ucAPI(): UserCodeCCAPI {
-		return this.commandClasses["User Code"] as unknown as UserCodeCCAPI;
+	#ucAPI(): UserCodeCCAPI {
+		return this.endpoint
+			.commandClasses["User Code"] as unknown as UserCodeCCAPI;
 	}
 
-	private _u3cAPI(): UserCredentialCCAPI {
-		return this.commandClasses[
+	#u3cAPI(): UserCredentialCCAPI {
+		return this.endpoint.commandClasses[
 			"User Credential"
 		] as unknown as UserCredentialCCAPI;
 	}
 
 	/** Returns the credential type to use for User Code CC based on supported characters */
-	private get _ucCredentialType(): UserCredentialType {
-		const supportedASCIIChars = this._getValue<string>(
-			UserCodeCCValues.supportedASCIIChars.endpoint(this.index),
+	get #ucCredentialType(): UserCredentialType {
+		const supportedASCIIChars = this.getValue<string>(
+			UserCodeCCValues.supportedASCIIChars.endpoint(this.endpoint.index),
 		);
 		return supportsNonPINChars(supportedASCIIChars)
 			? UserCredentialType.Password
@@ -1016,7 +959,7 @@ export class AccessControlMixin extends EndpointBase
 	}
 
 	/** Maps User Code CC's UserIDStatus to the unified active/userType model */
-	private _mapUserCodeStatusToUserData(
+	#mapUserCodeStatusToUserData(
 		userId: number,
 		status: UserIDStatus,
 	): UserData | undefined {
@@ -1055,8 +998,8 @@ export class AccessControlMixin extends EndpointBase
 	}
 
 	/** Removes cached credential values for a given user from the value DB */
-	private _purgeCachedCredentials(userId: number): void {
-		const valueDB = this.tryGetNode()?.valueDB;
+	#purgeCachedCredentials(userId: number): void {
+		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 		const credentialValues = valueDB.findValues(
 			(vid) =>
@@ -1071,12 +1014,14 @@ export class AccessControlMixin extends EndpointBase
 	}
 
 	/** Removes all cached user and credential values from the value DB */
-	private _purgeAllCachedUsersAndCredentials(): void {
-		const valueDB = this.tryGetNode()?.valueDB;
+	#purgeAllCachedUsersAndCredentials(): void {
+		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 
-		const maxUsers = this._getValue<number>(
-			UserCredentialCCValues.supportedUsers.endpoint(this.index),
+		const maxUsers = this.getValue<number>(
+			UserCredentialCCValues.supportedUsers.endpoint(
+				this.endpoint.index,
+			),
 		) ?? 0;
 		for (let userId = 1; userId <= maxUsers; userId++) {
 			for (
@@ -1091,7 +1036,7 @@ export class AccessControlMixin extends EndpointBase
 					UserCredentialCCValues.userChecksum(userId),
 				]
 			) {
-				valueDB.removeValue(value.endpoint(this.index));
+				valueDB.removeValue(value.endpoint(this.endpoint.index));
 			}
 		}
 
@@ -1108,8 +1053,8 @@ export class AccessControlMixin extends EndpointBase
 	}
 
 	/** Removes all cached user code status and code values from the value DB */
-	private _purgeAllCachedUserCodes(): void {
-		const valueDB = this.tryGetNode()?.valueDB;
+	#purgeAllCachedUserCodes(): void {
+		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 
 		const values = valueDB.findValues(
@@ -1122,7 +1067,7 @@ export class AccessControlMixin extends EndpointBase
 		}
 	}
 
-	private _assertValidSlot(type: UserCredentialType, slot: number): void {
+	#assertValidSlot(type: UserCredentialType, slot: number): void {
 		const caps = this.getCredentialCapabilitiesCached()
 			?.supportedCredentialTypes.get(type);
 		if (!caps || slot < 1 || slot > caps.numberOfCredentialSlots) {
@@ -1135,71 +1080,81 @@ export class AccessControlMixin extends EndpointBase
 		}
 	}
 
-	private _throwNoAccessControl(): never {
+	#throwNoAccessControl(): never {
 		throw new ZWaveError(
 			"This node does not support managing users or credentials",
 			ZWaveErrorCodes.CC_NotSupported,
 		);
 	}
 
-	private _getUserCached_U3C(userId: number): UserData | undefined {
-		const userType = this._getValue<UserCredentialUserType>(
-			UserCredentialCCValues.userType(userId).endpoint(this.index),
+	#getUserCached_U3C(userId: number): UserData | undefined {
+		const userType = this.getValue<UserCredentialUserType>(
+			UserCredentialCCValues.userType(userId).endpoint(
+				this.endpoint.index,
+			),
 		);
 		if (userType == undefined) return undefined;
 
 		return {
 			userId,
-			active: this._getValue<boolean>(
-				UserCredentialCCValues.userActive(userId).endpoint(this.index),
+			active: this.getValue<boolean>(
+				UserCredentialCCValues.userActive(userId).endpoint(
+					this.endpoint.index,
+				),
 			) ?? false,
 			userType,
-			userName: this._getValue<string>(
-				UserCredentialCCValues.userName(userId).endpoint(this.index),
-			) ?? undefined,
-			credentialRule: this._getValue<UserCredentialRule>(
-				UserCredentialCCValues.credentialRule(userId).endpoint(
-					this.index,
+			userName: this.getValue<string>(
+				UserCredentialCCValues.userName(userId).endpoint(
+					this.endpoint.index,
 				),
 			) ?? undefined,
-			expiringTimeoutMinutes: this._getValue<number>(
+			credentialRule: this.getValue<UserCredentialRule>(
+				UserCredentialCCValues.credentialRule(userId).endpoint(
+					this.endpoint.index,
+				),
+			) ?? undefined,
+			expiringTimeoutMinutes: this.getValue<number>(
 				UserCredentialCCValues.expiringTimeoutMinutes(userId).endpoint(
-					this.index,
+					this.endpoint.index,
 				),
 			) || undefined,
 		};
 	}
 
-	private _getCredentialCached_U3C(
+	#getCredentialCached_U3C(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
-		const data = this._getValue<Uint8Array>(
+		const data = this.getValue<Uint8Array>(
 			UserCredentialCCValues.credential(userId, type, slot).endpoint(
-				this.index,
+				this.endpoint.index,
 			),
 		);
 		if (data == undefined) return undefined;
 		return { userId, type, slot, data };
 	}
 
-	private _getUserCached_UC(userId: number): UserData | undefined {
-		const status = this._getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
+	#getUserCached_UC(userId: number): UserData | undefined {
+		const status = this.getValue<UserIDStatus>(
+			UserCodeCCValues.userIdStatus(userId).endpoint(
+				this.endpoint.index,
+			),
 		);
 		if (status == undefined) return undefined;
-		return this._mapUserCodeStatusToUserData(userId, status);
+		return this.#mapUserCodeStatusToUserData(userId, status);
 	}
 
-	private _getCredentialCached_UC(
+	#getCredentialCached_UC(
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
 		if (slot !== 1) return undefined;
-		const status = this._getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(userId).endpoint(this.index),
+		const status = this.getValue<UserIDStatus>(
+			UserCodeCCValues.userIdStatus(userId).endpoint(
+				this.endpoint.index,
+			),
 		);
 		if (
 			status == undefined
@@ -1208,8 +1163,8 @@ export class AccessControlMixin extends EndpointBase
 		) {
 			return undefined;
 		}
-		const data = this._getValue<string>(
-			UserCodeCCValues.userCode(userId).endpoint(this.index),
+		const data = this.getValue<string>(
+			UserCodeCCValues.userCode(userId).endpoint(this.endpoint.index),
 		);
 		if (data == undefined) return undefined;
 		return { userId, type, slot, data };
