@@ -2,7 +2,7 @@
 	"manufacturer": "Philio",
 	"manufacturerId": "0x013c",
 	"label": "PAC03",
-	"description": "Z-Wave Mitsubishi IT Communication Adapter",
+	"description": "Mitsubishi IT Communication Adapter",
 	"devices": [
 		{
 			"productType": "0x0001",
