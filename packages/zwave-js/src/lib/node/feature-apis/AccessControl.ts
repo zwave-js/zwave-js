@@ -83,19 +83,11 @@ export class AccessControlAPI extends FeatureAPI {
 		return this.endpoint.supportsCC(CommandClasses["User Credential"]);
 	}
 
-	get #usesUserCodeCC(): boolean {
-		return !this.#usesUserCredentialCC
-			&& this.endpoint.supportsCC(CommandClasses["User Code"]);
-	}
-
 	/**
 	 * Returns the user-related capabilities of this endpoint.
 	 * This method uses cached information from the most recent interview.
 	 */
-	public getUserCapabilitiesCached():
-		| UserCapabilities
-		| undefined
-	{
+	public getUserCapabilitiesCached(): UserCapabilities {
 		if (this.#usesUserCredentialCC) {
 			return {
 				maxUsers: this.getValue<number>(
@@ -119,7 +111,7 @@ export class AccessControlAPI extends FeatureAPI {
 					),
 				) ?? [],
 			};
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const supportedStatuses = this.getValue<UserIDStatus[]>(
 				UserCodeCCValues.supportedUserIDStatuses.endpoint(
 					this.endpoint.index,
@@ -146,17 +138,13 @@ export class AccessControlAPI extends FeatureAPI {
 				supportedCredentialRules: [UserCredentialRule.Single],
 			};
 		}
-		return undefined;
 	}
 
 	/**
 	 * Returns the credential-related capabilities of this endpoint.
 	 * This method uses cached information from the most recent interview.
 	 */
-	public getCredentialCapabilitiesCached():
-		| CredentialCapabilities
-		| undefined
-	{
+	public getCredentialCapabilitiesCached(): CredentialCapabilities {
 		if (this.#usesUserCredentialCC) {
 			const supportedTypes = this.getValue<UserCredentialType[]>(
 				UserCredentialCCValues.supportedCredentialTypes.endpoint(
@@ -190,7 +178,7 @@ export class AccessControlAPI extends FeatureAPI {
 						.endpoint(this.endpoint.index),
 				) ?? false,
 			};
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			// User Code CC only supports a single credential per user
 			// with a length of 4-10 characters (CC:0063.01.01.11.006).
 			// Despite the spec calling them "PIN codes", v1 devices often
@@ -221,7 +209,6 @@ export class AccessControlAPI extends FeatureAPI {
 				) ?? false,
 			};
 		}
-		return undefined;
 	}
 
 	/**
@@ -242,7 +229,7 @@ export class AccessControlAPI extends FeatureAPI {
 				expiringTimeoutMinutes: result.expiringTimeoutMinutes
 					|| undefined,
 			};
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 			const result = await api.get(userId);
 			if (!result) return undefined;
@@ -251,7 +238,6 @@ export class AccessControlAPI extends FeatureAPI {
 				result.userIdStatus,
 			);
 		}
-		return undefined;
 	}
 
 	/**
@@ -261,10 +247,9 @@ export class AccessControlAPI extends FeatureAPI {
 	public getUserCached(userId: number): UserData | undefined {
 		if (this.#usesUserCredentialCC) {
 			return this.#getUserCached_U3C(userId);
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			return this.#getUserCached_UC(userId);
 		}
-		return undefined;
 	}
 
 	/**
@@ -293,7 +278,7 @@ export class AccessControlAPI extends FeatureAPI {
 				nextUserId = result.nextUserId;
 			} while (nextUserId > 0);
 			return users;
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 			const maxUsers = await api.getUsersCount();
 			if (!maxUsers) return [];
@@ -335,7 +320,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return users;
 		}
-		return [];
 	}
 
 	/**
@@ -355,7 +339,7 @@ export class AccessControlAPI extends FeatureAPI {
 				if (user) users.push(user);
 			}
 			return users;
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const maxUsers = this.getValue<number>(
 				UserCodeCCValues.supportedUsers.endpoint(this.endpoint.index),
 			) ?? 0;
@@ -366,7 +350,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return users;
 		}
-		return [];
 	}
 
 	/**
@@ -412,7 +395,7 @@ export class AccessControlAPI extends FeatureAPI {
 					?? existing?.credentialRule,
 				userName: options.userName ?? existing?.userName,
 			});
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 			const existing = this.#getUserCached_UC(userId);
 			const existingStatus = this.getValue<UserIDStatus>(
@@ -479,7 +462,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return result;
 		}
-		this.#throwNoAccessControl();
 	}
 
 	/**
@@ -499,7 +481,7 @@ export class AccessControlAPI extends FeatureAPI {
 				this.#purgeCachedCredentials(userId);
 			}
 			return result;
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			// User Code CC ties each user to their code, so clearing
 			// the code implicitly deletes the user and vice versa
 			const existed = this.#getUserCached_UC(userId) != undefined;
@@ -527,7 +509,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return result;
 		}
-		this.#throwNoAccessControl();
 	}
 
 	/**
@@ -545,7 +526,7 @@ export class AccessControlAPI extends FeatureAPI {
 				this.#purgeAllCachedUsersAndCredentials();
 			}
 			return result;
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 			const result = await api.clear(0);
 			// Verifying all users being deleted is unrealistic
@@ -556,7 +537,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return result;
 		}
-		this.#throwNoAccessControl();
 	}
 
 	/**
@@ -580,7 +560,7 @@ export class AccessControlAPI extends FeatureAPI {
 				slot: result.credentialSlot,
 				data: result.credentialData,
 			};
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 			const result = await api.get(userId);
 			if (!result) return undefined;
@@ -592,7 +572,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return { userId, type, slot, data: result.userCode };
 		}
-		return undefined;
 	}
 
 	/**
@@ -608,10 +587,9 @@ export class AccessControlAPI extends FeatureAPI {
 
 		if (this.#usesUserCredentialCC) {
 			return this.#getCredentialCached_U3C(userId, type, slot);
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			return this.#getCredentialCached_UC(userId, type, slot);
 		}
-		return undefined;
 	}
 
 	/**
@@ -645,7 +623,7 @@ export class AccessControlAPI extends FeatureAPI {
 				|| nextCredSlot !== 0
 			);
 			return credentials;
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const cred = await this.getCredential(
 				userId,
 				this.#ucCredentialType,
@@ -653,7 +631,6 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 			return cred ? [cred] : [];
 		}
-		return [];
 	}
 
 	/**
@@ -691,7 +668,7 @@ export class AccessControlAPI extends FeatureAPI {
 				}
 			}
 			return credentials;
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const cred = this.#getCredentialCached_UC(
 				userId,
 				this.#ucCredentialType,
@@ -699,7 +676,6 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 			return cred ? [cred] : [];
 		}
-		return [];
 	}
 
 	/**
@@ -729,7 +705,7 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialSlot: slot,
 				credentialData,
 			});
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 
 			// Determine the current status; default to Enabled for new users
@@ -785,7 +761,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return result;
 		}
-		this.#throwNoAccessControl();
 	}
 
 	/**
@@ -807,7 +782,7 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialType: type,
 				credentialSlot: slot,
 			});
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			// User Code CC ties each user to their code, so clearing
 			// the credential also deletes the user
 			const existed = this.#getCredentialCached_UC(userId, type, slot)
@@ -835,7 +810,6 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return result;
 		}
-		this.#throwNoAccessControl();
 	}
 
 	/**
@@ -865,7 +839,7 @@ export class AccessControlAPI extends FeatureAPI {
 			: UserCredentialOperationType.Add;
 
 		timeout ??= this.getCredentialCapabilitiesCached()
-			?.supportedCredentialTypes
+			.supportedCredentialTypes
 			.get(type)?.credentialLearnRecommendedTimeout;
 
 		if (timeout == undefined) {
@@ -913,11 +887,10 @@ export class AccessControlAPI extends FeatureAPI {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			return api.getAdminPinCode();
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 			return api.getAdminCode();
 		}
-		return undefined;
 	}
 
 	/**
@@ -930,11 +903,10 @@ export class AccessControlAPI extends FeatureAPI {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			return api.setAdminPinCode({ pinCode: code });
-		} else if (this.#usesUserCodeCC) {
+		} else {
 			const api = this.#ucAPI();
 			return api.setAdminCode(code);
 		}
-		this.#throwNoAccessControl();
 	}
 
 	#ucAPI(): UserCodeCCAPI {
@@ -1069,7 +1041,7 @@ export class AccessControlAPI extends FeatureAPI {
 
 	#assertValidSlot(type: UserCredentialType, slot: number): void {
 		const caps = this.getCredentialCapabilitiesCached()
-			?.supportedCredentialTypes.get(type);
+			.supportedCredentialTypes.get(type);
 		if (!caps || slot < 1 || slot > caps.numberOfCredentialSlots) {
 			throw new ZWaveError(
 				`Credential slot ${slot} is out of range for credential type ${
@@ -1078,13 +1050,6 @@ export class AccessControlAPI extends FeatureAPI {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-	}
-
-	#throwNoAccessControl(): never {
-		throw new ZWaveError(
-			"This node does not support managing users or credentials",
-			ZWaveErrorCodes.CC_NotSupported,
-		);
 	}
 
 	#getUserCached_U3C(userId: number): UserData | undefined {

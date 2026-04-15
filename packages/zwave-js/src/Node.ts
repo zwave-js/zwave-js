@@ -27,5 +27,4 @@ export type {
 	UserCapabilities,
 	UserData,
 } from "./lib/node/feature-apis/AccessControl.js";
-export { DeviceFeatures } from "./lib/node/feature-apis/DeviceFeatures.js";
 export { FeatureAPI } from "./lib/node/feature-apis/FeatureAPI.js";

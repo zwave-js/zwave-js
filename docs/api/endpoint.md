@@ -295,25 +295,22 @@ Retrieves the version of the given CommandClass this endpoint implements.
 
 Z-Wave JS provides a unified API for managing users and credentials on access control devices such as door locks. This API transparently supports both the **User Credential CC** and the legacy **User Code CC**, abstracting away the differences between the two.
 
-The credential management API is accessed via the `accessControl` property on endpoints and nodes. Before accessing it, use `endpoint.supportsFeature` to check for support:
+The credential management API is accessed via the `accessControl` property on endpoints and nodes. The property is `undefined` when the endpoint does not support access control, so use it as the support check:
 
 ```ts
-// Check if the endpoint supports access control
-if (endpoint.supportsFeature(DeviceFeatures.AccessControl)) {
+if (endpoint.accessControl) {
 	const user = await endpoint.accessControl.getUser(1);
 }
 ```
 
 > [!NOTE] For nodes using the **User Code CC**, only a subset of the functionality is available. Each user supports a single credential in slot 1, user names and credential rules are not supported, and credential learning is unavailable.
 
-> [!NOTE] Methods that read data return `undefined` when the endpoint does not support access control. Methods that write data will throw if neither the **User Credential CC** nor the **User Code CC** is supported.
-
 ### Querying capabilities
 
 #### `getUserCapabilitiesCached`
 
 ```ts
-getUserCapabilitiesCached(): UserCapabilities | undefined
+getUserCapabilitiesCached(): UserCapabilities
 ```
 
 Returns user-related capabilities of the endpoint. This method uses cached information from the most recent interview.
@@ -332,7 +329,7 @@ interface UserCapabilities {
 #### `getCredentialCapabilitiesCached`
 
 ```ts
-getCredentialCapabilitiesCached(): CredentialCapabilities | undefined
+getCredentialCapabilitiesCached(): CredentialCapabilities
 ```
 
 Returns credential-related capabilities of the endpoint. This method uses cached information from the most recent interview.
