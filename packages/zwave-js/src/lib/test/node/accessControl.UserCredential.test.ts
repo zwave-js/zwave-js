@@ -92,14 +92,14 @@ integrationTest(
 			// User capabilities
 			const userCaps = node.accessControl.getUserCapabilitiesCached();
 			t.expect(userCaps).toBeDefined();
-			t.expect(userCaps!.maxUsers).toBe(20);
-			t.expect(userCaps!.maxUserNameLength).toBe(64);
-			t.expect(userCaps!.supportedUserTypes).toStrictEqual([
+			t.expect(userCaps.maxUsers).toBe(20);
+			t.expect(userCaps.maxUserNameLength).toBe(64);
+			t.expect(userCaps.supportedUserTypes).toStrictEqual([
 				UserCredentialUserType.General,
 				UserCredentialUserType.NonAccess,
 				UserCredentialUserType.Expiring,
 			]);
-			t.expect(userCaps!.supportedCredentialRules).toStrictEqual([
+			t.expect(userCaps.supportedCredentialRules).toStrictEqual([
 				UserCredentialRule.Single,
 				UserCredentialRule.Dual,
 			]);
@@ -108,21 +108,21 @@ integrationTest(
 			const credCaps = node.accessControl
 				.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
-			t.expect(credCaps!.supportsAdminCode).toBe(true);
-			t.expect(credCaps!.supportsAdminCodeDeactivation).toBe(true);
-			t.expect(credCaps!.supportedCredentialTypes.size).toBe(2);
+			t.expect(credCaps.supportsAdminCode).toBe(true);
+			t.expect(credCaps.supportsAdminCodeDeactivation).toBe(true);
+			t.expect(credCaps.supportedCredentialTypes.size).toBe(2);
 			t.expect(
-				credCaps!.supportedCredentialTypes.has(
+				credCaps.supportedCredentialTypes.has(
 					UserCredentialType.PINCode,
 				),
 			).toBe(true);
 			t.expect(
-				credCaps!.supportedCredentialTypes.has(
+				credCaps.supportedCredentialTypes.has(
 					UserCredentialType.RFIDCode,
 				),
 			).toBe(true);
 
-			const rfid = credCaps!.supportedCredentialTypes.get(
+			const rfid = credCaps.supportedCredentialTypes.get(
 				UserCredentialType.RFIDCode,
 			);
 			t.expect(rfid!.supportsCredentialLearn).toBe(true);

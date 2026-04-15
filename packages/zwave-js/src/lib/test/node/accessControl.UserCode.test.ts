@@ -47,13 +47,13 @@ integrationTest(
 			// User capabilities
 			const userCaps = node.accessControl.getUserCapabilitiesCached();
 			t.expect(userCaps).toBeDefined();
-			t.expect(userCaps!.maxUsers).toBe(10);
-			t.expect(userCaps!.supportedUserTypes).toStrictEqual([
+			t.expect(userCaps.maxUsers).toBe(10);
+			t.expect(userCaps.supportedUserTypes).toStrictEqual([
 				UserCredentialUserType.General,
 				UserCredentialUserType.NonAccess,
 			]);
-			t.expect(userCaps!.maxUserNameLength).toBeUndefined();
-			t.expect(userCaps!.supportedCredentialRules).toStrictEqual([
+			t.expect(userCaps.maxUserNameLength).toBeUndefined();
+			t.expect(userCaps.supportedCredentialRules).toStrictEqual([
 				UserCredentialRule.Single,
 			]);
 
@@ -61,11 +61,11 @@ integrationTest(
 			const credCaps = node.accessControl
 				.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
-			t.expect(credCaps!.supportsAdminCode).toBe(true);
-			t.expect(credCaps!.supportsAdminCodeDeactivation).toBe(true);
-			t.expect(credCaps!.supportedCredentialTypes.size).toBe(1);
+			t.expect(credCaps.supportsAdminCode).toBe(true);
+			t.expect(credCaps.supportsAdminCodeDeactivation).toBe(true);
+			t.expect(credCaps.supportedCredentialTypes.size).toBe(1);
 
-			const pinCap = credCaps!.supportedCredentialTypes.get(
+			const pinCap = credCaps.supportedCredentialTypes.get(
 				UserCredentialType.PINCode,
 			);
 			t.expect(pinCap).toBeDefined();
@@ -99,7 +99,7 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const caps = node.accessControl.getUserCapabilitiesCached();
-			t.expect(caps!.supportedUserTypes).toStrictEqual([
+			t.expect(caps.supportedUserTypes).toStrictEqual([
 				UserCredentialUserType.General,
 			]);
 		},
