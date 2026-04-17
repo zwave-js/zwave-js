@@ -235,7 +235,6 @@ integrationTest(
 			const cc = new UserCredentialCCUserReport({
 				nodeId: mockController.ownNodeId,
 				reportType: UserCredentialUserReportType.UserAdded,
-				nextUserId: 0,
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
 				userId: 5,
@@ -290,7 +289,6 @@ integrationTest(
 			const cc = new UserCredentialCCUserReport({
 				nodeId: mockController.ownNodeId,
 				reportType: UserCredentialUserReportType.UserModified,
-				nextUserId: 0,
 				modifierType: UserCredentialModifierType.ZWave,
 				modifierNodeId: 1,
 				userId: 2,
@@ -345,7 +343,6 @@ integrationTest(
 			const cc = new UserCredentialCCUserReport({
 				nodeId: mockController.ownNodeId,
 				reportType: UserCredentialUserReportType.UserDeleted,
-				nextUserId: 0,
 				modifierType: UserCredentialModifierType.ZWave,
 				modifierNodeId: 1,
 				userId: 3,
@@ -404,12 +401,9 @@ integrationTest(
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
 				credentialReadBack: true,
-				credentialLength: 4,
 				credentialData: Bytes.from("9876", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
-				nextCredentialType: UserCredentialType.None,
-				nextCredentialSlot: 0,
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
@@ -462,12 +456,9 @@ integrationTest(
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
 				credentialReadBack: true,
-				credentialLength: 4,
 				credentialData: Bytes.from("5555", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
-				nextCredentialType: UserCredentialType.None,
-				nextCredentialSlot: 0,
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
@@ -520,12 +511,8 @@ integrationTest(
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
 				credentialReadBack: false,
-				credentialLength: 0,
-				credentialData: new Bytes(),
 				modifierType: UserCredentialModifierType.ZWave,
 				modifierNodeId: 1,
-				nextCredentialType: UserCredentialType.None,
-				nextCredentialSlot: 0,
 			});
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
@@ -577,7 +564,6 @@ integrationTest(
 							nodeId: controller.ownNodeId,
 							reportType: UserCredentialUserReportType
 								.UserAddRejectedLocationOccupied,
-							nextUserId: 0,
 							modifierType: UserCredentialModifierType.ZWave,
 							modifierNodeId: 1,
 							userId: receivedCC.userId,
@@ -658,7 +644,6 @@ integrationTest(
 					new UserCredentialCCUserReport({
 						nodeId: mockController.ownNodeId,
 						reportType: UserCredentialUserReportType.UserAdded,
-						nextUserId: 0,
 						modifierType: UserCredentialModifierType.Locally,
 						modifierNodeId: 0,
 						userId: 4,
@@ -727,12 +712,9 @@ integrationTest(
 							credentialType: receivedCC.credentialType,
 							credentialSlot: receivedCC.credentialSlot,
 							credentialReadBack: true,
-							credentialLength: 4,
 							credentialData: Bytes.from("4242", "ascii"),
 							modifierType: UserCredentialModifierType.ZWave,
 							modifierNodeId: 1,
-							nextCredentialType: UserCredentialType.None,
-							nextCredentialSlot: 0,
 						});
 						await self.sendToController(
 							createMockZWaveRequestFrame(report, {
@@ -817,12 +799,8 @@ integrationTest(
 							credentialType: receivedCC.credentialType,
 							credentialSlot: receivedCC.credentialSlot,
 							credentialReadBack: false,
-							credentialLength: 0,
-							credentialData: new Bytes(),
 							modifierType: UserCredentialModifierType.ZWave,
 							modifierNodeId: 1,
-							nextCredentialType: UserCredentialType.None,
-							nextCredentialSlot: 0,
 						});
 						await self.sendToController(
 							createMockZWaveRequestFrame(report, {
@@ -905,13 +883,9 @@ integrationTest(
 							credentialType: receivedCC.credentialType,
 							credentialSlot: receivedCC.credentialSlot,
 							credentialReadBack: false,
-							credentialLength: 0,
-							credentialData: new Bytes(),
 							modifierType:
 								UserCredentialModifierType.DoesNotExist,
 							modifierNodeId: 0,
-							nextCredentialType: UserCredentialType.None,
-							nextCredentialSlot: 0,
 						});
 						await self.sendToController(
 							createMockZWaveRequestFrame(report, {
@@ -940,12 +914,9 @@ integrationTest(
 						credentialType: UserCredentialType.PINCode,
 						credentialSlot: 1,
 						credentialReadBack: true,
-						credentialLength: 4,
 						credentialData: Bytes.from("1111", "ascii"),
 						modifierType: UserCredentialModifierType.Locally,
 						modifierNodeId: 0,
-						nextCredentialType: UserCredentialType.None,
-						nextCredentialSlot: 0,
 					}),
 					{ ackRequested: false },
 				),

@@ -276,7 +276,7 @@ export class AccessControlAPI extends FeatureAPI {
 					expiringTimeoutMinutes: result.expiringTimeoutMinutes
 						|| undefined,
 				});
-				nextUserId = result.nextUserId;
+				nextUserId = result.nextUserId ?? 0;
 			} while (nextUserId > 0);
 			return users;
 		} else {
@@ -559,10 +559,12 @@ export class AccessControlAPI extends FeatureAPI {
 				userId: result.userId,
 				type: result.credentialType,
 				slot: result.credentialSlot,
-				data: normalizeCredentialData(
-					result.credentialType,
-					result.credentialData,
-				),
+				data: result.credentialData != undefined
+					? normalizeCredentialData(
+						result.credentialType,
+						result.credentialData,
+					)
+					: undefined,
 			};
 		} else {
 			const api = this.#ucAPI();
@@ -618,13 +620,16 @@ export class AccessControlAPI extends FeatureAPI {
 					userId: result.userId,
 					type: result.credentialType,
 					slot: result.credentialSlot,
-					data: normalizeCredentialData(
-						result.credentialType,
-						result.credentialData,
-					),
+					data: result.credentialData != undefined
+						? normalizeCredentialData(
+							result.credentialType,
+							result.credentialData,
+						)
+						: undefined,
 				});
-				nextCredType = result.nextCredentialType;
-				nextCredSlot = result.nextCredentialSlot;
+				nextCredType = result.nextCredentialType
+					?? UserCredentialType.None;
+				nextCredSlot = result.nextCredentialSlot ?? 0;
 			} while (
 				nextCredType !== UserCredentialType.None
 				|| nextCredSlot !== 0

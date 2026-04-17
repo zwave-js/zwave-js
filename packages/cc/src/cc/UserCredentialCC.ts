@@ -535,7 +535,6 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 				"credentialType",
 				"credentialSlot",
 				"credentialReadBack",
-				"credentialLength",
 				"credentialData",
 				"modifierType",
 				"modifierNodeId",
@@ -1164,7 +1163,7 @@ export class UserCredentialCC extends CommandClass {
 				}
 
 				previousUserId = currentUserId;
-				nextUserId = user.nextUserId;
+				nextUserId = user.nextUserId ?? 0;
 			} while (nextUserId > 0);
 		}
 
@@ -1279,8 +1278,8 @@ export class UserCredentialCC extends CommandClass {
 				nextCredSlot,
 			);
 			if (!cred?.credentialSlot) break; // No credential found, stop iterating
-			nextCredType = cred.nextCredentialType;
-			nextCredSlot = cred.nextCredentialSlot;
+			nextCredType = cred.nextCredentialType ?? UserCredentialType.None;
+			nextCredSlot = cred.nextCredentialSlot ?? 0;
 		} while (
 			nextCredType !== UserCredentialType.None || nextCredSlot !== 0
 		);
@@ -2137,19 +2136,31 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 }
 
 // @publicAPI
-export interface UserCredentialCCUserReportOptions {
-	reportType: UserCredentialUserReportType;
-	nextUserId: number;
-	modifierType: UserCredentialModifierType;
-	modifierNodeId: number;
-	userId: number;
-	userType: UserCredentialUserType;
-	active: boolean;
-	credentialRule: UserCredentialRule;
-	expiringTimeoutMinutes: number;
-	nameEncoding: UserCredentialNameEncoding;
-	userName: string;
-}
+export type UserCredentialCCUserReportOptions =
+	& {
+		modifierType: UserCredentialModifierType;
+		modifierNodeId: number;
+		userId: number;
+		userType: UserCredentialUserType;
+		active: boolean;
+		credentialRule: UserCredentialRule;
+		expiringTimeoutMinutes: number;
+		nameEncoding: UserCredentialNameEncoding;
+		userName: string;
+	}
+	& (
+		| {
+			reportType: UserCredentialUserReportType.ResponseToGet;
+			nextUserId: number;
+		}
+		| {
+			reportType: Exclude<
+				UserCredentialUserReportType,
+				UserCredentialUserReportType.ResponseToGet
+			>;
+			nextUserId?: undefined;
+		}
+	);
 
 @CCCommand(UserCredentialCommand.UserReport)
 export class UserCredentialCCUserReport extends UserCredentialCC {
@@ -2158,7 +2169,11 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	) {
 		super(options);
 		this.reportType = options.reportType;
-		this.nextUserId = options.nextUserId;
+		if (
+			options.reportType === UserCredentialUserReportType.ResponseToGet
+		) {
+			this.nextUserId = options.nextUserId;
+		}
 		this.modifierType = options.modifierType;
 		this.modifierNodeId = options.modifierNodeId;
 		this.userId = options.userId;
@@ -2201,10 +2216,8 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 				.toString("ascii");
 		}
 
-		return new this({
+		const common = {
 			nodeId: ctx.sourceNodeId,
-			reportType,
-			nextUserId,
 			modifierType,
 			modifierNodeId,
 			userId,
@@ -2214,11 +2227,16 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 			expiringTimeoutMinutes,
 			nameEncoding,
 			userName,
-		});
+		};
+
+		if (reportType === UserCredentialUserReportType.ResponseToGet) {
+			return new this({ ...common, reportType, nextUserId });
+		}
+		return new this({ ...common, reportType });
 	}
 
 	public readonly reportType: UserCredentialUserReportType;
-	public readonly nextUserId: number;
+	public readonly nextUserId?: number;
 	public readonly modifierType: UserCredentialModifierType;
 	public readonly modifierNodeId: number;
 	public readonly userId: number;
@@ -2238,7 +2256,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		}
 		this.payload = Bytes.alloc(15 + nameBuffer.length);
 		this.payload[0] = this.reportType;
-		this.payload.writeUInt16BE(this.nextUserId, 1);
+		this.payload.writeUInt16BE(this.nextUserId ?? 0, 1);
 		this.payload[3] = this.modifierType;
 		this.payload.writeUInt16BE(this.modifierNodeId, 4);
 		this.payload.writeUInt16BE(this.userId, 6);
@@ -2376,37 +2394,37 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		return {
-			...super.toLogEntry(ctx),
-			message: {
-				"report type": getEnumMemberName(
-					UserCredentialUserReportType,
-					this.reportType,
-				),
-				"next user ID": this.nextUserId,
-				"modifier type": getEnumMemberName(
-					UserCredentialModifierType,
-					this.modifierType,
-				),
-				"modifier node id": this.modifierNodeId,
-				"user ID": this.userId,
-				"user type": getEnumMemberName(
-					UserCredentialUserType,
-					this.userType,
-				),
-				active: this.active,
-				"credential rule": getEnumMemberName(
-					UserCredentialRule,
-					this.credentialRule,
-				),
-				"expiring timeout (minutes)": this.expiringTimeoutMinutes,
-				"name encoding": getEnumMemberName(
-					UserCredentialNameEncoding,
-					this.nameEncoding,
-				),
-				"user name": this.userName,
-			},
+		const message: MessageRecord = {
+			"report type": getEnumMemberName(
+				UserCredentialUserReportType,
+				this.reportType,
+			),
 		};
+		if (this.nextUserId != undefined) {
+			message["next user ID"] = this.nextUserId;
+		}
+		message["modifier type"] = getEnumMemberName(
+			UserCredentialModifierType,
+			this.modifierType,
+		);
+		message["modifier node id"] = this.modifierNodeId;
+		message["user ID"] = this.userId;
+		message["user type"] = getEnumMemberName(
+			UserCredentialUserType,
+			this.userType,
+		);
+		message.active = this.active;
+		message["credential rule"] = getEnumMemberName(
+			UserCredentialRule,
+			this.credentialRule,
+		);
+		message["expiring timeout (minutes)"] = this.expiringTimeoutMinutes;
+		message["name encoding"] = getEnumMemberName(
+			UserCredentialNameEncoding,
+			this.nameEncoding,
+		);
+		message["user name"] = this.userName;
+		return { ...super.toLogEntry(ctx), message };
 	}
 }
 
@@ -2607,19 +2625,39 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 }
 
 // @publicAPI
-export interface UserCredentialCCCredentialReportOptions {
-	reportType: UserCredentialCredentialReportType;
-	userId: number;
-	credentialType: UserCredentialType;
-	credentialSlot: number;
-	credentialReadBack: boolean;
-	credentialLength: number;
-	credentialData: Bytes;
-	modifierType: UserCredentialModifierType;
-	modifierNodeId: number;
-	nextCredentialType: UserCredentialType;
-	nextCredentialSlot: number;
-}
+export type UserCredentialCCCredentialReportOptions =
+	& {
+		userId: number;
+		credentialType: UserCredentialType;
+		credentialSlot: number;
+		modifierType: UserCredentialModifierType;
+		modifierNodeId: number;
+	}
+	& (
+		| {
+			credentialReadBack: true;
+			credentialData: Bytes;
+		}
+		| {
+			credentialReadBack: false;
+			credentialData?: undefined;
+		}
+	)
+	& (
+		| {
+			reportType: UserCredentialCredentialReportType.ResponseToGet;
+			nextCredentialType: UserCredentialType;
+			nextCredentialSlot: number;
+		}
+		| {
+			reportType: Exclude<
+				UserCredentialCredentialReportType,
+				UserCredentialCredentialReportType.ResponseToGet
+			>;
+			nextCredentialType?: undefined;
+			nextCredentialSlot?: undefined;
+		}
+	);
 
 @CCCommand(UserCredentialCommand.CredentialReport)
 export class UserCredentialCCCredentialReport extends UserCredentialCC {
@@ -2632,12 +2670,18 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		this.credentialType = options.credentialType;
 		this.credentialSlot = options.credentialSlot;
 		this.credentialReadBack = options.credentialReadBack;
-		this.credentialLength = options.credentialLength;
-		this.credentialData = options.credentialData;
+		if (options.credentialReadBack) {
+			this.credentialData = options.credentialData;
+		}
 		this.modifierType = options.modifierType;
 		this.modifierNodeId = options.modifierNodeId;
-		this.nextCredentialType = options.nextCredentialType;
-		this.nextCredentialSlot = options.nextCredentialSlot;
+		if (
+			options.reportType
+				=== UserCredentialCredentialReportType.ResponseToGet
+		) {
+			this.nextCredentialType = options.nextCredentialType;
+			this.nextCredentialSlot = options.nextCredentialSlot;
+		}
 	}
 
 	public static from(
@@ -2652,31 +2696,43 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		const credentialReadBack = !!(raw.payload[6] & 0b1000_0000);
 		const credentialLength = raw.payload[7];
 		validatePayload(raw.payload.length >= 8 + credentialLength + 6);
-		const credentialData = Bytes.from(
-			raw.payload.subarray(8, 8 + credentialLength),
-		);
 
-		let offset = 8 + credentialLength;
+		const offset = 8 + credentialLength;
 		const modifierType: UserCredentialModifierType = raw.payload[offset];
-		const modifierNodeId = raw.payload.readUInt16BE(
-			offset + 1,
-		);
-		const nextCredentialType: UserCredentialType = raw.payload[offset + 3];
-		const nextCredentialSlot = raw.payload.readUInt16BE(offset + 4);
+		const modifierNodeId = raw.payload.readUInt16BE(offset + 1);
 
-		return new this({
+		const common = {
 			nodeId: ctx.sourceNodeId,
-			reportType,
 			userId,
 			credentialType,
 			credentialSlot,
-			credentialReadBack,
-			credentialLength,
-			credentialData,
 			modifierType,
 			modifierNodeId,
-			nextCredentialType,
-			nextCredentialSlot,
+		};
+		const dataOptions = credentialReadBack
+			? {
+				credentialReadBack: true,
+				credentialData: Bytes.from(
+					raw.payload.subarray(8, 8 + credentialLength),
+				),
+			} as const
+			: { credentialReadBack: false } as const;
+
+		if (
+			reportType === UserCredentialCredentialReportType.ResponseToGet
+		) {
+			return new this({
+				...common,
+				...dataOptions,
+				reportType,
+				nextCredentialType: raw.payload[offset + 3],
+				nextCredentialSlot: raw.payload.readUInt16BE(offset + 4),
+			});
+		}
+		return new this({
+			...common,
+			...dataOptions,
+			reportType,
 		});
 	}
 
@@ -2685,29 +2741,33 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	public readonly credentialType: UserCredentialType;
 	public readonly credentialSlot: number;
 	public readonly credentialReadBack: boolean;
-	public readonly credentialLength: number;
-	public readonly credentialData: Bytes;
+	public readonly credentialData?: Bytes;
 	public readonly modifierType: UserCredentialModifierType;
 	public readonly modifierNodeId: number;
-	public readonly nextCredentialType: UserCredentialType;
-	public readonly nextCredentialSlot: number;
+	public readonly nextCredentialType?: UserCredentialType;
+	public readonly nextCredentialSlot?: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.alloc(14 + this.credentialData.length);
+		const credentialData = this.credentialData ?? new Bytes();
+		this.payload = Bytes.alloc(14 + credentialData.length);
 		this.payload[0] = this.reportType;
 		this.payload.writeUInt16BE(this.userId, 1);
 		this.payload[3] = this.credentialType;
 		this.payload.writeUInt16BE(this.credentialSlot, 4);
 		this.payload[6] = this.credentialReadBack ? 0x80 : 0x00;
-		this.payload[7] = this.credentialData.length;
-		if (this.credentialData.length > 0) {
-			this.payload.set(this.credentialData, 8);
+		this.payload[7] = credentialData.length;
+		if (credentialData.length > 0) {
+			this.payload.set(credentialData, 8);
 		}
-		let offset = 8 + this.credentialData.length;
+		const offset = 8 + credentialData.length;
 		this.payload[offset] = this.modifierType;
 		this.payload.writeUInt16BE(this.modifierNodeId, offset + 1);
-		this.payload[offset + 3] = this.nextCredentialType;
-		this.payload.writeUInt16BE(this.nextCredentialSlot, offset + 4);
+		this.payload[offset + 3] = this.nextCredentialType
+			?? UserCredentialType.None;
+		this.payload.writeUInt16BE(
+			this.nextCredentialSlot ?? 0,
+			offset + 4,
+		);
 		return super.serialize(ctx);
 	}
 
@@ -2776,23 +2836,28 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			return true;
 		}
 
-		this.ensureMetadata(
-			ctx,
-			UserCredentialCCValues.credential(
-				this.userId,
-				this.credentialType,
-				this.credentialSlot,
-			),
-		);
-		this.setValue(
-			ctx,
-			UserCredentialCCValues.credential(
-				this.userId,
-				this.credentialType,
-				this.credentialSlot,
-			),
-			normalizeCredentialData(this.credentialType, this.credentialData),
-		);
+		if (this.credentialData != undefined) {
+			this.ensureMetadata(
+				ctx,
+				UserCredentialCCValues.credential(
+					this.userId,
+					this.credentialType,
+					this.credentialSlot,
+				),
+			);
+			this.setValue(
+				ctx,
+				UserCredentialCCValues.credential(
+					this.userId,
+					this.credentialType,
+					this.credentialSlot,
+				),
+				normalizeCredentialData(
+					this.credentialType,
+					this.credentialData,
+				),
+			);
+		}
 		this.setValue(
 			ctx,
 			UserCredentialCCValues.credentialModifierType(
@@ -2816,35 +2881,39 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		return {
-			...super.toLogEntry(ctx),
-			message: {
-				"report type": getEnumMemberName(
-					UserCredentialCredentialReportType,
-					this.reportType,
-				),
-				"user ID": this.userId,
-				"credential type": getEnumMemberName(
-					UserCredentialType,
-					this.credentialType,
-				),
-				"credential slot": this.credentialSlot,
-				"credential read-back": this.credentialReadBack,
-				"credential data": credentialToLogString(
-					this.credentialData,
-				),
-				"modifier type": getEnumMemberName(
-					UserCredentialModifierType,
-					this.modifierType,
-				),
-				"modifier node id": this.modifierNodeId,
-				"next credential type": getEnumMemberName(
-					UserCredentialType,
-					this.nextCredentialType,
-				),
-				"next credential slot": this.nextCredentialSlot,
-			},
+		const message: MessageRecord = {
+			"report type": getEnumMemberName(
+				UserCredentialCredentialReportType,
+				this.reportType,
+			),
+			"user ID": this.userId,
+			"credential type": getEnumMemberName(
+				UserCredentialType,
+				this.credentialType,
+			),
+			"credential slot": this.credentialSlot,
+			"credential read-back": this.credentialReadBack,
 		};
+		if (this.credentialData != undefined) {
+			message["credential data"] = credentialToLogString(
+				this.credentialData,
+			);
+		}
+		message["modifier type"] = getEnumMemberName(
+			UserCredentialModifierType,
+			this.modifierType,
+		);
+		message["modifier node id"] = this.modifierNodeId;
+		if (this.nextCredentialType != undefined) {
+			message["next credential type"] = getEnumMemberName(
+				UserCredentialType,
+				this.nextCredentialType,
+			);
+		}
+		if (this.nextCredentialSlot != undefined) {
+			message["next credential slot"] = this.nextCredentialSlot;
+		}
+		return { ...super.toLogEntry(ctx), message };
 	}
 }
 
