@@ -10,6 +10,7 @@ import { type UserCodeCCAPI, UserCodeCCValues } from "@zwave-js/cc/UserCodeCC";
 import {
 	type UserCredentialCCAPI,
 	UserCredentialCCValues,
+	normalizeCredentialData,
 } from "@zwave-js/cc/UserCredentialCC";
 import {
 	CommandClasses,
@@ -558,7 +559,10 @@ export class AccessControlAPI extends FeatureAPI {
 				userId: result.userId,
 				type: result.credentialType,
 				slot: result.credentialSlot,
-				data: result.credentialData,
+				data: normalizeCredentialData(
+					result.credentialType,
+					result.credentialData,
+				),
 			};
 		} else {
 			const api = this.#ucAPI();
@@ -614,7 +618,10 @@ export class AccessControlAPI extends FeatureAPI {
 					userId: result.userId,
 					type: result.credentialType,
 					slot: result.credentialSlot,
-					data: result.credentialData,
+					data: normalizeCredentialData(
+						result.credentialType,
+						result.credentialData,
+					),
 				});
 				nextCredType = result.nextCredentialType;
 				nextCredSlot = result.nextCredentialSlot;
@@ -1091,7 +1098,7 @@ export class AccessControlAPI extends FeatureAPI {
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
-		const data = this.getValue<Uint8Array>(
+		const data = this.getValue<string | Uint8Array>(
 			UserCredentialCCValues.credential(userId, type, slot).endpoint(
 				this.endpoint.index,
 			),

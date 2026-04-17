@@ -7,6 +7,7 @@ import {
 	type UserCredentialCCCredentialLearnReport,
 	type UserCredentialCCCredentialReport,
 	type UserCredentialCCUserReport,
+	normalizeCredentialData,
 } from "@zwave-js/cc/UserCredentialCC";
 import type { ZWaveNode } from "../Node.js";
 
@@ -30,12 +31,19 @@ export function handleUserCredentialUserReport(
 	// Trust the reportType from the device
 	switch (report.reportType) {
 		case UserCredentialUserReportType.UserAdded:
+		// The device rejected an Add because the slot was already occupied,
+		// but reported the actual user data. Notify applications about the
+		// previously-unknown user.
+		case UserCredentialUserReportType.UserAddRejectedLocationOccupied:
 			node.emit("user added", endpoint, buildUserArgs(report));
 			break;
 		case UserCredentialUserReportType.UserModified:
 			node.emit("user modified", endpoint, buildUserArgs(report));
 			break;
 		case UserCredentialUserReportType.UserDeleted:
+		// The device rejected a Modify because the slot was empty, meaning
+		// our cache was stale. Notify applications that the user is gone.
+		case UserCredentialUserReportType.UserModifyRejectedLocationEmpty:
 			node.emit("user deleted", endpoint, {
 				userId: report.userId,
 			});
@@ -49,6 +57,10 @@ export function handleUserCredentialCredentialReport(
 ): void {
 	const endpoint = node.getEndpoint(report.endpointIndex) ?? node;
 
+	const normalizedData = report.credentialData
+		? normalizeCredentialData(report.credentialType, report.credentialData)
+		: undefined;
+
 	// Trust the reportType from the device
 	switch (report.reportType) {
 		case UserCredentialCredentialReportType.CredentialAdded:
@@ -56,7 +68,7 @@ export function handleUserCredentialCredentialReport(
 				userId: report.userId,
 				credentialType: report.credentialType,
 				credentialSlot: report.credentialSlot,
-				data: report.credentialData ?? undefined,
+				data: normalizedData,
 			});
 			break;
 		case UserCredentialCredentialReportType.CredentialModified:
@@ -64,15 +76,33 @@ export function handleUserCredentialCredentialReport(
 				userId: report.userId,
 				credentialType: report.credentialType,
 				credentialSlot: report.credentialSlot,
-				data: report.credentialData ?? undefined,
+				data: normalizedData,
 			});
 			break;
 		case UserCredentialCredentialReportType.CredentialDeleted:
+		// The device rejected a Modify because the slot was empty, meaning
+		// our cache was stale. Notify applications that the credential is gone.
+		case UserCredentialCredentialReportType
+			.CredentialModifyRejectedLocationEmpty:
 			node.emit("credential deleted", endpoint, {
 				userId: report.userId,
 				credentialType: report.credentialType,
 				credentialSlot: report.credentialSlot,
 			});
+			break;
+		case UserCredentialCredentialReportType
+			.CredentialAddRejectedLocationOccupied:
+			// The device rejected an Add because the slot was already occupied.
+			// When read-back is set, the report contains the actual credential
+			// data — notify applications about the previously-unknown credential.
+			if (report.credentialReadBack) {
+				node.emit("credential added", endpoint, {
+					userId: report.userId,
+					credentialType: report.credentialType,
+					credentialSlot: report.credentialSlot,
+					data: normalizedData,
+				});
+			}
 			break;
 	}
 }

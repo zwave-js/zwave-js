@@ -540,6 +540,454 @@ integrationTest(
 	},
 );
 
+integrationTest(
+	"setUser(Add) rejected with UserAddRejectedLocationOccupied emits user added event and caches the existing user",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			// Simulate a device that already has user 2 before the driver
+			// knows about it: reply to any Add with the existing user's data.
+			const rejectAddOccupied: MockNodeBehavior = {
+				async handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCredentialCCUserSet
+						&& receivedCC.operationType
+							=== UserCredentialOperationType.Add
+					) {
+						const report = new UserCredentialCCUserReport({
+							nodeId: controller.ownNodeId,
+							reportType: UserCredentialUserReportType
+								.UserAddRejectedLocationOccupied,
+							nextUserId: 0,
+							modifierType: UserCredentialModifierType.ZWave,
+							modifierNodeId: 1,
+							userId: receivedCC.userId,
+							userType: UserCredentialUserType.General,
+							active: true,
+							credentialRule: UserCredentialRule.Single,
+							expiringTimeoutMinutes: 0,
+							nameEncoding: UserCredentialNameEncoding.ASCII,
+							userName: "Existing",
+						});
+						await self.sendToController(
+							createMockZWaveRequestFrame(report, {
+								ackRequested: false,
+							}),
+						);
+						return { action: "fail" };
+					}
+				},
+			};
+			mockNode.defineBehavior(rejectAddOccupied);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userEvent = createDeferredPromise<unknown>();
+			node.on("user added", (_node, args) => userEvent.resolve(args));
+
+			// Driver cache is empty, so this sends Add
+			await node.accessControl!.setUser(2, {
+				userType: UserCredentialUserType.General,
+				userName: "Attempted",
+			});
+
+			t.expect(await userEvent).toMatchObject({
+				userId: 2,
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Existing",
+			});
+
+			const cached = node.accessControl!.getUserCached(2);
+			t.expect(cached).toBeDefined();
+			t.expect(cached!.userName).toBe("Existing");
+		},
+	},
+);
+
+integrationTest(
+	"setUser(Modify) rejected with UserModifyRejectedLocationEmpty emits user deleted event and clears the cache",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Prime the driver cache with a user that doesn't exist on the
+			// mock device (the unsolicited UserReport caches without
+			// populating mock state). A subsequent setUser will use Modify.
+			const priming = createDeferredPromise<void>();
+			node.once("user added", () => priming.resolve());
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(
+					new UserCredentialCCUserReport({
+						nodeId: mockController.ownNodeId,
+						reportType: UserCredentialUserReportType.UserAdded,
+						nextUserId: 0,
+						modifierType: UserCredentialModifierType.Locally,
+						modifierNodeId: 0,
+						userId: 4,
+						userType: UserCredentialUserType.General,
+						active: true,
+						credentialRule: UserCredentialRule.Single,
+						expiringTimeoutMinutes: 0,
+						nameEncoding: UserCredentialNameEncoding.ASCII,
+						userName: "Stale",
+					}),
+					{ ackRequested: false },
+				),
+			);
+			await priming;
+			t.expect(node.accessControl!.getUserCached(4)).toBeDefined();
+
+			const userEvent = createDeferredPromise<unknown>();
+			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+
+			// Driver cache has user 4 → this sends Modify. Mock has no user 4
+			// in state → replies with UserModifyRejectedLocationEmpty.
+			await node.accessControl!.setUser(4, { userName: "Updated" });
+
+			t.expect(await userEvent).toMatchObject({ userId: 4 });
+			t.expect(node.accessControl!.getUserCached(4)).toBeUndefined();
+		},
+	},
+);
+
+integrationTest(
+	"setCredential(Add) rejected with CredentialAddRejectedLocationOccupied emits credential added event and caches the read-back data",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 0,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			const rejectAddOccupied: MockNodeBehavior = {
+				async handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCredentialCCCredentialSet
+						&& receivedCC.operationType
+							=== UserCredentialOperationType.Add
+					) {
+						const report = new UserCredentialCCCredentialReport({
+							nodeId: controller.ownNodeId,
+							reportType: UserCredentialCredentialReportType
+								.CredentialAddRejectedLocationOccupied,
+							userId: receivedCC.userId,
+							credentialType: receivedCC.credentialType,
+							credentialSlot: receivedCC.credentialSlot,
+							credentialReadBack: true,
+							credentialLength: 4,
+							credentialData: Bytes.from("4242", "ascii"),
+							modifierType: UserCredentialModifierType.ZWave,
+							modifierNodeId: 1,
+							nextCredentialType: UserCredentialType.None,
+							nextCredentialSlot: 0,
+						});
+						await self.sendToController(
+							createMockZWaveRequestFrame(report, {
+								ackRequested: false,
+							}),
+						);
+						return { action: "fail" };
+					}
+				},
+			};
+			mockNode.defineBehavior(rejectAddOccupied);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const credEvent = createDeferredPromise<unknown>();
+			node.on(
+				"credential added",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			// Driver cache is empty, so this sends Add
+			await node.accessControl!.setCredential(
+				2,
+				UserCredentialType.PINCode,
+				1,
+				"1111",
+			);
+
+			t.expect(await credEvent).toMatchObject({
+				userId: 2,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 1,
+			});
+
+			const cached = node.accessControl!.getCredentialCached(
+				2,
+				UserCredentialType.PINCode,
+				1,
+			);
+			t.expect(cached).toBeDefined();
+			t.expect(cached!.data).toBe("4242");
+		},
+	},
+);
+
+integrationTest(
+	"CredentialAddRejectedLocationOccupied without read-back does not emit or cache",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 0,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			const rejectWithoutReadback: MockNodeBehavior = {
+				async handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCredentialCCCredentialSet
+						&& receivedCC.operationType
+							=== UserCredentialOperationType.Add
+					) {
+						const report = new UserCredentialCCCredentialReport({
+							nodeId: controller.ownNodeId,
+							reportType: UserCredentialCredentialReportType
+								.CredentialAddRejectedLocationOccupied,
+							userId: receivedCC.userId,
+							credentialType: receivedCC.credentialType,
+							credentialSlot: receivedCC.credentialSlot,
+							credentialReadBack: false,
+							credentialLength: 0,
+							credentialData: new Bytes(),
+							modifierType: UserCredentialModifierType.ZWave,
+							modifierNodeId: 1,
+							nextCredentialType: UserCredentialType.None,
+							nextCredentialSlot: 0,
+						});
+						await self.sendToController(
+							createMockZWaveRequestFrame(report, {
+								ackRequested: false,
+							}),
+						);
+						return { action: "fail" };
+					}
+				},
+			};
+			mockNode.defineBehavior(rejectWithoutReadback);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			let emitted = false;
+			node.on("credential added", () => {
+				emitted = true;
+			});
+
+			await node.accessControl!.setCredential(
+				2,
+				UserCredentialType.PINCode,
+				1,
+				"1111",
+			);
+
+			// Give any (unwanted) event a chance to fire
+			await new Promise((resolve) => setTimeout(resolve, 50));
+
+			t.expect(emitted).toBe(false);
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					2,
+					UserCredentialType.PINCode,
+					1,
+				),
+			).toBeUndefined();
+		},
+	},
+);
+
+integrationTest(
+	"setCredential(Modify) rejected with CredentialModifyRejectedLocationEmpty emits credential deleted event and clears the cache",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 0,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			// Reject Modify operations with LocationEmpty, regardless of
+			// whether the credential actually exists in mock state.
+			const rejectModifyEmpty: MockNodeBehavior = {
+				async handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCredentialCCCredentialSet
+						&& receivedCC.operationType
+							=== UserCredentialOperationType.Modify
+					) {
+						const report = new UserCredentialCCCredentialReport({
+							nodeId: controller.ownNodeId,
+							reportType: UserCredentialCredentialReportType
+								.CredentialModifyRejectedLocationEmpty,
+							userId: receivedCC.userId,
+							credentialType: receivedCC.credentialType,
+							credentialSlot: receivedCC.credentialSlot,
+							credentialReadBack: false,
+							credentialLength: 0,
+							credentialData: new Bytes(),
+							modifierType:
+								UserCredentialModifierType.DoesNotExist,
+							modifierNodeId: 0,
+							nextCredentialType: UserCredentialType.None,
+							nextCredentialSlot: 0,
+						});
+						await self.sendToController(
+							createMockZWaveRequestFrame(report, {
+								ackRequested: false,
+							}),
+						);
+						return { action: "fail" };
+					}
+				},
+			};
+			mockNode.defineBehavior(rejectModifyEmpty);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Prime the driver cache with a credential that doesn't exist
+			// on the mock device. A subsequent setCredential will use Modify.
+			const priming = createDeferredPromise<void>();
+			node.once("credential added", () => priming.resolve());
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(
+					new UserCredentialCCCredentialReport({
+						nodeId: mockController.ownNodeId,
+						reportType:
+							UserCredentialCredentialReportType.CredentialAdded,
+						userId: 1,
+						credentialType: UserCredentialType.PINCode,
+						credentialSlot: 1,
+						credentialReadBack: true,
+						credentialLength: 4,
+						credentialData: Bytes.from("1111", "ascii"),
+						modifierType: UserCredentialModifierType.Locally,
+						modifierNodeId: 0,
+						nextCredentialType: UserCredentialType.None,
+						nextCredentialSlot: 0,
+					}),
+					{ ackRequested: false },
+				),
+			);
+			await priming;
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					1,
+					UserCredentialType.PINCode,
+					1,
+				),
+			).toBeDefined();
+
+			const credEvent = createDeferredPromise<unknown>();
+			node.on(
+				"credential deleted",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			await node.accessControl!.setCredential(
+				1,
+				UserCredentialType.PINCode,
+				1,
+				"9999",
+			);
+
+			t.expect(await credEvent).toMatchObject({
+				userId: 1,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 1,
+			});
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					1,
+					UserCredentialType.PINCode,
+					1,
+				),
+			).toBeUndefined();
+		},
+	},
+);
+
 // =============================================================================
 // Set-type commands use correct CC commands
 // =============================================================================

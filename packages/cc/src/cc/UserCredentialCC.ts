@@ -65,6 +65,24 @@ function credentialToLogString(credential: string | Bytes): string {
 	return "*".repeat(credential.length);
 }
 
+/**
+ * Returns the canonical form of a credential for storage and reporting:
+ * text credentials (PIN codes, passwords) are returned as strings, binary
+ * credentials (biometric data, BLE/NFC/RFID identifiers, ...) as raw bytes.
+ */
+export function normalizeCredentialData(
+	credentialType: UserCredentialType,
+	credentialData: Bytes,
+): string | Bytes {
+	if (
+		credentialType === UserCredentialType.PINCode
+		|| credentialType === UserCredentialType.Password
+	) {
+		return credentialData.toString("utf8");
+	}
+	return credentialData;
+}
+
 // All of these values are internal, and not meant to be used by applications directly.
 // To interact with user credentials, use the functionality on the ZWaveNode class.
 export const UserCredentialCCValues = V.defineCCValues(
@@ -2241,10 +2259,13 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 
 		if (this.userId === 0) return true;
 
-		// Only persist data for successful responses
+		// A UserModifyRejectedLocationEmpty report means we have a stale cache
+		// entry for a user that no longer exists on the device.
 		if (
 			this.reportType
 				=== UserCredentialUserReportType.UserDeleted
+			|| this.reportType
+				=== UserCredentialUserReportType.UserModifyRejectedLocationEmpty
 		) {
 			// Remove all values for this user
 			const userId = this.userId;
@@ -2279,6 +2300,8 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 			return true;
 		}
 
+		// A UserAddRejectedLocationOccupied report contains the data for the
+		// existing user, so we can update our cache with the actual state.
 		if (
 			this.reportType
 				!== UserCredentialUserReportType.ResponseToGet
@@ -2286,6 +2309,8 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 				!== UserCredentialUserReportType.UserAdded
 			&& this.reportType
 				!== UserCredentialUserReportType.UserModified
+			&& this.reportType
+				!== UserCredentialUserReportType.UserAddRejectedLocationOccupied
 		) {
 			return true;
 		}
@@ -2696,9 +2721,14 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			return true;
 		}
 
+		// A CredentialModifyRejectedLocationEmpty report means we have a stale
+		// cache entry for a credential that no longer exists on the device.
 		if (
 			this.reportType
 				=== UserCredentialCredentialReportType.CredentialDeleted
+			|| this.reportType
+				=== UserCredentialCredentialReportType
+					.CredentialModifyRejectedLocationEmpty
 		) {
 			this.removeValue(
 				ctx,
@@ -2727,6 +2757,13 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			return true;
 		}
 
+		// A CredentialAddRejectedLocationOccupied report includes the actual
+		// credential data in the read-back field when the device chooses to
+		// reveal it, so we can update our cache with the real state.
+		const isRejectionWithReadback = this.reportType
+				=== UserCredentialCredentialReportType
+					.CredentialAddRejectedLocationOccupied
+			&& this.credentialReadBack;
 		if (
 			this.reportType
 				!== UserCredentialCredentialReportType.ResponseToGet
@@ -2734,6 +2771,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 				!== UserCredentialCredentialReportType.CredentialAdded
 			&& this.reportType
 				!== UserCredentialCredentialReportType.CredentialModified
+			&& !isRejectionWithReadback
 		) {
 			return true;
 		}
@@ -2753,7 +2791,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 				this.credentialType,
 				this.credentialSlot,
 			),
-			this.credentialData,
+			normalizeCredentialData(this.credentialType, this.credentialData),
 		);
 		this.setValue(
 			ctx,
