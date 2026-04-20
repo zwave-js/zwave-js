@@ -303,7 +303,7 @@ if (endpoint.accessControl) {
 }
 ```
 
-> [!NOTE] For nodes using the **User Code CC**, only a subset of the functionality is available. Each user supports a single credential in slot 1, user names and credential rules are not supported, and credential learning is unavailable.
+> [!NOTE] For nodes using the **User Code CC**, only a subset of the functionality is available. Each user maps to a single credential of the device's unified credential type, and the unified credential slot matches the user slot. User names and credential rules are not supported, and credential learning is unavailable.
 
 ### Querying capabilities
 
@@ -469,13 +469,12 @@ Deletes all users and their credentials.
 
 ```ts
 getCredential(
-	userId: number,
 	type: UserCredentialType,
 	slot: number,
 ): Promise<CredentialData | undefined>
 ```
 
-Returns the data for a specific credential. Returns `undefined` if the credential does not exist. Throws if the credential slot is out of range.
+Returns the data for a specific credential identified by its type and slot. Returns `undefined` if the credential does not exist. Throws if the credential slot is out of range.
 
 > [!NOTE] This communicates with the node to retrieve fresh information.
 
@@ -483,13 +482,12 @@ Returns the data for a specific credential. Returns `undefined` if the credentia
 
 ```ts
 getCredentialCached(
-	userId: number,
 	type: UserCredentialType,
 	slot: number,
 ): CredentialData | undefined
 ```
 
-Returns the data for a specific credential. Returns `undefined` if the credential does not exist. Throws if the credential slot is out of range.
+Returns the data for a specific credential identified by its type and slot. Returns `undefined` if the credential does not exist. Throws if the credential slot is out of range.
 
 > [!NOTE] This method uses cached information from the most recent interview.
 
@@ -507,20 +505,66 @@ interface CredentialData {
 #### `getCredentials`
 
 ```ts
-getCredentials(userId: number): Promise<CredentialData[]>
+getCredentialsForUser(
+	userId: number,
+	type?: UserCredentialType,
+): Promise<CredentialData[]>
 ```
 
-Returns all credentials for the given user.
+Returns all credentials for the given user, optionally filtered to a specific type.
 
 > [!NOTE] This communicates with the node to retrieve fresh information.
 
-#### `getCredentialsCached`
+#### `getCredentialsForUserCached`
 
 ```ts
-getCredentialsCached(userId: number): CredentialData[]
+getCredentialsForUserCached(
+	userId: number,
+	type?: UserCredentialType,
+): CredentialData[]
 ```
 
-Returns all credentials for the given user.
+Returns all credentials for the given user, optionally filtered to a specific type.
+
+> [!NOTE] This method uses cached information from the most recent interview.
+
+#### `getCredentialsByType`
+
+```ts
+getCredentialsByType(type: UserCredentialType): Promise<CredentialData[]>
+```
+
+Returns all credentials of the given type, regardless of ownership.
+
+> [!NOTE] This communicates with the node to retrieve fresh information.
+
+#### `getCredentialsByTypeCached`
+
+```ts
+getCredentialsByTypeCached(type: UserCredentialType): CredentialData[]
+```
+
+Returns all credentials of the given type, regardless of ownership.
+
+> [!NOTE] This method uses cached information from the most recent interview.
+
+#### `getAllCredentials`
+
+```ts
+getAllCredentials(): Promise<CredentialData[]>
+```
+
+Returns all credentials, regardless of ownership or type.
+
+> [!NOTE] This communicates with the node to retrieve fresh information.
+
+#### `getAllCredentialsCached`
+
+```ts
+getAllCredentialsCached(): CredentialData[]
+```
+
+Returns all credentials, regardless of ownership or type.
 
 > [!NOTE] This method uses cached information from the most recent interview.
 

@@ -1,14 +1,20 @@
 import {
 	type UserCredentialCapability,
+	UserCredentialCredentialReportType,
 	UserCredentialOperationType,
 	UserCredentialRule,
 	UserCredentialType,
+	UserCredentialUserReportType,
 	UserCredentialUserType,
 	UserIDStatus,
 } from "@zwave-js/cc";
 import { type UserCodeCCAPI, UserCodeCCValues } from "@zwave-js/cc/UserCodeCC";
 import {
 	type UserCredentialCCAPI,
+	type UserCredentialCCCredentialReport,
+	type UserCredentialCCCredentialSetResult,
+	type UserCredentialCCUserReport,
+	type UserCredentialCCUserSetResult,
 	UserCredentialCCValues,
 	normalizeCredentialData,
 } from "@zwave-js/cc/UserCredentialCC";
@@ -17,10 +23,13 @@ import {
 	type SupervisionResult,
 	ZWaveError,
 	ZWaveErrorCodes,
-	isUnsupervisedOrSucceeded,
 	supervisedCommandSucceeded,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+import {
+	handleUserCredentialCredentialReport,
+	handleUserCredentialUserReport,
+} from "../CCHandlers/UserCredentialCC.js";
 import { FeatureAPI } from "./FeatureAPI.js";
 
 export interface UserCapabilities {
@@ -61,6 +70,109 @@ export interface SetUserOptions {
 	userName?: string;
 	credentialRule?: UserCredentialRule;
 	expiringTimeoutMinutes?: number;
+}
+
+type UserCredentialGetResult = Awaited<
+	ReturnType<UserCredentialCCAPI["getCredential"]>
+>;
+
+/** Result status of a setUser / deleteUser / deleteAllUsers call */
+export enum SetUserStatus {
+	OK = 0,
+	Error_AddRejectedLocationOccupied = 1,
+	Error_ModifyRejectedLocationEmpty = 2,
+	Error_Unknown = 0xff,
+}
+
+/** Result status of a setCredential / deleteCredential call */
+export enum SetCredentialStatus {
+	OK = 0,
+	Error_AddRejectedLocationOccupied = 1,
+	Error_ModifyRejectedLocationEmpty = 2,
+	Error_DuplicateCredential = 3,
+	Error_ManufacturerSecurityRules = 4,
+	Error_DuplicateAdminPINCode = 5,
+	Error_WrongUserUniqueIdentifier = 6,
+	Error_Unknown = 0xff,
+}
+
+function u3cUserSetResultToStatus(
+	result: UserCredentialCCUserSetResult | undefined,
+): SetUserStatus {
+	if (!result) return SetUserStatus.Error_Unknown;
+	switch (result.reportType) {
+		case UserCredentialUserReportType.UserAdded:
+		case UserCredentialUserReportType.UserModified:
+		case UserCredentialUserReportType.UserDeleted:
+		case UserCredentialUserReportType.UserUnchanged:
+			return SetUserStatus.OK;
+		case UserCredentialUserReportType.UserAddRejectedLocationOccupied:
+			return SetUserStatus.Error_AddRejectedLocationOccupied;
+		case UserCredentialUserReportType.UserModifyRejectedLocationEmpty:
+			return SetUserStatus.Error_ModifyRejectedLocationEmpty;
+		default:
+			return SetUserStatus.Error_Unknown;
+	}
+}
+
+function u3cCredentialSetResultToStatus(
+	result: UserCredentialCCCredentialSetResult | undefined,
+): SetCredentialStatus {
+	if (!result) return SetCredentialStatus.Error_Unknown;
+	switch (result.reportType) {
+		case UserCredentialCredentialReportType.CredentialAdded:
+		case UserCredentialCredentialReportType.CredentialModified:
+		case UserCredentialCredentialReportType.CredentialDeleted:
+		case UserCredentialCredentialReportType.CredentialUnchanged:
+			return SetCredentialStatus.OK;
+		case UserCredentialCredentialReportType
+			.CredentialAddRejectedLocationOccupied:
+			return SetCredentialStatus.Error_AddRejectedLocationOccupied;
+		case UserCredentialCredentialReportType
+			.CredentialModifyRejectedLocationEmpty:
+			return SetCredentialStatus.Error_ModifyRejectedLocationEmpty;
+		case UserCredentialCredentialReportType.DuplicateCredential:
+			return SetCredentialStatus.Error_DuplicateCredential;
+		case UserCredentialCredentialReportType.ManufacturerSecurityRules:
+			return SetCredentialStatus.Error_ManufacturerSecurityRules;
+		case UserCredentialCredentialReportType.DuplicateAdminPINCode:
+			return SetCredentialStatus.Error_DuplicateAdminPINCode;
+		case UserCredentialCredentialReportType.WrongUserUniqueIdentifier:
+			return SetCredentialStatus.Error_WrongUserUniqueIdentifier;
+		default:
+			return SetCredentialStatus.Error_Unknown;
+	}
+}
+
+/**
+ * Dispatches event emission for a UserReport received as a response to a UserSet
+ * command. Normally the driver's handleCommand pipeline emits events for
+ * unsolicited reports, but responses matched to a pending transaction bypass that
+ * path. Re-invoke the handler here so applications observe the same events
+ * regardless of whether the report arrived as a response or unsolicited.
+ */
+function emitUserSetEvent(
+	endpoint: FeatureAPI["endpoint"],
+	result: UserCredentialCCUserSetResult,
+): void {
+	const node = endpoint.tryGetNode();
+	if (!node) return;
+	handleUserCredentialUserReport(
+		node,
+		result as unknown as UserCredentialCCUserReport,
+	);
+}
+
+function emitCredentialSetEvent(
+	endpoint: FeatureAPI["endpoint"],
+	result: UserCredentialCCCredentialSetResult,
+): void {
+	const node = endpoint.tryGetNode();
+	if (!node) return;
+	handleUserCredentialCredentialReport(
+		node,
+		result as unknown as UserCredentialCCCredentialReport,
+	);
 }
 
 const NON_PIN_CHARS = /[^0-9]/;
@@ -180,6 +292,12 @@ export class AccessControlAPI extends FeatureAPI {
 				) ?? false,
 			};
 		} else {
+			const maxUsers = this.getValue<number>(
+				UserCodeCCValues.supportedUsers.endpoint(
+					this.endpoint.index,
+				),
+			) ?? 0;
+
 			// User Code CC only supports a single credential per user
 			// with a length of 4-10 characters (CC:0063.01.01.11.006).
 			// Despite the spec calling them "PIN codes", v1 devices often
@@ -189,7 +307,8 @@ export class AccessControlAPI extends FeatureAPI {
 				UserCredentialCapability
 			>();
 			credentialTypes.set(this.#ucCredentialType, {
-				numberOfCredentialSlots: 1,
+				// For User Code CC, credential slots and users are identical
+				numberOfCredentialSlots: maxUsers,
 				minCredentialLength: 4,
 				maxCredentialLength: 10,
 				maxCredentialHashLength: 0,
@@ -360,7 +479,7 @@ export class AccessControlAPI extends FeatureAPI {
 	public async setUser(
 		userId: number,
 		options: SetUserOptions,
-	): Promise<SupervisionResult | undefined> {
+	): Promise<SetUserStatus> {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			const existing = this.#getUserCached_U3C(userId);
@@ -372,8 +491,9 @@ export class AccessControlAPI extends FeatureAPI {
 				?? existing?.userType
 				?? UserCredentialUserType.General;
 
+			let result: UserCredentialCCUserSetResult | undefined;
 			if (userType === UserCredentialUserType.Expiring) {
-				return api.setUser({
+				result = await api.setUser({
 					operationType,
 					userId,
 					active: options.active ?? existing?.active ?? true,
@@ -385,17 +505,20 @@ export class AccessControlAPI extends FeatureAPI {
 						?? existing?.credentialRule,
 					userName: options.userName ?? existing?.userName,
 				});
+			} else {
+				result = await api.setUser({
+					operationType,
+					userId,
+					active: options.active ?? existing?.active ?? true,
+					userType,
+					credentialRule: options.credentialRule
+						?? existing?.credentialRule,
+					userName: options.userName ?? existing?.userName,
+				});
 			}
 
-			return api.setUser({
-				operationType,
-				userId,
-				active: options.active ?? existing?.active ?? true,
-				userType,
-				credentialRule: options.credentialRule
-					?? existing?.credentialRule,
-				userName: options.userName ?? existing?.userName,
-			});
+			if (result) emitUserSetEvent(this.endpoint, result);
+			return u3cUserSetResultToStatus(result);
 		} else {
 			const api = this.#ucAPI();
 			const existing = this.#getUserCached_UC(userId);
@@ -436,7 +559,7 @@ export class AccessControlAPI extends FeatureAPI {
 
 			const result = await api.set(
 				userId,
-				status as number,
+				status,
 				existingCode,
 			);
 			let succeeded: boolean;
@@ -461,7 +584,7 @@ export class AccessControlAPI extends FeatureAPI {
 					);
 				}
 			}
-			return result;
+			return succeeded ? SetUserStatus.OK : SetUserStatus.Error_Unknown;
 		}
 	}
 
@@ -471,17 +594,19 @@ export class AccessControlAPI extends FeatureAPI {
 	 */
 	public async deleteUser(
 		userId: number,
-	): Promise<SupervisionResult | undefined> {
+	): Promise<SetUserStatus> {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
-			const result = await api.setUser({
+			const raw = await api.setUser({
 				operationType: UserCredentialOperationType.Delete,
 				userId,
 			});
-			if (isUnsupervisedOrSucceeded(result)) {
+			if (raw) emitUserSetEvent(this.endpoint, raw);
+			const status = u3cUserSetResultToStatus(raw);
+			if (status === SetUserStatus.OK) {
 				this.#purgeCachedCredentials(userId);
 			}
-			return result;
+			return status;
 		} else {
 			// User Code CC ties each user to their code, so clearing
 			// the code implicitly deletes the user and vice versa
@@ -504,11 +629,12 @@ export class AccessControlAPI extends FeatureAPI {
 					node.emit("credential deleted", this.endpoint as any, {
 						userId,
 						credentialType: this.#ucCredentialType,
-						credentialSlot: 1,
+						// For User Code CC, credential slots and users are identical
+						credentialSlot: userId,
 					});
 				}
 			}
-			return result;
+			return succeeded ? SetUserStatus.OK : SetUserStatus.Error_Unknown;
 		}
 	}
 
@@ -516,59 +642,50 @@ export class AccessControlAPI extends FeatureAPI {
 	 * Deletes all users and their credentials.
 	 * This communicates with the node.
 	 */
-	public async deleteAllUsers(): Promise<SupervisionResult | undefined> {
+	public async deleteAllUsers(): Promise<SetUserStatus> {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
-			const result = await api.setUser({
+			const raw = await api.setUser({
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
 			});
-			if (isUnsupervisedOrSucceeded(result)) {
+			if (raw) emitUserSetEvent(this.endpoint, raw);
+			const status = u3cUserSetResultToStatus(raw);
+			if (status === SetUserStatus.OK) {
 				this.#purgeAllCachedUsersAndCredentials();
 			}
-			return result;
+			return status;
 		} else {
 			const api = this.#ucAPI();
 			const result = await api.clear(0);
 			// Verifying all users being deleted is unrealistic
 			// since there can be up to 65535 users. So we just
 			// assume it worked when the command was not supervised.
-			if (isUnsupervisedOrSucceeded(result)) {
+			const succeeded = result == undefined
+				|| supervisedCommandSucceeded(result);
+			if (succeeded) {
 				this.#purgeAllCachedUserCodes();
 			}
-			return result;
+			return succeeded ? SetUserStatus.OK : SetUserStatus.Error_Unknown;
 		}
 	}
 
 	/**
-	 * Returns the data for a specific credential.
+	 * Returns the data for a specific credential type and slot.
 	 * This communicates with the node to retrieve fresh information.
 	 */
 	public async getCredential(
-		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): Promise<CredentialData | undefined> {
 		this.#assertValidSlot(type, slot);
 
 		if (this.#usesUserCredentialCC) {
-			const api = this.#u3cAPI();
-			const result = await api.getCredential(userId, type, slot);
-			if (!result?.credentialSlot) return undefined;
-			return {
-				userId: result.userId,
-				type: result.credentialType,
-				slot: result.credentialSlot,
-				data: result.credentialData != undefined
-					? normalizeCredentialData(
-						result.credentialType,
-						result.credentialData,
-					)
-					: undefined,
-			};
+			const result = await this.#u3cAPI().getCredential(0, type, slot);
+			return this.#mapCredentialData(result);
 		} else {
 			const api = this.#ucAPI();
-			const result = await api.get(userId);
+			const result = await api.get(slot);
 			if (!result) return undefined;
 			if (
 				result.userIdStatus === UserIDStatus.Available
@@ -576,117 +693,154 @@ export class AccessControlAPI extends FeatureAPI {
 			) {
 				return undefined;
 			}
-			return { userId, type, slot, data: result.userCode };
+			// For User Code CC, credential slots and users are identical
+			return { userId: slot, type, slot, data: result.userCode };
 		}
 	}
 
 	/**
-	 * Returns the data for a specific credential.
+	 * Returns the data for a specific credential type and slot.
 	 * This method uses cached information from the most recent interview.
 	 */
 	public getCredentialCached(
-		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
 		this.#assertValidSlot(type, slot);
 
 		if (this.#usesUserCredentialCC) {
-			return this.#getCredentialCached_U3C(userId, type, slot);
+			return this.#getCredentialCached_U3C(type, slot);
 		} else {
-			return this.#getCredentialCached_UC(userId, type, slot);
+			return this.#getCredentialCached_UC(type, slot);
 		}
 	}
 
 	/**
-	 * Returns all credentials for the given user.
+	 * Returns all credentials for the given user and optional type.
 	 * This communicates with the node to retrieve fresh information.
 	 */
-	public async getCredentials(userId: number): Promise<CredentialData[]> {
+	public async getCredentialsForUser(
+		userId: number,
+		type?: UserCredentialType,
+	): Promise<CredentialData[]> {
 		if (this.#usesUserCredentialCC) {
-			const api = this.#u3cAPI();
-			const credentials: CredentialData[] = [];
-			// Starting from type 0 / slot 0 gives us the first credential for the user
-			let nextCredType: UserCredentialType = UserCredentialType.None;
-			let nextCredSlot = 0;
-			do {
-				const result = await api.getCredential(
-					userId,
-					nextCredType,
-					nextCredSlot,
-				);
-				if (!result?.credentialSlot) break;
-				credentials.push({
-					userId: result.userId,
-					type: result.credentialType,
-					slot: result.credentialSlot,
-					data: result.credentialData != undefined
-						? normalizeCredentialData(
-							result.credentialType,
-							result.credentialData,
-						)
-						: undefined,
-				});
-				nextCredType = result.nextCredentialType
-					?? UserCredentialType.None;
-				nextCredSlot = result.nextCredentialSlot ?? 0;
-			} while (
-				nextCredType !== UserCredentialType.None
-				|| nextCredSlot !== 0
-			);
-			return credentials;
-		} else {
-			const cred = await this.getCredential(
+			if (type != undefined && !this.#supportsCredentialType(type)) {
+				return [];
+			}
+			return this.#queryCredentials_U3C(
 				userId,
-				this.#ucCredentialType,
-				1,
+				type ?? UserCredentialType.None,
+				0,
+				type,
 			);
+		} else {
+			if (type != undefined && type !== this.#ucCredentialType) {
+				return [];
+			}
+			const cred = await this.getCredential(
+				this.#ucCredentialType,
+				// For User Code CC, credential slots and users are identical
+				userId,
+			);
+			// ...and there is at most one credential per user.
 			return cred ? [cred] : [];
 		}
 	}
 
 	/**
-	 * Returns all credentials for the given user.
+	 * Returns all credentials for the given user and optional type.
 	 * This method uses cached information from the most recent interview.
 	 */
-	public getCredentialsCached(userId: number): CredentialData[] {
+	public getCredentialsForUserCached(
+		userId: number,
+		type?: UserCredentialType,
+	): CredentialData[] {
 		if (this.#usesUserCredentialCC) {
-			const credentials: CredentialData[] = [];
-			const supportedTypes = this.getValue<UserCredentialType[]>(
-				UserCredentialCCValues.supportedCredentialTypes.endpoint(
-					this.endpoint.index,
-				),
-			) ?? [];
-
-			for (const type of supportedTypes) {
-				const cap = this.getValue<UserCredentialCapability>(
-					UserCredentialCCValues.credentialCapabilities(type)
-						.endpoint(
-							this.endpoint.index,
-						),
-				);
-				if (!cap) continue;
-				for (
-					let slot = 1;
-					slot <= cap.numberOfCredentialSlots;
-					slot++
-				) {
-					const cred = this.#getCredentialCached_U3C(
-						userId,
-						type,
-						slot,
-					);
-					if (cred) credentials.push(cred);
-				}
+			if (type != undefined && !this.#supportsCredentialType(type)) {
+				return [];
 			}
-			return credentials;
-		} else {
-			const cred = this.#getCredentialCached_UC(
-				userId,
-				this.#ucCredentialType,
-				1,
+			return this.#getAllCredentialsCached_U3C().filter(
+				(credential) =>
+					credential.userId === userId
+					&& (type == undefined || credential.type === type),
 			);
+		} else {
+			if (type != undefined && type !== this.#ucCredentialType) {
+				return [];
+			}
+			const cred = this.#getCredentialCached_UC(
+				this.#ucCredentialType,
+				// For User Code CC, credential slots and users are identical
+				userId,
+			);
+			// ...and there is at most one credential per user.
 			return cred ? [cred] : [];
+		}
+	}
+
+	/**
+	 * Returns all credentials of the given type, regardless of ownership.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	public async getCredentialsByType(
+		type: UserCredentialType,
+	): Promise<CredentialData[]> {
+		if (!this.#supportsCredentialType(type)) {
+			return [];
+		}
+
+		if (this.#usesUserCredentialCC) {
+			return this.#queryCredentials_U3C(0, type, 0, type);
+		} else {
+			return this.#getAllCredentials_UC();
+		}
+	}
+
+	/**
+	 * Returns all credentials of the given type, regardless of ownership.
+	 * This method uses cached information from the most recent interview.
+	 */
+	public getCredentialsByTypeCached(
+		type: UserCredentialType,
+	): CredentialData[] {
+		if (!this.#supportsCredentialType(type)) {
+			return [];
+		}
+
+		if (this.#usesUserCredentialCC) {
+			return this.#getAllCredentialsCached_U3C().filter(
+				(credential) => credential.type === type,
+			);
+		} else {
+			return this.#getAllCredentialsCached_UC();
+		}
+	}
+
+	/**
+	 * Returns all credentials, regardless of ownership or type.
+	 * This communicates with the node to retrieve fresh information.
+	 */
+	public async getAllCredentials(): Promise<CredentialData[]> {
+		if (this.#usesUserCredentialCC) {
+			return this.#queryCredentials_U3C(
+				0,
+				UserCredentialType.None,
+				0,
+			);
+		} else {
+			return this.#getAllCredentials_UC();
+		}
+	}
+
+	/**
+	 * Returns all credentials, regardless of ownership or type.
+	 * This method uses cached information from the most recent interview.
+	 */
+	public getAllCredentialsCached(): CredentialData[] {
+		if (this.#usesUserCredentialCC) {
+			return this.#getAllCredentialsCached_U3C();
+		} else {
+			return this.#getAllCredentialsCached_UC();
 		}
 	}
 
@@ -699,16 +853,20 @@ export class AccessControlAPI extends FeatureAPI {
 		type: UserCredentialType,
 		slot: number,
 		data: string | Uint8Array,
-	): Promise<SupervisionResult | undefined> {
-		this.#assertValidSlot(type, slot);
-
+	): Promise<SetCredentialStatus> {
 		if (this.#usesUserCredentialCC) {
+			this.#assertValidSlot(type, slot);
+
 			const api = this.#u3cAPI();
-			const existing = this.#getCredentialCached_U3C(userId, type, slot);
+			const existing = this.#getCredentialCachedForUser_U3C(
+				userId,
+				type,
+				slot,
+			);
 			const credentialData = typeof data === "string"
 				? Bytes.from(data, "utf-8")
 				: Bytes.from(data);
-			return api.setCredential({
+			const raw = await api.setCredential({
 				operationType: existing
 					? UserCredentialOperationType.Modify
 					: UserCredentialOperationType.Add,
@@ -717,7 +875,13 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialSlot: slot,
 				credentialData,
 			});
+			if (raw) emitCredentialSetEvent(this.endpoint, raw);
+			return u3cCredentialSetResultToStatus(raw);
 		} else {
+			// User Code CC stores exactly one credential per user slot. Ignore the
+			// caller-provided unified slot and write back to the owning user's slot
+			// so events and cached state stay internally consistent.
+			this.#assertValidSlot(type, userId);
 			const api = this.#ucAPI();
 
 			// Determine the current status; default to Enabled for new users
@@ -734,9 +898,8 @@ export class AccessControlAPI extends FeatureAPI {
 				: existingStatus;
 
 			const existingCred = this.#getCredentialCached_UC(
-				userId,
 				type,
-				slot,
+				userId,
 			);
 
 			const codeData = typeof data === "string"
@@ -765,13 +928,15 @@ export class AccessControlAPI extends FeatureAPI {
 						{
 							userId,
 							credentialType: type,
-							credentialSlot: slot,
+							credentialSlot: userId,
 							data,
 						},
 					);
 				}
 			}
-			return result;
+			return succeeded
+				? SetCredentialStatus.OK
+				: SetCredentialStatus.Error_Unknown;
 		}
 	}
 
@@ -783,22 +948,28 @@ export class AccessControlAPI extends FeatureAPI {
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
-	): Promise<SupervisionResult | undefined> {
-		this.#assertValidSlot(type, slot);
-
+	): Promise<SetCredentialStatus> {
 		if (this.#usesUserCredentialCC) {
+			this.#assertValidSlot(type, slot);
+
 			const api = this.#u3cAPI();
-			return api.setCredential({
+			const raw = await api.setCredential({
 				operationType: UserCredentialOperationType.Delete,
 				userId,
 				credentialType: type,
 				credentialSlot: slot,
 			});
+			if (raw) emitCredentialSetEvent(this.endpoint, raw);
+			return u3cCredentialSetResultToStatus(raw);
 		} else {
-			// User Code CC ties each user to their code, so clearing
-			// the credential also deletes the user
-			const existed = this.#getCredentialCached_UC(userId, type, slot)
-				!= undefined;
+			// User Code CC stores exactly one credential per user slot. Ignore the
+			// caller-provided unified slot and write back to the owning user's slot
+			// so events and cached state stay internally consistent.
+			this.#assertValidSlot(type, userId);
+			const existed = this.#getCredentialCached_UC(
+				type,
+				userId,
+			) != undefined;
 			const api = this.#ucAPI();
 			const result = await api.clear(userId);
 			let succeeded: boolean;
@@ -815,12 +986,14 @@ export class AccessControlAPI extends FeatureAPI {
 					node.emit("credential deleted", this.endpoint as any, {
 						userId,
 						credentialType: type,
-						credentialSlot: slot,
+						credentialSlot: userId,
 					});
 					node.emit("user deleted", this.endpoint as any, { userId });
 				}
 			}
-			return result;
+			return succeeded
+				? SetCredentialStatus.OK
+				: SetCredentialStatus.Error_Unknown;
 		}
 	}
 
@@ -845,7 +1018,11 @@ export class AccessControlAPI extends FeatureAPI {
 
 		this.#assertValidSlot(type, slot);
 
-		const existing = this.#getCredentialCached_U3C(userId, type, slot);
+		const existing = this.#getCredentialCachedForUser_U3C(
+			userId,
+			type,
+			slot,
+		);
 		const operationType = existing
 			? UserCredentialOperationType.Modify
 			: UserCredentialOperationType.Add;
@@ -932,6 +1109,12 @@ export class AccessControlAPI extends FeatureAPI {
 		] as unknown as UserCredentialCCAPI;
 	}
 
+	#supportsCredentialType(type: UserCredentialType): boolean {
+		return this.getCredentialCapabilitiesCached()
+			.supportedCredentialTypes
+			.has(type);
+	}
+
 	/** Returns the credential type to use for User Code CC based on supported characters */
 	get #ucCredentialType(): UserCredentialType {
 		const supportedASCIIChars = this.getValue<string>(
@@ -985,15 +1168,28 @@ export class AccessControlAPI extends FeatureAPI {
 	#purgeCachedCredentials(userId: number): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
-		const credentialValues = valueDB.findValues(
+		const credentialOwners = valueDB.findValues(
 			(vid) =>
-				(UserCredentialCCValues.credential.is(vid)
-					|| UserCredentialCCValues.credentialModifierType.is(vid)
-					|| UserCredentialCCValues.credentialModifierNodeId.is(vid))
-				&& (vid.propertyKey as number >> 24) === userId,
+				UserCredentialCCValues.credentialOwner.is(vid)
+				&& vid.endpoint === this.endpoint.index,
 		);
-		for (const vid of credentialValues) {
-			valueDB.removeValue(vid);
+		for (const { endpoint, propertyKey, value } of credentialOwners) {
+			if (value !== userId) continue;
+
+			const key = propertyKey as number;
+			const type = key >>> 16;
+			const slot = key & 0xffff;
+
+			for (
+				const valueId of [
+					UserCredentialCCValues.credential(type, slot),
+					UserCredentialCCValues.credentialOwner(type, slot),
+					UserCredentialCCValues.credentialModifierType(type, slot),
+					UserCredentialCCValues.credentialModifierNodeId(type, slot),
+				]
+			) {
+				valueDB.removeValue(valueId.endpoint(endpoint));
+			}
 		}
 	}
 
@@ -1028,6 +1224,7 @@ export class AccessControlAPI extends FeatureAPI {
 		const credentialValues = valueDB.findValues(
 			(vid) =>
 				UserCredentialCCValues.credential.is(vid)
+				|| UserCredentialCCValues.credentialOwner.is(vid)
 				|| UserCredentialCCValues.credentialModifierType.is(vid)
 				|| UserCredentialCCValues.credentialModifierNodeId.is(vid),
 		);
@@ -1049,6 +1246,178 @@ export class AccessControlAPI extends FeatureAPI {
 		for (const vid of values) {
 			valueDB.removeValue(vid);
 		}
+	}
+
+	#mapCredentialData(
+		result: UserCredentialGetResult,
+	): CredentialData | undefined {
+		if (!result?.credentialSlot) return undefined;
+		return {
+			userId: result.userId,
+			type: result.credentialType,
+			slot: result.credentialSlot,
+			data: result.credentialData != undefined
+				? normalizeCredentialData(
+					result.credentialType,
+					result.credentialData,
+				)
+				: undefined,
+		};
+	}
+
+	async #queryCredentials_U3C(
+		userId: number,
+		startType: UserCredentialType,
+		startSlot: number,
+		filterType?: UserCredentialType,
+	): Promise<CredentialData[]> {
+		const api = this.#u3cAPI();
+		const credentials: CredentialData[] = [];
+		let queryType = startType;
+		let querySlot = startSlot;
+
+		// U3C credential enumeration behaves like a cursor walk.
+		// The initial (userId, type, slot) triple may be exact or wildcarded,
+		// and each report returns both the matching credential and a pointer to
+		// the next credential that should be requested.
+		while (true) {
+			const result = await api.getCredential(
+				userId,
+				queryType,
+				querySlot,
+			);
+			const credential = this.#mapCredentialData(result);
+			// No credential means the walk is exhausted or the current selector did
+			// not resolve to a valid entry on this node.
+			if (!result || !credential) break;
+			// When iterating a single type, stop as soon as the node answers with a
+			// credential of another type instead of leaking unrelated results.
+			if (filterType != undefined && credential.type !== filterType) {
+				break;
+			}
+
+			credentials.push(credential);
+
+			const nextType = result.nextCredentialType
+				?? UserCredentialType.None;
+			const nextSlot = result.nextCredentialSlot ?? 0;
+			// A zero next pointer marks the end of the node's credential sequence.
+			if (
+				nextType === UserCredentialType.None
+				&& nextSlot === 0
+			) {
+				break;
+			}
+			// Per CC:0083.01.0C.11.024/.025, the next pointer advances to the next
+			// existing credential for the user, across credential types. For
+			// type-filtered walks, stop before following that pointer into a
+			// different type.
+			if (filterType != undefined && nextType !== filterType) {
+				break;
+			}
+			// Guard against buggy nodes that repeat the same cursor forever.
+			if (nextType === queryType && nextSlot === querySlot) {
+				break;
+			}
+
+			queryType = nextType;
+			querySlot = nextSlot;
+		}
+
+		return credentials;
+	}
+
+	async #getAllCredentials_UC(): Promise<CredentialData[]> {
+		const api = this.#ucAPI();
+		const maxUsers = await api.getUsersCount();
+		if (!maxUsers) return [];
+
+		const credentials: CredentialData[] = [];
+		const supportsBulk = !!this.getValue<boolean>(
+			UserCodeCCValues.supportsMultipleUserCodeReport.endpoint(
+				this.endpoint.index,
+			),
+		);
+
+		if (supportsBulk) {
+			let nextUserId = 1;
+			while (nextUserId > 0 && nextUserId <= maxUsers) {
+				const response = await api.get(nextUserId, true);
+				if (!response) break;
+
+				for (const entry of response.userCodes) {
+					if (
+						entry.userIdStatus === UserIDStatus.Available
+						|| entry.userIdStatus
+							=== UserIDStatus.StatusNotAvailable
+					) {
+						continue;
+					}
+					// Bulk User Code reports enumerate user slots, which become the
+					// unified credential slots for the returned credentials.
+					credentials.push({
+						userId: entry.userId,
+						type: this.#ucCredentialType,
+						slot: entry.userId,
+						data: entry.userCode,
+					});
+				}
+
+				nextUserId = response.nextUserId;
+			}
+		} else {
+			for (let userId = 1; userId <= maxUsers; userId++) {
+				const credential = await this.getCredential(
+					this.#ucCredentialType,
+					userId,
+				);
+				if (credential) credentials.push(credential);
+			}
+		}
+
+		return credentials;
+	}
+
+	#getAllCredentialsCached_U3C(): CredentialData[] {
+		const valueDB = this.endpoint.tryGetNode()?.valueDB;
+		if (!valueDB) return [];
+
+		return valueDB
+			.findValues(
+				(vid) =>
+					UserCredentialCCValues.credentialOwner.is(vid)
+					&& vid.endpoint === this.endpoint.index,
+			)
+			.filter(
+				({ propertyKey }) => typeof propertyKey === "number",
+			)
+			.toSorted(
+				(a, b) => (a.propertyKey as number) - (b.propertyKey as number),
+			)
+			.flatMap(({ propertyKey }) => {
+				const key = propertyKey as number;
+				const type = key >>> 16;
+				const slot = key & 0xffff;
+				const credential = this.#getCredentialCached_U3C(type, slot);
+				return credential ? [credential] : [];
+			});
+	}
+
+	#getAllCredentialsCached_UC(): CredentialData[] {
+		const maxUsers = this.getValue<number>(
+			UserCodeCCValues.supportedUsers.endpoint(this.endpoint.index),
+		) ?? 0;
+		const credentials: CredentialData[] = [];
+		// Cached User Code values are keyed by user slot, and the unified
+		// abstraction reuses that slot number as the credential slot.
+		for (let userId = 1; userId <= maxUsers; userId++) {
+			const credential = this.#getCredentialCached_UC(
+				this.#ucCredentialType,
+				userId,
+			);
+			if (credential) credentials.push(credential);
+		}
+		return credentials;
 	}
 
 	#assertValidSlot(type: UserCredentialType, slot: number): void {
@@ -1098,18 +1467,41 @@ export class AccessControlAPI extends FeatureAPI {
 		};
 	}
 
+	#getCredentialOwner_U3C(
+		type: UserCredentialType,
+		slot: number,
+	): number | undefined {
+		return this.getValue<number>(
+			UserCredentialCCValues.credentialOwner(type, slot).endpoint(
+				this.endpoint.index,
+			),
+		);
+	}
+
 	#getCredentialCached_U3C(
-		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
+		const owner = this.#getCredentialOwner_U3C(type, slot);
+		if (owner == undefined) return undefined;
+
 		const data = this.getValue<string | Uint8Array>(
-			UserCredentialCCValues.credential(userId, type, slot).endpoint(
+			UserCredentialCCValues.credential(type, slot).endpoint(
 				this.endpoint.index,
 			),
 		);
 		if (data == undefined) return undefined;
-		return { userId, type, slot, data };
+		return { userId: owner, type, slot, data };
+	}
+
+	#getCredentialCachedForUser_U3C(
+		userId: number,
+		type: UserCredentialType,
+		slot: number,
+	): CredentialData | undefined {
+		const credential = this.#getCredentialCached_U3C(type, slot);
+		if (credential?.userId !== userId) return undefined;
+		return credential;
 	}
 
 	#getUserCached_UC(userId: number): UserData | undefined {
@@ -1123,13 +1515,13 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#getCredentialCached_UC(
-		userId: number,
 		type: UserCredentialType,
 		slot: number,
 	): CredentialData | undefined {
-		if (slot !== 1) return undefined;
+		if (type !== this.#ucCredentialType) return undefined;
+		// For User Code CC, credential slots and users are identical
 		const status = this.getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(userId).endpoint(
+			UserCodeCCValues.userIdStatus(slot).endpoint(
 				this.endpoint.index,
 			),
 		);
@@ -1141,9 +1533,9 @@ export class AccessControlAPI extends FeatureAPI {
 			return undefined;
 		}
 		const data = this.getValue<string>(
-			UserCodeCCValues.userCode(userId).endpoint(this.endpoint.index),
+			UserCodeCCValues.userCode(slot).endpoint(this.endpoint.index),
 		);
 		if (data == undefined) return undefined;
-		return { userId, type, slot, data };
+		return { userId: slot, type, slot, data };
 	}
 }

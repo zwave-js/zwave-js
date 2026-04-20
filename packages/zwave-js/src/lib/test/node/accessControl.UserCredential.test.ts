@@ -1,5 +1,4 @@
 import {
-	SupervisionCommand,
 	type UserCredentialCapability,
 	UserCredentialCredentialReportType,
 	UserCredentialModifierType,
@@ -27,6 +26,10 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+import {
+	SetCredentialStatus,
+	SetUserStatus,
+} from "../../node/feature-apis/AccessControl.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
 const defaultPINCapability: UserCredentialCapability = {
@@ -90,7 +93,7 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// User capabilities
-			const userCaps = node.accessControl.getUserCapabilitiesCached();
+			const userCaps = node.accessControl!.getUserCapabilitiesCached();
 			t.expect(userCaps).toBeDefined();
 			t.expect(userCaps.maxUsers).toBe(20);
 			t.expect(userCaps.maxUserNameLength).toBe(64);
@@ -105,7 +108,7 @@ integrationTest(
 			]);
 
 			// Credential capabilities
-			const credCaps = node.accessControl
+			const credCaps = node.accessControl!
 				.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
 			t.expect(credCaps.supportsAdminCode).toBe(true);
@@ -136,7 +139,7 @@ integrationTest(
 // =============================================================================
 
 integrationTest(
-	"getUserCached and getCredentialsCached return data set via the unified API",
+	"getUserCached and getCredentialsForUserCached return data set via the unified API",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -164,7 +167,7 @@ integrationTest(
 			// the mock's response has been processed and cached.
 			const userCreated = createDeferredPromise<void>();
 			node.once("user added", () => userCreated.resolve());
-			await node.accessControl.setUser(1, {
+			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
@@ -173,7 +176,7 @@ integrationTest(
 
 			const credCreated = createDeferredPromise<void>();
 			node.once("credential added", () => credCreated.resolve());
-			await node.accessControl.setCredential(
+			await node.accessControl!.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -182,21 +185,185 @@ integrationTest(
 			await credCreated;
 
 			// Now verify reads return the correct data
-			const user = node.accessControl.getUserCached(1);
+			const user = node.accessControl!.getUserCached(1);
 			t.expect(user).toBeDefined();
 			t.expect(user!.active).toBe(true);
 			t.expect(user!.userType).toBe(UserCredentialUserType.General);
 			t.expect(user!.userName).toBe("Alice");
 
-			t.expect(node.accessControl.getUserCached(2)).toBeUndefined();
+			t.expect(node.accessControl!.getUserCached(2)).toBeUndefined();
 
-			const users = node.accessControl.getUsersCached();
+			const users = node.accessControl!.getUsersCached();
 			t.expect(users.length).toBe(1);
 
-			const creds = node.accessControl.getCredentialsCached(1);
+			const creds = node.accessControl!.getCredentialsForUserCached(1);
 			t.expect(creds.length).toBe(1);
 			t.expect(creds[0].type).toBe(UserCredentialType.PINCode);
 			t.expect(creds[0].slot).toBe(1);
+
+			const credsByType = node.accessControl!.getCredentialsByTypeCached(
+				UserCredentialType.PINCode,
+			);
+			t.expect(credsByType.length).toBe(1);
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
+				1,
+			);
+		},
+	},
+);
+
+integrationTest(
+	"getCredentialCached resolves by type and slot while getCredentialsForUserCached filters by owner",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const firstUserCreated = createDeferredPromise<void>();
+			node.once("user added", () => firstUserCreated.resolve());
+			await node.accessControl!.setUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			await firstUserCreated;
+
+			const secondUserCreated = createDeferredPromise<void>();
+			node.once("user added", () => secondUserCreated.resolve());
+			await node.accessControl!.setUser(2, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Bob",
+			});
+			await secondUserCreated;
+
+			const credentialCreated = createDeferredPromise<void>();
+			node.once("credential added", () => credentialCreated.resolve());
+			await node.accessControl!.setCredential(
+				1,
+				UserCredentialType.PINCode,
+				1,
+				"1234",
+			);
+			await credentialCreated;
+
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					1,
+				),
+			).toMatchObject({
+				userId: 1,
+				type: UserCredentialType.PINCode,
+				slot: 1,
+				data: "1234",
+			});
+
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(2),
+			).toStrictEqual(
+				[],
+			);
+		},
+	},
+);
+
+integrationTest(
+	"setCredential rejects reusing the same credential slot for a different user",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const firstUserCreated = createDeferredPromise<void>();
+			node.once("user added", () => firstUserCreated.resolve());
+			await node.accessControl!.setUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			await firstUserCreated;
+
+			const secondUserCreated = createDeferredPromise<void>();
+			node.once("user added", () => secondUserCreated.resolve());
+			await node.accessControl!.setUser(2, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Bob",
+			});
+			await secondUserCreated;
+
+			const firstCredentialCreated = createDeferredPromise<void>();
+			node.once(
+				"credential added",
+				() => firstCredentialCreated.resolve(),
+			);
+			await node.accessControl!.setCredential(
+				1,
+				UserCredentialType.PINCode,
+				1,
+				"1234",
+			);
+			await firstCredentialCreated;
+
+			const result = await node.accessControl!.setCredential(
+				2,
+				UserCredentialType.PINCode,
+				1,
+				"5678",
+			);
+
+			t.expect(result).toBe(
+				SetCredentialStatus.Error_AddRejectedLocationOccupied,
+			);
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					1,
+				),
+			).toMatchObject({
+				userId: 1,
+				type: UserCredentialType.PINCode,
+				slot: 1,
+				data: "1234",
+			});
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(2),
+			).toStrictEqual([]);
 		},
 	},
 );
@@ -750,7 +917,6 @@ integrationTest(
 			});
 
 			const cached = node.accessControl!.getCredentialCached(
-				2,
 				UserCredentialType.PINCode,
 				1,
 			);
@@ -833,7 +999,6 @@ integrationTest(
 			t.expect(emitted).toBe(false);
 			t.expect(
 				node.accessControl!.getCredentialCached(
-					2,
 					UserCredentialType.PINCode,
 					1,
 				),
@@ -924,7 +1089,6 @@ integrationTest(
 			await priming;
 			t.expect(
 				node.accessControl!.getCredentialCached(
-					1,
 					UserCredentialType.PINCode,
 					1,
 				),
@@ -950,7 +1114,6 @@ integrationTest(
 			});
 			t.expect(
 				node.accessControl!.getCredentialCached(
-					1,
 					UserCredentialType.PINCode,
 					1,
 				),
@@ -987,7 +1150,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl.setUser(1, {
+			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Charlie",
@@ -1032,7 +1195,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl.setCredential(
+			await node.accessControl!.setCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -1082,7 +1245,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl.deleteUser(5);
+			await node.accessControl!.deleteUser(5);
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -1124,7 +1287,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl.deleteAllUsers();
+			await node.accessControl!.deleteAllUsers();
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -1166,7 +1329,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl.deleteCredential(
+			await node.accessControl!.deleteCredential(
 				1,
 				UserCredentialType.PINCode,
 				1,
@@ -1214,7 +1377,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl.setAdminCode("9876");
+			await node.accessControl!.setAdminCode("9876");
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -1253,7 +1416,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl.getAdminCode();
+			await node.accessControl!.getAdminCode();
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -1289,7 +1452,7 @@ async function populateUserAndCredential(
 ) {
 	const userCreated = createDeferredPromise<void>();
 	node.once("user added", () => userCreated.resolve());
-	await node.accessControl.setUser(1, {
+	await node.accessControl!.setUser(1, {
 		active: true,
 		userType: UserCredentialUserType.General,
 		userName: "Test",
@@ -1298,7 +1461,7 @@ async function populateUserAndCredential(
 
 	const credCreated = createDeferredPromise<void>();
 	node.once("credential added", () => credCreated.resolve());
-	await node.accessControl.setCredential(
+	await node.accessControl!.setCredential(
 		1,
 		UserCredentialType.PINCode,
 		1,
@@ -1321,64 +1484,78 @@ integrationTest(
 			await populateUserAndCredential(node);
 
 			// Verify data is cached
-			t.expect(node.accessControl.getUserCached(1)).toBeDefined();
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
 
 			const deleted = createDeferredPromise<void>();
 			node.once("user deleted", () => deleted.resolve());
-			await node.accessControl.deleteUser(1);
+			await node.accessControl!.deleteUser(1);
 			await deleted;
 
 			// User values are purged by the CC report handler,
 			// credentials must be purged by the AccessControl mixin
-			t.expect(node.accessControl.getUserCached(1)).toBeUndefined();
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(0);
+			t.expect(node.accessControl!.getUserCached(1)).toBeUndefined();
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				0,
+			);
 		},
 	},
 );
 
 integrationTest(
-	"deleteUser does not purge cached credentials on supervised failure",
+	"deleteUser does not purge cached credentials when the node does not respond",
 	{
 		nodeCapabilities: {
 			commandClasses: [
 				CommandClasses.Version,
-				CommandClasses.Supervision,
 				ccCaps(defaultDeleteTestCaps),
 			],
 		},
 
 		customSetup: async (driver, controller, mockNode) => {
-			// Only reject supervised Delete operations
-			const rejectSupervisedUserDelete: MockNodeBehavior = {
+			// Stop any default response to UserSet Delete. Without a UserReport,
+			// the setUser API call resolves with an undefined result, which the
+			// feature API must treat as a failure (do not purge the cache).
+			const dropUserDelete: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
 						receivedCC instanceof UserCredentialCCUserSet
 						&& receivedCC.operationType
 							=== UserCredentialOperationType.Delete
-						&& receivedCC.isEncapsulatedWith(
-							CommandClasses.Supervision,
-							SupervisionCommand.Get,
-						)
 					) {
-						return { action: "fail" };
+						return { action: "stop" };
 					}
 				},
 			};
-			mockNode.defineBehavior(rejectSupervisedUserDelete);
+			mockNode.defineBehavior(dropUserDelete);
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await populateUserAndCredential(node);
 
-			t.expect(node.accessControl.getUserCached(1)).toBeDefined();
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
 
-			await node.accessControl.deleteUser(1);
+			const result = await node.accessControl!.deleteUser(1);
+			t.expect(result).toBe(SetUserStatus.Error_Unknown);
 
-			// Supervised command failed — cache must remain intact
-			t.expect(node.accessControl.getUserCached(1)).toBeDefined();
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
+			// Command had no response — cache must remain intact
+			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
 		},
 	},
 );
@@ -1396,60 +1573,72 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await populateUserAndCredential(node);
 
-			t.expect(node.accessControl.getUsersCached().length).toBe(1);
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
 
 			// deleteAllUsers returns after the API call completes;
 			// the purge happens synchronously before returning
-			await node.accessControl.deleteAllUsers();
+			await node.accessControl!.deleteAllUsers();
 
-			t.expect(node.accessControl.getUsersCached().length).toBe(0);
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(0);
+			t.expect(node.accessControl!.getUsersCached().length).toBe(0);
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				0,
+			);
 		},
 	},
 );
 
 integrationTest(
-	"deleteAllUsers does not purge on supervised failure",
+	"deleteAllUsers does not purge when the node does not respond",
 	{
 		nodeCapabilities: {
 			commandClasses: [
 				CommandClasses.Version,
-				CommandClasses.Supervision,
 				ccCaps(defaultDeleteTestCaps),
 			],
 		},
 
 		customSetup: async (driver, controller, mockNode) => {
-			const rejectSupervisedUserDelete: MockNodeBehavior = {
+			const dropUserDelete: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
 						receivedCC instanceof UserCredentialCCUserSet
 						&& receivedCC.operationType
 							=== UserCredentialOperationType.Delete
-						&& receivedCC.isEncapsulatedWith(
-							CommandClasses.Supervision,
-							SupervisionCommand.Get,
-						)
 					) {
-						return { action: "fail" };
+						return { action: "stop" };
 					}
 				},
 			};
-			mockNode.defineBehavior(rejectSupervisedUserDelete);
+			mockNode.defineBehavior(dropUserDelete);
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await populateUserAndCredential(node);
 
-			t.expect(node.accessControl.getUsersCached().length).toBe(1);
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
+			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
 
-			await node.accessControl.deleteAllUsers();
+			const result = await node.accessControl!.deleteAllUsers();
+			t.expect(result).toBe(SetUserStatus.Error_Unknown);
 
-			// Supervised command failed — cache must remain intact
-			t.expect(node.accessControl.getUsersCached().length).toBe(1);
-			t.expect(node.accessControl.getCredentialsCached(1).length).toBe(1);
+			// Command had no response — cache must remain intact
+			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
 		},
 	},
 );

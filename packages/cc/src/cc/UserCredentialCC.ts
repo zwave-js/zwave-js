@@ -234,12 +234,23 @@ export const UserCredentialCCValues = V.defineCCValues(
 			{ internal: true },
 		),
 
-		// Per-credential modifier info (keyed by userId << 24 | type << 16 | slot)
+		// Per-credential owner info (keyed by type << 16 | slot)
+		...V.dynamicPropertyAndKeyWithName(
+			"credentialOwner",
+			"credentialOwner",
+			(type: UserCredentialType, slot: number) => (type << 16) | slot,
+			({ property, propertyKey }) =>
+				property === "credentialOwner"
+				&& typeof propertyKey === "number",
+			undefined,
+			{ internal: true },
+		),
+
+		// Per-credential modifier info (keyed by type << 16 | slot)
 		...V.dynamicPropertyAndKeyWithName(
 			"credentialModifierType",
 			"credentialModifierType",
-			(userId: number, type: UserCredentialType, slot: number) =>
-				(userId << 24) | (type << 16) | slot,
+			(type: UserCredentialType, slot: number) => (type << 16) | slot,
 			({ property, propertyKey }) =>
 				property === "credentialModifierType"
 				&& typeof propertyKey === "number",
@@ -249,8 +260,7 @@ export const UserCredentialCCValues = V.defineCCValues(
 		...V.dynamicPropertyAndKeyWithName(
 			"credentialModifierNodeId",
 			"credentialModifierNodeId",
-			(userId: number, type: UserCredentialType, slot: number) =>
-				(userId << 24) | (type << 16) | slot,
+			(type: UserCredentialType, slot: number) => (type << 16) | slot,
 			({ property, propertyKey }) =>
 				property === "credentialModifierNodeId"
 				&& typeof propertyKey === "number",
@@ -258,12 +268,11 @@ export const UserCredentialCCValues = V.defineCCValues(
 			{ internal: true },
 		),
 
-		// Per-credential values (keyed by userId << 24 | type << 16 | slot)
+		// Per-credential values (keyed by type << 16 | slot)
 		...V.dynamicPropertyAndKeyWithName(
 			"credential",
 			"credential",
-			(userId: number, type: UserCredentialType, slot: number) =>
-				(userId << 24) | (type << 16) | slot,
+			(type: UserCredentialType, slot: number) => (type << 16) | slot,
 			({ property, propertyKey }) =>
 				property === "credential"
 				&& typeof propertyKey === "number",
@@ -440,7 +449,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	public async setUser(
 		options: UserCredentialCCUserSetOptions,
-	): Promise<SupervisionResult | undefined> {
+	): Promise<UserCredentialCCUserSetResult | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserSet,
@@ -451,7 +460,24 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		return this.host.sendCommand(cc, this.commandOptions);
+		const response = await this.host.sendCommand<
+			UserCredentialCCUserReport
+		>(cc, this.commandOptions);
+		if (response) {
+			return pick(response, [
+				"endpointIndex",
+				"reportType",
+				"userId",
+				"modifierType",
+				"modifierNodeId",
+				"userType",
+				"active",
+				"credentialRule",
+				"expiringTimeoutMinutes",
+				"nameEncoding",
+				"userName",
+			]);
+		}
 	}
 
 	@validateArgs()
@@ -490,7 +516,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	public async setCredential(
 		options: UserCredentialCCCredentialSetOptions,
-	): Promise<SupervisionResult | undefined> {
+	): Promise<UserCredentialCCCredentialSetResult | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.CredentialSet,
@@ -501,7 +527,22 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		return this.host.sendCommand(cc, this.commandOptions);
+		const response = await this.host.sendCommand<
+			UserCredentialCCCredentialReport
+		>(cc, this.commandOptions);
+		if (response) {
+			return pick(response, [
+				"endpointIndex",
+				"reportType",
+				"userId",
+				"credentialType",
+				"credentialSlot",
+				"credentialReadBack",
+				"credentialData",
+				"modifierType",
+				"modifierNodeId",
+			]);
+		}
 	}
 
 	@validateArgs()
@@ -1235,24 +1276,42 @@ export class UserCredentialCC extends CommandClass {
 
 		// Remove all credential values for this user
 		const valueDB = this.getValueDB(ctx);
-		const credentialValues = valueDB.findValues(
+		const credentialOwners = valueDB.findValues(
 			(vid) =>
-				(UserCredentialCCValues.credential.is(vid)
-					|| UserCredentialCCValues.credentialModifierType.is(vid)
-					|| UserCredentialCCValues.credentialModifierNodeId.is(vid))
-				// The property key is constructed as (userId << 24) | (type << 16) | slot, so we can filter by userId
-				&& (vid.propertyKey as number >> 24) === userId,
+				UserCredentialCCValues.credentialOwner.is(vid)
+				&& vid.endpoint === this.endpointIndex,
 		);
-		for (
-			const { commandClass, endpoint, property, propertyKey }
-				of credentialValues
-		) {
-			valueDB.removeValue({
-				commandClass,
-				endpoint,
-				property,
-				propertyKey,
-			});
+		for (const { endpoint, propertyKey, value } of credentialOwners) {
+			if (value !== userId) continue;
+
+			const key = propertyKey as number;
+			const credentialType = key >>> 16;
+			const credentialSlot = key & 0xffff;
+
+			valueDB.removeValue(
+				UserCredentialCCValues.credential(
+					credentialType,
+					credentialSlot,
+				).endpoint(endpoint),
+			);
+			valueDB.removeValue(
+				UserCredentialCCValues.credentialOwner(
+					credentialType,
+					credentialSlot,
+				).endpoint(endpoint),
+			);
+			valueDB.removeValue(
+				UserCredentialCCValues.credentialModifierType(
+					credentialType,
+					credentialSlot,
+				).endpoint(endpoint),
+			);
+			valueDB.removeValue(
+				UserCredentialCCValues.credentialModifierNodeId(
+					credentialType,
+					credentialSlot,
+				).endpoint(endpoint),
+			);
 		}
 	}
 
@@ -1933,8 +1992,44 @@ export type UserCredentialCCUserSetOptions =
 		}
 	);
 
+// @publicAPI
+export type UserCredentialCCUserSetResult = Pick<
+	UserCredentialCCUserReport,
+	| "endpointIndex"
+	| "reportType"
+	| "userId"
+	| "modifierType"
+	| "modifierNodeId"
+	| "userType"
+	| "active"
+	| "credentialRule"
+	| "expiringTimeoutMinutes"
+	| "nameEncoding"
+	| "userName"
+>;
+
+function testResponseForUserCredentialUserSet(
+	sent: UserCredentialCCUserSet,
+	received: UserCredentialCCUserReport,
+) {
+	// CC:0083.01.05.11.010, CC:0083.01.05.11.011, CC:0083.01.05.11.012,
+	// CC:0083.01.05.11.013: UserSet MUST be answered by a UserReport.
+	// Match any report type other than ResponseToGet. For Add/Modify/Delete
+	// the report echoes the requested userId; for DeleteAll (userId 0) the
+	// report contains userId 0.
+	return (
+		received.reportType !== UserCredentialUserReportType.ResponseToGet
+		&& received.userId === sent.userId
+	);
+}
+
 @CCCommand(UserCredentialCommand.UserSet)
-@useSupervision()
+// The response class is forward-declared here, so use a dynamic CC response
+// that resolves the class lazily.
+@expectedCCResponse(
+	() => UserCredentialCCUserReport,
+	testResponseForUserCredentialUserSet,
+)
 export class UserCredentialCCUserSet extends UserCredentialCC {
 	public constructor(
 		options: WithAddress<UserCredentialCCUserSetOptions>,
@@ -2510,8 +2605,41 @@ export type UserCredentialCCCredentialSetOptions =
 		}
 	);
 
+// @publicAPI
+export type UserCredentialCCCredentialSetResult = Pick<
+	UserCredentialCCCredentialReport,
+	| "endpointIndex"
+	| "reportType"
+	| "userId"
+	| "credentialType"
+	| "credentialSlot"
+	| "credentialReadBack"
+	| "credentialData"
+	| "modifierType"
+	| "modifierNodeId"
+>;
+
+function testResponseForUserCredentialCredentialSet(
+	_sent: UserCredentialCCCredentialSet,
+	received: UserCredentialCCCredentialReport,
+) {
+	// CC:0083.01.0A.11.010, CC:0083.01.0A.11.011, CC:0083.01.0A.11.012,
+	// CC:0083.01.0A.11.013: CredentialSet MUST be answered by a
+	// CredentialReport. Match any report type other than ResponseToGet.
+	// Rejection reports like DuplicateCredential or WrongUserUniqueIdentifier
+	// may reference a *different* slot/type than the one we sent, so we match
+	// purely on report type.
+	return (
+		received.reportType
+			!== UserCredentialCredentialReportType.ResponseToGet
+	);
+}
+
 @CCCommand(UserCredentialCommand.CredentialSet)
-@useSupervision()
+@expectedCCResponse(
+	() => UserCredentialCCCredentialReport,
+	testResponseForUserCredentialCredentialSet,
+)
 export class UserCredentialCCCredentialSet extends UserCredentialCC {
 	public constructor(
 		options: WithAddress<UserCredentialCCCredentialSetOptions>,
@@ -2793,7 +2921,13 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			this.removeValue(
 				ctx,
 				UserCredentialCCValues.credential(
-					this.userId,
+					this.credentialType,
+					this.credentialSlot,
+				),
+			);
+			this.removeValue(
+				ctx,
+				UserCredentialCCValues.credentialOwner(
 					this.credentialType,
 					this.credentialSlot,
 				),
@@ -2801,7 +2935,6 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			this.removeValue(
 				ctx,
 				UserCredentialCCValues.credentialModifierType(
-					this.userId,
 					this.credentialType,
 					this.credentialSlot,
 				),
@@ -2809,7 +2942,6 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			this.removeValue(
 				ctx,
 				UserCredentialCCValues.credentialModifierNodeId(
-					this.userId,
 					this.credentialType,
 					this.credentialSlot,
 				),
@@ -2840,7 +2972,6 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			this.ensureMetadata(
 				ctx,
 				UserCredentialCCValues.credential(
-					this.userId,
 					this.credentialType,
 					this.credentialSlot,
 				),
@@ -2848,7 +2979,6 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 			this.setValue(
 				ctx,
 				UserCredentialCCValues.credential(
-					this.userId,
 					this.credentialType,
 					this.credentialSlot,
 				),
@@ -2860,8 +2990,15 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		}
 		this.setValue(
 			ctx,
+			UserCredentialCCValues.credentialOwner(
+				this.credentialType,
+				this.credentialSlot,
+			),
+			this.userId,
+		);
+		this.setValue(
+			ctx,
 			UserCredentialCCValues.credentialModifierType(
-				this.userId,
 				this.credentialType,
 				this.credentialSlot,
 			),
@@ -2870,7 +3007,6 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		this.setValue(
 			ctx,
 			UserCredentialCCValues.credentialModifierNodeId(
-				this.userId,
 				this.credentialType,
 				this.credentialSlot,
 			),
@@ -3301,6 +3437,29 @@ export class UserCredentialCCUserCredentialAssociationReport
 		);
 		this.payload[5] = this.status;
 		return super.serialize(ctx);
+	}
+
+	public persistValues(ctx: PersistValuesContext): boolean {
+		if (!super.persistValues(ctx)) return false;
+
+		if (
+			this.status !== 0
+			|| this.credentialType === UserCredentialType.None
+			|| this.credentialSlot === 0
+		) {
+			return true;
+		}
+
+		this.setValue(
+			ctx,
+			UserCredentialCCValues.credentialOwner(
+				this.credentialType,
+				this.credentialSlot,
+			),
+			this.destinationUserId,
+		);
+
+		return true;
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {

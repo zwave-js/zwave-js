@@ -69,7 +69,7 @@ integrationTest(
 				UserCredentialType.PINCode,
 			);
 			t.expect(pinCap).toBeDefined();
-			t.expect(pinCap!.numberOfCredentialSlots).toBe(1);
+			t.expect(pinCap!.numberOfCredentialSlots).toBe(10);
 			t.expect(pinCap!.minCredentialLength).toBe(4);
 			t.expect(pinCap!.maxCredentialLength).toBe(10);
 			t.expect(pinCap!.supportsCredentialLearn).toBe(false);
@@ -178,7 +178,7 @@ integrationTest(
 );
 
 integrationTest(
-	"getCredentialsCached maps each User Code CC user to a single PINCode credential",
+	"getCredentialsForUserCached maps each User Code CC user to a single PINCode credential",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -203,15 +203,44 @@ integrationTest(
 				UserIDStatus.Enabled,
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(2).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "5678");
 
-			const creds = node.accessControl.getCredentialsCached(1);
+			const creds = node.accessControl.getCredentialsForUserCached(1);
 			t.expect(creds.length).toBe(1);
 			t.expect(creds[0].type).toBe(UserCredentialType.PINCode);
 			t.expect(creds[0].slot).toBe(1);
 			t.expect(creds[0].data).toBe("1234");
 
+			t.expect(
+				node.accessControl.getCredentialCached(
+					UserCredentialType.PINCode,
+					2,
+				),
+			).toMatchObject({
+				userId: 2,
+				type: UserCredentialType.PINCode,
+				slot: 2,
+				data: "5678",
+			});
+			t.expect(
+				node.accessControl.getCredentialsForUserCached(2)[0].slot,
+			).toBe(2);
+			t.expect(
+				node.accessControl.getCredentialsByTypeCached(
+					UserCredentialType.PINCode,
+				).length,
+			).toBe(2);
+			t.expect(node.accessControl.getAllCredentialsCached().length).toBe(
+				2,
+			);
+
 			// Non-existent user has no credentials
-			t.expect(node.accessControl.getCredentialsCached(2).length).toBe(0);
+			t.expect(node.accessControl.getCredentialsForUserCached(3).length)
+				.toBe(0);
 		},
 	},
 );
@@ -247,16 +276,16 @@ integrationTest(
 			);
 
 			await node.accessControl.setCredential(
-				1,
+				2,
 				UserCredentialType.PINCode,
-				1,
+				2,
 				"1234",
 			);
 
 			t.expect(await credEvent).toMatchObject({
-				userId: 1,
+				userId: 2,
 				credentialType: UserCredentialType.PINCode,
-				credentialSlot: 1,
+				credentialSlot: 2,
 				data: "1234",
 			});
 		},
@@ -283,12 +312,12 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Pre-populate user 1
+			// Pre-populate user 2
 			node.valueDB.setValue(
-				UserCodeCCValues.userIdStatus(1).id,
+				UserCodeCCValues.userIdStatus(2).id,
 				UserIDStatus.Enabled,
 			);
-			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
+			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
 
 			const credEvent = createDeferredPromise<unknown>();
 			node.on(
@@ -297,16 +326,16 @@ integrationTest(
 			);
 
 			await node.accessControl.setCredential(
-				1,
+				2,
 				UserCredentialType.PINCode,
-				1,
+				2,
 				"5678",
 			);
 
 			t.expect(await credEvent).toMatchObject({
-				userId: 1,
+				userId: 2,
 				credentialType: UserCredentialType.PINCode,
-				credentialSlot: 1,
+				credentialSlot: 2,
 				data: "5678",
 			});
 		},
@@ -419,9 +448,9 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await node.accessControl.setCredential(
-				1,
+				2,
 				UserCredentialType.PINCode,
-				1,
+				2,
 				"1234",
 			);
 
@@ -429,12 +458,12 @@ integrationTest(
 				(frame) =>
 					frame.type === MockZWaveFrameType.Request
 					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
-					&& frame.payload.userCodes[0].userId === 1
+					&& frame.payload.userCodes[0].userId === 2
 					&& frame.payload.userCodes[0].userIdStatus
 						=== UserIDStatus.Enabled,
 				{
 					errorMessage:
-						"Should have sent ExtendedUserCodeSet for userId 1 with Enabled status",
+						"Should have sent ExtendedUserCodeSet for userId 2 with Enabled status",
 				},
 			);
 		},
@@ -462,9 +491,9 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await node.accessControl.setCredential(
-				1,
+				2,
 				UserCredentialType.PINCode,
-				1,
+				2,
 				"5678",
 			);
 
@@ -541,12 +570,12 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Pre-populate user 1
+			// Pre-populate user 2
 			node.valueDB.setValue(
-				UserCodeCCValues.userIdStatus(1).id,
+				UserCodeCCValues.userIdStatus(2).id,
 				UserIDStatus.Enabled,
 			);
-			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
+			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
 
 			const credEvent = createDeferredPromise<unknown>();
 			node.on(
@@ -555,15 +584,15 @@ integrationTest(
 			);
 
 			await node.accessControl.deleteCredential(
-				1,
+				2,
 				UserCredentialType.PINCode,
-				1,
+				2,
 			);
 
 			t.expect(await credEvent).toMatchObject({
-				userId: 1,
+				userId: 2,
 				credentialType: UserCredentialType.PINCode,
-				credentialSlot: 1,
+				credentialSlot: 2,
 			});
 		},
 	},
@@ -833,6 +862,100 @@ integrationTest(
 						"Should have sent ExtendedUserCodeSet for userId 1 with Available status",
 				},
 			);
+		},
+	},
+);
+
+// =============================================================================
+// Credential slot values other than the user ID are ignored
+// =============================================================================
+
+integrationTest(
+	"setCredential ignores slot !== userId and emits event with slot = userId",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const credEvent = createDeferredPromise<unknown>();
+			node.on(
+				"credential added",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			await node.accessControl.setCredential(
+				2,
+				UserCredentialType.PINCode,
+				99,
+				"1234",
+			);
+
+			t.expect(await credEvent).toMatchObject({
+				userId: 2,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 2,
+				data: "1234",
+			});
+		},
+	},
+);
+
+integrationTest(
+	"deleteCredential ignores slot !== userId and deletes the user's credential",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(2).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
+
+			const credEvent = createDeferredPromise<unknown>();
+			node.on(
+				"credential deleted",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			await node.accessControl.deleteCredential(
+				2,
+				UserCredentialType.PINCode,
+				99,
+			);
+
+			t.expect(await credEvent).toMatchObject({
+				userId: 2,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 2,
+			});
 		},
 	},
 );

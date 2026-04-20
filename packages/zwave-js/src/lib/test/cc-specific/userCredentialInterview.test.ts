@@ -263,7 +263,8 @@ integrationTest(
 				modifierNodeId: 0,
 			});
 
-			mockNode.state.set("UserCredential_cred_1_1_1", {
+			mockNode.state.set("UserCredential_cred_1_1", {
+				userId: 1,
 				credentialData: Bytes.from("1234", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -280,7 +281,8 @@ integrationTest(
 				modifierNodeId: 0,
 			});
 
-			mockNode.state.set("UserCredential_cred_3_1_2", {
+			mockNode.state.set("UserCredential_cred_1_2", {
+				userId: 3,
 				credentialData: Bytes.from("5678", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -305,12 +307,19 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						1,
 						UserCredentialType.PINCode,
 						1,
 					).endpoint(0),
 				),
 			).toBeDefined();
+			t.expect(
+				node.getValue(
+					UserCredentialCCValues.credentialOwner(
+						UserCredentialType.PINCode,
+						1,
+					).endpoint(0),
+				),
+			).toBe(1);
 
 			// User 3 should be discovered (gap at user 2)
 			t.expect(
@@ -329,12 +338,19 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						3,
 						UserCredentialType.PINCode,
 						2,
 					).endpoint(0),
 				),
 			).toBeDefined();
+			t.expect(
+				node.getValue(
+					UserCredentialCCValues.credentialOwner(
+						UserCredentialType.PINCode,
+						2,
+					).endpoint(0),
+				),
+			).toBe(3);
 		},
 	},
 );
@@ -500,7 +516,8 @@ integrationTest(
 				modifierNodeId: 0,
 			});
 
-			mockNode.state.set("UserCredential_cred_1_1_1", {
+			mockNode.state.set("UserCredential_cred_1_1", {
+				userId: 1,
 				credentialData: Bytes.from("1234", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -583,7 +600,8 @@ integrationTest(
 				modifierNodeId: 0,
 			});
 
-			mockNode.state.set("UserCredential_cred_1_1_1", {
+			mockNode.state.set("UserCredential_cred_1_1", {
+				userId: 1,
 				credentialData: Bytes.from("1234", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -712,14 +730,16 @@ integrationTest(
 			});
 
 			// PIN code credential
-			mockNode.state.set("UserCredential_cred_1_1_1", {
+			mockNode.state.set("UserCredential_cred_1_1", {
+				userId: 1,
 				credentialData: Bytes.from("1234", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
 			});
 
 			// Password credential
-			mockNode.state.set("UserCredential_cred_1_2_1", {
+			mockNode.state.set("UserCredential_cred_2_1", {
+				userId: 1,
 				credentialData: Bytes.from("password", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -731,7 +751,6 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						1,
 						UserCredentialType.PINCode,
 						1,
 					).endpoint(0),
@@ -742,7 +761,6 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						1,
 						UserCredentialType.Password,
 						1,
 					).endpoint(0),
@@ -918,13 +936,15 @@ integrationTest(
 			});
 
 			// Two PIN code credentials in slots 1 and 3 (gap at 2)
-			mockNode.state.set("UserCredential_cred_1_1_1", {
+			mockNode.state.set("UserCredential_cred_1_1", {
+				userId: 1,
 				credentialData: Bytes.from("1234", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
 			});
 
-			mockNode.state.set("UserCredential_cred_1_1_3", {
+			mockNode.state.set("UserCredential_cred_1_3", {
+				userId: 1,
 				credentialData: Bytes.from("5678", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -936,7 +956,6 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						1,
 						UserCredentialType.PINCode,
 						1,
 					).endpoint(0),
@@ -946,7 +965,6 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						1,
 						UserCredentialType.PINCode,
 						3,
 					).endpoint(0),
@@ -957,7 +975,6 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						1,
 						UserCredentialType.PINCode,
 						2,
 					).endpoint(0),
@@ -1017,7 +1034,8 @@ integrationTest(
 				modifierNodeId: 0,
 			});
 
-			mockNode.state.set("UserCredential_cred_2_1_1", {
+			mockNode.state.set("UserCredential_cred_1_1", {
+				userId: 2,
 				credentialData: Bytes.from("1111", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -1035,7 +1053,8 @@ integrationTest(
 				modifierNodeId: 0,
 			});
 
-			mockNode.state.set("UserCredential_cred_5_1_1", {
+			mockNode.state.set("UserCredential_cred_1_2", {
+				userId: 5,
 				credentialData: Bytes.from("5555", "ascii"),
 				modifierType: UserCredentialModifierType.Locally,
 				modifierNodeId: 0,
@@ -1060,22 +1079,36 @@ integrationTest(
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						2,
 						UserCredentialType.PINCode,
 						1,
 					).endpoint(0),
 				),
 			).toBeDefined();
+			t.expect(
+				node.getValue(
+					UserCredentialCCValues.credentialOwner(
+						UserCredentialType.PINCode,
+						1,
+					).endpoint(0),
+				),
+			).toBe(2);
 
 			t.expect(
 				node.getValue(
 					UserCredentialCCValues.credential(
-						5,
 						UserCredentialType.PINCode,
-						1,
+						2,
 					).endpoint(0),
 				),
 			).toBeDefined();
+			t.expect(
+				node.getValue(
+					UserCredentialCCValues.credentialOwner(
+						UserCredentialType.PINCode,
+						2,
+					).endpoint(0),
+				),
+			).toBe(5);
 
 			// User Get commands should have been sent during the interview
 			mockNode.assertReceivedControllerFrame(

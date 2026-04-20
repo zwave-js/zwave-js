@@ -94,10 +94,9 @@ const STATE_KEY_PREFIX = "UserCredential_";
 const StateKeys = {
 	user: (userId: number) => `${STATE_KEY_PREFIX}user_${userId}`,
 	credential: (
-		userId: number,
 		credentialType: UserCredentialType,
 		credentialSlot: number,
-	) => `${STATE_KEY_PREFIX}cred_${userId}_${credentialType}_${credentialSlot}`,
+	) => `${STATE_KEY_PREFIX}cred_${credentialType}_${credentialSlot}`,
 	adminPinCode: `${STATE_KEY_PREFIX}adminPinCode`,
 	keyLockerEntry: (
 		entryType: UserCredentialKeyLockerEntryType,
@@ -121,6 +120,7 @@ interface UserState {
 }
 
 interface CredentialState {
+	userId: number;
 	credentialData: Bytes;
 	modifierType: UserCredentialModifierType;
 	modifierNodeId: number;
@@ -176,8 +176,22 @@ function getCredential(
 	credentialType: UserCredentialType,
 	credentialSlot: number,
 ): CredentialState | undefined {
+	const credential = getCredentialByTypeAndSlot(
+		self,
+		credentialType,
+		credentialSlot,
+	);
+	if (credential?.userId !== userId) return undefined;
+	return credential;
+}
+
+function getCredentialByTypeAndSlot(
+	self: MockNode,
+	credentialType: UserCredentialType,
+	credentialSlot: number,
+): CredentialState | undefined {
 	return self.state.get(
-		StateKeys.credential(userId, credentialType, credentialSlot),
+		StateKeys.credential(credentialType, credentialSlot),
 	) as CredentialState | undefined;
 }
 
@@ -186,11 +200,14 @@ function setCredential(
 	userId: number,
 	credentialType: UserCredentialType,
 	credentialSlot: number,
-	data: CredentialState,
+	data: Omit<CredentialState, "userId">,
 ): void {
 	self.state.set(
-		StateKeys.credential(userId, credentialType, credentialSlot),
-		data,
+		StateKeys.credential(credentialType, credentialSlot),
+		{
+			userId,
+			...data,
+		},
 	);
 }
 
@@ -200,9 +217,13 @@ function deleteCredential(
 	credentialType: UserCredentialType,
 	credentialSlot: number,
 ): void {
-	self.state.delete(
-		StateKeys.credential(userId, credentialType, credentialSlot),
-	);
+	if (
+		getCredential(self, userId, credentialType, credentialSlot)
+			== undefined
+	) {
+		return;
+	}
+	self.state.delete(StateKeys.credential(credentialType, credentialSlot));
 }
 
 /** Get sorted list of all occupied user IDs. */
@@ -245,34 +266,33 @@ interface CredentialRef {
 	credentialSlot: number;
 }
 
-/** Get all credentials, sorted ascending by userId, credentialType, credentialSlot. */
+/** Get all credentials, sorted ascending by credentialType and credentialSlot. */
 function getAllCredentials(
 	self: MockNode,
 	capabilities: UserCredentialCCCapabilities,
 ): CredentialRef[] {
 	const result: CredentialRef[] = [];
-	const allUserIds = getAllUserIds(self, capabilities);
-	for (const userId of allUserIds) {
+	for (
+		const [credentialType, typeCapabilities] of capabilities
+			.supportedCredentialTypes
+	) {
 		for (
-			const [credentialType, typeCapabilities] of capabilities
-				.supportedCredentialTypes
+			let slot = 1;
+			slot <= typeCapabilities.numberOfCredentialSlots;
+			slot++
 		) {
-			for (
-				let slot = 1;
-				slot <= typeCapabilities.numberOfCredentialSlots;
-				slot++
-			) {
-				if (
-					getCredential(self, userId, credentialType, slot)
-						!== undefined
-				) {
-					result.push({
-						userId,
-						credentialType,
-						credentialSlot: slot,
-					});
-				}
-			}
+			const credential = getCredentialByTypeAndSlot(
+				self,
+				credentialType,
+				slot,
+			);
+			if (credential == undefined) continue;
+
+			result.push({
+				userId: credential.userId,
+				credentialType,
+				credentialSlot: slot,
+			});
 		}
 	}
 	return result;
@@ -465,9 +485,7 @@ function buildCredentialChecksumData(
 	capabilities: UserCredentialCCCapabilities,
 ): Bytes {
 	const allCreds = getAllCredentials(self, capabilities)
-		.filter((c) => c.credentialType === credentialType)
-		// Sort by slot ascending (getAllCredentials already sorts by slot within type)
-		.toSorted((a, b) => a.credentialSlot - b.credentialSlot);
+		.filter((c) => c.credentialType === credentialType);
 
 	const parts: Bytes[] = [];
 	for (const ref of allCreds) {
@@ -1587,6 +1605,11 @@ const respondToCredentialSet: MockNodeBehavior = {
 			credentialType,
 			credentialSlot,
 		);
+		const occupiedCred = getCredentialByTypeAndSlot(
+			self,
+			credentialType,
+			credentialSlot,
+		);
 
 		// Verify the user exists for Add/Modify
 		const user = getUser(self, userId);
@@ -1611,17 +1634,17 @@ const respondToCredentialSet: MockNodeBehavior = {
 		}
 
 		if (operationType === UserCredentialOperationType.Add) {
-			if (existingCred) {
+			if (occupiedCred) {
 				// Slot occupied — reject
 				const report = makeReport(
 					UserCredentialCredentialReportType
 						.CredentialAddRejectedLocationOccupied,
-					userId,
+					occupiedCred.userId,
 					credentialType,
 					credentialSlot,
-					existingCred.credentialData,
-					existingCred.modifierType,
-					existingCred.modifierNodeId,
+					occupiedCred.credentialData,
+					occupiedCred.modifierType,
+					occupiedCred.modifierNodeId,
 				);
 				await self.sendToController(
 					createMockZWaveRequestFrame(report, {
@@ -1631,7 +1654,7 @@ const respondToCredentialSet: MockNodeBehavior = {
 				return { action: "fail" };
 			}
 		} else if (operationType === UserCredentialOperationType.Modify) {
-			if (!existingCred) {
+			if (!occupiedCred) {
 				// Slot empty — reject
 				const report = makeReport(
 					UserCredentialCredentialReportType
@@ -1642,6 +1665,24 @@ const respondToCredentialSet: MockNodeBehavior = {
 					new Bytes(),
 					UserCredentialModifierType.DoesNotExist,
 					0,
+				);
+				await self.sendToController(
+					createMockZWaveRequestFrame(report, {
+						ackRequested: false,
+					}),
+				);
+				return { action: "fail" };
+			}
+			if (occupiedCred.userId !== userId) {
+				const report = makeReport(
+					UserCredentialCredentialReportType
+						.WrongUserUniqueIdentifier,
+					occupiedCred.userId,
+					credentialType,
+					credentialSlot,
+					occupiedCred.credentialData,
+					occupiedCred.modifierType,
+					occupiedCred.modifierNodeId,
 				);
 				await self.sendToController(
 					createMockZWaveRequestFrame(report, {
@@ -2194,18 +2235,11 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 		}
 
 		// Move: delete from source user, add to destination user
-		const credState = getCredential(
+		const credState = getCredentialByTypeAndSlot(
 			self,
-			credRef.userId,
 			credentialType,
 			credentialSlot,
 		)!;
-		deleteCredential(
-			self,
-			credRef.userId,
-			credentialType,
-			credentialSlot,
-		);
 		setCredential(self, destinationUserId, credentialType, credentialSlot, {
 			credentialData: credState.credentialData,
 			modifierType: UserCredentialModifierType.ZWave,

@@ -1514,6 +1514,7 @@ export type {
 	UserCredentialCCCredentialLearnStartOptions,
 	UserCredentialCCCredentialReportOptions,
 	UserCredentialCCCredentialSetOptions,
+	UserCredentialCCCredentialSetResult,
 	UserCredentialCCKeyLockerCapabilitiesReportOptions,
 	UserCredentialCCKeyLockerEntryGetOptions,
 	UserCredentialCCKeyLockerEntryReportOptions,
@@ -1526,6 +1527,7 @@ export type {
 	UserCredentialCCUserGetOptions,
 	UserCredentialCCUserReportOptions,
 	UserCredentialCCUserSetOptions,
+	UserCredentialCCUserSetResult,
 } from "./UserCredentialCC.js";
 import {
 	UserCredentialCC,
