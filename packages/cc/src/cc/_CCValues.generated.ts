@@ -9794,46 +9794,6 @@ export const UserCredentialCCValues = Object.freeze({
 			} as const satisfies CCValueOptions,
 		},
 	),
-	credentialModifierType: Object.assign(
-		(type: UserCredentialType, slot: number) => {
-			const property = "credentialModifierType";
-			const propertyKey = (type << 16) | slot;
-
-			return {
-				id: {
-					commandClass: CommandClasses["User Credential"],
-					property,
-					propertyKey,
-				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
-				get meta() {
-					return ValueMetadata.Any;
-				},
-			};
-		},
-		{
-			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
-					&& (({ property, propertyKey }) =>
-						property === "credentialModifierType"
-						&& typeof propertyKey === "number")(valueId);
-			},
-			options: {
-				internal: true,
-				minVersion: 1,
-				secret: false,
-				stateful: true,
-				supportsEndpoints: true,
-				autoCreate: true,
-			} as const satisfies CCValueOptions,
-		},
-	),
 	credentialOwner: Object.assign(
 		(type: UserCredentialType, slot: number) => {
 			const property = "credentialOwner";
@@ -9862,6 +9822,46 @@ export const UserCredentialCCValues = Object.freeze({
 						=== CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "credentialOwner"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	credentialModifierType: Object.assign(
+		(type: UserCredentialType, slot: number) => {
+			const property = "credentialModifierType";
+			const propertyKey = (type << 16) | slot;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credentialModifierType"
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {

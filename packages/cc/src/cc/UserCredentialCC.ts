@@ -449,7 +449,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	public async setUser(
 		options: UserCredentialCCUserSetOptions,
-	): Promise<UserCredentialCCUserSetResult | undefined> {
+	): Promise<UserCredentialCCUserReport | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserSet,
@@ -460,24 +460,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		const response = await this.host.sendCommand<
-			UserCredentialCCUserReport
-		>(cc, this.commandOptions);
-		if (response) {
-			return pick(response, [
-				"endpointIndex",
-				"reportType",
-				"userId",
-				"modifierType",
-				"modifierNodeId",
-				"userType",
-				"active",
-				"credentialRule",
-				"expiringTimeoutMinutes",
-				"nameEncoding",
-				"userName",
-			]);
-		}
+		return this.host.sendCommand<UserCredentialCCUserReport>(
+			cc,
+			this.commandOptions,
+		);
 	}
 
 	@validateArgs()
@@ -516,7 +502,7 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	public async setCredential(
 		options: UserCredentialCCCredentialSetOptions,
-	): Promise<UserCredentialCCCredentialSetResult | undefined> {
+	): Promise<UserCredentialCCCredentialReport | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.CredentialSet,
@@ -527,22 +513,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		const response = await this.host.sendCommand<
-			UserCredentialCCCredentialReport
-		>(cc, this.commandOptions);
-		if (response) {
-			return pick(response, [
-				"endpointIndex",
-				"reportType",
-				"userId",
-				"credentialType",
-				"credentialSlot",
-				"credentialReadBack",
-				"credentialData",
-				"modifierType",
-				"modifierNodeId",
-			]);
-		}
+		return this.host.sendCommand<UserCredentialCCCredentialReport>(
+			cc,
+			this.commandOptions,
+		);
 	}
 
 	@validateArgs()
@@ -638,19 +612,21 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 
 	@validateArgs()
 	public async setUserCredentialAssociation(
-		options: UserCredentialCCUserCredentialAssociationSetOptions,
-	): Promise<SupervisionResult | undefined> {
+		options: UserCredentialCCAssociationSetOptions,
+	): Promise<UserCredentialCCAssociationReport | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserCredentialAssociationSet,
 		);
 
-		const cc = new UserCredentialCCUserCredentialAssociationSet({
+		const cc = new UserCredentialCCAssociationSet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		return this.host.sendCommand(cc, this.commandOptions);
+		return this.host.sendCommand<
+			UserCredentialCCAssociationReport
+		>(cc, this.commandOptions);
 	}
 
 	// oxlint-disable-next-line typescript/explicit-module-boundary-types
@@ -914,14 +890,14 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 
 	@validateArgs()
 	public async sendUserCredentialAssociationReport(
-		options: UserCredentialCCUserCredentialAssociationReportOptions,
+		options: UserCredentialCCAssociationReportOptions,
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserCredentialAssociationReport,
 		);
 
-		const cc = new UserCredentialCCUserCredentialAssociationReport({
+		const cc = new UserCredentialCCAssociationReport({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 			...options,
@@ -1992,22 +1968,6 @@ export type UserCredentialCCUserSetOptions =
 		}
 	);
 
-// @publicAPI
-export type UserCredentialCCUserSetResult = Pick<
-	UserCredentialCCUserReport,
-	| "endpointIndex"
-	| "reportType"
-	| "userId"
-	| "modifierType"
-	| "modifierNodeId"
-	| "userType"
-	| "active"
-	| "credentialRule"
-	| "expiringTimeoutMinutes"
-	| "nameEncoding"
-	| "userName"
->;
-
 function testResponseForUserCredentialUserSet(
 	sent: UserCredentialCCUserSet,
 	received: UserCredentialCCUserReport,
@@ -2604,20 +2564,6 @@ export type UserCredentialCCCredentialSetOptions =
 			credentialData?: undefined;
 		}
 	);
-
-// @publicAPI
-export type UserCredentialCCCredentialSetResult = Pick<
-	UserCredentialCCCredentialReport,
-	| "endpointIndex"
-	| "reportType"
-	| "userId"
-	| "credentialType"
-	| "credentialSlot"
-	| "credentialReadBack"
-	| "credentialData"
-	| "modifierType"
-	| "modifierNodeId"
->;
 
 function testResponseForUserCredentialCredentialSet(
 	_sent: UserCredentialCCCredentialSet,
@@ -3306,79 +3252,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 // ============================================================
 
 // @publicAPI
-export interface UserCredentialCCUserCredentialAssociationSetOptions {
-	credentialType: UserCredentialType;
-	credentialSlot: number;
-	destinationUserId: number;
-}
-
-@CCCommand(UserCredentialCommand.UserCredentialAssociationSet)
-@useSupervision()
-export class UserCredentialCCUserCredentialAssociationSet
-	extends UserCredentialCC
-{
-	public constructor(
-		options: WithAddress<
-			UserCredentialCCUserCredentialAssociationSetOptions
-		>,
-	) {
-		super(options);
-		this.credentialType = options.credentialType;
-		this.credentialSlot = options.credentialSlot;
-		this.destinationUserId = options.destinationUserId;
-	}
-
-	public credentialType: UserCredentialType;
-	public credentialSlot: number;
-	public destinationUserId: number;
-
-	public static from(
-		raw: CCRaw,
-		ctx: CCParsingContext,
-	): UserCredentialCCUserCredentialAssociationSet {
-		validatePayload(raw.payload.length >= 5);
-		const credentialType: UserCredentialType = raw.payload[0];
-		const credentialSlot = raw.payload.readUInt16BE(1);
-		const destinationUserId = raw.payload.readUInt16BE(
-			3,
-		);
-
-		return new this({
-			nodeId: ctx.sourceNodeId,
-			credentialType,
-			credentialSlot,
-			destinationUserId,
-		});
-	}
-
-	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.alloc(5);
-		this.payload[0] = this.credentialType;
-		this.payload.writeUInt16BE(this.credentialSlot, 1);
-		this.payload.writeUInt16BE(
-			this.destinationUserId,
-			3,
-		);
-		return super.serialize(ctx);
-	}
-
-	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		return {
-			...super.toLogEntry(ctx),
-			message: {
-				"credential type": getEnumMemberName(
-					UserCredentialType,
-					this.credentialType,
-				),
-				"credential slot": this.credentialSlot,
-				"destination user ID": this.destinationUserId,
-			},
-		};
-	}
-}
-
-// @publicAPI
-export interface UserCredentialCCUserCredentialAssociationReportOptions {
+export interface UserCredentialCCAssociationReportOptions {
 	credentialType: UserCredentialType;
 	credentialSlot: number;
 	destinationUserId: number;
@@ -3386,13 +3260,9 @@ export interface UserCredentialCCUserCredentialAssociationReportOptions {
 }
 
 @CCCommand(UserCredentialCommand.UserCredentialAssociationReport)
-export class UserCredentialCCUserCredentialAssociationReport
-	extends UserCredentialCC
-{
+export class UserCredentialCCAssociationReport extends UserCredentialCC {
 	public constructor(
-		options: WithAddress<
-			UserCredentialCCUserCredentialAssociationReportOptions
-		>,
+		options: WithAddress<UserCredentialCCAssociationReportOptions>,
 	) {
 		super(options);
 		this.credentialType = options.credentialType;
@@ -3404,7 +3274,7 @@ export class UserCredentialCCUserCredentialAssociationReport
 	public static from(
 		raw: CCRaw,
 		ctx: CCParsingContext,
-	): UserCredentialCCUserCredentialAssociationReport {
+	): UserCredentialCCAssociationReport {
 		validatePayload(raw.payload.length >= 6);
 		const credentialType: UserCredentialType = raw.payload[0];
 		const credentialSlot = raw.payload.readUInt16BE(1);
@@ -3473,6 +3343,87 @@ export class UserCredentialCCUserCredentialAssociationReport
 				"credential slot": this.credentialSlot,
 				"destination user ID": this.destinationUserId,
 				status: this.status,
+			},
+		};
+	}
+}
+
+// @publicAPI
+export interface UserCredentialCCAssociationSetOptions {
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	destinationUserId: number;
+}
+
+function testResponseForUserCredentialAssociationSet(
+	sent: UserCredentialCCAssociationSet,
+	received: UserCredentialCCAssociationReport,
+) {
+	return (
+		sent.credentialType === received.credentialType
+		&& sent.credentialSlot === received.credentialSlot
+	);
+}
+
+@CCCommand(UserCredentialCommand.UserCredentialAssociationSet)
+@expectedCCResponse(
+	UserCredentialCCAssociationReport,
+	testResponseForUserCredentialAssociationSet,
+)
+export class UserCredentialCCAssociationSet extends UserCredentialCC {
+	public constructor(
+		options: WithAddress<UserCredentialCCAssociationSetOptions>,
+	) {
+		super(options);
+		this.credentialType = options.credentialType;
+		this.credentialSlot = options.credentialSlot;
+		this.destinationUserId = options.destinationUserId;
+	}
+
+	public credentialType: UserCredentialType;
+	public credentialSlot: number;
+	public destinationUserId: number;
+
+	public static from(
+		raw: CCRaw,
+		ctx: CCParsingContext,
+	): UserCredentialCCAssociationSet {
+		validatePayload(raw.payload.length >= 5);
+		const credentialType: UserCredentialType = raw.payload[0];
+		const credentialSlot = raw.payload.readUInt16BE(1);
+		const destinationUserId = raw.payload.readUInt16BE(
+			3,
+		);
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			credentialType,
+			credentialSlot,
+			destinationUserId,
+		});
+	}
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.alloc(5);
+		this.payload[0] = this.credentialType;
+		this.payload.writeUInt16BE(this.credentialSlot, 1);
+		this.payload.writeUInt16BE(
+			this.destinationUserId,
+			3,
+		);
+		return super.serialize(ctx);
+	}
+
+	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
+		return {
+			...super.toLogEntry(ctx),
+			message: {
+				"credential type": getEnumMemberName(
+					UserCredentialType,
+					this.credentialType,
+				),
+				"credential slot": this.credentialSlot,
+				"destination user ID": this.destinationUserId,
 			},
 		};
 	}

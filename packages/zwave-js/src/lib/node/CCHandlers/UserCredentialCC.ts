@@ -4,6 +4,7 @@ import {
 	UserCredentialUserReportType,
 } from "@zwave-js/cc";
 import {
+	type UserCredentialCCAssociationReport,
 	type UserCredentialCCCredentialLearnReport,
 	type UserCredentialCCCredentialReport,
 	type UserCredentialCCUserReport,
@@ -105,6 +106,23 @@ export function handleUserCredentialCredentialReport(
 			}
 			break;
 	}
+}
+
+export function handleUserCredentialAssociationReport(
+	node: ZWaveNode,
+	report: UserCredentialCCAssociationReport,
+): void {
+	// A successful association is semantically a modification of the credential's
+	// owner. Applications can observe it via the existing "credential modified"
+	// event. Failure statuses are delivered to the initiating node via the
+	// command response and do not fan out to listeners.
+	if (report.status !== 0) return;
+	const endpoint = node.getEndpoint(report.endpointIndex) ?? node;
+	node.emit("credential modified", endpoint, {
+		userId: report.destinationUserId,
+		credentialType: report.credentialType,
+		credentialSlot: report.credentialSlot,
+	});
 }
 
 export function handleUserCredentialCredentialLearnReport(

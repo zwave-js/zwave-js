@@ -74,7 +74,7 @@ async cancelCredentialLearn(): Promise<
 
 ```ts
 async setUserCredentialAssociation(
-	options: UserCredentialCCUserCredentialAssociationSetOptions,
+	options: UserCredentialCCAssociationSetOptions,
 ): Promise<SupervisionResult | undefined>;
 ```
 
@@ -183,7 +183,7 @@ async sendCredentialLearnReport(
 
 ```ts
 async sendUserCredentialAssociationReport(
-	options: UserCredentialCCUserCredentialAssociationReportOptions,
+	options: UserCredentialCCAssociationReportOptions,
 ): Promise<SupervisionResult | undefined>;
 ```
 

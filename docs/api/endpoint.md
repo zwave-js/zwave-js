@@ -344,8 +344,11 @@ interface CredentialCapabilities {
 	>;
 	supportsAdminCode: boolean;
 	supportsAdminCodeDeactivation: boolean;
+	supportsCredentialAssignment: boolean;
 }
 ```
+
+`supportsCredentialAssignment` is `true` if existing credentials can be re-assigned between users via [`assignCredential`](#assigncredential) without re-enrolling them. Only supported on nodes using the **User Credential CC**.
 
 Each entry in `supportedCredentialTypes` maps a `UserCredentialType` to its capabilities:
 
@@ -595,6 +598,33 @@ Deletes the given credential. Throws if the credential slot is out of range.
 
 > [!NOTE] For nodes using the **User Code CC**, deleting a credential also deletes the associated user, because User Code CC does not distinguish between users and their credentials.
 
+#### `assignCredential`
+
+```ts
+assignCredential(
+	type: UserCredentialType,
+	slot: number,
+	destinationUserId: number,
+): Promise<AssignCredentialStatus>
+```
+
+Re-assigns an existing credential to a different user without re-enrolling it. Useful for credentials that were added locally on the device (e.g. a biometric) and need to be attached to an existing user that already has other credentials.
+
+Only supported on nodes using the **User Credential CC**. Check the `supportsCredentialAssignment` property of [`getCredentialCapabilitiesCached`](#getcredentialcapabilitiescached) before calling. Throws `CC_NotSupported` on nodes that do not support the User Credential CC.
+
+On success, a [`"credential modified"`](#quotcredential-modifiedquot) event is emitted so UIs can stay in sync.
+
+<!-- #import AssignCredentialStatus from "zwave-js" -->
+
+```ts
+enum AssignCredentialStatus {
+	OK = 0,
+	Error_InvalidCredential = 1,
+	Error_InvalidUser = 2,
+	Error_Unknown = 0xff,
+}
+```
+
 ### Credential learning
 
 Some devices support learning credentials directly from user input (e.g. scanning a fingerprint on a biometric lock). This functionality is only available on nodes using the **User Credential CC** and will throw on other nodes.
@@ -685,7 +715,7 @@ interface UserDeletedArgs {
 (endpoint: Endpoint, args: CredentialChangedArgs) => void
 ```
 
-A credential was added or modified. The `args` object contains the credential data after the change:
+A credential was added or modified. The `args` object contains the credential data after the change. `"credential modified"` is also emitted when an existing credential is re-assigned to a different user via [`assignCredential`](#assigncredential); in that case `args.data` may be `undefined` because re-assignment does not carry the credential data.
 
 <!-- #import CredentialChangedArgs from "zwave-js" -->
 

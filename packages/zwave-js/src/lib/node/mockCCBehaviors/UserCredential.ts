@@ -16,6 +16,8 @@ import {
 	UserCredentialCCAdminPinCodeSet,
 	UserCredentialCCAllUsersChecksumGet,
 	UserCredentialCCAllUsersChecksumReport,
+	UserCredentialCCAssociationReport,
+	UserCredentialCCAssociationSet,
 	UserCredentialCCCredentialCapabilitiesGet,
 	UserCredentialCCCredentialCapabilitiesReport,
 	UserCredentialCCCredentialChecksumGet,
@@ -35,8 +37,6 @@ import {
 	UserCredentialCCUserCapabilitiesReport,
 	UserCredentialCCUserChecksumGet,
 	UserCredentialCCUserChecksumReport,
-	UserCredentialCCUserCredentialAssociationReport,
-	UserCredentialCCUserCredentialAssociationSet,
 	UserCredentialCCUserGet,
 	UserCredentialCCUserReport,
 	UserCredentialCCUserSet,
@@ -1778,6 +1778,7 @@ const respondToCredentialSet: MockNodeBehavior = {
 
 		// Store the credential
 		const newCred: CredentialState = {
+			userId,
 			credentialData,
 			// CC:0083.01.0C.11.030: When Modifier Type is Z-Wave, Node ID
 			// MUST be the sending node's ID.
@@ -2117,7 +2118,7 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 	async handleCC(controller, self, receivedCC) {
 		if (
 			!(receivedCC
-				instanceof UserCredentialCCUserCredentialAssociationSet)
+				instanceof UserCredentialCCAssociationSet)
 		) return;
 
 		const setCC = receivedCC;
@@ -2129,7 +2130,7 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 		// Validate credential type
 		if (!capabilities.supportedCredentialTypes.has(credentialType)) {
 			// CC:0083.01.13.11.000: Status 0x01 = Type Invalid
-			const report = new UserCredentialCCUserCredentialAssociationReport({
+			const report = new UserCredentialCCAssociationReport({
 				nodeId: controller.ownNodeId,
 				credentialType,
 				credentialSlot,
@@ -2153,7 +2154,7 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 			|| credentialSlot > typeCaps.numberOfCredentialSlots
 		) {
 			// Status 0x02 = Slot Invalid
-			const report = new UserCredentialCCUserCredentialAssociationReport({
+			const report = new UserCredentialCCAssociationReport({
 				nodeId: controller.ownNodeId,
 				credentialType,
 				credentialSlot,
@@ -2178,7 +2179,7 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 
 		if (!credRef) {
 			// Status 0x03 = Slot Empty
-			const report = new UserCredentialCCUserCredentialAssociationReport({
+			const report = new UserCredentialCCAssociationReport({
 				nodeId: controller.ownNodeId,
 				credentialType,
 				credentialSlot,
@@ -2199,7 +2200,7 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 			|| destinationUserId > capabilities.numberOfSupportedUsers
 		) {
 			// Status 0x04 = Destination UUID Invalid
-			const report = new UserCredentialCCUserCredentialAssociationReport({
+			const report = new UserCredentialCCAssociationReport({
 				nodeId: controller.ownNodeId,
 				credentialType,
 				credentialSlot,
@@ -2219,7 +2220,7 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 		const destUser = getUser(self, destinationUserId);
 		if (!destUser) {
 			// Status 0x05 = Destination UUID Nonexistent
-			const report = new UserCredentialCCUserCredentialAssociationReport({
+			const report = new UserCredentialCCAssociationReport({
 				nodeId: controller.ownNodeId,
 				credentialType,
 				credentialSlot,
@@ -2248,7 +2249,7 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 
 		// CC:0083.01.13.11.000: Status 0x00 = Success
 		// CC:0083.01.13.11.002: MUST also be sent to Lifeline
-		const report = new UserCredentialCCUserCredentialAssociationReport({
+		const report = new UserCredentialCCAssociationReport({
 			nodeId: controller.ownNodeId,
 			credentialType,
 			credentialSlot,

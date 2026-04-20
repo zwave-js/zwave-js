@@ -1,5 +1,6 @@
 import {
 	type UserCredentialCapability,
+	UserCredentialCommand,
 	UserCredentialCredentialReportType,
 	UserCredentialOperationType,
 	UserCredentialRule,
@@ -11,10 +12,9 @@ import {
 import { type UserCodeCCAPI, UserCodeCCValues } from "@zwave-js/cc/UserCodeCC";
 import {
 	type UserCredentialCCAPI,
+	type UserCredentialCCAssociationReport,
 	type UserCredentialCCCredentialReport,
-	type UserCredentialCCCredentialSetResult,
 	type UserCredentialCCUserReport,
-	type UserCredentialCCUserSetResult,
 	UserCredentialCCValues,
 	normalizeCredentialData,
 } from "@zwave-js/cc/UserCredentialCC";
@@ -26,10 +26,6 @@ import {
 	supervisedCommandSucceeded,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
-import {
-	handleUserCredentialCredentialReport,
-	handleUserCredentialUserReport,
-} from "../CCHandlers/UserCredentialCC.js";
 import { FeatureAPI } from "./FeatureAPI.js";
 
 export interface UserCapabilities {
@@ -46,6 +42,11 @@ export interface CredentialCapabilities {
 	>;
 	supportsAdminCode: boolean;
 	supportsAdminCodeDeactivation: boolean;
+	/**
+	 * Whether existing credentials can be reassigned between users via
+	 * {@link AccessControlAPI.assignCredential} without re-enrolling them.
+	 */
+	supportsCredentialAssignment: boolean;
 }
 
 export interface UserData {
@@ -96,11 +97,21 @@ export enum SetCredentialStatus {
 	Error_Unknown = 0xff,
 }
 
+/** Result status of an assignCredential call */
+export enum AssignCredentialStatus {
+	OK = 0,
+	/** Spec statuses 0x01 / 0x02 / 0x03 — credential type / slot invalid or empty */
+	Error_InvalidCredential = 1,
+	/** Spec statuses 0x04 / 0x05 — destination user invalid or nonexistent */
+	Error_InvalidUser = 2,
+	Error_Unknown = 0xff,
+}
+
 function u3cUserSetResultToStatus(
-	result: UserCredentialCCUserSetResult | undefined,
+	report: UserCredentialCCUserReport | undefined,
 ): SetUserStatus {
-	if (!result) return SetUserStatus.Error_Unknown;
-	switch (result.reportType) {
+	if (!report) return SetUserStatus.Error_Unknown;
+	switch (report.reportType) {
 		case UserCredentialUserReportType.UserAdded:
 		case UserCredentialUserReportType.UserModified:
 		case UserCredentialUserReportType.UserDeleted:
@@ -116,10 +127,10 @@ function u3cUserSetResultToStatus(
 }
 
 function u3cCredentialSetResultToStatus(
-	result: UserCredentialCCCredentialSetResult | undefined,
+	report: UserCredentialCCCredentialReport | undefined,
 ): SetCredentialStatus {
-	if (!result) return SetCredentialStatus.Error_Unknown;
-	switch (result.reportType) {
+	if (!report) return SetCredentialStatus.Error_Unknown;
+	switch (report.reportType) {
 		case UserCredentialCredentialReportType.CredentialAdded:
 		case UserCredentialCredentialReportType.CredentialModified:
 		case UserCredentialCredentialReportType.CredentialDeleted:
@@ -144,35 +155,23 @@ function u3cCredentialSetResultToStatus(
 	}
 }
 
-/**
- * Dispatches event emission for a UserReport received as a response to a UserSet
- * command. Normally the driver's handleCommand pipeline emits events for
- * unsolicited reports, but responses matched to a pending transaction bypass that
- * path. Re-invoke the handler here so applications observe the same events
- * regardless of whether the report arrived as a response or unsolicited.
- */
-function emitUserSetEvent(
-	endpoint: FeatureAPI["endpoint"],
-	result: UserCredentialCCUserSetResult,
-): void {
-	const node = endpoint.tryGetNode();
-	if (!node) return;
-	handleUserCredentialUserReport(
-		node,
-		result as unknown as UserCredentialCCUserReport,
-	);
-}
-
-function emitCredentialSetEvent(
-	endpoint: FeatureAPI["endpoint"],
-	result: UserCredentialCCCredentialSetResult,
-): void {
-	const node = endpoint.tryGetNode();
-	if (!node) return;
-	handleUserCredentialCredentialReport(
-		node,
-		result as unknown as UserCredentialCCCredentialReport,
-	);
+function u3cAssociationResultToStatus(
+	report: UserCredentialCCAssociationReport | undefined,
+): AssignCredentialStatus {
+	if (!report) return AssignCredentialStatus.Error_Unknown;
+	switch (report.status) {
+		case 0x00:
+			return AssignCredentialStatus.OK;
+		case 0x01:
+		case 0x02:
+		case 0x03:
+			return AssignCredentialStatus.Error_InvalidCredential;
+		case 0x04:
+		case 0x05:
+			return AssignCredentialStatus.Error_InvalidUser;
+		default:
+			return AssignCredentialStatus.Error_Unknown;
+	}
 }
 
 const NON_PIN_CHARS = /[^0-9]/;
@@ -290,6 +289,9 @@ export class AccessControlAPI extends FeatureAPI {
 					UserCredentialCCValues.supportsAdminCodeDeactivation
 						.endpoint(this.endpoint.index),
 				) ?? false,
+				supportsCredentialAssignment: this.#u3cAPI().supportsCommand(
+					UserCredentialCommand.UserCredentialAssociationSet,
+				) === true,
 			};
 		} else {
 			const maxUsers = this.getValue<number>(
@@ -327,6 +329,8 @@ export class AccessControlAPI extends FeatureAPI {
 						this.endpoint.index,
 					),
 				) ?? false,
+				// User Code CC has no equivalent to credential reassignment
+				supportsCredentialAssignment: false,
 			};
 		}
 	}
@@ -491,7 +495,7 @@ export class AccessControlAPI extends FeatureAPI {
 				?? existing?.userType
 				?? UserCredentialUserType.General;
 
-			let result: UserCredentialCCUserSetResult | undefined;
+			let result: UserCredentialCCUserReport | undefined;
 			if (userType === UserCredentialUserType.Expiring) {
 				result = await api.setUser({
 					operationType,
@@ -517,7 +521,7 @@ export class AccessControlAPI extends FeatureAPI {
 				});
 			}
 
-			if (result) emitUserSetEvent(this.endpoint, result);
+			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
 			return u3cUserSetResultToStatus(result);
 		} else {
 			const api = this.#ucAPI();
@@ -601,7 +605,7 @@ export class AccessControlAPI extends FeatureAPI {
 				operationType: UserCredentialOperationType.Delete,
 				userId,
 			});
-			if (raw) emitUserSetEvent(this.endpoint, raw);
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			const status = u3cUserSetResultToStatus(raw);
 			if (status === SetUserStatus.OK) {
 				this.#purgeCachedCredentials(userId);
@@ -649,7 +653,7 @@ export class AccessControlAPI extends FeatureAPI {
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
 			});
-			if (raw) emitUserSetEvent(this.endpoint, raw);
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			const status = u3cUserSetResultToStatus(raw);
 			if (status === SetUserStatus.OK) {
 				this.#purgeAllCachedUsersAndCredentials();
@@ -875,7 +879,7 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialSlot: slot,
 				credentialData,
 			});
-			if (raw) emitCredentialSetEvent(this.endpoint, raw);
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			return u3cCredentialSetResultToStatus(raw);
 		} else {
 			// User Code CC stores exactly one credential per user slot. Ignore the
@@ -959,7 +963,7 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialType: type,
 				credentialSlot: slot,
 			});
-			if (raw) emitCredentialSetEvent(this.endpoint, raw);
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			return u3cCredentialSetResultToStatus(raw);
 		} else {
 			// User Code CC stores exactly one credential per user slot. Ignore the
@@ -995,6 +999,44 @@ export class AccessControlAPI extends FeatureAPI {
 				? SetCredentialStatus.OK
 				: SetCredentialStatus.Error_Unknown;
 		}
+	}
+
+	/**
+	 * Assigns an existing credential to a different user, without re-enrolling
+	 * it. Useful for credentials that were added locally on the device (e.g. a
+	 * biometric auto-assigned to a fresh user) that need to be attached to an
+	 * existing user which already has other credentials.
+	 *
+	 * Only supported on nodes using the User Credential CC. Use
+	 * {@link getCredentialCapabilitiesCached} to check for support via the
+	 * `supportsCredentialAssignment` property.
+	 *
+	 * This communicates with the node.
+	 */
+	public async assignCredential(
+		type: UserCredentialType,
+		slot: number,
+		destinationUserId: number,
+	): Promise<AssignCredentialStatus> {
+		if (!this.#usesUserCredentialCC) {
+			throw new ZWaveError(
+				"This node does not support assigning a credential to a different user",
+				ZWaveErrorCodes.CC_NotSupported,
+			);
+		}
+
+		this.#assertValidSlot(type, slot);
+
+		const api = this.#u3cAPI();
+		const response = await api.setUserCredentialAssociation({
+			credentialType: type,
+			credentialSlot: slot,
+			destinationUserId,
+		});
+		if (response) {
+			await this.endpoint.tryGetNode()?.handleCommand(response);
+		}
+		return u3cAssociationResultToStatus(response);
 	}
 
 	/**
