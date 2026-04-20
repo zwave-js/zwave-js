@@ -1,0 +1,29 @@
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0xdead",
+	"label": "Test Lock",
+	"description": "With additive alarm mapping",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"alarmMapping": [
+			{
+				"from": {
+					"alarmType": 18
+				},
+				"to": {
+					"notificationType": 6,
+					"notificationEvent": 5
+				}
+			}
+		]
+	}
+}
