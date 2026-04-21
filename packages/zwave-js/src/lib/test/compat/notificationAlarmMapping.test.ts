@@ -116,6 +116,7 @@ integrationTest(
 				.getValue(
 					NotificationCCValues.supportedNotificationEvents(0x06).id,
 				);
+			// 0x05 is added by the alarmMapping compat flag
 			t.expect(supportedAccessControlEvents).toContain(0x05);
 			t.expect(supportedAccessControlEvents).toContain(0x16);
 
