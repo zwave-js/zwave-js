@@ -23,8 +23,22 @@
 		"specificDeviceClass": 7,
 		"commandClasses": {
 			"includedInsecurely": [
-				94, 34, 133, 112, 86, 122, 114, 115, 85, 134, 89, 90, 108, 116,
-				152, 159
+				94,
+				34,
+				133,
+				112,
+				86,
+				122,
+				114,
+				115,
+				85,
+				134,
+				89,
+				90,
+				108,
+				116,
+				152,
+				159
 			],
 			"includedSecurelyInsecureCCs": [],
 			"includedSecurelySecureCCs": []

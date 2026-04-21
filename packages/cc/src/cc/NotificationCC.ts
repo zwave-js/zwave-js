@@ -775,10 +775,12 @@ export class NotificationCC extends CommandClass {
 		const node = this.getNode(ctx)!;
 		const supportedNotifications = new Map<number, Set<number>>();
 		// Preserve the notification types and events discovered during the interview
-		for (const type of (this.getValue<readonly number[]>(
-			ctx,
-			NotificationCCValues.supportedNotificationTypes,
-		) ?? [])) {
+		for (
+			const type of (this.getValue<readonly number[]>(
+				ctx,
+				NotificationCCValues.supportedNotificationTypes,
+			) ?? [])
+		) {
 			supportedNotifications.set(
 				type,
 				new Set(
