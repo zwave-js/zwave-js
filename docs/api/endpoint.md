@@ -344,6 +344,10 @@ interface CredentialCapabilities {
 	>;
 	supportsAdminCode: boolean;
 	supportsAdminCodeDeactivation: boolean;
+	/**
+	 * Whether existing credentials can be reassigned between users via
+	 * {@link AccessControlAPI.assignCredential} without re-enrolling them.
+	 */
 	supportsCredentialAssignment: boolean;
 }
 ```
@@ -505,7 +509,7 @@ interface CredentialData {
 }
 ```
 
-#### `getCredentials`
+#### `getCredentialsForUser`
 
 ```ts
 getCredentialsForUser(
@@ -619,7 +623,9 @@ On success, a [`"credential modified"`](#quotcredential-modifiedquot) event is e
 ```ts
 enum AssignCredentialStatus {
 	OK = 0,
+	/** Spec statuses 0x01 / 0x02 / 0x03 — credential type / slot invalid or empty */
 	Error_InvalidCredential = 1,
+	/** Spec statuses 0x04 / 0x05 — destination user invalid or nonexistent */
 	Error_InvalidUser = 2,
 	Error_Unknown = 0xff,
 }

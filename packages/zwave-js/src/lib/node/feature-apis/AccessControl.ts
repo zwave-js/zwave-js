@@ -343,6 +343,7 @@ export class AccessControlAPI extends FeatureAPI {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			const result = await api.getUser(userId);
+			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
 			if (!result?.userId) return undefined;
 			return {
 				userId: result.userId,
@@ -388,6 +389,9 @@ export class AccessControlAPI extends FeatureAPI {
 			let nextUserId = 0;
 			do {
 				const result = await api.getUser(nextUserId);
+				if (result) {
+					await this.endpoint.tryGetNode()?.handleCommand(result);
+				}
 				if (!result?.userId) break;
 				users.push({
 					userId: result.userId,
@@ -686,6 +690,7 @@ export class AccessControlAPI extends FeatureAPI {
 
 		if (this.#usesUserCredentialCC) {
 			const result = await this.#u3cAPI().getCredential(0, type, slot);
+			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
 			return this.#mapCredentialData(result);
 		} else {
 			const api = this.#ucAPI();
@@ -1328,6 +1333,7 @@ export class AccessControlAPI extends FeatureAPI {
 				queryType,
 				querySlot,
 			);
+			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
 			const credential = this.#mapCredentialData(result);
 			// No credential means the walk is exhausted or the current selector did
 			// not resolve to a valid entry on this node.
@@ -1527,12 +1533,14 @@ export class AccessControlAPI extends FeatureAPI {
 		const owner = this.#getCredentialOwner_U3C(type, slot);
 		if (owner == undefined) return undefined;
 
+		// When credentialReadBack is false, the node never returns credential
+		// data. In that case, we still know the slot is occupied and to which
+		// user it belongs, and return the credential without data.
 		const data = this.getValue<string | Uint8Array>(
 			UserCredentialCCValues.credential(type, slot).endpoint(
 				this.endpoint.index,
 			),
 		);
-		if (data == undefined) return undefined;
 		return { userId: owner, type, slot, data };
 	}
 

@@ -446,6 +446,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 	}
 
 	// User Management
+	/**
+	 * Applications should not use this method directly. Prefer the
+	 * `endpoint.accessControl` API for managing users.
+	 */
 	@validateArgs()
 	public async setUser(
 		options: UserCredentialCCUserSetOptions,
@@ -466,9 +470,14 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		);
 	}
 
+	/**
+	 * Applications should not use this method directly. Prefer the
+	 * `endpoint.accessControl` API for querying users.
+	 */
 	@validateArgs()
-	// oxlint-disable-next-line typescript/explicit-module-boundary-types
-	public async getUser(userId: number) {
+	public async getUser(
+		userId: number,
+	): Promise<UserCredentialCCUserReport | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.UserGet,
@@ -479,26 +488,17 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			userId,
 		});
-		const response = await this.host.sendCommand<
-			UserCredentialCCUserReport
-		>(cc, this.commandOptions);
-		if (response) {
-			return pick(response, [
-				"nextUserId",
-				"modifierType",
-				"modifierNodeId",
-				"userId",
-				"userType",
-				"active",
-				"credentialRule",
-				"expiringTimeoutMinutes",
-				"nameEncoding",
-				"userName",
-			]);
-		}
+		return this.host.sendCommand<UserCredentialCCUserReport>(
+			cc,
+			this.commandOptions,
+		);
 	}
 
 	// Credential Management
+	/**
+	 * Applications should not use this method directly. Prefer the
+	 * `endpoint.accessControl` API for managing credentials.
+	 */
 	@validateArgs()
 	public async setCredential(
 		options: UserCredentialCCCredentialSetOptions,
@@ -519,13 +519,16 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		);
 	}
 
+	/**
+	 * Applications should not use this method directly. Prefer the
+	 * `endpoint.accessControl` API for querying credentials.
+	 */
 	@validateArgs()
-	// oxlint-disable-next-line typescript/explicit-module-boundary-types
 	public async getCredential(
 		userId: number,
 		credentialType: UserCredentialType,
 		credentialSlot: number,
-	) {
+	): Promise<UserCredentialCCCredentialReport | undefined> {
 		this.assertSupportsCommand(
 			UserCredentialCommand,
 			UserCredentialCommand.CredentialGet,
@@ -538,25 +541,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			credentialType,
 			credentialSlot,
 		});
-		const response = await this.host.sendCommand<
-			UserCredentialCCCredentialReport
-		>(cc, this.commandOptions);
-		if (response) {
-			return pick(response, [
-				// UserId, credential type and slot can be zero in the
-				// request to return the first credential, so we cannot
-				// simply omit them here
-				"userId",
-				"credentialType",
-				"credentialSlot",
-				"credentialReadBack",
-				"credentialData",
-				"modifierType",
-				"modifierNodeId",
-				"nextCredentialType",
-				"nextCredentialSlot",
-			]);
-		}
+		return this.host.sendCommand<UserCredentialCCCredentialReport>(
+			cc,
+			this.commandOptions,
+		);
 	}
 
 	@validateArgs()
@@ -610,6 +598,10 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
+	/**
+	 * Applications should not use this method directly. Prefer the
+	 * `endpoint.accessControl` API for reassigning credentials between users.
+	 */
 	@validateArgs()
 	public async setUserCredentialAssociation(
 		options: UserCredentialCCAssociationSetOptions,
@@ -2566,18 +2558,20 @@ export type UserCredentialCCCredentialSetOptions =
 	);
 
 function testResponseForUserCredentialCredentialSet(
-	_sent: UserCredentialCCCredentialSet,
+	sent: UserCredentialCCCredentialSet,
 	received: UserCredentialCCCredentialReport,
 ) {
 	// CC:0083.01.0A.11.010, CC:0083.01.0A.11.011, CC:0083.01.0A.11.012,
 	// CC:0083.01.0A.11.013: CredentialSet MUST be answered by a
-	// CredentialReport. Match any report type other than ResponseToGet.
-	// Rejection reports like DuplicateCredential or WrongUserUniqueIdentifier
-	// may reference a *different* slot/type than the one we sent, so we match
-	// purely on report type.
+	// CredentialReport. We correlate responses on the targeted (type, slot)
+	// but not on userId, because rejection reports like DuplicateCredential
+	// or WrongUserUniqueIdentifier may legitimately reference a different
+	// user at the same credential location.
 	return (
 		received.reportType
 			!== UserCredentialCredentialReportType.ResponseToGet
+		&& received.credentialType === sent.credentialType
+		&& received.credentialSlot === sent.credentialSlot
 	);
 }
 
