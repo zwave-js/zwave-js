@@ -21,9 +21,9 @@ export type { VirtualValueID } from "./lib/node/VirtualNode.js";
 export * from "./lib/node/_Types.js";
 export {
 	AccessControlAPI,
-	AssignCredentialStatus,
-	SetCredentialStatus,
-	SetUserStatus,
+	AssignCredentialResult,
+	SetCredentialResult,
+	SetUserResult,
 } from "./lib/node/feature-apis/AccessControl.js";
 export type {
 	CredentialCapabilities,

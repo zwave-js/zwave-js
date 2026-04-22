@@ -13,7 +13,6 @@ import { type UserCodeCCAPI, UserCodeCCValues } from "@zwave-js/cc/UserCodeCC";
 import {
 	type UserCredentialCCAPI,
 	type UserCredentialCCAssociationReport,
-	type UserCredentialCCCredentialReport,
 	type UserCredentialCCUserReport,
 	UserCredentialCCValues,
 	normalizeCredentialData,
@@ -77,16 +76,16 @@ type UserCredentialGetResult = Awaited<
 	ReturnType<UserCredentialCCAPI["getCredential"]>
 >;
 
-/** Result status of a setUser / deleteUser / deleteAllUsers call */
-export enum SetUserStatus {
+/** Result of a setUser / deleteUser / deleteAllUsers call */
+export enum SetUserResult {
 	OK = 0,
 	Error_AddRejectedLocationOccupied = 1,
 	Error_ModifyRejectedLocationEmpty = 2,
 	Error_Unknown = 0xff,
 }
 
-/** Result status of a setCredential / deleteCredential call */
-export enum SetCredentialStatus {
+/** Result of a setCredential / deleteCredential call */
+export enum SetCredentialResult {
 	OK = 0,
 	Error_AddRejectedLocationOccupied = 1,
 	Error_ModifyRejectedLocationEmpty = 2,
@@ -97,8 +96,8 @@ export enum SetCredentialStatus {
 	Error_Unknown = 0xff,
 }
 
-/** Result status of an assignCredential call */
-export enum AssignCredentialStatus {
+/** Result of an assignCredential call */
+export enum AssignCredentialResult {
 	OK = 0,
 	/** Spec statuses 0x01 / 0x02 / 0x03 — credential type / slot invalid or empty */
 	Error_InvalidCredential = 1,
@@ -107,70 +106,70 @@ export enum AssignCredentialStatus {
 	Error_Unknown = 0xff,
 }
 
-function u3cUserSetResultToStatus(
-	report: UserCredentialCCUserReport | undefined,
-): SetUserStatus {
-	if (!report) return SetUserStatus.Error_Unknown;
-	switch (report.reportType) {
+function u3cUserReportTypeToSetUserResult(
+	reportType: UserCredentialUserReportType | undefined,
+): SetUserResult {
+	if (reportType == undefined) return SetUserResult.Error_Unknown;
+	switch (reportType) {
 		case UserCredentialUserReportType.UserAdded:
 		case UserCredentialUserReportType.UserModified:
 		case UserCredentialUserReportType.UserDeleted:
 		case UserCredentialUserReportType.UserUnchanged:
-			return SetUserStatus.OK;
+			return SetUserResult.OK;
 		case UserCredentialUserReportType.UserAddRejectedLocationOccupied:
-			return SetUserStatus.Error_AddRejectedLocationOccupied;
+			return SetUserResult.Error_AddRejectedLocationOccupied;
 		case UserCredentialUserReportType.UserModifyRejectedLocationEmpty:
-			return SetUserStatus.Error_ModifyRejectedLocationEmpty;
+			return SetUserResult.Error_ModifyRejectedLocationEmpty;
 		default:
-			return SetUserStatus.Error_Unknown;
+			return SetUserResult.Error_Unknown;
 	}
 }
 
-function u3cCredentialSetResultToStatus(
-	report: UserCredentialCCCredentialReport | undefined,
-): SetCredentialStatus {
-	if (!report) return SetCredentialStatus.Error_Unknown;
-	switch (report.reportType) {
+function u3cCredentialReportTypeToSetCredentialResult(
+	reportType: UserCredentialCredentialReportType | undefined,
+): SetCredentialResult {
+	if (reportType == undefined) return SetCredentialResult.Error_Unknown;
+	switch (reportType) {
 		case UserCredentialCredentialReportType.CredentialAdded:
 		case UserCredentialCredentialReportType.CredentialModified:
 		case UserCredentialCredentialReportType.CredentialDeleted:
 		case UserCredentialCredentialReportType.CredentialUnchanged:
-			return SetCredentialStatus.OK;
+			return SetCredentialResult.OK;
 		case UserCredentialCredentialReportType
 			.CredentialAddRejectedLocationOccupied:
-			return SetCredentialStatus.Error_AddRejectedLocationOccupied;
+			return SetCredentialResult.Error_AddRejectedLocationOccupied;
 		case UserCredentialCredentialReportType
 			.CredentialModifyRejectedLocationEmpty:
-			return SetCredentialStatus.Error_ModifyRejectedLocationEmpty;
+			return SetCredentialResult.Error_ModifyRejectedLocationEmpty;
 		case UserCredentialCredentialReportType.DuplicateCredential:
-			return SetCredentialStatus.Error_DuplicateCredential;
+			return SetCredentialResult.Error_DuplicateCredential;
 		case UserCredentialCredentialReportType.ManufacturerSecurityRules:
-			return SetCredentialStatus.Error_ManufacturerSecurityRules;
+			return SetCredentialResult.Error_ManufacturerSecurityRules;
 		case UserCredentialCredentialReportType.DuplicateAdminPINCode:
-			return SetCredentialStatus.Error_DuplicateAdminPINCode;
+			return SetCredentialResult.Error_DuplicateAdminPINCode;
 		case UserCredentialCredentialReportType.WrongUserUniqueIdentifier:
-			return SetCredentialStatus.Error_WrongUserUniqueIdentifier;
+			return SetCredentialResult.Error_WrongUserUniqueIdentifier;
 		default:
-			return SetCredentialStatus.Error_Unknown;
+			return SetCredentialResult.Error_Unknown;
 	}
 }
 
-function u3cAssociationResultToStatus(
-	report: UserCredentialCCAssociationReport | undefined,
-): AssignCredentialStatus {
-	if (!report) return AssignCredentialStatus.Error_Unknown;
-	switch (report.status) {
+function u3cAssociationStatusToAssignCredentialResult(
+	status: UserCredentialCCAssociationReport["status"] | undefined,
+): AssignCredentialResult {
+	if (status == undefined) return AssignCredentialResult.Error_Unknown;
+	switch (status) {
 		case 0x00:
-			return AssignCredentialStatus.OK;
+			return AssignCredentialResult.OK;
 		case 0x01:
 		case 0x02:
 		case 0x03:
-			return AssignCredentialStatus.Error_InvalidCredential;
+			return AssignCredentialResult.Error_InvalidCredential;
 		case 0x04:
 		case 0x05:
-			return AssignCredentialStatus.Error_InvalidUser;
+			return AssignCredentialResult.Error_InvalidUser;
 		default:
-			return AssignCredentialStatus.Error_Unknown;
+			return AssignCredentialResult.Error_Unknown;
 	}
 }
 
@@ -487,7 +486,7 @@ export class AccessControlAPI extends FeatureAPI {
 	public async setUser(
 		userId: number,
 		options: SetUserOptions,
-	): Promise<SetUserStatus> {
+	): Promise<SetUserResult> {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			const existing = this.#getUserCached_U3C(userId);
@@ -526,7 +525,7 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 
 			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
-			return u3cUserSetResultToStatus(result);
+			return u3cUserReportTypeToSetUserResult(result?.reportType);
 		} else {
 			const api = this.#ucAPI();
 			const existing = this.#getUserCached_UC(userId);
@@ -592,7 +591,7 @@ export class AccessControlAPI extends FeatureAPI {
 					);
 				}
 			}
-			return succeeded ? SetUserStatus.OK : SetUserStatus.Error_Unknown;
+			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
 		}
 	}
 
@@ -602,7 +601,7 @@ export class AccessControlAPI extends FeatureAPI {
 	 */
 	public async deleteUser(
 		userId: number,
-	): Promise<SetUserStatus> {
+	): Promise<SetUserResult> {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			const raw = await api.setUser({
@@ -610,8 +609,8 @@ export class AccessControlAPI extends FeatureAPI {
 				userId,
 			});
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			const status = u3cUserSetResultToStatus(raw);
-			if (status === SetUserStatus.OK) {
+			const status = u3cUserReportTypeToSetUserResult(raw?.reportType);
+			if (status === SetUserResult.OK) {
 				this.#purgeCachedCredentials(userId);
 			}
 			return status;
@@ -642,7 +641,7 @@ export class AccessControlAPI extends FeatureAPI {
 					});
 				}
 			}
-			return succeeded ? SetUserStatus.OK : SetUserStatus.Error_Unknown;
+			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
 		}
 	}
 
@@ -650,7 +649,7 @@ export class AccessControlAPI extends FeatureAPI {
 	 * Deletes all users and their credentials.
 	 * This communicates with the node.
 	 */
-	public async deleteAllUsers(): Promise<SetUserStatus> {
+	public async deleteAllUsers(): Promise<SetUserResult> {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			const raw = await api.setUser({
@@ -658,8 +657,8 @@ export class AccessControlAPI extends FeatureAPI {
 				userId: 0,
 			});
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			const status = u3cUserSetResultToStatus(raw);
-			if (status === SetUserStatus.OK) {
+			const status = u3cUserReportTypeToSetUserResult(raw?.reportType);
+			if (status === SetUserResult.OK) {
 				this.#purgeAllCachedUsersAndCredentials();
 			}
 			return status;
@@ -674,7 +673,7 @@ export class AccessControlAPI extends FeatureAPI {
 			if (succeeded) {
 				this.#purgeAllCachedUserCodes();
 			}
-			return succeeded ? SetUserStatus.OK : SetUserStatus.Error_Unknown;
+			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
 		}
 	}
 
@@ -862,7 +861,7 @@ export class AccessControlAPI extends FeatureAPI {
 		type: UserCredentialType,
 		slot: number,
 		data: string | Uint8Array,
-	): Promise<SetCredentialStatus> {
+	): Promise<SetCredentialResult> {
 		if (this.#usesUserCredentialCC) {
 			this.#assertValidSlot(type, slot);
 
@@ -885,7 +884,9 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialData,
 			});
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			return u3cCredentialSetResultToStatus(raw);
+			return u3cCredentialReportTypeToSetCredentialResult(
+				raw?.reportType,
+			);
 		} else {
 			// User Code CC stores exactly one credential per user slot. Ignore the
 			// caller-provided unified slot and write back to the owning user's slot
@@ -944,8 +945,8 @@ export class AccessControlAPI extends FeatureAPI {
 				}
 			}
 			return succeeded
-				? SetCredentialStatus.OK
-				: SetCredentialStatus.Error_Unknown;
+				? SetCredentialResult.OK
+				: SetCredentialResult.Error_Unknown;
 		}
 	}
 
@@ -957,7 +958,7 @@ export class AccessControlAPI extends FeatureAPI {
 		userId: number,
 		type: UserCredentialType,
 		slot: number,
-	): Promise<SetCredentialStatus> {
+	): Promise<SetCredentialResult> {
 		if (this.#usesUserCredentialCC) {
 			this.#assertValidSlot(type, slot);
 
@@ -969,7 +970,9 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialSlot: slot,
 			});
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			return u3cCredentialSetResultToStatus(raw);
+			return u3cCredentialReportTypeToSetCredentialResult(
+				raw?.reportType,
+			);
 		} else {
 			// User Code CC stores exactly one credential per user slot. Ignore the
 			// caller-provided unified slot and write back to the owning user's slot
@@ -1001,8 +1004,8 @@ export class AccessControlAPI extends FeatureAPI {
 				}
 			}
 			return succeeded
-				? SetCredentialStatus.OK
-				: SetCredentialStatus.Error_Unknown;
+				? SetCredentialResult.OK
+				: SetCredentialResult.Error_Unknown;
 		}
 	}
 
@@ -1022,7 +1025,7 @@ export class AccessControlAPI extends FeatureAPI {
 		type: UserCredentialType,
 		slot: number,
 		destinationUserId: number,
-	): Promise<AssignCredentialStatus> {
+	): Promise<AssignCredentialResult> {
 		if (!this.#usesUserCredentialCC) {
 			throw new ZWaveError(
 				"This node does not support assigning a credential to a different user",
@@ -1041,7 +1044,7 @@ export class AccessControlAPI extends FeatureAPI {
 		if (response) {
 			await this.endpoint.tryGetNode()?.handleCommand(response);
 		}
-		return u3cAssociationResultToStatus(response);
+		return u3cAssociationStatusToAssignCredentialResult(response?.status);
 	}
 
 	/**

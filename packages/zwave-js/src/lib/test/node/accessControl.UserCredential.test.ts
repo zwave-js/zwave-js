@@ -27,8 +27,8 @@ import {
 } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import {
-	SetCredentialStatus,
-	SetUserStatus,
+	SetCredentialResult,
+	SetUserResult,
 } from "../../node/feature-apis/AccessControl.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -348,7 +348,7 @@ integrationTest(
 			);
 
 			t.expect(result).toBe(
-				SetCredentialStatus.Error_AddRejectedLocationOccupied,
+				SetCredentialResult.Error_AddRejectedLocationOccupied,
 			);
 			t.expect(
 				node.accessControl!.getCredentialCached(
@@ -1547,7 +1547,7 @@ integrationTest(
 			);
 
 			const result = await node.accessControl!.deleteUser(1);
-			t.expect(result).toBe(SetUserStatus.Error_Unknown);
+			t.expect(result).toBe(SetUserResult.Error_Unknown);
 
 			// Command had no response — cache must remain intact
 			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
@@ -1630,7 +1630,7 @@ integrationTest(
 			);
 
 			const result = await node.accessControl!.deleteAllUsers();
-			t.expect(result).toBe(SetUserStatus.Error_Unknown);
+			t.expect(result).toBe(SetUserResult.Error_Unknown);
 
 			// Command had no response — cache must remain intact
 			t.expect(node.accessControl!.getUsersCached().length).toBe(1);

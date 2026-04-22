@@ -609,7 +609,7 @@ assignCredential(
 	type: UserCredentialType,
 	slot: number,
 	destinationUserId: number,
-): Promise<AssignCredentialStatus>
+): Promise<AssignCredentialResult>
 ```
 
 Re-assigns an existing credential to a different user without re-enrolling it. Useful for credentials that were added locally on the device (e.g. a biometric) and need to be attached to an existing user that already has other credentials.
@@ -618,10 +618,10 @@ Only supported on nodes using the **User Credential CC**. Check the `supportsCre
 
 On success, a [`"credential modified"`](#quotcredential-modifiedquot) event is emitted so UIs can stay in sync.
 
-<!-- #import AssignCredentialStatus from "zwave-js" -->
+<!-- #import AssignCredentialResult from "zwave-js" -->
 
 ```ts
-enum AssignCredentialStatus {
+enum AssignCredentialResult {
 	OK = 0,
 	/** Spec statuses 0x01 / 0x02 / 0x03 — credential type / slot invalid or empty */
 	Error_InvalidCredential = 1,
