@@ -366,6 +366,7 @@
 		},
 		{
 			"#": "15",
+			"$if": "firmwareVersion < 2.40.0",
 			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset",
 			"description": "0=-10, 100=0, 200=+10",
@@ -375,6 +376,18 @@
 			"maxValue": 200,
 			"defaultValue": 100,
 			"unsigned": true
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion >= 2.40.0",
+			"$purpose": "calibration.humidity",
+			"label": "Humidity Offset",
+			"description": "0=-20%, 200=0, 400=+20%",
+			"valueSize": 2,
+			"unit": "0.1 %",
+			"minValue": 0,
+			"maxValue": 400,
+			"defaultValue": 200
 		},
 		{
 			"#": "16",
