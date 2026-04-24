@@ -2563,16 +2563,28 @@ function testResponseForUserCredentialCredentialSet(
 ) {
 	// CC:0083.01.0A.11.010, CC:0083.01.0A.11.011, CC:0083.01.0A.11.012,
 	// CC:0083.01.0A.11.013: CredentialSet MUST be answered by a
-	// CredentialReport. We correlate responses on the targeted (type, slot)
-	// but not on userId, because rejection reports like DuplicateCredential
-	// or WrongUserUniqueIdentifier may legitimately reference a different
-	// user at the same credential location.
-	return (
+	// CredentialReport. The credentialType is always echoed, so we use it
+	// as the primary correlation. DuplicateCredential and DuplicateAdminPINCode
+	// reports reference the EXISTING duplicate's (userId, slot) rather than
+	// the requested location, so we cannot correlate them on slot.
+	if (
 		received.reportType
-			!== UserCredentialCredentialReportType.ResponseToGet
-		&& received.credentialType === sent.credentialType
-		&& received.credentialSlot === sent.credentialSlot
-	);
+			=== UserCredentialCredentialReportType.ResponseToGet
+	) {
+		return false;
+	}
+	if (received.credentialType !== sent.credentialType) {
+		return false;
+	}
+	if (
+		received.reportType
+			=== UserCredentialCredentialReportType.DuplicateCredential
+		|| received.reportType
+			=== UserCredentialCredentialReportType.DuplicateAdminPINCode
+	) {
+		return true;
+	}
+	return received.credentialSlot === sent.credentialSlot;
 }
 
 @CCCommand(UserCredentialCommand.CredentialSet)
