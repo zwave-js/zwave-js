@@ -12,7 +12,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"Fibaro FGMS001 firmware 2.8: Basic Set commands are mapped to Binary Sensor CC, no Basic CC values exposed",
 	{
-		debug: true,
+		// debug: true,
 
 		nodeCapabilities: {
 			manufacturerId: 0x010f,
