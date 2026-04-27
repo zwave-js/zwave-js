@@ -933,5 +933,11 @@
 				}
 			]
 		}
-	]
+	],
+	"compat": {
+		// Firmware 2.8 and earlier do not support Notification CC yet, and use
+		// Basic Set commands to report motion/no-motion via Binary Sensor CC.
+		"$if": "firmwareVersion <= 2.8",
+		"mapBasicSet": "Binary Sensor"
+	}
 }
