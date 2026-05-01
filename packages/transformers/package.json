@@ -42,7 +42,7 @@
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260324.1",
+    "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "del-cli": "^7.0.0",
     "nano-spawn": "^2.0.0",
     "ts-morph": "^27.0.2",
