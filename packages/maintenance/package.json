@@ -48,7 +48,7 @@
     "@types/globrex": "^0.1.4",
     "@types/node": "^20.19.35",
     "@types/yargs": "^17.0.35",
-    "@typescript/native-preview": "7.0.0-dev.20260324.1",
+    "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/fmt": "^1.0.6",
     "@zwave-js/shared": "workspace:*",

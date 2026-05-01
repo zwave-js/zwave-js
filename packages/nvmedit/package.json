@@ -70,7 +70,7 @@
     "@types/node": "^20.19.35",
     "@types/semver": "^7.7.1",
     "@types/yargs": "^17.0.35",
-    "@typescript/native-preview": "7.0.0-dev.20260324.1",
+    "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "del-cli": "^7.0.0",
     "tsx": "^4.21.0",
     "vitest": "^4.1.0"
