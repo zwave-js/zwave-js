@@ -1,0 +1,297 @@
+{
+  "manufacturer": "Versa Wireless Inc.",
+  "manufacturerId": "0x0464",
+  "label": "LAMP-ZW2",
+  "description": "Z-Wave 800 LR Plug-In Lamp Dimmer",
+  "devices": [
+    {
+      "productType": "0xFF00",
+      "productId": "0xFF0D"
+    }
+  ],
+  "firmwareVersion": {
+    "min": "V8.0.0",
+    "max": "V8.10.0"
+  },
+  "associations": {
+    "1": {
+      "label": "Lifeline",
+      "maxNodes": 5,
+      "isLifeline": true
+    },
+    "2": {
+      "label": "Send Basic Set ON / Off",
+      "maxNodes": 5
+    }
+  },
+  "paramInformation": [
+    {
+      "#": "1",
+      "label": "LED Indicator Brightness",
+      "description": "LED brightness indicates lamp brightness",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 2,
+      "defaultValue": 1,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "2",
+      "label": "LED Indicator",
+      "description": "LED ON/OFF indicates lamp ON/OFF",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 0,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "3",
+      "label": "LED Indicator Color",
+      "description": "LED brightness indicates lamp brightness",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 5,
+      "defaultValue": 0,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "4",
+      "label": "Auto Turn-Off Timer",
+      "description": "Auto Turn-Off Timer",
+      "valueSize": 4,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 0,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "6",
+      "label": "Auto Turn-On Timer",
+      "description": "Auto Turn-On Timer",
+      "valueSize": 4,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 0,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "7",
+      "label": "Night Light Level",
+      "description": "Night light level",
+      "valueSize": 1,
+      "minValue": 1,
+      "maxValue": 10,
+      "defaultValue": 2,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "8",
+      "label": "Restores State After Power Failure",
+      "description": "Restore state after power failure",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 2,
+      "defaultValue": 2,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "9",
+      "label": "Ramp Rate (Turn on the light by pressing the button )",
+      "description": "Ramp rate (Turn on the light by pressing the button)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 2,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "10",
+      "label": "Ramp rate when pressing and holding the button ",
+      "description": "Ramp rate when pressing and holding the button",
+      "valueSize": 1,
+      "minValue": 1,
+      "maxValue": 99,
+      "defaultValue": 4,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "11",
+      "label": "Multilevel minimum value can be set",
+      "description": "Multilevel minimum value can be set",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 10,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "12",
+      "label": "Multilevel maximum value can be set",
+      "description": "Multilevel maximum value can be set",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 99,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "13",
+      "label": "Single Tap Behavior ",
+      "description": "Single Tap Behavior: when switch is off and press UPPER paddle 1 time, switch turns on to x brightness（Local Button)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 1,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "14",
+      "label": "Double Tap Behavior ",
+      "description": "Double Tap Behavior: when switch is off and press button 2 times, switch turns on to x brightness",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 1,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "15",
+      "label": "Custom brightness level",
+      "description": "In this parameter define default brightness level the switch will turn on to when pressed button once.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 0,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "16",
+      "label": "Enable or Disable local / Z-Wave control",
+      "description": "In this parameter define default brightness level the switch will turn on to when pressed button once.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 2,
+      "defaultValue": 1,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "17",
+      "label": "Disable programming from paddle",
+      "description": "Disable programming from paddle",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "18",
+      "label": "Ramp rate (Local Button OFF)",
+      "description": "Ramp rate(Local Button OFF)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 2,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "19",
+      "label": "Ramp rate (Hub ON)",
+      "description": "Ramp rate(Hub ON)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 255,
+      "defaultValue": 255,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "20",
+      "label": "Ramp rate (Hub OFF)",
+      "description": "Ramp rate(Hub OFF)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 255,
+      "defaultValue": 255,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    },
+{
+      "#": "21",
+      "label": "Disable LED blinking when a setting is change",
+      "description": "Disable LED blinking when a setting is change",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0,
+      "unsigned": true,
+      "readOnly": false,
+      "writeOnly": false,
+      "allowManualEntry": true
+    }
+  ],
+  "compat": {
+     },
+  "metadata": {
+    "inclusion": ["1. Follow the instructions for your Z-Wave certified controller to add a device to the Z-Wave network.", "2. Once the controller is ready to add your device, press the Manual/ Program button on the smart plug 3 times quickly. The blue LED will flash quickly.", "3. Confirm the Zwave plug was learned into the controller and complete set up on the controller. When the Zwave dimmer has been enrolled into the controller, the LED will light solid blue.", "4. Programming is now complete. You can now turn your device ON / OFF according to groups, schedules and interactive automation programmed by your controller. If your Z-Wave certified controller features remote access, you can control your plug from your mobile devices.", "Note: If you have an issue with pairing, please move the device as close as possible to the hub and try again. You can move to your final location when completed.", "Note:", "1. If the LED Indicator does not light up after pressing 3 times, please reset the device. To reset, press the button twice quickly then hold a 3rd press for 10 seconds.", "2. The flashing purple light means the device is already paired or in exclusion mode. If adding fails, please perform a Z-wave exclusion on your Z-wave controller and try to add the device again. "],
+    "exclusion": ["1. Follow the instructions for your Z-Wave certified controller to remove a device from the Z-Wave network.", "2. Once the controller is ready to remove your device, press the manual / program button on the smart plug 3 times quickly "],
+    "reset": "To reset, press the button twice quickly then hold a 3rd press for 10 seconds ",
+    "manual": "https://versawireless.com/pages/resources"
+  }
+}
