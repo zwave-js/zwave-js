@@ -1,4 +1,4 @@
- {
+{
   "manufacturer": "Versa Wireless Inc.",
   "manufacturerId": "0x0464",
   "label": "LAMP-ZW2",
@@ -122,7 +122,7 @@
     },
     {
       "#": "9",
-      "label": "Ramp Rate when pressing the button once",
+      "label": "Ramp Rate When Pressing The Button Once",
       "description": "Turn on the light by pressing the button once, the dimming speed is set by this parameter.",
       "valueSize": 1,
       "minValue": 0,
@@ -131,7 +131,7 @@
     },
     {
       "#": "10",
-      "label": "Ramp Rate when pressing and holding the button",
+      "label": "Ramp Rate When Pressing And Holding The Button",
       "description": "Sets the dimming speed when the button is pressed and held to increase or decrease brightness.",
       "valueSize": 1,
       "minValue": 1,
@@ -140,7 +140,7 @@
     },
     {
       "#": "11",
-      "label": "Multilevel minimum value can be set",
+      "label": "Multilevel Minimum Value Can Be Set",
       "description": "Sets the minimum dimming level that the device can be adjusted to.",
       "valueSize": 1,
       "minValue": 0,
@@ -149,7 +149,7 @@
     },
     {
       "#": "12",
-      "label": "Multilevel maximum value can be set",
+      "label": "Multilevel Maximum Value Can Be Set",
       "description": "Sets the maximum dimming level that the device can be adjusted to.",
       "valueSize": 1,
       "minValue": 0,
@@ -188,7 +188,7 @@
     },
     {
       "#": "15",
-      "label": "Custom brightness level",
+      "label": "Custom Brightness Level",
       "description": "In this parameter define default brightness level the switch will turn on to when pressed button once.",
       "valueSize": 1,
       "minValue": 0,
@@ -205,22 +205,22 @@
       "defaultValue": 1,
       "options": [
             {
-              "label": "Disable local Control, enable Z-Wave control",
+              "label": "Disable Local Control, Enable Z-Wave Control",
               "value": 0
             },
             {
-              "label": "Enable local Control, enable Z-Wave control",
+              "label": "Enable Local Control, Enable Z-Wave Control",
               "value": 1
             },
             {
-              "label": "Disable local Control, disable Z-Wave control",
+              "label": "Disable Local Control, Disable Z-Wave Control",
               "value": 2
             }
         ]
     },
     {
       "#": "17",
-      "label": "Disable programming from paddle",
+      "label": "Disable Programming From Paddle",
       "description": "Enables or disables the ability to change device settings using the physical paddle buttons.",
       "valueSize": 1,
       "minValue": 0,
@@ -228,11 +228,11 @@
       "defaultValue": 0,
       "options": [
             {
-              "label": "Disable programming from paddle enabled",
+              "label": "Disable Programming From Paddle",
               "value": 0
             },
             {
-              "label": "Disable programming from paddle disabled",
+              "label": "Disable Programming From Paddle Disabled",
               "value": 1
             }
         ]
@@ -271,7 +271,7 @@
     },
     {
       "#": "21",
-      "label": "Disable LED blinking when a setting is changed",
+      "label": "Disable LED blinking When Setting Is Changed",
       "description": "Enables or disables LED blinking feedback when device settings are modified.",
       "valueSize": 1,
       "minValue": 0,
