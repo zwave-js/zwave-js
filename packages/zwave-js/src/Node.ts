@@ -29,6 +29,7 @@ export type {
 	CredentialCapabilities,
 	CredentialData,
 	SetUserOptions,
+	DeleteCredentialsOptions,
 	UserCapabilities,
 	UserData,
 } from "./lib/node/feature-apis/AccessControl.js";

@@ -366,23 +366,24 @@ Each entry in `supportedCredentialTypes` maps a `UserCredentialType` to its capa
 <!-- #import UserCredentialCapability from "@zwave-js/cc" -->
 
 ```ts
-type UserCredentialCapability = {
-	numberOfCredentialSlots: number;
-	minCredentialLength: number;
-	maxCredentialLength: number;
-	maxCredentialHashLength: number;
-} & (
-	| {
+type UserCredentialCapability =
+	& {
+		numberOfCredentialSlots: number;
+		minCredentialLength: number;
+		maxCredentialLength: number;
+		maxCredentialHashLength: number;
+	}
+	& (
+		{
 			supportsCredentialLearn: true;
 			credentialLearnRecommendedTimeout: number;
 			credentialLearnNumberOfSteps: number;
-	  }
-	| {
+		} | {
 			supportsCredentialLearn: false;
 			credentialLearnRecommendedTimeout?: undefined;
 			credentialLearnNumberOfSteps?: undefined;
-	  }
-);
+		}
+	);
 ```
 
 ### Managing users
@@ -618,7 +619,24 @@ deleteCredentials(options?: DeleteCredentialsOptions): Promise<SetCredentialResu
 
 Deletes credentials matching the given filters:
 
-<!-- #import DeleteCredentialsOptions from "zwave-js" -->
+<!-- #import DeleteCredentialsOptions from "zwave-js" without comments -->
+
+```ts
+interface DeleteCredentialsOptions {
+	/**
+	 * Only delete credentials owned by this user. When omitted or `0`, the
+	 * filter is treated as a wildcard and credentials for all users are
+	 * deleted.
+	 */
+	userId?: number;
+	/**
+	 * Only delete credentials of this type. When omitted or
+	 * {@link UserCredentialType.None}, the filter is treated as a wildcard and
+	 * credentials of all types are deleted.
+	 */
+	credentialType?: UserCredentialType;
+}
+```
 
 - When `userId` is omitted or `0`, credentials for all users are deleted.
 - When `credentialType` is omitted or `UserCredentialType.None`, credentials of all types are deleted.
