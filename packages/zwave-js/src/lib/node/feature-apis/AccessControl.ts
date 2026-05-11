@@ -616,7 +616,10 @@ export class AccessControlAPI extends FeatureAPI {
 			return status;
 		} else {
 			// User Code CC ties each user to their code, so clearing
-			// the code implicitly deletes the user and vice versa
+			// the code implicitly deletes the user and vice versa.
+			// The cache entry only gates event emission - the node may have
+			// a user we never observed, so a missing entry must not gate the
+			// success of the API call itself.
 			const existed = this.#getUserCached_UC(userId) != undefined;
 			const api = this.#ucAPI();
 			const result = await api.clear(userId);
@@ -624,12 +627,14 @@ export class AccessControlAPI extends FeatureAPI {
 			if (result == undefined) {
 				// Unsupervised - verify the change
 				const verified = await api.get(userId);
-				succeeded = existed
-					&& verified?.userIdStatus === UserIDStatus.Available;
+				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			} else {
-				succeeded = supervisedCommandSucceeded(result) && existed;
+				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
+				this.#purgeCachedUserCodes(userId);
+			}
+			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
 				if (node) {
 					node.emit("user deleted", this.endpoint as any, { userId });
@@ -671,7 +676,7 @@ export class AccessControlAPI extends FeatureAPI {
 			const succeeded = result == undefined
 				|| supervisedCommandSucceeded(result);
 			if (succeeded) {
-				this.#purgeAllCachedUserCodes();
+				this.#purgeCachedUserCodes();
 			}
 			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
 		}
@@ -955,10 +960,31 @@ export class AccessControlAPI extends FeatureAPI {
 	 * This communicates with the node.
 	 */
 	public async deleteCredential(
-		userId: number,
 		type: UserCredentialType,
 		slot: number,
+	): Promise<SetCredentialResult>;
+	public async deleteCredential(
+		userId: number | undefined,
+		type: UserCredentialType,
+		slot: number,
+	): Promise<SetCredentialResult>;
+
+	public async deleteCredential(
+		userIdOrType: number | undefined,
+		typeOrSlot: UserCredentialType | number,
+		slot?: number,
 	): Promise<SetCredentialResult> {
+		// 2-arg overload: (type, slot) — normalize to the 3-arg form
+		if (slot == undefined) {
+			return this.deleteCredential(
+				0,
+				userIdOrType as UserCredentialType,
+				typeOrSlot,
+			);
+		}
+		const userId = userIdOrType ?? 0;
+		const type = typeOrSlot as UserCredentialType;
+
 		if (this.#usesUserCredentialCC) {
 			this.#assertValidSlot(type, slot);
 
@@ -974,33 +1000,178 @@ export class AccessControlAPI extends FeatureAPI {
 				raw?.reportType,
 			);
 		} else {
-			// User Code CC stores exactly one credential per user slot. Ignore the
-			// caller-provided unified slot and write back to the owning user's slot
-			// so events and cached state stay internally consistent.
-			this.#assertValidSlot(type, userId);
+			// User Code CC stores exactly one credential per user slot, with the
+			// user identifier being the slot number. When the caller omits the
+			// user (2-arg form), fall back to the slot. When both are given but
+			// disagree, no credential can exist at that (user, slot) pair.
+			if (userId !== 0 && userId !== slot) {
+				return SetCredentialResult.Error_ModifyRejectedLocationEmpty;
+			}
+
+			// Make sure the addressed slot is valid
+			const targetUserId = userId === 0 ? slot : userId;
+			this.#assertValidSlot(type, targetUserId);
+
+			// Only emit deleted events if we knew about the credential beforehand.
 			const existed = this.#getCredentialCached_UC(
 				type,
-				userId,
+				targetUserId,
 			) != undefined;
+
+			const api = this.#ucAPI();
+			const result = await api.clear(targetUserId);
+			let succeeded: boolean;
+			if (result == undefined) {
+				const verified = await api.get(targetUserId);
+				succeeded = verified?.userIdStatus === UserIDStatus.Available;
+			} else {
+				succeeded = supervisedCommandSucceeded(result);
+			}
+			if (succeeded) {
+				this.#purgeCachedUserCodes(targetUserId);
+			}
+			if (succeeded && existed) {
+				const node = this.endpoint.tryGetNode();
+				if (node) {
+					node.emit("credential deleted", this.endpoint as any, {
+						userId: targetUserId,
+						credentialType: type,
+						credentialSlot: targetUserId,
+					});
+					node.emit("user deleted", this.endpoint as any, {
+						userId: targetUserId,
+					});
+				}
+			}
+			return succeeded
+				? SetCredentialResult.OK
+				: SetCredentialResult.Error_Unknown;
+		}
+	}
+
+	/**
+	 * Deletes all credentials of the given type for the given user.
+	 * When the credential type is omitted, all credentials of all types for
+	 * the user are deleted. The user itself is not deleted.
+	 *
+	 * For nodes using the User Code CC, this implicitly deletes the user as
+	 * well because User Code CC does not distinguish between users and their
+	 * credentials. Throws if a `credentialType` is provided that the node does
+	 * not support.
+	 */
+	public async deleteAllCredentialsForUser(
+		userId: number,
+		credentialType?: UserCredentialType,
+	): Promise<SetCredentialResult> {
+		if (userId === 0) {
+			throw new ZWaveError(
+				"User ID 0 is not valid. Use deleteAllCredentials to delete credentials for all users instead.",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
+			const raw = await api.setCredential({
+				operationType: UserCredentialOperationType.Delete,
+				userId,
+				credentialType: credentialType ?? UserCredentialType.None,
+				credentialSlot: 0,
+			});
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
+			return u3cCredentialReportTypeToSetCredentialResult(
+				raw?.reportType,
+			);
+		} else {
+			if (
+				credentialType != undefined
+				&& credentialType !== this.#ucCredentialType
+			) {
+				// Returning OK here would falsely imply the User Code CC user
+				// was deleted (cascade), which only happens when the type
+				// matches. Reject loudly so callers do not act on a fictional
+				// success.
+				throw new ZWaveError(
+					`Credential type ${
+						getEnumMemberName(UserCredentialType, credentialType)
+					} is not supported by this node`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+
+			// Only emit deleted events if we knew about the credential beforehand.
+			const existed = this.#getUserCached_UC(userId) != undefined;
+
 			const api = this.#ucAPI();
 			const result = await api.clear(userId);
 			let succeeded: boolean;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				succeeded = existed
-					&& verified?.userIdStatus === UserIDStatus.Available;
+				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			} else {
-				succeeded = supervisedCommandSucceeded(result) && existed;
+				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
+				this.#purgeCachedUserCodes(userId);
+			}
+			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
 				if (node) {
 					node.emit("credential deleted", this.endpoint as any, {
 						userId,
-						credentialType: type,
+						credentialType: this.#ucCredentialType,
 						credentialSlot: userId,
 					});
 					node.emit("user deleted", this.endpoint as any, { userId });
+				}
+			}
+			return succeeded
+				? SetCredentialResult.OK
+				: SetCredentialResult.Error_Unknown;
+		}
+	}
+
+	/**
+	 * Deletes all credentials on the node.
+	 *
+	 * For nodes using the User Credential CC, user records are preserved (use
+	 * {@link deleteAllUsers} to delete those). For nodes using the User Code
+	 * CC, all users are implicitly deleted as well because User Code CC does
+	 * not distinguish between users and their credentials.
+	 */
+	public async deleteAllCredentials(): Promise<SetCredentialResult> {
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
+			const raw = await api.setCredential({
+				operationType: UserCredentialOperationType.Delete,
+				userId: 0,
+				credentialType: UserCredentialType.None,
+				credentialSlot: 0,
+			});
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
+			return u3cCredentialReportTypeToSetCredentialResult(
+				raw?.reportType,
+			);
+		} else {
+			const api = this.#ucAPI();
+			const result = await api.clear(0);
+			// Verifying all users being deleted is unrealistic
+			// since there can be up to 65535 users. So we just
+			// assume it worked when the command was not supervised.
+			const succeeded = result == undefined
+				|| supervisedCommandSucceeded(result);
+			if (succeeded) {
+				this.#purgeCachedUserCodes();
+				const node = this.endpoint.tryGetNode();
+				if (node) {
+					node.emit("credential deleted", this.endpoint as any, {
+						userId: 0,
+						credentialType: this.#ucCredentialType,
+						credentialSlot: 0,
+					});
+					node.emit("user deleted", this.endpoint as any, {
+						userId: 0,
+					});
 				}
 			}
 			return succeeded
@@ -1283,16 +1454,27 @@ export class AccessControlAPI extends FeatureAPI {
 		}
 	}
 
-	/** Removes all cached user code status and code values from the value DB */
-	#purgeAllCachedUserCodes(): void {
+	/**
+	 * Removes cached user code status and code values from the value DB.
+	 * If `userId` is given, only values for that user are removed. Otherwise, all
+	 * cached user codes are purged.
+	 */
+	#purgeCachedUserCodes(userId?: number): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 
-		const values = valueDB.findValues(
+		let values = valueDB.findValues(
 			(vid) =>
-				UserCodeCCValues.userIdStatus.is(vid)
-				|| UserCodeCCValues.userCode.is(vid),
+				vid.endpoint === this.endpoint.index
+				&& (UserCodeCCValues.userIdStatus.is(vid)
+					|| UserCodeCCValues.userCode.is(vid)),
 		);
+		if (userId) {
+			values = values.filter(
+				(vid) => vid.propertyKey === userId,
+			);
+		}
+
 		for (const vid of values) {
 			valueDB.removeValue(vid);
 		}

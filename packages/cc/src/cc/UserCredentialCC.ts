@@ -2854,15 +2854,10 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		if (
-			this.credentialType === UserCredentialType.None
-			|| this.credentialSlot === 0
-		) {
-			return true;
-		}
-
 		// A CredentialModifyRejectedLocationEmpty report means we have a stale
 		// cache entry for a credential that no longer exists on the device.
+		// CredentialDeleted reports may echo the request fields, including the
+		// wildcard zeros used to trigger bulk deletes per CC:0083.01.0A.
 		if (
 			this.reportType
 				=== UserCredentialCredentialReportType.CredentialDeleted
@@ -2870,34 +2865,99 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 				=== UserCredentialCredentialReportType
 					.CredentialModifyRejectedLocationEmpty
 		) {
-			this.removeValue(
-				ctx,
-				UserCredentialCCValues.credential(
-					this.credentialType,
-					this.credentialSlot,
-				),
-			);
-			this.removeValue(
-				ctx,
-				UserCredentialCCValues.credentialOwner(
-					this.credentialType,
-					this.credentialSlot,
-				),
-			);
-			this.removeValue(
-				ctx,
-				UserCredentialCCValues.credentialModifierType(
-					this.credentialType,
-					this.credentialSlot,
-				),
-			);
-			this.removeValue(
-				ctx,
-				UserCredentialCCValues.credentialModifierNodeId(
-					this.credentialType,
-					this.credentialSlot,
-				),
-			);
+			if (
+				this.credentialType !== UserCredentialType.None
+				&& this.credentialSlot !== 0
+			) {
+				// Single credential. The (type, slot) tuple uniquely identifies
+				// the entry in the value DB, so the userId is not needed.
+				this.removeValue(
+					ctx,
+					UserCredentialCCValues.credential(
+						this.credentialType,
+						this.credentialSlot,
+					),
+				);
+				this.removeValue(
+					ctx,
+					UserCredentialCCValues.credentialOwner(
+						this.credentialType,
+						this.credentialSlot,
+					),
+				);
+				this.removeValue(
+					ctx,
+					UserCredentialCCValues.credentialModifierType(
+						this.credentialType,
+						this.credentialSlot,
+					),
+				);
+				this.removeValue(
+					ctx,
+					UserCredentialCCValues.credentialModifierNodeId(
+						this.credentialType,
+						this.credentialSlot,
+					),
+				);
+			} else {
+				// Bulk delete. Walk all cached credentials and remove those
+				// matching the (userId, type) filter (zero means wildcard).
+				const valueDB = this.getValueDB(ctx);
+				const credentialOwners = valueDB.findValues(
+					(vid) =>
+						UserCredentialCCValues.credentialOwner.is(vid)
+						&& vid.endpoint === this.endpointIndex,
+				);
+				for (
+					const { endpoint, propertyKey, value } of credentialOwners
+				) {
+					// If a user ID is given, only delete credentials owned by that user
+					if (this.userId !== 0 && value !== this.userId) continue;
+
+					const key = propertyKey as number;
+					const cType = key >>> 16;
+					const cSlot = key & 0xffff;
+
+					// If a credential type is given, only delete credentials of that type
+					if (
+						this.credentialType !== UserCredentialType.None
+						&& cType !== this.credentialType
+					) {
+						continue;
+					}
+
+					valueDB.removeValue(
+						UserCredentialCCValues.credential(cType, cSlot)
+							.endpoint(endpoint),
+					);
+					valueDB.removeValue(
+						UserCredentialCCValues.credentialOwner(cType, cSlot)
+							.endpoint(endpoint),
+					);
+					valueDB.removeValue(
+						UserCredentialCCValues.credentialModifierType(
+							cType,
+							cSlot,
+						).endpoint(endpoint),
+					);
+					valueDB.removeValue(
+						UserCredentialCCValues.credentialModifierNodeId(
+							cType,
+							cSlot,
+						).endpoint(endpoint),
+					);
+				}
+			}
+			return true;
+		}
+
+		// Non-delete reports may carry (None, 0) as a sentinel for "no credential
+		// at this location" — e.g. the end-of-walk marker in nextCredential* of
+		// a ResponseToGet. Bail out so we don't write bogus cache entries.
+		if (
+			this.credentialType === UserCredentialType.None
+			|| this.credentialSlot === 0
+		) {
 			return true;
 		}
 

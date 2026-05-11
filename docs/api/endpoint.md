@@ -304,6 +304,13 @@ if (endpoint.accessControl) {
 ```
 
 > [!NOTE] For nodes using the **User Code CC**, only a subset of the functionality is available. Each user maps to a single credential of the device's unified credential type, and the unified credential slot matches the user slot. User names and credential rules are not supported, and credential learning is unavailable.
+>
+> As a result, several of the below APIs have side effects on these devices:
+>
+> - Adding a credential implicitly creates a user.
+> - Deleting one or more credentials implicitly deletes the owning users (and vice versa). Methods that delete users or credentials therefore emit both a `"credential deleted"` and a `"user deleted"` event.
+> - `deleteAllCredentialsForUser` rejects when called with a `credentialType` the node does not support.
+> - When `deleteCredential` is called without a `userId`, the `slot` is interpreted as the user identifier.
 
 ### Querying capabilities
 
@@ -592,15 +599,40 @@ Creates or updates a credential for the given user. Whether a credential is crea
 
 ```ts
 deleteCredential(
-	userId: number,
 	type: UserCredentialType,
 	slot: number,
-): Promise<SupervisionResult | undefined>
+): Promise<SetCredentialResult>;
+deleteCredential(
+	userId: number | undefined,
+	type: UserCredentialType,
+	slot: number,
+): Promise<SetCredentialResult>;
 ```
 
-Deletes the given credential. Throws if the credential slot is out of range.
+Deletes the given credential. Throws if the credential slot is out of range. When a `userId` is given, the credential is only deleted if it belongs to that user.
 
-> [!NOTE] For nodes using the **User Code CC**, deleting a credential also deletes the associated user, because User Code CC does not distinguish between users and their credentials.
+#### `deleteAllCredentialsForUser`
+
+```ts
+deleteAllCredentialsForUser(
+	userId: number,
+	credentialType?: UserCredentialType,
+): Promise<SetCredentialResult>
+```
+
+Deletes all credentials owned by the given user. When `credentialType` is provided, only credentials of that type are deleted. On nodes using the **User Credential CC**, the user record itself is preserved.
+
+A single [`"credential deleted"`](#quotcredential-deletedquot) event is emitted whose payload echoes the request: `credentialSlot` is always `0`, and `credentialType` is `0` when no type filter was given. Treat zeros in this payload as wildcards and refresh the affected scope rather than a single credential. This avoids flooding listeners with up to N×M events on fully provisioned locks.
+
+#### `deleteAllCredentials`
+
+```ts
+deleteAllCredentials(): Promise<SetCredentialResult>
+```
+
+Deletes all credentials on the node. On nodes using the **User Credential CC**, user records are preserved — use [`deleteAllUsers`](#deleteallusers) to delete those as well.
+
+A single [`"credential deleted"`](#quotcredential-deletedquot) event with all zeros is emitted (and on User Code CC, a [`"user deleted"`](#quotuser-deletedquot) event with `userId: 0`). Treat zeros as wildcards.
 
 #### `assignCredential`
 

@@ -14,6 +14,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+import { SetCredentialResult } from "../../node/feature-apis/AccessControl.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
 // =============================================================================
@@ -551,7 +552,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteCredential emits credential deleted event for existing credential",
+	"deleteCredential emits credential deleted + user deleted events on UC (cross-deletion cascade)",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -578,22 +579,218 @@ integrationTest(
 			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
 
 			const credEvent = createDeferredPromise<unknown>();
+			const userEvent = createDeferredPromise<unknown>();
 			node.on(
 				"credential deleted",
 				(_node, args) => credEvent.resolve(args),
 			);
+			node.on("user deleted", (_node, args) => userEvent.resolve(args));
 
 			await node.accessControl.deleteCredential(
 				2,
 				UserCredentialType.PINCode,
 				2,
 			);
+			t.expect(
+				node.accessControl.getCredentialCached(
+					UserCredentialType.PINCode,
+					2,
+				),
+			).toBeUndefined();
+			t.expect(node.accessControl.getUserCached(2)).toBeUndefined();
 
 			t.expect(await credEvent).toMatchObject({
 				userId: 2,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 2,
 			});
+			t.expect(await userEvent).toMatchObject({ userId: 2 });
+		},
+	},
+);
+
+integrationTest(
+	"deleteCredential(type, slot) overload on UC treats slot as the user identifier",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(3).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(3).id, "9999");
+
+			const credEvent = createDeferredPromise<unknown>();
+			const userEvent = createDeferredPromise<unknown>();
+			node.on(
+				"credential deleted",
+				(_node, args) => credEvent.resolve(args),
+			);
+			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+
+			await node.accessControl.deleteCredential(
+				UserCredentialType.PINCode,
+				3,
+			);
+
+			t.expect(await credEvent).toMatchObject({
+				userId: 3,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 3,
+			});
+			t.expect(await userEvent).toMatchObject({ userId: 3 });
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllCredentialsForUser emits credential deleted + user deleted events on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(4).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(4).id, "1111");
+
+			const credEvent = createDeferredPromise<unknown>();
+			const userEvent = createDeferredPromise<unknown>();
+			node.on(
+				"credential deleted",
+				(_node, args) => credEvent.resolve(args),
+			);
+			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+
+			await node.accessControl.deleteAllCredentialsForUser(4);
+			t.expect(
+				node.accessControl.getCredentialCached(
+					UserCredentialType.PINCode,
+					4,
+				),
+			).toBeUndefined();
+			t.expect(node.accessControl.getUserCached(4)).toBeUndefined();
+
+			t.expect(await credEvent).toMatchObject({
+				userId: 4,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 4,
+			});
+			t.expect(await userEvent).toMatchObject({ userId: 4 });
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllCredentialsForUser throws on UC when credentialType is unsupported",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await t.expect(
+				node.accessControl.deleteAllCredentialsForUser(
+					1,
+					UserCredentialType.Password,
+				),
+			).rejects.toThrow();
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllCredentials emits wildcard credential deleted + user deleted events on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const credEvent = createDeferredPromise<unknown>();
+			const userEvent = createDeferredPromise<unknown>();
+			node.on(
+				"credential deleted",
+				(_node, args) => credEvent.resolve(args),
+			);
+			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+
+			await node.accessControl.deleteAllCredentials();
+
+			t.expect(await credEvent).toMatchObject({
+				userId: 0,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 0,
+			});
+			t.expect(await userEvent).toMatchObject({ userId: 0 });
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
+					&& frame.payload.userCodes.length === 1
+					&& frame.payload.userCodes[0].userId === 0
+					&& frame.payload.userCodes[0].userIdStatus
+						=== UserIDStatus.Available,
+				{
+					errorMessage:
+						"Should have sent ExtendedUserCodeSet with userId 0 and Available status",
+				},
+			);
 		},
 	},
 );
@@ -914,7 +1111,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteCredential ignores slot !== userId and deletes the user's credential",
+	"deleteCredential rejects with ModifyRejectedLocationEmpty when slot !== userId on UC",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -939,23 +1136,21 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
 
-			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
-			);
+			let emitted = false;
+			node.on("credential deleted", () => {
+				emitted = true;
+			});
 
-			await node.accessControl.deleteCredential(
+			const result = await node.accessControl.deleteCredential(
 				2,
 				UserCredentialType.PINCode,
 				99,
 			);
 
-			t.expect(await credEvent).toMatchObject({
-				userId: 2,
-				credentialType: UserCredentialType.PINCode,
-				credentialSlot: 2,
-			});
+			t.expect(result).toBe(
+				SetCredentialResult.Error_ModifyRejectedLocationEmpty,
+			);
+			t.expect(emitted).toBe(false);
 		},
 	},
 );
