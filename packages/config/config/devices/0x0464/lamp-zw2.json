@@ -241,7 +241,6 @@
       "maxValue": 1,
       "defaultValue": 0,
       "unsigned": true,
-      "writeOnly": false,
       "options": [
             {
               "label": "Disable programming from paddle enabled",
