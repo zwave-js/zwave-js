@@ -309,7 +309,7 @@ if (endpoint.accessControl) {
 >
 > - Adding a credential implicitly creates a user.
 > - Deleting one or more credentials implicitly deletes the owning users (and vice versa). Methods that delete users or credentials therefore emit both a `"credential deleted"` and a `"user deleted"` event.
-> - `deleteAllCredentialsForUser` rejects when called with a `credentialType` the node does not support.
+> - `deleteCredentials` rejects when called with a `credentialType` the node does not support.
 > - When `deleteCredential` is called without a `userId`, the `slot` is interpreted as the user identifier.
 
 ### Querying capabilities
@@ -366,24 +366,23 @@ Each entry in `supportedCredentialTypes` maps a `UserCredentialType` to its capa
 <!-- #import UserCredentialCapability from "@zwave-js/cc" -->
 
 ```ts
-type UserCredentialCapability =
-	& {
-		numberOfCredentialSlots: number;
-		minCredentialLength: number;
-		maxCredentialLength: number;
-		maxCredentialHashLength: number;
-	}
-	& (
-		{
+type UserCredentialCapability = {
+	numberOfCredentialSlots: number;
+	minCredentialLength: number;
+	maxCredentialLength: number;
+	maxCredentialHashLength: number;
+} & (
+	| {
 			supportsCredentialLearn: true;
 			credentialLearnRecommendedTimeout: number;
 			credentialLearnNumberOfSteps: number;
-		} | {
+	  }
+	| {
 			supportsCredentialLearn: false;
 			credentialLearnRecommendedTimeout?: undefined;
 			credentialLearnNumberOfSteps?: undefined;
-		}
-	);
+	  }
+);
 ```
 
 ### Managing users
@@ -611,28 +610,21 @@ deleteCredential(
 
 Deletes the given credential. Throws if the credential slot is out of range. When a `userId` is given, the credential is only deleted if it belongs to that user.
 
-#### `deleteAllCredentialsForUser`
+#### `deleteCredentials`
 
 ```ts
-deleteAllCredentialsForUser(
-	userId: number,
-	credentialType?: UserCredentialType,
-): Promise<SetCredentialResult>
+deleteCredentials(options?: DeleteCredentialsOptions): Promise<SetCredentialResult>
 ```
 
-Deletes all credentials owned by the given user. When `credentialType` is provided, only credentials of that type are deleted. On nodes using the **User Credential CC**, the user record itself is preserved.
+Deletes credentials matching the given filters:
 
-A single [`"credential deleted"`](#quotcredential-deletedquot) event is emitted whose payload echoes the request: `credentialSlot` is always `0`, and `credentialType` is `0` when no type filter was given. Treat zeros in this payload as wildcards and refresh the affected scope rather than a single credential. This avoids flooding listeners with up to N×M events on fully provisioned locks.
+<!-- #import DeleteCredentialsOptions from "zwave-js" -->
 
-#### `deleteAllCredentials`
+- When `userId` is omitted or `0`, credentials for all users are deleted.
+- When `credentialType` is omitted or `UserCredentialType.None`, credentials of all types are deleted.
+- Calling without any filters deletes every credential on the node.
 
-```ts
-deleteAllCredentials(): Promise<SetCredentialResult>
-```
-
-Deletes all credentials on the node. On nodes using the **User Credential CC**, user records are preserved — use [`deleteAllUsers`](#deleteallusers) to delete those as well.
-
-A single [`"credential deleted"`](#quotcredential-deletedquot) event with all zeros is emitted (and on User Code CC, a [`"user deleted"`](#quotuser-deletedquot) event with `userId: 0`). Treat zeros as wildcards.
+A single [`"credential deleted"`](#quotcredential-deletedquot) event is emitted whose payload echoes the request: omitted filters are reported as `0`.
 
 #### `assignCredential`
 
