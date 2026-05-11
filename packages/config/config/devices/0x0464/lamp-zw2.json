@@ -1,0 +1,315 @@
+ {
+  "manufacturer": "Versa Wireless Inc.",
+  "manufacturerId": "0x0464",
+  "label": "LAMP-ZW2",
+  "description": "Plug-In Lamp Dimmer",
+  "devices": [
+    {
+      "productType": "0xff00",
+      "productId": "0xff0d"
+    }
+  ],
+  "firmwareVersion": {
+    "min": "8.0.0",
+    "max": "8.10.0"
+  },
+  "associations": {
+    "1": {
+      "label": "Lifeline",
+      "maxNodes": 5,
+      "isLifeline": true
+    },
+    "2": {
+      "label": "Send Basic Set ON / Off",
+      "maxNodes": 5
+    }
+  },
+  "paramInformation": [
+    {
+      "#": "1",
+      "label": "LED Indicator Brightness",
+      "description": "LED brightness indicates lamp brightness",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 2,
+      "defaultValue": 1,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Dimmer default",
+              "value": 1
+            }
+        ]
+    },
+    {
+      "#": "2",
+      "label": "LED Indicator",
+      "description": "LED ON/OFF indicates lamp ON/OFF",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 0,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Dimmer default",
+              "value": 0
+            }
+        ]
+    },
+    {
+      "#": "3",
+      "label": "LED Indicator Color",
+      "description": "LED brightness indicates lamp brightness",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 5,
+      "defaultValue": 0,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Dimmer default",
+              "value": 0
+            }
+        ]
+    },
+    {
+      "#": "4",
+      "label": "Auto Turn-Off Timer",
+      "description": "Sets the amount of time before the dimmer automatically turns off.",
+      "valueSize": 4,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 0,
+      "unit": "milliseconds",
+      "unsigned": true
+    },
+    {
+      "#": "6",
+      "label": "Auto Turn-On Timer",
+      "description": "Sets the amount of time before the dimmer automatically turns on.",
+      "valueSize": 4,
+      "minValue": 0,
+      "maxValue": 65535,
+      "defaultValue": 0,
+      "unit": "milliseconds"
+    },
+    {
+      "#": "7",
+      "label": "Night Light Level",
+      "description": "Sets the brightness level for the night light feature.",
+      "valueSize": 1,
+      "minValue": 1,
+      "maxValue": 10,
+      "defaultValue": 2,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Dimmer default",
+              "value": 2
+            }
+        ]
+    },
+    {
+      "#": "8",
+      "label": "Restores State After Power Failure",
+      "description": "Restores the previous state after a power failure",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 2,
+      "defaultValue": 2,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Dimmer default",
+              "value": 2
+            }
+        ]
+    },
+    {
+      "#": "9",
+      "label": "Ramp Rate (Turn on the light by pressing the button )",
+      "description": "Ramp rate when pressing the button once",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 2,
+      "unsigned": true
+    },
+    {
+      "#": "10",
+      "label": "Ramp rate when pressing and holding the button",
+      "description": "Sets the dimming speed when the button is pressed and held to increase or decrease brightness.",
+      "valueSize": 1,
+      "minValue": 1,
+      "maxValue": 99,
+      "defaultValue": 4,
+      "unsigned": true
+    },
+    {
+      "#": "11",
+      "label": "Multilevel minimum value can be set",
+      "description": "Sets the minimum dimming level that the device can be adjusted to.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 10,
+      "unsigned": true
+    },
+    {
+      "#": "12",
+      "label": "Multilevel maximum value can be set",
+      "description": "Sets the maximum dimming level that the device can be adjusted to.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 99,
+      "unsigned": true
+    },
+    {
+      "#": "13",
+      "label": "Single Tap Behavior",
+      "description": "Single Tap Behavior: when switch is off and press UPPER paddle 1 time, switch turns on to x brightness（Local Button)",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 1,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Dimmer default",
+              "value": 1
+            }
+        ]
+    },
+    {
+      "#": "14",
+      "label": "Double Tap Behavior",
+      "description": "Double Tap Behavior: when switch is off and press button 2 times, switch turns on to x brightness",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 3,
+      "defaultValue": 1,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Dimmer default",
+              "value": 1
+            }
+        ]
+    },
+    {
+      "#": "15",
+      "label": "Custom brightness level",
+      "description": "In this parameter define default brightness level the switch will turn on to when pressed button once.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 0,
+      "unsigned": true
+    },
+    {
+      "#": "16",
+      "label": "Local and Z-Wave Control Mode",
+      "description": "Enable or disable the local control of light and control via Z-Wave",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 2,
+      "defaultValue": 1,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "disable local Control, enable Z-Wave control",
+              "value": 0
+            },
+            {
+              "label": "enable local Control, enable Z-Wave control",
+              "value": 1
+            },
+            {
+              "label": "disable local Control, disable Z-Wave control",
+              "value": 2
+            }
+        ]
+    },
+    {
+      "#": "17",
+      "label": "Disable programming from paddle",
+      "description": "Enables or disables the ability to change device settings using the physical paddle buttons.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Disable programming from paddle enabled",
+              "value": 0
+            },
+            {
+              "label": "Disable programming from paddle disabled",
+              "value": 1
+            }
+        ]
+    },
+    {
+      "#": "18",
+      "label": "Ramp rate (Local Button OFF)",
+      "description": "Sets the fade-out speed when turning the light off using the local button.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 99,
+      "defaultValue": 2,
+      "unit": "seconds",
+      "unsigned": true
+    },
+    {
+      "#": "19",
+      "label": "Ramp rate (Hub ON)",
+      "description": "Sets the dimming speed when the light is turned on via the Z-Wave hub.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 255,
+      "defaultValue": 255,
+      "unit": "seconds",
+      "unsigned": true
+    },
+    {
+      "#": "20",
+      "label": "Ramp rate (Hub OFF)",
+      "description": "Sets the fade-out speed when turning the light off via the Z-Wave hub.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 255,
+      "defaultValue": 255,
+      "unit": "seconds",
+      "unsigned": true
+    },
+    {
+      "#": "21",
+      "label": "Disable LED blinking when a setting is changed",
+      "description": "Enables or disables LED blinking feedback when device settings are modified.",
+      "valueSize": 1,
+      "minValue": 0,
+      "maxValue": 1,
+      "defaultValue": 0,
+      "unsigned": true,
+      "options": [
+            {
+              "label": "Enable LED blinking",
+              "value": 0
+            },
+            {
+              "label": "Disable LED blinking",
+              "value": 1
+            }
+        ]
+    }
+  ],
+  "metadata": {
+    "inclusion": "1. Follow the instructions for your Z-Wave certified controller to add a device to the Z-Wave network. \n2. Once the controller is ready to add your device, press the Manual/ Program button on the smart plug 3 times quickly. The blue LED will flash quickly. \n3. Confirm the Zwave plug was learned into the controller and complete set up on the controller. When the Zwave dimmer has been enrolled into the controller, the LED will light solid blue.\n4. Programming is now complete. You can now turn your device ON / OFF according to groups, schedules and interactive automation programmed by your controller. If your Z-Wave certified controller features remote access, you can control your plug from your mobile devices.\n Note: If you have an issue with pairing, please move the device as close as possible to the hub and try again. You can move to your final location when completed. \nNote: \n1. If the LED Indicator does not light up after pressing 3 times, please reset the device. To reset, press the button twice quickly then hold a 3rd press for 10 seconds.\n2. The flashing purple light means the device is already paired or in exclusion mode. If adding fails, please perform a Z-wave exclusion on your Z-wave controller and try to add the device again.",
+    "exclusion": "1. Follow the instructions for your Z-Wave certified controller to remove a device from the Z-Wave network.\n2. Once the controller is ready to remove your device, press the manual / program button on the smart plug 3 times quickly ",
+    "reset": "To reset, press the button twice quickly then hold a 3rd press for 10 seconds",
+    "manual": "https://versawireless.com/pages/resources"
+  }
+}
