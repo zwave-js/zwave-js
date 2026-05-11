@@ -131,7 +131,7 @@
     },
     {
       "#": "10",
-      "label": "Ramp Rate When Pressing And Holding the Button",
+      "label": "Ramp Rate When Pressing and Holding the Button",
       "description": "Sets the dimming speed when the button is pressed and held to increase or decrease brightness.",
       "valueSize": 1,
       "minValue": 1,
