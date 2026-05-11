@@ -34,9 +34,6 @@
       "maxValue": 2,
       "defaultValue": 1,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Dimmer default",
@@ -53,9 +50,6 @@
       "maxValue": 3,
       "defaultValue": 0,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Dimmer default",
@@ -72,9 +66,6 @@
       "maxValue": 5,
       "defaultValue": 0,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Dimmer default",
@@ -91,10 +82,7 @@
       "maxValue": 65535,
       "defaultValue": 0,
       "unit": "miliseconds",
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "6",
@@ -104,10 +92,7 @@
       "minValue": 0,
       "maxValue": 65535,
       "defaultValue": 0,
-      "unit": "miliseconds",
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unit": "miliseconds"
     },
     {
       "#": "7",
@@ -118,9 +103,6 @@
       "maxValue": 10,
       "defaultValue": 2,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Dimmer default",
@@ -137,9 +119,6 @@
       "maxValue": 2,
       "defaultValue": 2,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Dimmer default",
@@ -155,10 +134,7 @@
       "minValue": 0,
       "maxValue": 99,
       "defaultValue": 2,
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "10",
@@ -168,10 +144,7 @@
       "minValue": 1,
       "maxValue": 99,
       "defaultValue": 4,
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "11",
@@ -181,10 +154,7 @@
       "minValue": 0,
       "maxValue": 99,
       "defaultValue": 10,
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "12",
@@ -194,10 +164,7 @@
       "minValue": 0,
       "maxValue": 99,
       "defaultValue": 99,
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "13",
@@ -208,9 +175,6 @@
       "maxValue": 3,
       "defaultValue": 1,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Dimmer default",
@@ -227,9 +191,6 @@
       "maxValue": 3,
       "defaultValue": 1,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Dimmer default",
@@ -245,10 +206,7 @@
       "minValue": 0,
       "maxValue": 99,
       "defaultValue": 0,
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "16",
@@ -259,9 +217,6 @@
       "maxValue": 2,
       "defaultValue": 1,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "disable local Control, enable Z-Wave control",
@@ -286,9 +241,7 @@
       "maxValue": 1,
       "defaultValue": 0,
       "unsigned": true,
-      "readOnly": false,
       "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Disable programming from paddle enabled",
@@ -309,10 +262,7 @@
       "maxValue": 99,
       "defaultValue": 2,
       "unit": "seconds",
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "19",
@@ -323,10 +273,7 @@
       "maxValue": 255,
       "defaultValue": 255,
       "unit": "seconds",
-      "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "20",
@@ -337,9 +284,7 @@
       "maxValue": 255,
       "defaultValue": 255,
       "unit": "seconds",
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true
+      "unsigned": true
     },
     {
       "#": "21",
@@ -350,9 +295,6 @@
       "maxValue": 1,
       "defaultValue": 0,
       "unsigned": true,
-      "readOnly": false,
-      "writeOnly": false,
-      "allowManualEntry": true,
       "options": [
             {
               "label": "Enable LED blinking",
