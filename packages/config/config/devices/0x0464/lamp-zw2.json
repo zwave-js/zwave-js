@@ -34,11 +34,11 @@
       "maxValue": 2,
       "defaultValue": 1,
       "options": [
-            {
-              "label": "Dimmer default",
-              "value": 1
-            }
-        ]
+        {
+          "label": "Dimmer default",
+          "value": 1
+        }
+      ]
     },
     {
       "#": "2",
@@ -49,11 +49,11 @@
       "maxValue": 3,
       "defaultValue": 0,
       "options": [
-            {
-              "label": "Dimmer default",
-              "value": 0
-            }
-        ]
+        {
+          "label": "Dimmer default",
+          "value": 0
+        }
+      ]
     },
     {
       "#": "3",
@@ -64,11 +64,11 @@
       "maxValue": 5,
       "defaultValue": 0,
       "options": [
-            {
-              "label": "Dimmer default",
-              "value": 0
-            }
-        ]
+        {
+          "label": "Dimmer default",
+          "value": 0
+        }
+      ]
     },
     {
       "#": "4",
@@ -99,11 +99,11 @@
       "maxValue": 10,
       "defaultValue": 2,
       "options": [
-            {
-              "label": "Dimmer default",
-              "value": 2
-            }
-        ]
+        {
+          "label": "Dimmer default",
+          "value": 2
+        }
+      ]
     },
     {
       "#": "8",
@@ -114,11 +114,11 @@
       "maxValue": 2,
       "defaultValue": 2,
       "options": [
-            {
-              "label": "Dimmer default",
-              "value": 2
-            }
-        ]
+        {
+          "label": "Dimmer default",
+          "value": 2
+        }
+      ]
     },
     {
       "#": "9",
@@ -165,11 +165,11 @@
       "maxValue": 3,
       "defaultValue": 1,
       "options": [
-            {
-              "label": "Dimmer default",
-              "value": 1
-            }
-        ]
+        {
+          "label": "Dimmer default",
+          "value": 1
+        }
+      ]
     },
     {
       "#": "14",
@@ -180,11 +180,11 @@
       "maxValue": 3,
       "defaultValue": 1,
       "options": [
-            {
-              "label": "Dimmer default",
-              "value": 1
-            }
-        ]
+        {
+          "label": "Dimmer default",
+          "value": 1
+        }
+      ]
     },
     {
       "#": "15",
@@ -204,19 +204,19 @@
       "maxValue": 2,
       "defaultValue": 1,
       "options": [
-            {
-              "label": "Disable local control, enable Z-Wave control",
-              "value": 0
-            },
-            {
-              "label": "Enable local control, enable Z-Wave control",
-              "value": 1
-            },
-            {
-              "label": "Disable local control, disable Z-Wave control",
-              "value": 2
-            }
-        ]
+        {
+          "label": "Disable local control, enable Z-Wave control",
+          "value": 0
+        },
+        {
+          "label": "Enable local control, enable Z-Wave control",
+          "value": 1
+        },
+        {
+          "label": "Disable local control, disable Z-Wave control",
+          "value": 2
+        }
+      ]
     },
     {
       "#": "17",
@@ -227,15 +227,15 @@
       "maxValue": 1,
       "defaultValue": 0,
       "options": [
-            {
-              "label": "Disable programming from paddle",
-              "value": 0
-            },
-            {
-              "label": "Disable programming from paddle disabled",
-              "value": 1
-            }
-        ]
+        {
+          "label": "Disable programming from paddle",
+          "value": 0
+        },
+        {
+          "label": "Disable programming from paddle disabled",
+          "value": 1
+        }
+      ]
     },
     {
       "#": "18",
@@ -278,15 +278,15 @@
       "maxValue": 1,
       "defaultValue": 0,
       "options": [
-            {
-              "label": "Enable LED blinking",
-              "value": 0
-            },
-            {
-              "label": "Disable LED blinking",
-              "value": 1
-            }
-        ]
+        {
+          "label": "Enable LED blinking",
+          "value": 0
+        },
+        {
+          "label": "Disable LED blinking",
+          "value": 1
+        }
+      ]
     }
   ],
   "metadata": {
