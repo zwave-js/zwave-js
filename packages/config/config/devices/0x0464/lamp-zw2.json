@@ -122,8 +122,8 @@
     },
     {
       "#": "9",
-      "label": "Ramp Rate (Turn on the light by pressing the button once)",
-      "description": "Ramp Rate when pressing the button once",
+      "label": "Ramp Rate when pressing the button once",
+      "description": "Turn on the light by pressing the button once, the dimming speed is set by this parameter.",
       "valueSize": 1,
       "minValue": 0,
       "maxValue": 99,
@@ -255,7 +255,8 @@
       "unit": "seconds",
       "minValue": 0,
       "maxValue": 255,
-      "defaultValue": 255
+      "defaultValue": 255,
+      "unsigned": true
     },
     {
       "#": "20",
@@ -265,7 +266,8 @@
       "unit": "seconds",
       "minValue": 0,
       "maxValue": 255,
-      "defaultValue": 255
+      "defaultValue": 255,
+      "unsigned": true
     },
     {
       "#": "21",
