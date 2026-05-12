@@ -53,7 +53,7 @@
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 20"
+    "node": ">= 22.12"
   },
   "scripts": {
     "task": "yarn ts maintenance/_tasks.ts",

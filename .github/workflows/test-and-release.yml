@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -180,7 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -232,7 +232,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -256,7 +256,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [22, 24, 26]
         os: [ubuntu-latest]
         shard: [1/4, 2/4, 3/4, 4/4]
 
@@ -290,7 +290,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [22, 24, 26]
         os: [ubuntu-latest]
 
     steps:
@@ -374,7 +374,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -410,7 +410,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -453,7 +453,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -530,7 +530,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
