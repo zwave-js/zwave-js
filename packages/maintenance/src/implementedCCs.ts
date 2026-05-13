@@ -43,8 +43,11 @@ interface CCInfo {
 
 (async () => {
 	const ccDir = path.join(__dirname, "../..", "cc/src/cc");
-	const ccFiles = (await fs.readdir(ccDir))
-		.filter((file) => file.endsWith(".ts") && !file.endsWith("test.ts"))
+	const ccFiles = (await Array.fromAsync(
+		fs.glob("*.ts", { cwd: ccDir, dot: true }),
+	))
+		.filter((file) => !file.endsWith("test.ts"))
+		.toSorted()
 		.map((file) => path.join(ccDir, file));
 
 	const allCCs = new Map<string, CCInfo>(

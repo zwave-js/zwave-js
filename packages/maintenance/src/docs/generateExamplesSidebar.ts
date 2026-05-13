@@ -26,8 +26,11 @@ async function generateExamples(): Promise<boolean> {
 	}
 
 	// Find examples
-	const examples = (await fsp.readdir(examplesDocsDir))
-		.filter((f) => f.endsWith(".md") && f !== "index.md");
+	const examples = (await Array.fromAsync(
+		fsp.glob("*.md", { cwd: examplesDocsDir, dot: true }),
+	))
+		.filter((f) => f !== "index.md")
+		.toSorted();
 
 	const processedExamples: {
 		position: number;

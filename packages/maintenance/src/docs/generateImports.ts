@@ -2,8 +2,6 @@
  * This method returns the original source code for an interface or type so it can be put into documentation
  */
 
-import { fs } from "@zwave-js/core/bindings/fs/node";
-import { enumFilesRecursive } from "@zwave-js/shared";
 import c from "ansi-colors";
 import esMain from "es-main";
 import fsp from "node:fs/promises";
@@ -283,12 +281,15 @@ ${source}
 
 /** Processes all imports, returns true if there was an error */
 async function processImports(piscina: Piscina): Promise<boolean> {
-	const files = await enumFilesRecursive(
-		fs,
-		path.join(projectRoot, "docs"),
-		(f) =>
-			!f.includes("/CCs/") && !f.includes("\\CCs\\") && f.endsWith(".md"),
-	);
+	const docsDir = path.join(projectRoot, "docs");
+	const files = (await Array.fromAsync(
+		fsp.glob("**/*.md", { cwd: docsDir, dot: true }),
+	))
+		.filter(
+			(file) => !file.startsWith("CCs/") && !file.includes("/CCs/"),
+		)
+		.map((file) => path.join(docsDir, file))
+		.toSorted();
 
 	const tasks = files.map((f) => piscina.run(f, { name: "processImport" }));
 

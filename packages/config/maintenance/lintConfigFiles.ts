@@ -8,7 +8,6 @@ import {
 import { fs } from "@zwave-js/core/bindings/fs/node";
 import { reportProblem } from "@zwave-js/maintenance";
 import {
-	enumFilesRecursive,
 	formatId,
 	getErrorMessage,
 	num2hex,
@@ -20,6 +19,7 @@ import c from "ansi-colors";
 import esMain from "es-main";
 import levenshtein from "js-levenshtein";
 import type { RulesLogic } from "json-logic-js";
+import fsp from "node:fs/promises";
 import * as path from "node:path";
 import { ConfigManager } from "../src/ConfigManager.js";
 import { parseLogic } from "../src/Logic.js";
@@ -260,11 +260,14 @@ async function lintDevices(): Promise<void> {
 
 	const rootDir = path.join(configDir, "devices");
 
-	const forbiddenFiles = await enumFilesRecursive(
-		fs,
-		rootDir,
-		(filename) => !filename.endsWith(".json"),
-	);
+	const forbiddenFiles = (
+		await Array.fromAsync(
+			fsp.glob("**/*", { cwd: rootDir, dot: true, withFileTypes: true }),
+		)
+	)
+		.filter((entry) => entry.isFile() && !entry.name.endsWith(".json"))
+		.map((entry) => path.join(entry.parentPath, entry.name))
+		.toSorted();
 	for (const file of forbiddenFiles) {
 		addError(
 			path.relative(rootDir, file),
@@ -274,15 +277,19 @@ async function lintDevices(): Promise<void> {
 		);
 	}
 
-	const filesWithWhitespace = await enumFilesRecursive(
-		fs,
-		rootDir,
-		(filename) => {
-			const basename = path.basename(filename);
-			// Check for whitespace in filename
-			return /\s/.test(basename);
-		},
-	);
+	const filesWithWhitespace = (
+		await Array.fromAsync(
+			fsp.glob("**/*", { cwd: rootDir, dot: true, withFileTypes: true }),
+		)
+	)
+		.filter(
+			(entry) =>
+				entry.isFile()
+				// Check for whitespace in filename
+				&& /\s/.test(entry.name),
+		)
+		.map((entry) => path.join(entry.parentPath, entry.name))
+		.toSorted();
 	for (const file of filesWithWhitespace) {
 		addError(
 			path.relative(rootDir, file),

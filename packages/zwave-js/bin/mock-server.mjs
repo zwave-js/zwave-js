@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // @ts-check
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { globSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import {
@@ -126,14 +126,11 @@ if (configPath) {
 
 	if (isDir) {
 		// Read all .js/.cjs/.json files from the directory and merge them
-		const files = readdirSync(absolutePath)
-			.filter(
-				(filename) =>
-					filename.endsWith(".js")
-					|| filename.endsWith(".cjs")
-					|| filename.endsWith(".json")
-					|| filename.endsWith(".dump"),
-			)
+		const files = globSync("*.{js,cjs,json,dump}", {
+			cwd: absolutePath,
+			dot: true,
+		})
+			.sort()
 			.map((filename) => {
 				const fullPath = path.join(absolutePath, filename);
 				return {
