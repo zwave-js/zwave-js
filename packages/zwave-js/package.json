@@ -109,7 +109,6 @@
     "build": "tsgo -b tsconfig.build.json --pretty",
     "watch": "tsgo -b tsconfig.build.json --pretty --watch",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "extract-api": "yarn api-extractor run",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
@@ -140,7 +139,6 @@
     "winston": "^3.18.3"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.57.7",
     "@types/node": "^20.19.35",
     "@types/semver": "^7.7.1",
     "@types/sinon": "^21.0.0",

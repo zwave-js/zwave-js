@@ -55,12 +55,10 @@
   "scripts": {
     "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "extract-api": "yarn api-extractor run",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.57.7",
     "@types/node": "^20.19.35",
     "@types/sinon": "^21.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260423.1",

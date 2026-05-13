@@ -41,7 +41,6 @@
     "@dprint/json": "^0.21.3",
     "@dprint/markdown": "^0.21.1",
     "@dprint/typescript": "^0.95.15",
-    "@microsoft/api-extractor": "^7.57.7",
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.11.0",
     "@tsconfig/node22": "^22.0.5",
     "@types/js-yaml": "^4",
@@ -147,8 +146,6 @@
     "for-changed": "yarn changed foreach --all --exclude \"@zwave-js/repo\" --git-range=$(git describe --abbrev=0)",
     "codefind": "yarn ts packages/maintenance/src/codefind.ts",
     "configfind": "yarn ts packages/config/maintenance/find.ts",
-    "extract-api": "FORCE_COLOR=1 yarn turbo run extract-api",
-    "accept-api": "yarn extract-api -- --local",
     "monopack": "yarn exec monopack",
     "check-references": "workspaces-to-typescript-project-references --check --tsconfigPath tsconfig.build.json",
     "sync-references": "workspaces-to-typescript-project-references --tsconfigPath tsconfig.build.json && yarn fmt > /dev/null"
