@@ -2278,10 +2278,7 @@ function isEquivalentParameters(
 		compareParameters.add(temp);
 	}
 
-	const setDifference = new Set(
-		[...compareParameters].filter((x) => !testParameters.has(x)),
-	);
-	return setDifference.size === 0;
+	return compareParameters.isSubsetOf(testParameters);
 }
 
 /****************************************************************************

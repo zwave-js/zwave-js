@@ -156,9 +156,9 @@ function areEndpointsUnnecessary(
 
 	// Endpoints may be useless if all of them have different device classes
 	const distinctDeviceClasses = distinct(
-		[...deviceClasses.values()].map(
-			({ generic, specific }) => generic * 256 + specific,
-		),
+		deviceClasses.values()
+			.map(({ generic, specific }) => generic * 256 + specific)
+			.toArray(),
 	);
 	if (distinctDeviceClasses.length !== endpointIndizes.length) {
 		// There are endpoints with the same device class, so they are not unnecessary
@@ -172,9 +172,11 @@ function areEndpointsUnnecessary(
 		0x12, // Remote Switch
 		0x13, // Toggle Switch
 	]);
-	const numSwitchEndpoints = [...deviceClasses.values()].filter(
-		({ generic }) => switchTypeDeviceClasses.has(generic),
-	).length;
+	const numSwitchEndpoints = deviceClasses.values().reduce(
+		(count, { generic }) =>
+			count + (switchTypeDeviceClasses.has(generic) ? 1 : 0),
+		0,
+	);
 	if (numSwitchEndpoints > 1) return false;
 
 	return true;

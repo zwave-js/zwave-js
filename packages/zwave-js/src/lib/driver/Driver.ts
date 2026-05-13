@@ -6270,8 +6270,8 @@ ${handlers.length} left`,
 			// Commands that are always in the NIF should not appear in the
 			// S2 commands supported report
 			const commandsInNIF = new Set(determineNIF().supportedCCs);
-			const supportedCommandsNotInNIF = [...supportedCCs].filter((cc) =>
-				!commandsInNIF.has(cc)
+			const supportedCommandsNotInNIF = Array.from(
+				supportedCCs.difference(commandsInNIF),
 			);
 
 			await endpoint.commandClasses["Security 2"].reportSupportedCommands(

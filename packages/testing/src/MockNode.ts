@@ -42,6 +42,12 @@ const defaultCCInfo: CommandClassInfo = {
 	version: 1,
 };
 
+const s2SecurityClasses = new Set([
+	SecurityClass.S2_AccessControl,
+	SecurityClass.S2_Authenticated,
+	SecurityClass.S2_Unauthenticated,
+]);
+
 export interface MockNodeOptions {
 	id: number;
 	controller: MockController;
@@ -281,11 +287,7 @@ export class MockNode {
 		let securityManager2: SecurityManager2 | undefined = undefined;
 		if (
 			this._options.controller.securityManagers.securityManager2
-			&& [
-				SecurityClass.S2_AccessControl,
-				SecurityClass.S2_Authenticated,
-				SecurityClass.S2_Unauthenticated,
-			].some((secClass) => securityClasses.has(secClass))
+			&& !securityClasses.isDisjointFrom(s2SecurityClasses)
 		) {
 			securityManager2 = await SecurityManager2.create();
 			const controllerSm2 =

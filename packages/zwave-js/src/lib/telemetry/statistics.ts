@@ -28,18 +28,20 @@ export async function compileStatistics(
 	return {
 		id: hash,
 		...appInfo,
-		devices: [...driver.controller.nodes.values()].map((node) => ({
-			manufacturerId: node.manufacturerId != undefined
-				? formatId(node.manufacturerId)
-				: "",
-			productType: node.productType != undefined
-				? formatId(node.productType)
-				: "",
-			productId: node.productId != undefined
-				? formatId(node.productId)
-				: "",
-			firmwareVersion: node.firmwareVersion ?? "",
-		})),
+		devices: driver.controller.nodes.values()
+			.map((node) => ({
+				manufacturerId: node.manufacturerId != undefined
+					? formatId(node.manufacturerId)
+					: "",
+				productType: node.productType != undefined
+					? formatId(node.productType)
+					: "",
+				productId: node.productId != undefined
+					? formatId(node.productId)
+					: "",
+				firmwareVersion: node.firmwareVersion ?? "",
+			}))
+			.toArray(),
 	};
 }
 

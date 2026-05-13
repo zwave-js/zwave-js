@@ -172,16 +172,16 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 	private _index: Set<string>;
 
 	private buildIndex(): Set<string> {
-		const ret = new Set<string>();
-		for (const key of this._db.keys()) {
-			if (compareDBKeyFast(key, this.nodeId)) ret.add(key);
-		}
-		for (const key of this._metadata.keys()) {
-			if (!ret.has(key) && compareDBKeyFast(key, this.nodeId)) {
-				ret.add(key);
-			}
-		}
-		return ret;
+		const dbKeys = new Set(
+			this._db.keys().filter((key) => compareDBKeyFast(key, this.nodeId)),
+		);
+		return dbKeys.union(
+			new Set(
+				this._metadata.keys().filter((key) =>
+					compareDBKeyFast(key, this.nodeId)
+				),
+			),
+		);
 	}
 
 	private valueIdToDBKey(valueID: ValueID): string {

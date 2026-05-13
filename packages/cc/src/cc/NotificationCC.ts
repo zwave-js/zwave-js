@@ -432,9 +432,10 @@ export function getNotificationEnumBehavior(
 		v.states.has(valueConfig.value)
 	);
 	if (!variable) return "none";
-	const numStatesWithEnums = [...variable.states.values()].filter(
-		(val) => val.parameter?.type === "enum",
-	).length;
+	const numStatesWithEnums = variable.states.values().reduce(
+		(count, val) => count + (val.parameter?.type === "enum" ? 1 : 0),
+		0,
+	);
 	if (numStatesWithEnums === 0) return "none";
 	// An enum value replaces the original value if there is only a single possible state
 	// which also has an enum parameter

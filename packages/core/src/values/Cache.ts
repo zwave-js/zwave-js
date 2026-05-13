@@ -38,7 +38,7 @@ export function serializeCacheValue(value: unknown): SerializedValue {
 		// We mark maps with a special key, so they can be detected by the deserialization routine
 		return {
 			...Object.fromEntries(
-				[...value.entries()].map(([k, v]) => [
+				value.entries().map(([k, v]) => [
 					k,
 					serializeCacheValue(v),
 				]),
