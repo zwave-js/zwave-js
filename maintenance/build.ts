@@ -7,7 +7,6 @@ const buildArgs = process.argv
 
 // FIXME: Parse package.json dependency graph to figure out if codegen and/or
 // partial builds are necessary, instead of hardcoding it here.
-// FIXME: dependency graph is needed to create CJS builds for affected packages
 
 // Only cc, config and projects that depend on them need codegen and partial builds
 const needsNoCodegen = [
@@ -130,15 +129,6 @@ async function main() {
 			execOptions,
 		);
 	}
-
-	// Perform ESM to CJS transformation
-	console.log();
-	console.log(`Transpiling to CommonJS...`);
-	await spawn(
-		"yarn",
-		["workspaces", "foreach", "--all", "--parallel", "run", "postbuild"],
-		execOptions,
-	);
 }
 
 main()
