@@ -12,16 +12,16 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { loadTSConfig, projectRoot } from "./tsAPITools.js";
 
-const style = (format: Parameters<typeof styleText>[0]) =>
+const createStyleFunction = (format: Parameters<typeof styleText>[0]) =>
 	(text: string): string =>
 		styleText(format, text, { validateStream: false });
 
-const blueBright = style("blueBright");
-const bold = style("bold");
-const gray = style("gray");
-const greenBright = style("greenBright");
-const redBright = style("redBright");
-const yellow = style("yellow");
+const blueBright = createStyleFunction("blueBright");
+const bold = createStyleFunction("bold");
+const gray = createStyleFunction("gray");
+const greenBright = createStyleFunction("greenBright");
+const redBright = createStyleFunction("redBright");
+const yellow = createStyleFunction("yellow");
 
 function relativeToProject(filename: string): string {
 	return path.relative(projectRoot, filename).replaceAll("\\", "/");
