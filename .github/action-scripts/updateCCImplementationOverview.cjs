@@ -3,7 +3,10 @@
 // @ts-check
 /// <reference path="../bot-scripts/types.d.ts" />
 
-const c = require("ansi-colors");
+const {
+	stripVTControlCharacters,
+	styleText,
+} = require("node:util");
 
 const ISSUE_NUMBER = 6;
 
@@ -33,7 +36,7 @@ async function main(param) {
 		.split("\n")
 		.filter((line) => line.startsWith("| "))
 		.join("\n");
-	ccTable = c.stripColor(ccTable);
+	ccTable = stripVTControlCharacters(ccTable);
 
 	const {
 		data: { body: oldBody },
@@ -50,9 +53,17 @@ async function main(param) {
 			issue_number: ISSUE_NUMBER,
 			body: newBody,
 		});
-		console.error(c.green("The implementation table was updated!"));
+		console.error(
+			styleText("green", "The implementation table was updated!", {
+				validateStream: false,
+			}),
+		);
 	} else {
-		console.error(c.yellow("No changes to the implementation table!"));
+		console.error(
+			styleText("yellow", "No changes to the implementation table!", {
+				validateStream: false,
+			}),
+		);
 	}
 }
 module.exports = main;

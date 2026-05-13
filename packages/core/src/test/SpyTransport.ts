@@ -1,4 +1,5 @@
 import c from "ansi-colors";
+import { stripVTControlCharacters } from "node:util";
 import sinon from "sinon";
 import { MESSAGE } from "triple-beam";
 import type { ExpectStatic } from "vitest";
@@ -57,7 +58,7 @@ export function assertMessage(
 	// By default ignore the color codes
 	const ignoreColor = options.ignoreColor !== false;
 	if (ignoreColor) {
-		actualMessage = c.stripColor(actualMessage);
+		actualMessage = stripVTControlCharacters(actualMessage);
 	}
 	// By default, strip away the timestamp and placeholder
 	if (options.ignoreTimestamp !== false) {
@@ -73,7 +74,7 @@ export function assertMessage(
 	}
 	if (typeof options.message === "string") {
 		if (ignoreColor) {
-			options.message = c.stripColor(options.message);
+			options.message = stripVTControlCharacters(options.message);
 		}
 		expect(actualMessage).toBe(options.message);
 	}

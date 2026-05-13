@@ -6,6 +6,7 @@ import c from "ansi-colors";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { stripVTControlCharacters } from "node:util";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -26,7 +27,7 @@ const argv = yargs(hideBin(process.argv)).parseSync();
 const onlyIncomplete = !!argv.onlyIncomplete;
 
 function getSafeLength(str: string): number {
-	return c.stripColor(str).length;
+	return stripVTControlCharacters(str).length;
 }
 
 function padEnd(str: string, len: number): string {
