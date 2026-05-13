@@ -82,8 +82,6 @@
 	},
 	"files.associations": {
 		"**/config/**/*.json": "jsonc",
-		"api-extractor-*.json": "jsonc",
-		"api-extractor.json": "jsonc",
 		"turbo.json": "jsonc"
 	},
 	"editor.rulers": [72, 80, 120],

@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22 # This should be LTS
+          node-version: 24 # This should be LTS
           cache: 'yarn'
 
       - name: Install dependencies
