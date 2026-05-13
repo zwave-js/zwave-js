@@ -10,25 +10,21 @@
   "exports": {
     ".": {
       "@@dev": "./src/index.ts",
-      "browser": "./build/esm/index_browser.js",
-      "import": "./build/esm/index.js",
-      "require": "./build/cjs/index.js"
+      "browser": "./build/index_browser.js",
+      "default": "./build/index.js"
     },
     "./safe": {
       "@@dev": "./src/index_safe.ts",
-      "import": "./build/esm/index_safe.js",
-      "require": "./build/cjs/index_safe.js"
+      "default": "./build/index_safe.js"
     },
     "./cc": {
       "@@dev": "./src/cc/index.ts",
-      "import": "./build/esm/cc/index.js",
-      "require": "./build/cjs/cc/index.js"
+      "default": "./build/cc/index.js"
     },
     "./package.json": "./package.json",
     "./*": {
       "@@dev": "./src/cc/*.ts",
-      "import": "./build/esm/cc/*.js",
-      "require": "./build/cjs/cc/*.js"
+      "default": "./build/cc/*.js"
     }
   },
   "files": [
@@ -58,8 +54,7 @@
   "scripts": {
     "task": "yarn ts maintenance/_tasks.ts",
     "codegen": "yarn task codegen && yarn lint:codegen:fix",
-    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ src_gen/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "ts": "tsx --conditions=@@dev",
@@ -77,7 +72,6 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.57.7",
     "@types/node": "^20.19.35",
     "@typescript/native-preview": "7.0.0-dev.20260423.1",

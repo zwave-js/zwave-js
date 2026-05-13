@@ -32,7 +32,6 @@
     "@actions/core": "^3.0.0",
     "@actions/exec": "^3.0.0",
     "@actions/github": "^9.0.0",
-    "@alcalzone/esm2cjs": "^1.4.2",
     "@alcalzone/jsonl-db": "^4.0.2",
     "@alcalzone/monopack": "^2.0.0",
     "@alcalzone/release-script": "~5.1.1",

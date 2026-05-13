@@ -36,7 +36,6 @@
     "clean": "del-cli build/ \"*.tsbuildinfo\""
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
     "@typescript-eslint/utils": "^8.57.1",
     "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "@zwave-js/core": "workspace:*",

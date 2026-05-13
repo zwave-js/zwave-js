@@ -10,78 +10,65 @@
   "exports": {
     ".": {
       "@@dev": "./src/index.ts",
-      "browser": "./build/esm/index_browser.js",
-      "import": "./build/esm/index.js",
-      "require": "./build/cjs/index.js"
+      "browser": "./build/index_browser.js",
+      "default": "./build/index.js"
     },
     "./bindings/*": {
       "@@dev": "./src/bindings/*.ts",
-      "import": "./build/esm/bindings/*.js",
-      "require": "./build/cjs/bindings/*.js"
+      "default": "./build/bindings/*.js"
     },
     "./safe": {
       "@@dev": "./src/index_safe.ts",
-      "import": "./build/esm/index_safe.js",
-      "require": "./build/cjs/index_safe.js"
+      "default": "./build/index_safe.js"
     },
     "./test": {
       "@@dev": "./src/index_test.ts",
-      "import": "./build/esm/index_test.js",
-      "require": "./build/cjs/index_test.js"
+      "default": "./build/index_test.js"
     },
     "./definitions": {
       "@@dev": "./src/definitions/index.ts",
-      "import": "./build/esm/definitions/index.js",
-      "require": "./build/cjs/definitions/index.js"
+      "default": "./build/definitions/index.js"
     },
     "./dsk": {
       "@@dev": "./src/dsk/index.ts",
-      "import": "./build/esm/dsk/index.js",
-      "require": "./build/cjs/dsk/index.js"
+      "default": "./build/dsk/index.js"
     },
     "./error": {
       "@@dev": "./src/error/ZWaveError.ts",
-      "import": "./build/esm/error/ZWaveError.js",
-      "require": "./build/cjs/error/ZWaveError.js"
+      "default": "./build/error/ZWaveError.js"
     },
     "./reflection": {
       "@@dev": "./src/reflection/decorators.ts",
-      "import": "./build/esm/reflection/decorators.js",
-      "require": "./build/cjs/reflection/decorators.js"
+      "default": "./build/reflection/decorators.js"
     },
     "./registries": {
       "@@dev": "./src/registries/index.ts",
-      "import": "./build/esm/registries/index.js",
-      "require": "./build/cjs/registries/index.js"
+      "default": "./build/registries/index.js"
     },
     "./traits": {
       "@@dev": "./src/traits/index.ts",
-      "import": "./build/esm/traits/index.js",
-      "require": "./build/cjs/traits/index.js"
+      "default": "./build/traits/index.js"
     },
     "./validation": {
       "@@dev": "./src/util/validation.ts",
-      "import": "./build/esm/util/validation.js",
-      "require": "./build/cjs/util/validation.js"
+      "default": "./build/util/validation.js"
     },
     "./qr": {
       "@@dev": "./src/qr/index.ts",
-      "browser": "./build/esm/qr/index.browser.js",
-      "import": "./build/esm/qr/index.js",
-      "require": "./build/cjs/qr/index.js"
+      "browser": "./build/qr/index.browser.js",
+      "default": "./build/qr/index.js"
     },
     "./package.json": "./package.json"
   },
   "sideEffects": [
-    "./build/(esm|cjs)/reflection/decorators.js"
+    "./build/reflection/decorators.js"
   ],
   "imports": {
     "#crypto_primitives": {
-      "browser": "./build/esm/crypto/primitives/primitives.browser.js",
       "@@dev": "./src/crypto/primitives/primitives.node.ts",
-      "require": "./build/cjs/crypto/primitives/primitives.node.js",
-      "node": "./build/esm/crypto/primitives/primitives.node.js",
-      "default": "./build/esm/crypto/primitives/primitives.browser.js"
+      "browser": "./build/crypto/primitives/primitives.browser.js",
+      "node": "./build/crypto/primitives/primitives.node.js",
+      "default": "./build/crypto/primitives/primitives.browser.js"
     }
   },
   "files": [
@@ -108,8 +95,7 @@
     "node": ">= 22.12"
   },
   "scripts": {
-    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
     "extract-api": "yarn api-extractor run",
     "test:ts": "vitest",
@@ -134,7 +120,6 @@
     "winston-transport": "^4.9.0"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
     "@microsoft/api-extractor": "^7.57.7",
     "@types/node": "^20.19.35",
     "@types/semver": "^7.7.1",
