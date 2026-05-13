@@ -3,14 +3,13 @@
  * Execute with `yarn ts packages/maintenance/src/convert-json.ts`
  */
 
-import { fs } from "@zwave-js/core/bindings/fs/node";
-import { enumFilesRecursive } from "@zwave-js/shared";
 import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Project, ts } from "ts-morph";
 import { formatWithDprint } from "./dprint.js";
+import { globSync } from "./nodeFsGlob.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -19,15 +18,14 @@ async function main() {
 
 	const devicesDir = path.join(__dirname, "../../config/config/devices");
 
-	const configFiles = await enumFilesRecursive(
-		fs,
-		devicesDir,
-		(file) =>
-			file.endsWith(".json")
-			&& !file.endsWith("index.json")
-			&& !file.includes("/templates/")
-			&& !file.includes("\\templates\\"),
-	);
+	const configFiles = globSync("**/*.json", { cwd: devicesDir })
+		.filter((file) => {
+			const normalized = file.replaceAll("\\", "/");
+			const segments = normalized.split("/");
+			return segments.at(-1) !== "index.json"
+				&& !segments.includes("templates");
+		})
+		.map((file) => path.join(devicesDir, file));
 
 	for (const filename of configFiles) {
 		const content = await fsp.readFile(filename, "utf8");
