@@ -73,19 +73,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@alcalzone/esm2cjs@npm:^1.4.2":
-  version: 1.4.2
-  resolution: "@alcalzone/esm2cjs@npm:1.4.2"
-  dependencies:
-    esbuild: "npm:^0.25.10"
-    tiny-glob: "npm:^0.2.9"
-    yargs: "npm:^17.5.1"
-  bin:
-    esm2cjs: bin/esm2cjs.cjs
-  checksum: 10/225879e3d37362ecc45b882fd20bbd8437eacc5037b4ce8bbb0bd3957b9e898d35052bbb326d8f64c6781788ddcf26fdcad2dd4c975c0729d573cdc462dbac13
-  languageName: node
-  linkType: hard
-
 "@alcalzone/jsonl-db@npm:^4.0.2":
   version: 4.0.2
   resolution: "@alcalzone/jsonl-db@npm:4.0.2"
@@ -2370,10 +2357,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node20@npm:^20.1.9":
-  version: 20.1.9
-  resolution: "@tsconfig/node20@npm:20.1.9"
-  checksum: 10/3d66cd9942175e477cb6b68d06d9523089fca32de8e63ef09433e2dc89fb737276b196700ee48e5991396a0ee35ba527a86599cf3c80310d6c569312ff79205e
+"@tsconfig/node22@npm:^22.0.5":
+  version: 22.0.5
+  resolution: "@tsconfig/node22@npm:22.0.5"
+  checksum: 10/2e21177946aa0bcd705e8303cd0844eb66d2abc1ceb9ca7bd7762443676e599bb11e7f7b257c027d8dec9d1c62cda114d1a3df5e38699c6b4943e6acadac261d
   languageName: node
   linkType: hard
 
@@ -3018,8 +3005,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/cc@workspace:packages/cc"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
     "@zwave-js/core": "workspace:*"
@@ -3045,8 +3030,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/config@workspace:packages/config"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/js-levenshtein": "npm:^1.1.3"
     "@types/json-logic-js": "npm:^2.0.8"
     "@types/node": "npm:^20.19.35"
@@ -3084,9 +3067,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/core@workspace:packages/core"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@alcalzone/jsonl-db": "npm:^4.0.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
     "@types/sinon": "npm:^21.0.0"
@@ -3118,7 +3099,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/eslint-plugin@workspace:packages/eslint-plugin"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@typescript-eslint/utils": "npm:^8.60.0"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
     "@zwave-js/core": "workspace:*"
@@ -3162,8 +3142,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/host@workspace:packages/host"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
     "@zwave-js/config": "workspace:*"
@@ -3179,7 +3157,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/maintenance@workspace:packages/maintenance"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@dprint/formatter": "npm:^0.5.1"
     "@dprint/json": "npm:^0.21.3"
     "@dprint/markdown": "npm:^0.21.1"
@@ -3232,8 +3209,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/nvmedit@workspace:packages/nvmedit"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
     "@types/yargs": "npm:^17.0.35"
@@ -3260,7 +3235,6 @@ __metadata:
     "@actions/core": "npm:^3.0.0"
     "@actions/exec": "npm:^3.0.0"
     "@actions/github": "npm:^9.1.1"
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@alcalzone/monopack": "npm:^2.0.0"
     "@alcalzone/release-script": "npm:~5.1.1"
@@ -3272,7 +3246,7 @@ __metadata:
     "@dprint/typescript": "npm:^0.96.1"
     "@microsoft/api-extractor": "npm:^7.58.7"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
-    "@tsconfig/node20": "npm:^20.1.9"
+    "@tsconfig/node22": "npm:^22.0.5"
     "@types/js-yaml": "npm:^4"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
@@ -3333,8 +3307,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/serial@workspace:packages/serial"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@serialport/binding-mock": "npm:^10.2.2"
     "@serialport/bindings-interface": "patch:@serialport/bindings-interface@npm%3A1.2.2#~/.yarn/patches/@serialport-bindings-interface-npm-1.2.2-e597dbc676.patch"
     "@serialport/stream": "npm:^13.0.0"
@@ -3361,8 +3333,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/shared@workspace:packages/shared"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/sinon": "npm:^21.0.0"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
@@ -3380,8 +3350,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@zwave-js/testing@workspace:packages/testing"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/triple-beam": "npm:^1.3.5"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
@@ -4810,7 +4778,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.25.10, esbuild@npm:^0.25.11":
+"esbuild@npm:^0.25.11":
   version: 0.25.11
   resolution: "esbuild@npm:0.25.11"
   dependencies:
@@ -9891,7 +9859,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yargs@npm:^17.0.0, yargs@npm:^17.4.1, yargs@npm:^17.5.1":
+"yargs@npm:^17.0.0, yargs@npm:^17.4.1":
   version: 17.7.2
   resolution: "yargs@npm:17.7.2"
   dependencies:
@@ -9947,11 +9915,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "zwave-js@workspace:packages/zwave-js"
   dependencies:
-    "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@andrewbranch/untar.js": "npm:^1.0.3"
     "@homebridge/ciao": "npm:^1.3.8"
-    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
     "@types/sinon": "npm:^21.0.0"
@@ -9985,6 +9951,6 @@ __metadata:
     vitest: "npm:^4.1.0"
     winston: "npm:^3.18.3"
   bin:
-    mock-server: bin/mock-server.cjs
+    mock-server: bin/mock-server.mjs
   languageName: unknown
   linkType: soft

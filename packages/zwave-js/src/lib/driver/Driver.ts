@@ -216,6 +216,7 @@ import {
 import { roundTo } from "alcalzone-shared/math";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
+import zwaveJsPackageJson from "zwave-js/package.json" with { type: "json" };
 import { PACKAGE_NAME, PACKAGE_VERSION } from "../_version.js";
 import { ZWaveController } from "../controller/Controller.js";
 import { downloadFirmwareUpdate } from "../controller/FirmwareUpdateService.js";
@@ -1155,7 +1156,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public get configVersion(): string {
 		return (
 			this.configManager?.configVersion
-				?? require("zwave-js/package.json")?.dependencies
+				?? zwaveJsPackageJson.dependencies
 					?.["@zwave-js/config"]
 				?? libVersion
 		);

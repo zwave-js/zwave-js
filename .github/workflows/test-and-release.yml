@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -135,32 +135,33 @@ jobs:
         node -e '(async () => { await import("@zwave-js/shared/safe") })()'
         node -e '(async () => { await import("@zwave-js/bindings-browser/fs") })()'
 
-        echo "Testing CJS entry points..."
-        # Now all entrypoints should work
-        node -e 'require("zwave-js")'
-        node -e 'require("@zwave-js/cc")'
-        node -e 'require("@zwave-js/config")'
-        node -e 'require("@zwave-js/core")'
-        node -e 'require("@zwave-js/host")'
-        node -e 'require("@zwave-js/nvmedit")'
-        node -e 'require("@zwave-js/serial")'
-        node -e 'require("@zwave-js/shared")'
-        node -e 'require("@zwave-js/testing")'
-        node -e 'require("zwave-js/safe")'
-        node -e 'require("@zwave-js/cc/safe")'
-        node -e 'require("@zwave-js/config/safe")'
-        node -e 'require("@zwave-js/core/safe")'
-        node -e 'require("@zwave-js/nvmedit/safe")'
-        node -e 'require("@zwave-js/serial/safe")'
-        node -e 'require("@zwave-js/shared/safe")'
-
         echo "Testing version exports..."
-        node -e 'assert.equal(require("@zwave-js/config").PACKAGE_VERSION, require("@zwave-js/config/package.json").version)'
-        node -e 'assert.equal(require("zwave-js").libVersion, require("zwave-js/package.json").version)'
-        node -e 'assert.equal(require("zwave-js").libName, require("zwave-js/package.json").name)'
+        node -e '
+          (async () => {
+            const c = await import("@zwave-js/config");
+            assert.equal(c.PACKAGE_VERSION, require("@zwave-js/config/package.json").version);
+          })()
+        '
+        node -e '
+          (async () => {
+            const z = await import("zwave-js");
+            assert.equal(z.libVersion, require("zwave-js/package.json").version);
+          })()
+        '
+        node -e '
+          (async () => {
+            const z = await import("zwave-js");
+            assert.equal(z.libName, require("zwave-js/package.json").name);
+          })()
+        '
 
         echo "Doing spot checks for some exports"
-        node -e 'assert.equal(typeof require("@zwave-js/core").randomBytes, "function")'
+        node -e '
+          (async () => {
+            const c = await import("@zwave-js/core");
+            assert.equal(typeof c.randomBytes, "function");
+          })()
+        '
 
     # Test if bundling for the browser is supported yet
     - name: Are we browser yet?
@@ -180,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -232,7 +233,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -256,7 +257,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [22, 24, 26]
         os: [ubuntu-latest]
         shard: [1/4, 2/4, 3/4, 4/4]
 
@@ -290,7 +291,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [22, 24, 26]
         os: [ubuntu-latest]
 
     steps:
@@ -313,52 +314,6 @@ jobs:
     - name: Test transformers
       run: yarn workspace @zwave-js/transformers run test:ts
 
-  # # ===================
-  # # This job checks if a PR changes the public API surface
-  # api-surface:
-  #   name: Check public API surface
-  #   # Only run for PRs
-  #   if: github.event_name == 'pull_request'
-
-  #   needs: [build]
-
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       node-version: [22] # This should be LTS
-
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v6
-
-  #   - name: Restore Turbo Cache from previous jobs
-  #     uses: ./.github/actions/build-cache-download
-
-  #   - name: Prepare testing environment
-  #     uses: ./.github/actions/prepare-env
-  #     with:
-  #       node-version: ${{ matrix.node-version }}
-  #       githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-  #   - name: Generate API report
-  #     run: yarn run extract-api $TURBO_FLAGS
-
-  #   - name: Show changes
-  #     if: failure()
-  #     run: |
-  #       cat packages/*/.tmp/api.md
-
-  #   - name: Comment on PR
-  #     if: failure()
-  #     run: |
-  #       echo "The public API surface has changed!" >> $GITHUB_STEP_SUMMARY
-  #       echo "Please run" >> $GITHUB_STEP_SUMMARY
-  #       echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-  #       echo "yarn accept-api" >> $GITHUB_STEP_SUMMARY
-  #       echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-  #       echo "and review the changes, then commit them if desired." >> $GITHUB_STEP_SUMMARY
-  #       echo "" >> $GITHUB_STEP_SUMMARY
-
   # ===================
 
   gh-cc-table:
@@ -374,7 +329,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -410,7 +365,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -453,7 +408,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code
@@ -530,7 +485,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout code

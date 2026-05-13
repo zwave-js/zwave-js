@@ -57,13 +57,6 @@
 			// Dummy task to enable running all lint:zwave tasks
 		},
 
-		"extract-api": {
-			"dependsOn": ["//#build:turbo"],
-			"inputs": ["src/**/*.{ts,cts,mts}", "build/**"],
-			"cache": false
-			// "outputs": [".tmp/api.md", "api.md"]
-		},
-
 		"test:ts": {
 			// "dependsOn": ["//#build:turbo"],
 			"inputs": ["src/**/*.{ts,cts,mts}", "vitest.config.mjs"]
