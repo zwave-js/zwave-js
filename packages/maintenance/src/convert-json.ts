@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Project, ts } from "ts-morph";
 import { formatWithDprint } from "./dprint.js";
-import { globSync } from "./nodeFsGlob.js";
+import { globSync, splitGlobPath } from "./nodeFsGlob.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -20,8 +20,7 @@ async function main() {
 
 	const configFiles = globSync("**/*.json", { cwd: devicesDir })
 		.filter((file) => {
-			const normalized = file.replaceAll("\\", "/");
-			const segments = normalized.split("/");
+			const segments = splitGlobPath(file);
 			return segments.at(-1) !== "index.json"
 				&& !segments.includes("templates");
 		})

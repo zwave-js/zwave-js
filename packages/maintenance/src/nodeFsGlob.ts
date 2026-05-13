@@ -23,3 +23,7 @@ interface GlobSync {
 
 export const globSync = (nodeFs as typeof nodeFs & { globSync: GlobSync })
 	.globSync;
+
+export function splitGlobPath(file: string): string[] {
+	return file.replaceAll("\\", "/").split("/");
+}

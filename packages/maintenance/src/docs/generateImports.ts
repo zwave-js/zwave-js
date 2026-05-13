@@ -22,7 +22,7 @@ import {
 	type TypeLiteralNode,
 } from "ts-morph";
 import { formatWithDprint } from "../dprint.js";
-import { globSync } from "../nodeFsGlob.js";
+import { globSync, splitGlobPath } from "../nodeFsGlob.js";
 import {
 	projectRoot,
 	tsConfigFilePathForDocs as tsConfigFilePath,
@@ -280,13 +280,11 @@ ${source}
 	return hasErrors;
 }
 
-	/** Processes all imports, returns true if there was an error */
+/** Processes all imports, returns true if there was an error */
 async function processImports(piscina: Piscina): Promise<boolean> {
 	const docsDir = path.join(projectRoot, "docs");
 	const files = globSync("**/*.md", { cwd: docsDir })
-		.filter(
-			(file) => !file.replaceAll("\\", "/").split("/").includes("CCs"),
-		)
+		.filter((file) => !splitGlobPath(file).includes("CCs"))
 		.map((file) => path.join(docsDir, file));
 
 	const tasks = files.map((f) => piscina.run(f, { name: "processImport" }));
