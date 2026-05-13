@@ -35,7 +35,7 @@
     "build/**/*.{js,d.ts,map}"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">= 22.12"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

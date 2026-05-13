@@ -7,54 +7,44 @@
   "exports": {
     ".": {
       "@@dev": "./src/index.ts",
-      "browser": "./build/esm/index_browser.js",
-      "import": "./build/esm/index.js",
-      "require": "./build/cjs/index.js"
+      "browser": "./build/index_browser.js",
+      "default": "./build/index.js"
     },
     "./safe": {
       "@@dev": "./src/index_safe.ts",
-      "import": "./build/esm/index_safe.js",
-      "require": "./build/cjs/index_safe.js"
+      "default": "./build/index_safe.js"
     },
     "./Controller": {
       "@@dev": "./src/Controller.ts",
-      "import": "./build/esm/Controller.js",
-      "require": "./build/cjs/Controller.js"
+      "default": "./build/Controller.js"
     },
     "./Driver": {
       "@@dev": "./src/Driver.ts",
-      "import": "./build/esm/Driver.js",
-      "require": "./build/cjs/Driver.js"
+      "default": "./build/Driver.js"
     },
     "./Error": {
       "@@dev": "./src/Error.ts",
-      "import": "./build/esm/Error.js",
-      "require": "./build/cjs/Error.js"
+      "default": "./build/Error.js"
     },
     "./Node": {
       "@@dev": "./src/Node.ts",
-      "import": "./build/esm/Node.js",
-      "require": "./build/cjs/Node.js"
+      "default": "./build/Node.js"
     },
     "./Testing": {
       "@@dev": "./src/Testing.ts",
-      "import": "./build/esm/Testing.js",
-      "require": "./build/cjs/Testing.js"
+      "default": "./build/Testing.js"
     },
     "./Utils": {
       "@@dev": "./src/Utils.ts",
-      "import": "./build/esm/Utils.js",
-      "require": "./build/cjs/Utils.js"
+      "default": "./build/Utils.js"
     },
     "./Values": {
       "@@dev": "./src/Values.ts",
-      "import": "./build/esm/Values.js",
-      "require": "./build/cjs/Values.js"
+      "default": "./build/Values.js"
     },
     "./Zniffer": {
       "@@dev": "./src/Zniffer.ts",
-      "import": "./build/esm/Zniffer.js",
-      "require": "./build/cjs/Zniffer.js"
+      "default": "./build/Zniffer.js"
     },
     "./package.json": "./package.json"
   },
@@ -81,9 +71,8 @@
     },
     "#mdns_discovery": {
       "@@dev": "./src/lib/driver/mDNSDiscovery/node.ts",
-      "require": "./build/cjs/lib/driver/mDNSDiscovery/node.js",
-      "node": "./build/esm/lib/driver/mDNSDiscovery/node.js",
-      "default": "./build/esm/lib/driver/mDNSDiscovery/stub.js"
+      "node": "./build/lib/driver/mDNSDiscovery/node.js",
+      "default": "./build/lib/driver/mDNSDiscovery/stub.js"
     }
   },
   "files": [
@@ -93,7 +82,7 @@
   ],
   "sideEffects": false,
   "bin": {
-    "mock-server": "bin/mock-server.cjs"
+    "mock-server": "bin/mock-server.mjs"
   },
   "author": {
     "name": "AlCalzone",
@@ -112,16 +101,14 @@
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 20"
+    "node": ">= 22.12"
   },
   "scripts": {
     "ts": "tsx --conditions=@@dev",
     "codegen": "yarn ts maintenance/codegen.ts",
-    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "watch": "tsgo -b tsconfig.build.json --pretty --watch",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "extract-api": "yarn api-extractor run",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
@@ -152,8 +139,6 @@
     "winston": "^3.18.3"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.57.7",
     "@types/node": "^20.19.35",
     "@types/semver": "^7.7.1",
     "@types/sinon": "^21.0.0",

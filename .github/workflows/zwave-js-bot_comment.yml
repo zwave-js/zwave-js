@@ -18,7 +18,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     # Checkout master branch first to get trusted bot scripts for security checks
@@ -136,7 +136,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch
@@ -243,7 +243,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch
@@ -431,7 +431,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch
@@ -536,7 +536,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch
@@ -653,7 +653,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch
@@ -772,7 +772,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch
@@ -837,7 +837,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch
@@ -901,7 +901,7 @@ jobs:
     runs-on: [ubuntu-latest]
     strategy:
       matrix:
-        node-version: [22] # This should be LTS
+        node-version: [24] # This should be LTS
 
     steps:
     - name: Checkout master branch

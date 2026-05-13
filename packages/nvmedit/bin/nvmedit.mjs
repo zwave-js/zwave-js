@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-import "../build/esm/cli.js";
+import "../build/cli.js";
