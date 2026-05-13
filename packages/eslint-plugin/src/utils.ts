@@ -16,9 +16,8 @@ import type {
 } from "eslint-plugin-jsonc";
 import type { AST as JSONC_AST, RuleListener } from "jsonc-eslint-parser";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 export type JSONCRuleContext = core.RuleContext<{
 	LangOptions: JSONCLanguageOptions;

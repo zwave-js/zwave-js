@@ -5,13 +5,12 @@
 import { runCodegen } from "@zwave-js/maintenance/runCodegen";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
 	createValidateArgsTransformer,
 	generateValidateArgsFiles,
 } from "../src/validateArgs/index.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 const packageDir = path.dirname(__dirname);
 const fixturesDir = path.join(__dirname, "fixtures");
 const buildDir = path.join(__dirname, "build");

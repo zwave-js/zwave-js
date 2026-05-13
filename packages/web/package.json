@@ -22,7 +22,7 @@
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 22.12"
+    "node": ">= 22.16.0"
   },
   "scripts": {
     "test": "node .build.mjs",

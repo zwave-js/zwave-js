@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 // Dprint parallelizes formatting and is generally fast enough to run on the whole repo
 // despite lint-staged telling us which files have changed.

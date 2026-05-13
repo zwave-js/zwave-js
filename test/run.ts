@@ -2,10 +2,9 @@ import { Bytes } from "@zwave-js/shared";
 import { wait as _wait } from "alcalzone-shared/async";
 import _os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Driver } from "zwave-js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 const wait = _wait;
 const os = _os;

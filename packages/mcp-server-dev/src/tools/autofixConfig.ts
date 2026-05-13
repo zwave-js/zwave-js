@@ -1,12 +1,10 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import spawn from "nano-spawn";
 import { readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import type { ToolHandler } from "../types.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = import.meta.dirname;
 
 // Get the repository root (go up from packages/mcp-server-dev/build/tools to root)
 const REPO_ROOT = resolve(__dirname, "../../../..");

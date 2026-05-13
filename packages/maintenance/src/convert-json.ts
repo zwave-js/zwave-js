@@ -8,11 +8,10 @@ import { enumFilesRecursive } from "@zwave-js/shared";
 import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Project, ts } from "ts-morph";
 import { formatWithDprint } from "./dprint.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 async function main() {
 	const project = new Project();

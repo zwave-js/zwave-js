@@ -2,7 +2,6 @@ import { fs } from "@zwave-js/core/bindings/fs/node";
 import { cloneDeep, readJSON } from "@zwave-js/shared";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { type ExpectStatic, test } from "vitest";
 import {
 	type MigrateNVMOptions,
@@ -17,7 +16,7 @@ import {
 } from "./convert.js";
 import type { NVM500JSON } from "./nvm500/NVMParser.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 function bufferEquals(
 	expect: ExpectStatic,

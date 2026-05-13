@@ -6,10 +6,9 @@
 
 import { formatWithDprint } from "@zwave-js/maintenance";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { type SourceFile } from "ts-morph";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 const apiRegex = /^@API\(CommandClasses(?:\.|\[)(.+?)(?:\])?\)/m;
 const classNameRegex = /class ([^\s]+) extends (\w+)?CCAPI/;

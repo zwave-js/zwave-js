@@ -6,10 +6,9 @@ import * as JSONC from "comment-json";
 import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { formatWithDprint } from "./dprint.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 async function main() {
 	const devicesDir = path.join(__dirname, "../../config/config/devices");

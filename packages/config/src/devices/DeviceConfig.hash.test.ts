@@ -1,12 +1,11 @@
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes, isUint8Array } from "@zwave-js/shared";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { beforeAll, test } from "vitest";
 import { ConfigManager } from "../ConfigManager.js";
 import type { DeviceConfig } from "./DeviceConfig.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 let configManager: ConfigManager;
 let testConfig: DeviceConfig;

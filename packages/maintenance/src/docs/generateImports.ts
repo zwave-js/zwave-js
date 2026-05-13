@@ -8,7 +8,6 @@ import c from "ansi-colors";
 import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 import { Piscina } from "piscina";
 import {
@@ -33,7 +32,7 @@ import {
 import { register } from "tsx/esm/api";
 register();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 const exportDeclarationCache = new Map<
 	string,

@@ -1,11 +1,10 @@
 import { hexToUint8Array } from "@zwave-js/shared";
 import * as fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { CtrDRBG } from "./ctr_drbg.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 function getVectors(alg: string) {
 	const text = fs.readFileSync(
