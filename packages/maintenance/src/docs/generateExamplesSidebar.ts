@@ -28,7 +28,7 @@ async function generateExamples(): Promise<boolean> {
 
 	// Find examples
 	const examples = globSync("*.md", { cwd: examplesDocsDir })
-		.filter((f) => f.endsWith(".md") && f !== "index.md");
+		.filter((f) => f !== "index.md");
 
 	const processedExamples: {
 		position: number;

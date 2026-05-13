@@ -45,7 +45,7 @@ interface CCInfo {
 (async () => {
 	const ccDir = path.join(__dirname, "../..", "cc/src/cc");
 	const ccFiles = globSync("*.ts", { cwd: ccDir })
-		.filter((file) => file.endsWith(".ts") && !file.endsWith("test.ts"))
+		.filter((file) => !file.endsWith("test.ts"))
 		.map((file) => path.join(ccDir, file));
 
 	const allCCs = new Map<string, CCInfo>(

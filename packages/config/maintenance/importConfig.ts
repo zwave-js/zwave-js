@@ -2008,10 +2008,7 @@ async function parseOHConfigFile(
 /** Translates all downloaded config files */
 async function importConfigFilesOH(): Promise<void> {
 	const configFiles = globSync("*.json", { cwd: ohTempDir }).filter(
-		(file) =>
-			file.endsWith(".json")
-			&& !file.startsWith("_")
-			&& file !== "manufacturers.json",
+		(file) => !file.startsWith("_") && file !== "manufacturers.json",
 	);
 
 	for (const file of configFiles) {
