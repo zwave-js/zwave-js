@@ -45,9 +45,6 @@ jobs:
     - name: Generate documentation
       run: yarn run docs:generate
 
-    - name: Generate API report
-      run: yarn run accept-api
-
     # Trigger this step only when pushing to master
     - name: Create or update PR
       if: |
