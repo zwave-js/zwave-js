@@ -7,7 +7,7 @@ import {
 } from "@zwave-js/core";
 import { type JSONObject, pick } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
-import { throwInvalidConfig, tryParseCCId } from "../utils_safe.js";
+import { throwInvalidConfig, tryParseCCId } from "../utils.js";
 import { type ConditionalItem, conditionApplies } from "./ConditionalItem.js";
 import type { DeviceID } from "./shared.js";
 

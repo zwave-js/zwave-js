@@ -2,8 +2,8 @@ import {
 	UserCodeCCExtendedUserCodeSet,
 	UserCodeCCSet,
 	UserCodeCCValues,
+	UserIDStatus,
 } from "@zwave-js/cc";
-import { UserIDStatus } from "@zwave-js/cc/safe";
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";

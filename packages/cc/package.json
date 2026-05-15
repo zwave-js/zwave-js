@@ -13,10 +13,6 @@
       "browser": "./build/index_browser.js",
       "default": "./build/index.js"
     },
-    "./safe": {
-      "@@dev": "./src/index_safe.ts",
-      "default": "./build/index_safe.js"
-    },
     "./cc": {
       "@@dev": "./src/cc/index.ts",
       "default": "./build/cc/index.js"

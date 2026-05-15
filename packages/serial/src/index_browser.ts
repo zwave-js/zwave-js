@@ -1,3 +1,5 @@
+/* @forbiddenImports external */
+
 export { SerialLogger } from "./log/Logger.js";
 export type { SerialLogContext } from "./log/Logger.js";
 export * from "./message/Constants.js";

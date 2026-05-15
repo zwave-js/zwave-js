@@ -8,6 +8,7 @@ export {
 	extractFirmware,
 	guessFirmwareFileFormat,
 	parseQRCodeString,
+	protocolDataRateToString,
 	rssiToString,
 	tryUnzipFirmwareFile,
 } from "@zwave-js/core";
@@ -15,7 +16,6 @@ export type {
 	Firmware,
 	FirmwareFileFormat,
 	QRProvisioningInformation,
-	protocolDataRateToString,
 } from "@zwave-js/core";
 export {
 	buffer2hex,
