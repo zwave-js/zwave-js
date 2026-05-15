@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { globSync } from "./nativeGlob.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -43,8 +44,10 @@ interface CCInfo {
 
 (async () => {
 	const ccDir = path.join(__dirname, "../..", "cc/src/cc");
-	const ccFiles = (await fs.readdir(ccDir))
-		.filter((file) => file.endsWith(".ts") && !file.endsWith("test.ts"))
+	const ccFiles = globSync("*.ts", {
+		cwd: ccDir,
+		exclude: ["*.test.ts"],
+	})
 		.map((file) => path.join(ccDir, file));
 
 	const allCCs = new Map<string, CCInfo>(

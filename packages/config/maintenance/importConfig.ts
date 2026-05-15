@@ -12,8 +12,8 @@ process.on("unhandledRejection", (r) => {
 
 import { CommandClasses, getIntegerLimits } from "@zwave-js/core";
 import { fs as nodeFS } from "@zwave-js/core/bindings/fs/node";
+import { globAsArray } from "@zwave-js/maintenance";
 import {
-	enumFilesRecursive,
 	formatId,
 	getErrorMessage,
 	num2hex,
@@ -854,11 +854,9 @@ async function parseZWAFiles(): Promise<void> {
 	// Parse json files in the zwaTempDir
 	let jsonData = [];
 
-	const configFiles = await enumFilesRecursive(
-		nodeFS,
-		zwaTempDir,
-		(file) => file.endsWith(".json"),
-	);
+	const configFiles = (await globAsArray("**/*.json", { cwd: zwaTempDir }))
+		.map((filename) => path.join(zwaTempDir, filename))
+		.toSorted((a, b) => a.localeCompare(b));
 
 	for (const file of configFiles) {
 		const j = await fs.readFile(file, "utf8");
@@ -1624,11 +1622,9 @@ async function maintenanceParse(): Promise<void> {
 
 	// Load the zwa files
 	await nodeFS.ensureDir(zwaTempDir);
-	const zwaFiles = await enumFilesRecursive(
-		nodeFS,
-		zwaTempDir,
-		(file) => file.endsWith(".json"),
-	);
+	const zwaFiles = (await globAsArray("**/*.json", { cwd: zwaTempDir }))
+		.map((filename) => path.join(zwaTempDir, filename))
+		.toSorted((a, b) => a.localeCompare(b));
 	for (const file of zwaFiles) {
 		// zWave Alliance numbering isn't always continuous and an html page is
 		// returned when a device number doesn't. Test for and delete such files.
@@ -1640,11 +1636,11 @@ async function maintenanceParse(): Promise<void> {
 	}
 
 	// Build the list of device files
-	const configFiles = await enumFilesRecursive(
-		nodeFS,
-		processedDir,
-		(file) => file.endsWith(".json"),
-	);
+	const configFiles = (await globAsArray("**/*.json", {
+		cwd: processedDir,
+	}))
+		.map((filename) => path.join(processedDir, filename))
+		.toSorted((a, b) => a.localeCompare(b));
 	for (const file of configFiles) {
 		const j = await fs.readFile(file, "utf8");
 
@@ -2013,12 +2009,10 @@ async function parseOHConfigFile(
 
 /** Translates all downloaded config files */
 async function importConfigFilesOH(): Promise<void> {
-	const configFiles = (await fs.readdir(ohTempDir)).filter(
-		(file) =>
-			file.endsWith(".json")
-			&& !file.startsWith("_")
-			&& file !== "manufacturers.json",
-	);
+	const configFiles = (await globAsArray("*.json", {
+		cwd: ohTempDir,
+		exclude: ["_*.json", "manufacturers.json"],
+	})).toSorted((a, b) => a.localeCompare(b));
 
 	for (const file of configFiles) {
 		const inPath = path.join(ohTempDir, file);
@@ -2333,11 +2327,12 @@ function getLatestConfigVersion(
 
 /** Changes the manufacturer names in all device config files to match manufacturers.json */
 async function updateManufacturerNames(): Promise<void> {
-	const configFiles = await enumFilesRecursive(
-		nodeFS,
-		processedDir,
-		(file) => file.endsWith(".json") && !file.endsWith("index.json"),
-	);
+	const configFiles = (await globAsArray("**/*.json", {
+		cwd: processedDir,
+		exclude: ["**/index.json"],
+	}))
+		.map((filename) => path.join(processedDir, filename))
+		.toSorted((a, b) => a.localeCompare(b));
 	await configManager.loadManufacturers();
 
 	for (const file of configFiles) {

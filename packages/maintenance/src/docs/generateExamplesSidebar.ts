@@ -6,6 +6,7 @@ import c from "ansi-colors";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { formatWithDprint } from "../dprint.js";
+import { globAsArray } from "../nativeGlob.js";
 import { projectRoot } from "../tsAPITools.js";
 
 const docsDir = path.join(projectRoot, "docs");
@@ -26,8 +27,10 @@ async function generateExamples(): Promise<boolean> {
 	}
 
 	// Find examples
-	const examples = (await fsp.readdir(examplesDocsDir))
-		.filter((f) => f.endsWith(".md") && f !== "index.md");
+	const examples = (await globAsArray("*.md", {
+		cwd: examplesDocsDir,
+		exclude: ["index.md"],
+	})).toSorted((a, b) => a.localeCompare(b));
 
 	const processedExamples: {
 		position: number;

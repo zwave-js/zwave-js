@@ -6,9 +6,8 @@ import {
 	getMinimumShiftForBitMask,
 } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
-import { reportProblem } from "@zwave-js/maintenance";
+import { globAsArray, reportProblem } from "@zwave-js/maintenance";
 import {
-	enumFilesRecursive,
 	formatId,
 	getErrorMessage,
 	num2hex,
@@ -260,11 +259,14 @@ async function lintDevices(): Promise<void> {
 
 	const rootDir = path.join(configDir, "devices");
 
-	const forbiddenFiles = await enumFilesRecursive(
-		fs,
-		rootDir,
-		(filename) => !filename.endsWith(".json"),
-	);
+	const forbiddenFiles = (await globAsArray("**/*", {
+		cwd: rootDir,
+		exclude: ["**/*.json"],
+		withFileTypes: true,
+	}))
+		.filter((entry) => !entry.isDirectory())
+		.map((entry) => path.join(entry.parentPath, entry.name))
+		.toSorted((a, b) => a.localeCompare(b));
 	for (const file of forbiddenFiles) {
 		addError(
 			path.relative(rootDir, file),
@@ -274,15 +276,13 @@ async function lintDevices(): Promise<void> {
 		);
 	}
 
-	const filesWithWhitespace = await enumFilesRecursive(
-		fs,
-		rootDir,
-		(filename) => {
-			const basename = path.basename(filename);
-			// Check for whitespace in filename
-			return /\s/.test(basename);
-		},
-	);
+	const filesWithWhitespace = (await globAsArray("**/*", {
+		cwd: rootDir,
+		withFileTypes: true,
+	}))
+		.filter((entry) => !entry.isDirectory() && /\s/.test(entry.name))
+		.map((entry) => path.join(entry.parentPath, entry.name))
+		.toSorted((a, b) => a.localeCompare(b));
 	for (const file of filesWithWhitespace) {
 		addError(
 			path.relative(rootDir, file),
