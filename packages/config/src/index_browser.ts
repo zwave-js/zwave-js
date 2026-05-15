@@ -1,3 +1,5 @@
+/* @forbiddenImports external */
+
 export * from "./ConfigManager.js";
 export * from "./Logger.js";
 export * from "./Manufacturers.js";
