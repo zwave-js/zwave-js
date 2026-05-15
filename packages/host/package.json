@@ -36,7 +36,7 @@
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 22.12"
+    "node": ">= 22.17"
   },
   "scripts": {
     "build": "tsgo -b tsconfig.build.json --pretty",

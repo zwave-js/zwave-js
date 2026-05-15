@@ -35,7 +35,7 @@
     "build/**/*.{js,d.ts,map}"
   ],
   "engines": {
-    "node": ">= 22.12"
+    "node": ">= 22.17"
   },
   "dependencies": {
     "@zwave-js/config": "workspace:*",
