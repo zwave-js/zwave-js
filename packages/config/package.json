@@ -10,11 +10,8 @@
   "exports": {
     ".": {
       "@@dev": "./src/index.ts",
+      "browser": "./build/index_browser.js",
       "default": "./build/index.js"
-    },
-    "./safe": {
-      "@@dev": "./src/index_safe.ts",
-      "default": "./build/index_safe.js"
     },
     "./package.json": "./package.json"
   },
