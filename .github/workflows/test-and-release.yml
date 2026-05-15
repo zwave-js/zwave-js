@@ -257,7 +257,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: ['22.17', 24, 26]
+        node-version: [22, 24, 26]
         os: [ubuntu-latest]
         shard: [1/4, 2/4, 3/4, 4/4]
 
@@ -291,7 +291,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: ['22.17', 24, 26]
+        node-version: [22, 24, 26]
         os: [ubuntu-latest]
 
     steps:
