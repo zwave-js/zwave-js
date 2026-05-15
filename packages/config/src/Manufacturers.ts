@@ -15,7 +15,7 @@ import type {
 import { isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";
 import path from "pathe";
-import { hexKeyRegex4Digits, throwInvalidConfig } from "./utils_safe.js";
+import { hexKeyRegex4Digits, throwInvalidConfig } from "./utils.js";
 
 export type ManufacturersMap = Map<number, string>;
 

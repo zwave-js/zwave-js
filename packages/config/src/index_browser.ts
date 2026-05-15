@@ -1,10 +1,6 @@
+/* @forbiddenImports external */
+
 export * from "./ConfigManager.js";
-export {
-	clearTemplateCache,
-	readJsonWithTemplate,
-	resolveImportPath,
-	resolveTemplateImport,
-} from "./JsonTemplate.js";
 export * from "./Logger.js";
 export * from "./Manufacturers.js";
 export { PACKAGE_VERSION } from "./_version.js";

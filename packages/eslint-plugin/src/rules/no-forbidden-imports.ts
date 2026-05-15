@@ -21,6 +21,8 @@ const whitelistedImports = new Set([
 	"alcalzone-shared/sorted-list",
 	"alcalzone-shared/typeguards",
 	"@zwave-js/waddle",
+	"json5",
+	"json-logic-js",
 ]);
 const whitelistedImportsRegex: RegExp[] = [];
 
