@@ -17,10 +17,6 @@ In addition to the root entry point `"zwave-js"`, this module provides the follo
 
 Everything exported here is also exported from the root entry point.
 
-?> **TIP:** Need to use functions or enums in a browser?
-
-In addition, there is also `"zwave-js/safe"`, an entry point that can be used from non-Node.js contexts, like browser/frontend bundlers. This exposes a safe subset of the `"zwave-js"` module, which is guaranteed not to import anything from outside the zwave-js monorepo, except some whitelisted modules.
-
 ## Secondary packages
 
 The `"zwave-js"` package depends on several other scoped packages which are installed along with it:

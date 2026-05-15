@@ -1,6 +1,7 @@
 import {
 	type DataDirection,
 	type LogContainer,
+	type LogContext,
 	ZWaveLoggerBase,
 	getDirectionPrefix,
 } from "@zwave-js/core";
@@ -11,11 +12,14 @@ import {
 	num2hex,
 } from "@zwave-js/shared";
 import { MessageHeaders } from "../message/MessageHeaders.js";
-import {
-	SERIAL_LABEL,
-	SERIAL_LOGLEVEL,
-	type SerialLogContext,
-} from "./Logger_safe.js";
+
+export const SERIAL_LABEL = "SERIAL";
+export const SERIAL_LOGLEVEL = "debug";
+
+export interface SerialLogContext extends LogContext<"serial"> {
+	direction: DataDirection;
+	header?: string;
+}
 
 export class SerialLogger extends ZWaveLoggerBase<SerialLogContext> {
 	constructor(loggers: LogContainer) {

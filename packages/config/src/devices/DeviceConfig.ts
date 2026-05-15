@@ -33,7 +33,7 @@ import path from "pathe";
 import semverGt from "semver/functions/gt.js";
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
-import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
+import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils.js";
 import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,

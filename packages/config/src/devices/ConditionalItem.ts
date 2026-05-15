@@ -2,7 +2,7 @@ import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { ObjectKeyMap } from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
 import { evaluate } from "../Logic.js";
-import { throwInvalidConfig } from "../utils_safe.js";
+import { throwInvalidConfig } from "../utils.js";
 import type { DeviceID } from "./shared.js";
 
 /** A conditional config item */

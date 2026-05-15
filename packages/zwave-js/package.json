@@ -10,10 +10,6 @@
       "browser": "./build/index_browser.js",
       "default": "./build/index.js"
     },
-    "./safe": {
-      "@@dev": "./src/index_safe.ts",
-      "default": "./build/index_safe.js"
-    },
     "./Controller": {
       "@@dev": "./src/Controller.ts",
       "default": "./build/Controller.js"

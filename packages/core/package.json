@@ -17,10 +17,6 @@
       "@@dev": "./src/bindings/*.ts",
       "default": "./build/bindings/*.js"
     },
-    "./safe": {
-      "@@dev": "./src/index_safe.ts",
-      "default": "./build/index_safe.js"
-    },
     "./test": {
       "@@dev": "./src/index_test.ts",
       "default": "./build/index_test.js"

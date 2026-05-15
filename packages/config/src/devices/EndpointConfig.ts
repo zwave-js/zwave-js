@@ -1,6 +1,6 @@
 import type { JSONObject } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
-import { throwInvalidConfig } from "../utils_safe.js";
+import { throwInvalidConfig } from "../utils.js";
 import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,
