@@ -25,6 +25,9 @@
   "funding": {
     "url": "https://github.com/sponsors/AlCalzone/"
   },
+  "engines": {
+    "node": ">= 22.17"
+  },
   "workspaces": [
     "packages/*"
   ],

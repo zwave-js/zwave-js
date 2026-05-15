@@ -33,7 +33,7 @@ to make the code valid JavaScript. It is recommended to put a `// @ts-check` com
 
 #### Execute directly
 
-Node.js 22.7.0 and later can execute TypeScript files directly by passing the `--experimental-transform-types` flag: `node --experimental-transform-types your_script.ts`. This has some limitations but may work for your use case.
+Node.js 22.17.0 and later can execute TypeScript files directly by passing the `--experimental-transform-types` flag: `node --experimental-transform-types your_script.ts`. This has some limitations but may work for your use case.
 
 #### Execute with a transpiler
 
