@@ -32,7 +32,7 @@
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 22.12"
+    "node": ">= 22.17"
   },
   "scripts": {
     "ts": "tsx --conditions=@@dev",
