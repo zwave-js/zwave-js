@@ -92,7 +92,7 @@ integrationTest(
 
 			t.expect(elapsed).toBeLessThan(1000);
 
-			await wait(500);
+			await wait(1000);
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -113,8 +113,15 @@ integrationTest(
 				},
 			);
 
-			t.expect(node.getValue(ProtectionCCValues.rfProtectionState.id)).toBe(
-				RFProtectionState.NoControl,
+			mockNode.assertSentControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof ProtectionCCReport
+					&& frame.payload.rf === RFProtectionState.NoControl,
+				{
+					errorMessage:
+						"Node should have sent a ProtectionCCReport with the updated RF state",
+				},
 			);
 		},
 	},

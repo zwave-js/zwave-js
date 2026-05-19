@@ -1,20 +1,16 @@
 import {
 	CommandClasses,
-	type GetNode,
 	type GetValueDB,
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
-	type NodeId,
 	type SupervisionResult,
-	type SupportsCC,
 	Timeout,
 	ValueMetadata,
+	type ValueID,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
 	parseBitMask,
 	validatePayload,
@@ -26,7 +22,9 @@ import {
 	POLL_VALUE,
 	type PollValueImplementation,
 	SET_VALUE,
+	SET_VALUE_HOOKS,
 	type SetValueImplementation,
+	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
 } from "../lib/API.js";
@@ -56,7 +54,6 @@ import {
 	RFProtectionState,
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
-import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 
 export const ProtectionCCValues = V.defineCCValues(CommandClasses.Protection, {
 	...V.staticProperty(
@@ -212,6 +209,32 @@ export class ProtectionCCAPI extends CCAPI {
 					throwUnsupportedProperty(this.ccId, property);
 			}
 		};
+	}
+
+	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
+		{ property },
+		value,
+	) => {
+		if (
+			(property === "local"
+				&& typeof value === "number")
+			|| (property === "rf" && typeof value === "number")
+		) {
+			return {
+				forceVerifyChanges: () => true,
+				verifyChanges: () => {
+					if (this.isSinglecast()) {
+						this.schedulePoll({ property }, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		}
+	};
+
+	public override isSetValueOptimistic(_valueId: ValueID): boolean {
+		return false;
 	}
 
 	// oxlint-disable-next-line typescript/explicit-module-boundary-types
@@ -500,28 +523,7 @@ export interface ProtectionCCSetOptions {
 	rf?: RFProtectionState;
 }
 
-function getCCResponseForProtectionCCSet(
-	ctx: GetNode<NodeId & SupportsCC>,
-	sent: ProtectionCCSet,
-) {
-	// The NodeID that has exclusive control can override the RF protection
-	// state of the device and can control it regardless of the protection
-	// state. Commands from any other nodes in the network may be restricted
-	// by the RF protection state. In that case, the Application Rejected
-	// Request Command MUST be returned.
-	if (
-		sent.isSinglecast()
-		&& !sent.isEncapsulatedWith(CommandClasses.Supervision)
-		&& ctx.getNode(sent.nodeId)?.supportsCC(
-			CommandClasses["Application Status"],
-		)
-	) {
-		return ApplicationStatusCCRejectedRequest;
-	}
-}
-
 @CCCommand(ProtectionCommand.Set)
-@expectedCCResponse(getCCResponseForProtectionCCSet)
 @useSupervision()
 export class ProtectionCCSet extends ProtectionCC {
 	public constructor(
@@ -532,16 +534,19 @@ export class ProtectionCCSet extends ProtectionCC {
 		this.rf = options.rf;
 	}
 
-	public static from(_raw: CCRaw, _ctx: CCParsingContext): ProtectionCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+	public static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const local: LocalProtectionState = raw.payload[0] & 0b1111;
+		let rf: RFProtectionState | undefined;
+		if (raw.payload.length >= 2) {
+			rf = raw.payload[1] & 0b1111;
+		}
 
-		// return new ProtectionCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			local,
+			rf,
+		});
 	}
 
 	public local: LocalProtectionState;
