@@ -11,8 +11,7 @@ import {
 	ValueMetadata,
 	type ValueID,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
+	encodeBitMask,
 	enumValuesToMetadataStates,
 	parseBitMask,
 	validatePayload,
@@ -603,8 +602,6 @@ export class ProtectionCCReport extends ProtectionCC {
 		options: WithAddress<ProtectionCCReportOptions>,
 	) {
 		super(options);
-
-		// TODO: Check implementation:
 		this.local = options.local;
 		this.rf = options.rf;
 	}
@@ -627,6 +624,13 @@ export class ProtectionCCReport extends ProtectionCC {
 	public readonly local: LocalProtectionState;
 
 	public readonly rf?: RFProtectionState;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = this.rf != undefined
+			? Bytes.from([this.local & 0b1111, this.rf & 0b1111])
+			: Bytes.from([this.local & 0b1111]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
@@ -670,8 +674,6 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 		options: WithAddress<ProtectionCCSupportedReportOptions>,
 	) {
 		super(options);
-
-		// TODO: Check implementation:
 		this.supportsTimeout = options.supportsTimeout;
 		this.supportsExclusiveControl = options.supportsExclusiveControl;
 		this.supportedLocalStates = options.supportedLocalStates;
@@ -736,6 +738,17 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 
 	public readonly supportedRFStates: RFProtectionState[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const flags = (this.supportsTimeout ? 0b1 : 0)
+			| (this.supportsExclusiveControl ? 0b10 : 0);
+		this.payload = Bytes.concat([
+			[flags],
+			encodeBitMask(this.supportedLocalStates, 15, 0),
+			encodeBitMask(this.supportedRFStates, 15, 0),
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -776,8 +789,6 @@ export class ProtectionCCExclusiveControlReport extends ProtectionCC {
 		options: WithAddress<ProtectionCCExclusiveControlReportOptions>,
 	) {
 		super(options);
-
-		// TODO: Check implementation:
 		this.exclusiveControlNodeId = options.exclusiveControlNodeId;
 	}
 
@@ -795,6 +806,11 @@ export class ProtectionCCExclusiveControlReport extends ProtectionCC {
 	}
 
 	public readonly exclusiveControlNodeId: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.exclusiveControlNodeId]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -827,18 +843,14 @@ export class ProtectionCCExclusiveControlSet extends ProtectionCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ProtectionCCExclusiveControlSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ProtectionCCExclusiveControlSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			exclusiveControlNodeId: raw.payload[0],
+		});
 	}
 
 	public exclusiveControlNodeId: number;
@@ -870,8 +882,6 @@ export class ProtectionCCTimeoutReport extends ProtectionCC {
 		options: WithAddress<ProtectionCCTimeoutReportOptions>,
 	) {
 		super(options);
-
-		// TODO: Check implementation:
 		this.timeout = options.timeout;
 	}
 
@@ -889,6 +899,11 @@ export class ProtectionCCTimeoutReport extends ProtectionCC {
 	}
 
 	public readonly timeout: Timeout;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.timeout.serialize()]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -919,18 +934,14 @@ export class ProtectionCCTimeoutSet extends ProtectionCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ProtectionCCTimeoutSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ProtectionCCTimeoutSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			timeout: Timeout.parse(raw.payload[0]),
+		});
 	}
 
 	public timeout: Timeout;

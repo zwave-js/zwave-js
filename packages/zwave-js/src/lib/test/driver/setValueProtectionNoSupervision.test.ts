@@ -87,6 +87,26 @@ integrationTest(
 		},
 
 		testBody: async (t, _driver, node, _mockController, mockNode) => {
+			t.expect(node.getValue(ProtectionCCValues.localProtectionState.id)).toBe(
+				LocalProtectionState.Unprotected,
+			);
+			t.expect(node.getValue(ProtectionCCValues.rfProtectionState.id)).toBe(
+				RFProtectionState.Unprotected,
+			);
+			t.expect(
+				node.getValueMetadata(ProtectionCCValues.localProtectionState.id)
+					.states,
+			).toStrictEqual({
+				0: "Unprotected",
+				2: "NoOperationPossible",
+			});
+			t.expect(
+				node.getValueMetadata(ProtectionCCValues.rfProtectionState.id).states,
+			).toStrictEqual({
+				0: "Unprotected",
+				1: "NoControl",
+			});
+
 			const startedAt = Date.now();
 			await node.setValue(
 				ProtectionCCValues.rfProtectionState.id,
@@ -126,6 +146,9 @@ integrationTest(
 					errorMessage:
 						"Node should have sent a ProtectionCCReport with the updated RF state",
 				},
+			);
+			t.expect(node.getValue(ProtectionCCValues.rfProtectionState.id)).toBe(
+				RFProtectionState.NoControl,
 			);
 		},
 	},
