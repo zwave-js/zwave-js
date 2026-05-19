@@ -8,8 +8,8 @@ import {
 	type MessageRecord,
 	type SupervisionResult,
 	Timeout,
-	ValueMetadata,
 	type ValueID,
+	ValueMetadata,
 	type WithAddress,
 	encodeBitMask,
 	enumValuesToMetadataStates,
@@ -658,9 +658,6 @@ export interface ProtectionCCSupportedReportOptions {
 	supportedRFStates: RFProtectionState[];
 }
 
-const protectionSupportedReportSupportsTimeoutFlag = 0b1;
-const protectionSupportedReportSupportsExclusiveControlFlag = 0b10;
-
 @CCCommand(ProtectionCommand.SupportedReport)
 @ccValueProperty(
 	"supportsExclusiveControl",
@@ -688,13 +685,8 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 		ctx: CCParsingContext,
 	): ProtectionCCSupportedReport {
 		validatePayload(raw.payload.length >= 5);
-		const supportsTimeout = !!(
-			raw.payload[0] & protectionSupportedReportSupportsTimeoutFlag
-		);
-		const supportsExclusiveControl = !!(
-			raw.payload[0]
-			& protectionSupportedReportSupportsExclusiveControlFlag
-		);
+		const supportsTimeout = !!(raw.payload[0] & 0b1);
+		const supportsExclusiveControl = !!(raw.payload[0] & 0b10);
 		const supportedLocalStates: LocalProtectionState[] = parseBitMask(
 			raw.payload.subarray(1, 3),
 			LocalProtectionState.Unprotected,
@@ -747,16 +739,20 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 	public readonly supportedRFStates: RFProtectionState[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const flags = (this.supportsTimeout
-			? protectionSupportedReportSupportsTimeoutFlag
-			: 0)
-			| (this.supportsExclusiveControl
-				? protectionSupportedReportSupportsExclusiveControlFlag
-				: 0);
+		const flags = (this.supportsTimeout ? 0b1 : 0)
+			| (this.supportsExclusiveControl ? 0b10 : 0);
 		this.payload = Bytes.concat([
 			[flags],
-			encodeBitMask(this.supportedLocalStates, 15, 0),
-			encodeBitMask(this.supportedRFStates, 15, 0),
+			encodeBitMask(
+				this.supportedLocalStates,
+				15,
+				LocalProtectionState.Unprotected,
+			),
+			encodeBitMask(
+				this.supportedRFStates,
+				15,
+				RFProtectionState.Unprotected,
+			),
 		]);
 		return super.serialize(ctx);
 	}
