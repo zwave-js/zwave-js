@@ -11,6 +11,8 @@ import {
 	ValueMetadata,
 	type ValueID,
 	type WithAddress,
+	ZWaveError,
+	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
 	parseBitMask,
 	validatePayload,
