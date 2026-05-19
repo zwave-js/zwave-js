@@ -676,11 +676,11 @@ export class AccessControlAPI extends FeatureAPI {
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
 			});
-			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			const status = u3cUserReportTypeToSetUserResult(raw?.reportType);
 			if (status === SetUserResult.OK) {
 				this.#purgeAllCachedUsersAndCredentials();
 			}
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			return status;
 		} else {
 			const api = this.#ucAPI();
@@ -1082,10 +1082,14 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialType,
 				credentialSlot: 0,
 			});
-			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			return u3cCredentialReportTypeToSetCredentialResult(
+			const status = u3cCredentialReportTypeToSetCredentialResult(
 				raw?.reportType,
 			);
+			if (status === SetCredentialResult.OK) {
+				this.#purgeCachedCredentials(userId, credentialType);
+			}
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
+			return status;
 		} else {
 			// User Code CC
 			if (
@@ -1350,7 +1354,10 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	/** Removes cached credential values for a given user from the value DB */
-	#purgeCachedCredentials(userId: number): void {
+	#purgeCachedCredentials(
+		userId: number,
+		credentialType: UserCredentialType = UserCredentialType.None,
+	): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 		const credentialOwners = valueDB.findValues(
@@ -1359,11 +1366,17 @@ export class AccessControlAPI extends FeatureAPI {
 				&& vid.endpoint === this.endpoint.index,
 		);
 		for (const { endpoint, propertyKey, value } of credentialOwners) {
-			if (value !== userId) continue;
+			if (userId !== 0 && value !== userId) continue;
 
 			const key = propertyKey as number;
 			const type = key >>> 16;
 			const slot = key & 0xffff;
+			if (
+				credentialType !== UserCredentialType.None
+				&& type !== credentialType
+			) {
+				continue;
+			}
 
 			for (
 				const valueId of [

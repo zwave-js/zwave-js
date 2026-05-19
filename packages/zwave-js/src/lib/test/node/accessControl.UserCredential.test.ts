@@ -1471,6 +1471,40 @@ async function populateUserAndCredential(
 }
 
 integrationTest(
+	"deleteCredentials purges cached credentials before emitting the filtered bulk delete event",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(1);
+
+			const cacheAtEvent = createDeferredPromise<number>();
+			node.once("credential deleted", () => {
+				cacheAtEvent.resolve(
+					node.accessControl!.getAllCredentialsCached().length,
+				);
+			});
+
+			const result = await node.accessControl!.deleteCredentials({
+				credentialType: UserCredentialType.PINCode,
+			});
+			t.expect(result).toBe(SetCredentialResult.OK);
+
+			t.expect(await cacheAtEvent).toBe(0);
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(0);
+			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
+		},
+	},
+);
+
+integrationTest(
 	"deleteUser purges cached credentials (unsupervised)",
 	{
 		nodeCapabilities: {
@@ -1556,6 +1590,49 @@ integrationTest(
 			).toBe(
 				1,
 			);
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllUsers purges the cache before emitting the bulk delete event",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
+
+			const cacheAtEvent = createDeferredPromise<{
+				users: number;
+				credentials: number;
+			}>();
+			node.once("user deleted", () => {
+				cacheAtEvent.resolve({
+					users: node.accessControl!.getUsersCached().length,
+					credentials: node.accessControl!.getCredentialsForUserCached(1)
+						.length,
+				});
+			});
+
+			const result = await node.accessControl!.deleteAllUsers();
+			t.expect(result).toBe(SetUserResult.OK);
+
+			t.expect(await cacheAtEvent).toStrictEqual({
+				users: 0,
+				credentials: 0,
+			});
 		},
 	},
 );
