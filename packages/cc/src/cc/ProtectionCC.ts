@@ -626,7 +626,7 @@ export class ProtectionCCReport extends ProtectionCC {
 	public readonly rf?: RFProtectionState;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = this.rf != undefined
+		this.payload = this.rf !== undefined
 			? Bytes.from([this.local & 0b1111, this.rf & 0b1111])
 			: Bytes.from([this.local & 0b1111]);
 		return super.serialize(ctx);
@@ -658,6 +658,9 @@ export interface ProtectionCCSupportedReportOptions {
 	supportedRFStates: RFProtectionState[];
 }
 
+const protectionSupportedReportSupportsTimeoutFlag = 0b1;
+const protectionSupportedReportSupportsExclusiveControlFlag = 0b10;
+
 @CCCommand(ProtectionCommand.SupportedReport)
 @ccValueProperty(
 	"supportsExclusiveControl",
@@ -685,8 +688,13 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 		ctx: CCParsingContext,
 	): ProtectionCCSupportedReport {
 		validatePayload(raw.payload.length >= 5);
-		const supportsTimeout = !!(raw.payload[0] & 0b1);
-		const supportsExclusiveControl = !!(raw.payload[0] & 0b10);
+		const supportsTimeout = !!(
+			raw.payload[0] & protectionSupportedReportSupportsTimeoutFlag
+		);
+		const supportsExclusiveControl = !!(
+			raw.payload[0]
+			& protectionSupportedReportSupportsExclusiveControlFlag
+		);
 		const supportedLocalStates: LocalProtectionState[] = parseBitMask(
 			raw.payload.subarray(1, 3),
 			LocalProtectionState.Unprotected,
@@ -739,8 +747,12 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 	public readonly supportedRFStates: RFProtectionState[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const flags = (this.supportsTimeout ? 0b1 : 0)
-			| (this.supportsExclusiveControl ? 0b10 : 0);
+		const flags = (this.supportsTimeout
+			? protectionSupportedReportSupportsTimeoutFlag
+			: 0)
+			| (this.supportsExclusiveControl
+				? protectionSupportedReportSupportsExclusiveControlFlag
+				: 0);
 		this.payload = Bytes.concat([
 			[flags],
 			encodeBitMask(this.supportedLocalStates, 15, 0),
