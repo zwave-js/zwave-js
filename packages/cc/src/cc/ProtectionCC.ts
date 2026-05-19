@@ -236,6 +236,8 @@ export class ProtectionCCAPI extends CCAPI {
 	};
 
 	public override isSetValueOptimistic(_valueId: ValueID): boolean {
+		// Protection changes may be rejected depending on the node's current
+		// exclusive/RF protection state, so we always read the state back.
 		return false;
 	}
 

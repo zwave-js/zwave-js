@@ -15,6 +15,10 @@ import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
+const responseTimeoutMs = 2000;
+const validationDelayMs = 100;
+const validationWaitMs = 1000;
+
 integrationTest(
 	"Protection setValue without supervision: expect immediate validation GET",
 	{
@@ -31,8 +35,8 @@ integrationTest(
 
 		additionalDriverOptions: {
 			timeouts: {
-				response: 2000,
-				refreshValueAfterTransition: 100,
+				response: responseTimeoutMs,
+				refreshValueAfterTransition: validationDelayMs,
 			},
 		},
 
@@ -90,9 +94,9 @@ integrationTest(
 			);
 			const elapsed = Date.now() - startedAt;
 
-			t.expect(elapsed).toBeLessThan(1000);
+			t.expect(elapsed).toBeLessThan(responseTimeoutMs / 2);
 
-			await wait(1000);
+			await wait(validationWaitMs);
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
