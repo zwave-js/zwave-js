@@ -14,8 +14,6 @@ let setNodeIDTypeCallCount = 0;
 integrationTest(
 "After soft reset, retry switching back to 16-bit node IDs when the first attempt gets a CAN",
 {
-// debug: true,
-
 controllerCapabilities: {
 libraryVersion: "Z-Wave 7.19.1",
 },

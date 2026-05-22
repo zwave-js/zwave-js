@@ -121,13 +121,18 @@ export class SerialAPISetupRequest extends Message {
 
 	public command: SerialAPISetupCommand;
 
-	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		const originalPayload = this.payload;
 		this.payload = Bytes.concat([
 			[this.command],
 			this.payload,
 		]);
 
-		return super.serialize(ctx);
+		try {
+			return await super.serialize(ctx);
+		} finally {
+			this.payload = originalPayload;
+		}
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
