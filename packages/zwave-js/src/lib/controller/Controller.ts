@@ -530,7 +530,6 @@ export class ZWaveController
 	}
 
 	private _noNodesIncluded: MaybeNotKnown<boolean>;
-	private _knownClassicNodeIds: readonly number[] = [];
 
 	private _nodeType: MaybeNotKnown<NodeType>;
 	public get nodeType(): MaybeNotKnown<NodeType> {
@@ -1676,7 +1675,9 @@ export class ZWaveController
 	 * @internal
 	 * Performs additional controller configuration
 	 */
-	public async configure(): Promise<void> {
+	public async configure(
+		knownClassicNodeIds: readonly number[],
+	): Promise<void> {
 		// Enable TX status report if supported
 		if (
 			this.isSerialAPISetupCommandSupported(
@@ -1706,7 +1707,7 @@ export class ZWaveController
 		);
 		this._sucNodeId = suc.sucNodeId;
 		const noSUCInNetwork = this._sucNodeId === 0
-			|| !this._knownClassicNodeIds.includes(this._sucNodeId);
+			|| !knownClassicNodeIds.includes(this._sucNodeId);
 		if (this._sucNodeId === 0) {
 			this.driver.controllerLog.print(`No SUC present in the network`);
 		} else if (this._sucNodeId === this._ownNodeId) {
@@ -7872,7 +7873,6 @@ export class ZWaveController
 		this._isPrimary = initData.isPrimary;
 		this._isSIS = initData.isSIS;
 		this._nodeType = initData.nodeType;
-		this._knownClassicNodeIds = [...initData.nodeIds];
 		this._supportsTimers = initData.supportsTimers;
 
 		return ret;
