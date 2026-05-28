@@ -44,7 +44,7 @@
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.11.0",
     "@tsconfig/node22": "^22.0.5",
     "@types/js-yaml": "^4",
-    "@types/node": "^20.19.35",
+    "@types/node": "^22.19.19",
     "@types/semver": "^7.7.1",
     "@types/source-map-support": "^0.5.10",
     "@types/tmp": "^0",

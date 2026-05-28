@@ -81,7 +81,7 @@
   "devDependencies": {
     "@serialport/binding-mock": "^10.2.2",
     "@serialport/bindings-interface": "patch:@serialport/bindings-interface@npm%3A1.2.2#~/.yarn/patches/@serialport-bindings-interface-npm-1.2.2-e597dbc676.patch",
-    "@types/node": "^20.19.35",
+    "@types/node": "^22.19.19",
     "@types/sinon": "^21.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "ansi-colors": "^4.1.3",

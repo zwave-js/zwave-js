@@ -4,12 +4,12 @@
  */
 
 import esMain from "es-main";
+import { globSync } from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Project, ts } from "ts-morph";
 import { formatWithDprint } from "./dprint.js";
-import { globAsArray } from "./nativeGlob.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,10 +18,10 @@ async function main() {
 
 	const devicesDir = path.join(__dirname, "../../config/config/devices");
 
-	const configFiles = (await globAsArray("**/*.json", {
+	const configFiles = globSync("**/*.json", {
 		cwd: devicesDir,
 		exclude: ["**/index.json", "**/templates/**"],
-	}))
+	})
 		.map((filename) => path.join(devicesDir, filename))
 		.toSorted((a, b) => a.localeCompare(b));
 

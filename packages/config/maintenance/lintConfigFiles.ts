@@ -6,7 +6,7 @@ import {
 	getMinimumShiftForBitMask,
 } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
-import { globAsArray, reportProblem } from "@zwave-js/maintenance";
+import { reportProblem } from "@zwave-js/maintenance";
 import {
 	formatId,
 	getErrorMessage,
@@ -19,6 +19,7 @@ import c from "ansi-colors";
 import esMain from "es-main";
 import levenshtein from "js-levenshtein";
 import type { RulesLogic } from "json-logic-js";
+import { globSync } from "node:fs";
 import * as path from "node:path";
 import { ConfigManager } from "../src/ConfigManager.js";
 import { parseLogic } from "../src/Logic.js";
@@ -259,11 +260,11 @@ async function lintDevices(): Promise<void> {
 
 	const rootDir = path.join(configDir, "devices");
 
-	const forbiddenFiles = (await globAsArray("**/*", {
+	const forbiddenFiles = globSync("**/*", {
 		cwd: rootDir,
 		exclude: ["**/*.json"],
 		withFileTypes: true,
-	}))
+	})
 		.filter((entry) => !entry.isDirectory())
 		.map((entry) => path.join(entry.parentPath, entry.name))
 		.toSorted((a, b) => a.localeCompare(b));
@@ -276,10 +277,10 @@ async function lintDevices(): Promise<void> {
 		);
 	}
 
-	const filesWithWhitespace = (await globAsArray("**/*", {
+	const filesWithWhitespace = globSync("**/*", {
 		cwd: rootDir,
 		withFileTypes: true,
-	}))
+	})
 		.filter((entry) => !entry.isDirectory() && /\s/.test(entry.name))
 		.map((entry) => path.join(entry.parentPath, entry.name))
 		.toSorted((a, b) => a.localeCompare(b));

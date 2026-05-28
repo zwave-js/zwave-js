@@ -3,10 +3,10 @@
  */
 
 import c from "ansi-colors";
+import { globSync } from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { formatWithDprint } from "../dprint.js";
-import { globAsArray } from "../nativeGlob.js";
 import { projectRoot } from "../tsAPITools.js";
 
 const docsDir = path.join(projectRoot, "docs");
@@ -27,10 +27,10 @@ async function generateExamples(): Promise<boolean> {
 	}
 
 	// Find examples
-	const examples = (await globAsArray("*.md", {
+	const examples = globSync("*.md", {
 		cwd: examplesDocsDir,
 		exclude: ["index.md"],
-	})).toSorted((a, b) => a.localeCompare(b));
+	}).toSorted((a, b) => a.localeCompare(b));
 
 	const processedExamples: {
 		position: number;

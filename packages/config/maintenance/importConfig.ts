@@ -12,7 +12,7 @@ process.on("unhandledRejection", (r) => {
 
 import { CommandClasses, getIntegerLimits } from "@zwave-js/core";
 import { fs as nodeFS } from "@zwave-js/core/bindings/fs/node";
-import { globAsArray } from "@zwave-js/maintenance";
+import { globSync } from "node:fs";
 import {
 	formatId,
 	getErrorMessage,
@@ -854,7 +854,7 @@ async function parseZWAFiles(): Promise<void> {
 	// Parse json files in the zwaTempDir
 	let jsonData = [];
 
-	const configFiles = (await globAsArray("**/*.json", { cwd: zwaTempDir }))
+	const configFiles = globSync("**/*.json", { cwd: zwaTempDir })
 		.map((filename) => path.join(zwaTempDir, filename))
 		.toSorted((a, b) => a.localeCompare(b));
 
@@ -1622,7 +1622,7 @@ async function maintenanceParse(): Promise<void> {
 
 	// Load the zwa files
 	await nodeFS.ensureDir(zwaTempDir);
-	const zwaFiles = (await globAsArray("**/*.json", { cwd: zwaTempDir }))
+	const zwaFiles = globSync("**/*.json", { cwd: zwaTempDir })
 		.map((filename) => path.join(zwaTempDir, filename))
 		.toSorted((a, b) => a.localeCompare(b));
 	for (const file of zwaFiles) {
@@ -1636,9 +1636,9 @@ async function maintenanceParse(): Promise<void> {
 	}
 
 	// Build the list of device files
-	const configFiles = (await globAsArray("**/*.json", {
+	const configFiles = globSync("**/*.json", {
 		cwd: processedDir,
-	}))
+	})
 		.map((filename) => path.join(processedDir, filename))
 		.toSorted((a, b) => a.localeCompare(b));
 	for (const file of configFiles) {
@@ -2009,10 +2009,10 @@ async function parseOHConfigFile(
 
 /** Translates all downloaded config files */
 async function importConfigFilesOH(): Promise<void> {
-	const configFiles = (await globAsArray("*.json", {
+	const configFiles = globSync("*.json", {
 		cwd: ohTempDir,
 		exclude: ["_*.json", "manufacturers.json"],
-	})).toSorted((a, b) => a.localeCompare(b));
+	}).toSorted((a, b) => a.localeCompare(b));
 
 	for (const file of configFiles) {
 		const inPath = path.join(ohTempDir, file);
@@ -2327,10 +2327,10 @@ function getLatestConfigVersion(
 
 /** Changes the manufacturer names in all device config files to match manufacturers.json */
 async function updateManufacturerNames(): Promise<void> {
-	const configFiles = (await globAsArray("**/*.json", {
+	const configFiles = globSync("**/*.json", {
 		cwd: processedDir,
 		exclude: ["**/index.json"],
-	}))
+	})
 		.map((filename) => path.join(processedDir, filename))
 		.toSorted((a, b) => a.localeCompare(b));
 	await configManager.loadManufacturers();

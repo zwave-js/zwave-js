@@ -3,12 +3,12 @@ import "reflect-metadata";
 import { CommandClasses } from "@zwave-js/core";
 import { num2hex } from "@zwave-js/shared";
 import c from "ansi-colors";
+import { globSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { globSync } from "./nativeGlob.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

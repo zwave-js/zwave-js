@@ -59,7 +59,7 @@
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "@types/node": "^20.19.35",
+    "@types/node": "^22.19.19",
     "@types/sinon": "^21.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "del-cli": "^7.0.0",

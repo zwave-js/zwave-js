@@ -4,6 +4,7 @@
 
 import c from "ansi-colors";
 import esMain from "es-main";
+import { globSync } from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,7 +23,6 @@ import {
 	type TypeLiteralNode,
 } from "ts-morph";
 import { formatWithDprint } from "../dprint.js";
-import { globAsArray } from "../nativeGlob.js";
 import {
 	projectRoot,
 	tsConfigFilePathForDocs as tsConfigFilePath,
@@ -283,10 +283,10 @@ ${source}
 /** Processes all imports, returns true if there was an error */
 async function processImports(piscina: Piscina): Promise<boolean> {
 	const docsDir = path.join(projectRoot, "docs");
-	const files = (await globAsArray("**/*.md", {
+	const files = globSync("**/*.md", {
 		cwd: docsDir,
 		exclude: ["**/CCs/**"],
-	}))
+	})
 		.map((filename) => path.join(docsDir, filename))
 		.toSorted((a, b) => a.localeCompare(b));
 
