@@ -378,7 +378,7 @@ import {
 interface ControllerEventCallbacks
 	extends StatisticsEventCallbacks<ControllerStatistics>
 {
-	"inclusion failed": () => void;
+	"inclusion failed": (nodeId?: number) => void;
 	"exclusion failed": () => void;
 	"inclusion started": (strategy: InclusionStrategy) => void;
 	"exclusion started": () => void;
@@ -2805,6 +2805,8 @@ export class ZWaveController
 						message: "was removed",
 					},
 				);
+
+				this.emit("inclusion failed", newNode.id);
 
 				// The node was removed. Do not emit the "node added" event
 				this.setInclusionState(InclusionState.Idle);
@@ -6969,7 +6971,7 @@ export class ZWaveController
 					),
 				);
 				self.setInclusionState(InclusionState.Idle);
-				self.emit("inclusion failed");
+				self.emit("inclusion failed", node.id);
 				return;
 			}
 
@@ -6984,7 +6986,7 @@ export class ZWaveController
 					),
 				);
 				self.setInclusionState(InclusionState.Idle);
-				self.emit("inclusion failed");
+				self.emit("inclusion failed", node.id);
 				return;
 			}
 
