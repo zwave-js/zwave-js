@@ -1725,7 +1725,8 @@ export class ZWaveController
 
 		// There needs to be a SUC/SIS in the network. If not, we promote ourselves to one if the following conditions are met:
 		// We are the primary controller, but we are not SUC, there is no SUC and there is no SIS, and there are no nodes in the network yet -
-		// OR the configured SUC node ID is not actually part of the network (which is an edge case observed on some controllers).
+		// OR the configured SUC node ID is not actually part of the network (this is an edge case observed on some controllers
+		// which prevents that controller from entering inclusion mode).
 		if (
 			this.role === ControllerRole.Primary
 			&& !this._isSUC
