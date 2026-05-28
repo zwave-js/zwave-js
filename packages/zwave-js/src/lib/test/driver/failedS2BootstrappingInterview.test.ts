@@ -1,16 +1,14 @@
 import { CommandClasses, InterviewStage, SecurityClass } from "@zwave-js/core";
 import {
 	ReplaceFailedNodeRequest,
-	ReplaceFailedNodeRequestStatusReport,
 	ReplaceFailedNodeResponse,
+	ReplaceFailedNodeRequestStatusReport,
 	ReplaceFailedNodeStartFlags,
 	ReplaceFailedNodeStatus,
 } from "@zwave-js/serial";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
-import {
-	InclusionStrategy,
-} from "../../controller/Inclusion.js";
+import { InclusionStrategy } from "../../controller/Inclusion.js";
 import type { ZWaveNode } from "../../node/Node.js";
 import { integrationTest } from "../integrationTestSuite.js";
 import { integrationTest as integrationTestMulti } from "../integrationTestSuiteMulti.js";
