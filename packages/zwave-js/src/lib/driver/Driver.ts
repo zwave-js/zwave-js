@@ -2086,7 +2086,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			await this.controller.identify();
 
 			// Perform additional configuration
-			await this.controller.configure();
+			await this.controller.configure(nodeIds);
 
 			// now that we know the home ID, we can open the databases
 			await this.initNetworkCache(this.controller.homeId!);
