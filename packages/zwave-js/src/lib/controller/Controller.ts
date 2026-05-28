@@ -2037,6 +2037,9 @@ export class ZWaveController
 	/**
 	 * Starts the hardware watchdog on supporting 700+ series controllers.
 	 * Returns whether the operation was successful.
+	 *
+	 * Using this method is not recommended. Modern Z-Wave firmware manages the hardware
+	 * watchdog internally, and the driver no longer interacts with it automatically.
 	 */
 	public async startWatchdog(): Promise<boolean> {
 		if (
@@ -2067,6 +2070,9 @@ export class ZWaveController
 	/**
 	 * Stops the hardware watchdog on supporting controllers.
 	 * Returns whether the operation was successful.
+	 *
+	 * Using this method is not recommended. Modern Z-Wave firmware manages the hardware
+	 * watchdog internally, and the driver no longer interacts with it automatically.
 	 */
 	public async stopWatchdog(): Promise<boolean> {
 		if (this.isFunctionSupported(FunctionType.StopWatchdog)) {
@@ -8482,9 +8488,6 @@ export class ZWaveController
 					);
 				}
 
-				// Disable watchdog to prevent resets during NVM access
-				yield* waitFor(self.stopWatchdog());
-
 				let ret: BytesView;
 				try {
 					if (self.sdkVersionGte("7.0")) {
@@ -8492,7 +8495,6 @@ export class ZWaveController
 						// All 7.xx versions so far seem to have a bug where the NVM is not properly closed after reading
 						// resulting in extremely strange controller behavior after a backup. To work around this, restart the stick if possible
 						yield* waitFor(self.driver.trySoftReset());
-						// Soft-resetting will enable the watchdog again
 					} else {
 						ret = yield* waitFor(self.backupNVMRaw500(onProgress));
 					}
@@ -8682,9 +8684,6 @@ export class ZWaveController
 						ZWaveErrorCodes.Controller_ResponseNOK,
 					);
 				}
-
-				// Disable watchdog to prevent resets during NVM access
-				yield* waitFor(self.stopWatchdog());
 
 				// Restoring a potentially incompatible NVM happens in three steps:
 				// 1. the current NVM is read

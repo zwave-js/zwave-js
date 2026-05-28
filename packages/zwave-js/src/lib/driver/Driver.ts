@@ -353,8 +353,6 @@ const defaultOptions: ZWaveOptions = {
 		unresponsiveControllerRecovery: !getenv(
 			"ZWAVEJS_DISABLE_UNRESPONSIVE_CONTROLLER_RECOVERY",
 		),
-		// By default disable the watchdog
-		watchdog: false,
 		// Support all CCs unless specified otherwise
 		disableCommandClasses: [],
 	},
@@ -3568,11 +3566,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// This is a bit hacky, but what the heck...
 		if (!this._enteringBootloader) {
-			// Start the watchdog again, unless disabled
-			if (this.options.features.watchdog) {
-				void this._controller?.startWatchdog();
-			}
-
 			// If desired, re-configure the controller to use 16 bit node IDs
 			void this._controller?.trySetNodeIDType(NodeIDType.Long);
 
@@ -5482,11 +5475,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 							ZWaveErrorCodes.Controller_Reset,
 						),
 					);
-				}
-
-				// Restart the watchdog unless disabled
-				if (this.options.features.watchdog) {
-					await this._controller?.startWatchdog();
 				}
 
 				if (this._controller?.nodeIdType === NodeIDType.Long) {

@@ -306,18 +306,6 @@ export interface ZWaveOptions {
 		unresponsiveControllerRecovery?: boolean;
 
 		/**
-		 * Controllers of the 700 series and newer have a hardware watchdog that can be enabled to automatically
-		 * reset the chip in case it becomes unresponsive. This option controls whether Z-Wave JS enables the watchdog automatically.
-		 *
-		 * @deprecated
-		 * It makes more sense to handle the watchdog in the firmware itself. Recent firmware versions do just that, so
-		 * this option is no longer necessary.
-		 *
-		 * Default: `false`
-		 */
-		watchdog?: boolean;
-
-		/**
 		 * Z-Wave JS normally uses all Command Classes it implements and responds to version queries for all of them.
 		 *
 		 * However, some Command Classes come with certification requirements that might not be fulfilled by the application.
@@ -576,17 +564,6 @@ export const driverPresets = Object.freeze(
 		NO_CONTROLLER_RECOVERY: {
 			features: {
 				unresponsiveControllerRecovery: false,
-			},
-		},
-
-		/**
-		 * @deprecated
-		 * This used to prevent the driver from enabling the watchdog on 700 series controllers.
-		 * This is now the default behavior, so this option is no longer necessary.
-		 */
-		NO_WATCHDOG: {
-			features: {
-				watchdog: false,
 			},
 		},
 
