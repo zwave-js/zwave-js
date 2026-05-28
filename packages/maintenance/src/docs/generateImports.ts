@@ -162,7 +162,10 @@ async function collectTransformedSources(
 						importKey,
 						transformedSources.get(importKey),
 					])
-					.filter((entry): entry is [string, string] => !!entry[1]),
+					.filter(
+						(entry): entry is [string, string] =>
+							entry[1] !== undefined,
+					),
 			),
 		]),
 	);
@@ -221,6 +224,8 @@ export function processImport(task: ProcessImportTask): Promise<boolean> {
 	if (typeof task === "string") {
 		return processDocFile(getProgram(), task);
 	}
+	// Worker tasks can receive pre-transformed sources so each worker doesn't
+	// need to create its own full docs project just to rewrite snippets.
 	return processDocFile(undefined, task.filename, task.transformedSources);
 }
 

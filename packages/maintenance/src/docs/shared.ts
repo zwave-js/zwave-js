@@ -23,22 +23,22 @@ const exportDeclarationCache = new Map<
 	ReadonlyMap<string, ExportedDeclarations[]>
 >();
 
-let _transformProject: Project | undefined;
-let _transformSourceFile: SourceFile | undefined;
+let transformProject: Project | undefined;
+let transformSourceFile: SourceFile | undefined;
 
 function getTransformSourceFile(sourceText: string): SourceFile {
-	if (!_transformProject) {
-		_transformProject = new Project();
+	if (!transformProject) {
+		transformProject = new Project();
 	}
-	if (!_transformSourceFile) {
-		_transformSourceFile = _transformProject.createSourceFile(
+	if (!transformSourceFile) {
+		transformSourceFile = transformProject.createSourceFile(
 			"index.ts",
 			sourceText,
 		);
 	} else {
-		_transformSourceFile.replaceWithText(sourceText);
+		transformSourceFile.replaceWithText(sourceText);
 	}
-	return _transformSourceFile;
+	return transformSourceFile;
 }
 
 export function findSourceNode(
