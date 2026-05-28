@@ -330,6 +330,7 @@ interface UserCapabilities {
 	supportedUserTypes: readonly UserCredentialUserType[];
 	maxUserNameLength: number | undefined;
 	supportedCredentialRules: readonly UserCredentialRule[];
+	supportsUsersWithoutCredentials: boolean;
 }
 ```
 
@@ -440,6 +441,33 @@ getUsersCached(): UserData[]
 Returns the data for all configured users.
 
 > [!NOTE] This method uses cached information from the most recent interview.
+
+#### `addUser`
+
+```ts
+addUser(
+	userId: number,
+	options: SetUserOptions,
+	credential?: {
+		type: UserCredentialType;
+		slot: number;
+		data: string | Uint8Array;
+	},
+): Promise<AddUserResult>
+```
+
+Creates a new user with the given ID, and optionally adds a credential for them in the same call.
+
+On endpoints where [`supportsUsersWithoutCredentials`](#getusercapabilitiescached) is `false`, the `credential` argument is required, and deleting the last credential of a user also removes the user.
+
+<!-- #import AddUserResult from "zwave-js" -->
+
+```ts
+interface AddUserResult {
+	user: SetUserResult;
+	credential?: SetCredentialResult;
+}
+```
 
 #### `setUser`
 

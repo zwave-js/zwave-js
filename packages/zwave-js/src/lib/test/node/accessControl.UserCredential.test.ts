@@ -106,6 +106,7 @@ integrationTest(
 				UserCredentialRule.Single,
 				UserCredentialRule.Dual,
 			]);
+			t.expect(userCaps.supportsUsersWithoutCredentials).toBe(true);
 
 			// Credential capabilities
 			const credCaps = node.accessControl!
@@ -1165,6 +1166,173 @@ integrationTest(
 					&& frame.payload.userId === 1,
 				{
 					errorMessage: "Should have sent UserSet with Add operation",
+				},
+			);
+		},
+	},
+);
+
+integrationTest(
+	"addUser without credential sends only UserSet (Add) on U3C",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userEvent = createDeferredPromise<unknown>();
+			node.on("user added", (_node, args) => userEvent.resolve(args));
+			let credEmitted = false;
+			node.on("credential added", () => {
+				credEmitted = true;
+			});
+
+			const result = await node.accessControl!.addUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+
+			t.expect(result.user).toBe(SetUserResult.OK);
+			t.expect(result.credential).toBeUndefined();
+
+			t.expect(await userEvent).toMatchObject({
+				userId: 1,
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			t.expect(credEmitted).toBe(false);
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCUserSet
+					&& frame.payload.operationType
+						=== UserCredentialOperationType.Add
+					&& frame.payload.userId === 1,
+				{
+					errorMessage: "Should have sent UserSet with Add operation",
+				},
+			);
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCCredentialSet,
+				{
+					noMatch: true,
+					errorMessage:
+						"Should not have sent a CredentialSet when no credential was provided",
+				},
+			);
+		},
+	},
+);
+
+integrationTest(
+	"addUser with credential sends UserSet (Add) then CredentialSet (Add) on U3C",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userEvent = createDeferredPromise<unknown>();
+			const credEvent = createDeferredPromise<unknown>();
+			node.on("user added", (_node, args) => userEvent.resolve(args));
+			node.on(
+				"credential added",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			const result = await node.accessControl!.addUser(
+				2,
+				{
+					active: true,
+					userType: UserCredentialUserType.General,
+					userName: "Bob",
+				},
+				{
+					type: UserCredentialType.PINCode,
+					slot: 2,
+					data: "4321",
+				},
+			);
+
+			t.expect(result.user).toBe(SetUserResult.OK);
+			t.expect(result.credential).toBe(SetCredentialResult.OK);
+
+			t.expect(await userEvent).toMatchObject({
+				userId: 2,
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Bob",
+			});
+			t.expect(await credEvent).toMatchObject({
+				userId: 2,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 2,
+				data: "4321",
+			});
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCUserSet
+					&& frame.payload.operationType
+						=== UserCredentialOperationType.Add
+					&& frame.payload.userId === 2,
+				{
+					errorMessage: "Should have sent UserSet with Add operation",
+				},
+			);
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCCredentialSet
+					&& frame.payload.operationType
+						=== UserCredentialOperationType.Add
+					&& frame.payload.userId === 2
+					&& frame.payload.credentialType
+						=== UserCredentialType.PINCode
+					&& frame.payload.credentialSlot === 2,
+				{
+					errorMessage:
+						"Should have sent CredentialSet with Add operation",
 				},
 			);
 		},

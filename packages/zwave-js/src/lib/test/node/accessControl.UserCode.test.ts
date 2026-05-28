@@ -14,7 +14,10 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
-import { SetCredentialResult } from "../../node/feature-apis/AccessControl.js";
+import {
+	SetCredentialResult,
+	SetUserResult,
+} from "../../node/feature-apis/AccessControl.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
 // =============================================================================
@@ -57,6 +60,7 @@ integrationTest(
 			t.expect(userCaps.supportedCredentialRules).toStrictEqual([
 				UserCredentialRule.Single,
 			]);
+			t.expect(userCaps.supportsUsersWithoutCredentials).toBe(false);
 
 			// Credential capabilities
 			const credCaps = node.accessControl!
@@ -1106,6 +1110,155 @@ integrationTest(
 				credentialSlot: 2,
 				data: "1234",
 			});
+		},
+	},
+);
+
+// =============================================================================
+// addUser
+// =============================================================================
+
+integrationTest(
+	"addUser without credential throws on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await t.expect(
+				node.accessControl!.addUser(1, {
+					active: true,
+					userType: UserCredentialUserType.General,
+				}),
+			).rejects.toThrow(/credential/i);
+		},
+	},
+);
+
+integrationTest(
+	"addUser with credential.slot !== userId throws on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await t.expect(
+				node.accessControl!.addUser(
+					1,
+					{
+						active: true,
+						userType: UserCredentialUserType.General,
+					},
+					{
+						type: UserCredentialType.PINCode,
+						slot: 99,
+						data: "1234",
+					},
+				),
+			).rejects.toThrow(/slot must equal the user ID/i);
+		},
+	},
+);
+
+integrationTest(
+	"addUser with credential writes user+code in a single Set on UC and emits both events",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userEvent = createDeferredPromise<unknown>();
+			const credEvent = createDeferredPromise<unknown>();
+			node.on("user added", (_node, args) => userEvent.resolve(args));
+			node.on(
+				"credential added",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			const result = await node.accessControl!.addUser(
+				3,
+				{
+					active: true,
+					userType: UserCredentialUserType.General,
+				},
+				{
+					type: UserCredentialType.PINCode,
+					slot: 3,
+					data: "1234",
+				},
+			);
+
+			t.expect(result).toEqual({
+				user: SetUserResult.OK,
+				credential: SetCredentialResult.OK,
+			});
+
+			t.expect(await userEvent).toMatchObject({
+				userId: 3,
+				active: true,
+				userType: UserCredentialUserType.General,
+			});
+			t.expect(await credEvent).toMatchObject({
+				userId: 3,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 3,
+				data: "1234",
+			});
+
+			// A single ExtendedUserCodeSet writes both the user status and
+			// the code together — verify that frame was sent.
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
+					&& frame.payload.userCodes[0].userId === 3
+					&& frame.payload.userCodes[0].userIdStatus
+						=== UserIDStatus.Enabled
+					&& frame.payload.userCodes[0].userCode === "1234",
+				{
+					errorMessage:
+						"Should have sent ExtendedUserCodeSet for userId 3 with code 1234",
+				},
+			);
 		},
 	},
 );
