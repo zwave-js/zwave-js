@@ -134,9 +134,16 @@ interface ${struct.name}${
 		struct.properties
 			?.filter((p) => !shouldStripPropertySignature(p))
 			.map((p) => {
+				let type = p.type as string;
+				// ts-morph 28 (TS 6.0) appends "| undefined" to the structure
+				// type of optional properties. Strip it so the output keeps
+				// matching the original source.
+				if (p.hasQuestionToken) {
+					type = type.replace(/\s*\|\s*undefined\s*$/, "");
+				}
 				return `${p.isReadonly ? "readonly " : ""}${p.name}${
 					p.hasQuestionToken ? "?:" : ":"
-				} ${p.type as string};`;
+				} ${type};`;
 			})
 			.join("\n")
 	}

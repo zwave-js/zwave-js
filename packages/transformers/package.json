@@ -47,7 +47,7 @@
     "nano-spawn": "^2.0.0",
     "ts-morph": "^28.0.0",
     "tsx": "^4.21.0",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vitest": "^4.1.0"
   }
 }
