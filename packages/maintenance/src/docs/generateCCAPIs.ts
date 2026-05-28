@@ -14,7 +14,6 @@ import { Piscina } from "piscina";
 import {
 	type JSDocTagStructure,
 	type MethodDeclaration,
-	Node,
 	type OptionalKind,
 	Project,
 	type SourceFile,
