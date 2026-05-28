@@ -26,6 +26,7 @@ export {
 	SetUserResult,
 } from "./lib/node/feature-apis/AccessControl.js";
 export type {
+	AddUserResult,
 	CredentialCapabilities,
 	CredentialData,
 	DeleteCredentialsOptions,
