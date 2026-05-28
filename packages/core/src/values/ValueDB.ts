@@ -131,7 +131,7 @@ export function valueEquals(a: unknown, b: unknown): boolean {
 
 	if (isObject(a)) {
 		if (!isObject(b)) return false;
-		const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+		const allKeys = new Set(Object.keys(a)).union(new Set(Object.keys(b)));
 		return [...allKeys].every((k) =>
 			valueEquals((a as any)[k], (b as any)[k])
 		);
