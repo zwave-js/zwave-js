@@ -1483,7 +1483,9 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			await populateUserAndCredential(node);
 
-			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(1);
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
+				1,
+			);
 
 			const cacheAtEvent = createDeferredPromise<number>();
 			node.once("credential deleted", () => {
@@ -1498,7 +1500,9 @@ integrationTest(
 			t.expect(result).toBe(SetCredentialResult.OK);
 
 			t.expect(await cacheAtEvent).toBe(0);
-			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(0);
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
+				0,
+			);
 			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
 		},
 	},
@@ -1621,8 +1625,9 @@ integrationTest(
 			node.once("user deleted", () => {
 				cacheAtEvent.resolve({
 					users: node.accessControl!.getUsersCached().length,
-					credentials: node.accessControl!.getCredentialsForUserCached(1)
-						.length,
+					credentials:
+						node.accessControl!.getCredentialsForUserCached(1)
+							.length,
 				});
 			});
 
