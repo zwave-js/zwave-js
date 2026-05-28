@@ -266,8 +266,7 @@ async function lintDevices(): Promise<void> {
 		withFileTypes: true,
 	})
 		.filter((entry) => !entry.isDirectory())
-		.map((entry) => path.join(entry.parentPath, entry.name))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((entry) => path.join(entry.parentPath, entry.name));
 	for (const file of forbiddenFiles) {
 		addError(
 			path.relative(rootDir, file),
@@ -282,8 +281,7 @@ async function lintDevices(): Promise<void> {
 		withFileTypes: true,
 	})
 		.filter((entry) => !entry.isDirectory() && /\s/.test(entry.name))
-		.map((entry) => path.join(entry.parentPath, entry.name))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((entry) => path.join(entry.parentPath, entry.name));
 	for (const file of filesWithWhitespace) {
 		addError(
 			path.relative(rootDir, file),

@@ -855,8 +855,7 @@ async function parseZWAFiles(): Promise<void> {
 	let jsonData = [];
 
 	const configFiles = globSync("**/*.json", { cwd: zwaTempDir })
-		.map((filename) => path.join(zwaTempDir, filename))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((filename) => path.join(zwaTempDir, filename));
 
 	for (const file of configFiles) {
 		const j = await fs.readFile(file, "utf8");
@@ -1623,8 +1622,7 @@ async function maintenanceParse(): Promise<void> {
 	// Load the zwa files
 	await nodeFS.ensureDir(zwaTempDir);
 	const zwaFiles = globSync("**/*.json", { cwd: zwaTempDir })
-		.map((filename) => path.join(zwaTempDir, filename))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((filename) => path.join(zwaTempDir, filename));
 	for (const file of zwaFiles) {
 		// zWave Alliance numbering isn't always continuous and an html page is
 		// returned when a device number doesn't. Test for and delete such files.
@@ -1639,8 +1637,7 @@ async function maintenanceParse(): Promise<void> {
 	const configFiles = globSync("**/*.json", {
 		cwd: processedDir,
 	})
-		.map((filename) => path.join(processedDir, filename))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((filename) => path.join(processedDir, filename));
 	for (const file of configFiles) {
 		const j = await fs.readFile(file, "utf8");
 
@@ -2012,7 +2009,7 @@ async function importConfigFilesOH(): Promise<void> {
 	const configFiles = globSync("*.json", {
 		cwd: ohTempDir,
 		exclude: ["_*.json", "manufacturers.json"],
-	}).toSorted((a, b) => a.localeCompare(b));
+	});
 
 	for (const file of configFiles) {
 		const inPath = path.join(ohTempDir, file);
@@ -2331,8 +2328,7 @@ async function updateManufacturerNames(): Promise<void> {
 		cwd: processedDir,
 		exclude: ["**/index.json"],
 	})
-		.map((filename) => path.join(processedDir, filename))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((filename) => path.join(processedDir, filename));
 	await configManager.loadManufacturers();
 
 	for (const file of configFiles) {

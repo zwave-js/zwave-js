@@ -30,7 +30,7 @@ async function generateExamples(): Promise<boolean> {
 	const examples = globSync("*.md", {
 		cwd: examplesDocsDir,
 		exclude: ["index.md"],
-	}).toSorted((a, b) => a.localeCompare(b));
+	});
 
 	const processedExamples: {
 		position: number;

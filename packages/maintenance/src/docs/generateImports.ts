@@ -287,8 +287,7 @@ async function processImports(piscina: Piscina): Promise<boolean> {
 		cwd: docsDir,
 		exclude: ["**/CCs/**"],
 	})
-		.map((filename) => path.join(docsDir, filename))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((filename) => path.join(docsDir, filename));
 
 	const tasks = files.map((f) => piscina.run(f, { name: "processImport" }));
 

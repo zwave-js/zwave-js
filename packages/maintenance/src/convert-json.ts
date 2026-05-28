@@ -22,8 +22,7 @@ async function main() {
 		cwd: devicesDir,
 		exclude: ["**/index.json", "**/templates/**"],
 	})
-		.map((filename) => path.join(devicesDir, filename))
-		.toSorted((a, b) => a.localeCompare(b));
+		.map((filename) => path.join(devicesDir, filename));
 
 	for (const filename of configFiles) {
 		const content = await fsp.readFile(filename, "utf8");
