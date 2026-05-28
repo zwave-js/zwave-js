@@ -1676,7 +1676,7 @@ export class ZWaveController
 	 * Performs additional controller configuration
 	 */
 	public async configure(
-		knownClassicNodeIds: readonly number[],
+		knownNodeIds: readonly number[],
 	): Promise<void> {
 		// Enable TX status report if supported
 		if (
@@ -1706,13 +1706,14 @@ export class ZWaveController
 			{ supportCheck: false },
 		);
 		this._sucNodeId = suc.sucNodeId;
-		const noSUCInNetwork = this._sucNodeId === 0
-			|| !knownClassicNodeIds.includes(this._sucNodeId);
+		const sucNodeMissing = this._sucNodeId !== 0
+			&& this._sucNodeId !== this._ownNodeId
+			&& !knownNodeIds.includes(this._sucNodeId);
 		if (this._sucNodeId === 0) {
 			this.driver.controllerLog.print(`No SUC present in the network`);
 		} else if (this._sucNodeId === this._ownNodeId) {
 			this.driver.controllerLog.print(`This is the SUC`);
-		} else if (noSUCInNetwork) {
+		} else if (sucNodeMissing) {
 			this.driver.controllerLog.print(
 				`SUC node ID ${this.sucNodeId} is not part of the network`,
 			);
@@ -1723,11 +1724,17 @@ export class ZWaveController
 		}
 
 		// There needs to be a SUC/SIS in the network. If not, we promote ourselves to one if the following conditions are met:
-		// We are the primary controller, but we are not SUC and there is no SUC in the network.
+		// We are the primary controller, but we are not SUC, there is no SUC and there is no SIS, and there are no nodes in the network yet -
+		// OR the configured SUC node ID is not actually part of the network (which is an edge case observed on some controllers).
 		if (
 			this.role === ControllerRole.Primary
 			&& !this._isSUC
-			&& noSUCInNetwork
+			&& (
+				(this._noNodesIncluded
+					&& this._sucNodeId === 0
+					&& !this._isSISPresent)
+				|| sucNodeMissing
+			)
 		) {
 			this.driver.controllerLog.print(
 				`There is no SUC/SIS in the network - promoting ourselves...`,
