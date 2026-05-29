@@ -12,21 +12,14 @@ import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 import { Piscina } from "piscina";
 import {
-	type CommentRange,
-	type ExportedDeclarations,
-	type InterfaceDeclaration,
-	type InterfaceDeclarationStructure,
 	type JSDocTagStructure,
 	type MethodDeclaration,
-	Node,
 	type OptionalKind,
 	Project,
-	type PropertySignatureStructure,
 	type SourceFile,
 	SyntaxKind,
 	type Type,
 	TypeFormatFlags,
-	type TypeLiteralNode,
 	type ts,
 } from "ts-morph";
 import { formatWithDprint } from "../dprint.js";
@@ -41,210 +34,6 @@ import { register } from "tsx/esm/api";
 register();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const exportDeclarationCache = new Map<
-	string,
-	ReadonlyMap<string, ExportedDeclarations[]>
->();
-
-export function findSourceNode(
-	program: Project,
-	exportingFile: string,
-	identifier: string,
-): ExportedDeclarations | undefined {
-	// Scan all source files
-	if (!exportDeclarationCache.has(exportingFile)) {
-		const decls = program.getSourceFile(exportingFile)
-			?.getExportedDeclarations();
-		if (decls) exportDeclarationCache.set(exportingFile, decls);
-	}
-	return exportDeclarationCache.get(exportingFile)
-		?.get(identifier)?.[0];
-}
-
-export function stripComments(
-	node: ExportedDeclarations,
-	options: ImportRange["options"],
-): ExportedDeclarations {
-	if (Node.isTextInsertable(node)) {
-		// Remove some comments if desired
-		const ranges: { pos: number; end: number }[] = [];
-		const removePredicate = (c: CommentRange) =>
-			(!options.comments
-				&& c.getKind() === SyntaxKind.SingleLineCommentTrivia)
-			|| (!options.jsdoc
-				&& c.getKind() === SyntaxKind.MultiLineCommentTrivia);
-
-		const getCommentRangesForNode = (
-			node: Node,
-		): { pos: number; end: number }[] => {
-			const comments = node.getLeadingCommentRanges();
-			const ret = comments.map((c, i) => ({
-				pos: c.getPos(),
-				end: i < comments.length - 1
-					? comments[i + 1].getPos()
-					: Math.max(node.getStart(), c.getEnd()),
-				remove: removePredicate(c),
-			}));
-			// Only use comment ranges that should be removed
-			return ret.filter((r) => r.remove);
-		};
-
-		if (Node.isEnumDeclaration(node)) {
-			for (const member of node.getMembers()) {
-				ranges.push(...getCommentRangesForNode(member));
-			}
-		} else if (Node.isInterfaceDeclaration(node)) {
-			const walkInterfaceDeclaration = (node: InterfaceDeclaration) => {
-				for (const member of node.getMembers()) {
-					ranges.push(...getCommentRangesForNode(member));
-					if (Node.isInterfaceDeclaration(member)) {
-						walkInterfaceDeclaration(member);
-					}
-				}
-			};
-			walkInterfaceDeclaration(node);
-		}
-
-		// Sort in reverse order, so the removals don't influence each other
-		ranges.sort((a, b) => b.pos - a.pos);
-		for (const { pos, end } of ranges) {
-			node.removeText(pos, end);
-		}
-	}
-	return node;
-}
-
-function shouldStripPropertySignature(
-	p: OptionalKind<PropertySignatureStructure>,
-): boolean {
-	return !!p.docs?.some(
-		(d) =>
-			typeof d !== "string"
-			&& d.tags?.some((t) => /(deprecated|internal)/.test(t.tagName)),
-	);
-}
-
-// As long as ts-morph has no means to print a structure, we'll have to use this
-// to print the declarations of a class
-function printInterfaceDeclarationStructure(
-	struct: InterfaceDeclarationStructure,
-): string {
-	return `
-interface ${struct.name}${
-		struct.typeParameters?.length
-			// oxlint-disable-next-line typescript/no-base-to-string
-			? `<${struct.typeParameters.map((t) => t.toString()).join(", ")}>`
-			: ""
-	} {
-	${
-		struct.properties
-			?.filter((p) => !shouldStripPropertySignature(p))
-			.map((p) => {
-				return `${p.isReadonly ? "readonly " : ""}${p.name}${
-					p.hasQuestionToken ? "?:" : ":"
-				} ${p.type as string};`;
-			})
-			.join("\n")
-	}
-}`;
-}
-
-export function getTransformedSource(
-	node: ExportedDeclarations,
-	options: ImportRange["options"],
-): string {
-	// Create a temporary project with a temporary source file to print the node
-	const project = new Project();
-	const sourceFile = project.createSourceFile("index.ts", node.getText());
-	node = [
-		...sourceFile.getExportedDeclarations().values(),
-	][0][0];
-
-	// Remove @internal and @deprecated members
-	if (Node.isInterfaceDeclaration(node)) {
-		const commentsToRemove: { remove(): void }[] = [];
-		const walkDeclaration = (
-			node: InterfaceDeclaration | TypeLiteralNode,
-		) => {
-			for (const member of node.getMembers()) {
-				if (
-					member
-						.getJsDocs()
-						.some((doc) =>
-							/@(deprecated|internal)/.test(doc.getInnerText())
-						)
-				) {
-					commentsToRemove.push(member);
-				}
-				if (Node.isInterfaceDeclaration(member)) {
-					walkDeclaration(member);
-				} else if (Node.isPropertySignature(member)) {
-					const typeNode = member.getTypeNode();
-					if (Node.isTypeLiteral(typeNode)) {
-						walkDeclaration(typeNode);
-					}
-				}
-			}
-		};
-		walkDeclaration(node);
-		for (let i = commentsToRemove.length - 1; i >= 0; i--) {
-			commentsToRemove[i].remove();
-		}
-	}
-
-	// Remove exports and declare keywords
-	if (Node.isModifierable(node)) {
-		node = node.toggleModifier("declare", false);
-		// @ts-expect-error
-		node = node.toggleModifier("export", false);
-	}
-
-	let ret: string;
-	if (Node.isClassDeclaration(node)) {
-		// Class declarations contain the entire source, we are only interested in the properties
-		ret = printInterfaceDeclarationStructure(node.extractInterface());
-	} else {
-		// Comments must be removed last (if that is desired)
-		node = stripComments(node, options);
-		// Using getText instead of print avoids reformatting the node
-		ret = node.getText();
-	}
-
-	// Format so we get the original formatting back
-	ret = formatWithDprint("index.ts", ret).trim();
-	return ret;
-}
-
-interface ImportRange {
-	index: number;
-	end: number;
-	module: string;
-	symbol: string;
-	import: string;
-	options: {
-		comments?: boolean;
-		jsdoc?: boolean;
-	};
-}
-
-const importRegex =
-	/(?<import><!-- #import (?<symbol>.*?) from "(?<module>.*?)"(?: with (?<options>[\w\-, ]*?))? -->)(?:[\s\r\n]*(^`{3,4})ts[\r\n]*(?<source>(.|\n)*?)\5)?/gm;
-
-export function findImportRanges(docFile: string): ImportRange[] {
-	const matches = [...docFile.matchAll(importRegex)];
-	return matches.map((match) => ({
-		index: match.index,
-		end: match.index + match[0].length,
-		module: match.groups!.module,
-		symbol: match.groups!.symbol,
-		import: match.groups!.import,
-		options: {
-			comments: !!match.groups!.options?.includes("comments"),
-			jsdoc: !match.groups!.options?.includes("no-jsdoc"),
-		},
-	}));
-}
 
 function stripQuotes(str: string): string {
 	return str.replaceAll(/^['"]|['"]$/g, "");
@@ -276,6 +65,7 @@ Context: ${context}`,
 
 const docsDir = path.join(projectRoot, "docs");
 const ccDocsDir = path.join(docsDir, "api/CCs");
+const formattedValueTypeCache = new Map<string, string>();
 
 function fixPrinterErrors(text: string): string {
 	return (
@@ -426,11 +216,17 @@ ${
 
 		const type = valueIDsConst.getType();
 		const formatValueType = (type: Type<ts.Type>): string => {
+			const typeText = type.getText(
+				valueIDsConst,
+				TypeFormatFlags.NoTruncation,
+			);
+			if (formattedValueTypeCache.has(typeText)) {
+				return formattedValueTypeCache.get(typeText)!;
+			}
 			const prefix = "type _ = ";
 			let ret = formatWithDprint(
 				"type.ts",
-				prefix
-					+ type.getText(valueIDsConst, TypeFormatFlags.NoTruncation),
+				prefix + typeText,
 			)
 				.trim()
 				.slice(prefix.length, -1);
@@ -441,6 +237,7 @@ ${
 				.replaceAll(/^(\s+)readonly /gm, "$1")
 				.replaceAll(/;$/gm, ",");
 
+			formattedValueTypeCache.set(typeText, ret);
 			return ret;
 		};
 
