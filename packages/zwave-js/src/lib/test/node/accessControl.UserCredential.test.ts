@@ -26,7 +26,6 @@ import {
 	ccCaps,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import {
 	SetCredentialResult,
 	SetUserResult,
@@ -167,16 +166,16 @@ integrationTest(
 			// Create a user and credential via the unified API.
 			// Wait for the unsolicited report events, which indicate
 			// the mock's response has been processed and cached.
-			const userCreated = createDeferredPromise<void>();
+			const userCreated = Promise.withResolvers<void>();
 			node.once("user added", () => userCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await userCreated;
+			await userCreated.promise;
 
-			const credCreated = createDeferredPromise<void>();
+			const credCreated = Promise.withResolvers<void>();
 			node.once("credential added", () => credCreated.resolve());
 			await node.accessControl!.setCredential(
 				1,
@@ -184,7 +183,7 @@ integrationTest(
 				1,
 				"1234",
 			);
-			await credCreated;
+			await credCreated.promise;
 
 			// Now verify reads return the correct data
 			const user = node.accessControl!.getUserCached(1);
@@ -238,25 +237,25 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const firstUserCreated = createDeferredPromise<void>();
+			const firstUserCreated = Promise.withResolvers<void>();
 			node.once("user added", () => firstUserCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await firstUserCreated;
+			await firstUserCreated.promise;
 
-			const secondUserCreated = createDeferredPromise<void>();
+			const secondUserCreated = Promise.withResolvers<void>();
 			node.once("user added", () => secondUserCreated.resolve());
 			await node.accessControl!.setUser(2, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Bob",
 			});
-			await secondUserCreated;
+			await secondUserCreated.promise;
 
-			const credentialCreated = createDeferredPromise<void>();
+			const credentialCreated = Promise.withResolvers<void>();
 			node.once("credential added", () => credentialCreated.resolve());
 			await node.accessControl!.setCredential(
 				1,
@@ -264,7 +263,7 @@ integrationTest(
 				1,
 				"1234",
 			);
-			await credentialCreated;
+			await credentialCreated.promise;
 
 			t.expect(
 				node.accessControl!.getCredentialCached(
@@ -311,25 +310,25 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const firstUserCreated = createDeferredPromise<void>();
+			const firstUserCreated = Promise.withResolvers<void>();
 			node.once("user added", () => firstUserCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await firstUserCreated;
+			await firstUserCreated.promise;
 
-			const secondUserCreated = createDeferredPromise<void>();
+			const secondUserCreated = Promise.withResolvers<void>();
 			node.once("user added", () => secondUserCreated.resolve());
 			await node.accessControl!.setUser(2, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Bob",
 			});
-			await secondUserCreated;
+			await secondUserCreated.promise;
 
-			const firstCredentialCreated = createDeferredPromise<void>();
+			const firstCredentialCreated = Promise.withResolvers<void>();
 			node.once(
 				"credential added",
 				() => firstCredentialCreated.resolve(),
@@ -340,7 +339,7 @@ integrationTest(
 				1,
 				"1234",
 			);
-			await firstCredentialCreated;
+			await firstCredentialCreated.promise;
 
 			const result = await node.accessControl!.setCredential(
 				2,
@@ -398,7 +397,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
 
 			const cc = new UserCredentialCCUserReport({
@@ -418,7 +417,7 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await userEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({
 				userId: 5,
 				active: true,
 				userType: UserCredentialUserType.General,
@@ -452,7 +451,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on("user modified", (_node, args) => userEvent.resolve(args));
 
 			const cc = new UserCredentialCCUserReport({
@@ -472,7 +471,7 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await userEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({
 				userId: 2,
 				active: false,
 				userType: UserCredentialUserType.General,
@@ -521,7 +520,7 @@ integrationTest(
 			node.valueDB.setValue(credentialValueId, "1234");
 			node.valueDB.setValue(credentialOwnerValueId, 3);
 
-			const userEvent = createDeferredPromise<{
+			const userEvent = Promise.withResolvers<{
 				args: unknown;
 				user: unknown;
 				credentials: unknown[];
@@ -552,7 +551,7 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await userEvent).toStrictEqual({
+			t.expect(await userEvent.promise).toStrictEqual({
 				args: { userId: 3 },
 				user: undefined,
 				credentials: [],
@@ -639,7 +638,7 @@ integrationTest(
 				t.expect(node.getValue(valueId)).toBeDefined();
 			}
 
-			const deleted = createDeferredPromise<void>();
+			const deleted = Promise.withResolvers<void>();
 			node.once("user deleted", () => deleted.resolve());
 
 			const cc = new UserCredentialCCUserReport({
@@ -658,7 +657,7 @@ integrationTest(
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
-			await deleted;
+			await deleted.promise;
 
 			for (const valueId of cachedValueIds) {
 				t.expect(node.getValue(valueId)).toBeUndefined();
@@ -694,7 +693,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential added",
 				(_node, args) => credEvent.resolve(args),
@@ -715,7 +714,7 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 1,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
@@ -748,7 +747,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential modified",
 				(_node, args) => credEvent.resolve(args),
@@ -770,7 +769,7 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 1,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
@@ -803,7 +802,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential deleted",
 				(_node, args) => credEvent.resolve(args),
@@ -824,7 +823,7 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 1,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
@@ -893,7 +892,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
 
 			// Driver cache is empty, so this sends Add
@@ -902,7 +901,7 @@ integrationTest(
 				userName: "Attempted",
 			});
 
-			t.expect(await userEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({
 				userId: 2,
 				active: true,
 				userType: UserCredentialUserType.General,
@@ -943,7 +942,7 @@ integrationTest(
 			// Prime the driver cache with a user that doesn't exist on the
 			// mock device (the unsolicited UserReport caches without
 			// populating mock state). A subsequent setUser will use Modify.
-			const priming = createDeferredPromise<void>();
+			const priming = Promise.withResolvers<void>();
 			node.once("user added", () => priming.resolve());
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(
@@ -963,17 +962,17 @@ integrationTest(
 					{ ackRequested: false },
 				),
 			);
-			await priming;
+			await priming.promise;
 			t.expect(node.accessControl!.getUserCached(4)).toBeDefined();
 
-			const userEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on("user deleted", (_node, args) => userEvent.resolve(args));
 
 			// Driver cache has user 4 → this sends Modify. Mock has no user 4
 			// in state → replies with UserModifyRejectedLocationEmpty.
 			await node.accessControl!.setUser(4, { userName: "Updated" });
 
-			t.expect(await userEvent).toMatchObject({ userId: 4 });
+			t.expect(await userEvent.promise).toMatchObject({ userId: 4 });
 			t.expect(node.accessControl!.getUserCached(4)).toBeUndefined();
 		},
 	},
@@ -1035,7 +1034,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential added",
 				(_node, args) => credEvent.resolve(args),
@@ -1049,7 +1048,7 @@ integrationTest(
 				"1111",
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 2,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
@@ -1206,7 +1205,7 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// Prime the driver cache with a credential that doesn't exist
 			// on the mock device. A subsequent setCredential will use Modify.
-			const priming = createDeferredPromise<void>();
+			const priming = Promise.withResolvers<void>();
 			node.once("credential added", () => priming.resolve());
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(
@@ -1225,7 +1224,7 @@ integrationTest(
 					{ ackRequested: false },
 				),
 			);
-			await priming;
+			await priming.promise;
 			t.expect(
 				node.accessControl!.getCredentialCached(
 					UserCredentialType.PINCode,
@@ -1233,7 +1232,7 @@ integrationTest(
 				),
 			).toBeDefined();
 
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential deleted",
 				(_node, args) => credEvent.resolve(args),
@@ -1246,7 +1245,7 @@ integrationTest(
 				"9999",
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 1,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
@@ -1334,7 +1333,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
 			let credEmitted = false;
 			node.on("credential added", () => {
@@ -1350,7 +1349,7 @@ integrationTest(
 			t.expect(result.user).toBe(SetUserResult.OK);
 			t.expect(result.credential).toBeUndefined();
 
-			t.expect(await userEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({
 				userId: 1,
 				active: true,
 				userType: UserCredentialUserType.General,
@@ -1408,8 +1407,8 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
-			const credEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
 			node.on(
 				"credential added",
@@ -1433,13 +1432,13 @@ integrationTest(
 			t.expect(result.user).toBe(SetUserResult.OK);
 			t.expect(result.credential).toBe(SetCredentialResult.OK);
 
-			t.expect(await userEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({
 				userId: 2,
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Bob",
 			});
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 2,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 2,
@@ -1756,16 +1755,16 @@ const defaultDeleteTestCaps = {
 async function populateUserAndCredential(
 	node: Parameters<Parameters<typeof integrationTest>[1]["testBody"]>[2],
 ) {
-	const userCreated = createDeferredPromise<void>();
+	const userCreated = Promise.withResolvers<void>();
 	node.once("user added", () => userCreated.resolve());
 	await node.accessControl!.setUser(1, {
 		active: true,
 		userType: UserCredentialUserType.General,
 		userName: "Test",
 	});
-	await userCreated;
+	await userCreated.promise;
 
-	const credCreated = createDeferredPromise<void>();
+	const credCreated = Promise.withResolvers<void>();
 	node.once("credential added", () => credCreated.resolve());
 	await node.accessControl!.setCredential(
 		1,
@@ -1773,7 +1772,7 @@ async function populateUserAndCredential(
 		1,
 		"1234",
 	);
-	await credCreated;
+	await credCreated.promise;
 }
 
 integrationTest(
@@ -1793,7 +1792,7 @@ integrationTest(
 				1,
 			);
 
-			const cacheAtEvent = createDeferredPromise<number>();
+			const cacheAtEvent = Promise.withResolvers<number>();
 			node.once("credential deleted", () => {
 				cacheAtEvent.resolve(
 					node.accessControl!.getAllCredentialsCached().length,
@@ -1805,7 +1804,7 @@ integrationTest(
 			});
 			t.expect(result).toBe(SetCredentialResult.OK);
 
-			t.expect(await cacheAtEvent).toBe(0);
+			t.expect(await cacheAtEvent.promise).toBe(0);
 			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
 				0,
 			);
@@ -1835,10 +1834,10 @@ integrationTest(
 				1,
 			);
 
-			const deleted = createDeferredPromise<void>();
+			const deleted = Promise.withResolvers<void>();
 			node.once("user deleted", () => deleted.resolve());
 			await node.accessControl!.deleteUser(1);
-			await deleted;
+			await deleted.promise;
 
 			t.expect(node.accessControl!.getUserCached(1)).toBeUndefined();
 			t.expect(
@@ -1922,7 +1921,7 @@ integrationTest(
 				1,
 			);
 
-			const cacheAtEvent = createDeferredPromise<{
+			const cacheAtEvent = Promise.withResolvers<{
 				users: number;
 				credentials: number;
 			}>();
@@ -1938,7 +1937,7 @@ integrationTest(
 			const result = await node.accessControl!.deleteAllUsers();
 			t.expect(result).toBe(SetUserResult.OK);
 
-			t.expect(await cacheAtEvent).toStrictEqual({
+			t.expect(await cacheAtEvent.promise).toStrictEqual({
 				users: 0,
 				credentials: 0,
 			});
@@ -2053,17 +2052,17 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userCreated = createDeferredPromise<void>();
+			const userCreated = Promise.withResolvers<void>();
 			node.once("user added", () => userCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await userCreated;
+			await userCreated.promise;
 
 			for (const slot of [1, 2, 3, 4, 5]) {
-				const added = createDeferredPromise<void>();
+				const added = Promise.withResolvers<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
 					1,
@@ -2071,7 +2070,7 @@ integrationTest(
 					slot,
 					`000${slot}`,
 				);
-				await added;
+				await added.promise;
 			}
 			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
 				5,
@@ -2130,14 +2129,14 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userCreated = createDeferredPromise<void>();
+			const userCreated = Promise.withResolvers<void>();
 			node.once("user added", () => userCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await userCreated;
+			await userCreated.promise;
 
 			for (
 				const [type, slot] of [
@@ -2147,7 +2146,7 @@ integrationTest(
 					[UserCredentialType.Password, 2],
 				] as const
 			) {
-				const added = createDeferredPromise<void>();
+				const added = Promise.withResolvers<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
 					1,
@@ -2155,7 +2154,7 @@ integrationTest(
 					slot,
 					`000${slot}`,
 				);
-				await added;
+				await added.promise;
 			}
 
 			// Delete the tail of the PIN type and the lead-in of the Password type.
@@ -2213,21 +2212,21 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			for (const userId of [1, 2]) {
-				const uc = createDeferredPromise<void>();
+				const uc = Promise.withResolvers<void>();
 				node.once("user added", () => uc.resolve());
 				await node.accessControl!.setUser(userId, {
 					active: true,
 					userType: UserCredentialUserType.General,
 					userName: `U${userId}`,
 				});
-				await uc;
+				await uc.promise;
 			}
 
 			// user 1 owns slots 1 and 3; user 2 owns slot 2, sitting in user 1's gap.
 			for (
 				const [userId, slot] of [[1, 1], [2, 2], [1, 3]] as const
 			) {
-				const added = createDeferredPromise<void>();
+				const added = Promise.withResolvers<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
 					userId,
@@ -2235,7 +2234,7 @@ integrationTest(
 					slot,
 					`000${slot}`,
 				);
-				await added;
+				await added.promise;
 			}
 
 			// Delete user 1's slot 3 on the device only.
@@ -2288,14 +2287,14 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userCreated = createDeferredPromise<void>();
+			const userCreated = Promise.withResolvers<void>();
 			node.once("user added", () => userCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await userCreated;
+			await userCreated.promise;
 
 			for (
 				const [type, slot] of [
@@ -2305,7 +2304,7 @@ integrationTest(
 					[UserCredentialType.Password, 1],
 				] as const
 			) {
-				const added = createDeferredPromise<void>();
+				const added = Promise.withResolvers<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
 					1,
@@ -2313,7 +2312,7 @@ integrationTest(
 					slot,
 					`000${slot}`,
 				);
-				await added;
+				await added.promise;
 			}
 
 			// Delete the last PIN credential; the walk then crosses into Password.
@@ -2368,14 +2367,14 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userCreated = createDeferredPromise<void>();
+			const userCreated = Promise.withResolvers<void>();
 			node.once("user added", () => userCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await userCreated;
+			await userCreated.promise;
 
 			for (
 				const [type, slot] of [
@@ -2384,7 +2383,7 @@ integrationTest(
 					[UserCredentialType.Password, 1],
 				] as const
 			) {
-				const added = createDeferredPromise<void>();
+				const added = Promise.withResolvers<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
 					1,
@@ -2392,7 +2391,7 @@ integrationTest(
 					slot,
 					`000${slot}`,
 				);
-				await added;
+				await added.promise;
 			}
 
 			mockNode.state.delete(
@@ -2445,17 +2444,17 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userCreated = createDeferredPromise<void>();
+			const userCreated = Promise.withResolvers<void>();
 			node.once("user added", () => userCreated.resolve());
 			await node.accessControl!.setUser(1, {
 				active: true,
 				userType: UserCredentialUserType.General,
 				userName: "Alice",
 			});
-			await userCreated;
+			await userCreated.promise;
 
 			for (const slot of [1, 2]) {
-				const added = createDeferredPromise<void>();
+				const added = Promise.withResolvers<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
 					1,
@@ -2463,7 +2462,7 @@ integrationTest(
 					slot,
 					`000${slot}`,
 				);
-				await added;
+				await added.promise;
 			}
 			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
 				2,

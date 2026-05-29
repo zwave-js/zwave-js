@@ -9,7 +9,6 @@ import {
 	assertMessage,
 } from "@zwave-js/core/test";
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
-import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import colors from "ansi-colors";
 import MockDate from "mockdate";
 import { beforeEach, test as baseTest } from "vitest";
@@ -97,7 +96,7 @@ function createTransaction(
 	const trns = new Transaction(driver, {
 		message,
 		parts: {} as any,
-		promise: createDeferredPromise(),
+		resolver: Promise.withResolvers(),
 		priority: options.priority || MessagePriority.Controller,
 	});
 	return trns;

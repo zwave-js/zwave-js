@@ -47,7 +47,6 @@ import {
 	getDefaultMockEndpointCapabilities,
 	getDefaultMockNodeCapabilities,
 } from "@zwave-js/testing";
-import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import { type AddressInfo, type Server, createServer } from "node:net";
 import {
 	createDefaultMockControllerBehaviors,
@@ -181,10 +180,10 @@ export class MockServer {
 		// Do not allow more than one client to connect
 		this.server.maxConnections = 1;
 
-		const promise = createDeferredPromise();
+		const listening = Promise.withResolvers<void>();
 		this.server.on("error", (err) => {
 			if ((err as any).code === "EADDRINUSE") {
-				promise.reject(err);
+				listening.reject(err);
 			}
 		});
 		this.server.listen(
@@ -198,7 +197,7 @@ export class MockServer {
 					`Server listening on tcp://${address.address}:${address.port}`,
 				);
 
-				promise.resolve();
+				listening.resolve();
 
 				// Advertise the service via mDNS
 				try {

@@ -84,10 +84,6 @@ import {
 	num2hex,
 	pick,
 } from "@zwave-js/shared";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ZnifferLogger } from "../log/Zniffer.js";
 import {
@@ -326,9 +322,9 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		keyof HostIDs | "sourceNodeId" | "frameType" | keyof SecurityManagers
 	>;
 
-	private _destroyPromise: DeferredPromise<void> | undefined;
+	private _destroyResolver: PromiseWithResolvers<void> | undefined;
 	private get wasDestroyed(): boolean {
-		return !!this._destroyPromise;
+		return !!this._destroyResolver;
 	}
 
 	private _chipType: string | UnknownZWaveChipType | undefined;
@@ -745,10 +741,10 @@ supported frequencies: ${
 		timeout: number,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
-			const promise = createDeferredPromise<ZnifferMessage>();
+			const matched = Promise.withResolvers<ZnifferMessage>();
 			const entry: AwaitedMessageEntry = {
 				predicate,
-				handler: (msg) => promise.resolve(msg),
+				handler: (msg) => matched.resolve(msg),
 				timeout: undefined,
 			};
 			this.awaitedMessages.push(entry);
@@ -768,7 +764,7 @@ supported frequencies: ${
 				);
 			}, timeout);
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then((cc) => {
+			void matched.promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
@@ -1095,8 +1091,8 @@ supported frequencies: ${
 	 */
 	public async destroy(): Promise<void> {
 		// Ensure this is only called once and all subsequent calls block
-		if (this._destroyPromise) return this._destroyPromise;
-		this._destroyPromise = createDeferredPromise();
+		if (this._destroyResolver) return this._destroyResolver.promise;
+		this._destroyResolver = Promise.withResolvers<void>();
 
 		this.znifferLog.print("Destroying Zniffer instance...");
 
@@ -1115,7 +1111,7 @@ supported frequencies: ${
 		// destroy loggers as the very last thing
 		this._logContainer.destroy();
 
-		this._destroyPromise.resolve();
+		this._destroyResolver.resolve();
 	}
 
 	/**
