@@ -13,7 +13,6 @@ import {
 	type CompareResult,
 	compareNumberOrString,
 } from "alcalzone-shared/comparable";
-import type { DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { NodeStatus } from "../node/_Types.js";
 import type { Driver } from "./Driver.js";
 
@@ -40,7 +39,7 @@ export interface TransactionOptions {
 	/** The priority of this transaction */
 	priority: MessagePriority;
 	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
-	promise: DeferredPromise<Message | void>;
+	resolver: PromiseWithResolvers<Message | void>;
 
 	/** Gets called with progress updates for a transaction */
 	listener?: TransactionProgressListener;
@@ -58,7 +57,7 @@ export class Transaction implements Comparable<Transaction> {
 		options.parts.parent = this;
 
 		// Initialize class fields
-		this.promise = options.promise;
+		this.resolver = options.resolver;
 		this.message = options.message;
 		this.priority = options.priority;
 		this.parts = options.parts;
@@ -95,7 +94,7 @@ export class Transaction implements Comparable<Transaction> {
 	}
 
 	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
-	public readonly promise: DeferredPromise<Message | void>;
+	public readonly resolver: PromiseWithResolvers<Message | void>;
 
 	/** The "primary" message this transaction contains, e.g. the un-encapsulated version of a SendData request */
 	public readonly message: Message;
@@ -158,9 +157,9 @@ export class Transaction implements Comparable<Transaction> {
 		if (this.parts.self) {
 			this.parts.self.throw(result).catch(noop);
 		} else if (isZWaveError(result)) {
-			this.promise.reject(result);
+			this.resolver.reject(result);
 		} else {
-			this.promise.resolve(result);
+			this.resolver.resolve(result);
 		}
 	}
 

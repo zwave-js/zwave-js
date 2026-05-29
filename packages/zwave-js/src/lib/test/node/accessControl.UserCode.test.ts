@@ -16,7 +16,6 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import type { MockNodeBehavior } from "@zwave-js/testing";
-import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import {
 	SetCredentialResult,
 	SetUserResult,
@@ -277,7 +276,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential added",
 				(_node, args) => credEvent.resolve(args),
@@ -290,7 +289,7 @@ integrationTest(
 				"1234",
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 2,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 2,
@@ -327,7 +326,7 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
 
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential modified",
 				(_node, args) => credEvent.resolve(args),
@@ -340,7 +339,7 @@ integrationTest(
 				"5678",
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 2,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 2,
@@ -377,8 +376,8 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
 
-			const userEvent = createDeferredPromise<unknown>();
-			const credEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on("user deleted", (_node, args) => userEvent.resolve(args));
 			node.on(
 				"credential deleted",
@@ -387,8 +386,8 @@ integrationTest(
 
 			await node.accessControl!.deleteUser(1);
 
-			t.expect(await userEvent).toMatchObject({ userId: 1 });
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({ userId: 1 });
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 1,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 1,
@@ -541,7 +540,7 @@ integrationTest(
 			// Pre-populate a credential so setUser has a code to send
 			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
 
-			const userEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
 
 			await node.accessControl!.setUser(1, {
@@ -549,7 +548,7 @@ integrationTest(
 				userType: UserCredentialUserType.General,
 			});
 
-			t.expect(await userEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({
 				userId: 1,
 				active: true,
 				userType: UserCredentialUserType.General,
@@ -585,8 +584,8 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
 
-			const credEvent = createDeferredPromise<unknown>();
-			const userEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential deleted",
 				(_node, args) => credEvent.resolve(args),
@@ -606,12 +605,12 @@ integrationTest(
 			).toBeUndefined();
 			t.expect(node.accessControl!.getUserCached(2)).toBeUndefined();
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 2,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 2,
 			});
-			t.expect(await userEvent).toMatchObject({ userId: 2 });
+			t.expect(await userEvent.promise).toMatchObject({ userId: 2 });
 		},
 	},
 );
@@ -642,8 +641,8 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(3).id, "9999");
 
-			const credEvent = createDeferredPromise<unknown>();
-			const userEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential deleted",
 				(_node, args) => credEvent.resolve(args),
@@ -655,12 +654,12 @@ integrationTest(
 				3,
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 3,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 3,
 			});
-			t.expect(await userEvent).toMatchObject({ userId: 3 });
+			t.expect(await userEvent.promise).toMatchObject({ userId: 3 });
 		},
 	},
 );
@@ -691,8 +690,8 @@ integrationTest(
 			);
 			node.valueDB.setValue(UserCodeCCValues.userCode(4).id, "1111");
 
-			const credEvent = createDeferredPromise<unknown>();
-			const userEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential deleted",
 				(_node, args) => credEvent.resolve(args),
@@ -708,12 +707,12 @@ integrationTest(
 			).toBeUndefined();
 			t.expect(node.accessControl!.getUserCached(4)).toBeUndefined();
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 4,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 4,
 			});
-			t.expect(await userEvent).toMatchObject({ userId: 4 });
+			t.expect(await userEvent.promise).toMatchObject({ userId: 4 });
 		},
 	},
 );
@@ -768,8 +767,8 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const credEvent = createDeferredPromise<unknown>();
-			const userEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential deleted",
 				(_node, args) => credEvent.resolve(args),
@@ -778,12 +777,12 @@ integrationTest(
 
 			await node.accessControl!.deleteCredentials();
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 0,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 0,
 			});
-			t.expect(await userEvent).toMatchObject({ userId: 0 });
+			t.expect(await userEvent.promise).toMatchObject({ userId: 0 });
 
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -1094,7 +1093,7 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const credEvent = createDeferredPromise<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on(
 				"credential added",
 				(_node, args) => credEvent.resolve(args),
@@ -1107,7 +1106,7 @@ integrationTest(
 				"1234",
 			);
 
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 2,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 2,

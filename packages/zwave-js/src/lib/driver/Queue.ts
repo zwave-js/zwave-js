@@ -1,8 +1,4 @@
 import type { Message } from "@zwave-js/serial";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import { SortedList } from "alcalzone-shared/sorted-list";
 import type { Transaction } from "./Transaction.js";
 
@@ -55,10 +51,10 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 	public trigger(): void {
 		while (this.transactions.length > 0 && this.listeners.length > 0) {
 			if (this.mayStartNextTransaction(this.transactions.peekStart()!)) {
-				const promise = this.listeners.shift()!;
+				const listener = this.listeners.shift()!;
 				const item = this.transactions.shift()!;
 				this.currentTransaction = item;
-				promise.resolve(item);
+				listener.resolve(item);
 			} else {
 				break;
 			}
@@ -66,7 +62,7 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 	}
 
 	// A list of Promises that are waiting to be resolved
-	private listeners: DeferredPromise<Transaction | undefined>[] = [];
+	private listeners: PromiseWithResolvers<Transaction | undefined>[] = [];
 
 	// Whether the queue was ended
 	private ended = false;
@@ -81,8 +77,8 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 		this.ended = true;
 		this.transactions.clear();
 		this.currentTransaction = undefined;
-		for (const p of this.listeners) {
-			p.resolve(undefined);
+		for (const l of this.listeners) {
+			l.resolve(undefined);
 		}
 	}
 
@@ -102,11 +98,11 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 					value = this.transactions.shift()!;
 				} else if (!this.ended) {
 					// Otherwise create a new promise and add it to the pending list
-					const promise = createDeferredPromise<
+					const listener = Promise.withResolvers<
 						Transaction | undefined
 					>();
-					this.listeners.push(promise);
-					value = await promise;
+					this.listeners.push(listener);
+					value = await listener.promise;
 				}
 
 				this.currentTransaction = value;
@@ -126,5 +122,5 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 export interface SerialAPIQueueItem extends Disposable {
 	msg: Message;
 	transactionSource?: string;
-	result: DeferredPromise<Message | undefined>;
+	result: PromiseWithResolvers<Message | undefined>;
 }

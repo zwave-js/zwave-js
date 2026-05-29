@@ -1,8 +1,3 @@
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
-
 export class AsyncQueue<T> implements AsyncIterable<T> {
 	/** Adds one or more items onto the queue */
 	public add(...items: T[]): void {
@@ -10,9 +5,9 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 
 		// Resolve any pending promises first
 		while (items.length > 0 && this.listeners.length > 0) {
-			const promise = this.listeners.shift()!;
+			const listener = this.listeners.shift()!;
 			const item = items.shift()!;
-			promise.resolve(item);
+			listener.resolve(item);
 		}
 
 		// Add the remaining items to the backlog
@@ -43,7 +38,7 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 	// A list of items that have been pushed but not pulled
 	private backlog: T[] = [];
 	// A list of Promises that are waiting to be resolved
-	private listeners: DeferredPromise<T | undefined>[] = [];
+	private listeners: PromiseWithResolvers<T | undefined>[] = [];
 
 	// Whether the queue was ended
 	private ended = false;
@@ -70,8 +65,8 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 			}
 		}
 
-		for (const p of this.listeners) {
-			p.resolve(undefined);
+		for (const listener of this.listeners) {
+			listener.resolve(undefined);
 		}
 	}
 
@@ -85,9 +80,9 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 					value = this.backlog.shift();
 				} else if (!this.ended) {
 					// Otherwise create a new promise and add it to the pending list
-					const promise = createDeferredPromise<T | undefined>();
-					this.listeners.push(promise);
-					value = await promise;
+					const listener = Promise.withResolvers<T | undefined>();
+					this.listeners.push(listener);
+					value = await listener.promise;
 				}
 
 				if (value) {
