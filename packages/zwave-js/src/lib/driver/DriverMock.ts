@@ -7,7 +7,6 @@ import {
 import { MockPort } from "@zwave-js/serial/mock";
 import { noop } from "@zwave-js/shared";
 import type { FileSystem } from "@zwave-js/shared/bindings";
-import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import net from "node:net";
 import { tmpdir } from "node:os";
 import path from "pathe";
@@ -116,16 +115,16 @@ export async function createAndStartDriverWithMockPort(
 		): Promise<void> => {
 			// Return the info to the calling code, giving it control over
 			// continuing the driver startup.
-			const continuePromise = createDeferredPromise();
+			const continueResolver = Promise.withResolvers<void>();
 			resolve({
 				driver,
 				mockPort,
 				serial,
 				tcpServer,
-				continueStartup: () => continuePromise.resolve(),
+				continueStartup: () => continueResolver.resolve(),
 			});
 
-			return continuePromise;
+			return continueResolver.promise;
 		};
 
 		// Usually we don't want logs in these tests

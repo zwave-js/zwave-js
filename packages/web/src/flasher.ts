@@ -9,10 +9,6 @@ import {
 import { Bytes, getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
-import {
 	Driver,
 	DriverMode,
 	OTWFirmwareUpdateStatus,
@@ -59,7 +55,7 @@ const btnSetSystemIndication = document.getElementById(
 let driver!: Driver;
 let port!: SerialPort;
 let serialBinding!: ZWaveSerialBindingFactory;
-let readyPromise: DeferredPromise<void> | undefined;
+let readyResolver: PromiseWithResolvers<void> | undefined;
 
 let recreateWhenInBootloader = false;
 
@@ -140,14 +136,14 @@ async function createDriver() {
 
 	(globalThis as any).driver = driver;
 
-	readyPromise = createDeferredPromise();
+	readyResolver = Promise.withResolvers();
 	await driver.start();
-	return readyPromise;
+	return readyResolver.promise;
 }
 
 function failed() {
-	if (readyPromise) {
-		readyPromise = undefined;
+	if (readyResolver) {
+		readyResolver = undefined;
 
 		alert(
 			"Failed to start the driver. Reconnect the device and try again.\nIf the problem persists, you can return to bootloader and flash a new firmware.",
@@ -173,8 +169,8 @@ function ready() {
 
 	checkApp();
 
-	readyPromise?.resolve();
-	readyPromise = undefined;
+	readyResolver?.resolve();
+	readyResolver = undefined;
 }
 
 function checkApp() {
