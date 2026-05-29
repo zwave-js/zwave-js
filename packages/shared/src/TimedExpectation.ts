@@ -1,7 +1,3 @@
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import { type Timer, setTimer } from "./Timers.js";
 
 /** Allows waiting for something for a given amount of time, after which the expectation will automatically be rejected. */
@@ -15,7 +11,7 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 			"Expectation was not fulfilled within the timeout",
 		preventDefault: boolean = false,
 	) {
-		this.promise = createDeferredPromise<TResult>();
+		this.resolver = Promise.withResolvers<TResult>();
 		this.timeout = setTimer(() => this.reject(), timeoutMs);
 		this.timeoutErrorMessage = timeoutErrorMessage;
 		this.predicate = predicate;
@@ -28,7 +24,7 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 		this.stack = (tmp as any).stack.replace(/^Error:?\s*\n/, "");
 	}
 
-	private promise: DeferredPromise<TResult>;
+	private readonly resolver: PromiseWithResolvers<TResult>;
 	private timeout?: Timer;
 	private _done: boolean = false;
 	private readonly timeoutErrorMessage: string;
@@ -42,7 +38,7 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 		if (this._done) return;
 
 		this.timeout?.clear();
-		this.promise.resolve(result);
+		this.resolver.resolve(result);
 	}
 
 	private reject(): void {
@@ -51,7 +47,7 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 		this.timeout?.clear();
 		const err = new Error(this.timeoutErrorMessage);
 		err.stack = this.stack;
-		this.promise.reject(err);
+		this.resolver.reject(err);
 	}
 
 	// Make this await-able
@@ -62,6 +58,6 @@ export class TimedExpectation<TResult = void, TPredicate = never>
 			| null,
 		onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
 	): PromiseLike<TResult1 | TResult2> {
-		return this.promise.then(onfulfilled, onrejected);
+		return this.resolver.promise.then(onfulfilled, onrejected);
 	}
 }

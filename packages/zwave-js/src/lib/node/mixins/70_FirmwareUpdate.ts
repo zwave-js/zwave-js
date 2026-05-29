@@ -35,10 +35,6 @@ import { type BytesView, getEnumMemberName, throttle } from "@zwave-js/shared";
 import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import { isArray } from "alcalzone-shared/typeguards";
 import {
@@ -52,7 +48,7 @@ import { SchedulePollMixin } from "./60_ScheduledPoll.js";
 interface AbortFirmwareUpdateContext {
 	abort: boolean;
 	tooLateToAbort: boolean;
-	abortPromise: DeferredPromise<boolean>;
+	abortResolver: PromiseWithResolvers<boolean>;
 }
 
 type PartialFirmwareUpdateResult =
@@ -279,7 +275,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 				const abortContext = {
 					abort: false,
 					tooLateToAbort: false,
-					abortPromise: createDeferredPromise<boolean>(),
+					abortResolver: Promise.withResolvers<boolean>(),
 				};
 
 				self._abortFirmwareUpdate = async () => {
@@ -297,7 +293,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 
 					// Trigger the abort
 					abortContext.abort = true;
-					const aborted = await abortContext.abortPromise;
+					const aborted = await abortContext.abortResolver.promise;
 					if (!aborted) {
 						throw new ZWaveError(
 							`The node did not acknowledge the aborted update`,
@@ -693,7 +689,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 		);
 
 		if (abortContext.abort) {
-			abortContext.abortPromise.resolve(true);
+			abortContext.abortResolver.resolve(true);
 			return;
 		} else {
 			return {
@@ -1123,7 +1119,7 @@ export abstract class FirmwareUpdateMixin extends SchedulePollMixin
 			);
 
 		if (abortContext.abort) {
-			abortContext.abortPromise.resolve(
+			abortContext.abortResolver.resolve(
 				statusReport?.status
 					=== FirmwareUpdateStatus.Error_TransmissionFailed,
 			);

@@ -1,5 +1,4 @@
 import { isAbortError, noop } from "@zwave-js/shared";
-import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 
 /**
  * Merge multiple streams into a single one, not taking order into account.
@@ -9,10 +8,10 @@ import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 export function mergeReadableStreams<T>(
 	...streams: ReadableStream<T>[]
 ): ReadableStream<T> {
-	const resolvePromises = streams.map(() => createDeferredPromise<void>());
+	const streamResolvers = streams.map(() => Promise.withResolvers<void>());
 	return new ReadableStream<T>({
 		start(controller) {
-			void Promise.all(resolvePromises)
+			void Promise.all(streamResolvers.map((p) => p.promise))
 				.then(() => controller.close())
 				.catch(noop);
 			try {
@@ -32,7 +31,7 @@ export function mergeReadableStreams<T>(
 								}
 							}
 						}
-						resolvePromises[+key].resolve();
+						streamResolvers[+key].resolve();
 					})();
 				}
 			} catch (e) {
