@@ -299,10 +299,6 @@ import {
 import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache.js";
@@ -2133,14 +2129,14 @@ export class ZWaveController
 			);
 		}
 
-		const startedPromise = createDeferredPromise<void>();
+		const started = Promise.withResolvers<void>();
 		void this.driver.scheduler.queueTask(this.getBeginClassicInclusionTask(
-			startedPromise,
+			started,
 			options,
 		)).catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
-		await startedPromise;
+		await started.promise;
 		return true;
 	}
 
@@ -2148,7 +2144,7 @@ export class ZWaveController
 	 * Returns the task to handle the complete classic inclusion process
 	 */
 	private getBeginClassicInclusionTask(
-		startedPromise: DeferredPromise<void>,
+		started: PromiseWithResolvers<void>,
 		options: InclusionOptionsInternal,
 	): TaskBuilder<void> {
 		const self = this;
@@ -2190,7 +2186,7 @@ export class ZWaveController
 
 					self.emit("inclusion started", options.strategy);
 					// Notify the caller that the process has started
-					startedPromise.resolve();
+					started.resolve();
 				} catch (e) {
 					self.setInclusionState(InclusionState.Idle);
 					if (
@@ -2201,14 +2197,14 @@ export class ZWaveController
 							`Starting the inclusion failed`,
 							"error",
 						);
-						startedPromise.reject(
+						started.reject(
 							new ZWaveError(
 								"The inclusion could not be started.",
 								ZWaveErrorCodes.Controller_InclusionFailed,
 							),
 						);
 					} else {
-						startedPromise.reject(e as Error);
+						started.reject(e as Error);
 					}
 					return;
 				}
@@ -2239,16 +2235,16 @@ export class ZWaveController
 			return false;
 		}
 
-		const startedPromise = createDeferredPromise<void>();
+		const started = Promise.withResolvers<void>();
 		void this.driver.scheduler.queueTask(
 			this.getBeginSmartStartInclusionTask(
-				startedPromise,
+				started,
 				provisioningEntry,
 			),
 		).catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
-		await startedPromise;
+		await started.promise;
 		return true;
 	}
 
@@ -2256,7 +2252,7 @@ export class ZWaveController
 	 * Returns the task to handle the complete classic inclusion process
 	 */
 	private getBeginSmartStartInclusionTask(
-		startedPromise: DeferredPromise<void>,
+		started: PromiseWithResolvers<void>,
 		provisioningEntry: PlannedProvisioningEntry,
 	): TaskBuilder<void> {
 		const self = this;
@@ -2312,11 +2308,11 @@ export class ZWaveController
 						InclusionStrategy.SmartStart,
 					);
 					// Notify the caller that the process has started
-					startedPromise.resolve();
+					started.resolve();
 				} catch (e) {
 					self.setInclusionState(InclusionState.Idle);
 					// Error handling for this happens at the call site
-					startedPromise.reject(e as Error);
+					started.reject(e as Error);
 					return;
 				}
 
@@ -3114,14 +3110,14 @@ export class ZWaveController
 			return false;
 		}
 
-		const startedPromise = createDeferredPromise<void>();
+		const started = Promise.withResolvers<void>();
 		void this.driver.scheduler.queueTask(this.getExclusionTask(
-			startedPromise,
+			started,
 			options,
 		)).catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
-		await startedPromise;
+		await started.promise;
 		return true;
 	}
 
@@ -3205,7 +3201,7 @@ export class ZWaveController
 	 * Returns the task to handle the complete exclusion process
 	 */
 	private getExclusionTask(
-		startedPromise: DeferredPromise<void>,
+		started: PromiseWithResolvers<void>,
 		options: ExclusionOptions,
 	): TaskBuilder<void> {
 		const self = this;
@@ -3245,7 +3241,7 @@ export class ZWaveController
 
 					self.emit("exclusion started");
 					// Notify the caller that the process has started
-					startedPromise.resolve();
+					started.resolve();
 				} catch (e) {
 					self.setInclusionState(InclusionState.Idle);
 					if (
@@ -3256,14 +3252,14 @@ export class ZWaveController
 							`Starting the exclusion failed`,
 							"error",
 						);
-						startedPromise.reject(
+						started.reject(
 							new ZWaveError(
 								"The exclusion could not be started.",
 								ZWaveErrorCodes.Controller_ExclusionFailed,
 							),
 						);
 					} else {
-						startedPromise.reject(e as Error);
+						started.reject(e as Error);
 					}
 					return;
 				}
@@ -4195,11 +4191,13 @@ export class ZWaveController
 		return this._bootstrappingS2NodeId;
 	}
 
-	private cancelBootstrapS2Promise: DeferredPromise<KEXFailType> | undefined;
+	private cancelBootstrapS2Resolver:
+		| PromiseWithResolvers<KEXFailType>
+		| undefined;
 	public cancelSecureBootstrapS2(reason: KEXFailType): void {
-		if (this.cancelBootstrapS2Promise) {
-			this.cancelBootstrapS2Promise.resolve(reason);
-			this.cancelBootstrapS2Promise = undefined;
+		if (this.cancelBootstrapS2Resolver) {
+			this.cancelBootstrapS2Resolver.resolve(reason);
+			this.cancelBootstrapS2Resolver = undefined;
 		}
 	}
 
@@ -4294,7 +4292,7 @@ export class ZWaveController
 
 		// Allow canceling the bootstrapping process
 		this._bootstrappingS2NodeId = node.id;
-		this.cancelBootstrapS2Promise = createDeferredPromise();
+		this.cancelBootstrapS2Resolver = Promise.withResolvers<KEXFailType>();
 
 		try {
 			const api = node.commandClasses["Security 2"].withOptions({
@@ -4315,7 +4313,7 @@ export class ZWaveController
 				deleteTempKey();
 				// We're no longer bootstrapping
 				this._bootstrappingS2NodeId = undefined;
-				this.cancelBootstrapS2Promise = undefined;
+				this.cancelBootstrapS2Resolver = undefined;
 			};
 
 			const abortUser = async () => {
@@ -4584,7 +4582,7 @@ export class ZWaveController
 						|| cc instanceof Security2CCKEXFail,
 					tai2RemainingMs,
 				).catch(() => "timeout" as const),
-				this.cancelBootstrapS2Promise,
+				this.cancelBootstrapS2Resolver?.promise,
 			]);
 			if (kexSetEcho === "timeout") return abortTimeout();
 			if (typeof kexSetEcho === "number") {
@@ -4848,7 +4846,7 @@ export class ZWaveController
 			deleteTempKey();
 			// And we're no longer bootstrapping
 			this._bootstrappingS2NodeId = undefined;
-			this.cancelBootstrapS2Promise = undefined;
+			this.cancelBootstrapS2Resolver = undefined;
 		}
 	}
 
@@ -6823,15 +6821,15 @@ export class ZWaveController
 
 		const node = this._nodes.getOrThrow(nodeId);
 
-		const startedPromise = createDeferredPromise<void>();
+		const started = Promise.withResolvers<void>();
 		void this.driver.scheduler.queueTask(this.getReplaceFailedNodeTask(
-			startedPromise,
+			started,
 			node,
 			options,
 		)).catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
-		await startedPromise;
+		await started.promise;
 		return true;
 	}
 
@@ -6839,7 +6837,7 @@ export class ZWaveController
 	 * Returns the task to handle the complete exclusion process
 	 */
 	private getReplaceFailedNodeTask(
-		startedPromise: DeferredPromise<void>,
+		started: PromiseWithResolvers<void>,
 		node: ZWaveNode,
 		options: ReplaceNodeOptions,
 	): TaskBuilder<void> {
@@ -6852,7 +6850,7 @@ export class ZWaveController
 			group: { id: "inclusion-exclusion" },
 			task: async function*() {
 				yield* self.replaceFailedNodeTask(
-					startedPromise,
+					started,
 					node,
 					options,
 					abortWaiting.signal,
@@ -6866,7 +6864,7 @@ export class ZWaveController
 	}
 
 	private async *replaceFailedNodeTask(
-		startedPromise: DeferredPromise<void>,
+		started: PromiseWithResolvers<void>,
 		node: ZWaveNode,
 		options: ReplaceNodeOptions,
 		abortWaiting: AbortSignal,
@@ -6884,7 +6882,7 @@ export class ZWaveController
 
 		if (await node.ping()) {
 			self.setInclusionState(InclusionState.Idle);
-			startedPromise.reject(
+			started.reject(
 				new ZWaveError(
 					`The node replace process could not be started because the node responded to a ping.`,
 					ZWaveErrorCodes.ReplaceFailedNode_Failed,
@@ -6943,7 +6941,7 @@ export class ZWaveController
 
 			self.setInclusionState(InclusionState.Idle);
 
-			startedPromise.reject(
+			started.reject(
 				new ZWaveError(
 					message,
 					ZWaveErrorCodes.ReplaceFailedNode_Failed,
@@ -6968,7 +6966,7 @@ export class ZWaveController
 			);
 
 			if (msg.replaceStatus === ReplaceFailedNodeStatus.NodeOK) {
-				startedPromise.reject(
+				started.reject(
 					new ZWaveError(
 						`The node could not be replaced because it has responded`,
 						ZWaveErrorCodes.ReplaceFailedNode_NodeOK,
@@ -6983,7 +6981,7 @@ export class ZWaveController
 				msg.replaceStatus
 					=== ReplaceFailedNodeStatus.FailedNodeReplaceFailed
 			) {
-				startedPromise.reject(
+				started.reject(
 					new ZWaveError(
 						`The failed node has not been replaced`,
 						ZWaveErrorCodes.ReplaceFailedNode_Failed,
@@ -7015,7 +7013,7 @@ export class ZWaveController
 			);
 			self.emit("inclusion started", options.strategy);
 			self.setInclusionState(InclusionState.Including);
-			startedPromise.resolve();
+			started.resolve();
 		}
 
 		// Step 2: Inclusion is being handled by the protocol, wait for it

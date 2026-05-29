@@ -1,6 +1,5 @@
 import { CommandClasses } from "@zwave-js/core";
 import { wait } from "alcalzone-shared/async";
-import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import path from "node:path";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -28,10 +27,9 @@ integrationTest(
 			node.markAsAwake();
 			void node.refreshInfo();
 
-			const interviewDone = createDeferredPromise<void>();
-			node.once("interview completed", () => {
-				interviewDone.resolve();
-			});
+			const { promise: interviewDone, resolve } = Promise
+				.withResolvers<void>();
+			node.once("interview completed", () => resolve());
 
 			// The interview should complete quickly
 			const testResult = await Promise.race([
@@ -70,10 +68,9 @@ integrationTest(
 				node.markAsAwake();
 			}, 100);
 
-			const interviewDone = createDeferredPromise<void>();
-			node.once("interview completed", () => {
-				interviewDone.resolve();
-			});
+			const { promise: interviewDone, resolve } = Promise
+				.withResolvers<void>();
+			node.once("interview completed", () => resolve());
 
 			// The interview should complete quickly
 			const testResult = await Promise.race([
@@ -109,10 +106,9 @@ integrationTest(
 			node.markAsAwake();
 			void node.refreshInfo({ waitForWakeup: false });
 
-			const interviewDone = createDeferredPromise<void>();
-			node.once("interview completed", () => {
-				interviewDone.resolve();
-			});
+			const { promise: interviewDone, resolve } = Promise
+				.withResolvers<void>();
+			node.once("interview completed", () => resolve());
 
 			// The interview should complete quickly
 			const testResult = await Promise.race([
@@ -151,10 +147,9 @@ integrationTest(
 				node.markAsAwake();
 			}, 100);
 
-			const interviewDone = createDeferredPromise<void>();
-			node.once("interview completed", () => {
-				interviewDone.resolve();
-			});
+			const { promise: interviewDone, resolve } = Promise
+				.withResolvers<void>();
+			node.once("interview completed", () => resolve());
 
 			// The interview should complete quickly
 			const testResult = await Promise.race([

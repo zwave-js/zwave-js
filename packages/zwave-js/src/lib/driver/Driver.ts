@@ -208,10 +208,6 @@ import type {
 } from "@zwave-js/shared/bindings";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
@@ -1008,7 +1004,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 	private queuePaused = false;
 	/** Used to immediately abort ongoing Serial API commands */
-	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
+	private abortSerialAPICommand: PromiseWithResolvers<Error> | undefined;
 
 	private initSerialAPIQueue(): void {
 		this.serialAPIQueue = new AsyncQueue();
@@ -1580,7 +1576,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this._options.storage.deviceConfigExternalDir,
 		});
 
-		const spOpenPromise = createDeferredPromise();
+		const spOpenResolver = Promise.withResolvers<void>();
 
 		// Log which version is running
 		if (this._options.logConfig?.showLogo !== false) {
@@ -1602,7 +1598,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					this.port,
 				);
 			} else {
-				spOpenPromise.reject(
+				spOpenResolver.reject(
 					new ZWaveError(
 						"This platform does not support creating a serial connection by path",
 						ZWaveErrorCodes.Driver_Failed,
@@ -1639,14 +1635,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			try {
 				await this.openSerialport();
 			} catch (e) {
-				spOpenPromise.reject(e as Error);
+				spOpenResolver.reject(e as Error);
 				void this.destroy();
 				return;
 			}
 
 			this.driverLog.print("serial port opened");
 			this._isOpen = true;
-			spOpenPromise.resolve();
+			spOpenResolver.resolve();
 
 			// Start the task scheduler
 			this._scheduler.start();
@@ -1783,7 +1779,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		});
 
-		return spOpenPromise;
+		return spOpenResolver.promise;
 	}
 
 	private async detectMode(): Promise<DriverMode> {
@@ -3711,11 +3707,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return false;
 	}
 
-	private _ensureCLIReadyPromise: DeferredPromise<boolean> | undefined;
+	private _ensureCLIReadyResolver:
+		| PromiseWithResolvers<boolean>
+		| undefined;
 	private async ensureCLIReady(): Promise<boolean> {
 		// Ensure this is only called once and all subsequent calls block
-		if (this._ensureCLIReadyPromise) return this._ensureCLIReadyPromise;
-		this._ensureCLIReadyPromise = createDeferredPromise();
+		if (this._ensureCLIReadyResolver) {
+			return this._ensureCLIReadyResolver.promise;
+		}
+		this._ensureCLIReadyResolver = Promise.withResolvers<boolean>();
 
 		// Try to detect the available CLI commands and wait long enough for the communication to succeed
 		// Wait 1.5 seconds after reset to ensure that the module is ready for communication again
@@ -3730,8 +3730,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			try {
 				await this.cli.detectCommands();
 				this.controllerLog.print("CLI started");
-				this._ensureCLIReadyPromise?.resolve(true);
-				this._ensureCLIReadyPromise = undefined;
+				this._ensureCLIReadyResolver?.resolve(true);
+				this._ensureCLIReadyResolver = undefined;
 				return true;
 			} catch {
 				if (i === 2) {
@@ -3739,8 +3739,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						"CLI did not respond, giving up",
 						"error",
 					);
-					this._ensureCLIReadyPromise?.resolve(false);
-					this._ensureCLIReadyPromise = undefined;
+					this._ensureCLIReadyResolver?.resolve(false);
+					this._ensureCLIReadyResolver = undefined;
 					return false;
 				}
 				await wait(1000);
@@ -3824,9 +3824,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 	}
 
-	private _destroyPromise: DeferredPromise<void> | undefined;
+	private _destroyResolver: PromiseWithResolvers<void> | undefined;
 	private get wasDestroyed(): boolean {
-		return !!this._destroyPromise;
+		return !!this._destroyResolver;
 	}
 
 	/**
@@ -3882,8 +3882,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 */
 	public async destroy(): Promise<void> {
 		// Ensure this is only called once and all subsequent calls block
-		if (this._destroyPromise) return this._destroyPromise;
-		this._destroyPromise = createDeferredPromise();
+		if (this._destroyResolver) return this._destroyResolver.promise;
+		this._destroyResolver = Promise.withResolvers<void>();
 
 		this.driverLog.print("destroying driver instance...");
 
@@ -3913,7 +3913,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// destroy loggers as the very last thing
 		this._logContainer.destroy();
 
-		this._destroyPromise.resolve();
+		this._destroyResolver.resolve();
 	}
 
 	/** Cleanly destroy the controller instance, but not the entire driver */
@@ -6852,15 +6852,15 @@ ${handlers.length} left`,
 	/**
 	 * Provides access to the result Promise for the currently executed serial API command
 	 */
-	private _currentSerialAPICommandPromise:
-		| DeferredPromise<Message | undefined>
+	private _currentSerialAPICommandResolver:
+		| PromiseWithResolvers<Message | undefined>
 		| undefined;
 
 	/** Handles sequencing of queued Serial API commands */
 	private async drainSerialAPIQueue(): Promise<void> {
 		for await (const item of this.serialAPIQueue) {
 			const { msg, transactionSource, result } = item;
-			this._currentSerialAPICommandPromise = result;
+			this._currentSerialAPICommandResolver = result;
 
 			// Attempt the command multiple times if necessary
 			attempts: for (let attempt = 1;; attempt++) {
@@ -6885,7 +6885,7 @@ ${handlers.length} left`,
 					// In all other cases, reject the transaction
 					result.reject(e as Error);
 				} finally {
-					this._currentSerialAPICommandPromise = undefined;
+					this._currentSerialAPICommandResolver = undefined;
 				}
 				break attempts;
 			}
@@ -6908,7 +6908,7 @@ ${handlers.length} left`,
 		msg: Message,
 		transactionSource?: string,
 	): Promise<Message | undefined> {
-		const result = createDeferredPromise<Message | undefined>();
+		const result = Promise.withResolvers<Message | undefined>();
 		this.serialAPIQueue.add({
 			msg,
 			transactionSource,
@@ -6926,7 +6926,7 @@ ${handlers.length} left`,
 			},
 		});
 
-		return result;
+		return result.promise;
 	}
 
 	private mayRetrySerialAPICommand(
@@ -6981,7 +6981,7 @@ ${handlers.length} left`,
 		}
 
 		const machine = createSerialAPICommandMachine(msg);
-		this.abortSerialAPICommand = createDeferredPromise();
+		this.abortSerialAPICommand = Promise.withResolvers<Error>();
 		const abortController = new AbortController();
 
 		let nextInput: SerialAPICommandMachineInput | undefined = {
@@ -7054,7 +7054,7 @@ ${handlers.length} left`,
 
 					case "waitingForResponse": {
 						const response = await Promise.race([
-							this.abortSerialAPICommand?.catch((e) =>
+							this.abortSerialAPICommand?.promise.catch((e) =>
 								e as Error
 							),
 							this.waitForMessage(
@@ -7101,7 +7101,7 @@ ${handlers.length} left`,
 						}
 
 						const callback = await Promise.race([
-							this.abortSerialAPICommand?.catch((e) =>
+							this.abortSerialAPICommand?.promise.catch((e) =>
 								e as Error
 							),
 							this.waitForMessage(
@@ -7246,7 +7246,7 @@ ${handlers.length} left`,
 		}
 
 		// Create the transaction
-		const { generator, resultPromise } = createMessageGenerator(
+		const { generator, resultResolver } = createMessageGenerator(
 			this,
 			this.getEncodingContext(),
 			msg,
@@ -7258,7 +7258,7 @@ ${handlers.length} left`,
 			message: msg,
 			priority: options.priority,
 			parts: generator,
-			promise: resultPromise,
+			resolver: resultResolver,
 			listener: options.onProgress,
 		});
 
@@ -7295,7 +7295,7 @@ ${handlers.length} left`,
 		}
 
 		try {
-			const result = (await resultPromise) as TResponse;
+			const result = (await resultResolver.promise) as TResponse;
 
 			// If this was a successful non-nonce message to a sleeping node, make sure it goes to sleep again
 			let maybeSendToSleep: boolean;
@@ -7671,10 +7671,10 @@ ${handlers.length} left`,
 		abortSignal?: AbortSignal,
 	): Promise<MessageHeaders> {
 		return new Promise<MessageHeaders>((resolve, reject) => {
-			const promise = createDeferredPromise<MessageHeaders>();
+			const matched = Promise.withResolvers<MessageHeaders>();
 			const entry: AwaitedMessageHeader = {
 				predicate,
-				handler: (msg) => promise.resolve(msg),
+				handler: (msg) => matched.resolve(msg),
 				timeout: undefined,
 			};
 			this.awaitedMessageHeaders.push(entry);
@@ -7697,7 +7697,7 @@ ${handlers.length} left`,
 				}, timeout);
 			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then((cc) => {
+			void matched.promise.then((cc) => {
 				removeEntry();
 				resolve(cc);
 			});
@@ -7735,11 +7735,11 @@ ${handlers.length} left`,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
-			const promise = createDeferredPromise<Message>();
+			const matched = Promise.withResolvers<Message>();
 			const entry: AwaitedMessageEntry = {
 				predicate,
 				refreshPredicate,
-				handler: (msg) => promise.resolve(msg),
+				handler: (msg) => matched.resolve(msg),
 				timeout: undefined,
 			};
 			this.awaitedMessages.push(entry);
@@ -7762,7 +7762,7 @@ ${handlers.length} left`,
 				}, timeout);
 			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then((cc) => {
+			void matched.promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
@@ -7794,10 +7794,10 @@ ${handlers.length} left`,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
-			const promise = createDeferredPromise<CCId>();
+			const matched = Promise.withResolvers<CCId>();
 			const entry: AwaitedCommandEntry = {
 				predicate,
-				handler: (cc) => promise.resolve(cc),
+				handler: (cc) => matched.resolve(cc),
 				timeout: undefined,
 			};
 			this.awaitedCommands.push(entry);
@@ -7820,7 +7820,7 @@ ${handlers.length} left`,
 				}, timeout);
 			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then((cc) => {
+			void matched.promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
@@ -7845,9 +7845,9 @@ ${handlers.length} left`,
 				return;
 			}
 
-			const promise = createDeferredPromise<void>();
+			const idle = Promise.withResolvers<void>();
 			const entry: AwaitedIdleEntry = {
-				handler: () => promise.resolve(),
+				handler: () => idle.resolve(),
 				timeout: undefined,
 			};
 			this.awaitedIdle.push(entry);
@@ -7870,7 +7870,7 @@ ${handlers.length} left`,
 				}, timeout);
 			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then(() => {
+			void idle.promise.then(() => {
 				removeEntry();
 				resolve();
 			});
@@ -9126,7 +9126,7 @@ integrity: ${update.integrity}`;
 	// region Bootloader
 
 	private _enteringBootloader: boolean = false;
-	private _enterBootloaderPromise: DeferredPromise<void> | undefined;
+	private _enterBootloaderResolver: PromiseWithResolvers<void> | undefined;
 
 	public async enterBootloader(): Promise<void> {
 		if (this._bootloader) return;
@@ -9141,9 +9141,9 @@ integrity: ${update.integrity}`;
 			}
 
 			// Wait if the menu shows up
-			this._enterBootloaderPromise = createDeferredPromise();
+			this._enterBootloaderResolver = Promise.withResolvers<void>();
 			const success = await Promise.race([
-				this._enterBootloaderPromise.then(() => true),
+				this._enterBootloaderResolver.promise.then(() => true),
 				wait(5000, true).then(() => false),
 			]);
 			if (success) {
@@ -9270,9 +9270,9 @@ integrity: ${update.integrity}`;
 				data.version,
 				data.options,
 			);
-			if (this._enterBootloaderPromise) {
-				this._enterBootloaderPromise.resolve();
-				this._enterBootloaderPromise = undefined;
+			if (this._enterBootloaderResolver) {
+				this._enterBootloaderResolver.resolve();
+				this._enterBootloaderResolver = undefined;
 			}
 		}
 	}
@@ -9300,10 +9300,10 @@ integrity: ${update.integrity}`;
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
-			const promise = createDeferredPromise<BootloaderChunk>();
+			const matched = Promise.withResolvers<BootloaderChunk>();
 			const entry: AwaitedBootloaderChunkEntry = {
 				predicate,
-				handler: (chunk) => promise.resolve(chunk),
+				handler: (chunk) => matched.resolve(chunk),
 				timeout: undefined,
 			};
 			this.awaitedBootloaderChunks.push(entry);
@@ -9326,7 +9326,7 @@ integrity: ${update.integrity}`;
 				}, timeout);
 			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then((chunk) => {
+			void matched.promise.then((chunk) => {
 				removeEntry();
 				resolve(chunk as T);
 			});
@@ -9358,10 +9358,10 @@ integrity: ${update.integrity}`;
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
-			const promise = createDeferredPromise<CLIChunk>();
+			const matched = Promise.withResolvers<CLIChunk>();
 			const entry: AwaitedCLIChunkEntry = {
 				predicate,
-				handler: (chunk) => promise.resolve(chunk),
+				handler: (chunk) => matched.resolve(chunk),
 				timeout: undefined,
 			};
 			this.awaitedCLIChunks.push(entry);
@@ -9384,7 +9384,7 @@ integrity: ${update.integrity}`;
 				}, timeout);
 			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
-			void promise.then((chunk) => {
+			void matched.promise.then((chunk) => {
 				removeEntry();
 				resolve(chunk as T);
 			});
@@ -9547,7 +9547,7 @@ integrity: ${update.integrity}`;
 
 		if (frameCount < 1) return 0;
 
-		const ret = createDeferredPromise<number>();
+		const ret = Promise.withResolvers<number>();
 
 		const context = {
 			testNodeId,
@@ -9577,7 +9577,7 @@ integrity: ${update.integrity}`;
 
 		context.timeout = setTimeout(sendFrame, interval);
 
-		return ret;
+		return ret.promise;
 	}
 
 	/** Sends a NOP Power frame to the given node and returns the transmit status if the frame was sent */

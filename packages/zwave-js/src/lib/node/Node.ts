@@ -160,10 +160,6 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
 import path from "pathe";
 import type { Driver } from "../driver/Driver.js";
@@ -2856,7 +2852,9 @@ protocol version:      ${this.protocolVersion}`;
 	}
 
 	private _healthCheckAborted: boolean = false;
-	private _abortHealthCheckPromise: DeferredPromise<void> | undefined;
+	private _abortHealthCheckResolver:
+		| PromiseWithResolvers<void>
+		| undefined;
 
 	/**
 	 * Aborts an ongoing health check if one is currently in progress.
@@ -2868,7 +2866,7 @@ protocol version:      ${this.protocolVersion}`;
 	public abortHealthCheck(): void {
 		if (!this._healthCheckInProgress) return;
 		this._healthCheckAborted = true;
-		this._abortHealthCheckPromise?.resolve();
+		this._abortHealthCheckResolver?.resolve();
 	}
 
 	/**
@@ -2900,13 +2898,13 @@ protocol version:      ${this.protocolVersion}`;
 		try {
 			this._healthCheckInProgress = true;
 			this._healthCheckAborted = false;
-			this._abortHealthCheckPromise = createDeferredPromise();
+			this._abortHealthCheckResolver = Promise.withResolvers<void>();
 
 			return await this.checkLifelineHealthInternal(rounds, onProgress);
 		} finally {
 			this._healthCheckInProgress = false;
 			this._healthCheckAborted = false;
-			this._abortHealthCheckPromise = undefined;
+			this._abortHealthCheckResolver = undefined;
 		}
 	}
 
@@ -2983,7 +2981,7 @@ protocol version:      ${this.protocolVersion}`;
 			);
 			await Promise.race([
 				this.waitForWakeup(),
-				this._abortHealthCheckPromise,
+				this._abortHealthCheckResolver?.promise,
 			]);
 			if (this._healthCheckAborted) return aborted();
 		}
@@ -3226,7 +3224,7 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 		try {
 			this._healthCheckInProgress = true;
 			this._healthCheckAborted = false;
-			this._abortHealthCheckPromise = createDeferredPromise();
+			this._abortHealthCheckResolver = Promise.withResolvers<void>();
 
 			return await this.checkRouteHealthInternal(
 				targetNodeId,
@@ -3236,7 +3234,7 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 		} finally {
 			this._healthCheckInProgress = false;
 			this._healthCheckAborted = false;
-			this._abortHealthCheckPromise = undefined;
+			this._abortHealthCheckResolver = undefined;
 		}
 	}
 
@@ -3349,7 +3347,7 @@ ${formatLifelineHealthCheckSummary(summary)}`,
 			);
 			await Promise.race([
 				this.waitForWakeup(),
-				this._abortHealthCheckPromise,
+				this._abortHealthCheckResolver?.promise,
 			]);
 			if (this._healthCheckAborted) return aborted();
 		}
@@ -3518,8 +3516,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 	}
 
 	private _linkReliabilityCheckAborted: boolean = false;
-	private _abortLinkReliabilityCheckPromise:
-		| DeferredPromise<void>
+	private _abortLinkReliabilityCheckResolver:
+		| PromiseWithResolvers<void>
 		| undefined;
 
 	/**
@@ -3531,7 +3529,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 	public abortLinkReliabilityCheck(): void {
 		if (!this._linkReliabilityCheckInProgress) return;
 		this._linkReliabilityCheckAborted = true;
-		this._abortLinkReliabilityCheckPromise?.resolve();
+		this._abortLinkReliabilityCheckResolver?.resolve();
 	}
 
 	/**
@@ -3557,7 +3555,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		try {
 			this._linkReliabilityCheckInProgress = true;
 			this._linkReliabilityCheckAborted = false;
-			this._abortLinkReliabilityCheckPromise = createDeferredPromise();
+			this._abortLinkReliabilityCheckResolver = Promise
+				.withResolvers<void>();
 
 			switch (options.mode) {
 				case LinkReliabilityCheckMode.BasicSetOnOff:
@@ -3568,7 +3567,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		} finally {
 			this._linkReliabilityCheckInProgress = false;
 			this._linkReliabilityCheckAborted = false;
-			this._abortLinkReliabilityCheckPromise = undefined;
+			this._abortLinkReliabilityCheckResolver = undefined;
 		}
 	}
 
@@ -3636,7 +3635,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			);
 			await Promise.race([
 				this.waitForWakeup(),
-				this._abortLinkReliabilityCheckPromise,
+				this._abortLinkReliabilityCheckResolver?.promise,
 			]);
 			if (this._linkReliabilityCheckAborted) return aborted();
 		}
@@ -3762,7 +3761,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			);
 			await Promise.race([
 				wait(waitDurationMs, true),
-				this._abortLinkReliabilityCheckPromise,
+				this._abortLinkReliabilityCheckResolver?.promise,
 			]);
 		}
 
