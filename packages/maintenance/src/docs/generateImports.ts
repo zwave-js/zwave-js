@@ -11,18 +11,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 import { Piscina } from "piscina";
-import {
-	Project,
-} from "ts-morph";
+import { Project } from "ts-morph";
 import { formatWithDprint } from "../dprint.js";
 import {
 	projectRoot,
 	tsConfigFilePathForDocs as tsConfigFilePath,
 } from "../tsAPITools.js";
 import {
+	type ImportOptions,
 	findSourceNode,
 	getTransformedSource,
-	type ImportOptions,
 } from "./shared.js";
 
 // Support directly loading this file in a worker
@@ -58,7 +56,9 @@ export function findImportRanges(docFile: string): ImportRange[] {
 	}));
 }
 
-function getImportKey(range: Pick<ImportRange, "module" | "symbol" | "options">): string {
+function getImportKey(
+	range: Pick<ImportRange, "module" | "symbol" | "options">,
+): string {
 	return JSON.stringify([
 		range.module,
 		range.symbol,
@@ -93,7 +93,9 @@ export async function processDocFile(
 				if (!program) return;
 				const sourceNode = findSourceNode(
 					program,
-					`packages/${range.module.replace(/^@zwave-js\//, "")}/src/index.ts`,
+					`packages/${
+						range.module.replace(/^@zwave-js\//, "")
+					}/src/index.ts`,
 					range.symbol,
 				);
 				if (!sourceNode) return;

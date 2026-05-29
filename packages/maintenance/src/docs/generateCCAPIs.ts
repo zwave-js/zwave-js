@@ -220,8 +220,9 @@ ${
 				valueIDsConst,
 				TypeFormatFlags.NoTruncation,
 			);
-			const cached = formattedValueTypeCache.get(typeText);
-			if (cached) return cached;
+			if (formattedValueTypeCache.has(typeText)) {
+				return formattedValueTypeCache.get(typeText)!;
+			}
 			const prefix = "type _ = ";
 			let ret = formatWithDprint(
 				"type.ts",

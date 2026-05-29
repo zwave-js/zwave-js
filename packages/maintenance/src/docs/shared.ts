@@ -18,11 +18,16 @@ export interface ImportOptions {
 	jsdoc?: boolean;
 }
 
+// These caches and the reused transform project intentionally live for the
+// entire process. The docs generation runs as a short-lived script (and within
+// short-lived worker threads), so there is no need to reset them between runs.
 const exportDeclarationCache = new Map<
 	string,
 	ReadonlyMap<string, ExportedDeclarations[]>
 >();
 
+// Reuse a single project/source file across calls instead of recreating one
+// per snippet, which is expensive in ts-morph.
 let transformProject: Project | undefined;
 let transformSourceFile: SourceFile | undefined;
 
