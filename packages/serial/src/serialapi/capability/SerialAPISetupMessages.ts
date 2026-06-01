@@ -121,13 +121,18 @@ export class SerialAPISetupRequest extends Message {
 
 	public command: SerialAPISetupCommand;
 
-	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+	public async serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		const originalPayload = this.payload;
 		this.payload = Bytes.concat([
 			[this.command],
 			this.payload,
 		]);
 
-		return super.serialize(ctx);
+		try {
+			return await super.serialize(ctx);
+		} finally {
+			this.payload = originalPayload;
+		}
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
@@ -182,6 +187,15 @@ export class SerialAPISetupResponse extends Message {
 	}
 
 	public command: SerialAPISetupCommand;
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.command],
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
 		const message: MessageRecord = {
@@ -425,15 +439,18 @@ export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetNodeIDTypeRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
+		validatePayload(raw.payload.length >= 1);
+		const nodeIdType = raw.payload[0];
+		validatePayload(
+			nodeIdType === NodeIDType.Short || nodeIdType === NodeIDType.Long,
 		);
 
-		// return new SerialAPISetup_SetNodeIDTypeRequest({});
+		return new this({
+			nodeIdType,
+		});
 	}
 
 	public nodeIdType: NodeIDType;
