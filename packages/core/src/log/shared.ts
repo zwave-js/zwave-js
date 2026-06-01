@@ -48,6 +48,12 @@ export interface ZWaveLogInfo<TContext extends LogContext = LogContext>
 	label?: string;
 	message: string | string[];
 	context: TContext;
+	/** Raw serial message data for transport-level formatting */
+	serialMessage?: {
+		logEntry: MessageOrCCLogEntry;
+		isCCContainer: boolean;
+		command?: any;
+	};
 }
 
 export interface LogContext<T extends string = string> {
@@ -156,6 +162,11 @@ export interface LogConfig {
 	filename: string;
 	forceConsole: boolean;
 	showLogo?: boolean;
+	/**
+	 * @deprecated This option is no longer used. To control message formatting, configure
+	 * the format on individual transports using `createDefaultTransportFormat()` with the
+	 * `serialMessageFormat` parameter set to "json" or "human-readable".
+	 */
 	raw?: boolean;
 }
 

@@ -8,7 +8,9 @@ import {
 	channelPadding,
 	directionPrefixPadding,
 	messageFitsIntoOneLine,
+	messageRecordToLines,
 	messageToLines,
+	tagify,
 	timestampPadding,
 	timestampPaddingShort,
 } from "./shared.js";
@@ -141,6 +143,110 @@ export function printLogMessage(shortTimestamps: boolean): LogFormat {
 				);
 			}
 			info[MESSAGE as any] = lines.join("\n");
+			return info;
+		},
+	};
+}
+
+export type SerialMessageFormatterMode = "human-readable" | "json";
+
+/**
+ * Formats serial message hierarchy for human-readable or JSON output.
+ * This formatter should be applied BEFORE formatLogMessage.
+ */
+export function formatSerialMessage(
+	mode: SerialMessageFormatterMode,
+	driver?: any,
+): LogFormat {
+	return {
+		transform: (info: ZWaveLogInfo) => {
+			// Only process messages that have serial message data
+			if (!info.serialMessage) {
+				return info;
+			}
+
+			const { logEntry, isCCContainer, command } = info.serialMessage;
+
+			if (mode === "json") {
+				// In JSON mode, stringify the log entry
+				info.message = JSON.stringify(logEntry);
+			} else {
+				// In human-readable mode, render the entire command tree
+				let msg = [tagify(logEntry.tags)];
+
+				if (logEntry.message) {
+					msg.push(
+						...messageRecordToLines(logEntry.message).map(
+							(line) => (isCCContainer ? "│ " : "  ") + line,
+						),
+					);
+				}
+
+				try {
+					// If possible, include information about the CCs
+					if (isCCContainer && command) {
+						// Remove the default payload message and draw a bracket
+						msg = msg.filter(
+							(line) => !line.startsWith("│ payload:"),
+						);
+
+						// We need to check if the command has encapsulation methods
+						// without importing from @zwave-js/cc to avoid circular dependencies
+						const logCC = (
+							cc: any,
+							indent: number = 0,
+						) => {
+							const isEncapCC = typeof cc.encapsulated !==
+									"undefined"
+								|| (Array.isArray(cc.encapsulated)
+									&& cc.encapsulated.length > 0);
+							const loggedCC = cc.toLogEntry?.(driver) || {
+								tags: [],
+								message: {},
+							};
+							msg.push(
+								" ".repeat(indent * 2)
+									+ "└─"
+									+ tagify(loggedCC.tags),
+							);
+
+							indent++;
+							if (loggedCC.message) {
+								msg.push(
+									...messageRecordToLines(loggedCC.message)
+										.map(
+											(line) =>
+												`${" ".repeat(indent * 2)}${
+													isEncapCC ? "│ " : "  "
+												}${line}`,
+										),
+								);
+							}
+							// If this is an encap CC, continue
+							if (
+								cc.encapsulated
+								&& !Array.isArray(cc.encapsulated)
+							) {
+								logCC(cc.encapsulated, indent);
+							} else if (Array.isArray(cc.encapsulated)) {
+								for (const encap of cc.encapsulated) {
+									logCC(encap, indent);
+								}
+							}
+						};
+
+						logCC(command);
+					}
+				} catch {
+					// Ignore errors during CC logging
+				}
+
+				info.message = msg;
+			}
+
+			// Clean up the raw data after processing
+			delete info.serialMessage;
+
 			return info;
 		},
 	};
