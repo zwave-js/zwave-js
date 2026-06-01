@@ -1148,38 +1148,37 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@microsoft/api-extractor-model@npm:7.33.4":
-  version: 7.33.4
-  resolution: "@microsoft/api-extractor-model@npm:7.33.4"
+"@microsoft/api-extractor-model@npm:7.33.8":
+  version: 7.33.8
+  resolution: "@microsoft/api-extractor-model@npm:7.33.8"
   dependencies:
     "@microsoft/tsdoc": "npm:~0.16.0"
     "@microsoft/tsdoc-config": "npm:~0.18.1"
-    "@rushstack/node-core-library": "npm:5.20.3"
-  checksum: 10/60888f94ee2b121aac3a1e443c6922080b130226d956c98eb44de5deba80c887d0382cd9ade8ccd46d8a55af27182fb937f7ef0a17dccac286253eb35cc8111d
+    "@rushstack/node-core-library": "npm:5.23.1"
+  checksum: 10/0f054bfa82507fe055754c087eb090922a4fb02a6dd7d5bd7c7e2c212a4723fd942cae90e62a3a8db2e64ec4f217b88676b082e0635615d40da4ccbb2fac5e4a
   languageName: node
   linkType: hard
 
-"@microsoft/api-extractor@npm:^7.57.7":
-  version: 7.57.7
-  resolution: "@microsoft/api-extractor@npm:7.57.7"
+"@microsoft/api-extractor@npm:^7.58.7":
+  version: 7.58.7
+  resolution: "@microsoft/api-extractor@npm:7.58.7"
   dependencies:
-    "@microsoft/api-extractor-model": "npm:7.33.4"
+    "@microsoft/api-extractor-model": "npm:7.33.8"
     "@microsoft/tsdoc": "npm:~0.16.0"
     "@microsoft/tsdoc-config": "npm:~0.18.1"
-    "@rushstack/node-core-library": "npm:5.20.3"
-    "@rushstack/rig-package": "npm:0.7.2"
-    "@rushstack/terminal": "npm:0.22.3"
-    "@rushstack/ts-command-line": "npm:5.3.3"
+    "@rushstack/node-core-library": "npm:5.23.1"
+    "@rushstack/rig-package": "npm:0.7.3"
+    "@rushstack/terminal": "npm:0.24.0"
+    "@rushstack/ts-command-line": "npm:5.3.9"
     diff: "npm:~8.0.2"
-    lodash: "npm:~4.17.23"
     minimatch: "npm:10.2.3"
     resolve: "npm:~1.22.1"
-    semver: "npm:~7.5.4"
+    semver: "npm:~7.7.4"
     source-map: "npm:~0.6.1"
-    typescript: "npm:5.8.2"
+    typescript: "npm:5.9.3"
   bin:
     api-extractor: bin/api-extractor
-  checksum: 10/052a137ad8b9b81034b14c9225429c517783112a550a4bff3d8588f4626d269790df163eb7dd55573a44de607051571e2bf03eb6384bf2dc505a41e98de94153
+  checksum: 10/a9eaa48119aee851a921b85cdb3acb200ef010d6e3a0fb924fc8c99537a15af059ef126db4883718879d7e3d31d40f990517d7d163ca6f0938524dcc181f0e4a
   languageName: node
   linkType: hard
 
@@ -2078,9 +2077,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rushstack/node-core-library@npm:5.20.3":
-  version: 5.20.3
-  resolution: "@rushstack/node-core-library@npm:5.20.3"
+"@rushstack/node-core-library@npm:5.23.1":
+  version: 5.23.1
+  resolution: "@rushstack/node-core-library@npm:5.23.1"
   dependencies:
     ajv: "npm:~8.18.0"
     ajv-draft-04: "npm:~1.0.0"
@@ -2089,13 +2088,13 @@ __metadata:
     import-lazy: "npm:~4.0.0"
     jju: "npm:~1.4.0"
     resolve: "npm:~1.22.1"
-    semver: "npm:~7.5.4"
+    semver: "npm:~7.7.4"
   peerDependencies:
     "@types/node": "*"
   peerDependenciesMeta:
     "@types/node":
       optional: true
-  checksum: 10/16479e853e3c15fca644a05b50734e1356f0180a88a0d164fe7a7c75b90da9e7da44befe455361ed8ef786ad1b00b6c3662f40e08cb06dc081bf5fb574c74642
+  checksum: 10/77e30e2848e33ff56d07ca9c93488ff7afffc3fdccbc754f27a205809d91a71950fd39c1dc9f6a86e6ecba83e36f470a920b8b4f3a6b319cfd4fadc48891ca8d
   languageName: node
   linkType: hard
 
@@ -2111,21 +2110,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rushstack/rig-package@npm:0.7.2":
-  version: 0.7.2
-  resolution: "@rushstack/rig-package@npm:0.7.2"
+"@rushstack/rig-package@npm:0.7.3":
+  version: 0.7.3
+  resolution: "@rushstack/rig-package@npm:0.7.3"
   dependencies:
+    jju: "npm:~1.4.0"
     resolve: "npm:~1.22.1"
-    strip-json-comments: "npm:~3.1.1"
-  checksum: 10/d500714d77792797aaf98afaa7c6133b6886626096f738e1cfd9c18a15ac05fbb3ac6b2cc0798a21e9e9836ebae7f4542c951e4541cfdbee3a280f3f072cf93e
+  checksum: 10/46cbdf1b4538640a6c93825ddaa7693b45cd7f640b34106ab554319b5d3fae18f65a3c91576c6cce005a1250722159c329ce5f4b1729bead594d9f634cd18616
   languageName: node
   linkType: hard
 
-"@rushstack/terminal@npm:0.22.3":
-  version: 0.22.3
-  resolution: "@rushstack/terminal@npm:0.22.3"
+"@rushstack/terminal@npm:0.24.0":
+  version: 0.24.0
+  resolution: "@rushstack/terminal@npm:0.24.0"
   dependencies:
-    "@rushstack/node-core-library": "npm:5.20.3"
+    "@rushstack/node-core-library": "npm:5.23.1"
     "@rushstack/problem-matcher": "npm:0.2.1"
     supports-color: "npm:~8.1.1"
   peerDependencies:
@@ -2133,19 +2132,19 @@ __metadata:
   peerDependenciesMeta:
     "@types/node":
       optional: true
-  checksum: 10/d4a8a2b1743d5e8a45f318be4665bf1fcb4bfbe9013a0d48f6c9f89960142da1bcad3544bbcd38fc29a1d061ff4664cb0b4ab87c8e9cb0d0f7479b6be70fa47b
+  checksum: 10/796fc5c031df2035d10b764257e2c58cd330b04241eb28a67505a726df41e895d3bb91de76c6b1db76ebbf0098396188b02aaeaa35dd2cb14ed25112e3335b2e
   languageName: node
   linkType: hard
 
-"@rushstack/ts-command-line@npm:5.3.3":
-  version: 5.3.3
-  resolution: "@rushstack/ts-command-line@npm:5.3.3"
+"@rushstack/ts-command-line@npm:5.3.9":
+  version: 5.3.9
+  resolution: "@rushstack/ts-command-line@npm:5.3.9"
   dependencies:
-    "@rushstack/terminal": "npm:0.22.3"
+    "@rushstack/terminal": "npm:0.24.0"
     "@types/argparse": "npm:1.0.38"
     argparse: "npm:~1.0.9"
     string-argv: "npm:~0.3.1"
-  checksum: 10/a0266554ef6abc710f3dfbcb91006be1c3593760b4142bd6357349c79f096b3a7f7a5ec723c4f60293dc4357c54d820cf90e6f351c269d0a0591c6654432a0a4
+  checksum: 10/54c9bef6db8a06de0b10ea12148d94425458828833b5f46a43b9a78fb28a533abe1d636afe5355d4081b717869021b04f74f90f5a3837dee4c20c0af9eb0ef58
   languageName: node
   linkType: hard
 
@@ -2971,7 +2970,7 @@ __metadata:
   resolution: "@zwave-js/cc@workspace:packages/cc"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
     "@zwave-js/core": "workspace:*"
@@ -2998,7 +2997,7 @@ __metadata:
   resolution: "@zwave-js/config@workspace:packages/config"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/js-levenshtein": "npm:^1.1.3"
     "@types/json-logic-js": "npm:^2.0.8"
     "@types/node": "npm:^20.19.35"
@@ -3038,7 +3037,7 @@ __metadata:
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@alcalzone/jsonl-db": "npm:^4.0.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
     "@types/sinon": "npm:^21.0.0"
@@ -3115,7 +3114,7 @@ __metadata:
   resolution: "@zwave-js/host@workspace:packages/host"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
     "@zwave-js/config": "workspace:*"
@@ -3178,7 +3177,7 @@ __metadata:
   resolution: "@zwave-js/nvmedit@workspace:packages/nvmedit"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
     "@types/yargs": "npm:^17.0.35"
@@ -3215,7 +3214,7 @@ __metadata:
     "@dprint/json": "npm:^0.21.3"
     "@dprint/markdown": "npm:^0.21.1"
     "@dprint/typescript": "npm:^0.95.15"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
     "@tsconfig/node20": "npm:^20.1.9"
     "@types/js-yaml": "npm:^4"
@@ -3279,7 +3278,7 @@ __metadata:
   resolution: "@zwave-js/serial@workspace:packages/serial"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@serialport/binding-mock": "npm:^10.2.2"
     "@serialport/bindings-interface": "patch:@serialport/bindings-interface@npm%3A1.2.2#~/.yarn/patches/@serialport-bindings-interface-npm-1.2.2-e597dbc676.patch"
     "@serialport/stream": "npm:^13.0.0"
@@ -3307,7 +3306,7 @@ __metadata:
   resolution: "@zwave-js/shared@workspace:packages/shared"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/sinon": "npm:^21.0.0"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
@@ -3326,7 +3325,7 @@ __metadata:
   resolution: "@zwave-js/testing@workspace:packages/testing"
   dependencies:
     "@alcalzone/esm2cjs": "npm:^1.4.2"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/triple-beam": "npm:^1.3.5"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
@@ -6714,7 +6713,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.21, lodash@npm:~4.17.23":
+"lodash@npm:^4.17.21":
   version: 4.17.23
   resolution: "lodash@npm:4.17.23"
   checksum: 10/82504c88250f58da7a5a4289f57a4f759c44946c005dd232821c7688b5fcfbf4a6268f6a6cdde4b792c91edd2f3b5398c1d2a0998274432cff76def48735e233
@@ -8370,23 +8369,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.5.2, semver@npm:^7.6.0, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.7.4":
+"semver@npm:^7.3.5, semver@npm:^7.5.2, semver@npm:^7.6.0, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.7.4, semver@npm:~7.7.4":
   version: 7.7.4
   resolution: "semver@npm:7.7.4"
   bin:
     semver: bin/semver.js
   checksum: 10/26bdc6d58b29528f4142d29afb8526bc335f4fc04c4a10f2b98b217f277a031c66736bf82d3d3bb354a2f6a3ae50f18fd62b053c4ac3f294a3d10a61f5075b75
-  languageName: node
-  linkType: hard
-
-"semver@npm:~7.5.4":
-  version: 7.5.4
-  resolution: "semver@npm:7.5.4"
-  dependencies:
-    lru-cache: "npm:^6.0.0"
-  bin:
-    semver: bin/semver.js
-  checksum: 10/985dec0d372370229a262c737063860fabd4a1c730662c1ea3200a2f649117761a42184c96df62a0e885e76fbd5dace41087d6c1ac0351b13c0df5d6bcb1b5ac
   languageName: node
   linkType: hard
 
@@ -8853,7 +8841,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"strip-json-comments@npm:3.1.1, strip-json-comments@npm:~3.1.1":
+"strip-json-comments@npm:3.1.1":
   version: 3.1.1
   resolution: "strip-json-comments@npm:3.1.1"
   checksum: 10/492f73e27268f9b1c122733f28ecb0e7e8d8a531a6662efbd08e22cccb3f9475e90a1b82cab06a392f6afae6d2de636f977e231296400d0ec5304ba70f166443
@@ -9246,16 +9234,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.8.2":
-  version: 5.8.2
-  resolution: "typescript@npm:5.8.2"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10/dbc2168a55d56771f4d581997be52bab5cbc09734fec976cfbaabd787e61fb4c6cf9125fd48c6f98054ce549c77ecedefc7f64252a830dd8e9c3381f61fbeb78
-  languageName: node
-  linkType: hard
-
 "typescript@npm:5.9.3":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
@@ -9273,16 +9251,6 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10/0ef2357a4cffd916b52b683a021cdab0f81eea4e9aa35f2d254581c9a5106da02224e3392e1b0ed42b7a48f80c966e5f52b8e1a27941fa0523c1705a9c2e0330
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>":
-  version: 5.8.2
-  resolution: "typescript@patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=5786d5"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10/97920a082ffc57583b1cb6bc4faa502acc156358e03f54c7fc7fdf0b61c439a717f4c9070c449ee9ee683d4cfc3bb203127c2b9794b2950f66d9d307a4ff262c
   languageName: node
   linkType: hard
 
@@ -9931,7 +9899,7 @@ __metadata:
     "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@andrewbranch/untar.js": "npm:^1.0.3"
     "@homebridge/ciao": "npm:^1.3.8"
-    "@microsoft/api-extractor": "npm:^7.57.7"
+    "@microsoft/api-extractor": "npm:^7.58.7"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
     "@types/sinon": "npm:^21.0.0"
