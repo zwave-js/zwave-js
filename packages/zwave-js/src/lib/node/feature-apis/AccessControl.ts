@@ -32,6 +32,7 @@ export interface UserCapabilities {
 	supportedUserTypes: readonly UserCredentialUserType[];
 	maxUserNameLength: number | undefined;
 	supportedCredentialRules: readonly UserCredentialRule[];
+	supportsUsersWithoutCredentials: boolean;
 }
 
 export interface CredentialCapabilities {
@@ -90,6 +91,18 @@ export interface DeleteCredentialsOptions {
 type UserCredentialGetResult = Awaited<
 	ReturnType<UserCredentialCCAPI["getCredential"]>
 >;
+
+/** Result of an addUser call */
+export interface AddUserResult {
+	/** Result of adding the user. */
+	user: SetUserResult;
+	/**
+	 * Result of adding the credential. Only present when a credential was
+	 * provided. On User Code CC, the user and credential are written as a
+	 * single operation, so this mirrors {@link AddUserResult.user}.
+	 */
+	credential?: SetCredentialResult;
+}
 
 /** Result of a setUser / deleteUser / deleteAllUsers call */
 export enum SetUserResult {
@@ -236,6 +249,7 @@ export class AccessControlAPI extends FeatureAPI {
 						this.endpoint.index,
 					),
 				) ?? [],
+				supportsUsersWithoutCredentials: true,
 			};
 		} else {
 			const supportedStatuses = this.getValue<UserIDStatus[]>(
@@ -262,6 +276,7 @@ export class AccessControlAPI extends FeatureAPI {
 				// User Code CC does not support user names or credential rules
 				maxUserNameLength: undefined,
 				supportedCredentialRules: [UserCredentialRule.Single],
+				supportsUsersWithoutCredentials: false,
 			};
 		}
 	}
@@ -495,6 +510,143 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	/**
+	 * Creates a new user with the given ID, optionally writing a credential at
+	 * the same time.
+	 *
+	 * This communicates with the node.
+	 *
+	 * @param credential - The credential to set for this user. On devices where `supportsUsersWithoutCredentials` is `false`, this field is required.
+	 */
+	public async addUser(
+		userId: number,
+		options: SetUserOptions,
+		credential?: {
+			type: UserCredentialType;
+			slot: number;
+			data: string | Uint8Array;
+		},
+	): Promise<AddUserResult> {
+		if (this.#usesUserCredentialCC) {
+			const api = this.#u3cAPI();
+			const userType = options.userType
+				?? UserCredentialUserType.General;
+
+			let result: UserCredentialCCUserReport | undefined;
+			if (userType === UserCredentialUserType.Expiring) {
+				result = await api.setUser({
+					operationType: UserCredentialOperationType.Add,
+					userId,
+					active: options.active ?? true,
+					userType,
+					expiringTimeoutMinutes: options.expiringTimeoutMinutes ?? 0,
+					credentialRule: options.credentialRule,
+					userName: options.userName,
+				});
+			} else {
+				result = await api.setUser({
+					operationType: UserCredentialOperationType.Add,
+					userId,
+					active: options.active ?? true,
+					userType,
+					credentialRule: options.credentialRule,
+					userName: options.userName,
+				});
+			}
+
+			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
+			const userResult = u3cUserReportTypeToSetUserResult(
+				result?.reportType,
+			);
+
+			if (userResult !== SetUserResult.OK || !credential) {
+				return credential
+					? { user: userResult, credential: undefined }
+					: { user: userResult };
+			}
+
+			const credentialResult = await this.setCredential(
+				userId,
+				credential.type,
+				credential.slot,
+				credential.data,
+			);
+			return { user: userResult, credential: credentialResult };
+		} else {
+			// User Code CC
+			if (!credential) {
+				throw new ZWaveError(
+					"On this device, users and codes must be stored together. addUser() requires a credential.",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			if (credential.slot !== userId) {
+				throw new ZWaveError(
+					"On this device, users and codes share the same slot. The credential slot must equal the user ID.",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+
+			this.#assertValidSlot(credential.type, userId);
+
+			const active = options.active ?? true;
+			const userType = options.userType
+				?? UserCredentialUserType.General;
+
+			let status: UserIDStatus;
+			if (!active) {
+				status = UserIDStatus.Disabled;
+			} else if (userType === UserCredentialUserType.NonAccess) {
+				status = UserIDStatus.Messaging;
+			} else {
+				status = UserIDStatus.Enabled;
+			}
+
+			const api = this.#ucAPI();
+			const codeData = typeof credential.data === "string"
+				? credential.data
+				: Bytes.from(credential.data);
+			const result = await api.set(userId, status, codeData);
+			let succeeded: boolean;
+			if (result == undefined) {
+				const verified = await api.get(userId);
+				succeeded = verified?.userCode === codeData
+					&& verified?.userIdStatus === status;
+			} else {
+				succeeded = supervisedCommandSucceeded(result);
+			}
+
+			if (succeeded) {
+				const node = this.endpoint.tryGetNode();
+				if (node) {
+					const userData: UserData = { userId, active, userType };
+					node.emit(
+						"user added",
+						this.endpoint as any,
+						userData,
+					);
+					node.emit(
+						"credential added",
+						this.endpoint as any,
+						{
+							userId,
+							credentialType: credential.type,
+							credentialSlot: userId,
+							data: credential.data,
+						},
+					);
+				}
+			}
+
+			return succeeded
+				? { user: SetUserResult.OK, credential: SetCredentialResult.OK }
+				: {
+					user: SetUserResult.Error_Unknown,
+					credential: SetCredentialResult.Error_Unknown,
+				};
+		}
+	}
+
+	/**
 	 * Creates or updates the user with the given ID.
 	 * This communicates with the node.
 	 */
@@ -574,7 +726,7 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 			if (!existingCode) {
 				throw new ZWaveError(
-					"User Code CC requires a credential to be set before modifying the user. Use setCredential() first.",
+					"On this device, users and codes must be stored together. To add a new user, use the addUser() method and provide a credential.",
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
@@ -676,11 +828,11 @@ export class AccessControlAPI extends FeatureAPI {
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
 			});
-			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			const status = u3cUserReportTypeToSetUserResult(raw?.reportType);
 			if (status === SetUserResult.OK) {
 				this.#purgeAllCachedUsersAndCredentials();
 			}
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			return status;
 		} else {
 			const api = this.#ucAPI();
@@ -1082,10 +1234,14 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialType,
 				credentialSlot: 0,
 			});
-			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			return u3cCredentialReportTypeToSetCredentialResult(
+			const status = u3cCredentialReportTypeToSetCredentialResult(
 				raw?.reportType,
 			);
+			if (status === SetCredentialResult.OK) {
+				this.#purgeCachedCredentials(userId, credentialType);
+			}
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
+			return status;
 		} else {
 			// User Code CC
 			if (
@@ -1349,8 +1505,15 @@ export class AccessControlAPI extends FeatureAPI {
 		return { userId, active, userType };
 	}
 
-	/** Removes cached credential values for a given user from the value DB */
-	#purgeCachedCredentials(userId: number): void {
+	/**
+	 * Removes cached credential values from the value DB for the given filters.
+	 * Use userId 0 to match all users, and UserCredentialType.None to match all
+	 * credential types.
+	 */
+	#purgeCachedCredentials(
+		userId: number,
+		credentialType: UserCredentialType = UserCredentialType.None,
+	): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 		const credentialOwners = valueDB.findValues(
@@ -1359,11 +1522,19 @@ export class AccessControlAPI extends FeatureAPI {
 				&& vid.endpoint === this.endpoint.index,
 		);
 		for (const { endpoint, propertyKey, value } of credentialOwners) {
-			if (value !== userId) continue;
+			// Bulk delete reports use wildcard filters instead of enumerating each
+			// removed credential, so match against the requested owner/type here.
+			if (userId !== 0 && value !== userId) continue;
 
 			const key = propertyKey as number;
 			const type = key >>> 16;
 			const slot = key & 0xffff;
+			if (
+				credentialType !== UserCredentialType.None
+				&& type !== credentialType
+			) {
+				continue;
+			}
 
 			for (
 				const valueId of [

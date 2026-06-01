@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/shared",
-  "version": "15.23.0",
+  "version": "15.24.2",
   "description": "zwave-js: shared utilities",
   "keywords": [],
   "publishConfig": {
@@ -65,12 +65,12 @@
   },
   "devDependencies": {
     "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.57.7",
+    "@microsoft/api-extractor": "^7.58.7",
     "@types/node": "^20.19.35",
     "@types/sinon": "^21.0.0",
     "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "del-cli": "^7.0.0",
-    "sinon": "^21.0.3",
+    "sinon": "^22.0.0",
     "tsx": "^4.21.0",
     "vitest": "^4.1.0"
   }

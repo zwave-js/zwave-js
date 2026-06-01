@@ -106,6 +106,7 @@ integrationTest(
 				UserCredentialRule.Single,
 				UserCredentialRule.Dual,
 			]);
+			t.expect(userCaps.supportsUsersWithoutCredentials).toBe(true);
 
 			// Credential capabilities
 			const credCaps = node.accessControl!
@@ -1172,6 +1173,173 @@ integrationTest(
 );
 
 integrationTest(
+	"addUser without credential sends only UserSet (Add) on U3C",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userEvent = createDeferredPromise<unknown>();
+			node.on("user added", (_node, args) => userEvent.resolve(args));
+			let credEmitted = false;
+			node.on("credential added", () => {
+				credEmitted = true;
+			});
+
+			const result = await node.accessControl!.addUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+
+			t.expect(result.user).toBe(SetUserResult.OK);
+			t.expect(result.credential).toBeUndefined();
+
+			t.expect(await userEvent).toMatchObject({
+				userId: 1,
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			t.expect(credEmitted).toBe(false);
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCUserSet
+					&& frame.payload.operationType
+						=== UserCredentialOperationType.Add
+					&& frame.payload.userId === 1,
+				{
+					errorMessage: "Should have sent UserSet with Add operation",
+				},
+			);
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCCredentialSet,
+				{
+					noMatch: true,
+					errorMessage:
+						"Should not have sent a CredentialSet when no credential was provided",
+				},
+			);
+		},
+	},
+);
+
+integrationTest(
+	"addUser with credential sends UserSet (Add) then CredentialSet (Add) on U3C",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userEvent = createDeferredPromise<unknown>();
+			const credEvent = createDeferredPromise<unknown>();
+			node.on("user added", (_node, args) => userEvent.resolve(args));
+			node.on(
+				"credential added",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			const result = await node.accessControl!.addUser(
+				2,
+				{
+					active: true,
+					userType: UserCredentialUserType.General,
+					userName: "Bob",
+				},
+				{
+					type: UserCredentialType.PINCode,
+					slot: 2,
+					data: "4321",
+				},
+			);
+
+			t.expect(result.user).toBe(SetUserResult.OK);
+			t.expect(result.credential).toBe(SetCredentialResult.OK);
+
+			t.expect(await userEvent).toMatchObject({
+				userId: 2,
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Bob",
+			});
+			t.expect(await credEvent).toMatchObject({
+				userId: 2,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 2,
+				data: "4321",
+			});
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCUserSet
+					&& frame.payload.operationType
+						=== UserCredentialOperationType.Add
+					&& frame.payload.userId === 2,
+				{
+					errorMessage: "Should have sent UserSet with Add operation",
+				},
+			);
+
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCredentialCCCredentialSet
+					&& frame.payload.operationType
+						=== UserCredentialOperationType.Add
+					&& frame.payload.userId === 2
+					&& frame.payload.credentialType
+						=== UserCredentialType.PINCode
+					&& frame.payload.credentialSlot === 2,
+				{
+					errorMessage:
+						"Should have sent CredentialSet with Add operation",
+				},
+			);
+		},
+	},
+);
+
+integrationTest(
 	"setCredential sends CredentialSet with Add operationType for new credentials",
 	{
 		nodeCapabilities: {
@@ -1471,6 +1639,44 @@ async function populateUserAndCredential(
 }
 
 integrationTest(
+	"deleteCredentials purges cached credentials before emitting the filtered bulk delete event",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
+				1,
+			);
+
+			const cacheAtEvent = createDeferredPromise<number>();
+			node.once("credential deleted", () => {
+				cacheAtEvent.resolve(
+					node.accessControl!.getAllCredentialsCached().length,
+				);
+			});
+
+			const result = await node.accessControl!.deleteCredentials({
+				credentialType: UserCredentialType.PINCode,
+			});
+			t.expect(result).toBe(SetCredentialResult.OK);
+
+			t.expect(await cacheAtEvent).toBe(0);
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
+				0,
+			);
+			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
+		},
+	},
+);
+
+integrationTest(
 	"deleteUser purges cached credentials (unsupervised)",
 	{
 		nodeCapabilities: {
@@ -1556,6 +1762,50 @@ integrationTest(
 			).toBe(
 				1,
 			);
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllUsers purges the cache before emitting the bulk delete event",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps(defaultDeleteTestCaps),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			await populateUserAndCredential(node);
+
+			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(1).length,
+			).toBe(
+				1,
+			);
+
+			const cacheAtEvent = createDeferredPromise<{
+				users: number;
+				credentials: number;
+			}>();
+			node.once("user deleted", () => {
+				cacheAtEvent.resolve({
+					users: node.accessControl!.getUsersCached().length,
+					credentials:
+						node.accessControl!.getCredentialsForUserCached(1)
+							.length,
+				});
+			});
+
+			const result = await node.accessControl!.deleteAllUsers();
+			t.expect(result).toBe(SetUserResult.OK);
+
+			t.expect(await cacheAtEvent).toStrictEqual({
+				users: 0,
+				credentials: 0,
+			});
 		},
 	},
 );

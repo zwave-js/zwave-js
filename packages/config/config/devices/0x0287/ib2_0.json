@@ -13,6 +13,13 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
@@ -44,5 +51,17 @@
 				}
 			]
 		}
-	]
+	],
+	"compat": {
+		// https://github.com/zwave-js/zwave-js/issues/5686
+		// The device supports Binary Switch CC to control the tilt, but it is not linked
+		// to the Window Covering CC values. Remove the Binary Switch CC to avoid confusion.
+		"commandClasses": {
+			"remove": {
+				"Binary Switch": {
+					"endpoints": "*"
+				}
+			}
+		}
+	}
 }

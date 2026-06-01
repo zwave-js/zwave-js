@@ -29,6 +29,9 @@
 		"@zwave-js/config#codegen": {
 			"outputs": ["src/_version.ts"]
 		},
+		"zwave-js#codegen": {
+			"outputs": ["src/lib/_version.ts"]
+		},
 
 		// We just define a single build script, as it turns out that
 		// TypeScript is just better at caching TS builds than Turbo
