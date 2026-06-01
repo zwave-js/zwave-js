@@ -4708,7 +4708,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			);
 			if (this.serial.isOpen) await this.serial.close();
 			await wait(1000);
-			await this.openSerialport();
+			try {
+				await this.openSerialport();
+			} catch (e) {
+				void this.destroyWithMessage(getErrorMessage(e));
+				return;
+			}
 
 			this.driverLog.print(
 				"Serial port reopened. Returning to normal operation and hoping for the best...",
