@@ -81,7 +81,7 @@
 			"defaultValue": 0
 		},
 		{
-			"#": ,
+			"#": 5,
 			"label": "Auto Turn-On Timer",
 			"description": "Sets the amount of time before the dimmer automatically turns on.",
 			"valueSize": 4,
