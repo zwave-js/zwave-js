@@ -464,7 +464,13 @@ On endpoints where [`supportsUsersWithoutCredentials`](#getusercapabilitiescache
 
 ```ts
 interface AddUserResult {
+	/** Result of adding the user. */
 	user: SetUserResult;
+	/**
+	 * Result of adding the credential. Only present when a credential was
+	 * provided. On User Code CC, the user and credential are written as a
+	 * single operation, so this mirrors {@link AddUserResult.user}.
+	 */
 	credential?: SetCredentialResult;
 }
 ```
