@@ -26,7 +26,7 @@
 	},
 	"paramInformation": [
 		{
-			"#": "1",
+			"#": 1,
 			"label": "LED Indicator Brightness",
 			"description": "LED brightness indicates lamp brightness",
 			"valueSize": 1,
@@ -41,7 +41,7 @@
 			]
 		},
 		{
-			"#": "2",
+			"#": 2,
 			"label": "LED Indicator",
 			"description": "LED ON/OFF indicates lamp ON/OFF",
 			"valueSize": 1,
@@ -56,7 +56,7 @@
 			]
 		},
 		{
-			"#": "3",
+			"#": 3,
 			"label": "LED Indicator Color",
 			"description": "LED brightness indicates lamp brightness",
 			"valueSize": 1,
@@ -71,7 +71,7 @@
 			]
 		},
 		{
-			"#": "4",
+			"#": 4,
 			"label": "Auto Turn-Off Timer",
 			"description": "Sets the amount of time before the dimmer automatically turns off.",
 			"valueSize": 4,
@@ -81,7 +81,7 @@
 			"defaultValue": 0
 		},
 		{
-			"#": "6",
+			"#": ,
 			"label": "Auto Turn-On Timer",
 			"description": "Sets the amount of time before the dimmer automatically turns on.",
 			"valueSize": 4,
@@ -91,7 +91,7 @@
 			"defaultValue": 0
 		},
 		{
-			"#": "7",
+			"#": 6,
 			"label": "Night Light Level",
 			"description": "Sets the brightness level for the night light feature.",
 			"valueSize": 1,
@@ -106,7 +106,7 @@
 			]
 		},
 		{
-			"#": "8",
+			"#": 7,
 			"label": "Restores State After Power Failure",
 			"description": "Restores the previous state after a power failure",
 			"valueSize": 1,
@@ -121,7 +121,7 @@
 			]
 		},
 		{
-			"#": "9",
+			"#": 8,
 			"label": "Ramp Rate When Pressing the Button Once",
 			"description": "Turn on the light by pressing the button once, the dimming speed is set by this parameter.",
 			"valueSize": 1,
@@ -130,7 +130,7 @@
 			"defaultValue": 2
 		},
 		{
-			"#": "10",
+			"#": 9,
 			"label": "Ramp Rate When Pressing and Holding the Button",
 			"description": "Sets the dimming speed when the button is pressed and held to increase or decrease brightness.",
 			"valueSize": 1,
@@ -139,7 +139,7 @@
 			"defaultValue": 4
 		},
 		{
-			"#": "11",
+			"#": 10,
 			"label": "Multilevel Minimum Value Can Be Set",
 			"description": "Sets the minimum dimming level that the device can be adjusted to.",
 			"valueSize": 1,
@@ -148,7 +148,7 @@
 			"defaultValue": 10
 		},
 		{
-			"#": "12",
+			"#": 11,
 			"label": "Multilevel Maximum Value Can Be Set",
 			"description": "Sets the maximum dimming level that the device can be adjusted to.",
 			"valueSize": 1,
@@ -157,7 +157,7 @@
 			"defaultValue": 99
 		},
 		{
-			"#": "13",
+			"#": 12,
 			"label": "Single Tap Behavior",
 			"description": "Single Tap Behavior: when switch is off and press UPPER paddle 1 time, switch turns on to x brightness（Local Button)",
 			"valueSize": 1,
@@ -172,7 +172,7 @@
 			]
 		},
 		{
-			"#": "14",
+			"#": 13,
 			"label": "Double Tap Behavior",
 			"description": "Double Tap Behavior: when switch is off and press button 2 times, switch turns on to x brightness",
 			"valueSize": 1,
@@ -187,7 +187,7 @@
 			]
 		},
 		{
-			"#": "15",
+			"#": 14,
 			"label": "Custom Brightness Level",
 			"description": "In this parameter define default brightness level the switch will turn on to when pressed button once.",
 			"valueSize": 1,
@@ -196,7 +196,7 @@
 			"defaultValue": 0
 		},
 		{
-			"#": "16",
+			"#": 15,
 			"label": "Local and Z-Wave Control Mode",
 			"description": "Enable or disable the local control of light and control via Z-Wave",
 			"valueSize": 1,
@@ -219,7 +219,7 @@
 			]
 		},
 		{
-			"#": "17",
+			"#": 16,
 			"label": "Disable Programming From Paddle",
 			"description": "Enables or disables the ability to change device settings using the physical paddle buttons.",
 			"valueSize": 1,
@@ -238,7 +238,7 @@
 			]
 		},
 		{
-			"#": "18",
+			"#": 17,
 			"label": "Ramp Rate (Local Button OFF)",
 			"description": "Sets the fade-out speed when turning the light off using the local button.",
 			"valueSize": 1,
@@ -248,7 +248,7 @@
 			"defaultValue": 2
 		},
 		{
-			"#": "19",
+			"#": 18,
 			"label": "Ramp Rate (Hub ON)",
 			"description": "Sets the dimming speed when the light is turned on via the Z-Wave hub.",
 			"valueSize": 1,
@@ -259,7 +259,7 @@
 			"unsigned": true
 		},
 		{
-			"#": "20",
+			"#": 19,
 			"label": "Ramp Rate (Hub OFF)",
 			"description": "Sets the fade-out speed when turning the light off via the Z-Wave hub.",
 			"valueSize": 1,
@@ -270,7 +270,7 @@
 			"unsigned": true
 		},
 		{
-			"#": "21",
+			"#": 20,
 			"label": "Disable LED Blinking When Setting Is Changed",
 			"description": "Enables or disables LED blinking feedback when device settings are modified.",
 			"valueSize": 1,
