@@ -3150,7 +3150,7 @@ __metadata:
     es-main: "npm:^1.4.0"
     globrex: "npm:^0.1.2"
     json5: "npm:^2.2.3"
-    nano-spawn: "npm:^2.0.0"
+    nano-spawn: "npm:^2.1.0"
     piscina: "npm:^5.1.4"
     reflect-metadata: "npm:^0.2.2"
     ts-morph: "npm:^28.0.0"
@@ -3167,7 +3167,7 @@ __metadata:
     "@modelcontextprotocol/sdk": "npm:^1.27.1"
     "@types/node": "npm:^20.19.35"
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
-    nano-spawn: "npm:^2.0.0"
+    nano-spawn: "npm:^2.1.0"
   bin:
     zwave-dev-mcp: ./build/index.js
   languageName: unknown
@@ -3254,7 +3254,7 @@ __metadata:
     json5: "npm:^2.2.3"
     jsonc-eslint-parser: "npm:^3.1.0"
     lint-staged: "npm:^16.4.0"
-    nano-spawn: "npm:^2.0.0"
+    nano-spawn: "npm:^2.1.0"
     openai: "npm:^5.12.2"
     oxlint: "npm:^1.56.0"
     oxlint-tsgolint: "npm:^0.17.3"
@@ -3351,7 +3351,7 @@ __metadata:
   dependencies:
     "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
     del-cli: "npm:^7.0.0"
-    nano-spawn: "npm:^2.0.0"
+    nano-spawn: "npm:^2.1.0"
     ts-morph: "npm:^28.0.0"
     tsx: "npm:^4.21.0"
     typescript: "npm:6.0.3"
@@ -7162,6 +7162,13 @@ __metadata:
   version: 2.0.0
   resolution: "nano-spawn@npm:2.0.0"
   checksum: 10/117d35d7bd85b146908de5d3d1177d2b2ee3174e5d884d6bc9555583bf6e50a265f4038b5c134b7cdd768a10d53598ccde5c00d6f55e25e7eed31b86b8d29646
+  languageName: node
+  linkType: hard
+
+"nano-spawn@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "nano-spawn@npm:2.1.0"
+  checksum: 10/0b6562e1354bbb4124152b708e83d02faa9267fdf2901397c13bd80c738accf620b1bc3cfec81e08e55bfb087060f2ec3731f065aec06117853e6d00ee2ded33
   languageName: node
   linkType: hard
 
