@@ -81,7 +81,7 @@
     "json5": "^2.2.3",
     "jsonc-eslint-parser": "^3.1.0",
     "lint-staged": "^16.4.0",
-    "nano-spawn": "^2.0.0",
+    "nano-spawn": "^2.1.0",
     "openai": "^5.12.2",
     "oxlint": "^1.56.0",
     "oxlint-tsgolint": "^0.17.3",
