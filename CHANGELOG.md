@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.24.2 (2026-06-01)
 ### Bugfixes
 * Verify new state after Protection CC Set (#8831)
 * Add the missing possibility of adding users and credentials together in one call through the unified credential management API on devices using User Code CC (#8837)
