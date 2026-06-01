@@ -31,9 +31,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/github@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@actions/github@npm:9.0.0"
+"@actions/github@npm:^9.1.1":
+  version: 9.1.1
+  resolution: "@actions/github@npm:9.1.1"
   dependencies:
     "@actions/http-client": "npm:^3.0.2"
     "@octokit/core": "npm:^7.0.6"
@@ -42,7 +42,7 @@ __metadata:
     "@octokit/request": "npm:^10.0.7"
     "@octokit/request-error": "npm:^7.1.0"
     undici: "npm:^6.23.0"
-  checksum: 10/5d3b2790f7b67cb7b0ec4416e8b666fde69621bac5fff5e59737c8233f8ad09829471b5cab2c50faea60da39554c69d5e7e51e5ffc8e2c899fba32f47db15b9b
+  checksum: 10/eb77846e506df107208ee6a57aa38c80ce6cdd9ab499ec3518a8e3000334def8f93fcf2b43c8b512fede9b093a1ca39d184551a9c50f37cb8fc17704d09c7e70
   languageName: node
   linkType: hard
 
@@ -3204,7 +3204,7 @@ __metadata:
   dependencies:
     "@actions/core": "npm:^3.0.0"
     "@actions/exec": "npm:^3.0.0"
-    "@actions/github": "npm:^9.0.0"
+    "@actions/github": "npm:^9.1.1"
     "@alcalzone/esm2cjs": "npm:^1.4.2"
     "@alcalzone/jsonl-db": "npm:^4.0.2"
     "@alcalzone/monopack": "npm:^2.0.0"
