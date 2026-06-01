@@ -4,6 +4,20 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Verify new state after Protection CC Set (#8831)
+* Add the missing possibility of adding users and credentials together in one call through the unified credential management API on devices using User Code CC (#8837)
+* Fixed an issue where bulk deletion of users and credentials would purge the cache after issuing the deletion event, causing applications to read stale data (#8829)
+* Work around an issue with some controllers that could not enter inclusion mode because the SUC was missing from the network (#8842)
+
+### Config file changes
+* Add lifeline association and remove Binary Switch CC for iBlinds v2 (#8830)
+* Add new fingerprint for Honeywell TH6320ZW2007 (#8841)
+
+### Changes under the hood
+* Speed up typed documentation generation process (#8843)
+
 ## 15.24.0 (2026-05-12)
 ### Features
 * Implement bulk-delete APIs for credentials (#8793)
