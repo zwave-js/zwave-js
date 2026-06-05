@@ -7,15 +7,15 @@ It is recommended to either use TypeScript when consuming the library or work in
 ## Setting up the project
 
 1. If you haven't already, set up a new Node.js project in an empty folder:
-   ```bash
+  
    npm init
-   ```
+   
    _...or `yarn init`, or `pnpm init`, it's your choice! The following will assume `npm`._
 
 1. Install this library as a dependency in your project
-   ```bash
+   
    npm i zwave-js
-   ```
+   
 
 1. Choose how you want to author your script: Plain JavaScript or TypeScript.
 
@@ -35,7 +35,7 @@ to make the code valid JavaScript. It is recommended to put a `// @ts-check` com
 
 Node.js 22.7.0 and later can execute TypeScript files directly by passing the `--experimental-transform-types` flag: `node --experimental-transform-types your_script.ts`. This has some limitations but may work for your use case.
 
-#### Execute with a transpiler
+	Execute with a transpiler
 
 A more robust way to execute TypeScript is by using a transpiler. We recommend using `tsx`, since it is very fast and the most compatible with modern features like ES Modules, etc. See the [documentation for `tsx`](https://tsx.is/) on how to set it up and use it.
 
@@ -44,20 +44,20 @@ A more robust way to execute TypeScript is by using a transpiler. We recommend u
 If that doesn't work, TypeScript files typically have to be compiled to JavaScript first. To do so,
 
 - add `typescript` as a `devDependency` to your project:
-  ```bash
+ 
   npm i -D typescript
-  ```
+ 
 - add a `tsconfig.json` file to your project (see the [TypeScript documentation](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html) for details)
-  ```bash
+ 
   npx tsc --init
-  ```
+  
 - and set up a build script in your `package.json`:
-  ```json
+  json
   "scripts": {
   	// ... other scripts
   	"build": "tsc"
   }
-  ```
+  
 
 Then you can compile the script to JavaScript by executing `npm run build` and run the compiled script with `node your_script.js`.
 
@@ -67,14 +67,14 @@ Then you can compile the script to JavaScript by executing `npm run build` and r
 
 The first thing you need to do in your code is import the main entry point of this library. Importing this entry point installs a polyfill that is required for Z-Wave JS to work:
 
-```ts
+ts
 import { Driver } from "zwave-js";
 //    main entry point ⤴
-```
+
 
 If you want to benefit from type checking (recommended!), add a `// @ts-check` comment at the top of your file:
 
-```ts
+ts
 // @ts-check
 
 import { Driver } from "zwave-js";
