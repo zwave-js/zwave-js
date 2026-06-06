@@ -17,7 +17,8 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Twin Assist",
+			"label": "Twist Assist",
+			"deprecated": true,
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
