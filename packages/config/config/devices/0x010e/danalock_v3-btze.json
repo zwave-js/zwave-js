@@ -18,6 +18,7 @@
 		{
 			"#": "1",
 			"label": "Twist Assist",
+			"description": "Deprecated parameter - no longer supported",
 			"deprecated": true,
 			"valueSize": 1,
 			"defaultValue": 0,
