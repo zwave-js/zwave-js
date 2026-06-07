@@ -4708,7 +4708,18 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			);
 			if (this.serial.isOpen) await this.serial.close();
 			await wait(1000);
-			await this.openSerialport();
+			try {
+				await this.openSerialport();
+			} catch (e) {
+				// If we can't reopen the serial port (e.g. a TCP-backed port
+				// whose remote endpoint went away), there is no path back to
+				// a working driver from here. Destroy the driver so consumers
+				// see a `Driver_Failed` error event and can restart, instead
+				// of leaving the driver wedged. Matches the pattern in
+				// handleSerialPortClosedUnexpectedly. See zwave-js-ui#4451.
+				void this.destroyWithMessage(getErrorMessage(e));
+				return;
+			}
 
 			this.driverLog.print(
 				"Serial port reopened. Returning to normal operation and hoping for the best...",
