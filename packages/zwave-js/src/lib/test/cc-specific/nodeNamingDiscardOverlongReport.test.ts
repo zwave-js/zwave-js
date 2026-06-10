@@ -9,12 +9,18 @@ import { ccCaps, createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
+const MAX_NODE_TEXT_LENGTH = 16;
+const NODE_TEXT_ENCODING_ASCII = 0x00;
+
 class SpoofedNodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCCNameReport {
 	public override serialize(
 		...args: Parameters<CommandClass["serialize"]>
 	): ReturnType<CommandClass["serialize"]> {
 		const [ctx] = args;
-		this.payload = Bytes.concat([[0x00], Bytes.from(this.name, "ascii")]);
+		this.payload = Bytes.concat([
+			[NODE_TEXT_ENCODING_ASCII],
+			Bytes.from(this.name, "ascii"),
+		]);
 		return CommandClass.prototype.serialize.call(this, ctx);
 	}
 }
@@ -38,7 +44,9 @@ integrationTest(
 			const spoofedName = "12345678901234567";
 			const spoofedNamePayload = Bytes.from(spoofedName, "ascii");
 
-			t.expect(spoofedNamePayload.length).toBeGreaterThan(16);
+			t.expect(spoofedNamePayload.length).toBeGreaterThan(
+				MAX_NODE_TEXT_LENGTH,
+			);
 			t.expect(node.getValue(nameValueId)).toBe("Initial Name");
 
 			const cc = new SpoofedNodeNamingAndLocationCCNameReport({
