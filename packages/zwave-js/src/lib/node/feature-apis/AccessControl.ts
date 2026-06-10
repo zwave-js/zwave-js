@@ -1195,19 +1195,40 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(targetUserId);
-			}
-			if (succeeded && existed) {
+				// User Code CC reserves a permanent slot per user, so a successful
+				// clear leaves the slot in the Available state with an empty code
+				// rather than removing the slot. Persist that explicitly so the
+				// value DB matches what a post-clear Get/Report would yield, and
+				// downstream consumers continue to render the (now empty) slot.
 				const node = this.endpoint.tryGetNode();
 				if (node) {
-					node.emit("credential deleted", this.endpoint as any, {
-						userId: targetUserId,
-						credentialType: type,
-						credentialSlot: targetUserId,
-					});
-					node.emit("user deleted", this.endpoint as any, {
-						userId: targetUserId,
-					});
+					const endpointIndex = this.endpoint.index;
+					node.valueDB.setValue(
+						UserCodeCCValues.userIdStatus(targetUserId).endpoint(
+							endpointIndex,
+						),
+						UserIDStatus.Available,
+					);
+					node.valueDB.setValue(
+						UserCodeCCValues.userCode(targetUserId).endpoint(
+							endpointIndex,
+						),
+						"",
+					);
+					if (existed) {
+						node.emit(
+							"credential deleted",
+							this.endpoint as any,
+							{
+								userId: targetUserId,
+								credentialType: type,
+								credentialSlot: targetUserId,
+							},
+						);
+						node.emit("user deleted", this.endpoint as any, {
+							userId: targetUserId,
+						});
+					}
 				}
 			}
 			return succeeded
