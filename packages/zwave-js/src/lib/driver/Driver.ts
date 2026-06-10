@@ -3561,7 +3561,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Make sure we're able to communicate with the controller again
 		if (!(await this.ensureSerialAPI())) {
 			if (destroyOnError) {
-				await this.destroy();
+				// Notify applications that the driver failed, so they can
+				// clean up and restart, instead of just disappearing
+				await this.destroyWithMessage(
+					"The Serial API did not respond after soft-reset",
+				);
 			} else {
 				throw new ZWaveError(
 					"The Serial API did not respond after soft-reset",
@@ -4708,7 +4712,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			);
 			if (this.serial.isOpen) await this.serial.close();
 			await wait(1000);
-			await this.openSerialport();
+			try {
+				await this.openSerialport();
+			} catch (e) {
+				// The serial port cannot be reopened, e.g. because a TCP-based
+				// connection to the controller is gone. The driver cannot
+				// recover from this, so notify applications that it failed,
+				// allowing them to clean up and restart.
+				void this.destroyWithMessage(getErrorMessage(e));
+				return;
+			}
 
 			this.driverLog.print(
 				"Serial port reopened. Returning to normal operation and hoping for the best...",
