@@ -2083,6 +2083,17 @@ protocol version:      ${this.protocolVersion}`;
 				}
 				this.addCC(cc, { isSupported: true });
 			}
+			// CC:0000.00.00.12.004: Nodes SHOULD NOT advertise controlled CCs, so we normally
+			// ignore them. However, some devices advertise CCs like Scene Activation ONLY as
+			// controlled, so we remember the controlled list as well. Whether values are exposed
+			// for a controlled CC is decided separately in getDefinedValueIDs().
+			for (const cc of nodeInfo.controlledCCs ?? []) {
+				if (cc === CommandClasses.Basic) {
+					// Basic CC MUST not be in the NIF and we have special rules to determine support
+					continue;
+				}
+				this.addCC(cc, { isControlled: true });
+			}
 		}
 
 		// As the NIF is sent on wakeup, treat this as a sign that the node is awake

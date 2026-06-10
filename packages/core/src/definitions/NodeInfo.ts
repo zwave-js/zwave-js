@@ -9,23 +9,26 @@ export interface ApplicationNodeInformation {
 	genericDeviceClass: number;
 	specificDeviceClass: number;
 	supportedCCs: CommandClasses[];
+	controlledCCs?: CommandClasses[];
 }
 
 export function parseApplicationNodeInformation(
 	nif: BytesView,
 ): ApplicationNodeInformation {
 	validatePayload(nif.length >= 2);
+	const ccList = parseCCList(nif.subarray(2));
 	return {
 		genericDeviceClass: nif[0],
 		specificDeviceClass: nif[1],
-		supportedCCs: parseCCList(nif.subarray(2)).supportedCCs,
+		supportedCCs: ccList.supportedCCs,
+		controlledCCs: ccList.controlledCCs,
 	};
 }
 
 export function encodeApplicationNodeInformation(
 	nif: ApplicationNodeInformation,
 ): Bytes {
-	const ccList = encodeCCList(nif.supportedCCs, []);
+	const ccList = encodeCCList(nif.supportedCCs, nif.controlledCCs ?? []);
 	return Bytes.concat([
 		[nif.genericDeviceClass, nif.specificDeviceClass],
 		ccList,
@@ -63,7 +66,7 @@ export function encodeNodeUpdatePayload(
 	nif: NodeUpdatePayload,
 	nodeIdType: NodeIDType = NodeIDType.Short,
 ): Bytes {
-	const ccList = encodeCCList(nif.supportedCCs, []);
+	const ccList = encodeCCList(nif.supportedCCs, nif.controlledCCs ?? []);
 	const nodeId = encodeNodeID(nif.nodeId, nodeIdType);
 	return Bytes.concat([
 		nodeId,
@@ -395,11 +398,12 @@ export function parseNodeInformationFrame(
 		ccList = buffer.subarray(offset);
 	}
 
-	const supportedCCs = parseCCList(ccList).supportedCCs;
+	const { supportedCCs, controlledCCs } = parseCCList(ccList);
 
 	return {
 		...info,
 		supportedCCs,
+		controlledCCs,
 	};
 }
 
@@ -412,7 +416,7 @@ export function encodeNodeInformationFrame(
 		isLongRange,
 	);
 
-	let ccList = encodeCCList(info.supportedCCs, []);
+	let ccList = encodeCCList(info.supportedCCs, info.controlledCCs ?? []);
 	if (isLongRange) {
 		ccList = Bytes.concat([[ccList.length], ccList]);
 	}

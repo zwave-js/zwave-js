@@ -92,6 +92,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC
 		this.supportsSecurity = options.supportsSecurity;
 		this.supportsBeaming = options.supportsBeaming;
 		this.supportedCCs = options.supportedCCs;
+		this.controlledCCs = options.controlledCCs ?? [];
 	}
 
 	public static from(
@@ -119,6 +120,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC
 	public supportsSecurity: boolean;
 	public supportsBeaming: boolean;
 	public supportedCCs: CommandClasses[];
+	public controlledCCs: CommandClasses[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = encodeNodeInformationFrame(this);
@@ -679,6 +681,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC
 		this.supportsSecurity = options.supportsSecurity;
 		this.supportsBeaming = options.supportsBeaming;
 		this.supportedCCs = options.supportedCCs;
+		this.controlledCCs = options.controlledCCs ?? [];
 	}
 
 	public static from(
@@ -711,6 +714,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC
 	public supportsSecurity: boolean;
 	public supportsBeaming: boolean;
 	public supportedCCs: CommandClasses[];
+	public controlledCCs: CommandClasses[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
