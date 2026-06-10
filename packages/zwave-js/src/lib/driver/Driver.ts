@@ -3561,7 +3561,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Make sure we're able to communicate with the controller again
 		if (!(await this.ensureSerialAPI())) {
 			if (destroyOnError) {
-				await this.destroy();
+				// Notify applications that the driver failed, so they can
+				// clean up and restart, instead of just disappearing
+				await this.destroyWithMessage(
+					"The Serial API did not respond after soft-reset",
+				);
 			} else {
 				throw new ZWaveError(
 					"The Serial API did not respond after soft-reset",
@@ -4711,12 +4715,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			try {
 				await this.openSerialport();
 			} catch (e) {
-				// If we can't reopen the serial port (e.g. a TCP-backed port
-				// whose remote endpoint went away), there is no path back to
-				// a working driver from here. Destroy the driver so consumers
-				// see a `Driver_Failed` error event and can restart, instead
-				// of leaving the driver wedged. Matches the pattern in
-				// handleSerialPortClosedUnexpectedly. See zwave-js-ui#4451.
+				// The serial port cannot be reopened, e.g. because a TCP-based
+				// connection to the controller is gone. The driver cannot
+				// recover from this, so notify applications that it failed,
+				// allowing them to clean up and restart.
 				void this.destroyWithMessage(getErrorMessage(e));
 				return;
 			}
