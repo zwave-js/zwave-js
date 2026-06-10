@@ -14,8 +14,8 @@ test("parseApplicationNodeInformation() should parse correctly", (t) => {
 		CommandClasses["Multi Channel"],
 		CommandClasses["Multilevel Toggle Switch"],
 		0xef, // ======
-		// Controlled CCs (ignored in Application Node Info)
-		CommandClasses["Multilevel Toggle Switch"],
+		// Controlled CCs
+		CommandClasses["Scene Activation"],
 	]);
 	const eif = parseApplicationNodeInformation(payload);
 
@@ -24,6 +24,9 @@ test("parseApplicationNodeInformation() should parse correctly", (t) => {
 	t.expect(eif.supportedCCs).toStrictEqual([
 		CommandClasses["Multi Channel"],
 		CommandClasses["Multilevel Toggle Switch"],
+	]);
+	t.expect(eif.controlledCCs).toStrictEqual([
+		CommandClasses["Scene Activation"],
 	]);
 });
 

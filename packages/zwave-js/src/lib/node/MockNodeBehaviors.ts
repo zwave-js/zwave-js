@@ -72,6 +72,12 @@ const respondToRequestNodeInfo: MockNodeBehavior = {
 					.filter(([, info]) => info.isSupported)
 					// FIXME: Filter out secure CCs if the node isn't secure
 					.map(([ccId]) => ccId),
+				controlledCCs: [...self.implementedCCs]
+					// Basic CC must not be included in the NIF
+					.filter(([ccId]) => ccId !== CommandClasses.Basic)
+					// Only include controlled CCs
+					.filter(([, info]) => info.isControlled)
+					.map(([ccId]) => ccId),
 			});
 			return { action: "sendCC", cc };
 		}
