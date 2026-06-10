@@ -25,6 +25,7 @@ export function prepareDriver(
 	cacheDir: string = path.join(__dirname, "cache"),
 	logToFile: boolean = false,
 	additionalOptions: PartialZWaveOptions = {},
+	connectViaTCP: boolean = false,
 ): Promise<CreateAndStartDriverWithMockPortResult> {
 	// Skipping the bootloader check speeds up tests a lot
 	additionalOptions.testingHooks ??= {};
@@ -46,6 +47,7 @@ export function prepareDriver(
 
 	return createAndStartDriverWithMockPort({
 		...additionalOptions,
+		connectViaTCP,
 		logConfig,
 		securityKeys: {
 			S0_Legacy: Bytes.from("0102030405060708090a0b0c0d0e0f10", "hex"),
