@@ -12,7 +12,9 @@ import { integrationTest } from "../integrationTestSuite.js";
 const MAX_NODE_TEXT_LENGTH = 16;
 const NODE_TEXT_ENCODING_ASCII = 0x00;
 
-class SpoofedNodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCCNameReport {
+class SpoofedNodeNamingAndLocationCCNameReport
+	extends NodeNamingAndLocationCCNameReport
+{
 	public override serialize(
 		...args: Parameters<CommandClass["serialize"]>
 	): ReturnType<CommandClass["serialize"]> {
