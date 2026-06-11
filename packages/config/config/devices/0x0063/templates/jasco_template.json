@@ -477,6 +477,14 @@
 			}
 		]
 	},
+	"led_indicator_intensity_no_off": {
+		"label": "LED Indicator Intensity",
+		"valueSize": 1,
+		"minValue": 1,
+		"maxValue": 7,
+		"defaultValue": 4,
+		"unsigned": true
+	},
 	"smart_bulb_mode": {
 		"$import": "~/templates/master_template.json#base_enable_disable",
 		"label": "Smart Bulb Mode"

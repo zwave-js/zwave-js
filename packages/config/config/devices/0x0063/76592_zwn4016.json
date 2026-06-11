@@ -43,7 +43,7 @@
 		},
 		{
 			"#": "19",
-			"$import": "templates/jasco_template.json#alternate_exclusion"
+			"$import": "templates/jasco_template.json#alternate_exclusion_menu"
 		},
 		{
 			"#": "34",
@@ -51,16 +51,17 @@
 		},
 		{
 			"#": "35",
-			"$import": "templates/jasco_template.json#led_indicator_intensity"
+			"$import": "templates/jasco_template.json#led_indicator_intensity_no_off"
 		},
 		{
 			"#": "36",
-			"$import": "templates/jasco_template.json#led_indicator_intensity",
+			"$import": "templates/jasco_template.json#led_indicator_intensity_no_off",
 			"label": "Guidelight Mode Intensity"
 		},
 		{
 			"#": "39",
-			"$import": "templates/jasco_template.json#control_groups"
+			"$import": "templates/jasco_template.json#smart_bulb_mode",
+			"label": "Relay Control"
 		},
 		{
 			"#": "84",
@@ -74,6 +75,7 @@
 	"metadata": {
 		"inclusion": "Press and release the top or bottom of the smart switch.",
 		"exclusion": "Press and release the top or bottom of the smart switch.",
-		"reset": "1. Pull the airgap switch.\n2. Press and hold the bottom button, push the airgap switch in and continue holding the bottom button for 10 seconds.\n3. The LED will flash once each of the 8 colors then stop."
+		"reset": "1. Pull the airgap switch.\n2. Press and hold the bottom button, push the airgap switch in and continue holding the bottom button for 10 seconds.\n3. The LED will flash once each of the 8 colors then stop.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80387/76592-Z-WavePlusIn-WallSmartSwitchWhiteandLightAlmondPaddles800SUserManual.pdf"
 	}
 }
