@@ -34,6 +34,10 @@ import {
 	SendDataRequestTransmitReport,
 	SendDataResponse,
 } from "./SendDataMessages.js";
+import {
+	SendProtocolDataRequest,
+	SendProtocolDataRequestTransmitReport,
+} from "./SendProtocolDataMessages.js";
 
 export type SendDataMessage =
 	| SendDataRequest
@@ -360,6 +364,7 @@ export function isTransmitReport(msg: unknown): msg is TransmitReport {
 		|| msg instanceof DeleteSUCReturnRouteRequestTransmitReport
 		|| msg instanceof AssignPriorityReturnRouteRequestTransmitReport
 		|| msg instanceof AssignPrioritySUCReturnRouteRequestTransmitReport
+		|| msg instanceof SendProtocolDataRequestTransmitReport
 	);
 }
 
@@ -369,16 +374,25 @@ export function hasTXReport(
 	& (
 		| SendDataRequestTransmitReport
 		| SendDataBridgeRequestTransmitReport
+		| SendProtocolDataRequestTransmitReport
 	)
 	& { txReport: TXReport }
 {
 	if (!msg) return false;
 	return (
 		(msg instanceof SendDataRequestTransmitReport
-			|| msg instanceof SendDataBridgeRequestTransmitReport)
+			|| msg instanceof SendDataBridgeRequestTransmitReport
+			|| msg instanceof SendProtocolDataRequestTransmitReport)
 		// Only OK and NoAck have meaningful data in the TX report
 		&& (msg.transmitStatus === TransmitStatus.OK
 			|| msg.transmitStatus === TransmitStatus.NoAck)
 		&& !!msg.txReport
 	);
+}
+
+export function isSendProtocolData(
+	msg: unknown,
+): msg is SendProtocolDataRequest {
+	if (!msg) return false;
+	return msg instanceof SendProtocolDataRequest;
 }
