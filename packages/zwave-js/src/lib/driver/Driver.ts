@@ -7453,6 +7453,10 @@ ${handlers.length} left`,
 			msg.nodeUpdateTimeout = options.reportTimeoutMs;
 		}
 
+		if (options.ignoreNodeUpdate) {
+			msg.ignoreNodeUpdate = true;
+		}
+
 		return msg as SendDataMessage & ContainsCC;
 	}
 
