@@ -261,9 +261,19 @@ export class LanguageCCReport extends LanguageCC {
 	public static from(raw: CCRaw, ctx: CCParsingContext): LanguageCCReport {
 		validatePayload(raw.payload.length >= 3);
 		const language = raw.payload.subarray(0, 3).toString("ascii");
+		// Enforce the same locale format the Set side requires, so a node
+		// cannot push codes that violate ISO 639-2 / ISO 3166-1
+		validatePayload(
+			language.length === 3,
+			language.toLowerCase() === language,
+		);
 		let country: MaybeNotKnown<string>;
 		if (raw.payload.length >= 5) {
 			country = raw.payload.subarray(3, 5).toString("ascii");
+			validatePayload(
+				country.length === 2,
+				country.toUpperCase() === country,
+			);
 		}
 
 		return new this({
