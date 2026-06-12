@@ -1591,10 +1591,8 @@ export class AccessControlAPI extends FeatureAPI {
 
 	/**
 	 * Resets cached User Code CC slots in the value DB to the cleared state
-	 * (`userIdStatus = Available`, `userCode = ""`). User Code CC reserves a
-	 * permanent slot per user identifier, so a cleared slot is still present —
-	 * just empty. If `userId` is given, only that slot is reset; otherwise all
-	 * cached slots are reset.
+	 * (`userIdStatus = Available`, `userCode = ""`).
+	 * If `userId` is given, only that slot is reset; otherwise all cached slots are reset.
 	 */
 	#clearCachedUserCodes(userId?: number): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
