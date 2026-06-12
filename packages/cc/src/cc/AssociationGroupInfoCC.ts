@@ -483,7 +483,7 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 		validatePayload(raw.payload.length >= 2);
 		const groupId = raw.payload[0];
 		const nameLength = raw.payload[1];
-		// The Name Length field MUST be in the range 0..42 per the spec
+		// CC:0059.01.02.11.001: The Name Length field MUST be in the range 0..42
 		validatePayload(nameLength <= 42);
 		validatePayload(raw.payload.length >= 2 + nameLength);
 		// The specs don't allow 0-terminated string, but some devices use them
