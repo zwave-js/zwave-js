@@ -776,7 +776,6 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 		validatePayload(raw.payload.length >= 4);
 		const parameter: WindowCoveringParameter = raw.payload[0];
 		validatePayload(isEnumMember(WindowCoveringParameter, parameter));
-		// Levels are in the range 0..99
 		validatePayload(
 			raw.payload[1] <= 99,
 			raw.payload[2] <= 99,
