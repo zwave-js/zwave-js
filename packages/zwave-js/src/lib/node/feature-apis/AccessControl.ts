@@ -214,12 +214,23 @@ function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 
 /** High-level API for managing users and credentials on access control devices */
 export class AccessControlAPI extends FeatureAPI {
-	// FIXME: This is technically not correct. A node could support both CCs,
-	// and we may have to decide which one to use, or switch between them on
-	// the fly using Version CC / migration.
-	// This is not implemented yet, so checking for U3C first is fine for now.
 	get #usesUserCredentialCC(): boolean {
-		return this.endpoint.supportsCC(CommandClasses["User Credential"]);
+		if (!this.endpoint.supportsCC(CommandClasses["User Credential"])) {
+			return false;
+		}
+		if (!this.endpoint.supportsCC(CommandClasses["User Code"])) {
+			return true;
+		}
+		// CL:0083.01.21.00.4: The controlling node MUST use User Credential
+		// Command Class to control a supporting node unless the supporting
+		// node reports that (0) Users are supported.
+		//
+		// While that is unknown (interview incomplete), we default to U3C.
+		return this.getValue<number>(
+			UserCredentialCCValues.supportedUsers.endpoint(
+				this.endpoint.index,
+			),
+		) !== 0;
 	}
 
 	/**
