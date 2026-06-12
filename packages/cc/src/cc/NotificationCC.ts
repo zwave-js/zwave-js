@@ -1604,6 +1604,13 @@ export class NotificationCCReport extends NotificationCC {
 			if (!isUint8Array(this.eventParameters)) {
 				return;
 			}
+			// readUIntBE supports at most 6 bytes; a longer (or empty) value
+			// must not reach it, or it throws a RangeError that would escape
+			// the parser and crash the driver
+			validatePayload(
+				this.eventParameters.length >= 1
+					&& this.eventParameters.length <= 6,
+			);
 			// The parameters contain a named value
 			this.eventParameters = {
 				[valueConfig.parameter.propertyName]: Bytes.view(
