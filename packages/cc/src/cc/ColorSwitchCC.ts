@@ -770,6 +770,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 	public static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCReport {
 		validatePayload(raw.payload.length >= 2);
 		const colorComponent: ColorComponent = raw.payload[0];
+		validatePayload(isEnumMember(ColorComponent, colorComponent));
 		const currentValue = raw.payload[1];
 		let targetValue: number | undefined;
 		let duration: Duration | undefined;

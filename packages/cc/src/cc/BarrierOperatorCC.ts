@@ -831,6 +831,10 @@ export class BarrierOperatorCCEventSignalingReport extends BarrierOperatorCC {
 		validatePayload(raw.payload.length >= 2);
 		const subsystemType: SubsystemType = raw.payload[0];
 		const subsystemState: SubsystemState = raw.payload[1];
+		validatePayload(
+			isEnumMember(SubsystemType, subsystemType),
+			isEnumMember(SubsystemState, subsystemState),
+		);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
