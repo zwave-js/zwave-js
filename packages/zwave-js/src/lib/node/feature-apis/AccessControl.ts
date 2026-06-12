@@ -799,7 +799,7 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(userId);
+				this.#clearCachedUserCodes(userId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -843,7 +843,7 @@ export class AccessControlAPI extends FeatureAPI {
 			const succeeded = result == undefined
 				|| supervisedCommandSucceeded(result);
 			if (succeeded) {
-				this.#purgeCachedUserCodes();
+				this.#clearCachedUserCodes();
 			}
 			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
 		}
@@ -1195,7 +1195,7 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(targetUserId);
+				this.#clearCachedUserCodes(targetUserId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -1281,7 +1281,7 @@ export class AccessControlAPI extends FeatureAPI {
 					|| supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(userId);
+				this.#clearCachedUserCodes(userId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -1590,11 +1590,11 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	/**
-	 * Removes cached user code status and code values from the value DB.
-	 * If `userId` is given, only values for that user are removed. Otherwise, all
-	 * cached user codes are purged.
+	 * Resets cached User Code CC slots in the value DB to the cleared state
+	 * (`userIdStatus = Available`, `userCode = ""`).
+	 * If `userId` is given, only that slot is reset; otherwise all cached slots are reset.
 	 */
-	#purgeCachedUserCodes(userId?: number): void {
+	#clearCachedUserCodes(userId?: number): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 
@@ -1611,7 +1611,11 @@ export class AccessControlAPI extends FeatureAPI {
 		}
 
 		for (const vid of values) {
-			valueDB.removeValue(vid);
+			if (UserCodeCCValues.userIdStatus.is(vid)) {
+				valueDB.setValue(vid, UserIDStatus.Available);
+			} else {
+				valueDB.setValue(vid, "");
+			}
 		}
 	}
 

@@ -1307,3 +1307,164 @@ integrationTest(
 		},
 	},
 );
+
+// =============================================================================
+// Post-clear value DB state
+//
+// User Code CC reserves a permanent slot per user identifier, so a cleared
+// slot must persist as `userIdStatus = Available` and `userCode = ""` rather
+// than being removed from the value DB. This mirrors what `persistUserCode`
+// would write after a Get → Report round-trip.
+// =============================================================================
+
+integrationTest(
+	"deleteCredential persists cleared slot as Available + empty code on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const statusVid = UserCodeCCValues.userIdStatus(2).id;
+			const codeVid = UserCodeCCValues.userCode(2).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1234");
+
+			await node.accessControl!.deleteCredential(
+				2,
+				UserCredentialType.PINCode,
+				2,
+			);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
+		},
+	},
+);
+
+integrationTest(
+	"deleteUser persists cleared slot as Available + empty code on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const statusVid = UserCodeCCValues.userIdStatus(1).id;
+			const codeVid = UserCodeCCValues.userCode(1).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "5678");
+
+			await node.accessControl!.deleteUser(1);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
+		},
+	},
+);
+
+integrationTest(
+	"deleteCredentials persists cleared slot as Available + empty code on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const statusVid = UserCodeCCValues.userIdStatus(4).id;
+			const codeVid = UserCodeCCValues.userCode(4).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1111");
+
+			await node.accessControl!.deleteCredentials({ userId: 4 });
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
+		},
+	},
+);
+
+integrationTest(
+	"deleteAllUsers persists all cleared slots as Available + empty code on UC",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const status1Vid = UserCodeCCValues.userIdStatus(1).id;
+			const code1Vid = UserCodeCCValues.userCode(1).id;
+			const status2Vid = UserCodeCCValues.userIdStatus(2).id;
+			const code2Vid = UserCodeCCValues.userCode(2).id;
+			node.valueDB.setValue(status1Vid, UserIDStatus.Enabled);
+			node.valueDB.setValue(code1Vid, "1111");
+			node.valueDB.setValue(status2Vid, UserIDStatus.Enabled);
+			node.valueDB.setValue(code2Vid, "2222");
+
+			await node.accessControl!.deleteAllUsers();
+
+			t.expect(node.valueDB.getValue(status1Vid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(code1Vid)).toBe("");
+			t.expect(node.valueDB.getValue(status2Vid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(code2Vid)).toBe("");
+		},
+	},
+);
