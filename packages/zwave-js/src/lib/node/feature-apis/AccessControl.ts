@@ -799,7 +799,7 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(userId);
+				this.#clearCachedUserCodes(userId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -843,7 +843,7 @@ export class AccessControlAPI extends FeatureAPI {
 			const succeeded = result == undefined
 				|| supervisedCommandSucceeded(result);
 			if (succeeded) {
-				this.#purgeCachedUserCodes();
+				this.#clearCachedUserCodes();
 			}
 			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
 		}
@@ -1195,40 +1195,19 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				// User Code CC reserves a permanent slot per user, so a successful
-				// clear leaves the slot in the Available state with an empty code
-				// rather than removing the slot. Persist that explicitly so the
-				// value DB matches what a post-clear Get/Report would yield, and
-				// downstream consumers continue to render the (now empty) slot.
+				this.#clearCachedUserCodes(targetUserId);
+			}
+			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
 				if (node) {
-					const endpointIndex = this.endpoint.index;
-					node.valueDB.setValue(
-						UserCodeCCValues.userIdStatus(targetUserId).endpoint(
-							endpointIndex,
-						),
-						UserIDStatus.Available,
-					);
-					node.valueDB.setValue(
-						UserCodeCCValues.userCode(targetUserId).endpoint(
-							endpointIndex,
-						),
-						"",
-					);
-					if (existed) {
-						node.emit(
-							"credential deleted",
-							this.endpoint as any,
-							{
-								userId: targetUserId,
-								credentialType: type,
-								credentialSlot: targetUserId,
-							},
-						);
-						node.emit("user deleted", this.endpoint as any, {
-							userId: targetUserId,
-						});
-					}
+					node.emit("credential deleted", this.endpoint as any, {
+						userId: targetUserId,
+						credentialType: type,
+						credentialSlot: targetUserId,
+					});
+					node.emit("user deleted", this.endpoint as any, {
+						userId: targetUserId,
+					});
 				}
 			}
 			return succeeded
@@ -1302,7 +1281,7 @@ export class AccessControlAPI extends FeatureAPI {
 					|| supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(userId);
+				this.#clearCachedUserCodes(userId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -1611,11 +1590,13 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	/**
-	 * Removes cached user code status and code values from the value DB.
-	 * If `userId` is given, only values for that user are removed. Otherwise, all
-	 * cached user codes are purged.
+	 * Resets cached User Code CC slots in the value DB to the cleared state
+	 * (`userIdStatus = Available`, `userCode = ""`). User Code CC reserves a
+	 * permanent slot per user identifier, so a cleared slot is still present —
+	 * just empty. If `userId` is given, only that slot is reset; otherwise all
+	 * cached slots are reset.
 	 */
-	#purgeCachedUserCodes(userId?: number): void {
+	#clearCachedUserCodes(userId?: number): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 
@@ -1632,7 +1613,11 @@ export class AccessControlAPI extends FeatureAPI {
 		}
 
 		for (const vid of values) {
-			valueDB.removeValue(vid);
+			if (UserCodeCCValues.userIdStatus.is(vid)) {
+				valueDB.setValue(vid, UserIDStatus.Available);
+			} else {
+				valueDB.setValue(vid, "");
+			}
 		}
 	}
 
