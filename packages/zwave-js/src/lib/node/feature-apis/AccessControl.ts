@@ -214,12 +214,49 @@ function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 
 /** High-level API for managing users and credentials on access control devices */
 export class AccessControlAPI extends FeatureAPI {
-	// FIXME: This is technically not correct. A node could support both CCs,
-	// and we may have to decide which one to use, or switch between them on
-	// the fly using Version CC / migration.
-	// This is not implemented yet, so checking for U3C first is fine for now.
+	// FIXME: Switching between both CCs on the fly using Version CC /
+	// migration is not implemented yet. For now, prefer User Credential CC
+	// when its interview yielded usable data, and fall back to User Code CC
+	// otherwise.
 	get #usesUserCredentialCC(): boolean {
-		return this.endpoint.supportsCC(CommandClasses["User Credential"]);
+		if (!this.endpoint.supportsCC(CommandClasses["User Credential"])) {
+			return false;
+		}
+		if (!this.endpoint.supportsCC(CommandClasses["User Code"])) {
+			return true;
+		}
+		// Some devices advertise support for User Credential CC, but report
+		// no users or no usable credential types. When such a device also
+		// supports User Code CC, manage users and credentials through that
+		// instead of pretending that none can exist.
+		return this.#u3cIsUsable;
+	}
+
+	/**
+	 * Whether the cached User Credential CC capabilities indicate that users
+	 * and credentials can actually be managed through it. This is the case
+	 * when the device reports at least one user and at least one credential
+	 * type with a non-zero number of slots.
+	 */
+	get #u3cIsUsable(): boolean {
+		const maxUsers = this.getValue<number>(
+			UserCredentialCCValues.supportedUsers.endpoint(
+				this.endpoint.index,
+			),
+		);
+		if (!maxUsers) return false;
+
+		const supportedTypes = this.getValue<UserCredentialType[]>(
+			UserCredentialCCValues.supportedCredentialTypes.endpoint(
+				this.endpoint.index,
+			),
+		) ?? [];
+		return supportedTypes.some((type) =>
+			this.getValue<UserCredentialCapability>(
+				UserCredentialCCValues.credentialCapabilities(type)
+					.endpoint(this.endpoint.index),
+			)?.numberOfCredentialSlots
+		);
 	}
 
 	/**
