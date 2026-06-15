@@ -3584,10 +3584,24 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 
 			// If desired, re-configure the controller to use 16 bit node IDs
-			void this._controller?.trySetNodeIDType(NodeIDType.Long);
+			const setNodeIDTypePromise = (async () => {
+				for (let attempt = 1; attempt <= 3; attempt++) {
+					if (
+						await this._controller?.trySetNodeIDType(NodeIDType.Long)
+					) {
+						return true;
+					}
+					if (attempt < 3) {
+						await wait(100);
+					}
+				}
+				return false;
+			})();
 
 			// Resume sending
 			this.unpauseSendQueue();
+
+			await setNodeIDTypePromise;
 		}
 	}
 
