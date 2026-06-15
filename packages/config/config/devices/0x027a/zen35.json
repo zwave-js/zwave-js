@@ -382,13 +382,7 @@
 			"valueSize": 1,
 			"minValue": 10,
 			"maxValue": 50,
-			"defaultValue": 10,
-			"options": [
-				{
-					"label": "1.0",
-					"value": 10
-				}
-			]
+			"defaultValue": 10
 		}
 	],
 	"metadata": {
