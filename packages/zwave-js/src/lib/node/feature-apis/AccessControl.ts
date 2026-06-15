@@ -212,6 +212,42 @@ function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 		&& NON_PIN_CHARS.test(supportedASCIIChars);
 }
 
+// Characters known to be used by nodes that obfuscate user codes in reports
+const USER_CODE_OBFUSCATION_CHARS = ["*"];
+
+/**
+ * Some version 1 nodes obfuscate codes in the report (e.g. "******"), so
+ * we need to be a bit lenient when verifying that a code was set correctly.
+ */
+function userCodeReadBackConfirmsSet(
+	expected: string | Uint8Array,
+	actual: string | Uint8Array | undefined,
+	version: number,
+): boolean {
+	if (actual == undefined) return false;
+
+	// Compare byte-wise unless both codes are strings
+	if (typeof expected !== "string" || typeof actual !== "string") {
+		const toBytes = (v: string | Uint8Array) =>
+			typeof v === "string" ? Bytes.from(v, "ascii") : Bytes.view(v);
+		if (toBytes(actual).equals(toBytes(expected))) return true;
+	} else if (actual === expected) {
+		return true;
+	}
+
+	// It has been found that some version 1 nodes wrongfully report obfuscated
+	// User Codes in the User Code Report (e.g. "******").
+	// CC:0063.01.00.32.002  A controlling node SHOULD understand that a code has
+	// been set correctly but cannot be read back with such nodes.
+	if (version === 1 && typeof actual === "string" && actual.length > 0) {
+		return USER_CODE_OBFUSCATION_CHARS.some((char) =>
+			actual === char.repeat(actual.length)
+		);
+	}
+
+	return false;
+}
+
 /** High-level API for managing users and credentials on access control devices */
 export class AccessControlAPI extends FeatureAPI {
 	// FIXME: This is technically not correct. A node could support both CCs,
@@ -609,8 +645,12 @@ export class AccessControlAPI extends FeatureAPI {
 			let succeeded: boolean;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				succeeded = verified?.userCode === codeData
-					&& verified?.userIdStatus === status;
+				succeeded = verified?.userIdStatus === status
+					&& userCodeReadBackConfirmsSet(
+						codeData,
+						verified?.userCode,
+						api.version,
+					);
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
 			}
@@ -1095,7 +1135,12 @@ export class AccessControlAPI extends FeatureAPI {
 			let succeeded: boolean;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				succeeded = verified?.userCode === codeData;
+				succeeded = verified?.userIdStatus === status
+					&& userCodeReadBackConfirmsSet(
+						codeData,
+						verified?.userCode,
+						api.version,
+					);
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
 			}
@@ -1456,12 +1501,16 @@ export class AccessControlAPI extends FeatureAPI {
 			.has(type);
 	}
 
-	/** Returns the credential type to use for User Code CC based on supported characters */
-	get #ucCredentialType(): UserCredentialType {
-		const supportedASCIIChars = this.getValue<string>(
+	/** The ASCII characters the node accepts in user codes, if known */
+	get #supportedASCIIChars(): string | undefined {
+		return this.getValue<string>(
 			UserCodeCCValues.supportedASCIIChars.endpoint(this.endpoint.index),
 		);
-		return supportsNonPINChars(supportedASCIIChars)
+	}
+
+	/** Returns the credential type to use for User Code CC based on supported characters */
+	get #ucCredentialType(): UserCredentialType {
+		return supportsNonPINChars(this.#supportedASCIIChars)
 			? UserCredentialType.Password
 			: UserCredentialType.PINCode;
 	}
