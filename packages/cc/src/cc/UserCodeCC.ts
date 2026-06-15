@@ -68,6 +68,7 @@ import type { NotificationEventPayload } from "../lib/NotificationEventPayload.j
 import { V } from "../lib/Values.js";
 import { KeypadMode, UserCodeCommand, UserIDStatus } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+import { UserCredentialCC } from "./UserCredentialCC.js";
 
 export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 	...V.staticProperty("supportedUsers", undefined, { internal: true }),
@@ -943,11 +944,53 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 export class UserCodeCC extends CommandClass {
 	declare ccCommand: UserCodeCommand;
 
+	public determineRequiredCCInterviews(): readonly CommandClasses[] {
+		return [
+			...super.determineRequiredCCInterviews(),
+			// CL:0083.01.21.00.2 ff: The controlling node MUST only use ONE of
+			// the User Management Command Classes to control a supporting node,
+			// and cache which User Management CC is used for each node.
+			//
+			// We determine this by interviewing U3C first, and then optionally
+			// User Code CC.
+			CommandClasses["User Credential"],
+		];
+	}
+
 	public async interview(
 		ctx: InterviewContext,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+
+		// CL:0083.01.21.00.6: A controlling node MUST NOT control the User
+		// Code on a supporting node that otherwise supports User Credential
+		// unless no Users are currently supported on the supporting node.
+		if (endpoint.supportsCC(CommandClasses["User Credential"])) {
+			const u3cUsers = UserCredentialCC.getSupportedUsersCached(
+				ctx,
+				endpoint,
+			);
+			if (u3cUsers == undefined) {
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message:
+						"Cannot determine if the node uses User Credential CC for user management, skipping User Code CC interview...",
+					level: "warn",
+				});
+				return;
+			} else if (u3cUsers > 0) {
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message:
+						"Node uses User Credential CC for user management, skipping User Code CC interview...",
+					direction: "none",
+				});
+				this.setInterviewComplete(ctx, true);
+				return;
+			}
+		}
+
 		const api = CCAPI.create(
 			CommandClasses["User Code"],
 			ctx,
@@ -1029,6 +1072,18 @@ export class UserCodeCC extends CommandClass {
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+
+		// CL:0083.01.21.00.6: A controlling node MUST NOT control the User
+		// Code on a supporting node that otherwise supports User Credential
+		// unless no Users are currently supported on the supporting node.
+		// This includes the case where that is not determined yet:
+		if (
+			endpoint.supportsCC(CommandClasses["User Credential"])
+			&& UserCredentialCC.getSupportedUsersCached(ctx, endpoint) !== 0
+		) {
+			return;
+		}
+
 		const api = CCAPI.create(
 			CommandClasses["User Code"],
 			ctx,
