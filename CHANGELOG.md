@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.24.3 (2026-06-15)
 ### Bugfixes
 * When the serial port fails to reopen during controller recovery, the driver will now emit a `Driver_Failed` error instead of silently getting stuck with a closed port (#8861)
 * Controlled CCs in the NIF are no longer ignored. This affected primarily `Scene Activation CC` (#8864)
