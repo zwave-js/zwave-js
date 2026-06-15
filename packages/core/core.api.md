@@ -53,6 +53,8 @@ export const applicationCCs: readonly CommandClasses[];
 // @public (undocumented)
 export interface ApplicationNodeInformation {
     // (undocumented)
+    controlledCCs?: CommandClasses[];
+    // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
     specificDeviceClass: number;

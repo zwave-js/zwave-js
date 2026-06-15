@@ -221,7 +221,66 @@ import { ZWaveSerialBindingFactory } from '@zwave-js/serial';
 import { ZWaveSerialPortImplementation } from '@zwave-js/serial';
 import type { ZWaveSerialStream } from '@zwave-js/serial';
 
+// Warning: (ae-missing-release-tag) "AccessControlAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class AccessControlAPI extends FeatureAPI {
+    addUser(userId: number, options: SetUserOptions, credential?: {
+        type: UserCredentialType;
+        slot: number;
+        data: string | Uint8Array;
+    }): Promise<AddUserResult>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getCredentialCapabilitiesCached"
+    assignCredential(type: UserCredentialType, slot: number, destinationUserId: number): Promise<AssignCredentialResult>;
+    cancelCredentialLearn(): Promise<SupervisionResult | undefined>;
+    deleteAllUsers(): Promise<SetUserResult>;
+    deleteCredential(type: UserCredentialType, slot: number): Promise<SetCredentialResult>;
+    // (undocumented)
+    deleteCredential(userId: number | undefined, type: UserCredentialType, slot: number): Promise<SetCredentialResult>;
+    deleteCredentials(options?: DeleteCredentialsOptions): Promise<SetCredentialResult>;
+    deleteUser(userId: number): Promise<SetUserResult>;
+    getAdminCode(): Promise<string | undefined>;
+    getAllCredentials(): Promise<CredentialData[]>;
+    getAllCredentialsCached(): CredentialData[];
+    getCredential(type: UserCredentialType, slot: number): Promise<CredentialData | undefined>;
+    getCredentialCached(type: UserCredentialType, slot: number): CredentialData | undefined;
+    getCredentialCapabilitiesCached(): CredentialCapabilities;
+    getCredentialsByType(type: UserCredentialType): Promise<CredentialData[]>;
+    getCredentialsByTypeCached(type: UserCredentialType): CredentialData[];
+    getCredentialsForUser(userId: number, type?: UserCredentialType): Promise<CredentialData[]>;
+    getCredentialsForUserCached(userId: number, type?: UserCredentialType): CredentialData[];
+    getUser(userId: number): Promise<UserData | undefined>;
+    getUserCached(userId: number): UserData | undefined;
+    getUserCapabilitiesCached(): UserCapabilities;
+    getUsers(): Promise<UserData[]>;
+    getUsersCached(): UserData[];
+    setAdminCode(code: string): Promise<SupervisionResult | undefined>;
+    setCredential(userId: number, type: UserCredentialType, slot: number, data: string | Uint8Array): Promise<SetCredentialResult>;
+    setUser(userId: number, options: SetUserOptions): Promise<SetUserResult>;
+    startCredentialLearn(userId: number, type: UserCredentialType, slot: number, timeout?: number): Promise<SupervisionResult | undefined>;
+}
+
+// Warning: (ae-missing-release-tag) "AddUserResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface AddUserResult {
+    credential?: SetCredentialResult;
+    user: SetUserResult;
+}
+
 export { AllowedValue }
+
+// Warning: (ae-missing-release-tag) "AssignCredentialResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum AssignCredentialResult {
+    Error_InvalidCredential = 1,
+    Error_InvalidUser = 2,
+    // (undocumented)
+    Error_Unknown = 255,
+    // (undocumented)
+    OK = 0
+}
 
 // Warning: (ae-missing-release-tag) "BeamFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -385,6 +444,7 @@ export interface CredentialCapabilities {
     supportsAdminCode: boolean;
     // (undocumented)
     supportsAdminCodeDeactivation: boolean;
+    supportsCredentialAssignment: boolean;
 }
 
 // Warning: (ae-missing-release-tag) "CredentialChangedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -481,6 +541,15 @@ export type DateAndTime = AllOrNone<{
     dstOffset: number;
     standardOffset: number;
 }>;
+
+// Warning: (ae-missing-release-tag) "DeleteCredentialsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface DeleteCredentialsOptions {
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
+    credentialType?: UserCredentialType;
+    userId?: number;
+}
 
 // Warning: (ae-missing-release-tag) "DeviceClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -779,6 +848,19 @@ export enum ExplorerFrameCommand {
 }
 
 export { extractFirmware }
+
+// Warning: (ae-missing-release-tag) "FeatureAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export abstract class FeatureAPI {
+    constructor(endpoint: EndpointBase);
+    // Warning: (ae-forgotten-export) The symbol "EndpointBase" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly endpoint: EndpointBase;
+    // (undocumented)
+    protected getValue<T = unknown>(valueId: ValueID): MaybeNotKnown<T>;
+}
 
 export { FileSystem }
 
@@ -1616,6 +1698,28 @@ export { SerialAPISetupCommand }
 
 export { SetbackState }
 
+// Warning: (ae-missing-release-tag) "SetCredentialResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum SetCredentialResult {
+    // (undocumented)
+    Error_AddRejectedLocationOccupied = 1,
+    // (undocumented)
+    Error_DuplicateAdminPINCode = 5,
+    // (undocumented)
+    Error_DuplicateCredential = 3,
+    // (undocumented)
+    Error_ManufacturerSecurityRules = 4,
+    // (undocumented)
+    Error_ModifyRejectedLocationEmpty = 2,
+    // (undocumented)
+    Error_Unknown = 255,
+    // (undocumented)
+    Error_WrongUserUniqueIdentifier = 6,
+    // (undocumented)
+    OK = 0
+}
+
 // Warning: (ae-missing-release-tag) "SetUserOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1630,6 +1734,20 @@ export interface SetUserOptions {
     userName?: string;
     // (undocumented)
     userType?: UserCredentialUserType;
+}
+
+// Warning: (ae-missing-release-tag) "SetUserResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum SetUserResult {
+    // (undocumented)
+    Error_AddRejectedLocationOccupied = 1,
+    // (undocumented)
+    Error_ModifyRejectedLocationEmpty = 2,
+    // (undocumented)
+    Error_Unknown = 255,
+    // (undocumented)
+    OK = 0
 }
 
 // Warning: (ae-missing-release-tag) "SmartStartProvisioningEntry" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1657,6 +1775,8 @@ export interface UserCapabilities {
     supportedCredentialRules: readonly UserCredentialRule[];
     // (undocumented)
     supportedUserTypes: readonly UserCredentialUserType[];
+    // (undocumented)
+    supportsUsersWithoutCredentials: boolean;
 }
 
 // Warning: (ae-missing-release-tag) "UserData" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2709,9 +2829,9 @@ export * from "@zwave-js/cc";
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // src/lib/controller/Controller.ts:914:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
 // src/lib/driver/Driver.ts:1071:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:7648:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7661:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:376:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2251:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2264:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:740:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
