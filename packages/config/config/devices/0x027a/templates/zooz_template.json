@@ -303,6 +303,57 @@
 			}
 		]
 	},
+	"led_indicator_brightness_1_10": {
+		"label": "LED Indicator Brightness",
+		"valueSize": 1,
+		"minValue": 1,
+		"maxValue": 10,
+		"defaultValue": 5,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "10%",
+				"value": 1
+			},
+			{
+				"label": "20%",
+				"value": 2
+			},
+			{
+				"label": "30%",
+				"value": 3
+			},
+			{
+				"label": "40%",
+				"value": 4
+			},
+			{
+				"label": "50%",
+				"value": 5
+			},
+			{
+				"label": "60%",
+				"value": 6
+			},
+			{
+				"label": "70%",
+				"value": 7
+			},
+			{
+				"label": "80%",
+				"value": 8
+			},
+			{
+				"label": "90%",
+				"value": 9
+			},
+			{
+				"label": "100%",
+				"value": 10
+			}
+		]
+	},
 	"led_confirm_config_change": {
 		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 		"label": "LED Indicator: Confirm Configuration Change",
