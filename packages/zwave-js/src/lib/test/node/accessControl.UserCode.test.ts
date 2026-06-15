@@ -8,11 +8,14 @@ import {
 	UserCodeCCAdminCodeGet,
 	UserCodeCCAdminCodeSet,
 	UserCodeCCExtendedUserCodeSet,
+	UserCodeCCGet,
+	UserCodeCCReport,
 	UserCodeCCSet,
 	UserCodeCCValues,
 } from "@zwave-js/cc/UserCodeCC";
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
+import type { MockNodeBehavior } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import {
 	SetCredentialResult,
@@ -1465,6 +1468,228 @@ integrationTest(
 				UserIDStatus.Available,
 			);
 			t.expect(node.valueDB.getValue(code2Vid)).toBe("");
+		},
+	},
+);
+
+// =============================================================================
+// Obfuscated user code read-back
+//
+// It has been found that some version 1 nodes wrongfully report obfuscated User
+// Codes in the User Code Report (e.g. "******"), so a code that was set
+// correctly cannot be read back.
+// =============================================================================
+
+/**
+ * Returns a behavior that answers every User Code Get with the given obfuscated
+ * code, while still reporting the slot as Enabled (these nodes obfuscate only
+ * the code, not the status).
+ */
+function obfuscateUserCodeReadBack(obfuscatedCode: string): MockNodeBehavior {
+	return {
+		handleCC(controller, self, receivedCC) {
+			if (receivedCC instanceof UserCodeCCGet) {
+				const cc = new UserCodeCCReport({
+					nodeId: controller.ownNodeId,
+					userId: receivedCC.userId,
+					userIdStatus: UserIDStatus.Enabled,
+					userCode: obfuscatedCode,
+				});
+				return { action: "sendCC", cc };
+			}
+		},
+	};
+}
+
+integrationTest(
+	"setCredential succeeds when a V1 node reports an obfuscated code (asterisks)",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 1,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(obfuscateUserCodeReadBack("******"));
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const result = await node.accessControl!.setCredential(
+				1,
+				UserCredentialType.PINCode,
+				1,
+				"1234",
+			);
+			// CC:0063.01.00.32.002  A controlling node SHOULD understand that a
+			// code has been set correctly but cannot be read back with such nodes.
+			t.expect(result).toBe(SetCredentialResult.OK);
+		},
+	},
+);
+
+integrationTest(
+	"setCredential succeeds when a V1 node reports obfuscated asterisks of differing length",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 1,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			// 6-digit code set, read back as 4 asterisks
+			mockNode.defineBehavior(obfuscateUserCodeReadBack("****"));
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const result = await node.accessControl!.setCredential(
+				2,
+				UserCredentialType.PINCode,
+				2,
+				"123456",
+			);
+			// CC:0063.01.00.32.002  A controlling node SHOULD understand that a
+			// code has been set correctly but cannot be read back with such nodes.
+			t.expect(result).toBe(SetCredentialResult.OK);
+		},
+	},
+);
+
+integrationTest(
+	"setCredential fails when a V1 node reports a different, non-obfuscated code",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 1,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			// A genuinely different code is not an obfuscation and must not be
+			// treated as a successful set
+			mockNode.defineBehavior(obfuscateUserCodeReadBack("9999"));
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const result = await node.accessControl!.setCredential(
+				3,
+				UserCredentialType.PINCode,
+				3,
+				"4321",
+			);
+			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+		},
+	},
+);
+
+integrationTest(
+	"addUser succeeds when a V1 node reports an obfuscated code",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 1,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(obfuscateUserCodeReadBack("*****"));
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const result = await node.accessControl!.addUser(
+				4,
+				{
+					active: true,
+					userType: UserCredentialUserType.General,
+				},
+				{
+					type: UserCredentialType.PINCode,
+					slot: 4,
+					data: "5678",
+				},
+			);
+			// CC:0063.01.00.32.002  A controlling node SHOULD understand that a
+			// code has been set correctly but cannot be read back with such nodes.
+			t.expect(result).toEqual({
+				user: SetUserResult.OK,
+				credential: SetCredentialResult.OK,
+			});
+		},
+	},
+);
+
+integrationTest(
+	"setCredential fails when a V2 node reports an obfuscated code (leniency is V1-only)",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(obfuscateUserCodeReadBack("******"));
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const result = await node.accessControl!.setCredential(
+				5,
+				UserCredentialType.PINCode,
+				5,
+				"1234",
+			);
+			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
 		},
 	},
 );
