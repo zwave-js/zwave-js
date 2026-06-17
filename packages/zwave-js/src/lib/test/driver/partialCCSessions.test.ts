@@ -2,6 +2,11 @@ import {
 	ConfigurationCCNameGet,
 	ConfigurationCCNameReport,
 } from "@zwave-js/cc/ConfigurationCC";
+import {
+	MAX_SEGMENT_SIZE,
+	TransportServiceCCFirstSegment,
+	TransportServiceCCSubsequentSegment,
+} from "@zwave-js/cc/TransportServiceCC";
 import { CommandClasses } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
@@ -214,6 +219,198 @@ integrationTest(
 			// a complete response and succeeds.
 			const name2 = await node.commandClasses.Configuration.getName(1);
 			t.expect(name2).toBe("Test parameter");
+		},
+	},
+);
+
+integrationTest(
+	"Partial reports are merged when some are encapsulated with Transport Service and some are not",
+	{
+		// debug: true,
+
+		nodeCapabilities,
+
+		async customSetup(driver, mockController, mockNode) {
+			const part1 =
+				"Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooooooooooooooooooong parameter name, ";
+			const part2 = "part 2";
+
+			const respondToConfigurationNameGet: MockNodeBehavior = {
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof ConfigurationCCNameGet) {
+						// The first report is too long for a single frame and
+						// gets sent using Transport Service
+						const report1 = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
+							name: part1,
+							reportsToFollow: 1,
+						});
+						const serialized = await report1.serialize(
+							mockNode.encodingContext,
+						);
+
+						const sessionId = 3;
+						let offset = 0;
+						while (offset < serialized.length) {
+							const partialDatagram = serialized.subarray(
+								offset,
+								offset + MAX_SEGMENT_SIZE,
+							);
+							const segment = offset === 0
+								? new TransportServiceCCFirstSegment({
+									nodeId: controller.ownNodeId,
+									sessionId,
+									datagramSize: serialized.length,
+									partialDatagram,
+								})
+								: new TransportServiceCCSubsequentSegment({
+									nodeId: controller.ownNodeId,
+									sessionId,
+									datagramSize: serialized.length,
+									datagramOffset: offset,
+									partialDatagram,
+								});
+							await self.sendToController(
+								createMockZWaveRequestFrame(segment, {
+									ackRequested: false,
+								}),
+							);
+							await wait(50);
+							offset += partialDatagram.length;
+						}
+
+						// The second report fits into a normal frame
+						const report2 = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
+							name: part2,
+							reportsToFollow: 0,
+						});
+						await self.sendToController(
+							createMockZWaveRequestFrame(report2, {
+								ackRequested: false,
+							}),
+						);
+
+						return { action: "stop" };
+					}
+				},
+			};
+			mockNode.defineBehavior(respondToConfigurationNameGet);
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			const name = await node.commandClasses.Configuration.getName(1);
+			t.expect(name).toBe(
+				"Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooooooooooooooooooong parameter name, part 2",
+			);
+		},
+	},
+);
+
+let queryCountMissingFinalTS = 0;
+integrationTest(
+	"A missing final report following a Transport Service encapsulated one is re-requested and patched together",
+	{
+		// debug: true,
+
+		nodeCapabilities,
+
+		async customSetup(driver, mockController, mockNode) {
+			const part1 =
+				"Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooooooooooooooooooong parameter name, ";
+			const part2 = "part 2";
+
+			async function sendReportViaTransportService(
+				controller: typeof mockController,
+				self: typeof mockNode,
+				report: ConfigurationCCNameReport,
+				sessionId: number,
+			) {
+				const serialized = await report.serialize(
+					mockNode.encodingContext,
+				);
+				let offset = 0;
+				while (offset < serialized.length) {
+					const partialDatagram = serialized.subarray(
+						offset,
+						offset + MAX_SEGMENT_SIZE,
+					);
+					const segment = offset === 0
+						? new TransportServiceCCFirstSegment({
+							nodeId: controller.ownNodeId,
+							sessionId,
+							datagramSize: serialized.length,
+							partialDatagram,
+						})
+						: new TransportServiceCCSubsequentSegment({
+							nodeId: controller.ownNodeId,
+							sessionId,
+							datagramSize: serialized.length,
+							datagramOffset: offset,
+							partialDatagram,
+						});
+					await self.sendToController(
+						createMockZWaveRequestFrame(segment, {
+							ackRequested: false,
+						}),
+					);
+					await wait(50);
+					offset += partialDatagram.length;
+				}
+			}
+
+			const respondToConfigurationNameGet: MockNodeBehavior = {
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof ConfigurationCCNameGet) {
+						const queryCount = ++queryCountMissingFinalTS;
+
+						// The first report is too long for a single frame and
+						// gets sent using Transport Service
+						const report1 = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
+							name: part1,
+							reportsToFollow: 1,
+						});
+						await sendReportViaTransportService(
+							controller,
+							self,
+							report1,
+							queryCount,
+						);
+
+						// The non-encapsulated final report goes missing on the
+						// first attempt
+						if (queryCount > 1) {
+							const report2 = new ConfigurationCCNameReport({
+								nodeId: controller.ownNodeId,
+								parameter: receivedCC.parameter,
+								name: part2,
+								reportsToFollow: 0,
+							});
+							await self.sendToController(
+								createMockZWaveRequestFrame(report2, {
+									ackRequested: false,
+								}),
+							);
+						}
+
+						return { action: "stop" };
+					}
+				},
+			};
+			mockNode.defineBehavior(respondToConfigurationNameGet);
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			const name = await node.commandClasses.Configuration.getName(1);
+			t.expect(name).toBe(
+				"Veeeeeeeeeeeeeeeeeeeeeeeeery loooooooooooooooooooooooooooooooooong parameter name, part 2",
+			);
+
+			t.expect(queryCountMissingFinalTS).toBe(2);
 		},
 	},
 );

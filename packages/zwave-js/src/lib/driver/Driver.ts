@@ -39,7 +39,6 @@ import {
 	SupervisionCC,
 	type SupervisionCCGet,
 	SupervisionCCReport,
-	TransportServiceCC,
 	TransportServiceCCFirstSegment,
 	TransportServiceCCSegmentComplete,
 	TransportServiceCCSegmentRequest,
@@ -681,8 +680,9 @@ type AwaitedIdleEntry = Omit<
 >;
 
 interface TransportServiceSession {
-	fragmentSize: number;
 	machine: TransportServiceRXMachine;
+	/** The reassembled datagram. Segments are copied here as they are received. */
+	datagram: Bytes;
 	timeout?: NodeJS.Timeout;
 }
 
@@ -4267,11 +4267,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					});
 					wasMessageLogged = true;
 
-					void this.handleTransportServiceCommand(msg.command).catch(
-						() => {
-							// Don't care about errors in incoming transport service commands
-						},
-					);
+					const reassembled = await this
+						.handleTransportServiceCommand(
+							msg.command,
+						);
+					if (!reassembled) {
+						// The datagram is not complete yet.
+						// Check if a message timer needs to be refreshed.
+						this.refreshAwaitedMessageTimers(msg);
+						return;
+					}
+
+					// The reassembled command continues through the normal receive path.
+					// Transport Service is always the outermost CC, so nothing else needs to be preserved.
+					msg.command = reassembled;
+					// Now we do want to log the command again, so we can see what was inside
+					wasMessageLogged = false;
 				}
 
 				// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
@@ -4322,13 +4333,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					} else {
 						throw e;
 					}
-				}
-
-				// Transport Service CC can be eliminated from the encapsulation stack, since it is always the outermost CC
-				if (isTransportServiceEncapsulation(completeMsg.command)) {
-					completeMsg.command = completeMsg.command.encapsulated;
-					// Now we do want to log the command again, so we can see what was inside
-					wasMessageLogged = false;
 				}
 			}
 
@@ -5239,22 +5243,38 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 	}
 
-	/** Is called when a Transport Service command is received */
+	/**
+	 * Is called when a Transport Service command is received.
+	 * When the command completes a datagram, the reassembled command is returned.
+	 */
 	private async handleTransportServiceCommand(
 		command:
 			| TransportServiceCCFirstSegment
 			| TransportServiceCCSubsequentSegment,
-	): Promise<void> {
+	): Promise<CommandClass | undefined> {
 		const nodeSessions = this.ensureNodeSessions(command.nodeId);
 
 		// TODO: Figure out how to know which timeout is the correct one. For now use the larger one
 		const missingSegmentTimeout =
 			TransportServiceTimeouts.requestMissingSegmentR2;
 
-		const advanceTransportServiceSession = async (
+		const sendSegmentComplete = () => {
+			const cc = new TransportServiceCCSegmentComplete({
+				nodeId: command.nodeId,
+				sessionId: command.sessionId,
+			});
+			void this.sendCommand(cc, {
+				maxSendAttempts: 1,
+				priority: MessagePriority.Immediate,
+			}).catch(noop);
+		};
+
+		// The state handling is synchronous, all outgoing commands are sent in the
+		// background so the receive path is not blocked
+		const advanceTransportServiceSession = (
 			session: TransportServiceSession,
 			input: TransportServiceRXMachineInput,
-		): Promise<void> => {
+		): "completed" | undefined => {
 			const machine = session.machine;
 
 			// Figure out what needs to be done for this input
@@ -5278,12 +5298,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						sessionId: command.sessionId,
 						datagramOffset: machine.state.offset,
 					});
-					await this.sendCommand(cc, {
+					this.sendCommand(cc, {
 						maxSendAttempts: 1,
 						priority: MessagePriority.Immediate,
-					}).catch(noop);
-
-					startMissingSegmentTimeout(session);
+					})
+						.catch(noop)
+						// Only time out waiting for the missing segment after requesting it
+						.finally(() => startMissingSegmentTimeout(session));
 				} else if (machine.state.value === "failure") {
 					this.controllerLog.logNode(command.nodeId, {
 						message:
@@ -5296,30 +5317,25 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					if (session.timeout) {
 						clearTimeout(session.timeout);
 					}
-				}
-			}
+				} else if (machine.state.value === "success") {
+					this.controllerLog.logNode(command.nodeId, {
+						message:
+							`Transport Service RX session #${command.sessionId} complete`,
+						level: "debug",
+						direction: "inbound",
+					});
+					if (session.timeout) {
+						clearTimeout(session.timeout);
+					}
 
-			if (machine.state.value === "success") {
-				// This state may happen without a transition if we received the last segment before
-				// but the SegmentComplete message got lost
-				this.controllerLog.logNode(command.nodeId, {
-					message:
-						`Transport Service RX session #${command.sessionId} complete`,
-					level: "debug",
-					direction: "inbound",
-				});
-				if (session.timeout) {
-					clearTimeout(session.timeout);
+					sendSegmentComplete();
+					return "completed";
 				}
-
-				const cc = new TransportServiceCCSegmentComplete({
-					nodeId: command.nodeId,
-					sessionId: command.sessionId,
-				});
-				await this.sendCommand(cc, {
-					maxSendAttempts: 1,
-					priority: MessagePriority.Immediate,
-				}).catch(noop);
+			} else if (machine.state.value === "success") {
+				// The session was already complete, but the node re-sent the last segment
+				// because the SegmentComplete message got lost. Acknowledge it again, but
+				// do not hand the datagram to the application a second time.
+				sendSegmentComplete();
 			}
 		};
 
@@ -5332,11 +5348,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 			session.timeout = setTimeout(() => {
 				session.timeout = undefined;
-				void advanceTransportServiceSession(session, {
+				advanceTransportServiceSession(session, {
 					value: "timeout",
 				});
 			}, missingSegmentTimeout);
 		}
+
+		let session: TransportServiceSession | undefined;
+		let datagramOffset: number;
 
 		if (command instanceof TransportServiceCCFirstSegment) {
 			// This is the first message in a sequence. Create or re-initialize the session
@@ -5357,26 +5376,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				command.partialDatagram.length,
 			);
 
-			const session: TransportServiceSession = {
-				fragmentSize: command.partialDatagram.length,
+			session = {
 				machine,
+				datagram: new Bytes(command.datagramSize),
 			};
 			nodeSessions.transportService.set(command.sessionId, session);
-
-			// Time out waiting for subsequent segments
-			startMissingSegmentTimeout(session);
+			datagramOffset = 0;
 		} else {
 			// This is a subsequent message in a sequence. Continue executing the state machine
-			const transportSession = nodeSessions.transportService.get(
-				command.sessionId,
-			);
-			if (transportSession) {
-				await advanceTransportServiceSession(transportSession, {
-					value: "segment",
-					offset: command.datagramOffset,
-					length: command.partialDatagram.length,
-				});
-			} else {
+			session = nodeSessions.transportService.get(command.sessionId);
+			if (!session) {
 				// This belongs to a session we don't know... tell the sending node to try again
 				const cc = new TransportServiceCCSegmentWait({
 					nodeId: command.nodeId,
@@ -5386,7 +5395,49 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					maxSendAttempts: 1,
 					priority: MessagePriority.Immediate,
 				}).catch(noop);
+				return;
 			}
+			datagramOffset = command.datagramOffset;
+		}
+
+		// Ensure that we don't try to write out-of-bounds
+		if (
+			datagramOffset + command.partialDatagram.length
+				> session.datagram.length
+		) {
+			this.controllerLog.logNode(command.nodeId, {
+				message:
+					`Transport Service RX session #${command.sessionId}: Ignoring segment because it is incompatible with the datagram length`,
+				level: "warn",
+				direction: "inbound",
+			});
+			return;
+		}
+		session.datagram.set(command.partialDatagram, datagramOffset);
+
+		const result = advanceTransportServiceSession(session, {
+			value: "segment",
+			offset: datagramOffset,
+			length: command.partialDatagram.length,
+		});
+		if (result !== "completed") return;
+
+		// The datagram is complete, reassemble the command it contains
+		try {
+			return await CommandClass.parse(session.datagram, {
+				...this.getCCParsingContext(),
+				sourceNodeId: command.nodeId,
+				// Transport Service is only used for singlecast commands
+				frameType: command.frameType ?? "singlecast",
+			});
+		} catch (e) {
+			this.driverLog.print(
+				`Dropping Transport Service datagram because the contained command could not be deserialized: ${
+					getErrorMessage(e)
+				}`,
+				"warn",
+			);
+			return;
 		}
 	}
 
@@ -5554,8 +5605,6 @@ ${handlers.length} left`,
 			return true;
 		}
 
-		// Transport Service has a special handler
-		if (cc instanceof TransportServiceCC) return false;
 		// CRC16 belongs outside of Security encapsulation
 		if (cc instanceof CRC16CCCommandEncapsulation) {
 			return this.isSecurityLevelTooLow(cc.encapsulated);
