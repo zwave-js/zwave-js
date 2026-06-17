@@ -1174,7 +1174,10 @@ max. valve table size: ${systemInfo.maxValveTableSize}`;
 		this.ensureMetadata(ctx, IrrigationCCValues.shutoffSystem);
 
 		// Query current values
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -1257,11 +1260,8 @@ moisture sensor polarity: ${
 			await api.getValveInfo("master");
 		}
 
-		for (
-			let i = 1;
-			i <= (IrrigationCC.getNumValvesCached(ctx, endpoint) ?? 0);
-			i++
-		) {
+		const numValves = IrrigationCC.getNumValvesCached(ctx, endpoint) ?? 0;
+		for (let i = 1; i <= numValves; i++) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `Querying configuration for valve ${
@@ -1285,6 +1285,8 @@ moisture sensor polarity: ${
 				direction: "outbound",
 			});
 			await api.getValveInfo(i);
+
+			options?.onProgress?.(i, numValves);
 		}
 	}
 

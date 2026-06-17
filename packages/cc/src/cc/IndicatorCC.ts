@@ -842,15 +842,29 @@ export class IndicatorCC extends CommandClass {
 						direction: "outbound",
 					});
 
-					for (const id of manufacturerDefinedIndicatorIds) {
-						await api.getDescription(id);
+					for (
+						let i = 0;
+						i < manufacturerDefinedIndicatorIds.length;
+						i++
+					) {
+						await api.getDescription(
+							manufacturerDefinedIndicatorIds[i],
+						);
+
+						node.reportInterviewProgress(
+							i + 1,
+							manufacturerDefinedIndicatorIds.length,
+						);
 					}
 				}
 			}
 		}
 
 		// Query current values
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -882,7 +896,8 @@ export class IndicatorCC extends CommandClass {
 				ctx,
 				IndicatorCCValues.supportedIndicatorIds,
 			) ?? [];
-			for (const indicatorId of supportedIndicatorIds) {
+			for (let i = 0; i < supportedIndicatorIds.length; i++) {
+				const indicatorId = supportedIndicatorIds[i];
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `requesting current indicator value (id = ${
@@ -893,6 +908,8 @@ export class IndicatorCC extends CommandClass {
 					direction: "outbound",
 				});
 				await api.get(indicatorId);
+
+				options?.onProgress?.(i + 1, supportedIndicatorIds.length);
 			}
 		}
 	}

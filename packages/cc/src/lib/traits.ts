@@ -1,6 +1,7 @@
 import type { GetDeviceConfig } from "@zwave-js/config";
 import type {
 	CCId,
+	CommandClasses,
 	FrameType,
 	GetSupportedCCVersion,
 	HostIDs,
@@ -119,6 +120,14 @@ export interface ReportInterviewProgress {
 	 * configuration parameters or association groups.
 	 */
 	reportInterviewProgress(completed: number, total: number): void;
+
+	/**
+	 * Returns the relative interview weight of the given CC.
+	 * CCs with dynamic interview lengths, e.g. Configuration CC, can use this to
+	 * estimate a typical `total` of their interview progress without knowing the
+	 * exact amount of work up front.
+	 */
+	getInterviewProgressWeight(cc: CommandClasses): number;
 }
 
 /** Additional context needed for deserializing CCs */

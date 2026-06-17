@@ -457,6 +457,7 @@ dimming duration: ${group.dimmingDuration.toString()}`;
 					direction: "inbound",
 				});
 			}
+			options?.onProgress?.(groupId, groupCount);
 		}
 	}
 

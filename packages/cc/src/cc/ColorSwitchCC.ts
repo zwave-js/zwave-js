@@ -616,7 +616,10 @@ export class ColorSwitchCC extends CommandClass {
 		}
 
 		// Query all color components
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -641,7 +644,8 @@ export class ColorSwitchCC extends CommandClass {
 			ColorSwitchCCValues.supportedColorComponents,
 		) ?? [];
 
-		for (const color of supportedColors) {
+		for (let i = 0; i < supportedColors.length; i++) {
+			const color = supportedColors[i];
 			// Some devices report invalid colors, but the CC API checks
 			// for valid values and throws otherwise.
 			if (!isEnumMember(ColorComponent, color)) continue;
@@ -653,6 +657,8 @@ export class ColorSwitchCC extends CommandClass {
 				direction: "outbound",
 			});
 			await api.get(color);
+
+			options?.onProgress?.(i + 1, supportedColors.length);
 		}
 	}
 

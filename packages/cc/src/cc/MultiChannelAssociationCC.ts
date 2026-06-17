@@ -490,7 +490,10 @@ export class MultiChannelAssociationCC extends CommandClass {
 		}
 
 		// Query each association group for its members
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// And set up lifeline associations
 		await ccUtils.configureLifelineAssociations(ctx, endpoint);
@@ -562,6 +565,7 @@ currently assigned endpoints: ${
 				message: logMessage,
 				direction: "inbound",
 			});
+			options?.onProgress?.(groupId, mcGroupCount);
 		}
 
 		// Check if there are more non-multi-channel association groups we haven't queried yet

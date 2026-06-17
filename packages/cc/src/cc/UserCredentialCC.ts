@@ -29,6 +29,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -1057,25 +1058,31 @@ export class UserCredentialCC extends CommandClass {
 			await api.getKeyLockerCapabilities();
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		this.setInterviewComplete(ctx, true);
 	}
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+
+		const supportedUsers = this.getValue<number>(
+			ctx,
+			UserCredentialCCValues.supportedUsers,
+		);
 
 		// CL:0083.01.21.00.4: The controlling node MUST use User Credential
 		// Command Class to control a supporting node unless the supporting
 		// node reports that (0) Users are supported.
 		// In that case, User Code CC is used instead of this CC:
-		if (
-			this.getValue<number>(ctx, UserCredentialCCValues.supportedUsers)
-				=== 0
-		) {
+		if (supportedUsers === 0) {
 			return;
 		}
 
@@ -1196,6 +1203,8 @@ export class UserCredentialCC extends CommandClass {
 						);
 					}
 				}
+
+				options?.onProgress?.(currentUserId, supportedUsers ?? 0);
 
 				previousUserId = currentUserId;
 				nextUserId = user.nextUserId ?? 0;

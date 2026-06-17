@@ -22,6 +22,9 @@ const INTERVIEW_PROGRESS_CC_BAND_END = 99;
 const INTERVIEW_PROGRESS_DISCOVERY_CAP = 30;
 const INTERVIEW_PROGRESS_DISCOVERY_UNIT = 0.4;
 
+/** The assumed number of configuration parameters when the count is not known from a config file */
+const ASSUMED_CONFIG_PARAM_COUNT = 30;
+
 /** The overall interview progress (percent in [0, 100]) reached when the given stage has completed */
 function interviewStageProgress(
 	stage: InterviewStage,
@@ -138,16 +141,17 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	 *
 	 *   | Collection                          | Typical | Affected CC(s)                                            |
 	 *   | ----------------------------------- | ------- | --------------------------------------------------------- |
-	 *   | Configuration parameters            | 50+     | Configuration                                             |
+	 *   | Configuration parameters            | ~30*    | Configuration (*fallback when no config file)             |
 	 *   | Supported CCs (queried for version) | ~20     | Version                                                   |
-	 *   | Association groups                  | ~5      | Association, Association Group Information, Multi Channel Association, Scene Controller Configuration |
+	 *   | Association groups                  | ~5      | Association, Association Group Information,               |
+	 *   |                                     |         | Multi Channel Association, Scene Controller Configuration |
 	 *   | Notification types                  | ~3      | Notification                                              |
 	 *   | Multi Channel endpoints             | ~3      | Multi Channel                                             |
 	 *   | Multilevel Sensor types             | ~3      | Multilevel Sensor                                         |
 	 *   | Meter scales/rate types             | ~4      | Meter                                                     |
 	 *   | Alarm Sensor types                  | ~2      | Alarm Sensor                                              |
 	 *   | Binary Sensor types                 | ~1      | Binary Sensor                                             |
-	 *   | User codes / credentials            | ~30     | User Code (opt-in only), User Credential                  |
+	 *   | User codes / credentials            | ~25     | User Code (opt-in only), User Credential                  |
 	 */
 	private ccInterviewWeight(cc: CommandClasses): number {
 		switch (cc) {
@@ -155,12 +159,12 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 				return this.configurationCCInterviewWeight();
 			case CommandClasses["User Credential"]:
 				// The interview enumerates all users and their credentials
-				return 30;
+				return 25;
 			case CommandClasses["User Code"]:
 				// User codes are only enumerated when explicitly requested; otherwise the
 				// interview just queries capabilities
 				return this.driver.getInterviewOptions()?.queryAllUserCodes
-					? 30
+					? 25
 					: 2;
 			case CommandClasses.Version:
 				// Queries the version of every supported CC
@@ -214,14 +218,12 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	/**
 	 * The interview weight of the Configuration CC scales with the number of parameters that get
 	 * queried. When they are known up front from the device config file, the weight is the count
-	 * of distinct readable parameters; otherwise (e.g. a v3+ device whose parameters are discovered
-	 * by scanning the device) it falls back to a value tuned for a parameter-heavy device.
+	 * of distinct readable parameters; otherwise we assume a typical count.
 	 */
 	private configurationCCInterviewWeight(): number {
-		const FALLBACK_WEIGHT = 50;
 		const paramInfo = this.deviceConfig?.paramInformation
 			?? this.deviceConfig?.endpoints?.get(0)?.paramInformation;
-		if (!paramInfo?.size) return FALLBACK_WEIGHT;
+		if (!paramInfo?.size) return ASSUMED_CONFIG_PARAM_COUNT;
 
 		// Partial parameters share a parameter number and are queried once; write-only
 		// parameters are not queried during the interview.
@@ -230,7 +232,7 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 				.filter((key) => !paramInfo.get(key)?.writeOnly)
 				.map((key) => key.parameter),
 		);
-		return queryableParameters.size || FALLBACK_WEIGHT;
+		return queryableParameters.size;
 	}
 
 	/** Computes the progress slice width for the CC that is about to be interviewed */
@@ -301,6 +303,15 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 			stageProgress,
 		);
 		this.emitInterviewProgressUpdate(completedStage);
+	}
+
+	/**
+	 * Returns the assumed interview weight of the given CC, used by CCs to estimate their own
+	 * interview progress when the actual amount of work is not known up front.
+	 * Implements the {@link ReportInterviewProgress} trait.
+	 */
+	public getInterviewProgressWeight(cc: CommandClasses): number {
+		return this.ccInterviewWeight(cc);
 	}
 
 	/**
