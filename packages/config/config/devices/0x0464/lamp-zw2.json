@@ -87,15 +87,15 @@
 			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		},
 		{
-			"#": "9",
-			"label": "Ramp Rate (Button - On)",
+			"#": "9",			
 			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_on_off",
+			"label": "Ramp Rate (Button - On)",
 			"maxValue": 99
 		},
 		{
 			"#": "10",
-			"label": "Ramp Rate (Hold)",
 			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_dimmer",
+			"label": "Ramp Rate (Hold)",
 			"maxValue": 99
 		},
 		{
@@ -166,8 +166,8 @@
 		},
 		{
 			"#": "15",
-			"label": "Custom Brightness Level",
 			"$import": "~/templates/master_template.json#base_0-99_nounit",
+			"label": "Custom Brightness Level",
 			"defaultValue": 0,
 			"options": [
 				{
@@ -182,47 +182,47 @@
 		},
 		{
 			"#": "17",
-			"label": "Button Programming",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Button Programming",
 			"defaultValue": 0
 		},
 		{
 			"#": "18",
-			"label": "Ramp Rate (Button - Off)",
 			"$import": "~/templates/master_template.json#base_0-99_nounit",
+			"label": "Ramp Rate (Button - Off)",
 			"unit": "seconds",
 			"defaultValue": 2
 		},
 		{
 			"#": "19",
-			"label": "Ramp Rate (Hub - On)",
 			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"label": "Ramp Rate (Hub - On)",
 			"unit": "seconds",
 			"defaultValue": 255,
 			"options": [
 				{
-					"label": "Use Parameter 9",
+					"label": "Use parameter 9.",
 					"value": 255
 				}
 			]
 		},
 		{
 			"#": "20",
-			"label": "Ramp Rate (Hub - Off)",
 			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"label": "Ramp Rate (Hub - Off)",
 			"unit": "seconds",
 			"defaultValue": 255,
 			"options": [
 				{
-					"label": "Use Parameter 18",
+					"label": "Use parameter 18.",
 					"value": 255
 				}
 			]
 		},
 		{
 			"#": "21",
-			"label": "LED Blinking on Setting Change",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "LED Blinking on Setting Change",
 			"defaultValue": 0
 		}
 	],
@@ -233,3 +233,4 @@
 		"manual": "https://versawireless.com/apps/resources/lamp-zw2-installation-instruction-manual"
 	}
 }
+
