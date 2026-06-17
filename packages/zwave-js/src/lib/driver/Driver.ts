@@ -4243,7 +4243,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// If the message could be decoded, forward it to the send thread
 		if (msg) {
-			let wasMessageLogged = false;
 			if (isCommandRequest(msg) && containsCC(msg)) {
 				// SecurityCCCommandEncapsulationNonceGet is two commands in one, but
 				// we're not set up to handle things like this. Reply to the nonce get
@@ -4265,7 +4264,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						secondaryTags: ["partial"],
 						direction: "inbound",
 					});
-					wasMessageLogged = true;
 
 					const reassembled = await this
 						.handleTransportServiceCommand(
@@ -4278,23 +4276,21 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						return;
 					}
 
-					// The reassembled command continues through the normal receive path.
-					// Transport Service is always the outermost CC, so nothing else needs to be preserved.
+					// The reassembled command continues through the normal receive
+					// path and is logged again there, so its contents are visible.
+					// Transport Service is always the outermost CC, so nothing else
+					// needs to be preserved.
 					msg.command = reassembled;
-					// Now we do want to log the command again, so we can see what was inside
-					wasMessageLogged = false;
 				}
 
 				// Make sure the command was received at the expected security level
 				// BEFORE assembling partial CCs. Otherwise it would be possible to
 				// inject unencrypted segments into a partial CC session.
 				if (this.isSecurityLevelTooLow(msg.command)) {
-					if (!wasMessageLogged) {
-						this.driverLog.logMessage(msg, {
-							direction: "inbound",
-							secondaryTags: ["discarded"],
-						});
-					}
+					this.driverLog.logMessage(msg, {
+						direction: "inbound",
+						secondaryTags: ["discarded"],
+					});
 					return;
 				}
 
@@ -4311,12 +4307,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 				// Now that the command is complete, the checks that depend on the actual payload can be done
 				if (this.shouldDiscardCC(completeMsg.command)) {
-					if (!wasMessageLogged) {
-						this.driverLog.logMessage(msg, {
-							direction: "inbound",
-							secondaryTags: ["discarded"],
-						});
-					}
+					this.driverLog.logMessage(msg, {
+						direction: "inbound",
+						secondaryTags: ["discarded"],
+					});
 					return;
 				}
 
@@ -4346,17 +4340,15 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				}
 			}
 
-			if (!wasMessageLogged) {
-				try {
-					this.driverLog.logMessage(msg, {
-						direction: "inbound",
-					});
-				} catch (e) {
-					// We shouldn't throw just because logging a message fails
-					this.driverLog.print(
-						`Logging a message failed: ${getErrorMessage(e)}`,
-					);
-				}
+			try {
+				this.driverLog.logMessage(msg, {
+					direction: "inbound",
+				});
+			} catch (e) {
+				// We shouldn't throw just because logging a message fails
+				this.driverLog.print(
+					`Logging a message failed: ${getErrorMessage(e)}`,
+				);
 			}
 
 			// // Check if this message is unsolicited by passing it to the Serial API command interpreter if possible
@@ -5070,8 +5062,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		rerequestSession: (session) => this.rerequestPartialCCSession(session),
 		onSessionLost: (session) => {
 			this.controllerLog.logNode(session.nodeId, {
-				message:
-					`Dropping incomplete partial CC session`,
+				message: `Dropping incomplete partial CC session`,
 				level: "warn",
 				direction: "inbound",
 			});
