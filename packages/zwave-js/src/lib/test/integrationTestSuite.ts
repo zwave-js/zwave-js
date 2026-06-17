@@ -11,6 +11,7 @@ import type {
 import { wait } from "alcalzone-shared/async";
 import crypto from "node:crypto";
 import fsp from "node:fs/promises";
+import type net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { type TestContext, test } from "vitest";
@@ -26,6 +27,8 @@ interface IntegrationTestOptions {
 	provisioningDirectory?: string;
 	/** Whether the recorded messages and frames should be cleared before executing the test body. Default: true. */
 	clearMessageStatsBeforeTest?: boolean;
+	/** Whether the driver should connect to the mock controller through an actual TCP connection. This allows testing reconnection scenarios with real network errors. Default: false */
+	connectViaTCP?: boolean;
 	controllerCapabilities?: MockControllerOptions["capabilities"];
 	nodeCapabilities?: MockNodeOptions["capabilities"];
 	customSetup?: (
@@ -39,8 +42,14 @@ interface IntegrationTestOptions {
 		node: ZWaveNode,
 		mockController: MockController,
 		mockNode: MockNode,
+		context: IntegrationTestContext,
 	) => Promise<void>;
 	additionalDriverOptions?: PartialZWaveOptions;
+}
+
+export interface IntegrationTestContext {
+	/** The TCP server the driver is connected to. Only present when the `connectViaTCP` option is enabled. */
+	tcpServer?: net.Server;
 }
 
 export interface IntegrationTestFn {
@@ -66,6 +75,7 @@ function suite(
 		debug = false,
 		provisioningDirectory,
 		clearMessageStatsBeforeTest = true,
+		connectViaTCP = false,
 		additionalDriverOptions,
 	} = options;
 
@@ -73,6 +83,7 @@ function suite(
 	let node: ZWaveNode;
 	let mockPort: MockPort;
 	let serial: ZWaveSerialStream;
+	let tcpServer: net.Server | undefined;
 	let continueStartup: () => void;
 	let mockController: MockController;
 	let mockNode: MockNode;
@@ -96,11 +107,13 @@ function suite(
 			await copyFilesRecursive(fs, provisioningDirectory, cacheDir);
 		}
 
-		({ driver, continueStartup, mockPort, serial } = await prepareDriver(
-			cacheDir,
-			debug,
-			additionalDriverOptions,
-		));
+		({ driver, continueStartup, mockPort, serial, tcpServer } =
+			await prepareDriver(
+				cacheDir,
+				debug,
+				additionalDriverOptions,
+				connectViaTCP,
+			));
 
 		({
 			mockController,
@@ -175,6 +188,7 @@ function suite(
 			await wait(100);
 
 			await driver.destroy();
+			tcpServer?.close(noop);
 			if (!debug) {
 				await fsp.rm(cacheDir, { recursive: true, force: true })
 					.catch(noop);
@@ -182,7 +196,9 @@ function suite(
 		});
 
 		await prepareTest();
-		await testBody(t, driver, node, mockController, mockNode);
+		await testBody(t, driver, node, mockController, mockNode, {
+			tcpServer,
+		});
 	}, 30000);
 }
 

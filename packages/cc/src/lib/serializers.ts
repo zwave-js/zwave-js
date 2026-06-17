@@ -1,4 +1,4 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { ZWaveError, ZWaveErrorCodes, validatePayload } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
 import type {
@@ -90,6 +90,8 @@ export function encodeSwitchpoint(point: Switchpoint): Bytes {
  * Decodes timezone information used in time related CCs
  */
 export function parseTimezone(data: BytesView): Timezone {
+	// The timezone structure is 3 bytes: hour, minute, delta
+	validatePayload(data.length >= 3);
 	const hourSign = !!(data[0] & 0b1000_0000);
 	const hour = data[0] & 0b0111_1111;
 	const minute = data[1];

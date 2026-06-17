@@ -4,6 +4,29 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.24.3 (2026-06-15)
+### Bugfixes
+* When the serial port fails to reopen during controller recovery, the driver will now emit a `Driver_Failed` error instead of silently getting stuck with a closed port (#8861)
+* Controlled CCs in the NIF are no longer ignored. This affected primarily `Scene Activation CC` (#8864)
+* Fixed an issue where the payload length of `NodeNamingAndLocationCC` reports was not validated correctly (#8865)
+* Fixed an issue where the name length of `Association Group Info CC Name Report` was not validated correctly (#8875)
+* Fixed several issues where miscellaneous fields in reports were not validated correctly (#8876)
+* Fixed a driver crash that could happen when receiving a certain misformed Notification Report (#8874)
+* When clearing credentials/users on locks with `User Code CC` through the unified `AccessControl` API, the corresponding cache values are now cleared rather than deleted, mirroring how they appear when the lock reports them as empty (#8866)
+* Fixed an issue where multicast/broadcast commands with a target endpoint would fail unless all target nodes' endpoints had been interviewed (#8882)
+* The interview procedure for User Code CC and User Credential CC on locks supporting both now correctly follows the specification. Z-Wave JS now correctly defers to `User Code CC` on those locks if `User Credential CC` is not active. (#8879)
+* Setting user codes on `User Code CC v1` locks that obfuscate the codes in responses should now longer result in an error claiming the lock rejected the credential for an unknown reason (#8884)
+
+### Config file changes
+* Add fingerprints to Kwikset HC620 (#8858, #8872)
+* Correct label of "Twist Assist" parameter on Danalock V3-BTZE, limit to FW < 0.22 (#8860)
+* Add AUS/NZ fingerprint to Aeotec Water Sensor 7 Pro (#8883)
+* Update Zooz ZEN35 for firmware 1.40 and unique dimmer wording (#8871)
+* Add Jasco 76592 (ZWN4016) In-Wall Smart Switch (#8867)
+
+### Changes under the hood
+* Tests now support connecting the driver to the mock port via TCP (#8863)
+
 ## 15.24.2 (2026-06-01)
 ### Bugfixes
 * Verify new state after Protection CC Set (#8831)

@@ -93,9 +93,9 @@ test("getImplementedVersionStatic() should work on inherited classes", (t) => {
 	t.expect(getImplementedVersionStatic(DummyCCSubClass1)).toBe(7);
 });
 
-test("expectMoreMessages() returns false by default", (t) => {
+test("getRemainingSegments() returns undefined by default", (t) => {
 	const cc = new DummyCC({ nodeId: 1 });
-	t.expect(cc.expectMoreMessages([])).toBe(false);
+	t.expect(cc.getRemainingSegments()).toBeUndefined();
 });
 
 test("getExpectedCCResponse() returns the expected CC response like it was defined", (t) => {

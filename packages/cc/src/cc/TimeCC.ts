@@ -317,6 +317,13 @@ export class TimeCCDateReport extends TimeCC {
 		const month = raw.payload[2];
 		const day = raw.payload[3];
 
+		validatePayload(
+			month >= 1,
+			month <= 12,
+			day >= 1,
+			day <= 31,
+		);
+
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			year,

@@ -388,6 +388,7 @@ export class BinarySensorCCReport extends BinarySensorCC {
 		if (raw.payload.length >= 2) {
 			type = raw.payload[1];
 		}
+		validatePayload(isEnumMember(BinarySensorType, type));
 
 		return new this({
 			nodeId: ctx.sourceNodeId,

@@ -953,14 +953,19 @@ export class CommandClass implements CCId {
 	}
 
 	/**
-	 * When a CC supports to be split into multiple partial CCs, this indicates that the last report hasn't been received yet.
-	 * @param _session The previously received set of messages received in this partial CC session
+	 * When a CC supports to be split into multiple partial CCs, this returns how many
+	 * more segments are expected after this one (e.g. the value of a "reports to follow" field).
+	 * The counter doubles as the segment's position within the session, which is used
+	 * to detect missing, duplicated and reordered segments.
 	 */
-	public expectMoreMessages(_session: CommandClass[]): boolean {
-		return false; // By default, all CCs are monolithic
+	public getRemainingSegments(): number | undefined {
+		return undefined; // By default, all CCs are monolithic
 	}
 
-	/** Include previously received partial responses into a final CC */
+	/**
+	 * Include previously received partial responses into a final CC.
+	 * The partials are deduplicated and ordered like they were transmitted by the node.
+	 */
 	public async mergePartialCCs(
 		_partials: CommandClass[],
 		_ctx: CCParsingContext,

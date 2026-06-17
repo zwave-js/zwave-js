@@ -212,14 +212,61 @@ function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 		&& NON_PIN_CHARS.test(supportedASCIIChars);
 }
 
+// Characters known to be used by nodes that obfuscate user codes in reports
+const USER_CODE_OBFUSCATION_CHARS = ["*"];
+
+/**
+ * Some version 1 nodes obfuscate codes in the report (e.g. "******"), so
+ * we need to be a bit lenient when verifying that a code was set correctly.
+ */
+function userCodeReadBackConfirmsSet(
+	expected: string | Uint8Array,
+	actual: string | Uint8Array | undefined,
+	version: number,
+): boolean {
+	if (actual == undefined) return false;
+
+	// Compare byte-wise unless both codes are strings
+	if (typeof expected !== "string" || typeof actual !== "string") {
+		const toBytes = (v: string | Uint8Array) =>
+			typeof v === "string" ? Bytes.from(v, "ascii") : Bytes.view(v);
+		if (toBytes(actual).equals(toBytes(expected))) return true;
+	} else if (actual === expected) {
+		return true;
+	}
+
+	// It has been found that some version 1 nodes wrongfully report obfuscated
+	// User Codes in the User Code Report (e.g. "******").
+	// CC:0063.01.00.32.002  A controlling node SHOULD understand that a code has
+	// been set correctly but cannot be read back with such nodes.
+	if (version === 1 && typeof actual === "string" && actual.length > 0) {
+		return USER_CODE_OBFUSCATION_CHARS.some((char) =>
+			actual === char.repeat(actual.length)
+		);
+	}
+
+	return false;
+}
+
 /** High-level API for managing users and credentials on access control devices */
 export class AccessControlAPI extends FeatureAPI {
-	// FIXME: This is technically not correct. A node could support both CCs,
-	// and we may have to decide which one to use, or switch between them on
-	// the fly using Version CC / migration.
-	// This is not implemented yet, so checking for U3C first is fine for now.
 	get #usesUserCredentialCC(): boolean {
-		return this.endpoint.supportsCC(CommandClasses["User Credential"]);
+		if (!this.endpoint.supportsCC(CommandClasses["User Credential"])) {
+			return false;
+		}
+		if (!this.endpoint.supportsCC(CommandClasses["User Code"])) {
+			return true;
+		}
+		// CL:0083.01.21.00.4: The controlling node MUST use User Credential
+		// Command Class to control a supporting node unless the supporting
+		// node reports that (0) Users are supported.
+		//
+		// While that is unknown (interview incomplete), we default to U3C.
+		return this.getValue<number>(
+			UserCredentialCCValues.supportedUsers.endpoint(
+				this.endpoint.index,
+			),
+		) !== 0;
 	}
 
 	/**
@@ -609,8 +656,12 @@ export class AccessControlAPI extends FeatureAPI {
 			let succeeded: boolean;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				succeeded = verified?.userCode === codeData
-					&& verified?.userIdStatus === status;
+				succeeded = verified?.userIdStatus === status
+					&& userCodeReadBackConfirmsSet(
+						codeData,
+						verified?.userCode,
+						api.version,
+					);
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
 			}
@@ -799,7 +850,7 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(userId);
+				this.#clearCachedUserCodes(userId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -843,7 +894,7 @@ export class AccessControlAPI extends FeatureAPI {
 			const succeeded = result == undefined
 				|| supervisedCommandSucceeded(result);
 			if (succeeded) {
-				this.#purgeCachedUserCodes();
+				this.#clearCachedUserCodes();
 			}
 			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
 		}
@@ -1095,7 +1146,12 @@ export class AccessControlAPI extends FeatureAPI {
 			let succeeded: boolean;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				succeeded = verified?.userCode === codeData;
+				succeeded = verified?.userIdStatus === status
+					&& userCodeReadBackConfirmsSet(
+						codeData,
+						verified?.userCode,
+						api.version,
+					);
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
 			}
@@ -1195,7 +1251,7 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(targetUserId);
+				this.#clearCachedUserCodes(targetUserId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -1281,7 +1337,7 @@ export class AccessControlAPI extends FeatureAPI {
 					|| supervisedCommandSucceeded(result);
 			}
 			if (succeeded) {
-				this.#purgeCachedUserCodes(userId);
+				this.#clearCachedUserCodes(userId);
 			}
 			if (succeeded && existed) {
 				const node = this.endpoint.tryGetNode();
@@ -1456,12 +1512,16 @@ export class AccessControlAPI extends FeatureAPI {
 			.has(type);
 	}
 
-	/** Returns the credential type to use for User Code CC based on supported characters */
-	get #ucCredentialType(): UserCredentialType {
-		const supportedASCIIChars = this.getValue<string>(
+	/** The ASCII characters the node accepts in user codes, if known */
+	get #supportedASCIIChars(): string | undefined {
+		return this.getValue<string>(
 			UserCodeCCValues.supportedASCIIChars.endpoint(this.endpoint.index),
 		);
-		return supportsNonPINChars(supportedASCIIChars)
+	}
+
+	/** Returns the credential type to use for User Code CC based on supported characters */
+	get #ucCredentialType(): UserCredentialType {
+		return supportsNonPINChars(this.#supportedASCIIChars)
 			? UserCredentialType.Password
 			: UserCredentialType.PINCode;
 	}
@@ -1590,11 +1650,11 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	/**
-	 * Removes cached user code status and code values from the value DB.
-	 * If `userId` is given, only values for that user are removed. Otherwise, all
-	 * cached user codes are purged.
+	 * Resets cached User Code CC slots in the value DB to the cleared state
+	 * (`userIdStatus = Available`, `userCode = ""`).
+	 * If `userId` is given, only that slot is reset; otherwise all cached slots are reset.
 	 */
-	#purgeCachedUserCodes(userId?: number): void {
+	#clearCachedUserCodes(userId?: number): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 
@@ -1611,7 +1671,11 @@ export class AccessControlAPI extends FeatureAPI {
 		}
 
 		for (const vid of values) {
-			valueDB.removeValue(vid);
+			if (UserCodeCCValues.userIdStatus.is(vid)) {
+				valueDB.setValue(vid, UserIDStatus.Available);
+			} else {
+				valueDB.setValue(vid, "");
+			}
 		}
 	}
 

@@ -148,7 +148,9 @@ function deserializeMultiChannelAssociationDestination(data: BytesView): {
 		nodeIds.push(data[i]);
 	}
 	const endpoints: EndpointAddress[] = [];
-	for (let i = endpointOffset; i < data.length; i += 2) {
+	// Each endpoint destination is a (node id, endpoint) pair; stop when a
+	// full pair is no longer available so a dangling trailing byte is ignored
+	for (let i = endpointOffset; i + 1 < data.length; i += 2) {
 		const nodeId = data[i];
 		const isBitMask = !!(data[i + 1] & 0b1000_0000);
 		const destination = data[i + 1] & 0b0111_1111;
@@ -832,8 +834,8 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 		return { groupId: this.groupId };
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

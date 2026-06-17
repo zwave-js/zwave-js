@@ -1018,6 +1018,20 @@ export class UserCredentialCC extends CommandClass {
 			return;
 		}
 
+		// CL:0083.01.21.00.4: The controlling node MUST use User Credential
+		// Command Class to control a supporting node unless the supporting
+		// node reports that (0) Users are supported.
+		if (userCaps.numberOfSupportedUsers === 0) {
+			ctx.logNode(node.id, {
+				endpoint: this.endpointIndex,
+				message:
+					"Node reports 0 supported users and operates in User Code CC mode, skipping the rest of the interview...",
+				direction: "none",
+			});
+			this.setInterviewComplete(ctx, true);
+			return;
+		}
+
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
 			message: "querying credential capabilities...",
@@ -1053,6 +1067,18 @@ export class UserCredentialCC extends CommandClass {
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+
+		// CL:0083.01.21.00.4: The controlling node MUST use User Credential
+		// Command Class to control a supporting node unless the supporting
+		// node reports that (0) Users are supported.
+		// In that case, User Code CC is used instead of this CC:
+		if (
+			this.getValue<number>(ctx, UserCredentialCCValues.supportedUsers)
+				=== 0
+		) {
+			return;
+		}
+
 		const api = CCAPI.create(
 			CommandClasses["User Credential"],
 			ctx,

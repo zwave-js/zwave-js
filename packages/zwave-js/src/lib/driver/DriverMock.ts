@@ -1,7 +1,14 @@
-import type { ZWaveSerialStream } from "@zwave-js/serial";
+import {
+	SerialAPIParser,
+	type ZWaveSerialBindingFactory,
+	ZWaveSerialFrameType,
+	type ZWaveSerialStream,
+} from "@zwave-js/serial";
 import { MockPort } from "@zwave-js/serial/mock";
+import { noop } from "@zwave-js/shared";
 import type { FileSystem } from "@zwave-js/shared/bindings";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+import net from "node:net";
 import { tmpdir } from "node:os";
 import path from "pathe";
 import { Driver } from "./Driver.js";
@@ -12,46 +19,109 @@ export interface CreateAndStartDriverWithMockPortResult {
 	continueStartup: () => void;
 	mockPort: MockPort;
 	serial: ZWaveSerialStream;
+	/** The TCP server the driver is connected to. Only present when the `connectViaTCP` option is enabled. */
+	tcpServer?: net.Server;
 }
 
 export interface CreateAndStartDriverWithMockPortOptions {
-	// portAddress: string;
+	/**
+	 * Whether the driver should connect to the mock port through an actual TCP connection
+	 * instead of using its binding directly. This allows testing reconnection scenarios
+	 * with real network errors. Default: false.
+	 */
+	connectViaTCP?: boolean;
+}
+
+/** Exposes a {@link MockPort} via a local TCP server, so the driver can connect to it using a `tcp://` connection string */
+async function serveMockPortViaTCP(mockPort: MockPort): Promise<net.Server> {
+	// Take the role the driver would normally have in direct mode and
+	// bridge between the mock port binding and the TCP socket
+	const binding = await mockPort.factory()();
+
+	let socket: net.Socket | undefined;
+
+	// Forward data from the mock controller to the connected socket
+	void new ReadableStream(binding.source).pipeTo(
+		new WritableStream({
+			write(chunk) {
+				socket?.write(chunk);
+			},
+		}),
+	).catch(noop);
+
+	const sinkWriter = new WritableStream(binding.sink).getWriter();
+
+	const server = net.createServer((sock) => {
+		socket = sock;
+
+		// The mock controller expects one complete message per chunk, but TCP
+		// does not preserve write boundaries. Re-chunk the byte stream into
+		// Serial API frames before passing them on.
+		const parser = new SerialAPIParser();
+		const parserWriter = parser.writable.getWriter();
+		void parser.readable.pipeTo(
+			new WritableStream({
+				write(frame) {
+					if (frame.type !== ZWaveSerialFrameType.SerialAPI) return;
+					const data = typeof frame.data === "number"
+						? Uint8Array.from([frame.data])
+						: frame.data;
+					void sinkWriter.write(data).catch(noop);
+				},
+			}),
+		).catch(noop);
+
+		sock.on("data", (chunk) => {
+			void parserWriter.write(chunk).catch(noop);
+		});
+		sock.on("error", noop);
+		sock.on("close", () => {
+			if (socket === sock) socket = undefined;
+			void parserWriter.abort().catch(noop);
+		});
+	});
+
+	await new Promise<void>((resolve) => {
+		server.listen(0, "127.0.0.1", resolve);
+	});
+
+	return server;
 }
 
 /** Creates a real driver instance with a mocked serial port to enable end to end tests */
-export function createAndStartDriverWithMockPort(
+export async function createAndStartDriverWithMockPort(
 	options:
 		& Partial<CreateAndStartDriverWithMockPortOptions>
 		& PartialZWaveOptions = {},
 ): Promise<CreateAndStartDriverWithMockPortResult> {
-	const { ...driverOptions } = options;
+	const { connectViaTCP = false, ...driverOptions } = options;
+
+	const mockPort = new MockPort();
+	let port: string | ZWaveSerialBindingFactory;
+	let tcpServer: net.Server | undefined;
+	if (connectViaTCP) {
+		tcpServer = await serveMockPortViaTCP(mockPort);
+		const address = tcpServer.address() as net.AddressInfo;
+		port = `tcp://${address.address}:${address.port}`;
+	} else {
+		port = mockPort.factory();
+	}
+
 	return new Promise((resolve, reject) => {
 		let driver: Driver;
-		const mockPort = new MockPort();
-		const bindingFactory = mockPort.factory();
-		// let mockPort: MockPortBinding;
-
-		// MockBinding.reset();
-		// MockBinding.createPort(portAddress, {
-		// 	record: true,
-		// 	readyData: new Uint8Array(),
-		// });
 
 		// This will be called when the driver has opened the serial port
 		const onSerialPortOpen = (
 			serial: ZWaveSerialStream,
 		): Promise<void> => {
-			// // Extract the mock serial port
-			// mockPort = MockBinding.getInstance(portAddress)!;
-			// if (!mockPort) reject(new Error("Mock serial port is not open!"));
-
-			// And return the info to the calling code, giving it control over
+			// Return the info to the calling code, giving it control over
 			// continuing the driver startup.
 			const continuePromise = createDeferredPromise();
 			resolve({
 				driver,
 				mockPort,
 				serial,
+				tcpServer,
 				continueStartup: () => continuePromise.resolve(),
 			});
 
@@ -70,7 +140,7 @@ export function createAndStartDriverWithMockPort(
 			onSerialPortOpen,
 		};
 
-		driver = new Driver(bindingFactory, {
+		driver = new Driver(port, {
 			...driverOptions,
 			testingHooks,
 		});

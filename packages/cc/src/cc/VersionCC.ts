@@ -469,6 +469,16 @@ export class VersionCC extends CommandClass {
 					// for which support is determined later.
 					if (cc === CommandClasses.Basic) {
 						endpoint.addCC(cc, { version: supportedVersion });
+					} else if (
+						endpoint.controlsCC(cc) && !endpoint.supportsCC(cc)
+					) {
+						// The node only advertised this CC as controlled (e.g. in the NIF).
+						// Remember the version so its values can be exposed, but do not
+						// promote it to a supported CC.
+						endpoint.addCC(cc, {
+							isControlled: true,
+							version: supportedVersion,
+						});
 					} else {
 						endpoint.addCC(cc, {
 							isSupported: true,
