@@ -762,8 +762,10 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		}
 	}
 
-	public expectMoreMessages(): boolean {
-		return !!this.sequenced && !this.secondFrame;
+	public getRemainingSegments(): number | undefined {
+		// Sequenced S0 commands are always split into exactly two frames
+		if (!this.sequenced) return 0;
+		return this.secondFrame ? 0 : 1;
 	}
 
 	public async mergePartialCCs(
@@ -1080,8 +1082,8 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 		return {};
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

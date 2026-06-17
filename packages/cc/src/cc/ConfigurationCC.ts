@@ -2445,12 +2445,29 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 	}
 
 	public getPartialCCSessionId(): Record<string, any> | undefined {
-		// We don't expect the applHost to merge CCs but we want to wait until all reports have been received
 		return {};
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
+	}
+
+	public mergePartialCCs(
+		partials: ConfigurationCCBulkReport[],
+		_ctx: CCParsingContext,
+	): Promise<void> {
+		// Merge the values of all partial reports
+		const merged = new Map<number, ConfigValue>();
+		for (const partial of partials) {
+			for (const [parameter, value] of partial._values) {
+				merged.set(parameter, value);
+			}
+		}
+		for (const [parameter, value] of this._values) {
+			merged.set(parameter, value);
+		}
+		this._values = merged;
+		return Promise.resolve();
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
@@ -2628,8 +2645,8 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 		return { parameter: this.parameter };
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(
@@ -2804,8 +2821,8 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 		return { parameter: this.parameter };
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

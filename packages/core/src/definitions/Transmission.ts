@@ -112,6 +112,12 @@ export type SendCommandOptions =
 		transmitOptions?: TransmitOptions;
 		/** Overwrite the default report timeout */
 		reportTimeoutMs?: number;
+		/**
+		 * @internal
+		 * Do not wait for the expected response to this command,
+		 * e.g. because another transaction is already waiting for it.
+		 */
+		ignoreNodeUpdate?: boolean;
 	};
 
 export type SendCommandReturnType<TResponse extends CCId | undefined> =

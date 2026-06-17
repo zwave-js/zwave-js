@@ -373,6 +373,9 @@ export class Message {
 	/** Returns a message specific timeout used to wait for an update from the target node */
 	public nodeUpdateTimeout: number | undefined; // Default: use driver timeout
 
+	/** Whether the update from the target node should not be awaited, e.g. because something else is already waiting for it */
+	public ignoreNodeUpdate: boolean = false;
+
 	/** Checks if a message is an expected response for this message */
 	public isExpectedResponse(msg: Message): boolean {
 		return (

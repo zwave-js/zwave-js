@@ -410,8 +410,8 @@ export class ThermostatOperatingStateCCLoggingReport
 		return {};
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

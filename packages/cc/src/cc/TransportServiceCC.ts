@@ -5,8 +5,6 @@ import {
 	type MessageOrCCLogEntry,
 	type SinglecastCC,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
@@ -140,7 +138,6 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 	public sessionId: number;
 	public headerExtension: BytesView | undefined;
 	public partialDatagram: BytesView;
-	public encapsulated!: CommandClass;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Transport Service re-uses the lower 3 bits of the ccCommand as payload
@@ -174,15 +171,6 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 		this.payload.writeUInt16BE(crc, this.payload.length - 2);
 
 		return super.serialize(ctx);
-	}
-
-	public expectMoreMessages(): boolean {
-		return true; // The FirstSegment message always expects more messages
-	}
-
-	public getPartialCCSessionId(): Record<string, any> | undefined {
-		// Only use the session ID to identify the session, not the CC command
-		return { ccCommand: undefined, sessionId: this.sessionId };
 	}
 
 	protected computeEncapsulationOverhead(): number {
@@ -287,74 +275,6 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 	public sessionId: number;
 	public headerExtension: BytesView | undefined;
 	public partialDatagram: BytesView;
-
-	// This can only be received
-	private _encapsulated!: CommandClass;
-	public get encapsulated(): CommandClass {
-		return this._encapsulated;
-	}
-
-	public expectMoreMessages(
-		session: [
-			TransportServiceCCFirstSegment,
-			...TransportServiceCCSubsequentSegment[],
-		],
-	): boolean {
-		if (!(session[0] instanceof TransportServiceCCFirstSegment)) {
-			// First segment is missing
-			return true;
-		}
-		const datagramSize = session[0].datagramSize;
-		const receivedBytes = Array.from<boolean>({ length: datagramSize })
-			.fill(false);
-		for (const segment of [...session, this]) {
-			const offset = segment instanceof TransportServiceCCFirstSegment
-				? 0
-				: segment.datagramOffset;
-			for (
-				let i = offset;
-				i <= offset + segment.partialDatagram.length;
-				i++
-			) {
-				receivedBytes[i] = true;
-			}
-		}
-		// Expect more messages as long as we haven't received everything
-		return receivedBytes.includes(false);
-	}
-
-	public getPartialCCSessionId(): Record<string, any> | undefined {
-		// Only use the session ID to identify the session, not the CC command
-		return { ccCommand: undefined, sessionId: this.sessionId };
-	}
-
-	public async mergePartialCCs(
-		partials: [
-			TransportServiceCCFirstSegment,
-			...TransportServiceCCSubsequentSegment[],
-		],
-		ctx: CCParsingContext,
-	): Promise<void> {
-		// Concat the CC buffers
-		const datagram = new Bytes(this.datagramSize);
-		for (const partial of [...partials, this]) {
-			// Ensure that we don't try to write out-of-bounds
-			const offset = partial instanceof TransportServiceCCFirstSegment
-				? 0
-				: partial.datagramOffset;
-			if (offset + partial.partialDatagram.length > datagram.length) {
-				throw new ZWaveError(
-					`The partial datagram offset and length in a segment are not compatible to the communicated datagram length`,
-					ZWaveErrorCodes.PacketFormat_InvalidPayload,
-				);
-			}
-			datagram.set(partial.partialDatagram, offset);
-		}
-
-		// and deserialize the CC
-		this._encapsulated = await CommandClass.parse(datagram, ctx);
-		this._encapsulated.encapsulatingCC = this as any;
-	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Transport Service re-uses the lower 3 bits of the ccCommand as payload
