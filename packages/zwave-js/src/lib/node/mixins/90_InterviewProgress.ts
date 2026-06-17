@@ -17,38 +17,10 @@ const INTERVIEW_PROGRESS_CC_BAND_END = 99;
 // Security, Manufacturer Specific, Version, Wake Up, Multi Channel on the root and
 // Security/Version on each endpoint) cannot know the total amount of work yet, so each of
 // those CCs advances progress by a fixed amount derived from its weight, bounded by this cap.
-const INTERVIEW_PROGRESS_DISCOVERY_CAP = 20;
-const INTERVIEW_PROGRESS_DISCOVERY_UNIT = 0.6;
-
-/**
- * The relative weight of a CC's interview, used to distribute interview progress more realistically.
- * Most CCs are quick (weight 1); CCs that are known to require many queries get a higher weight.
- */
-function ccInterviewWeight(cc: CommandClasses): number {
-	switch (cc) {
-		case CommandClasses.Configuration:
-			// May scan hundreds of parameters
-			return 8;
-		case CommandClasses.Version:
-			// Queries the version of every supported CC
-			return 5;
-		case CommandClasses["User Code"]:
-			return 4;
-		case CommandClasses.Association:
-		case CommandClasses["Association Group Information"]:
-		case CommandClasses.Notification:
-			return 3;
-		case CommandClasses.Security:
-		case CommandClasses["Security 2"]:
-			// Security CCs can take a while because they may retry a few times to increase reliability
-			return 2;
-		case CommandClasses["Multi Channel"]:
-		case CommandClasses["Multilevel Sensor"]:
-			return 2;
-		default:
-			return 1;
-	}
-}
+// The cap leaves headroom for endpoint-heavy devices (which repeat Security/Version per
+// endpoint) so the bar does not stall once the cap is reached.
+const INTERVIEW_PROGRESS_DISCOVERY_CAP = 30;
+const INTERVIEW_PROGRESS_DISCOVERY_UNIT = 0.4;
 
 /** The overall interview progress (percent in [0, 100]) reached when the given stage has completed */
 function interviewStageProgress(
@@ -143,7 +115,7 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 		let remainingWeight = 0;
 		for (const ccs of remainingCCs) {
 			for (const cc of ccs) {
-				remainingWeight += ccInterviewWeight(cc);
+				remainingWeight += this.ccInterviewWeight(cc);
 			}
 		}
 		this._ccInterviewBulkPhase = true;
@@ -154,11 +126,97 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 		);
 	}
 
+	/**
+	 * The relative weight of a CC's interview, used to distribute interview progress more
+	 * realistically. The weight approximates the number of device queries the CC's interview
+	 * performs, so the progress bar advances at a roughly constant per-query rate. Most CCs are
+	 * quick (weight 1); CCs that iterate over a runtime-enumerated collection get a higher weight
+	 * derived from the typical size of that collection.
+	 *
+	 * Typical collection sizes used to derive the weights below (median across a survey of ~34
+	 * certified products in the Z-Wave Alliance product database, plus maintainer input):
+	 *
+	 *   | Collection                          | Typical | Affected CC(s)                                            |
+	 *   | ----------------------------------- | ------- | --------------------------------------------------------- |
+	 *   | Configuration parameters            | 50+     | Configuration                                             |
+	 *   | Supported CCs (queried for version) | ~20     | Version                                                   |
+	 *   | Association groups                  | ~5      | Association, Association Group Information, Multi Channel Association, Scene Controller Configuration |
+	 *   | Notification types                  | ~3      | Notification                                              |
+	 *   | Multi Channel endpoints             | ~3      | Multi Channel                                             |
+	 *   | Multilevel Sensor types             | ~3      | Multilevel Sensor                                         |
+	 *   | Meter scales/rate types             | ~4      | Meter                                                     |
+	 *   | Alarm Sensor types                  | ~2      | Alarm Sensor                                              |
+	 *   | Binary Sensor types                 | ~1      | Binary Sensor                                             |
+	 *   | User codes / credentials            | ~30     | User Code (opt-in only), User Credential                  |
+	 */
+	private ccInterviewWeight(cc: CommandClasses): number {
+		switch (cc) {
+			case CommandClasses.Configuration:
+				// Scales with the number of config parameters; weighted for a heavy device
+				return 50;
+			case CommandClasses["User Credential"]:
+				// The interview enumerates all users and their credentials
+				return 30;
+			case CommandClasses["User Code"]:
+				// User codes are only enumerated when explicitly requested; otherwise the
+				// interview just queries capabilities
+				return this.driver.getInterviewOptions()?.queryAllUserCodes
+					? 30
+					: 2;
+			case CommandClasses.Version:
+				// Queries the version of every supported CC
+				return 20;
+			case CommandClasses["Association Group Information"]:
+				// Two queries (name + commands) per association group
+				return 10;
+			case CommandClasses.Notification:
+				return 7;
+			case CommandClasses.Association:
+			case CommandClasses["Multi Channel Association"]:
+			case CommandClasses["Multilevel Sensor"]:
+				return 6;
+			case CommandClasses["Scene Controller Configuration"]:
+			case CommandClasses.Meter:
+			case CommandClasses.Irrigation:
+				return 5;
+			case CommandClasses["Color Switch"]:
+			case CommandClasses["Thermostat Setpoint"]:
+			case CommandClasses["Multi Channel"]:
+				return 4;
+			case CommandClasses.Indicator:
+			case CommandClasses["Barrier Operator"]:
+				return 3;
+			case CommandClasses.Security:
+			case CommandClasses["Security 2"]:
+				// Security CCs can take a while because they may retry a few times to increase reliability
+				return 2;
+			case CommandClasses["Window Covering"]:
+			case CommandClasses.Battery:
+			case CommandClasses["Central Scene"]:
+			case CommandClasses["Node Naming and Location"]:
+			case CommandClasses["Sound Switch"]:
+			case CommandClasses["Entry Control"]:
+			case CommandClasses["Door Lock"]:
+			case CommandClasses["Wake Up"]:
+			case CommandClasses["Energy Production"]:
+			case CommandClasses["Alarm Sensor"]:
+			case CommandClasses["Thermostat Mode"]:
+			case CommandClasses["Thermostat Fan Mode"]:
+			case CommandClasses["Thermostat Fan State"]:
+			case CommandClasses["Thermostat Operating State"]:
+			case CommandClasses["Thermostat Setback"]:
+				// A handful of fixed queries each
+				return 2;
+			default:
+				return 1;
+		}
+	}
+
 	/** Computes the progress slice width for the CC that is about to be interviewed */
 	private computeCCInterviewStepWidth(cc: CommandClasses): number {
 		if (this._ccInterviewBulkPhase) {
 			if (this._ccInterviewBulkRemainingWeight <= 0) return 0;
-			const width = ccInterviewWeight(cc)
+			const width = this.ccInterviewWeight(cc)
 				/ this._ccInterviewBulkRemainingWeight
 				* this._ccInterviewBulkBand;
 			// Never advance past the end of the CC band
@@ -171,7 +229,7 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 			);
 		} else {
 			// Discovery phase: a fixed amount derived from the CC's weight, bounded by the cap
-			const width = ccInterviewWeight(cc)
+			const width = this.ccInterviewWeight(cc)
 				* INTERVIEW_PROGRESS_DISCOVERY_UNIT;
 			return Math.max(
 				0,
