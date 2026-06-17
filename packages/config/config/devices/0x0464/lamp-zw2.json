@@ -10,8 +10,8 @@
 		}
 	],
 	"firmwareVersion": {
-		"min": "8.0.0",
-		"max": "8.10.0"
+		"min": "0.0",
+		"max": "255.255"
 	},
 	"associations": {
 		"1": {
@@ -26,273 +26,210 @@
 	},
 	"paramInformation": [
 		{
-			"#": 1,
-			"label": "LED Indicator Brightness",
-			"description": "LED brightness indicates lamp brightness",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
-			"defaultValue": 1,
-			"options": [
-				{
-					"label": "Dimmer default",
-					"value": 1
-				}
-			]
+			"#": "1",
+			"$import": "~/0x0312/templates/minoston_template.json#led_indicator_brightness"
 		},
 		{
-			"#": 2,
-			"label": "LED Indicator",
-			"description": "LED ON/OFF indicates lamp ON/OFF",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 3,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Dimmer default",
-					"value": 0
-				}
-			]
+			"#": "2",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
 		},
 		{
-			"#": 3,
-			"label": "LED Indicator Color",
-			"description": "LED brightness indicates lamp brightness",
+			"#": "3",
+			"label": "LED Color",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 5,
 			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Dimmer default",
+					"label": "Blue",
+					"value": 0
+				},
+				{
+					"label": "Green",
+					"value": 1
+				},
+				{
+					"label": "Red",
+					"value": 2
+				},
+				{
+					"label": "Yellow",
+					"value": 3
+				},
+				{
+					"label": "Cyan",
+					"value": 4
+				},
+				{
+					"label": "Magenta",
+					"value": 5
+				}
+			]
+		},
+
+		{
+			"#": "4",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_off_timer"
+		},
+		{
+			"#": "6",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_on_timer"
+		},
+		{
+			"#": "7",
+			"$import": "~/0x0312/templates/minoston_template.json#night_light_set"
+		},
+		{
+			"#": "8",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "9",
+			"label": "Ramp Rate (Button - On)",
+			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_on_off",
+			"maxValue": 99
+		},
+		{
+			"#": "10",
+			"label": "Ramp Rate (Hold)",
+			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_dimmer",
+			"maxValue": 99
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#minimum_dim_level_0-99",
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable",
 					"value": 0
 				}
 			]
 		},
 		{
-			"#": 4,
-			"label": "Auto Turn-Off Timer",
-			"description": "Sets the amount of time before the dimmer automatically turns off.",
-			"valueSize": 4,
-			"unit": "ms",
-			"minValue": 0,
-			"maxValue": 65535,
-			"defaultValue": 0
-		},
-		{
-			"#": 5,
-			"label": "Auto Turn-On Timer",
-			"description": "Sets the amount of time before the dimmer automatically turns on.",
-			"valueSize": 4,
-			"unit": "ms",
-			"minValue": 0,
-			"maxValue": 65535,
-			"defaultValue": 0
-		},
-		{
-			"#": 6,
-			"label": "Night Light Level",
-			"description": "Sets the brightness level for the night light feature.",
-			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 10,
-			"defaultValue": 2,
+			"#": "12",
+			"$import": "~/templates/master_template.json#maximum_dim_level_0-99",
 			"options": [
 				{
-					"label": "Dimmer default",
-					"value": 2
+					"label": "Disable",
+					"value": 0
 				}
 			]
 		},
 		{
-			"#": 7,
-			"label": "Restores State After Power Failure",
-			"description": "Restores the previous state after a power failure",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
-			"defaultValue": 2,
+			"#": "13",
+			"$import": "~/0x0312/templates/minoston_template.json#single_tap_function",
 			"options": [
 				{
-					"label": "Dimmer default",
+					"label": "Last brightness level",
+					"value": 0
+				},
+				{
+					"label": "Value set in parameter 15",
+					"value": 1
+				},
+				{
+					"label": "Maximum brightness set in parameter 12",
 					"value": 2
+				},
+				{
+					"label": "Full brightness",
+					"value": 3
 				}
 			]
 		},
 		{
-			"#": 8,
-			"label": "Ramp Rate When Pressing the Button Once",
-			"description": "Turn on the light by pressing the button once, the dimming speed is set by this parameter.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 99,
-			"defaultValue": 2
-		},
-		{
-			"#": 9,
-			"label": "Ramp Rate When Pressing and Holding the Button",
-			"description": "Sets the dimming speed when the button is pressed and held to increase or decrease brightness.",
-			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 99,
-			"defaultValue": 4
-		},
-		{
-			"#": 10,
-			"label": "Multilevel Minimum Value Can Be Set",
-			"description": "Sets the minimum dimming level that the device can be adjusted to.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 99,
-			"defaultValue": 10
-		},
-		{
-			"#": 11,
-			"label": "Multilevel Maximum Value Can Be Set",
-			"description": "Sets the maximum dimming level that the device can be adjusted to.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 99,
-			"defaultValue": 99
-		},
-		{
-			"#": 12,
-			"label": "Single Tap Behavior",
-			"description": "Single Tap Behavior: when switch is off and press UPPER paddle 1 time, switch turns on to x brightness（Local Button)",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 3,
+			"#": "14",
+			"$import": "~/0x0312/templates/minoston_template.json#double_tap_function",
 			"defaultValue": 1,
 			"options": [
 				{
-					"label": "Dimmer default",
-					"value": 1
-				}
-			]
-		},
-		{
-			"#": 13,
-			"label": "Double Tap Behavior",
-			"description": "Double Tap Behavior: when switch is off and press button 2 times, switch turns on to x brightness",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 3,
-			"defaultValue": 1,
-			"options": [
+					"label": "Full brightness",
+					"value": 0
+				},
 				{
-					"label": "Dimmer default",
+					"label": "Value set in parameter 7",
 					"value": 1
+				},
+				{
+					"label": "Maximum brightness set in parameter 12",
+					"value": 2
+				},
+				{
+					"label": "Disable",
+					"value": 3
 				}
 			]
 		},
 		{
-			"#": 14,
+			"#": "15",
 			"label": "Custom Brightness Level",
-			"description": "In this parameter define default brightness level the switch will turn on to when pressed button once.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 99,
+			"$import": "~/templates/master_template.json#base_0-99_nounit",
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Last Level",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "16",
+			"$import": "~/templates/master_template.json#smart_switch_mode_0-2"
+		},
+		{
+			"#": "17",
+			"label": "Button Programming",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"defaultValue": 0
 		},
 		{
-			"#": 15,
-			"label": "Local and Z-Wave Control Mode",
-			"description": "Enable or disable the local control of light and control via Z-Wave",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
-			"defaultValue": 1,
-			"options": [
-				{
-					"label": "Disable local control, enable Z-Wave control",
-					"value": 0
-				},
-				{
-					"label": "Enable local control, enable Z-Wave control",
-					"value": 1
-				},
-				{
-					"label": "Disable local control, disable Z-Wave control",
-					"value": 2
-				}
-			]
-		},
-		{
-			"#": 16,
-			"label": "Disable Programming From Paddle",
-			"description": "Enables or disables the ability to change device settings using the physical paddle buttons.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Disable programming from paddle",
-					"value": 0
-				},
-				{
-					"label": "Disable programming from paddle disabled",
-					"value": 1
-				}
-			]
-		},
-		{
-			"#": 17,
-			"label": "Ramp Rate (Local Button OFF)",
-			"description": "Sets the fade-out speed when turning the light off using the local button.",
-			"valueSize": 1,
+			"#": "18",
+			"label": "Ramp Rate (Button - Off)",
+			"$import": "~/templates/master_template.json#base_0-99_nounit",
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 99,
 			"defaultValue": 2
 		},
 		{
-			"#": 18,
-			"label": "Ramp Rate (Hub ON)",
-			"description": "Sets the dimming speed when the light is turned on via the Z-Wave hub.",
-			"valueSize": 1,
+			"#": "19",
+			"label": "Ramp Rate (Hub - On)",
+			"$import": "~/templates/master_template.json#base_0-255_nounit",
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": 19,
-			"label": "Ramp Rate (Hub OFF)",
-			"description": "Sets the fade-out speed when turning the light off via the Z-Wave hub.",
-			"valueSize": 1,
-			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": 20,
-			"label": "Disable LED Blinking When Setting Is Changed",
-			"description": "Enables or disables LED blinking feedback when device settings are modified.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
-			"defaultValue": 0,
 			"options": [
 				{
-					"label": "Enable LED blinking",
-					"value": 0
-				},
-				{
-					"label": "Disable LED blinking",
-					"value": 1
+					"label": "Use Parameter 9",
+					"value": 255
 				}
 			]
+		},
+		{
+			"#": "20",
+			"label": "Ramp Rate (Hub - Off)",
+			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"unit": "seconds",
+			"defaultValue": 255,
+			"options": [
+				{
+					"label": "Use Parameter 18",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "21",
+			"label": "LED Blinking on Setting Change",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"defaultValue": 0
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Follow the instructions for your Z-Wave certified controller to add a device to the Z-Wave network. \n2. Once the controller is ready to add your device, press the Manual/ Program button on the smart plug 3 times quickly. The blue LED will flash quickly. \n3. Confirm the Zwave plug was learned into the controller and complete set up on the controller. When the Zwave dimmer has been enrolled into the controller, the LED will light solid blue.\n4. Programming is now complete. You can now turn your device ON / OFF according to groups, schedules and interactive automation programmed by your controller. If your Z-Wave certified controller features remote access, you can control your plug from your mobile devices.\n Note: If you have an issue with pairing, please move the device as close as possible to the hub and try again. You can move to your final location when completed. \nNote: \n1. If the LED Indicator does not light up after pressing 3 times, please reset the device. To reset, press the button twice quickly then hold a 3rd press for 10 seconds.\n2. The flashing purple light means the device is already paired or in exclusion mode. If adding fails, please perform a Z-wave exclusion on your Z-wave controller and try to add the device again.",
-		"exclusion": "1. Follow the instructions for your Z-Wave certified controller to remove a device from the Z-Wave network.\n2. Once the controller is ready to remove your device, press the manual / program button on the smart plug 3 times quickly.",
-		"reset": "To reset, press the button twice quickly then hold a 3rd press for 10 seconds.",
-		"manual": "https://versawireless.com/pages/resources"
+		"inclusion": "Press the button 3 times quickly. The blue LED will flash quickly. When included, the LED will light solid blue. A flashing purple LED indicates the device is already paired or in exclusion mode.",
+		"exclusion": "Press the button 3 times quickly.",
+		"reset": "Press the button twice quickly, then hold a 3rd press for 10 seconds.",
+		"manual": "https://versawireless.com/apps/resources/lamp-zw2-installation-instruction-manual"
 	}
 }
