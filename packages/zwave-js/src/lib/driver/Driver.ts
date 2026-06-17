@@ -4285,6 +4285,19 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					wasMessageLogged = false;
 				}
 
+				// Make sure the command was received at the expected security level
+				// BEFORE assembling partial CCs. Otherwise it would be possible to
+				// inject unencrypted segments into a partial CC session.
+				if (this.isSecurityLevelTooLow(msg.command)) {
+					if (!wasMessageLogged) {
+						this.driverLog.logMessage(msg, {
+							direction: "inbound",
+							secondaryTags: ["discarded"],
+						});
+					}
+					return;
+				}
+
 				// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
 				const completeMsg = await this.assemblePartialCCs(msg);
 				if (!completeMsg) {
@@ -4296,11 +4309,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// containing the final segment, which may not be the current one
 				msg = completeMsg;
 
-				// Make sure we are allowed to handle this command
-				if (
-					this.isSecurityLevelTooLow(completeMsg.command)
-					|| this.shouldDiscardCC(completeMsg.command)
-				) {
+				// Now that the command is complete, the checks that depend on the actual payload can be done
+				if (this.shouldDiscardCC(completeMsg.command)) {
 					if (!wasMessageLogged) {
 						this.driverLog.logMessage(msg, {
 							direction: "inbound",

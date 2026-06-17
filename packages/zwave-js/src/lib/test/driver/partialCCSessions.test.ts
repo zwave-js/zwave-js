@@ -7,7 +7,7 @@ import {
 	TransportServiceCCFirstSegment,
 	TransportServiceCCSubsequentSegment,
 } from "@zwave-js/cc/TransportServiceCC";
-import { CommandClasses } from "@zwave-js/core";
+import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
 	createMockZWaveRequestFrame,
@@ -461,6 +461,84 @@ integrationTest(
 			// merged with the stale segment
 			const name = await node.commandClasses.Configuration.getName(1);
 			t.expect(name).toBe("fresh");
+		},
+	},
+);
+
+integrationTest(
+	"Unencrypted reports cannot be injected into a partial CC session at a higher security level",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				CommandClasses["Security 2"],
+				{
+					ccId: CommandClasses.Configuration,
+					isSupported: true,
+					secure: true,
+					version: 1,
+				},
+			],
+			securityClasses: new Set([SecurityClass.S2_Unauthenticated]),
+		},
+
+		async customSetup(driver, mockController, mockNode) {
+			const respondToConfigurationNameGet: MockNodeBehavior = {
+				async handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof ConfigurationCCNameGet) {
+						// The genuine response is S2-encapsulated
+						const report1 = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
+							name: "Test para",
+							reportsToFollow: 1,
+						});
+						await self.sendResponse(receivedCC, {
+							action: "sendCC",
+							cc: report1,
+							ackRequested: false,
+						});
+						await wait(100);
+
+						// An attacker tries to replace the first report with a
+						// forged, unencrypted one
+						const evilReport = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
+							name: "Malicious para",
+							reportsToFollow: 1,
+						});
+						await self.sendToController(
+							createMockZWaveRequestFrame(evilReport, {
+								ackRequested: false,
+							}),
+						);
+						await wait(100);
+
+						const report2 = new ConfigurationCCNameReport({
+							nodeId: controller.ownNodeId,
+							parameter: receivedCC.parameter,
+							name: "meter",
+							reportsToFollow: 0,
+						});
+						await self.sendResponse(receivedCC, {
+							action: "sendCC",
+							cc: report2,
+							ackRequested: false,
+						});
+
+						return { action: "stop" };
+					}
+				},
+			};
+			mockNode.defineBehavior(respondToConfigurationNameGet);
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			const name = await node.commandClasses.Configuration.getName(1);
+			t.expect(name).toBe("Test parameter");
 		},
 	},
 );
