@@ -672,8 +672,8 @@ export class AssociationCCReport extends AssociationCC {
 		return { groupId: this.groupId };
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

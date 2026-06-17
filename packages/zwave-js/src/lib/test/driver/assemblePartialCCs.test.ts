@@ -59,17 +59,17 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("returns true when a non-partial CC is received", async ({ context, expect }) => {
+test("returns the message when a non-partial CC is received", async ({ context, expect }) => {
 	const { driver } = context;
 	const cc = new BasicCCSet({ nodeId: 2, targetValue: 50 });
 	const msg = new ApplicationCommandRequest({
 		command: cc,
 	});
-	expect(await driver["assemblePartialCCs"](msg)).toBe(true);
+	expect(await driver["assemblePartialCCs"](msg)).toBe(msg);
 });
 
 test(
-	"returns true when a partial CC is received that expects no more reports",
+	"returns the message when a partial CC is received that expects no more reports",
 	async ({ context, expect }) => {
 		const { driver } = context;
 		const cc = await CommandClass.parse(
@@ -88,12 +88,12 @@ test(
 		const msg = new ApplicationCommandRequest({
 			command: cc,
 		});
-		expect(await driver["assemblePartialCCs"](msg)).toBe(true);
+		expect(await driver["assemblePartialCCs"](msg)).toBe(msg);
 	},
 );
 
 test(
-	"returns false when a partial CC is received that expects more reports",
+	"returns undefined when a partial CC is received that expects more reports",
 	async ({ context, expect }) => {
 		const { driver } = context;
 		const cc = await CommandClass.parse(
@@ -112,12 +112,12 @@ test(
 		const msg = new ApplicationCommandRequest({
 			command: cc,
 		});
-		expect(await driver["assemblePartialCCs"](msg)).toBe(false);
+		expect(await driver["assemblePartialCCs"](msg)).toBeUndefined();
 	},
 );
 
 test(
-	"returns true when the final partial CC is received and merges its data",
+	"returns the final message when the final partial CC is received and merges its data",
 	async ({ context, expect }) => {
 		const { driver } = context;
 		const cc1 = await CommandClass.parse(
@@ -149,12 +149,13 @@ test(
 		const msg1 = new ApplicationCommandRequest({
 			command: cc1,
 		});
-		await expect(driver["assemblePartialCCs"](msg1)).resolves.toBe(false);
+		await expect(driver["assemblePartialCCs"](msg1)).resolves
+			.toBeUndefined();
 
 		const msg2 = new ApplicationCommandRequest({
 			command: cc2,
 		});
-		await expect(driver["assemblePartialCCs"](msg2)).resolves.toBe(true);
+		await expect(driver["assemblePartialCCs"](msg2)).resolves.toBe(msg2);
 
 		expect(
 			(msg2.command as AssociationCCReport).nodeIds,
@@ -173,7 +174,7 @@ test("does not crash when receiving a Multi Command CC", async ({ context, expec
 	const msg = new ApplicationCommandRequest({
 		command: cc,
 	});
-	expect(await driver["assemblePartialCCs"](msg)).toBe(true);
+	expect(await driver["assemblePartialCCs"](msg)).toBe(msg);
 });
 
 test("supports nested partial/non-partial CCs", async ({ context, expect }) => {
@@ -188,7 +189,7 @@ test("supports nested partial/non-partial CCs", async ({ context, expect }) => {
 	const msg = new ApplicationCommandRequest({
 		command: cc,
 	});
-	expect(await driver["assemblePartialCCs"](msg)).toBe(true);
+	expect(await driver["assemblePartialCCs"](msg)).toBe(msg);
 });
 
 test("supports nested partial/partial CCs (part 1)", async ({ context, expect }) => {
@@ -211,7 +212,7 @@ test("supports nested partial/partial CCs (part 1)", async ({ context, expect })
 	const msg = new ApplicationCommandRequest({
 		command: cc,
 	});
-	expect(await driver["assemblePartialCCs"](msg)).toBe(false);
+	expect(await driver["assemblePartialCCs"](msg)).toBeUndefined();
 });
 
 test("supports nested partial/partial CCs (part 2)", async ({ context, expect }) => {
@@ -234,11 +235,11 @@ test("supports nested partial/partial CCs (part 2)", async ({ context, expect })
 	const msg = new ApplicationCommandRequest({
 		command: cc,
 	});
-	expect(await driver["assemblePartialCCs"](msg)).toBe(true);
+	expect(await driver["assemblePartialCCs"](msg)).toBe(msg);
 });
 
 test(
-	"returns false when a partial CC throws Deserialization_NotImplemented during merging",
+	"returns undefined when a partial CC throws Deserialization_NotImplemented during merging",
 	async ({ context, expect }) => {
 		const { driver } = context;
 		const cc = await CommandClass.parse(
@@ -263,12 +264,12 @@ test(
 		const msg = new ApplicationCommandRequest({
 			command: cc,
 		});
-		expect(await driver["assemblePartialCCs"](msg)).toBe(false);
+		expect(await driver["assemblePartialCCs"](msg)).toBeUndefined();
 	},
 );
 
 test(
-	"returns false when a partial CC throws CC_NotImplemented during merging",
+	"returns undefined when a partial CC throws CC_NotImplemented during merging",
 	async ({ context, expect }) => {
 		const { driver } = context;
 		const cc = await CommandClass.parse(
@@ -293,12 +294,12 @@ test(
 		const msg = new ApplicationCommandRequest({
 			command: cc,
 		});
-		expect(await driver["assemblePartialCCs"](msg)).toBe(false);
+		expect(await driver["assemblePartialCCs"](msg)).toBeUndefined();
 	},
 );
 
 test(
-	"returns false when a partial CC throws PacketFormat_InvalidPayload during merging",
+	"returns undefined when a partial CC throws PacketFormat_InvalidPayload during merging",
 	async ({ context, expect }) => {
 		const { driver } = context;
 		const cc = await CommandClass.parse(
@@ -323,7 +324,7 @@ test(
 		const msg = new ApplicationCommandRequest({
 			command: cc,
 		});
-		expect(await driver["assemblePartialCCs"](msg)).toBe(false);
+		expect(await driver["assemblePartialCCs"](msg)).toBeUndefined();
 	},
 );
 
