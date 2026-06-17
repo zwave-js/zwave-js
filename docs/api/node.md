@@ -1311,6 +1311,36 @@ A state of the interview process for this node was completed. Only the name of t
 (node: ZWaveNode, stageName: string) => void
 ```
 
+> [!NOTE] This event is deprecated. It has been found that it is not very useful due to most of the interview happening in the `CommandClasses` stage. Use the `"interview progress"` event for granular interview progress reporting instead.
+
+### `"interview progress"`
+
+The interview made progress. This event is emitted frequently (throttled) during the interview and provides an approximate overall progress, which is useful to display a progress bar. The first and last interview stages are nearly instant, while interviewing the Command Classes takes the majority of the time, so the reported progress is weighted accordingly.
+
+```ts
+(node: ZWaveNode, progress: InterviewProgress) => void
+```
+
+<!-- #import InterviewProgress from "zwave-js" -->
+
+```ts
+interface InterviewProgress {
+	// The interview stage that is currently in progress
+	stage: InterviewStage;
+	// The approximate overall interview progress in %, rounded to two digits.
+	// This is monotonically non-decreasing within a single interview and only an approximation,
+	// as the exact amount of work cannot be known in advance.
+	progress: number;
+	// During the `CommandClasses` stage: the index of the endpoint that is currently being interviewed
+	endpoint?: number;
+	// During the `CommandClasses` stage: the Command Class that is currently being interviewed
+	commandClass?: CommandClasses;
+}
+```
+
+> [!NOTE]
+> The progress is an approximation. It advances per Command Class, with finer-grained updates while interviewing some long-running CCs (e.g. Version, Configuration, Association). A single long-running CC that does not report its internal progress may pause the reported progress until it completes.
+
 ### `"interview completed"`
 
 The initial interview or reinterview process for this node was completed. The node is passed as the single argument to the callback:

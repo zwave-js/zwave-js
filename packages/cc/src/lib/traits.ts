@@ -112,6 +112,15 @@ export interface GetInterviewOptions {
 	getInterviewOptions(): InterviewOptions;
 }
 
+/** Allows a Command Class to report fine-grained progress during its interview */
+export interface ReportInterviewProgress {
+	/**
+	 * Reports the granular progress of the current interview step, e.g. while iterating over
+	 * configuration parameters or association groups.
+	 */
+	reportInterviewProgress(completed: number, total: number): void;
+}
+
 /** Additional context needed for deserializing CCs */
 export interface CCParsingContext
 	extends Readonly<SecurityManagers>, GetDeviceConfig, HostIDs

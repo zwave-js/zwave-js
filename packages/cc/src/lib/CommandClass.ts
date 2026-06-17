@@ -75,7 +75,7 @@ import {
 	defaultCCValueOptions,
 } from "./Values.js";
 import type { CCEncodingContext, CCParsingContext } from "./traits.js";
-import type { GetInterviewOptions } from "./traits.js";
+import type { GetInterviewOptions, ReportInterviewProgress } from "./traits.js";
 
 export interface CommandClassOptions extends CCAddress {
 	ccId?: number; // Used to overwrite the declared CC ID
@@ -112,6 +112,7 @@ export type InterviewContext =
 		& ControlsCC
 		& QuerySecurityClasses
 		& SetSecurityClass
+		& ReportInterviewProgress
 		& GetEndpoint<EndpointId & GetCCs & SupportsCC & ControlsCC & ModifyCCs>
 		& GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>
 	>
@@ -125,6 +126,10 @@ export type RefreshValuesContext = CCAPIHost<
 export interface RefreshValuesOptions {
 	/** The priority to use for the refresh value queries */
 	priority?: MessagePriority;
+	/**
+	 * An optional callback to report fine-grained progress while refreshing values.
+	 */
+	onProgress?: (completed: number, total: number) => void;
 }
 
 export type PersistValuesContext =

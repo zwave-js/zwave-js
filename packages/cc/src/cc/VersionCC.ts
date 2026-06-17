@@ -585,13 +585,16 @@ export class VersionCC extends CommandClass {
 			message: "querying CC versions...",
 			direction: "outbound",
 		});
+		// Determine the CCs whose version we still need to query, so we can report progress
+		const ccsToQuery: CommandClasses[] = [];
 		// Basic CC is not included in the NIF, so it won't be returned by endpoint.getCCs() at this point
-		{
-			const cc = CommandClasses.Basic;
-			// Skip the query of endpoint CCs that are also supported by the root device
-			if (this.endpointIndex === 0 || node.getCCVersion(cc) === 0) {
-				await queryCCVersion(cc);
-			}
+		// Add it to the list if we are interviewing the root endpoint,
+		// or if we are on an endpoint and the root endpoint does not support it
+		if (
+			this.endpointIndex === 0
+			|| node.getCCVersion(CommandClasses.Basic) === 0
+		) {
+			ccsToQuery.push(CommandClasses.Basic);
 		}
 		for (const [cc] of endpoint.getCCs()) {
 			// We already queried the Version CC version at the start of this interview
@@ -600,7 +603,12 @@ export class VersionCC extends CommandClass {
 			if (cc === CommandClasses.Basic) continue;
 			// Skip the query of endpoint CCs that are also supported by the root device
 			if (this.endpointIndex > 0 && node.getCCVersion(cc) > 0) continue;
-			await queryCCVersion(cc);
+			ccsToQuery.push(cc);
+		}
+		// Actually query them
+		for (let i = 0; i < ccsToQuery.length; i++) {
+			await queryCCVersion(ccsToQuery[i]);
+			node.reportInterviewProgress(i + 1, ccsToQuery.length);
 		}
 
 		// Step 4: Query VersionCC capabilities (root device only)

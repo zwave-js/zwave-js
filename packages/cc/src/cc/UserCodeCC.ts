@@ -1048,6 +1048,8 @@ export class UserCodeCC extends CommandClass {
 			{
 				queryAllUserCodes: ctx.getInterviewOptions()?.queryAllUserCodes
 					?? false,
+				onProgress: (completed, total) =>
+					node.reportInterviewProgress(completed, total),
 			},
 		);
 
@@ -1182,6 +1184,7 @@ export class UserCodeCC extends CommandClass {
 						let nextUserId = 1;
 						while (nextUserId > 0 && nextUserId <= supportedUsers) {
 							const response = await api.get(nextUserId, true);
+							options?.onProgress?.(nextUserId, supportedUsers);
 							if (response) {
 								nextUserId = response.nextUserId;
 							} else {
@@ -1202,6 +1205,7 @@ export class UserCodeCC extends CommandClass {
 							userId++
 						) {
 							await api.get(userId);
+							options?.onProgress?.(userId, supportedUsers);
 						}
 					}
 				}
@@ -1225,6 +1229,7 @@ export class UserCodeCC extends CommandClass {
 				});
 				for (let userId = 1; userId <= supportedUsers; userId++) {
 					await api.get(userId);
+					options?.onProgress?.(userId, supportedUsers);
 				}
 			}
 		}

@@ -1321,7 +1321,10 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 			}
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Apply recommended values from device config
 		if (
@@ -1432,37 +1435,37 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				this.endpointIndex,
 			);
 			if (paramInfo?.size) {
-				// Because partial params share the same parameter number,
-				// we need to remember which ones we have already queried.
-				const alreadyQueried = new Set<number>();
-				for (const param of paramInfo.keys()) {
-					// No need to query writeonly params
-					if (paramInfo.get(param)?.writeOnly) continue;
-					// Don't double-query params
-					if (alreadyQueried.has(param.parameter)) continue;
-					alreadyQueried.add(param.parameter);
-
+				// Partial params share the same parameter number. Collect the
+				// distinct readable parameter numbers so each is queried once.
+				const parametersToQuery = distinct(
+					[...paramInfo.keys()]
+						// No need to query writeonly params
+						.filter((param) => !paramInfo.get(param)?.writeOnly)
+						.map((param) => param.parameter),
+				);
+				for (let i = 0; i < parametersToQuery.length; i++) {
+					const parameter = parametersToQuery[i];
 					// Query the current value
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message:
-							`querying parameter #${param.parameter} value...`,
+						message: `querying parameter #${parameter} value...`,
 						direction: "outbound",
 					});
 					// ... at least try to
-					const paramValue = await api.get(param.parameter);
+					const paramValue = await api.get(parameter);
+					options?.onProgress?.(i + 1, parametersToQuery.length);
 					if (typeof paramValue === "number") {
 						ctx.logNode(node.id, {
 							endpoint: this.endpointIndex,
 							message:
-								`parameter #${param.parameter} has value: ${paramValue}`,
+								`parameter #${parameter} has value: ${paramValue}`,
 							direction: "inbound",
 						});
 					} else if (!paramValue) {
 						ctx.logNode(node.id, {
 							endpoint: this.endpointIndex,
 							message:
-								`received no value for parameter #${param.parameter}`,
+								`received no value for parameter #${parameter}`,
 							direction: "inbound",
 							level: "warn",
 						});
@@ -1483,7 +1486,8 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 					.map((v) => v.property)
 					.filter((p) => typeof p === "number"),
 			);
-			for (const param of parameters) {
+			for (let i = 0; i < parameters.length; i++) {
+				const param = parameters[i];
 				if (
 					this.getParamInformation(ctx, param).readable !== false
 				) {
@@ -1501,6 +1505,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 						direction: "none",
 					});
 				}
+				options?.onProgress?.(i + 1, parameters.length);
 			}
 		}
 	}

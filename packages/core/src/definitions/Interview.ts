@@ -1,3 +1,5 @@
+import type { CommandClasses } from "./CommandClasses.js";
+
 export enum InterviewStage {
 	/** The interview process hasn't started for this node */
 	None,
@@ -22,4 +24,19 @@ export enum InterviewStage {
 
 	/** The interview process has finished */
 	Complete,
+}
+
+export interface InterviewProgress {
+	/** The interview stage that is currently in progress */
+	stage: InterviewStage;
+	/**
+	 * The approximate overall interview progress in %, rounded to two digits.
+	 * This is monotonically non-decreasing within a single interview and only an approximation,
+	 * as the exact amount of work cannot be known in advance.
+	 */
+	progress: number;
+	/** During the `CommandClasses` stage: the index of the endpoint that is currently being interviewed */
+	endpoint?: number;
+	/** During the `CommandClasses` stage: the Command Class that is currently being interviewed */
+	commandClass?: CommandClasses;
 }
