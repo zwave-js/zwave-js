@@ -152,8 +152,7 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	private ccInterviewWeight(cc: CommandClasses): number {
 		switch (cc) {
 			case CommandClasses.Configuration:
-				// Scales with the number of config parameters; weighted for a heavy device
-				return 50;
+				return this.configurationCCInterviewWeight();
 			case CommandClasses["User Credential"]:
 				// The interview enumerates all users and their credentials
 				return 30;
@@ -210,6 +209,28 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 			default:
 				return 1;
 		}
+	}
+
+	/**
+	 * The interview weight of the Configuration CC scales with the number of parameters that get
+	 * queried. When they are known up front from the device config file, the weight is the count
+	 * of distinct readable parameters; otherwise (e.g. a v3+ device whose parameters are discovered
+	 * by scanning the device) it falls back to a value tuned for a parameter-heavy device.
+	 */
+	private configurationCCInterviewWeight(): number {
+		const FALLBACK_WEIGHT = 50;
+		const paramInfo = this.deviceConfig?.paramInformation
+			?? this.deviceConfig?.endpoints?.get(0)?.paramInformation;
+		if (!paramInfo?.size) return FALLBACK_WEIGHT;
+
+		// Partial parameters share a parameter number and are queried once; write-only
+		// parameters are not queried during the interview.
+		const queryableParameters = new Set(
+			[...paramInfo.keys()]
+				.filter((key) => !paramInfo.get(key)?.writeOnly)
+				.map((key) => key.parameter),
+		);
+		return queryableParameters.size || FALLBACK_WEIGHT;
 	}
 
 	/** Computes the progress slice width for the CC that is about to be interviewed */
