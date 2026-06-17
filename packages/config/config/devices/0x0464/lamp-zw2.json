@@ -37,10 +37,7 @@
 			"#": "3",
 			"label": "LED Color",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 5,
 			"defaultValue": 0,
-			"unsigned": true,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -171,7 +168,7 @@
 			"defaultValue": 0,
 			"options": [
 				{
-					"label": "Last Level",
+					"label": "Last level",
 					"value": 0
 				}
 			]
@@ -201,7 +198,7 @@
 			"defaultValue": 255,
 			"options": [
 				{
-					"label": "Use parameter 9.",
+					"label": "Use parameter 9",
 					"value": 255
 				}
 			]
@@ -214,7 +211,7 @@
 			"defaultValue": 255,
 			"options": [
 				{
-					"label": "Use parameter 18.",
+					"label": "Use parameter 18",
 					"value": 255
 				}
 			]
@@ -233,4 +230,3 @@
 		"manual": "https://versawireless.com/apps/resources/lamp-zw2-installation-instruction-manual"
 	}
 }
-
