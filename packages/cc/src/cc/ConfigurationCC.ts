@@ -297,6 +297,60 @@ function getParamInformationFromConfigFile(
 	}
 }
 
+/**
+ * Returns the distinct parameter numbers in a ParamInfoMap. Partial parameters share a
+ * parameter number and are collapsed to a single entry, since they are queried together.
+ */
+export function getDistinctConfigParameters(paramInfo: ParamInfoMap): number[] {
+	return distinct([...paramInfo.keys()].map((key) => key.parameter));
+}
+
+/**
+ * Returns the distinct readable (non-write-only) parameter numbers in a ParamInfoMap.
+ * These are the parameters whose value is queried during the interview.
+ */
+export function getReadableConfigParameters(paramInfo: ParamInfoMap): number[] {
+	return distinct(
+		[...paramInfo.keys()]
+			.filter((key) => !paramInfo.get(key)?.writeOnly)
+			.map((key) => key.parameter),
+	);
+}
+
+/**
+ * Estimates the number of device queries the Configuration interview performs,
+ * depending on CC versions, availability of a config files, and compat flags.
+ */
+function estimateConfigurationInterviewQueryCount(
+	paramInfo: ParamInfoMap | undefined,
+	ccVersion: number,
+	assumedParamCount: number,
+	skipNameQuery: boolean,
+	skipInfoQuery: boolean,
+): number {
+	if (paramInfo?.size) {
+		// Before V3, only the value of each readable parameter is queried
+		if (ccVersion < 3) return getReadableConfigParameters(paramInfo).length;
+
+		// On V3+, the properties of every parameter are queried (including write-only
+		// ones, whose value is not), plus the value of each readable parameter. Name and
+		// info are skipped for parameters documented in a config file.
+		return getDistinctConfigParameters(paramInfo).length
+			+ getReadableConfigParameters(paramInfo).length;
+	}
+
+	// Before V3, only the value of each parameter is queried
+	if (ccVersion < 3) return assumedParamCount;
+
+	// On V3+, we query properties + value,
+	const queriesPerParam = 2
+		// optionally the name
+		+ (skipNameQuery ? 0 : 1)
+		// and optionally the description
+		+ (skipInfoQuery ? 0 : 1);
+	return assumedParamCount * queriesPerParam;
+}
+
 /** Builds a ConfigurationMetadata object from a ParamInformation entry */
 function configParamInfoToMetadata(
 	info: ParamInformation,
@@ -1205,6 +1259,10 @@ export class ConfigurationCC extends CommandClass {
 			Array.from(paramInfo?.keys() ?? []).map((k) => k.parameter),
 		);
 
+		// Fraction of the Configuration progress slice filled by the v3+ parameter scan.
+		// The value refresh below fills the remainder, so each value query advances progress.
+		let configScanProgress = 0;
+
 		if (api.version >= 3) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
@@ -1234,6 +1292,16 @@ export class ConfigurationCC extends CommandClass {
 				return;
 			}
 
+			// Estimate (or calculate) the total number of queries needed during the interview.
+			const expectedQueryCount = estimateConfigurationInterviewQueryCount(
+				paramInfo,
+				api.version,
+				node.getInterviewProgressWeight(CommandClasses.Configuration),
+				!!deviceConfig?.compat?.skipConfigurationNameQuery,
+				!!deviceConfig?.compat?.skipConfigurationInfoQuery,
+			);
+			let scannedQueries = 0;
+
 			while (param > 0) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
@@ -1256,6 +1324,10 @@ export class ConfigurationCC extends CommandClass {
 					break;
 				}
 				const { nextParameter, ...properties } = props;
+				node.reportInterviewProgress(
+					++scannedQueries,
+					expectedQueryCount,
+				);
 
 				let logMessage: string;
 				if (properties.valueSize === 0) {
@@ -1271,6 +1343,10 @@ export class ConfigurationCC extends CommandClass {
 								// If querying the name fails, don't abort the entire interview
 								() => undefined,
 							);
+							node.reportInterviewProgress(
+								++scannedQueries,
+								expectedQueryCount,
+							);
 						}
 
 						// Skip the info query for bugged devices
@@ -1278,6 +1354,10 @@ export class ConfigurationCC extends CommandClass {
 							await api.getInfo(param).catch(
 								// If querying the info fails, don't abort the entire interview
 								() => undefined,
+							);
+							node.reportInterviewProgress(
+								++scannedQueries,
+								expectedQueryCount,
 							);
 						}
 					}
@@ -1319,9 +1399,29 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 					break;
 				}
 			}
+
+			configScanProgress = Math.min(
+				1,
+				scannedQueries / expectedQueryCount,
+			);
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) => {
+				// To support reporting granular progress for devices where we don't
+				// know the parameter count in advance, we let the scan phase
+				// fill up the progress and map the value queries into the remainder.
+				//
+				// For devices with known parameter counts, this mapping is uniform.
+				// For other devices it may yield larger, smaller, or no progress at all,
+				// depending on the actual parameter count.
+				const fraction = total > 0
+					? configScanProgress
+						+ (completed / total) * (1 - configScanProgress)
+					: configScanProgress;
+				node.reportInterviewProgress(fraction, 1);
+			},
+		});
 
 		// Apply recommended values from device config
 		if (
@@ -1432,37 +1532,31 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				this.endpointIndex,
 			);
 			if (paramInfo?.size) {
-				// Because partial params share the same parameter number,
-				// we need to remember which ones we have already queried.
-				const alreadyQueried = new Set<number>();
-				for (const param of paramInfo.keys()) {
-					// No need to query writeonly params
-					if (paramInfo.get(param)?.writeOnly) continue;
-					// Don't double-query params
-					if (alreadyQueried.has(param.parameter)) continue;
-					alreadyQueried.add(param.parameter);
-
+				const parametersToQuery = getReadableConfigParameters(
+					paramInfo,
+				);
+				for (const [i, parameter] of parametersToQuery.entries()) {
 					// Query the current value
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message:
-							`querying parameter #${param.parameter} value...`,
+						message: `querying parameter #${parameter} value...`,
 						direction: "outbound",
 					});
 					// ... at least try to
-					const paramValue = await api.get(param.parameter);
+					const paramValue = await api.get(parameter);
+					options?.onProgress?.(i + 1, parametersToQuery.length);
 					if (typeof paramValue === "number") {
 						ctx.logNode(node.id, {
 							endpoint: this.endpointIndex,
 							message:
-								`parameter #${param.parameter} has value: ${paramValue}`,
+								`parameter #${parameter} has value: ${paramValue}`,
 							direction: "inbound",
 						});
 					} else if (!paramValue) {
 						ctx.logNode(node.id, {
 							endpoint: this.endpointIndex,
 							message:
-								`received no value for parameter #${param.parameter}`,
+								`received no value for parameter #${parameter}`,
 							direction: "inbound",
 							level: "warn",
 						});
@@ -1483,7 +1577,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 					.map((v) => v.property)
 					.filter((p) => typeof p === "number"),
 			);
-			for (const param of parameters) {
+			for (const [i, param] of parameters.entries()) {
 				if (
 					this.getParamInformation(ctx, param).readable !== false
 				) {
@@ -1501,6 +1595,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 						direction: "none",
 					});
 				}
+				options?.onProgress?.(i + 1, parameters.length);
 			}
 		}
 	}

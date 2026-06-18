@@ -436,7 +436,7 @@ export class MultilevelSensorCC extends CommandClass {
 
 			// As well as the supported scales for each sensor
 
-			for (const type of sensorTypes) {
+			for (const [i, type] of sensorTypes.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `querying supported scales for ${
@@ -469,10 +469,15 @@ export class MultilevelSensorCC extends CommandClass {
 					});
 					return;
 				}
+
+				node.reportInterviewProgress(i + 1, sensorTypes.length);
 			}
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -525,7 +530,7 @@ value:       ${mlsResponse.value}${
 				endpoint: this.endpointIndex,
 			}) || [];
 
-			for (const type of sensorTypes) {
+			for (const [i, type] of sensorTypes.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `querying ${
@@ -545,6 +550,8 @@ value:       ${mlsResponse.value}${
 						direction: "inbound",
 					});
 				}
+
+				options?.onProgress?.(i + 1, sensorTypes.length);
 			}
 		}
 	}

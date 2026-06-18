@@ -43,6 +43,7 @@ test("the CC interviews happen in the correct order", (t) => {
 		CommandClasses["Security 2"],
 		CommandClasses["Manufacturer Specific"],
 		CommandClasses.Version,
+		CommandClasses["Multi Channel"],
 		...applicationCCs,
 	]);
 	const rootInterviewGraphPart2 = node.buildCCInterviewGraph([
@@ -59,7 +60,6 @@ test("the CC interviews happen in the correct order", (t) => {
 		"Device Reset Locally",
 		"Firmware Update Meta Data",
 		"CRC-16 Encapsulation",
-		"Multi Channel",
 		"Association",
 		"Multi Channel Association",
 		"Association Group Information",

@@ -1051,6 +1051,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				`new node, doing a full interview...`,
 			);
 			this.emit("interview started", this);
+			// Reset the progress baseline and announce the 0% starting point for a fresh interview
+			this.resetInterviewProgressBaseline();
 			await this.queryProtocolInfo();
 		}
 
@@ -1067,6 +1069,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 
 			if (this.interviewStage === InterviewStage.ProtocolInfo) {
+				this.reportInterviewStageStarted(InterviewStage.NodeInfo);
 				if (
 					!(await tryInterviewStage(() => this.interviewNodeInfo()))
 				) {
@@ -1077,6 +1080,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			// At this point the basic interview of new nodes is done. Start here when re-interviewing known nodes
 			// to get updated information about command classes
 			if (this.interviewStage === InterviewStage.NodeInfo) {
+				this.reportInterviewStageStarted(InterviewStage.CommandClasses);
 				// Only advance the interview if it was completed, otherwise abort
 				if (await this.interviewCCs()) {
 					this.setInterviewStage(InterviewStage.CommandClasses);
@@ -1092,6 +1096,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			|| (!this.isControllerNode
 				&& this.interviewStage === InterviewStage.CommandClasses)
 		) {
+			this.reportInterviewStageStarted(InterviewStage.OverwriteConfig);
 			// Load a config file for this node if it exists and overwrite the previously reported information
 			await this.overwriteConfig();
 		}
@@ -1100,6 +1105,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		this.cachedDeviceConfigHash = await this.deviceConfig?.getHash();
 
 		this.setInterviewStage(InterviewStage.Complete);
+		this.reportInterviewStageStarted(InterviewStage.Complete);
 		this.updateReadyMachine({ value: "INTERVIEW_DONE" });
 
 		// Tell listeners that the interview is completed
@@ -1336,8 +1342,26 @@ protocol version:      ${this.protocolVersion}`;
 		);
 	}
 
-	/** Step #? of the node interview */
 	protected async interviewCCs(): Promise<boolean> {
+		// Interviewing CCs happens in two phases, because the full amount of work is unknown up
+		// front (endpoints are revealed by Multi Channel, secure CCs by Security):
+		//
+		// Discovery phase — establishes the complete CC inventory:
+		//   - Root device: Security S2/S0 → Manufacturer Specific → Version (loads device config)
+		//     → Wake Up → Multi Channel (discovers endpoints)
+		//   - Endpoint prefix pass: Security S2/S0 → Version per endpoint; remembers each
+		//     endpoint's interview order
+		//
+		// Bulk phase — inventory is final, interview the rest:
+		//   - Root device non-application CCs
+		//   - Each endpoint's remaining CCs
+		//   - Root device application CCs
+		//   - Basic CC for root device and endpoints
+		//
+		// Progress reporting (see the InterviewProgress mixin) mirrors this:
+		//   - Discovery: each CC advances the CommandClasses band by a small, capped fixed amount
+		//   - Bulk: the remaining band is split proportionally to the remaining interview weight.
+		//     CCs can report sub-progress in their progress slice.
 		if (this.isControllerNode) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1347,15 +1371,15 @@ protocol version:      ${this.protocolVersion}`;
 			return true;
 		}
 
+		// Reset the per-stage progress tracking for this run of the CC interview
+		this.resetCCInterviewProgress();
+
 		const securityManager2 = this.driver.getSecurityManager2(this.id);
 
-		/**
-		 * @param force When this is `true`, the interview will be attempted even when the CC is not supported by the endpoint.
-		 */
-		const interviewEndpoint = async (
+		const runCCInterview = async (
 			endpoint: Endpoint,
 			cc: CommandClasses,
-			force: boolean = false,
+			force: boolean,
 		): Promise<"continue" | false | void> => {
 			let instance: CommandClass;
 			try {
@@ -1399,7 +1423,9 @@ protocol version:      ${this.protocolVersion}`;
 			}
 
 			// Skip this step if the CC was already interviewed
-			if (instance.isInterviewComplete(this.driver)) return "continue";
+			if (instance.isInterviewComplete(this.driver)) {
+				return "continue";
+			}
 
 			try {
 				await instance.interview(this.driver);
@@ -1413,6 +1439,27 @@ protocol version:      ${this.protocolVersion}`;
 				throw e;
 			}
 		};
+
+		/**
+		 * @param force When this is `true`, the interview will be attempted even when the CC is not supported by the endpoint.
+		 */
+		const interviewEndpoint = async (
+			endpoint: Endpoint,
+			cc: CommandClasses,
+			force: boolean = false,
+		): Promise<"continue" | false | void> => {
+			// Reserve a progress slice for this CC so that fine-grained progress
+			// reported during its interview maps into the correct range.
+			this.reserveCCInterviewStepProgress(endpoint.index, cc);
+			const result = await runCCInterview(endpoint, cc, force);
+			// Count this CC as completed (interviewed or skipped) unless the interview was aborted
+			if (result !== false) this.completeCCInterviewStepProgress();
+			return result;
+		};
+
+		// =====================================================================
+		// Discovery phase: root device
+		// -> Security, device identification, discover endpoints
 
 		// Always interview Security first because it changes the interview order
 		if (this.supportsCC(CommandClasses["Security 2"])) {
@@ -1600,6 +1647,27 @@ protocol version:      ${this.protocolVersion}`;
 
 		this.modifySupportedCCBeforeInterview(this);
 
+		// In order to be able to approximate the interview progress, we need to know
+		// early which endpoints exist and which CCs have to be interviewed on them.
+		if (this.supportsCC(CommandClasses["Multi Channel"])) {
+			this.driver.controllerLog.logNode(
+				this.id,
+				"Root device interview: Multi Channel",
+				"silly",
+			);
+
+			const action = await interviewEndpoint(
+				this,
+				CommandClasses["Multi Channel"],
+			);
+			if (typeof action === "boolean") return action;
+
+			// Now that the Multi Channel interview has discovered the endpoints, we may need to
+			// make some more changes to the CCs the device reports. This time, the non-root
+			// endpoints are relevant.
+			this.applyCommandClassesCompatFlag();
+		}
+
 		// We determine the correct interview order of the remaining CCs by topologically sorting two dependency graph
 		// In order to avoid emitting unnecessary value events for the root endpoint,
 		// we defer the application CC interview until after the other endpoints have been interviewed
@@ -1611,6 +1679,8 @@ protocol version:      ${this.protocolVersion}`;
 			CommandClasses["Manufacturer Specific"],
 			CommandClasses.Version,
 			CommandClasses["Wake Up"],
+			// Multi Channel is interviewed early because it discovers the endpoints
+			CommandClasses["Multi Channel"],
 			// Basic CC is interviewed last
 			CommandClasses.Basic,
 		];
@@ -1661,24 +1731,10 @@ protocol version:      ${this.protocolVersion}`;
 			"silly",
 		);
 
-		// Now that we know the correct order, do the interview in sequence
-		for (const cc of rootInterviewOrderBeforeEndpoints) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				`Root device interview: ${getCCName(cc)}`,
-				"silly",
-			);
-
-			const action = await interviewEndpoint(this, cc);
-			if (action === "continue") continue;
-			else if (typeof action === "boolean") return action;
-		}
-
-		// Before querying the endpoints, we may need to make some more changes to the CCs the device reports
-		// This time, the non-root endpoints are relevant
-		this.applyCommandClassesCompatFlag();
-
-		// Now query ALL endpoints
+		// =====================================================================
+		// Discovery phase: endpoints
+		// -> discover supported CCs on each endpoint that differ from the root device
+		const endpointInterviewOrders = new Map<number, CommandClasses[]>();
 		for (const endpointIndex of this.getEndpointIndizes()) {
 			const endpoint = this.getEndpoint(endpointIndex);
 			if (!endpoint) continue;
@@ -1928,6 +1984,55 @@ protocol version:      ${this.protocolVersion}`;
 				level: "silly",
 			});
 
+			// Remember the order; the actual CC interview happens in the bulk phase below
+			endpointInterviewOrders.set(endpointIndex, endpointInterviewOrder);
+		}
+
+		// =====================================================================
+		// Discovery → bulk boundary
+		// We now know exactly which CCs are supported, so we can switch to
+		// proportional progress reporting.
+
+		// Basic CC is interviewed conditionally at the very end (root device + each endpoint),
+		// outside the interview orders above. Include an allowance for it so the bar keeps
+		// moving during those interviews instead of sitting at the band end.
+		const remainingBasicCCs = Array.from(
+			{ length: 1 + endpointInterviewOrders.size },
+			() => CommandClasses.Basic,
+		);
+		this.setupCCInterviewBulkProgress(
+			rootInterviewOrderBeforeEndpoints,
+			...endpointInterviewOrders.values(),
+			rootInterviewOrderAfterEndpoints,
+			remainingBasicCCs,
+		);
+
+		// =====================================================================
+		// Bulk phase: root device
+		// -> Remaining non-application CCs
+		for (const cc of rootInterviewOrderBeforeEndpoints) {
+			this.driver.controllerLog.logNode(
+				this.id,
+				`Root device interview: ${getCCName(cc)}`,
+				"silly",
+			);
+
+			const action = await interviewEndpoint(this, cc);
+			if (action === "continue") continue;
+			else if (typeof action === "boolean") return action;
+		}
+
+		// =====================================================================
+		// Bulk phase: endpoints
+		// -> All remaining CCs
+		for (const endpointIndex of this.getEndpointIndizes()) {
+			const endpoint = this.getEndpoint(endpointIndex);
+			if (!endpoint) continue;
+			const endpointInterviewOrder = endpointInterviewOrders.get(
+				endpointIndex,
+			);
+			if (!endpointInterviewOrder) continue;
+
 			// Now that we know the correct order, do the interview in sequence
 			for (const cc of endpointInterviewOrder) {
 				this.driver.controllerLog.logNode(this.id, {
@@ -1946,7 +2051,9 @@ protocol version:      ${this.protocolVersion}`;
 			}
 		}
 
-		// Continue with the application CCs for the root endpoint
+		// =====================================================================
+		// Bulk phase: root device
+		// -> Application CCs
 		for (const cc of rootInterviewOrderAfterEndpoints) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1959,7 +2066,8 @@ protocol version:      ${this.protocolVersion}`;
 			else if (typeof action === "boolean") return action;
 		}
 
-		// At the very end, figure out if Basic CC is supposed to be supported
+		// =====================================================================
+		// Bulk phase: Basic CC -> Figure out if it is supposed to be supported
 		// First on the root device
 		const compat = this.deviceConfig?.compat;
 		if (

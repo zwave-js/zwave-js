@@ -571,7 +571,12 @@ identical capabilities:      ${multiResponse.identicalCapabilities}`;
 
 		// Step 3: Query endpoints
 		let hasQueriedCapabilities = false;
+		let completedEndpoints = 0;
 		for (const endpoint of allEndpoints) {
+			node.reportInterviewProgress(
+				++completedEndpoints,
+				allEndpoints.length,
+			);
 			if (
 				endpoint > multiResponse.individualEndpointCount
 				&& ccVersion >= 4

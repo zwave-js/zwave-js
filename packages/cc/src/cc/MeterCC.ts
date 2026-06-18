@@ -692,7 +692,10 @@ supports reset:       ${suppResp.supportsReset}`;
 		}
 
 		// Query current meter values
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -732,6 +735,8 @@ supports reset:       ${suppResp.supportsReset}`;
 			const rateTypes = supportedRateTypes.length
 				? supportedRateTypes
 				: [undefined];
+			const total = rateTypes.length * supportedScales.length;
+			let completed = 0;
 			for (const rateType of rateTypes) {
 				for (const scale of supportedScales) {
 					ctx.logNode(node.id, {
@@ -754,6 +759,8 @@ supports reset:       ${suppResp.supportsReset}`;
 						direction: "outbound",
 					});
 					await api.get({ scale, rateType });
+
+					options?.onProgress?.(++completed, total);
 				}
 			}
 		}

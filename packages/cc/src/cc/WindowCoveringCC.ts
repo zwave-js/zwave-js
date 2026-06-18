@@ -596,7 +596,10 @@ ${
 			}
 
 			// Query current values for all supported parameters
-			await this.refreshValues(ctx);
+			await this.refreshValues(ctx, {
+				onProgress: (completed, total) =>
+					node.reportInterviewProgress(completed, total),
+			});
 		}
 
 		// Remember that the interview is complete
@@ -622,10 +625,12 @@ ${
 			WindowCoveringCCValues.supportedParameters,
 		) ?? [];
 
-		for (const param of parameters) {
-			// Only query odd parameters (with position support)
-			if (param % 2 == 0) continue;
+		// Only odd parameters have position support and need to be queried
+		const queryableParameters = parameters.filter((param) =>
+			param % 2 != 0
+		);
 
+		for (const [i, param] of queryableParameters.entries()) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `querying position for parameter ${
@@ -637,6 +642,8 @@ ${
 				direction: "outbound",
 			});
 			await api.get(param);
+
+			options?.onProgress?.(i + 1, queryableParameters.length);
 		}
 	}
 

@@ -4,7 +4,7 @@ import {
 } from "@zwave-js/core/bindings/log/node";
 import { beforeEach, test as baseTest } from "vitest";
 import { CommandClasses } from "../definitions/CommandClasses.js";
-import { InterviewStage } from "../definitions/InterviewStage.js";
+import { InterviewStage } from "../definitions/Interview.js";
 import {
 	SpyTransport,
 	assertLogInfo,

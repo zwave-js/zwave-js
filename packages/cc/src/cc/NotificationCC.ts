@@ -700,6 +700,11 @@ export class NotificationCC extends CommandClass {
 							direction: "inbound",
 						});
 					}
+
+					node.reportInterviewProgress(
+						i + 1,
+						supportedNotificationTypes.length,
+					);
 				}
 			}
 
@@ -722,10 +727,16 @@ export class NotificationCC extends CommandClass {
 			}
 
 			if (notificationMode === "pull") {
-				await this.refreshValues(ctx);
+				await this.refreshValues(ctx, {
+					onProgress: (completed, total) =>
+						node.reportInterviewProgress(completed, total),
+				});
 			} /* if (notificationMode === "push") */ else {
 				// First, query the current state of each supported notification
-				await this.refreshValues(ctx);
+				await this.refreshValues(ctx, {
+					onProgress: (completed, total) =>
+						node.reportInterviewProgress(completed, total),
+				});
 
 				for (let i = 0; i < supportedNotificationTypes.length; i++) {
 					const type = supportedNotificationTypes[i];
@@ -738,6 +749,11 @@ export class NotificationCC extends CommandClass {
 						direction: "outbound",
 					});
 					await api.set(type, true);
+
+					node.reportInterviewProgress(
+						i + 1,
+						supportedNotificationTypes.length,
+					);
 				}
 			}
 		}
@@ -1056,6 +1072,8 @@ export class NotificationCC extends CommandClass {
 				// @ts-expect-error
 				await node.handleCommand(response);
 			}
+
+			options?.onProgress?.(i + 1, supportedNotificationTypes.length);
 		}
 
 		// Remember when we did this

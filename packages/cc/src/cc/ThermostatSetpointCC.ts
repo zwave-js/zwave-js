@@ -409,6 +409,13 @@ export class ThermostatSetpointCC extends CommandClass {
 					message: logMessage,
 					direction: "inbound",
 				});
+
+				node.reportInterviewProgress(
+					type - ThermostatSetpointType.Heating + 1,
+					ThermostatSetpointType["Full Power"]
+						- ThermostatSetpointType.Heating
+						+ 1,
+				);
 			}
 
 			// Remember which setpoint types are actually supported
@@ -452,7 +459,7 @@ export class ThermostatSetpointCC extends CommandClass {
 				return;
 			}
 
-			for (const type of setpointTypes) {
+			for (const [i, type] of setpointTypes.entries()) {
 				const setpointName = getEnumMemberName(
 					ThermostatSetpointType,
 					type,
@@ -482,10 +489,15 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 						direction: "inbound",
 					});
 				}
+
+				node.reportInterviewProgress(i + 1, setpointTypes.length);
 			}
 
 			// Query the current value for all setpoint types
-			await this.refreshValues(ctx);
+			await this.refreshValues(ctx, {
+				onProgress: (completed, total) =>
+					node.reportInterviewProgress(completed, total),
+			});
 		}
 
 		// Remember that the interview is complete
@@ -512,7 +524,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 		) ?? [];
 
 		// Query each setpoint's current value
-		for (const type of setpointTypes) {
+		for (const [i, type] of setpointTypes.entries()) {
 			const setpointName = getEnumMemberName(
 				ThermostatSetpointType,
 				type,
@@ -536,6 +548,8 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 					direction: "inbound",
 				});
 			}
+
+			options?.onProgress?.(i + 1, setpointTypes.length);
 		}
 	}
 }

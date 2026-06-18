@@ -14,6 +14,7 @@ import type {
 import type { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import type {
 	CommandClasses,
+	InterviewProgress,
 	MetadataUpdatedArgs,
 	NodeStatus,
 	TranslatedValueID,
@@ -36,7 +37,12 @@ export {
 	Powerlevel,
 	PowerlevelTestStatus,
 } from "@zwave-js/cc";
-export { ControllerStatus, InterviewStage, NodeStatus } from "@zwave-js/core";
+export {
+	ControllerStatus,
+	type InterviewProgress,
+	InterviewStage,
+	NodeStatus,
+} from "@zwave-js/core";
 
 export type NodeInterviewFailedEventArgs =
 	& {
@@ -88,6 +94,10 @@ export type ZWaveInterviewFailedCallback = (
 export type ZWaveNodeFirmwareUpdateProgressCallback = (
 	node: ZWaveNode,
 	progress: FirmwareUpdateProgress,
+) => void;
+export type ZWaveNodeInterviewProgressCallback = (
+	node: ZWaveNode,
+	progress: InterviewProgress,
 ) => void;
 export type ZWaveNodeFirmwareUpdateFinishedCallback = (
 	node: ZWaveNode,
@@ -281,6 +291,7 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	"interview completed": (node: ZWaveNode) => void;
 	ready: (node: ZWaveNode) => void;
 	"interview stage completed": (node: ZWaveNode, stageName: string) => void;
+	"interview progress": ZWaveNodeInterviewProgressCallback;
 	"interview started": (node: ZWaveNode) => void;
 	"node info received": (node: ZWaveNode) => void;
 	"user added": (endpoint: Endpoint, args: UserData) => void;
@@ -322,6 +333,7 @@ export const zWaveNodeEvents = [
 	"interview completed",
 	"ready",
 	"interview stage completed",
+	"interview progress",
 	"interview started",
 	"value added",
 	"value updated",

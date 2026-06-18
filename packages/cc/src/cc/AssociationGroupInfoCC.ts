@@ -397,10 +397,20 @@ export class AssociationGroupInfoCC extends CommandClass {
 			});
 			await api.getCommands(groupId);
 			// Not sure how to log this
+
+			// This loop and the info query in refreshValues() each iterate over all groups,
+			// so they make up the first and second half of this CC's interview progress.
+			node.reportInterviewProgress(groupId, 2 * associationGroupCount);
 		}
 
 		// Finally query each group for its information
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed) =>
+				node.reportInterviewProgress(
+					associationGroupCount + completed,
+					2 * associationGroupCount,
+				),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -455,6 +465,7 @@ profile:         ${
 					direction: "inbound",
 				});
 			}
+			options?.onProgress?.(groupId, associationGroupCount);
 		}
 	}
 }

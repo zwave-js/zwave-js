@@ -1,4 +1,4 @@
-import { type InterviewStage } from "../definitions/InterviewStage.js";
+import { type InterviewStage } from "../definitions/Interview.js";
 import type { FLiRS } from "../definitions/NodeInfo.js";
 import type { NodeStatus } from "../definitions/NodeStatus.js";
 import type { MaybeNotKnown } from "../values/Primitive.js";
