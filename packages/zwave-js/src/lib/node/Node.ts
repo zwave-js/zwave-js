@@ -1050,9 +1050,9 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				this.id,
 				`new node, doing a full interview...`,
 			);
-			// Reset the progress baseline for a fresh interview
-			this.resetInterviewProgressBaseline();
 			this.emit("interview started", this);
+			// Reset the progress baseline and announce the 0% starting point for a fresh interview
+			this.resetInterviewProgressBaseline();
 			await this.queryProtocolInfo();
 		}
 
@@ -1069,6 +1069,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 
 			if (this.interviewStage === InterviewStage.ProtocolInfo) {
+				this.reportInterviewStageStarted(InterviewStage.NodeInfo);
 				if (
 					!(await tryInterviewStage(() => this.interviewNodeInfo()))
 				) {
@@ -1079,6 +1080,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			// At this point the basic interview of new nodes is done. Start here when re-interviewing known nodes
 			// to get updated information about command classes
 			if (this.interviewStage === InterviewStage.NodeInfo) {
+				this.reportInterviewStageStarted(InterviewStage.CommandClasses);
 				// Only advance the interview if it was completed, otherwise abort
 				if (await this.interviewCCs()) {
 					this.setInterviewStage(InterviewStage.CommandClasses);
@@ -1094,6 +1096,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			|| (!this.isControllerNode
 				&& this.interviewStage === InterviewStage.CommandClasses)
 		) {
+			this.reportInterviewStageStarted(InterviewStage.OverwriteConfig);
 			// Load a config file for this node if it exists and overwrite the previously reported information
 			await this.overwriteConfig();
 		}
@@ -1102,6 +1105,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		this.cachedDeviceConfigHash = await this.deviceConfig?.getHash();
 
 		this.setInterviewStage(InterviewStage.Complete);
+		this.reportInterviewStageStarted(InterviewStage.Complete);
 		this.updateReadyMachine({ value: "INTERVIEW_DONE" });
 
 		// Tell listeners that the interview is completed
@@ -1118,8 +1122,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			this,
 			getEnumMemberName(InterviewStage, completedStage),
 		);
-		// Updates the interview progress according to the completed stage.
-		this.snapInterviewProgressToStage(completedStage);
 		this.driver.controllerLog.interviewStage(this);
 	}
 

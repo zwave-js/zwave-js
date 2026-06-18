@@ -9,32 +9,32 @@ import { DeviceConfigMixin } from "./80_DeviceConfig.js";
 
 // The interview progress is approximated as a percentage in [0, 100], matching the unit
 // used for firmware update progress. The CommandClasses stage dominates the total interview
-// time, so it occupies the largest band. The other stages are near-instant and snap to fixed
-// points (see snapInterviewProgressToStage).
+// time, so it occupies the largest band. The other stages are near-instant and advance to fixed
+// points (see interviewStageStartProgress).
 const INTERVIEW_PROGRESS_CC_BAND_START = 2;
 const INTERVIEW_PROGRESS_CC_BAND_END = 99;
-// The "discovery phase" (interviewing the CCs that establish the complete CC inventory:
-// Security, Manufacturer Specific, Version, Wake Up, Multi Channel on the root and
-// Security/Version on each endpoint) cannot know the total amount of work yet, so each of
-// those CCs advances progress by a fixed amount derived from its weight, bounded by this cap.
-// The cap leaves headroom for endpoint-heavy devices (which repeat Security/Version per
-// endpoint) so the bar does not stall once the cap is reached.
+
+// During the "discovery phase" of the CC interview, we don't know how much work is
+// involved in total, so we instead advance the progress by a fixed amount,
+// up to a cap that should leave enough room for the devices with lots of endpoints
+// or CCs.
 const INTERVIEW_PROGRESS_DISCOVERY_CAP = 30;
 const INTERVIEW_PROGRESS_DISCOVERY_UNIT = 0.4;
 
 /** The assumed number of configuration parameters when the count is not known from a config file */
 const ASSUMED_CONFIG_PARAM_COUNT = 30;
 
-/** The overall interview progress (percent in [0, 100]) reached when the given stage has completed */
-function interviewStageProgress(
+/**
+ * At which percentage each stage is defined to start.
+ */
+function interviewStageStartProgress(
 	stage: InterviewStage,
 ): number | undefined {
 	switch (stage) {
-		case InterviewStage.ProtocolInfo:
-			return 1;
 		case InterviewStage.NodeInfo:
-			return INTERVIEW_PROGRESS_CC_BAND_START;
+			return 1;
 		case InterviewStage.CommandClasses:
+			return INTERVIEW_PROGRESS_CC_BAND_START;
 		case InterviewStage.OverwriteConfig:
 			return INTERVIEW_PROGRESS_CC_BAND_END;
 		case InterviewStage.Complete:
@@ -80,9 +80,16 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 		});
 	}
 
-	/** Resets the overall progress baseline to 0 for a fresh interview */
+	/**
+	 * Resets the overall progress baseline to 0 for a fresh interview and emits an initial
+	 * progress event (stage `None`). This gives consumers a meaningful 0% anchor right away,
+	 * even if the first interview stage never starts.
+	 */
 	protected resetInterviewProgressBaseline(): void {
 		this._interviewProgress = 0;
+		this._ccInterviewCurrentEndpoint = undefined;
+		this._ccInterviewCurrentCC = undefined;
+		this.emitInterviewProgressUpdate(InterviewStage.None);
 	}
 
 	/**
@@ -99,7 +106,7 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 		this._ccInterviewCurrentEndpoint = undefined;
 		this._ccInterviewCurrentCC = undefined;
 		// Make sure the CC band starts at its lower bound, even on a resumed interview
-		// where the earlier stage snaps did not happen in this session.
+		// where the earlier stage transitions did not happen in this session.
 		this._interviewProgress = Math.max(
 			this._interviewProgress,
 			INTERVIEW_PROGRESS_CC_BAND_START,
@@ -136,8 +143,8 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	 * quick (weight 1); CCs that iterate over a runtime-enumerated collection get a higher weight
 	 * derived from the typical size of that collection.
 	 *
-	 * Typical collection sizes used to derive the weights below (median across a survey of ~34
-	 * certified products in the Z-Wave Alliance product database, plus maintainer input):
+	 * Typical collection sizes used to derive the weights below (median across a survey of ~30
+	 * certified products in the Z-Wave Alliance product database, plus some common sense):
 	 *
 	 *   | Collection                          | Typical | Affected CC(s)                                            |
 	 *   | ----------------------------------- | ------- | --------------------------------------------------------- |
@@ -288,21 +295,20 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	}
 
 	/**
-	 * Snaps the overall progress to the band end of a completed interview stage and emits an update.
-	 * The CommandClasses band (the bulk of the work) is filled granularly by the CC interview itself.
+	 * Advances the overall progress to the start of the given interview stage and emits an update
+	 * reporting that stage as currently in progress.
 	 */
-	protected snapInterviewProgressToStage(
-		completedStage: InterviewStage,
-	): void {
-		const stageProgress = interviewStageProgress(completedStage);
+	protected reportInterviewStageStarted(stage: InterviewStage): void {
+		const stageProgress = interviewStageStartProgress(stage);
 		if (stageProgress == undefined) return;
+
 		this._ccInterviewCurrentEndpoint = undefined;
 		this._ccInterviewCurrentCC = undefined;
 		this._interviewProgress = Math.max(
 			this._interviewProgress,
 			stageProgress,
 		);
-		this.emitInterviewProgressUpdate(completedStage);
+		this.emitInterviewProgressUpdate(stage);
 	}
 
 	/**
@@ -322,9 +328,9 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	public reportInterviewProgress(completed: number, total: number): void {
 		// Only meaningful while a specific CC is being interviewed
 		if (this._ccInterviewCurrentCC == undefined) return;
-		// This is called from many different CC interviews, so the inputs are sanitized
-		// here (not at each call site): the reported fraction is clamped into [0, 1],
-		// guarding against `completed > total`, negative values, and `total <= 0`.
+
+		// Make sure that we don't report garbage when the CC interviews
+		// call this with miscalculated progress values.
 		const fraction = total > 0
 			? Math.min(1, Math.max(0, completed / total))
 			: 0;
