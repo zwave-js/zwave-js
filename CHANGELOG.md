@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Added support for reporting granular interview progress (0-100%) using the new `"interview progress"` event (#8886)
+
+### Bugfixes
+* Improve handling of report-type CCs that are split across multiple frames (#8885)
+
 ## 15.24.3 (2026-06-15)
 ### Bugfixes
 * When the serial port fails to reopen during controller recovery, the driver will now emit a `Driver_Failed` error instead of silently getting stuck with a closed port (#8861)
