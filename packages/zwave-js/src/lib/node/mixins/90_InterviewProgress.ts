@@ -1,3 +1,4 @@
+import { getDistinctConfigParameters } from "@zwave-js/cc/ConfigurationCC";
 import {
 	CommandClasses,
 	type InterviewProgress,
@@ -225,21 +226,14 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	/**
 	 * The interview weight of the Configuration CC scales with the number of parameters that get
 	 * queried. When they are known up front from the device config file, the weight is the count
-	 * of distinct readable parameters; otherwise we assume a typical count.
+	 * of distinct parameters, otherwise we assume a typical count.
 	 */
 	private configurationCCInterviewWeight(): number {
 		const paramInfo = this.deviceConfig?.paramInformation
 			?? this.deviceConfig?.endpoints?.get(0)?.paramInformation;
 		if (!paramInfo?.size) return ASSUMED_CONFIG_PARAM_COUNT;
 
-		// Partial parameters share a parameter number and are queried once; write-only
-		// parameters are not queried during the interview.
-		const queryableParameters = new Set(
-			[...paramInfo.keys()]
-				.filter((key) => !paramInfo.get(key)?.writeOnly)
-				.map((key) => key.parameter),
-		);
-		return queryableParameters.size;
+		return getDistinctConfigParameters(paramInfo).length;
 	}
 
 	/** Computes the progress slice width for the CC that is about to be interviewed */

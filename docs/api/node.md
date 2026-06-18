@@ -1312,7 +1312,7 @@ A state of the interview process for this node was completed. Only the name of t
 ```
 
 > [!NOTE] This event is deprecated. It has been found that it is not very useful to report interview progress due to most of the interview happening in the `CommandClasses` stage.
-It is recommended to instead use the `"interview progress"` event for granular interview progress reporting.
+> It is recommended to instead use the `"interview progress"` event for granular interview progress reporting.
 
 ### `"interview progress"`
 
@@ -1340,6 +1340,7 @@ interface InterviewProgress {
 ```
 
 The `stage` is the current interview stage in progress, with two exceptions:
+
 - When the interview has just started, the stage is `None` and the progress is `0%`.
 - When the interview has completed, the stage is `Complete` and the progress is `100%`.
 

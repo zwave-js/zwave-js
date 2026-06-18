@@ -436,8 +436,7 @@ export class MultilevelSensorCC extends CommandClass {
 
 			// As well as the supported scales for each sensor
 
-			for (let i = 0; i < sensorTypes.length; i++) {
-				const type = sensorTypes[i];
+			for (const [i, type] of sensorTypes.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `querying supported scales for ${
@@ -531,8 +530,7 @@ value:       ${mlsResponse.value}${
 				endpoint: this.endpointIndex,
 			}) || [];
 
-			for (let i = 0; i < sensorTypes.length; i++) {
-				const type = sensorTypes[i];
+			for (const [i, type] of sensorTypes.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `querying ${

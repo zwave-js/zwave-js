@@ -843,13 +843,10 @@ export class IndicatorCC extends CommandClass {
 					});
 
 					for (
-						let i = 0;
-						i < manufacturerDefinedIndicatorIds.length;
-						i++
+						const [i, id] of manufacturerDefinedIndicatorIds
+							.entries()
 					) {
-						await api.getDescription(
-							manufacturerDefinedIndicatorIds[i],
-						);
+						await api.getDescription(id);
 
 						node.reportInterviewProgress(
 							i + 1,
@@ -896,8 +893,7 @@ export class IndicatorCC extends CommandClass {
 				ctx,
 				IndicatorCCValues.supportedIndicatorIds,
 			) ?? [];
-			for (let i = 0; i < supportedIndicatorIds.length; i++) {
-				const indicatorId = supportedIndicatorIds[i];
+			for (const [i, indicatorId] of supportedIndicatorIds.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `requesting current indicator value (id = ${

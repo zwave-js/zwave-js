@@ -606,8 +606,8 @@ export class VersionCC extends CommandClass {
 			ccsToQuery.push(cc);
 		}
 		// Actually query them
-		for (let i = 0; i < ccsToQuery.length; i++) {
-			await queryCCVersion(ccsToQuery[i]);
+		for (const [i, cc] of ccsToQuery.entries()) {
+			await queryCCVersion(cc);
 			node.reportInterviewProgress(i + 1, ccsToQuery.length);
 		}
 

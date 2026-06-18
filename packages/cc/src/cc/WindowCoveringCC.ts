@@ -630,9 +630,7 @@ ${
 			param % 2 != 0
 		);
 
-		for (let i = 0; i < queryableParameters.length; i++) {
-			const param = queryableParameters[i];
-
+		for (const [i, param] of queryableParameters.entries()) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `querying position for parameter ${

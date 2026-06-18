@@ -644,8 +644,7 @@ export class ColorSwitchCC extends CommandClass {
 			ColorSwitchCCValues.supportedColorComponents,
 		) ?? [];
 
-		for (let i = 0; i < supportedColors.length; i++) {
-			const color = supportedColors[i];
+		for (const [i, color] of supportedColors.entries()) {
 			// Some devices report invalid colors, but the CC API checks
 			// for valid values and throws otherwise.
 			if (!isEnumMember(ColorComponent, color)) continue;

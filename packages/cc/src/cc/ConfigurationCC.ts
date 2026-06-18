@@ -298,6 +298,26 @@ function getParamInformationFromConfigFile(
 }
 
 /**
+ * Returns the distinct parameter numbers in a ParamInfoMap. Partial parameters share a
+ * parameter number and are collapsed to a single entry, since they are queried together.
+ */
+export function getDistinctConfigParameters(paramInfo: ParamInfoMap): number[] {
+	return distinct([...paramInfo.keys()].map((key) => key.parameter));
+}
+
+/**
+ * Returns the distinct readable (non-write-only) parameter numbers in a ParamInfoMap.
+ * These are the parameters whose value is queried during the interview.
+ */
+export function getReadableConfigParameters(paramInfo: ParamInfoMap): number[] {
+	return distinct(
+		[...paramInfo.keys()]
+			.filter((key) => !paramInfo.get(key)?.writeOnly)
+			.map((key) => key.parameter),
+	);
+}
+
+/**
  * Estimates the number of device queries the Configuration interview performs,
  * depending on CC versions, availability of a config files, and compat flags.
  */
@@ -309,14 +329,14 @@ function estimateConfigurationInterviewQueryCount(
 	skipInfoQuery: boolean,
 ): number {
 	if (paramInfo?.size) {
-		const readableParameters = new Set(
-			[...paramInfo.keys()]
-				.filter((key) => !paramInfo.get(key)?.writeOnly)
-				.map((key) => key.parameter),
-		);
-		// v3+ queries each parameter's properties in addition to its value
-		// For parameters from config files, name and info are skipped.
-		return readableParameters.size * (ccVersion >= 3 ? 2 : 1);
+		// Before V3, only the value of each readable parameter is queried
+		if (ccVersion < 3) return getReadableConfigParameters(paramInfo).length;
+
+		// On V3+, the properties of every parameter are queried (including write-only
+		// ones, whose value is not), plus the value of each readable parameter. Name and
+		// info are skipped for parameters documented in a config file.
+		return getDistinctConfigParameters(paramInfo).length
+			+ getReadableConfigParameters(paramInfo).length;
 	}
 
 	// Before V3, only the value of each parameter is queried
@@ -1391,7 +1411,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				// To support reporting granular progress for devices where we don't
 				// know the parameter count in advance, we let the scan phase
 				// fill up the progress and map the value queries into the remainder.
-				// 
+				//
 				// For devices with known parameter counts, this mapping is uniform.
 				// For other devices it may yield larger, smaller, or no progress at all,
 				// depending on the actual parameter count.
@@ -1512,16 +1532,10 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 				this.endpointIndex,
 			);
 			if (paramInfo?.size) {
-				// Partial params share the same parameter number. Collect the
-				// distinct readable parameter numbers so each is queried once.
-				const parametersToQuery = distinct(
-					[...paramInfo.keys()]
-						// No need to query writeonly params
-						.filter((param) => !paramInfo.get(param)?.writeOnly)
-						.map((param) => param.parameter),
+				const parametersToQuery = getReadableConfigParameters(
+					paramInfo,
 				);
-				for (let i = 0; i < parametersToQuery.length; i++) {
-					const parameter = parametersToQuery[i];
+				for (const [i, parameter] of parametersToQuery.entries()) {
 					// Query the current value
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
@@ -1563,8 +1577,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 					.map((v) => v.property)
 					.filter((p) => typeof p === "number"),
 			);
-			for (let i = 0; i < parameters.length; i++) {
-				const param = parameters[i];
+			for (const [i, param] of parameters.entries()) {
 				if (
 					this.getParamInformation(ctx, param).readable !== false
 				) {

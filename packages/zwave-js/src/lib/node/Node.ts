@@ -1376,6 +1376,70 @@ protocol version:      ${this.protocolVersion}`;
 
 		const securityManager2 = this.driver.getSecurityManager2(this.id);
 
+		const runCCInterview = async (
+			endpoint: Endpoint,
+			cc: CommandClasses,
+			force: boolean,
+		): Promise<"continue" | false | void> => {
+			let instance: CommandClass;
+			try {
+				if (force) {
+					instance = CommandClass.createInstanceUnchecked(
+						endpoint,
+						cc,
+					)!;
+				} else {
+					instance = endpoint.createCCInstance(cc)!;
+				}
+			} catch (e) {
+				if (
+					isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.CC_NotSupported
+				) {
+					// The CC is no longer supported. This can happen if the node tells us
+					// something different in the Version interview than it did in its NIF
+					return "continue";
+				}
+				// we want to pass all other errors through
+				throw e;
+			}
+			if (
+				endpoint.isCCSecure(cc)
+				&& !this.driver.securityManager
+				&& !securityManager2
+			) {
+				// The CC is only supported securely, but the network key is not set up
+				// Skip the CC
+				this.driver.controllerLog.logNode(
+					this.id,
+					`Skipping interview for secure CC ${
+						getCCName(
+							cc,
+						)
+					} because no network key is configured!`,
+					"error",
+				);
+				return "continue";
+			}
+
+			// Skip this step if the CC was already interviewed
+			if (instance.isInterviewComplete(this.driver)) {
+				return "continue";
+			}
+
+			try {
+				await instance.interview(this.driver);
+			} catch (e) {
+				if (isTransmissionError(e)) {
+					// We had a CAN or timeout during the interview
+					// or the node is presumed dead. Abort the process
+					return false;
+				}
+				// we want to pass all other errors through
+				throw e;
+			}
+		};
+
 		/**
 		 * @param force When this is `true`, the interview will be attempted even when the CC is not supported by the endpoint.
 		 */
@@ -1387,67 +1451,7 @@ protocol version:      ${this.protocolVersion}`;
 			// Reserve a progress slice for this CC so that fine-grained progress
 			// reported during its interview maps into the correct range.
 			this.reserveCCInterviewStepProgress(endpoint.index, cc);
-			const result = await (async (): Promise<
-				"continue" | false | void
-			> => {
-				let instance: CommandClass;
-				try {
-					if (force) {
-						instance = CommandClass.createInstanceUnchecked(
-							endpoint,
-							cc,
-						)!;
-					} else {
-						instance = endpoint.createCCInstance(cc)!;
-					}
-				} catch (e) {
-					if (
-						isZWaveError(e)
-						&& e.code === ZWaveErrorCodes.CC_NotSupported
-					) {
-						// The CC is no longer supported. This can happen if the node tells us
-						// something different in the Version interview than it did in its NIF
-						return "continue";
-					}
-					// we want to pass all other errors through
-					throw e;
-				}
-				if (
-					endpoint.isCCSecure(cc)
-					&& !this.driver.securityManager
-					&& !securityManager2
-				) {
-					// The CC is only supported securely, but the network key is not set up
-					// Skip the CC
-					this.driver.controllerLog.logNode(
-						this.id,
-						`Skipping interview for secure CC ${
-							getCCName(
-								cc,
-							)
-						} because no network key is configured!`,
-						"error",
-					);
-					return "continue";
-				}
-
-				// Skip this step if the CC was already interviewed
-				if (instance.isInterviewComplete(this.driver)) {
-					return "continue";
-				}
-
-				try {
-					await instance.interview(this.driver);
-				} catch (e) {
-					if (isTransmissionError(e)) {
-						// We had a CAN or timeout during the interview
-						// or the node is presumed dead. Abort the process
-						return false;
-					}
-					// we want to pass all other errors through
-					throw e;
-				}
-			})();
+			const result = await runCCInterview(endpoint, cc, force);
 			// Count this CC as completed (interviewed or skipped) unless the interview was aborted
 			if (result !== false) this.completeCCInterviewStepProgress();
 			return result;

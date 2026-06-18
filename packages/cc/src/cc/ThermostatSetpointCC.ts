@@ -459,8 +459,7 @@ export class ThermostatSetpointCC extends CommandClass {
 				return;
 			}
 
-			for (let i = 0; i < setpointTypes.length; i++) {
-				const type = setpointTypes[i];
+			for (const [i, type] of setpointTypes.entries()) {
 				const setpointName = getEnumMemberName(
 					ThermostatSetpointType,
 					type,
@@ -525,8 +524,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 		) ?? [];
 
 		// Query each setpoint's current value
-		for (let i = 0; i < setpointTypes.length; i++) {
-			const type = setpointTypes[i];
+		for (const [i, type] of setpointTypes.entries()) {
 			const setpointName = getEnumMemberName(
 				ThermostatSetpointType,
 				type,
