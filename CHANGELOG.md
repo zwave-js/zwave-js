@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.25.0 (2026-06-18)
 ### Features
 * Added support for reporting granular interview progress (0-100%) using the new `"interview progress"` event (#8886)
 
