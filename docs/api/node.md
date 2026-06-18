@@ -1326,15 +1326,19 @@ The interview made progress. This event is emitted frequently (throttled) during
 
 ```ts
 interface InterviewProgress {
-	// The interview stage that is currently in progress
+	/**
+	 * The interview stage that is currently in progress.
+	 * `None` at the interview start, and `Complete` once the interview has finished.
+	 */
 	stage: InterviewStage;
-	// The approximate overall interview progress in %, rounded to two digits.
-	// This is monotonically non-decreasing within a single interview and only an approximation,
-	// as the exact amount of work cannot be known in advance.
+	/**
+	 * The approximate overall interview progress in %, rounded to two digits.
+	 */
 	progress: number;
-	// During the `CommandClasses` stage: the index of the endpoint that is currently being interviewed
+
+	/** During the `CommandClasses` stage: the index of the endpoint that is currently being interviewed */
 	endpoint?: number;
-	// During the `CommandClasses` stage: the Command Class that is currently being interviewed
+	/** During the `CommandClasses` stage: the Command Class that is currently being interviewed */
 	commandClass?: CommandClasses;
 }
 ```
