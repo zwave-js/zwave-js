@@ -1,0 +1,232 @@
+{
+	"manufacturer": "Versa Wireless Inc.",
+	"manufacturerId": "0x0464",
+	"label": "LAMP-ZW2",
+	"description": "Plug-In Lamp Dimmer",
+	"devices": [
+		{
+			"productType": "0xff00",
+			"productId": "0xff0d"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Send Basic Set ON / Off",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/0x0312/templates/minoston_template.json#led_indicator_brightness"
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "3",
+			"label": "LED Color",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Blue",
+					"value": 0
+				},
+				{
+					"label": "Green",
+					"value": 1
+				},
+				{
+					"label": "Red",
+					"value": 2
+				},
+				{
+					"label": "Yellow",
+					"value": 3
+				},
+				{
+					"label": "Cyan",
+					"value": 4
+				},
+				{
+					"label": "Magenta",
+					"value": 5
+				}
+			]
+		},
+
+		{
+			"#": "4",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_off_timer"
+		},
+		{
+			"#": "6",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_on_timer"
+		},
+		{
+			"#": "7",
+			"$import": "~/0x0312/templates/minoston_template.json#night_light_set"
+		},
+		{
+			"#": "8",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "9",
+			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_on_off",
+			"label": "Ramp Rate (Button - On)",
+			"maxValue": 99
+		},
+		{
+			"#": "10",
+			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_dimmer",
+			"label": "Ramp Rate (Hold)",
+			"maxValue": 99
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#minimum_dim_level_0-99",
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#maximum_dim_level_0-99",
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "13",
+			"$import": "~/0x0312/templates/minoston_template.json#single_tap_function",
+			"options": [
+				{
+					"label": "Last brightness level",
+					"value": 0
+				},
+				{
+					"label": "Value set in parameter 15",
+					"value": 1
+				},
+				{
+					"label": "Maximum brightness set in parameter 12",
+					"value": 2
+				},
+				{
+					"label": "Full brightness",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "14",
+			"$import": "~/0x0312/templates/minoston_template.json#double_tap_function",
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "Full brightness",
+					"value": 0
+				},
+				{
+					"label": "Value set in parameter 7",
+					"value": 1
+				},
+				{
+					"label": "Maximum brightness set in parameter 12",
+					"value": 2
+				},
+				{
+					"label": "Disable",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "15",
+			"$import": "~/templates/master_template.json#base_0-99_nounit",
+			"label": "Custom Brightness Level",
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Last level",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "16",
+			"$import": "~/templates/master_template.json#smart_switch_mode_0-2"
+		},
+		{
+			"#": "17",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Button Programming",
+			"defaultValue": 0
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#base_0-99_nounit",
+			"label": "Ramp Rate (Button - Off)",
+			"unit": "seconds",
+			"defaultValue": 2
+		},
+		{
+			"#": "19",
+			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"label": "Ramp Rate (Hub - On)",
+			"unit": "seconds",
+			"defaultValue": 255,
+			"options": [
+				{
+					"label": "Use parameter 9",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "20",
+			"$import": "~/templates/master_template.json#base_0-255_nounit",
+			"label": "Ramp Rate (Hub - Off)",
+			"unit": "seconds",
+			"defaultValue": 255,
+			"options": [
+				{
+					"label": "Use parameter 18",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "21",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "LED Blinking on Setting Change",
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "Press the button 3 times quickly. The blue LED will flash quickly. When included, the LED will light solid blue. A flashing purple LED indicates the device is already paired or in exclusion mode.",
+		"exclusion": "Press the button 3 times quickly.",
+		"reset": "Press the button twice quickly, then hold a 3rd press for 10 seconds.",
+		"manual": "https://versawireless.com/apps/resources/lamp-zw2-installation-instruction-manual"
+	}
+}
