@@ -84,13 +84,45 @@
 		},
 		{
 			"#": "62",
-			"label": "Power Report Frequency",
-			"description": "Choose how often you want your RGBW Dimmer to report power consumption (W) to your controller. NOTE: must be 0, or an increment of 30.",
+			"$purpose": "reporting_interval.power",
+			"label": "Power (W) Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32400,
+			"allowed": [
+				{ "range": [0, 32400], "step": 30 }
+			],
 			"defaultValue": 3600
+		},
+		{
+			"#": "63",
+			"label": "Analog Sensor Voltage Report Threshold",
+			"valueSize": 2,
+			"unit": "0.1 V",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "64",
+			"label": "Analog Sensor Report Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{ "range": [0, 32400], "step": 30 }
+			],
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "65",
@@ -105,12 +137,13 @@
 		},
 		{
 			"#": "66",
-			"label": "Energy Report Frequency",
-			"description": "Choose how often you want your RGBW Dimmer to report energy (kWh) to your controller. NOTE: must be 0, or an increment of 30",
+			"$purpose": "reporting_interval.energy",
+			"label": "Energy (kWh) Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32400,
+			"allowed": [
+				{ "range": [0, 32400], "step": 30 }
+			],
 			"defaultValue": 3600
 		},
 		{
@@ -162,6 +195,81 @@
 					"value": 0
 				}
 			]
+		},
+		{
+			// One byte per RGBW channel, packed big-endian: IN1/Red is the most
+			// significant byte, IN4/White the least. Per channel: 0-99 = brightness, 255 = on.
+			"#": "154[0xff000000]",
+			"label": "Single Click ON Trigger for Associated Devices (Red)",
+			"valueSize": 4,
+			"unit": "%",
+			"allowed": [
+				{ "range": [0, 99] },
+				{ "value": 255 }
+			],
+			"defaultValue": 255,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "On",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "154[0x00ff0000]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Single Click ON Trigger for Associated Devices (Green)"
+		},
+		{
+			"#": "154[0x0000ff00]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Single Click ON Trigger for Associated Devices (Blue)"
+		},
+		{
+			"#": "154[0x000000ff]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Single Click ON Trigger for Associated Devices (White)"
+		},
+		{
+			"#": "155[0xff000000]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Single Click OFF Trigger for Associated Devices (Red)"
+		},
+		{
+			"#": "155[0x00ff0000]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Single Click OFF Trigger for Associated Devices (Green)"
+		},
+		{
+			"#": "155[0x0000ff00]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Single Click OFF Trigger for Associated Devices (Blue)"
+		},
+		{
+			"#": "155[0x000000ff]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Single Click OFF Trigger for Associated Devices (White)"
+		},
+		{
+			"#": "156[0xff000000]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Double Click ON Trigger for Associated Devices (Red)"
+		},
+		{
+			"#": "156[0x00ff0000]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Double Click ON Trigger for Associated Devices (Green)"
+		},
+		{
+			"#": "156[0x0000ff00]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Double Click ON Trigger for Associated Devices (Blue)"
+		},
+		{
+			"#": "156[0x000000ff]",
+			"$import": "#paramInformation/154[0xff000000]",
+			"label": "Double Click ON Trigger for Associated Devices (White)"
 		},
 		{
 			"#": "157",

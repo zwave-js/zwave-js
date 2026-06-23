@@ -122,18 +122,7 @@
 		{
 			"#": "14",
 			"$if": "firmwareVersion >= 3.50",
-			"$import": "~/templates/master_template.json#base_options_nounit",
-			"label": "Central Scene Paddle Mapping",
-			"options": [
-				{
-					"label": "Upper paddle: Scene 2, lower paddle: Scene 1",
-					"value": 0
-				},
-				{
-					"label": "Upper paddle: Scene 1, lower paddle: Scene 2",
-					"value": 1
-				}
-			]
+			"$import": "templates/zooz_template.json#central_scene_paddle_mapping"
 		},
 		{
 			"#": "15",

@@ -56,7 +56,8 @@
 		},
 		{
 			"#": "2",
-			"$import": "templates/zooz_template.json#battery_report_threshold"
+			"$import": "templates/zooz_template.json#battery_report_threshold",
+			"defaultValue": 5
 		},
 		{
 			"#": "3",
