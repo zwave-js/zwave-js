@@ -142,6 +142,16 @@
 			"defaultValue": 1
 		},
 		{
+			"#": "45",
+			"$if": "firmwareVersion >= 1.13",
+			"label": "Temperature Auto Report Interval",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 60,
+			"defaultValue": 15
+		},
+		{
 			"#": "36[0xff]",
 			"label": "Overheat Trigger: Temperature",
 			"valueSize": 2,
@@ -237,10 +247,29 @@
 			"defaultValue": 1
 		},
 		{
+			"#": "52",
+			"label": "Water Leak Cancellation Timer",
+			"description": "Time without further leak detection before sending a leak cancellation report",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 60,
+			"defaultValue": 10
+		},
+		{
 			"#": "42",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Allow Valve Control - Water Leak Detected During Freeze Mode",
 			"defaultValue": 1
+		},
+		{
+			"#": "22",
+			"$if": "firmwareVersion >= 1.12",
+			"label": "Open/Close Cycle: Minimum Pulse Count",
+			"valueSize": 1,
+			"minValue": 10,
+			"maxValue": 99,
+			"defaultValue": 38
 		},
 		{
 			"#": "97",
@@ -250,6 +279,10 @@
 			"defaultValue": 3,
 			"allowManualEntry": false,
 			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
 				{
 					"label": "Enable when included/excluded",
 					"value": 3
@@ -292,27 +325,121 @@
 			"label": "Touch Keylock Protection"
 		},
 		{
+			// Firmware 1.19 split the former single-byte notification toggle
+			// into discrete parameters 81-86, one per notification type.
+			"#": "81",
+			"$if": "firmwareVersion >= 1.19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Notification Report: Water Valve Open/Close",
+			"defaultValue": 1
+		},
+		{
+			"#": "82",
+			"$if": "firmwareVersion >= 1.19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Notification Report: Overheat Detection",
+			"defaultValue": 0
+		},
+		{
+			"#": "83",
+			"$if": "firmwareVersion >= 1.19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Notification Report: Freeze Detection",
+			"defaultValue": 1
+		},
+		{
+			"#": "84",
+			"$if": "firmwareVersion >= 1.19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Notification Report: Wired Water Leak Probe",
+			"defaultValue": 1
+		},
+		{
+			"#": "85",
+			"$if": "firmwareVersion >= 1.19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Notification Report: AC Power",
+			"defaultValue": 1
+		},
+		{
+			"#": "86",
+			"$if": "firmwareVersion >= 1.19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Notification Report: Backup Battery (ZAC92)",
+			"defaultValue": 1
+		},
+		{
+			// Firmware before 1.19 exposed these notification toggles as a single bitmask parameter
 			"#": "81[0x01]",
+			"$if": "firmwareVersion < 1.19",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Notification Report: Water Valve Open",
 			"defaultValue": 1
 		},
 		{
 			"#": "81[0x02]",
+			"$if": "firmwareVersion < 1.19",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Notification Report: Overheat Detection",
 			"defaultValue": 1
 		},
 		{
 			"#": "81[0x04]",
+			"$if": "firmwareVersion < 1.19",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Notification Report: Freeze Detection",
 			"defaultValue": 1
 		},
 		{
 			"#": "81[0x08]",
+			"$if": "firmwareVersion < 1.19",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Notification Report: Local Water Leak Sensor Probe Detection",
+			"defaultValue": 1
+		},
+		{
+			"#": "99",
+			"$if": "firmwareVersion >= 1.15",
+			"label": "Manual Open Calibration Offset",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 10,
+			"defaultValue": 9
+		},
+		{
+			"#": "100",
+			"label": "Manual Close Calibration Offset",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 10,
+			"defaultValue": 4
+		},
+		{
+			"#": "113",
+			"$purpose": "reporting_threshold.battery",
+			"label": "Backup Battery Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 10
+		},
+		{
+			"#": "114",
+			"$purpose": "reporting_threshold.low_battery",
+			"label": "Low Backup Battery Report Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 30
+		},
+		{
+			"#": "115",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto-Close on Low Backup Battery",
 			"defaultValue": 1
 		}
 	],

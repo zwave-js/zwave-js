@@ -118,6 +118,28 @@
 			"#": "13",
 			"$if": "firmwareVersion >= 2.2",
 			"$import": "templates/zooz_template.json#smart_switch_mode_reporting"
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion >= 3.50",
+			"$import": "~/templates/master_template.json#base_options_nounit",
+			"label": "Central Scene Paddle Mapping",
+			"options": [
+				{
+					"label": "Upper paddle: Scene 2, lower paddle: Scene 1",
+					"value": 0
+				},
+				{
+					"label": "Upper paddle: Scene 1, lower paddle: Scene 2",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion >= 3.50",
+			"$import": "templates/zooz_template.json#local_programming",
+			"defaultValue": 0
 		}
 	],
 	"metadata": {

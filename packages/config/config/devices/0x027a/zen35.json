@@ -205,7 +205,7 @@
 			"#": "20",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "Send Report and Toggle LED on Button Press If Dimmer Disabled",
-			"defaultValue": 1
+			"defaultValue": 0
 		},
 		{
 			"#": "21",
@@ -218,8 +218,7 @@
 		},
 		{
 			"#": "23",
-			"$import": "templates/zooz_template.json#local_dimming_speed",
-			"defaultValue": 5
+			"$import": "templates/zooz_template.json#local_dimming_speed"
 		},
 		{
 			"#": "24",
@@ -231,18 +230,15 @@
 		},
 		{
 			"#": "26",
-			"$import": "templates/zooz_template.json#local_dimming_speed_group_3_and_4",
-			"defaultValue": 5
+			"$import": "templates/zooz_template.json#local_dimming_speed_group_3_and_4"
 		},
 		{
 			"#": "27",
-			"$import": "templates/zooz_template.json#min_brightness",
-			"defaultValue": 1
+			"$import": "templates/zooz_template.json#min_brightness"
 		},
 		{
 			"#": "28",
-			"$import": "templates/zooz_template.json#max_brightness",
-			"defaultValue": 99
+			"$import": "templates/zooz_template.json#max_brightness"
 		},
 		{
 			"#": "29",
@@ -343,7 +339,7 @@
 		{
 			"#": "36",
 			"$import": "templates/zooz_template.json#enable_scene_control",
-			"defaultValue": 0
+			"defaultValue": 1
 		},
 		{
 			"#": "37",

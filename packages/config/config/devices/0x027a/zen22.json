@@ -16,13 +16,31 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$if": "firmwareVersion <= 2.255 || firmwareVersion >= 20.14",
+			"$if": "firmwareVersion <= 2.255 || firmwareVersion >= 20.15",
 			"$import": "~/templates/master_template.json#orientation"
 		},
 		{
 			"#": "1",
-			"$if": "firmwareVersion >= 3.0 && firmwareVersion <= 20.14",
-			"$import": "~/templates/master_template.json#orientation_momentary"
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
+			"$purpose": "orientation",
+			"label": "On/Off Paddle Orientation",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Upper paddle on, lower paddle off",
+					"value": 0
+				},
+				{
+					"label": "Upper paddle off, lower paddle on",
+					"value": 1
+				},
+				{
+					"label": "Either paddle toggles on/off",
+					"value": 2
+				}
+			]
 		},
 		{
 			"#": "2",
@@ -68,20 +86,26 @@
 			]
 		},
 		{
-			"#": "4",
-			"$if": "firmwareVersion >= 3.0",
-			"$import": "templates/zooz_template.json#auto_off_timer_duration"
-		},
-		{
 			"#": "5",
 			"$if": "firmwareVersion >= 3.0",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Enable/Disable Auto Turn-On"
+			"label": "Auto Turn-On Timer"
 		},
 		{
 			"#": "6",
 			"$if": "firmwareVersion >= 3.0",
 			"$import": "templates/zooz_template.json#auto_on_timer_duration"
+		},
+		{
+			"#": "3",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-Off Timer"
+		},
+		{
+			"#": "4",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
+			"$import": "templates/zooz_template.json#auto_off_timer_duration"
 		},
 		{
 			"#": "7[0x01]",
@@ -189,8 +213,7 @@
 		{
 			"#": "22",
 			"$if": "firmwareVersion >= 3.7",
-			"$import": "templates/zooz_template.json#night_light_mode",
-			"defaultValue": 0
+			"$import": "templates/zooz_template.json#night_light_mode"
 		}
 	]
 }
