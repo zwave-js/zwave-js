@@ -19,6 +19,18 @@
 		},
 		{
 			"productType": "0x0004",
+		    "productId": "0x006a"
+		},
+		{
+			"productType": "0x0004",
+			"productId": "0x006c"
+		},
+		{
+			"productType": "0x0004",
+			"productId": "0x006d"
+		},
+		{
+			"productType": "0x0004",
 			"productId": "0x0091"
 		},
 		{
@@ -40,6 +52,10 @@
 		{
 			"productType": "0x0004",
 			"productId": "0x0177"
+		},
+		{
+			"productType": "0x0004",
+			"productId": "0x0393"
 		}
 	],
 	"firmwareVersion": {
