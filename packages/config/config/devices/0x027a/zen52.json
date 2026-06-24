@@ -34,7 +34,8 @@
 	"paramInformation": [
 		{
 			"#": "2",
-			"$import": "~/templates/master_template.json#enable_led_indicator"
+			"$import": "~/templates/master_template.json#enable_led_indicator",
+			"defaultValue": 1
 		},
 		{
 			"#": "3",
@@ -127,6 +128,40 @@
 		{
 			"#": "27",
 			"$import": "templates/zooz_template.json#zen5x_external_switch_multiple_click"
+		},
+		{
+			"#": "28",
+			"$if": "firmwareVersion >= 1.80",
+			"label": "Input Trigger",
+			"description": "Choose whether the inputs trigger the outputs, or just send input reports for monitoring while keeping the outputs separate.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Inputs trigger outputs",
+					"value": 0
+				},
+				{
+					"label": "Input S1 separated from output",
+					"value": 1
+				},
+				{
+					"label": "Input S2 separated from output",
+					"value": 2
+				},
+				{
+					"label": "Both inputs separated from outputs",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "29",
+			"$if": "firmwareVersion >= 1.80",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "DC Motor Mode",
+			"description": "Synchronize relay 1 and relay 2 so they cannot be activated at the same time."
 		}
 	],
 	"metadata": {

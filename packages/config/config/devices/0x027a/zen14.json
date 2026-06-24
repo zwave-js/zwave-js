@@ -90,7 +90,8 @@
 
 		{
 			"#": "7",
-			"$import": "templates/zooz_template.json#led_indicator_brightness"
+			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"defaultValue": 2
 		},
 		{
 			"#": "8",

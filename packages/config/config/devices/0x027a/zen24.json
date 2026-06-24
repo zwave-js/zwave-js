@@ -67,6 +67,26 @@
 			"$import": "templates/zooz_template.json#auto_on_timer_duration"
 		},
 		{
+			"#": "7[0x01]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_physical"
+		},
+		{
+			"#": "7[0x02]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_3way"
+		},
+		{
+			"#": "7[0x04]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_zwave"
+		},
+		{
+			"#": "7[0x08]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_timer"
+		},
+		{
 			"#": "8",
 			"$if": "firmwareVersion >= 3.0",
 			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"

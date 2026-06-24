@@ -118,6 +118,17 @@
 			"#": "13",
 			"$if": "firmwareVersion >= 2.2",
 			"$import": "templates/zooz_template.json#smart_switch_mode_reporting"
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion >= 3.50",
+			"$import": "templates/zooz_template.json#central_scene_paddle_mapping"
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion >= 3.50",
+			"$import": "templates/zooz_template.json#local_programming",
+			"defaultValue": 0
 		}
 	],
 	"metadata": {

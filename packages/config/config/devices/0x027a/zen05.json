@@ -1,3 +1,7 @@
+// Firmware versions
+// 700-series: 1.10
+// 800LR:      2.0 -> 2.10 -> 2.20 -> 2.30
+
 {
 	"manufacturer": "Zooz",
 	"manufacturerId": "0x027a",
@@ -32,6 +36,11 @@
 				{
 					"label": "Always off",
 					"value": 2
+				},
+				{
+					"$if": "firmwareVersion >= 2.0",
+					"label": "Always on",
+					"value": 3
 				}
 			]
 		},
@@ -57,6 +66,129 @@
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Manual Control",
 			"defaultValue": 1
+		},
+		{
+			"#": "13",
+			"$if": "firmwareVersion >= 2.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Power (W) Reporting",
+			"defaultValue": 0
+		},
+		{
+			"#": "9",
+			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_threshold.power",
+			"label": "Power (W) Report Threshold",
+			"valueSize": 1,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "10",
+			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_interval.power",
+			"label": "Power (W) Report Interval",
+			"valueSize": 4,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 65535,
+			"defaultValue": 5
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion >= 2.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Current (A) Reporting",
+			"defaultValue": 0
+		},
+		{
+			"#": "11",
+			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_threshold.current",
+			"label": "Current (A) Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 A",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_interval.current",
+			"label": "Current (A) Report Interval",
+			"valueSize": 4,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 65535,
+			"defaultValue": 60
+		},
+		{
+			"#": "18",
+			"$if": "firmwareVersion >= 2.10",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Energy (kWh) Reporting",
+			"defaultValue": 0
+		},
+		{
+			"#": "12",
+			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_threshold.energy",
+			"label": "Energy (kWh) Report Threshold",
+			"valueSize": 1,
+			"unit": "0.01 kWh",
+			"minValue": 0,
+			"maxValue": 200,
+			"defaultValue": 1,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "17",
+			"$if": "firmwareVersion >= 2.10",
+			"$purpose": "reporting_interval.energy",
+			"label": "Energy (kWh) Report Interval",
+			"valueSize": 4,
+			"unit": "minutes",
+			"minValue": 1,
+			"maxValue": 65535,
+			"defaultValue": 60
+		},
+		{
+			"#": "16",
+			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_interval.voltage",
+			"label": "Voltage (V) Report Interval",
+			"valueSize": 4,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 65535,
+			"defaultValue": 60,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
 		}
 	]
 }

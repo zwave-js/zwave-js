@@ -21,14 +21,28 @@
 			"defaultValue": 4
 		},
 		{
+			"#": "13",
+			"$if": "firmwareVersion >= 2.10",
+			"label": "Vibration Sensitivity",
+			"description": "1 = least sensitive, 4 = most sensitive",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 4,
+			"defaultValue": 3
+		},
+		{
 			"#": "14",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Motion Detection: Send Basic Set",
-			"defaultValue": 1
+			"label": "Motion Detection: Send Basic Set"
 		},
 		{
 			"#": "15",
 			"$import": "templates/zooz_template.json#basic_set_value"
+		},
+		{
+			"#": "16",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Motion Cleared: Send Basic Set"
 		},
 		{
 			"#": "17",
@@ -38,18 +52,32 @@
 		},
 		{
 			"#": "18",
+			"$if": "firmwareVersion < 2.0",
 			"label": "Motion Detection: Timeout",
 			"description": "3 seconds are added to the configured value (e.g. 27 equals 30 seconds)",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 3,
+			"minValue": 10,
 			"maxValue": 65535,
 			"defaultValue": 27,
 			"unsigned": true
 		},
 		{
+			"#": "18",
+			"$if": "firmwareVersion >= 2.0",
+			"label": "Motion Detection: Timeout",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 10,
+			"maxValue": 65535,
+			"defaultValue": 30,
+			"unsigned": true
+		},
+		{
 			"#": "19",
-			"$import": "templates/zooz_template.json#binary_sensor_report"
+			"$if": "firmwareVersion < 2.0",
+			"$import": "templates/zooz_template.json#binary_sensor_report",
+			"defaultValue": 0
 		},
 		{
 			"#": "20",
@@ -61,6 +89,11 @@
 			"#": "32",
 			"$import": "templates/zooz_template.json#low_battery_alarm_threshold",
 			"defaultValue": 10
+		},
+		{
+			"#": "254",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Lock Configuration"
 		}
 	],
 	"metadata": {

@@ -1,4 +1,10 @@
-// 800 series (LR) starting with firmware 2.10
+// Two hardware revisions, distinguished by firmware major version:
+//   700 series:      1.2 -> 1.3 -> 10.0 -> 10.10 (highest)
+//   800 series (LR): 2.10 -> 2.20 -> 2.30 -> 2.40
+
+// Conditionals:
+// 700 10.10 and later, plus 800LR:
+//   firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.10
 {
 	"manufacturer": "Zooz",
 	"manufacturerId": "0x027a",
@@ -78,17 +84,18 @@
 		{
 			"#": "27",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.10",
-			"$import": "templates/zooz_template.json#dimmer_off_ramp_rate"
+			"$import": "templates/zooz_template.json#dimmer_off_ramp_rate",
+			"defaultValue": 2
 		},
 		{
 			"#": "28",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.10",
-			"$import": "templates/zooz_template.json#zwave_on_dimmer_ramp_rate"
+			"$import": "templates/zooz_template.json#zwave_on_dimmer_ramp_rate_match_manual_255"
 		},
 		{
 			"#": "29",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.10",
-			"$import": "templates/zooz_template.json#zwave_off_dimmer_ramp_rate"
+			"$import": "templates/zooz_template.json#zwave_off_dimmer_ramp_rate_match_manual_255"
 		},
 		{
 			"#": "10",
@@ -137,12 +144,61 @@
 		{
 			"#": "26",
 			"$if": "firmwareVersion >= 1.03",
-			"$import": "templates/zooz_template.json#local_programming"
+			"$import": "templates/zooz_template.json#local_programming",
+			"defaultValue": 0
 		},
 		{
 			"#": "30",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.10",
 			"$import": "templates/zooz_template.json#local_dimming_speed_group_3_and_4"
+		},
+		// LED Indicator settings
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "23",
+			"$import": "templates/zooz_template.json#led_indicator_color"
+		},
+		{
+			"#": "24",
+			"$import": "templates/zooz_template.json#led_indicator_brightness"
+		},
+		// 800 series (LR) only parameters
+		{
+			"#": "32",
+			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_confirm_config_change"
+		},
+		{
+			"#": "33",
+			"$if": "firmwareVersion >= 2.20 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#on_off_switch_mode"
+		},
+		{
+			"#": "34",
+			"$if": "firmwareVersion >= 2.30 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#custom_brightness",
+			"label": "Custom Brightness Level (Z-Wave Control)"
+		},
+		{
+			"#": "35",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
+		},
+		{
+			"#": "36",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#gamma_factor"
+		},
+		{
+			"#": "37",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_multi_color"
 		}
 	],
 	"compat": {

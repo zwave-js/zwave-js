@@ -1,4 +1,6 @@
-// 800 series (LR) starting with firmware 2.10
+// Two hardware revisions, distinguished by firmware major version:
+//   700 series:      1.02 -> 10.0 (highest)
+//   800 series (LR): 2.10 -> 2.20 -> 2.30 -> 2.40
 {
 	"manufacturer": "Zooz",
 	"manufacturerId": "0x027a",
@@ -76,13 +78,40 @@
 			"$import": "templates/zooz_template.json#smart_switch_mode_reporting"
 		},
 		{
+			"#": "14",
+			"$import": "templates/zooz_template.json#led_indicator_color"
+		},
+		{
+			"#": "15",
+			"$import": "templates/zooz_template.json#led_indicator_brightness"
+		},
+		{
+			"#": "18",
+			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_confirm_config_change"
+		},
+		{
 			"#": "16",
 			"$import": "templates/zooz_template.json#association_reports_binary"
 		},
 		{
 			"#": "17",
-			"$if": "firmwareVersion >= 10.0",
-			"$import": "templates/zooz_template.json#local_programming"
+			"$if": "firmwareVersion >= 2.10",
+			"$import": "templates/zooz_template.json#local_programming",
+			"defaultValue": 0
+		},
+		{
+			"#": "19",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
+		},
+		{
+			"#": "20",
+			"$if": "firmwareVersion >= 2.40 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_multi_color"
 		}
 	],
 	"compat": {

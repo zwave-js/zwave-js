@@ -97,12 +97,13 @@
 		},
 		{
 			"#": "9",
-			"$import": "~/templates/master_template.json#base_0-255_nounit",
 			"$purpose": "reporting_threshold.brightness",
 			"label": "Light Reporting Threshold",
+			"valueSize": 2,
 			"unit": "lux",
-			"defaultValue": 255,
-			"unsigned": true
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 100
 		},
 		{
 			"#": "10",

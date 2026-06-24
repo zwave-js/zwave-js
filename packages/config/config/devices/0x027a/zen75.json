@@ -91,6 +91,19 @@
 		{
 			"#": "19",
 			"$import": "templates/zooz_template.json#led_confirm_config_change"
+		},
+		{
+			"#": "20",
+			"$if": "firmwareVersion >= 1.20",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
+		},
+		{
+			"#": "21",
+			"$if": "firmwareVersion >= 1.20",
+			"$import": "templates/zooz_template.json#led_indicator_multi_color"
 		}
 	],
 	"metadata": {

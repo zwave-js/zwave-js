@@ -1,3 +1,10 @@
+// Firmware versions
+// VER 1.0:      20.16
+// VER 2.0-2.02: 20.15
+// VER 3.0-4.05: 3.0 -> 3.04 -> 4.0 -> 4.05
+
+// Conditionals:
+// VER 3.0 and later: firmwareVersion >= 3.0 && firmwareVersion < 20.15
 {
 	"manufacturer": "Zooz",
 	"manufacturerId": "0x027a",
@@ -21,50 +28,51 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$if": "firmwareVersion !== 20.16",
 			"$import": "~/templates/master_template.json#orientation_momentary"
 		},
 		{
 			"#": "2",
-			"$if": "firmwareVersion <= 2.255",
-			"$import": "~/templates/master_template.json#led_indicator_two_options"
-		},
-		{
-			"#": "2",
-			"$if": "firmwareVersion >= 3.0",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#led_indicator_four_options"
 		},
 		{
+			"#": "2",
+			"$if": "firmwareVersion !== 20.16",
+			"$import": "~/templates/master_template.json#led_indicator_two_options"
+		},
+		{
 			"#": "3",
-			"$if": "firmwareVersion <= 2.255",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-Off Timer"
+		},
+		{
+			"#": "3",
+			"$if": "firmwareVersion !== 20.16",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "Enable/Disable LED Indicator",
 			"defaultValue": 0
 		},
 		{
-			"#": "3",
-			"$if": "firmwareVersion >= 3.0",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Auto Turn-Off Timer"
-		},
-		{
 			"#": "4",
-			"$if": "firmwareVersion >= 3.0",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
 			"$import": "templates/zooz_template.json#auto_off_timer_duration"
 		},
 		{
 			"#": "5",
-			"$if": "firmwareVersion >= 3.0",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Auto Turn-On Timer"
 		},
 		{
 			"#": "6",
-			"$if": "firmwareVersion >= 3.0",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
 			"$import": "templates/zooz_template.json#auto_on_timer_duration"
 		},
 		{
 			"#": "7[0x01]",
-			"$if": "firmwareVersion >= 3.4",
+			"$if": "firmwareVersion >= 3.4 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Send Status Change Report: Local Control",
 			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
@@ -72,7 +80,7 @@
 		},
 		{
 			"#": "7[0x02]",
-			"$if": "firmwareVersion >= 3.4",
+			"$if": "firmwareVersion >= 3.4 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Send Status Change Report: 3-Way",
 			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
@@ -80,7 +88,7 @@
 		},
 		{
 			"#": "7[0x04]",
-			"$if": "firmwareVersion >= 3.4",
+			"$if": "firmwareVersion >= 3.4 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Send Status Change Report: Z-Wave",
 			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
@@ -88,7 +96,7 @@
 		},
 		{
 			"#": "7[0x08]",
-			"$if": "firmwareVersion >= 3.4",
+			"$if": "firmwareVersion >= 3.4 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Send Status Change Report: Timer",
 			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
@@ -96,33 +104,45 @@
 		},
 		{
 			"#": "8",
-			"$if": "firmwareVersion >= 3.0",
+			"$if": "firmwareVersion >= 3.0 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		},
 		{
 			"#": "9",
-			"$if": "firmwareVersion >= 3.1",
+			"$if": "firmwareVersion >= 3.1 && firmwareVersion < 20.15",
 			"$import": "templates/zooz_template.json#enable_scene_control"
 		},
 		{
 			"#": "10",
-			"$if": "firmwareVersion >= 3.1",
+			"$if": "firmwareVersion >= 3.1 && firmwareVersion < 20.15",
 			"$import": "templates/zooz_template.json#local_control"
 		},
 		{
 			"#": "11",
-			"$if": "firmwareVersion >= 3.4",
+			"$if": "firmwareVersion >= 3.4 && firmwareVersion < 20.15",
 			"$import": "~/templates/master_template.json#smart_switch_mode_0-2"
 		},
 		{
 			"#": "12",
-			"$if": "firmwareVersion >= 3.4",
+			"$if": "firmwareVersion >= 3.4 && firmwareVersion < 20.15",
 			"$import": "templates/zooz_template.json#3way_switch_type"
 		},
 		{
 			"#": "13",
-			"$if": "firmwareVersion >= 3.4",
+			"$if": "firmwareVersion >= 3.4 && firmwareVersion < 20.15",
 			"$import": "templates/zooz_template.json#smart_switch_mode_reporting"
+		},
+		{
+			// Value table is not published by Zooz for the ZEN21; assumed identical to the ZEN26/ZEN27.
+			"#": "16",
+			"$if": "firmwareVersion >= 4.5 && firmwareVersion < 20.15",
+			"$import": "templates/zooz_template.json#central_scene_paddle_mapping"
+		},
+		{
+			"#": "17",
+			"$if": "firmwareVersion >= 4.5 && firmwareVersion < 20.15",
+			"$import": "templates/zooz_template.json#local_programming",
+			"defaultValue": 0
 		}
 	],
 	"metadata": {
