@@ -43,6 +43,10 @@ add_operation(
 	"ver ===",
 	tryOr((a, b) => semverEq(padVersion(a), padVersion(b)), false),
 );
+add_operation(
+	"ver !==",
+	tryOr((a, b) => !semverEq(padVersion(a), padVersion(b)), false),
+);
 
 export function parseLogic(input: string): RulesLogic {
 	const expr = parse(input);

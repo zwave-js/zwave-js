@@ -60,6 +60,16 @@ const tests = [
 		context: { sdkVersion: "7.19.0", firmwareVersion: "1.5" },
 		expected: true,
 	},
+	{
+		logic: "firmwareVersion !== 20.16",
+		context: { firmwareVersion: "20.15" },
+		expected: true,
+	},
+	{
+		logic: "firmwareVersion !== 20.16",
+		context: { firmwareVersion: "20.16" },
+		expected: false,
+	},
 ] as const;
 
 for (let i = 1; i <= tests.length; i++) {
