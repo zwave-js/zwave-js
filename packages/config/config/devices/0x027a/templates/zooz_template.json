@@ -1014,6 +1014,20 @@
 		"description": "Enables control through the physical inputs on the device",
 		"defaultValue": 1
 	},
+	"central_scene_paddle_mapping": {
+		"$import": "~/templates/master_template.json#base_options_nounit",
+		"label": "Central Scene Paddle Mapping",
+		"options": [
+			{
+				"label": "Upper paddle: Scene 2, lower paddle: Scene 1",
+				"value": 0
+			},
+			{
+				"label": "Upper paddle: Scene 1, lower paddle: Scene 2",
+				"value": 1
+			}
+		]
+	},
 	"local_programming": {
 		"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 		"label": "Local Programming",

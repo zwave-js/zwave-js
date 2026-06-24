@@ -91,8 +91,7 @@
 		},
 		{
 			"#": "9",
-			"$import": "templates/zooz_template.json#dimmer_ramp_rate",
-			"defaultValue": 1
+			"$import": "templates/zooz_template.json#dimmer_ramp_rate"
 		},
 		{
 			"#": "10",
@@ -147,14 +146,15 @@
 		},
 		{
 			"#": "17",
-			"$if": "firmwareVersion === 2.7",
+			"$if": "firmwareVersion >= 2.7 && firmwareVersion <= 3.0",
 			"$import": "templates/zooz_template.json#zwave_ramp_rate",
 			"defaultValue": 1
 		},
 		{
 			"#": "17",
-			"$if": "firmwareVersion >= 2.8",
+			"$if": "firmwareVersion >= 3.1",
 			"$import": "templates/zooz_template.json#zwave_ramp_rate"
+			// The default value changed, nothing else
 		},
 		{
 			"#": "18",
@@ -175,6 +175,17 @@
 			"#": "22",
 			"$if": "firmwareVersion >= 2.8",
 			"$import": "templates/zooz_template.json#night_light_mode",
+			"defaultValue": 0
+		},
+		{
+			"#": "23",
+			"$if": "firmwareVersion >= 3.40",
+			"$import": "templates/zooz_template.json#central_scene_paddle_mapping"
+		},
+		{
+			"#": "24",
+			"$if": "firmwareVersion >= 3.40",
+			"$import": "templates/zooz_template.json#local_programming",
 			"defaultValue": 0
 		}
 	],
