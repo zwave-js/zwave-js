@@ -269,737 +269,737 @@
 		{
 			"#": "46[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (All Days)",
+			"label": "All Days: Period 1 Hour",
 			"defaultValue": 6
 		},
 		{
 			"#": "46[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (All Days)"
+			"label": "All Days: Period 1 Minute"
+		},
+		{
+			"#": "50",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "All Days: Period 1 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "54",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "All Days: Period 1 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "47[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (All Days)",
+			"label": "All Days: Period 2 Hour",
 			"defaultValue": 8
 		},
 		{
 			"#": "47[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (All Days)"
+			"label": "All Days: Period 2 Minute"
+		},
+		{
+			"#": "51",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "All Days: Period 2 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "55",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "All Days: Period 2 Cooling Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "48[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (All Days)",
+			"label": "All Days: Period 3 Hour",
 			"defaultValue": 18
 		},
 		{
 			"#": "48[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (All Days)"
+			"label": "All Days: Period 3 Minute"
+		},
+		{
+			"#": "52",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "All Days: Period 3 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "56",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "All Days: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "49[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (All Days)",
+			"label": "All Days: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "49[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (All Days)"
-		},
-		{
-			"#": "50",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (All Days)",
-			"defaultValue": 700
-		},
-		{
-			"#": "51",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (All Days)",
-			"defaultValue": 620
-		},
-		{
-			"#": "52",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (All Days)",
-			"defaultValue": 700
+			"label": "All Days: Period 4 Minute"
 		},
 		{
 			"#": "53",
 			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (All Days)",
+			"label": "All Days: Period 4 Heating Setpoint",
 			"defaultValue": 620
-		},
-		{
-			"#": "54",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (All Days)",
-			"defaultValue": 780
-		},
-		{
-			"#": "55",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (All Days)",
-			"defaultValue": 850
-		},
-		{
-			"#": "56",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (All Days)",
-			"defaultValue": 780
 		},
 		{
 			"#": "57",
 			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (All Days)",
+			"label": "All Days: Period 4 Cooling Setpoint",
 			"defaultValue": 820
 		},
 		{
 			"#": "58[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (Mon)",
+			"label": "Monday: Period 1 Hour",
 			"defaultValue": 6
 		},
 		{
 			"#": "58[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (Mon)"
+			"label": "Monday: Period 1 Minute"
 		},
 		{
-			"#": "59[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (Tue)",
-			"defaultValue": 6
+			"#": "86",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 1 Heating Setpoint",
+			"defaultValue": 700
 		},
 		{
-			"#": "59[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (Tue)"
-		},
-		{
-			"#": "60[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (Wed)",
-			"defaultValue": 6
-		},
-		{
-			"#": "60[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (Wed)"
-		},
-		{
-			"#": "61[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (Thu)",
-			"defaultValue": 6
-		},
-		{
-			"#": "61[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (Thu)"
-		},
-		{
-			"#": "62[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (Fri)",
-			"defaultValue": 6
-		},
-		{
-			"#": "62[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (Fri)"
-		},
-		{
-			"#": "63[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (Sat)",
-			"defaultValue": 6
-		},
-		{
-			"#": "63[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (Sat)"
-		},
-		{
-			"#": "64[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 1 Time: Hour (Sun)",
-			"defaultValue": 6
-		},
-		{
-			"#": "64[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 1 Time: Minute (Sun)"
+			"#": "114",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 1 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "65[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (Mon)",
+			"label": "Monday: Period 2 Hour",
 			"defaultValue": 8
 		},
 		{
 			"#": "65[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (Mon)"
+			"label": "Monday: Period 2 Minute"
 		},
 		{
-			"#": "66[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (Tue)",
-			"defaultValue": 8
+			"#": "93",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 2 Heating Setpoint",
+			"defaultValue": 620
 		},
 		{
-			"#": "66[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (Tue)"
-		},
-		{
-			"#": "67[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (Wed)",
-			"defaultValue": 8
-		},
-		{
-			"#": "67[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (Wed)"
-		},
-		{
-			"#": "68[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (Thu)",
-			"defaultValue": 8
-		},
-		{
-			"#": "68[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (Thu)"
-		},
-		{
-			"#": "69[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (Fri)",
-			"defaultValue": 8
-		},
-		{
-			"#": "69[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (Fri)"
-		},
-		{
-			"#": "70[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (Sat)",
-			"defaultValue": 8
-		},
-		{
-			"#": "70[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (Sat)"
-		},
-		{
-			"#": "71[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 2 Time: Hour (Sun)",
-			"defaultValue": 8
-		},
-		{
-			"#": "71[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 2 Time: Minute (Sun)"
+			"#": "121",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 2 Cooling Setpoint",
+			"defaultValue": 850
 		},
 		{
 			"#": "72[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (Mon)",
+			"label": "Monday: Period 3 Hour",
 			"defaultValue": 18
 		},
 		{
 			"#": "72[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (Mon)"
+			"label": "Monday: Period 3 Minute"
 		},
 		{
-			"#": "73[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (Tue)",
-			"defaultValue": 18
+			"#": "100",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 3 Heating Setpoint",
+			"defaultValue": 700
 		},
 		{
-			"#": "73[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (Tue)"
-		},
-		{
-			"#": "74[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (Wed)",
-			"defaultValue": 18
-		},
-		{
-			"#": "74[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (Wed)"
-		},
-		{
-			"#": "75[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (Thu)",
-			"defaultValue": 18
-		},
-		{
-			"#": "75[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (Thu)"
-		},
-		{
-			"#": "76[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (Fri)",
-			"defaultValue": 18
-		},
-		{
-			"#": "76[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (Fri)"
-		},
-		{
-			"#": "77[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (Sat)",
-			"defaultValue": 18
-		},
-		{
-			"#": "77[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (Sat)"
-		},
-		{
-			"#": "78[0xff]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 3 Time: Hour (Sun)",
-			"defaultValue": 18
-		},
-		{
-			"#": "78[0xff00]",
-			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 3 Time: Minute (Sun)"
+			"#": "128",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "79[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (Mon)",
+			"label": "Monday: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "79[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (Mon)"
+			"label": "Monday: Period 4 Minute"
+		},
+		{
+			"#": "107",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 4 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "135",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Monday: Period 4 Cooling Setpoint",
+			"defaultValue": 820
+		},
+		{
+			"#": "59[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Tuesday: Period 1 Hour",
+			"defaultValue": 6
+		},
+		{
+			"#": "59[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Tuesday: Period 1 Minute"
+		},
+		{
+			"#": "87",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 1 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "115",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 1 Cooling Setpoint",
+			"defaultValue": 780
+		},
+		{
+			"#": "66[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Tuesday: Period 2 Hour",
+			"defaultValue": 8
+		},
+		{
+			"#": "66[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Tuesday: Period 2 Minute"
+		},
+		{
+			"#": "94",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 2 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "122",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 2 Cooling Setpoint",
+			"defaultValue": 850
+		},
+		{
+			"#": "73[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Tuesday: Period 3 Hour",
+			"defaultValue": 18
+		},
+		{
+			"#": "73[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Tuesday: Period 3 Minute"
+		},
+		{
+			"#": "101",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 3 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "129",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "80[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (Tue)",
+			"label": "Tuesday: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "80[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (Tue)"
+			"label": "Tuesday: Period 4 Minute"
+		},
+		{
+			"#": "108",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 4 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "136",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Tuesday: Period 4 Cooling Setpoint",
+			"defaultValue": 820
+		},
+		{
+			"#": "60[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Wednesday: Period 1 Hour",
+			"defaultValue": 6
+		},
+		{
+			"#": "60[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Wednesday: Period 1 Minute"
+		},
+		{
+			"#": "88",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 1 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "116",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 1 Cooling Setpoint",
+			"defaultValue": 780
+		},
+		{
+			"#": "67[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Wednesday: Period 2 Hour",
+			"defaultValue": 8
+		},
+		{
+			"#": "67[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Wednesday: Period 2 Minute"
+		},
+		{
+			"#": "95",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 2 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "123",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 2 Cooling Setpoint",
+			"defaultValue": 850
+		},
+		{
+			"#": "74[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Wednesday: Period 3 Hour",
+			"defaultValue": 18
+		},
+		{
+			"#": "74[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Wednesday: Period 3 Minute"
+		},
+		{
+			"#": "102",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 3 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "130",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "81[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (Wed)",
+			"label": "Wednesday: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "81[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (Wed)"
+			"label": "Wednesday: Period 4 Minute"
+		},
+		{
+			"#": "109",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 4 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "137",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Wednesday: Period 4 Cooling Setpoint",
+			"defaultValue": 820
+		},
+		{
+			"#": "61[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Thursday: Period 1 Hour",
+			"defaultValue": 6
+		},
+		{
+			"#": "61[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Thursday: Period 1 Minute"
+		},
+		{
+			"#": "89",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 1 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "117",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 1 Cooling Setpoint",
+			"defaultValue": 780
+		},
+		{
+			"#": "68[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Thursday: Period 2 Hour",
+			"defaultValue": 8
+		},
+		{
+			"#": "68[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Thursday: Period 2 Minute"
+		},
+		{
+			"#": "96",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 2 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "124",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 2 Cooling Setpoint",
+			"defaultValue": 850
+		},
+		{
+			"#": "75[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Thursday: Period 3 Hour",
+			"defaultValue": 18
+		},
+		{
+			"#": "75[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Thursday: Period 3 Minute"
+		},
+		{
+			"#": "103",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 3 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "131",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "82[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (Thu)",
+			"label": "Thursday: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "82[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (Thu)"
+			"label": "Thursday: Period 4 Minute"
+		},
+		{
+			"#": "110",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 4 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "138",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Thursday: Period 4 Cooling Setpoint",
+			"defaultValue": 820
+		},
+		{
+			"#": "62[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Friday: Period 1 Hour",
+			"defaultValue": 6
+		},
+		{
+			"#": "62[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Friday: Period 1 Minute"
+		},
+		{
+			"#": "90",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 1 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "118",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 1 Cooling Setpoint",
+			"defaultValue": 780
+		},
+		{
+			"#": "69[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Friday: Period 2 Hour",
+			"defaultValue": 8
+		},
+		{
+			"#": "69[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Friday: Period 2 Minute"
+		},
+		{
+			"#": "97",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 2 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "125",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 2 Cooling Setpoint",
+			"defaultValue": 850
+		},
+		{
+			"#": "76[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Friday: Period 3 Hour",
+			"defaultValue": 18
+		},
+		{
+			"#": "76[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Friday: Period 3 Minute"
+		},
+		{
+			"#": "104",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 3 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "132",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "83[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (Fri)",
+			"label": "Friday: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "83[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (Fri)"
+			"label": "Friday: Period 4 Minute"
+		},
+		{
+			"#": "111",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 4 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "139",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Friday: Period 4 Cooling Setpoint",
+			"defaultValue": 820
+		},
+		{
+			"#": "63[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Saturday: Period 1 Hour",
+			"defaultValue": 6
+		},
+		{
+			"#": "63[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Saturday: Period 1 Minute"
+		},
+		{
+			"#": "91",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 1 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "119",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 1 Cooling Setpoint",
+			"defaultValue": 780
+		},
+		{
+			"#": "70[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Saturday: Period 2 Hour",
+			"defaultValue": 8
+		},
+		{
+			"#": "70[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Saturday: Period 2 Minute"
+		},
+		{
+			"#": "98",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 2 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "126",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 2 Cooling Setpoint",
+			"defaultValue": 850
+		},
+		{
+			"#": "77[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Saturday: Period 3 Hour",
+			"defaultValue": 18
+		},
+		{
+			"#": "77[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Saturday: Period 3 Minute"
+		},
+		{
+			"#": "105",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 3 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "133",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "84[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (Sat)",
+			"label": "Saturday: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "84[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (Sat)"
+			"label": "Saturday: Period 4 Minute"
+		},
+		{
+			"#": "112",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 4 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "140",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Saturday: Period 4 Cooling Setpoint",
+			"defaultValue": 820
+		},
+		{
+			"#": "64[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Sunday: Period 1 Hour",
+			"defaultValue": 6
+		},
+		{
+			"#": "64[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Sunday: Period 1 Minute"
+		},
+		{
+			"#": "92",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Sunday: Period 1 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "120",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Sunday: Period 1 Cooling Setpoint",
+			"defaultValue": 780
+		},
+		{
+			"#": "71[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Sunday: Period 2 Hour",
+			"defaultValue": 8
+		},
+		{
+			"#": "71[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Sunday: Period 2 Minute"
+		},
+		{
+			"#": "99",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Sunday: Period 2 Heating Setpoint",
+			"defaultValue": 620
+		},
+		{
+			"#": "127",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Sunday: Period 2 Cooling Setpoint",
+			"defaultValue": 850
+		},
+		{
+			"#": "78[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Sunday: Period 3 Hour",
+			"defaultValue": 18
+		},
+		{
+			"#": "78[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Sunday: Period 3 Minute"
+		},
+		{
+			"#": "106",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Sunday: Period 3 Heating Setpoint",
+			"defaultValue": 700
+		},
+		{
+			"#": "134",
+			"$import": "templates/mcohome_template.json#schedule_setpoint",
+			"label": "Sunday: Period 3 Cooling Setpoint",
+			"defaultValue": 780
 		},
 		{
 			"#": "85[0xff]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
-			"label": "Period 4 Time: Hour (Sun)",
+			"label": "Sunday: Period 4 Hour",
 			"defaultValue": 22
 		},
 		{
 			"#": "85[0xff00]",
 			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
-			"label": "Period 4 Time: Minute (Sun)"
-		},
-		{
-			"#": "86",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (Mon)",
-			"defaultValue": 700
-		},
-		{
-			"#": "87",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (Tue)",
-			"defaultValue": 700
-		},
-		{
-			"#": "88",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (Wed)",
-			"defaultValue": 700
-		},
-		{
-			"#": "89",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (Thu)",
-			"defaultValue": 700
-		},
-		{
-			"#": "90",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (Fri)",
-			"defaultValue": 700
-		},
-		{
-			"#": "91",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (Sat)",
-			"defaultValue": 700
-		},
-		{
-			"#": "92",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 1 (Sun)",
-			"defaultValue": 700
-		},
-		{
-			"#": "93",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (Mon)",
-			"defaultValue": 620
-		},
-		{
-			"#": "94",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (Tue)",
-			"defaultValue": 620
-		},
-		{
-			"#": "95",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (Wed)",
-			"defaultValue": 620
-		},
-		{
-			"#": "96",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (Thu)",
-			"defaultValue": 620
-		},
-		{
-			"#": "97",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (Fri)",
-			"defaultValue": 620
-		},
-		{
-			"#": "98",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (Sat)",
-			"defaultValue": 620
-		},
-		{
-			"#": "99",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 2 (Sun)",
-			"defaultValue": 620
-		},
-		{
-			"#": "100",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (Mon)",
-			"defaultValue": 700
-		},
-		{
-			"#": "101",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (Tue)",
-			"defaultValue": 700
-		},
-		{
-			"#": "102",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (Wed)",
-			"defaultValue": 700
-		},
-		{
-			"#": "103",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (Thu)",
-			"defaultValue": 700
-		},
-		{
-			"#": "104",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (Fri)",
-			"defaultValue": 700
-		},
-		{
-			"#": "105",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (Sat)",
-			"defaultValue": 700
-		},
-		{
-			"#": "106",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 3 (Sun)",
-			"defaultValue": 700
-		},
-		{
-			"#": "107",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (Mon)",
-			"defaultValue": 620
-		},
-		{
-			"#": "108",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (Tue)",
-			"defaultValue": 620
-		},
-		{
-			"#": "109",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (Wed)",
-			"defaultValue": 620
-		},
-		{
-			"#": "110",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (Thu)",
-			"defaultValue": 620
-		},
-		{
-			"#": "111",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (Fri)",
-			"defaultValue": 620
-		},
-		{
-			"#": "112",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (Sat)",
-			"defaultValue": 620
+			"label": "Sunday: Period 4 Minute"
 		},
 		{
 			"#": "113",
 			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Heating Setpoint Period 4 (Sun)",
+			"label": "Sunday: Period 4 Heating Setpoint",
 			"defaultValue": 620
-		},
-		{
-			"#": "114",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (Mon)",
-			"defaultValue": 780
-		},
-		{
-			"#": "115",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (Tue)",
-			"defaultValue": 780
-		},
-		{
-			"#": "116",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (Wed)",
-			"defaultValue": 780
-		},
-		{
-			"#": "117",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (Thu)",
-			"defaultValue": 780
-		},
-		{
-			"#": "118",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (Fri)",
-			"defaultValue": 780
-		},
-		{
-			"#": "119",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (Sat)",
-			"defaultValue": 780
-		},
-		{
-			"#": "120",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 1 (Sun)",
-			"defaultValue": 780
-		},
-		{
-			"#": "121",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (Mon)",
-			"defaultValue": 850
-		},
-		{
-			"#": "122",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (Tue)",
-			"defaultValue": 850
-		},
-		{
-			"#": "123",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (Wed)",
-			"defaultValue": 850
-		},
-		{
-			"#": "124",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (Thu)",
-			"defaultValue": 850
-		},
-		{
-			"#": "125",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (Fri)",
-			"defaultValue": 850
-		},
-		{
-			"#": "126",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (Sat)",
-			"defaultValue": 850
-		},
-		{
-			"#": "127",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 2 (Sun)",
-			"defaultValue": 850
-		},
-		{
-			"#": "128",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (Mon)",
-			"defaultValue": 780
-		},
-		{
-			"#": "129",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (Tue)",
-			"defaultValue": 780
-		},
-		{
-			"#": "130",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (Wed)",
-			"defaultValue": 780
-		},
-		{
-			"#": "131",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (Thu)",
-			"defaultValue": 780
-		},
-		{
-			"#": "132",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (Fri)",
-			"defaultValue": 780
-		},
-		{
-			"#": "133",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (Sat)",
-			"defaultValue": 780
-		},
-		{
-			"#": "134",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 3 (Sun)",
-			"defaultValue": 780
-		},
-		{
-			"#": "135",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (Mon)",
-			"defaultValue": 820
-		},
-		{
-			"#": "136",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (Tue)",
-			"defaultValue": 820
-		},
-		{
-			"#": "137",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (Wed)",
-			"defaultValue": 820
-		},
-		{
-			"#": "138",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (Thu)",
-			"defaultValue": 820
-		},
-		{
-			"#": "139",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (Fri)",
-			"defaultValue": 820
-		},
-		{
-			"#": "140",
-			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (Sat)",
-			"defaultValue": 820
 		},
 		{
 			"#": "141",
 			"$import": "templates/mcohome_template.json#schedule_setpoint",
-			"label": "Cooling Setpoint Period 4 (Sun)",
+			"label": "Sunday: Period 4 Cooling Setpoint",
 			"defaultValue": 820
 		},
 		{
