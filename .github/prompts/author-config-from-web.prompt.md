@@ -46,6 +46,7 @@ Before creating parameters from scratch, identify reusable templates:
 - Check manufacturer-specific templates in `packages/config/config/devices/<manufacturerId>/templates/`
 - Check master templates in `packages/config/config/devices/templates/master_template.json`
 - Look for existing parameters in other config files from the same manufacturer that could be reused via templates
+- Use the `find_template_definition` tool to jump to a template's definition, and `find_template_references` to see which existing devices already use a template (good evidence that it fits a common pattern)
 
 ## 4. Reference File Analysis
 
@@ -97,11 +98,12 @@ For each parameter found on the website:
 
 **ALWAYS verify template compatibility before using any template:**
 
-1. **Read the actual template definition** from the template file to understand:
+1. **Resolve the actual template definition** with the `resolve_config_import` tool (or `find_template_definition` to open it) to understand:
    - Value ranges (minValue, maxValue)
    - Default values
    - Option labels and values
    - Data types and units
+   - After importing, use `resolve_config_param` to confirm the fully resolved parameter (template plus your overrides) matches the documented behavior
 
 2. **Compare with website parameter description** to ensure exact match:
    - Value mappings must be identical
