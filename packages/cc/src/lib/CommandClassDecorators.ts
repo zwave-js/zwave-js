@@ -64,8 +64,8 @@ export const getCCCommandConstructor =
  * @publicAPI
  * Retrieves the CC ID defined for a Z-Wave Command Class
  */
-export function getCommandClassStatic<T extends CCConstructor<CommandClass>>(
-	classConstructor: T,
+export function getCommandClassStatic(
+	classConstructor: CCConstructor<CommandClass>,
 ): CommandClasses {
 	// retrieve the current metadata
 	const ret = CCAndCommandDecorator.lookupSuperValueStatic(classConstructor);
@@ -144,8 +144,8 @@ export const implementedVersion = implementedVersionDecorator.decorator;
  * @publicAPI
  * Retrieves the implemented version defined for a Z-Wave command class
  */
-export function getImplementedVersion<T extends CommandClass>(
-	cc: T | CommandClasses,
+export function getImplementedVersion(
+	cc: CommandClass | CommandClasses,
 ): number {
 	// get the class constructor
 	let constr: CCConstructor<CommandClass> | undefined;
@@ -163,9 +163,9 @@ export function getImplementedVersion<T extends CommandClass>(
  * @publicAPI
  * Retrieves the implemented version defined for a Z-Wave command class
  */
-export function getImplementedVersionStatic<
-	T extends CCConstructor<CommandClass>,
->(classConstructor: T): number {
+export function getImplementedVersionStatic(
+	classConstructor: CCConstructor<CommandClass>,
+): number {
 	return implementedVersionDecorator.lookupValueStatic(classConstructor) ?? 0;
 }
 
@@ -246,8 +246,8 @@ export const ccValues = ccValuesDecorator.decorator;
  * @publicAPI
  * Retrieves the CC value definitions which belong to a Z-Wave command class
  */
-export function getCCValues<T extends CommandClass>(
-	cc: T | CommandClasses,
+export function getCCValues(
+	cc: CommandClass | CommandClasses,
 ): Record<string, StaticCCValue | DynamicCCValue | undefined> | undefined {
 	// get the class constructor
 	let constr: CCConstructor<CommandClass> | undefined;

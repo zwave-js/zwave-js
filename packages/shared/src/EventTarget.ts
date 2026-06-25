@@ -142,8 +142,8 @@ export class TypedEventTarget<
 		return this;
 	}
 
-	public removeAllListeners<TEvent extends keyof TEvents>(
-		event?: TEvent,
+	public removeAllListeners(
+		event?: keyof TEvents,
 	): this {
 		if (event) {
 			if (this.listeners.has(event)) {

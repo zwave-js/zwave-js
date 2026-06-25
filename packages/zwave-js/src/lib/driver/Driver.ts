@@ -7893,15 +7893,15 @@ ${handlers.length} left`,
 	 * Calls the given handler function every time a CommandClass is received that matches the given predicate.
 	 * @param predicate A predicate function to test all incoming command classes
 	 */
-	public registerCommandHandler<T extends CCId>(
+	public registerCommandHandler(
 		predicate: (cc: CCId) => boolean,
-		handler: (cc: T) => void,
+		handler: (cc: CCId) => void,
 	): {
 		unregister: () => void;
 	} {
 		const entry: AwaitedCommandEntry = {
 			predicate,
-			handler: (cc) => handler(cc as T),
+			handler: (cc) => handler(cc),
 			timeout: undefined,
 		};
 		this.awaitedCommands.push(entry);

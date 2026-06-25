@@ -527,8 +527,6 @@ export class MeterCCAPI extends PhysicalCCAPI {
 			} else {
 				return this.reset();
 			}
-
-			return undefined;
 		};
 	}
 

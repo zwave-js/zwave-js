@@ -55,7 +55,7 @@ async function main() {
 			.map((ref) => ref.getParentIfKind(SyntaxKind.IntersectionType))
 			.filter((typ): typ is IntersectionTypeNode =>
 				typ != undefined
-				&& !!typ.getParent().isKind(SyntaxKind.Parameter)
+				&& typ.getParent().isKind(SyntaxKind.Parameter)
 				&& !!typ.getParent().getParent()?.isKind(SyntaxKind.Constructor)
 			);
 		for (const type of oldTypes) {

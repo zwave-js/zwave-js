@@ -50,8 +50,8 @@ export function findImportRanges(docFile: string): ImportRange[] {
 		symbol: match.groups!.symbol,
 		import: match.groups!.import,
 		options: {
-			comments: !!match.groups!.options?.includes("comments"),
-			jsdoc: !match.groups!.options?.includes("no-jsdoc"),
+			comments: !!match.groups?.options?.includes("comments"),
+			jsdoc: !match.groups?.options?.includes("no-jsdoc"),
 		},
 	}));
 }

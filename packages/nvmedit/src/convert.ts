@@ -1403,7 +1403,7 @@ export async function jsonToNVM(
 	target.controller.rfConfig ??= {
 		rfRegion: RFRegion["Default (EU)"],
 		txPower: 0.0,
-		measured0dBm: +3.3,
+		measured0dBm: 3.3,
 		enablePTI: null,
 		maxTXPower: null,
 		nodeIdType: null,

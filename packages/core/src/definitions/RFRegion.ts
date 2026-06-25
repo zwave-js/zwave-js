@@ -80,7 +80,7 @@ export function getLegalPowerlevelMesh(region: RFRegion): number | undefined {
 	switch (region) {
 		case RFRegion.Europe:
 		case RFRegion["Europe (Long Range)"]:
-			return +13; // dBm
+			return 13; // dBm
 		case RFRegion.USA:
 		case RFRegion["USA (Long Range)"]:
 			return -1; // dBm
@@ -92,10 +92,10 @@ export function getLegalPowerlevelLR(region: RFRegion): number | undefined {
 	switch (region) {
 		case RFRegion.Europe:
 		case RFRegion["Europe (Long Range)"]:
-			return +14; // dBm
+			return 14; // dBm
 		case RFRegion.USA:
 		case RFRegion["USA (Long Range)"]:
-			return +20; // dBm
+			return 20; // dBm
 	}
 	// Nobody knows
 }

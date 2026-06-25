@@ -336,7 +336,7 @@ const versions = Object.freeze([
 function semverToLegacy(version: string): string {
 	// oxlint-disable-next-line no-unused-vars
 	const [major, minor, _patch] = version.split(".", 3);
-	return `${major}.${minor.toString().padStart(2, "0")}`;
+	return `${major}.${minor.padStart(2, "0")}`;
 }
 
 /**

@@ -6,8 +6,8 @@ import type { Timeout } from "./Timeout.js";
 const isIntegerRegex = /^\d+$/;
 
 /** Returns an array with the values of a numeric enum */
-export function getNumericEnumValues<T extends Record<string, any>>(
-	enumeration: T,
+export function getNumericEnumValues(
+	enumeration: Record<string, any>,
 ): readonly number[] {
 	return Object.keys(enumeration)
 		.filter((val) => isIntegerRegex.test(val))
@@ -15,8 +15,8 @@ export function getNumericEnumValues<T extends Record<string, any>>(
 }
 
 /** Takes an enumeration and an array of values of this enumeration and returns a states record to be used as metadata */
-export function enumValuesToMetadataStates<T extends Record<string, any>>(
-	enumeration: T,
+export function enumValuesToMetadataStates(
+	enumeration: Record<string, any>,
 	values?: readonly number[],
 ): Record<number, string> {
 	const ret: Record<number, string> = {};

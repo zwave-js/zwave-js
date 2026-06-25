@@ -543,7 +543,7 @@ export class CCAPI {
 		]);
 		proxiedProps.delete("constructor");
 
-		function wrapResult<T>(result: T, txReport: TXReport): any {
+		function wrapResult(result: unknown, txReport: TXReport): any {
 			// Both the result and the TX report may be undefined (no response, no support)
 			return stripUndefined({
 				result,

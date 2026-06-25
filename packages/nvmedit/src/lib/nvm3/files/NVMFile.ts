@@ -131,8 +131,8 @@ export function nvmFileID<Class extends typeof NVMFile>(
 /**
  * Retrieves the file ID defined for a NVM file class
  */
-export function getNVMFileID<T extends NVMFile>(
-	id: T,
+export function getNVMFileID(
+	id: NVMFile,
 ): number | ((id: number) => boolean) {
 	// get the class constructor
 	const constr = id.constructor;
@@ -171,8 +171,8 @@ export function getNVMFileConstructor(
 /**
  * Retrieves the file ID defined for a NVM file class
  */
-export function getNVMFileIDStatic<T extends NVMFileConstructor<NVMFile>>(
-	classConstructor: T,
+export function getNVMFileIDStatic(
+	classConstructor: NVMFileConstructor<NVMFile>,
 ): number | ((id: number) => boolean) {
 	// retrieve the current metadata
 	const ret = Reflect.getMetadata(METADATA_nvmFileID, classConstructor);
