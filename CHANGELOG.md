@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.25.1 (2026-06-25)
 ### Config file changes
 * Correct MCOHome MH-5900 parameters (#8565)
 * Add missing product ID 0x01ba for SimonTech 10002020-13X (#8897)
