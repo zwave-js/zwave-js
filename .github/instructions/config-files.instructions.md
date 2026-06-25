@@ -289,12 +289,21 @@ Templates allow reusing common parameter definitions across devices to maintain 
 1. **Master Template** (`~/templates/master_template.json`):
    - Common parameter bases usable across all manufacturers
    - Examples: `base_enable_disable`, `base_0-99_nounit`, `orientation`, `led_indicator_three_options`
-   - Modifying existing master templates affects ALL devices using them, be careful with changes
+   - Modifying existing master templates affects ALL devices using them, be careful with changes (use `find_template_references` to see which devices are affected)
 
 2. **Manufacturer-specific Templates** (in each manufacturer's `templates/` folder):
    - Parameters common to devices from that specific manufacturer
    - Should only be created if there are multiple devices from that manufacturer reusing the same parameter definitions
-   - Changing existing manufacturer templates affects all devices from that manufacturer
+   - Changing existing manufacturer templates affects all devices from that manufacturer (use `find_template_references` to see which devices are affected)
+
+### Tools for Working with Templates
+
+The `zwave-dev` MCP server provides tools to inspect templates without manually tracing `$import`s. They read fresh from disk, resolve nested imports recursively, and mirror the config editor:
+
+- `resolve_config_import` - resolve an `$import` specifier to the exact JSON it pulls in. Use this to verify a template matches the documented device behavior before importing it.
+- `resolve_config_param` - resolve a parameter to its final JSON with all templates applied (optionally evaluating `$if` conditionals for a given firmware version). Use this to confirm overrides produce the intended result.
+- `find_template_definition` - jump to where a template (or a parameter's `$import`) is defined.
+- `find_template_references` - list every device file that imports a given template. Use this before changing a shared template to assess the impact.
 
 ### When Reviewing Templates
 
