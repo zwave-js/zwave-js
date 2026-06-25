@@ -165,10 +165,10 @@
 		},
 		{
 			"#": "25",
-			"valueSize": 1,
-			"allowManualEntry": false,
 			"label": "HVAC System Type",
+			"valueSize": 1,
 			"defaultValue": 7,
+			"allowManualEntry": false,
 			// HVAC wiring acronyms (2C, AUX, Y1+W2, ...) are intentional
 			/* eslint-disable @zwave-js/consistent-config-string-case */
 			"options": [
