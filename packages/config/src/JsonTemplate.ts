@@ -127,6 +127,132 @@ function getImportStack(
 	return "";
 }
 
+/**
+ * Resolves the filename portion of an `$import` specifier to an absolute path.
+ *
+ * @param fs The filesystem used to check whether candidate files exist
+ * @param importFilename The filename portion of the specifier, e.g. `~/templates/foo.json` or `templates/foo.json`
+ * @param contextFilename The file the specifier appears in, used to resolve relative paths
+ * @param rootDirs The root directories that `~/`-prefixed specifiers are resolved against
+ * @param visited The import stack so far, included in error messages
+ * @param selector The selector portion of the specifier, included in error messages
+ */
+async function resolveImportFilename(
+	fs: ReadFileSystemInfo & ReadFile,
+	importFilename: string,
+	contextFilename: string,
+	rootDirs: string[] | undefined,
+	visited: string[],
+	selector: string | undefined,
+): Promise<string> {
+	if (importFilename.startsWith("~/")) {
+		// This is a special import specifier that is relative to the root directory
+		// Try to find at least one root directory that contains the referenced file
+		if (!rootDirs) {
+			throw new ZWaveError(
+				`An $import specifier cannot start with ~/ when no root directory is defined!${
+					getImportStack(visited, selector)
+				}`,
+				ZWaveErrorCodes.Config_Invalid,
+			);
+		}
+		for (const rootDir of rootDirs) {
+			const candidate = path.join(rootDir, importFilename.slice(2));
+			if (await pathExists(fs, candidate)) return candidate;
+		}
+		throw new ZWaveError(
+			`Could not find the referenced file ${
+				importFilename.slice(2)
+			} in any of the root directories: ${
+				rootDirs.map((d) => `\n· ${d}`).join("")
+			}\n${getImportStack(visited, selector)}`,
+			ZWaveErrorCodes.Config_Invalid,
+		);
+	} else {
+		return path.join(path.dirname(contextFilename), importFilename);
+	}
+}
+
+/**
+ * Resolves a single `$import` specifier (as used in device config files) to the
+ * JSON it pulls in, with the imported file's own `$import`s resolved recursively.
+ *
+ * @param fs The filesystem used to read config and template files
+ * @param contextFilename The file the specifier appears in, used to resolve relative paths and same-file (`#selector`) imports
+ * @param specifier The `$import` specifier to resolve, e.g. `~/templates/master_template.json#base_enable_disable`
+ * @param rootDirs The root directories that `~/`-prefixed specifiers are resolved against
+ */
+export async function resolveTemplateImport(
+	fs: ReadFileSystemInfo & ReadFile,
+	contextFilename: string,
+	specifier: string,
+	rootDirs?: string | string[],
+): Promise<Record<string, unknown>> {
+	assertImportSpecifier(specifier);
+	if (typeof rootDirs === "string") rootDirs = [rootDirs];
+
+	const { filename: importFilename, selector } = importSpecifierRegex
+		.exec(specifier)!.groups!;
+
+	const newFilename = importFilename
+		? await resolveImportFilename(
+			fs,
+			importFilename,
+			contextFilename,
+			rootDirs,
+			[],
+			selector,
+		)
+		: path.normalize(contextFilename);
+
+	const fileCache = new Map(templateCache);
+	return readJsonWithTemplateInternal(
+		fs,
+		newFilename,
+		selector,
+		[],
+		fileCache,
+		rootDirs,
+	);
+}
+
+/**
+ * Resolves the target file of an `$import` specifier to an absolute path,
+ * without reading or resolving the file's contents. Returns `undefined` if the
+ * specifier is invalid or the referenced file cannot be located.
+ *
+ * @param fs The filesystem used to locate `~/`-prefixed files
+ * @param contextFilename The file the specifier appears in, used to resolve relative and same-file imports
+ * @param specifier The `$import` specifier
+ * @param rootDirs The root directories that `~/`-prefixed specifiers are resolved against
+ */
+export async function resolveImportPath(
+	fs: ReadFileSystemInfo & ReadFile,
+	contextFilename: string,
+	specifier: string,
+	rootDirs?: string | string[],
+): Promise<string | undefined> {
+	if (!importSpecifierRegex.test(specifier)) return undefined;
+	if (typeof rootDirs === "string") rootDirs = [rootDirs];
+
+	const { filename: importFilename } = importSpecifierRegex
+		.exec(specifier)!.groups!;
+	if (!importFilename) return path.normalize(contextFilename);
+
+	try {
+		return await resolveImportFilename(
+			fs,
+			importFilename,
+			contextFilename,
+			rootDirs,
+			[],
+			undefined,
+		);
+	} catch {
+		return undefined;
+	}
+}
+
 async function readJsonWithTemplateInternal(
 	fs: ReadFileSystemInfo & ReadFile,
 	filename: string,
@@ -218,66 +344,17 @@ async function resolveJsonImports(
 				.exec(val)!.groups!;
 
 			// Resolve the correct import path
-			let newFilename: string | undefined;
-			if (importFilename) {
-				if (importFilename.startsWith("~/")) {
-					// This is a special import specifier that is relative to the root directory
-					// Try to find at least one root directory that contains the referenced file
-					if (rootDirs) {
-						for (const rootDir of rootDirs) {
-							newFilename = path.join(
-								rootDir,
-								importFilename.slice(2),
-							);
-							if (await pathExists(fs, newFilename)) {
-								break;
-							} else {
-								// Try the next
-								newFilename = undefined!;
-							}
-						}
+			const newFilename = importFilename
+				? await resolveImportFilename(
+					fs,
+					importFilename,
+					filename,
+					rootDirs,
+					visited,
+					selector,
+				)
+				: filename;
 
-						if (!newFilename) {
-							throw new ZWaveError(
-								`Could not find the referenced file ${
-									importFilename.slice(
-										2,
-									)
-								} in any of the root directories: ${
-									rootDirs
-										.map((d) => `\n· ${d}`)
-										.join("")
-								}\n${
-									getImportStack(
-										visited,
-										selector,
-									)
-								}`,
-								ZWaveErrorCodes.Config_Invalid,
-							);
-						}
-					} else {
-						throw new ZWaveError(
-							`An $import specifier cannot start with ~/ when no root directory is defined!${
-								getImportStack(
-									visited,
-									selector,
-								)
-							}`,
-							ZWaveErrorCodes.Config_Invalid,
-						);
-					}
-				} else {
-					newFilename = path.join(
-						path.dirname(filename),
-						importFilename,
-					);
-				}
-			} else {
-				newFilename = filename;
-			}
-
-			// const importFilename = path.join(path.dirname(filename), val);
 			const imported = await readJsonWithTemplateInternal(
 				fs,
 				newFilename,

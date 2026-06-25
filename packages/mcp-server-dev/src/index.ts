@@ -9,8 +9,12 @@ import {
 import { McpToolRegistry } from "./registry.js";
 import {
 	autofixConfigTool,
+	findTemplateDefinitionTool,
+	findTemplateReferencesTool,
 	formatTool,
 	lintConfigTool,
+	resolveImportTool,
+	resolveParamTool,
 } from "./tools/index.js";
 
 class DevMCPServer {
@@ -40,6 +44,10 @@ class DevMCPServer {
 		this.registry.register(formatTool);
 		this.registry.register(autofixConfigTool);
 		this.registry.register(lintConfigTool);
+		this.registry.register(resolveParamTool);
+		this.registry.register(resolveImportTool);
+		this.registry.register(findTemplateDefinitionTool);
+		this.registry.register(findTemplateReferencesTool);
 	}
 
 	private setupToolHandlers() {
