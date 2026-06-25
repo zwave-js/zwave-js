@@ -4,6 +4,18 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Config file changes
+* Correct MCOHome MH-5900 parameters (#8565)
+* Add missing product ID 0x01ba for SimonTech 10002020-13X (#8897)
+* Add missing product IDs for SimonTech 10002080-13X Roller Blind (#8896)
+* Align all Zooz devices with the documentation, update to latest firmwares (#8899)
+* Add Versa Wireless LAMP-ZW2 (#8889)
+
+### Changes under the hood
+* Fixed the "not equal" version comparison in conditional logic (#8898)
+* The development MCP server has gained tools for navigating and understanding template imports in config files (#8903)
+
 ## 15.25.0 (2026-06-18)
 ### Features
 * Added support for reporting granular interview progress (0-100%) using the new `"interview progress"` event (#8886)
