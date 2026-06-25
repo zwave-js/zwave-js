@@ -387,5 +387,20 @@
 				"value": 55
 			}
 		]
+	},
+	"schedule_period_time": {
+		"description": "Encoded as (hour × 256) + minute",
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 65535,
+		"defaultValue": 0,
+		"unsigned": true
+	},
+	"schedule_setpoint": {
+		"valueSize": 2,
+		"unit": "0.1 °F/C",
+		"minValue": 0,
+		"maxValue": 1000,
+		"defaultValue": 0
 	}
 }
