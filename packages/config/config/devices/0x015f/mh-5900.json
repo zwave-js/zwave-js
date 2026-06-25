@@ -60,20 +60,22 @@
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 8,
-			"defaultValue": 7
+			"defaultValue": 8
 		},
 		{
 			"#": "16",
 			"label": "Temperature: Upper Limit",
 			"valueSize": 1,
+			"unit": "°F/C",
 			"minValue": 1,
 			"maxValue": 99,
-			"defaultValue": 99
+			"defaultValue": 98
 		},
 		{
 			"#": "17",
 			"label": "Temperature: Lower Limit",
 			"valueSize": 1,
+			"unit": "°F/C",
 			"minValue": 0,
 			"maxValue": 98,
 			"defaultValue": 41
@@ -163,12 +165,47 @@
 		},
 		{
 			"#": "25",
-			"label": "HVAC System Type",
-			"description": "Refer to the device manual for the available system types",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 12,
-			"defaultValue": 12
+			"allowManualEntry": false,
+			"label": "HVAC System Type",
+			"defaultValue": 7,
+			// HVAC wiring acronyms (2C, AUX, Y1+W2, ...) are intentional
+			/* eslint-disable @zwave-js/consistent-config-string-case */
+			"options": [
+				{
+					"label": "Conventional: cool only (2C)",
+					"value": 0
+				},
+				{
+					"label": "Conventional: heat only (2H)",
+					"value": 1
+				},
+				{
+					"label": "Conventional: cool and heat (2C/2H)",
+					"value": 2
+				},
+				{
+					"label": "Heat pump: cool only (2C, Y1+Y2)",
+					"value": 3
+				},
+				{
+					"label": "Heat pump: heat only (2H, Y1+W2/AUX)",
+					"value": 4
+				},
+				{
+					"label": "Heat pump: two-stage heat (3H, Y1+Y2+W2/AUX)",
+					"value": 5
+				},
+				{
+					"label": "Heat pump: single cool / single heat + AUX",
+					"value": 6
+				},
+				{
+					"label": "Heat pump: two-stage cool and heat + AUX",
+					"value": 7
+				}
+			]
+			/* eslint-enable @zwave-js/consistent-config-string-case */
 		},
 		{
 			"#": "26",
