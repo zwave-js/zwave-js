@@ -388,11 +388,17 @@
 			}
 		]
 	},
-	"schedule_period_time": {
-		"description": "Encoded as (hour × 256) + minute",
+	"schedule_period_time_hour": {
 		"valueSize": 2,
 		"minValue": 0,
-		"maxValue": 65535,
+		"maxValue": 23,
+		"defaultValue": 0,
+		"unsigned": true
+	},
+	"schedule_period_time_minute": {
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 59,
 		"defaultValue": 0,
 		"unsigned": true
 	},

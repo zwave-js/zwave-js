@@ -267,28 +267,48 @@
 			"label": "Weekly Schedule"
 		},
 		{
-			"#": "46",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (All Days)",
-			"defaultValue": 1536
+			"#": "46[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (All Days)",
+			"defaultValue": 6
 		},
 		{
-			"#": "47",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (All Days)",
-			"defaultValue": 2048
+			"#": "46[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (All Days)"
 		},
 		{
-			"#": "48",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (All Days)",
-			"defaultValue": 4608
+			"#": "47[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (All Days)",
+			"defaultValue": 8
 		},
 		{
-			"#": "49",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (All Days)",
-			"defaultValue": 5632
+			"#": "47[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (All Days)"
+		},
+		{
+			"#": "48[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (All Days)",
+			"defaultValue": 18
+		},
+		{
+			"#": "48[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (All Days)"
+		},
+		{
+			"#": "49[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (All Days)",
+			"defaultValue": 22
+		},
+		{
+			"#": "49[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (All Days)"
 		},
 		{
 			"#": "50",
@@ -339,172 +359,312 @@
 			"defaultValue": 820
 		},
 		{
-			"#": "58",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (Mon)",
-			"defaultValue": 1536
+			"#": "58[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (Mon)",
+			"defaultValue": 6
 		},
 		{
-			"#": "59",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (Tue)",
-			"defaultValue": 1536
+			"#": "58[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (Mon)"
 		},
 		{
-			"#": "60",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (Wed)",
-			"defaultValue": 1536
+			"#": "59[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (Tue)",
+			"defaultValue": 6
 		},
 		{
-			"#": "61",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (Thu)",
-			"defaultValue": 1536
+			"#": "59[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (Tue)"
 		},
 		{
-			"#": "62",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (Fri)",
-			"defaultValue": 1536
+			"#": "60[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (Wed)",
+			"defaultValue": 6
 		},
 		{
-			"#": "63",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (Sat)",
-			"defaultValue": 1536
+			"#": "60[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (Wed)"
 		},
 		{
-			"#": "64",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 1 Time (Sun)",
-			"defaultValue": 1536
+			"#": "61[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (Thu)",
+			"defaultValue": 6
 		},
 		{
-			"#": "65",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (Mon)",
-			"defaultValue": 2048
+			"#": "61[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (Thu)"
 		},
 		{
-			"#": "66",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (Tue)",
-			"defaultValue": 2048
+			"#": "62[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (Fri)",
+			"defaultValue": 6
 		},
 		{
-			"#": "67",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (Wed)",
-			"defaultValue": 2048
+			"#": "62[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (Fri)"
 		},
 		{
-			"#": "68",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (Thu)",
-			"defaultValue": 2048
+			"#": "63[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (Sat)",
+			"defaultValue": 6
 		},
 		{
-			"#": "69",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (Fri)",
-			"defaultValue": 2048
+			"#": "63[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (Sat)"
 		},
 		{
-			"#": "70",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (Sat)",
-			"defaultValue": 2048
+			"#": "64[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 1 Time: Hour (Sun)",
+			"defaultValue": 6
 		},
 		{
-			"#": "71",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 2 Time (Sun)",
-			"defaultValue": 2048
+			"#": "64[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 1 Time: Minute (Sun)"
 		},
 		{
-			"#": "72",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (Mon)",
-			"defaultValue": 4608
+			"#": "65[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (Mon)",
+			"defaultValue": 8
 		},
 		{
-			"#": "73",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (Tue)",
-			"defaultValue": 4608
+			"#": "65[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (Mon)"
 		},
 		{
-			"#": "74",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (Wed)",
-			"defaultValue": 4608
+			"#": "66[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (Tue)",
+			"defaultValue": 8
 		},
 		{
-			"#": "75",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (Thu)",
-			"defaultValue": 4608
+			"#": "66[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (Tue)"
 		},
 		{
-			"#": "76",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (Fri)",
-			"defaultValue": 4608
+			"#": "67[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (Wed)",
+			"defaultValue": 8
 		},
 		{
-			"#": "77",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (Sat)",
-			"defaultValue": 4608
+			"#": "67[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (Wed)"
 		},
 		{
-			"#": "78",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 3 Time (Sun)",
-			"defaultValue": 4608
+			"#": "68[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (Thu)",
+			"defaultValue": 8
 		},
 		{
-			"#": "79",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (Mon)",
-			"defaultValue": 5632
+			"#": "68[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (Thu)"
 		},
 		{
-			"#": "80",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (Tue)",
-			"defaultValue": 5632
+			"#": "69[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (Fri)",
+			"defaultValue": 8
 		},
 		{
-			"#": "81",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (Wed)",
-			"defaultValue": 5632
+			"#": "69[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (Fri)"
 		},
 		{
-			"#": "82",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (Thu)",
-			"defaultValue": 5632
+			"#": "70[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (Sat)",
+			"defaultValue": 8
 		},
 		{
-			"#": "83",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (Fri)",
-			"defaultValue": 5632
+			"#": "70[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (Sat)"
 		},
 		{
-			"#": "84",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (Sat)",
-			"defaultValue": 5632
+			"#": "71[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 2 Time: Hour (Sun)",
+			"defaultValue": 8
 		},
 		{
-			"#": "85",
-			"$import": "templates/mcohome_template.json#schedule_period_time",
-			"label": "Period 4 Time (Sun)",
-			"defaultValue": 5632
+			"#": "71[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 2 Time: Minute (Sun)"
+		},
+		{
+			"#": "72[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (Mon)",
+			"defaultValue": 18
+		},
+		{
+			"#": "72[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (Mon)"
+		},
+		{
+			"#": "73[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (Tue)",
+			"defaultValue": 18
+		},
+		{
+			"#": "73[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (Tue)"
+		},
+		{
+			"#": "74[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (Wed)",
+			"defaultValue": 18
+		},
+		{
+			"#": "74[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (Wed)"
+		},
+		{
+			"#": "75[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (Thu)",
+			"defaultValue": 18
+		},
+		{
+			"#": "75[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (Thu)"
+		},
+		{
+			"#": "76[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (Fri)",
+			"defaultValue": 18
+		},
+		{
+			"#": "76[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (Fri)"
+		},
+		{
+			"#": "77[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (Sat)",
+			"defaultValue": 18
+		},
+		{
+			"#": "77[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (Sat)"
+		},
+		{
+			"#": "78[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 3 Time: Hour (Sun)",
+			"defaultValue": 18
+		},
+		{
+			"#": "78[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 3 Time: Minute (Sun)"
+		},
+		{
+			"#": "79[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (Mon)",
+			"defaultValue": 22
+		},
+		{
+			"#": "79[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (Mon)"
+		},
+		{
+			"#": "80[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (Tue)",
+			"defaultValue": 22
+		},
+		{
+			"#": "80[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (Tue)"
+		},
+		{
+			"#": "81[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (Wed)",
+			"defaultValue": 22
+		},
+		{
+			"#": "81[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (Wed)"
+		},
+		{
+			"#": "82[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (Thu)",
+			"defaultValue": 22
+		},
+		{
+			"#": "82[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (Thu)"
+		},
+		{
+			"#": "83[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (Fri)",
+			"defaultValue": 22
+		},
+		{
+			"#": "83[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (Fri)"
+		},
+		{
+			"#": "84[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (Sat)",
+			"defaultValue": 22
+		},
+		{
+			"#": "84[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (Sat)"
+		},
+		{
+			"#": "85[0xff]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_hour",
+			"label": "Period 4 Time: Hour (Sun)",
+			"defaultValue": 22
+		},
+		{
+			"#": "85[0xff00]",
+			"$import": "templates/mcohome_template.json#schedule_period_time_minute",
+			"label": "Period 4 Time: Minute (Sun)"
 		},
 		{
 			"#": "86",
