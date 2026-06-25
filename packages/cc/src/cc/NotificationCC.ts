@@ -997,7 +997,7 @@ export class NotificationCC extends CommandClass {
 			// Find all variables that are supported by this node and have an idle state
 			for (
 				const variable of notification.variables
-					.filter((v) => !!v.idle)
+					.filter((v) => v.idle)
 			) {
 				if (
 					[...variable.states.keys()].some((key) =>

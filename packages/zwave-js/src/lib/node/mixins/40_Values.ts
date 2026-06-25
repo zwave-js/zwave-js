@@ -121,9 +121,9 @@ export abstract class NodeValuesMixin extends NodeWakeupMixin
 	/**
 	 * Enhances the raw event args of the ValueDB so it can be consumed better by applications
 	 */
-	protected translateValueEvent<T extends ValueID>(
+	protected translateValueEvent(
 		eventName: keyof ZWaveNodeValueEventCallbacks,
-		arg: T,
+		arg: ValueID,
 	): void {
 		// Try to retrieve the speaking CC name
 		const outArg = nodeUtils.translateValueID(this.driver, this, arg);

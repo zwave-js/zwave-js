@@ -5,14 +5,12 @@ import {
 } from "@zwave-js/serial/serialapi";
 import type { ExpectStatic } from "vitest";
 
-export function assertCC<
-	TConst extends CCConstructor<CommandClass> = CCConstructor<CommandClass>,
->(
+export function assertCC(
 	expect: ExpectStatic,
 	callArg: any,
 	options: {
 		nodeId?: number;
-		cc: TConst;
+		cc: CCConstructor<CommandClass>;
 		ccValues?: Record<string, any>;
 	},
 ): void {

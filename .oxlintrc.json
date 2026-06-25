@@ -107,6 +107,8 @@
 		"typescript/no-unnecessary-type-arguments": "off", // explicit > implicit
 		"eslint/preserve-caught-error": "off", // TODO: For now this is okay, but we should really enable this
 		"eslint/no-shadow": "off", // Too much noise
+		"eslint/no-underscore-dangle": "off", // We use leading underscores for private/protected class members
+		"typescript/consistent-return": "off", // We intentionally mix early returns and value returns throughout the codebase
 		// "pedantic"
 		"typescript/no-deprecated": "off", // Causes false-positives: https://github.com/oxc-project/oxc/issues/15594
 		// "perf"
@@ -196,6 +198,9 @@
 		"typescript/no-unsafe-enum-comparison": "off",
 		"typescript/no-unsafe-declaration-merging": "off",
 		"typescript/no-unsafe-type-assertion": "off",
+		// Mostly flags intentional "caller-specified type" generic helpers
+		// (e.g. getValue<T>(), getMetadata<T>()); useful as an occasional smoke check
+		"typescript/no-unnecessary-type-parameters": "off",
 
 		// Although this rule makes sense, it takes about a second to execute (and we don't need it)
 		"typescript/no-implied-eval": "off",
@@ -208,13 +213,10 @@
 		],
 		"typescript/no-this-alias": "off",
 
-		// Prefer simple property access and declaration without quotes
-		// Note: ESLint config disables "dot-notation" in favor of "@typescript-eslint/dot-notation"
-		// Since Oxlint doesn't have the TypeScript version with those options, we skip this rule
-		// "dot-notation": "off",
-		// "@typescript-eslint/dot-notation": [ ... ], // Not available with these options in Oxlint
-
-		"eslint/quote-props": ["error", "as-needed"],
+		// "typescript/dot-notation" is available, but its allowPrivateClassPropertyAccess /
+		// allowProtectedClassPropertyAccess options are not honored by oxlint-tsgolint (verified
+		// broken as of 0.23.0): it still flags and auto-rewrites deliberate bracket access to
+		// private/protected members, which breaks compilation. Keep off until fixed upstream.
 
 		// ========= Unused Imports Plugin (not available) =========
 		// "unused-imports/no-unused-imports": "error", // Plugin not available in Oxlint

@@ -37,9 +37,9 @@ export const getManufacturerId = manufacturerIdDecorator.lookupValue;
  * @publicAPI
  * Retrieves the Manufacturer ID defined for a specific implementation of the Manufacturer Proprietary CC
  */
-export function getManufacturerIdStatic<
-	T extends ManufacturerProprietaryCCConstructor,
->(classConstructor: T): number {
+export function getManufacturerIdStatic(
+	classConstructor: ManufacturerProprietaryCCConstructor,
+): number {
 	// retrieve the current metadata
 	const ret = manufacturerIdDecorator.lookupValueStatic(classConstructor);
 	if (ret == undefined) {

@@ -1652,7 +1652,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				iv,
 				securityClass: decryptionSecurityClass,
 			} = await decrypt());
-			if (!!authOK && !!plaintext) break;
+			if (authOK && !!plaintext) break;
 			// No need to try further SPANs if we just got the sender's EI
 			if (!!getSenderEI(extensions)) break;
 		}

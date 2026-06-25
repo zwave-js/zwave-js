@@ -72,8 +72,8 @@ export function validateBergerCodeMulti(
 	}
 }
 
-export function mapToObject<T, TMap extends Map<string | number, T>>(
-	map: TMap,
+export function mapToObject<T>(
+	map: Map<string | number, T>,
 ): Record<string, T> {
 	const obj: Record<string | number, T> = {};
 	for (const [key, value] of map) {
