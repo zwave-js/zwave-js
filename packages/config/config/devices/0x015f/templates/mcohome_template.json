@@ -387,5 +387,26 @@
 				"value": 55
 			}
 		]
+	},
+	"schedule_period_time_hour": {
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 23,
+		"defaultValue": 0,
+		"unsigned": true
+	},
+	"schedule_period_time_minute": {
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 59,
+		"defaultValue": 0,
+		"unsigned": true
+	},
+	"schedule_setpoint": {
+		"valueSize": 2,
+		"unit": "0.1 °F/C",
+		"minValue": 0,
+		"maxValue": 1000,
+		"defaultValue": 0
 	}
 }
