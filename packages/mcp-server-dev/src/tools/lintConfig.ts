@@ -1,15 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import spawn from "nano-spawn";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { REPO_ROOT } from "../configEnv.js";
 import type { ToolHandler } from "../types.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Get the repository root (go up from packages/mcp-server-dev/build/tools to root)
-const REPO_ROOT = resolve(__dirname, "../../../..");
-// const CONFIG_PACKAGE_DIR = resolve(REPO_ROOT, "packages/config");
 
 export const TOOL_NAME = "lint_config";
 

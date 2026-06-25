@@ -87,6 +87,7 @@
     - [Time CC](api/CCs/Time.md)
     - [Time Parameters CC](api/CCs/TimeParameters.md)
     - [User Code CC](api/CCs/UserCode.md)
+    - [User Credential CC](api/CCs/UserCredential.md)
     - [Version CC](api/CCs/Version.md)
     - [Wake Up CC](api/CCs/WakeUp.md)
     - [Window Covering CC](api/CCs/WindowCovering.md)
@@ -110,7 +111,6 @@
 
   - [Overview](config-files/overview.md)
   - [File format](config-files/file-format.md)
-  - [Hidden parameters](config-files/hidden-parameters.md)
   - [Contributing device files](config-files/contributing-files.md)
   - [Importing files from other sources](config-files/importing-from-others.md)
   <!-- - [Using telemetry data](config-files/using-telemetry-data.md) -->
@@ -118,6 +118,8 @@
   - [Conditional parameters and settings](config-files/conditional-settings.md)
   - [Using templates](config-files/using-templates.md)
   - [Guide on partial parameters](config-files/partial-parameters.md)
+  - [Parameter purpose](config-files/parameter-purpose.md)
+  - [Hidden parameters](config-files/hidden-parameters.md)
 
 - Development
 

@@ -1,0 +1,30 @@
+{
+	"manufacturer": "Z-Wave JS",
+	"manufacturerId": "0xffff",
+	"label": "700 Series",
+	"description": "USB Controller",
+	"devices": [
+		{
+			"productType": "0xffff",
+			"productId": "0xffff"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": 1,
+			"label": "This is ignored",
+			"valueSize": 1,
+			"unsigned": false,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{ "label": "Option 1", "value": 0 },
+				{ "label": "Option 2", "value": 1 }
+			]
+		}
+	]
+}

@@ -71,6 +71,7 @@
 		},
 		{
 			"#": "11",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Automatic Reporting: Temperature Change Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -86,12 +87,14 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Automatic Reporting: Temperature Reporting Interval",
-			"description": "Allowable range: 10-65535",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 65535,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 65535] }
+			],
 			"defaultValue": 300,
 			"unsigned": true,
 			"options": [
@@ -103,6 +106,7 @@
 		},
 		{
 			"#": "13",
+			"$purpose": "reporting_threshold.power",
 			"label": "Automatic Reporting: Power Change Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -119,6 +123,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_threshold.voltage",
 			"label": "Automatic Reporting: Voltage Change Threshold",
 			"valueSize": 1,
 			"unit": "V",
@@ -134,6 +139,7 @@
 		},
 		{
 			"#": "15",
+			"$purpose": "reporting_threshold.current",
 			"label": "Automatic Reporting: Current Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -150,6 +156,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_interval.energy",
 			"label": "Automatic Reporting: Energy Reports Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -170,11 +177,12 @@
 		{
 			"#": "20",
 			"label": "Overcurrent Protection",
-			"description": "Allowable range: 10-16",
 			"valueSize": 1,
 			"unit": "A",
-			"minValue": 0,
-			"maxValue": 16,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 16] }
+			],
 			"defaultValue": 16,
 			"options": [
 				{

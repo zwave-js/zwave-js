@@ -44,6 +44,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "motion_clear_delay",
 			"label": "On Time",
 			"description": "Delay before sending OFF",
 			"valueSize": 1,

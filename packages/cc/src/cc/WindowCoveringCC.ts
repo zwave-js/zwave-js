@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -14,7 +13,7 @@ import {
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName, isEnumMember, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
@@ -38,6 +37,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -55,6 +55,7 @@ import {
 	WindowCoveringCommand,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const WindowCoveringCCValues = V.defineCCValues(
 	CommandClasses["Window Covering"],
@@ -127,7 +128,7 @@ export const WindowCoveringCCValues = V.defineCCValues(
 				ccSpecific: {
 					parameter,
 				},
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"levelChangeUp",
@@ -305,6 +306,8 @@ export class WindowCoveringCCAPI extends CCAPI {
 			).endpoint(this.endpoint.index);
 
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				// Window Covering commands may take some time to be executed.
 				// Therefore we try to supervise the command execution and delay the
 				// optimistic update until the final result is received.
@@ -593,7 +596,10 @@ ${
 			}
 
 			// Query current values for all supported parameters
-			await this.refreshValues(ctx);
+			await this.refreshValues(ctx, {
+				onProgress: (completed, total) =>
+					node.reportInterviewProgress(completed, total),
+			});
 		}
 
 		// Remember that the interview is complete
@@ -602,6 +608,7 @@ ${
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -610,7 +617,7 @@ ${
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const parameters: number[] = this.getValue(
@@ -618,10 +625,12 @@ ${
 			WindowCoveringCCValues.supportedParameters,
 		) ?? [];
 
-		for (const param of parameters) {
-			// Only query odd parameters (with position support)
-			if (param % 2 == 0) continue;
+		// Only odd parameters have position support and need to be queried
+		const queryableParameters = parameters.filter((param) =>
+			param % 2 != 0
+		);
 
+		for (const [i, param] of queryableParameters.entries()) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `querying position for parameter ${
@@ -633,6 +642,8 @@ ${
 				direction: "outbound",
 			});
 			await api.get(param);
+
+			options?.onProgress?.(i + 1, queryableParameters.length);
 		}
 	}
 
@@ -771,6 +782,11 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 	): WindowCoveringCCReport {
 		validatePayload(raw.payload.length >= 4);
 		const parameter: WindowCoveringParameter = raw.payload[0];
+		validatePayload(isEnumMember(WindowCoveringParameter, parameter));
+		validatePayload(
+			raw.payload[1] <= 99,
+			raw.payload[2] <= 99,
+		);
 		const currentValue = raw.payload[1];
 		const targetValue = raw.payload[2];
 		const duration = Duration.parseReport(raw.payload[3])

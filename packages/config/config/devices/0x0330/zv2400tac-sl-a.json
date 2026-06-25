@@ -53,6 +53,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness Value",
 			"valueSize": 1,
 			"minValue": 0,
@@ -61,6 +62,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness Value",
 			"valueSize": 1,
 			"minValue": 0,
@@ -149,22 +151,27 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "reporting_threshold.power",
 			"label": "Threshold, Unit Is W",
 			"valueSize": 2,
+			"unit": "W",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 10
 		},
 		{
 			"#": "15",
+			"$purpose": "reporting_threshold.power",
 			"label": "Threshold, Unit Is %",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 20
 		},
 		{
 			"#": "21",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Metering Time Cycle",
 			"valueSize": 4,
 			"minValue": 0,
@@ -173,6 +180,7 @@
 		},
 		{
 			"#": "22",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Metering Time Cycle",
 			"valueSize": 4,
 			"minValue": 0,
@@ -181,6 +189,7 @@
 		},
 		{
 			"#": "23",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage Metering Time Cycle",
 			"valueSize": 4,
 			"minValue": 0,
@@ -189,6 +198,7 @@
 		},
 		{
 			"#": "24",
+			"$purpose": "reporting_interval.current",
 			"label": "Current Metering Time Cycle",
 			"valueSize": 4,
 			"minValue": 0,

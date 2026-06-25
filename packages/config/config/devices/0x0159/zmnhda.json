@@ -117,6 +117,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"description": "Set value means percentage",
 			"valueSize": 1,
@@ -126,6 +127,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval",
 			"valueSize": 2,
 			"minValue": 0,
@@ -135,6 +137,7 @@
 		},
 		{
 			"#": "60",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dimming Value",
 			"valueSize": 1,
 			"minValue": 0,
@@ -143,6 +146,7 @@
 		},
 		{
 			"#": "61",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dimming Value",
 			"valueSize": 1,
 			"minValue": 2,

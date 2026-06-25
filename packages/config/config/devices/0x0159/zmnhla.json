@@ -199,14 +199,17 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"valueSize": 1,
+			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 0
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Timer Interval",
 			"valueSize": 2,
 			"minValue": 0,

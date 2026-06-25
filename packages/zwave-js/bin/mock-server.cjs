@@ -24,8 +24,8 @@ Options:
   -i, --interface   The network interface to bind to. Default: all interfaces
   -p, --port        The port to bind to. Default: 5555
   -c, --config      Path to a single config file, or a directory with config
-                    files. Config files have extension .js or .json and define
-                    the mock(s)
+                    files. Config files have extension .js, .cjs or .json and
+                    define the mock(s)
 
 `);
 	throw process.exit(0);
@@ -124,11 +124,12 @@ if (configPath) {
 	const isDir = statSync(absolutePath).isDirectory();
 
 	if (isDir) {
-		// Read all .js and .json files from the directory and merge them
+		// Read all .js/.cjs/.json files from the directory and merge them
 		const files = readdirSync(absolutePath)
 			.filter(
 				(filename) =>
 					filename.endsWith(".js")
+					|| filename.endsWith(".cjs")
 					|| filename.endsWith(".json")
 					|| filename.endsWith(".dump"),
 			)
@@ -163,6 +164,7 @@ const portIndex = args.findIndex((arg) => arg === "--port" || arg === "-p");
 let port = portIndex === -1 ? undefined : parseInt(args[portIndex + 1]);
 if (Number.isNaN(port)) port = undefined;
 
+/** @type {MockServer} */
 let server;
 (async () => {
 	server = new MockServer({

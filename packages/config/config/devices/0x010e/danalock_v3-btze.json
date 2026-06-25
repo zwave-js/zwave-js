@@ -17,7 +17,9 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Twin Assist",
+			// This parameter was removed in firmware version 0.22.0
+			"$if": "firmwareVersion < 0.22",
+			"label": "Twist Assist",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,

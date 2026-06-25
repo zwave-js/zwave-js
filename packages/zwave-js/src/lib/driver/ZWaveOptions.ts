@@ -79,6 +79,12 @@ export interface ZWaveOptions {
 		 * to polling the API for the responsiveness check.
 		 */
 		serialAPIStarted: number; // [1000...30000], default: 5000 ms
+
+		/**
+		 * The minimum time to wait before and between automatic polling of nodes.
+		 * This should not be too low to avoid congesting the Z-Wave network.
+		 */
+		pollTime: number; // [1000...30000], default: 10000 ms
 	};
 
 	attempts: {
@@ -111,6 +117,12 @@ export interface ZWaveOptions {
 		 * How many attempts should be made for OTW firmware updates before giving up
 		 */
 		firmwareUpdateOTW: number; // [1...5], default: 3
+
+		/**
+		 * How often a response that is split into multiple reports should be re-requested
+		 * when some of the reports were not received. Set to 0 to disable re-requesting.
+		 */
+		partialReports: number; // [0...5], default: 2
 	};
 
 	/**

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -36,6 +35,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { SupervisionCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const SupervisionCCValues = V.defineCCValues(
 	CommandClasses.Supervision,
@@ -106,6 +106,9 @@ export class SupervisionCCAPI extends PhysicalCCAPI {
 				transmitOptions: TransmitOptions.DEFAULT_NOACK,
 				// Only try sending the report once. If it fails, the node will ask again
 				maxSendAttempts: 1,
+				// Don't keep the transaction alive to verify S2 delivery, or receiving
+				// other commands from the node may interfere with it
+				s2VerifyDelivery: false,
 			});
 		} catch (e) {
 			if (isTransmissionError(e)) {

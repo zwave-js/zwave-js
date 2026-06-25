@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -8,8 +7,6 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
@@ -30,6 +27,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -43,6 +41,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { LockCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const LockCCValues = V.defineCCValues(CommandClasses.Lock, {
 	...V.staticProperty(
@@ -51,7 +50,7 @@ export const LockCCValues = V.defineCCValues(CommandClasses.Lock, {
 			...ValueMetadata.Boolean,
 			label: "Locked",
 			description: "Whether the lock is locked",
-		} as const,
+		},
 	),
 });
 
@@ -153,6 +152,7 @@ export class LockCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -161,7 +161,7 @@ export class LockCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {
@@ -192,16 +192,14 @@ export class LockCCSet extends LockCC {
 		this.locked = options.locked;
 	}
 
-	public static from(_raw: CCRaw, _ctx: CCParsingContext): LockCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+	public static from(raw: CCRaw, ctx: CCParsingContext): LockCCSet {
+		validatePayload(raw.payload.length >= 1);
+		const locked = raw.payload[0] === 1;
 
-		// return new LockCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			locked,
+		});
 	}
 
 	public locked: boolean;
@@ -247,6 +245,11 @@ export class LockCCReport extends LockCC {
 	}
 
 	public readonly locked: boolean;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.locked ? 1 : 0]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {

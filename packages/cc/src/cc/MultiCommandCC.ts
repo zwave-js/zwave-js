@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
@@ -19,6 +18,7 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { MultiCommandCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // TODO: Handle this command when received
 

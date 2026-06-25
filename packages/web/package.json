@@ -1,7 +1,7 @@
 {
   "name": "@zwave-js/web",
   "private": true,
-  "version": "15.20.0",
+  "version": "15.25.0",
   "description": "zwave-js: web stuff",
   "keywords": [],
   "type": "module",
@@ -31,11 +31,12 @@
   "devDependencies": {
     "@types/w3c-web-serial": "^1.0.8",
     "@types/w3c-web-usb": "^1.0.10",
+    "@typescript/native-preview": "7.0.0-dev.20260423.1",
     "@zwave-js/bindings-browser": "workspace:^",
     "@zwave-js/core": "workspace:*",
     "@zwave-js/shared": "workspace:*",
     "esbuild": "^0.25.11",
-    "esbuild-plugins-node-modules-polyfill": "^1.7.1",
+    "esbuild-plugins-node-modules-polyfill": "^1.8.1",
     "zwave-js": "workspace:*"
   }
 }

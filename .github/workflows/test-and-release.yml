@@ -220,7 +220,7 @@ jobs:
         failure() &&
         github.event_name == 'pull_request' &&
         steps.lint.outputs.changed == 'true'
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: lint-fix
         path: fix.patch
@@ -387,7 +387,7 @@ jobs:
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Update CC table # (maybe)
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.BOT_TOKEN}}
         result-encoding: string
@@ -423,7 +423,7 @@ jobs:
         githubToken: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Update overview
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.BOT_TOKEN}}
         result-encoding: string
@@ -495,7 +495,7 @@ jobs:
 
 
     - name: Create Github Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:

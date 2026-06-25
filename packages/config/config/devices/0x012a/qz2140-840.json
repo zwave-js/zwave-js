@@ -27,7 +27,7 @@
 		{
 			"#": "9",
 			"label": "Dimming Resolution Level",
-			"description": "Valid values: 1-99, indicates the number of dimming levels",
+			"description": "Indicates the number of dimming levels",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 99,
@@ -36,7 +36,7 @@
 		{
 			"#": "10",
 			"label": "Timer",
-			"description": "Valid values: 1-255, indicates the time duration of each level",
+			"description": "Indicates the time duration of each level",
 			"valueSize": 1,
 			"minValue": 1,
 			"maxValue": 255,

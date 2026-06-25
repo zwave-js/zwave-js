@@ -84,6 +84,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Delta",
 			"description": "change in temperature for report",
 			"valueSize": 1,

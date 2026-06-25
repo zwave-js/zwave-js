@@ -10,18 +10,27 @@
 			"cache": false // TypeScript does the caching
 		},
 
+		"build": {
+			"dependsOn": ["codegen", "^build"],
+			"cache": false // tsgo is fast enough
+		},
+
 		"codegen": {
 			// Dummy task to enable running all codegen tasks
 		},
 		"@zwave-js/cc#codegen": {
 			"outputs": [
+				"src/cc/_CCValues.generated.ts",
 				"src/cc/index.ts",
-				"src/lib/API.ts",
-				"src/lib/Values.ts"
+				"src/lib/_CCAPI.generated.ts",
+				"src_gen/**"
 			]
 		},
 		"@zwave-js/config#codegen": {
 			"outputs": ["src/_version.ts"]
+		},
+		"zwave-js#codegen": {
+			"outputs": ["src/lib/_version.ts"]
 		},
 
 		// We just define a single build script, as it turns out that
@@ -43,15 +52,9 @@
 		},
 
 		"lint:zwave": {
-			"dependsOn": ["bootstrap"]
+			"dependsOn": ["bootstrap"],
+			"cache": false
 			// Dummy task to enable running all lint:zwave tasks
-		},
-		"@zwave-js/config#lint:zwave": {
-			"inputs": [
-				"**/*.{ts,cts,mts}",
-				"config/**/*.json",
-				"config/eslint.config.mjs"
-			]
 		},
 
 		"extract-api": {

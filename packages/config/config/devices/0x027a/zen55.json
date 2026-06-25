@@ -21,9 +21,36 @@
 		},
 		{
 			"#": "2",
+			"$if": "firmwareVersion < 1.40",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Turn On Relay On Alarm",
 			"defaultValue": 1
+		},
+		{
+			"#": "2",
+			"$if": "firmwareVersion >= 1.40",
+			"label": "Turn On Relay On Alarm",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Smoke and CO notifications",
+					"value": 1
+				},
+				{
+					"label": "Smoke notification only",
+					"value": 2
+				},
+				{
+					"label": "CO notification only",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "3",
@@ -98,7 +125,7 @@
 					"value": 4
 				},
 				{
-					"label": "CO detected: No command;( No CO: 0xff (On)",
+					"label": "CO detected: No command; No CO: 0xff (On)",
 					"value": 5
 				}
 			]
@@ -142,38 +169,23 @@
 			]
 		},
 		{
-			"#": "9[0x01]",
-			"$if": "firmwareVersion >= 1.10",
-			"label": "Report Type: Signal Sensor",
+			"#": "9",
+			"label": "Relay Report Type",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Binary Switch Report",
+					"label": "Binary Switch reports for Z-Wave and sensor control",
 					"value": 0
 				},
 				{
-					"label": "Basic Report",
+					"label": "Binary Switch reports for Z-Wave control; Basic reports for sensor control",
 					"value": 1
-				}
-			]
-		},
-		{
-			"#": "9[0x02]",
-			"$if": "firmwareVersion >= 1.10",
-			"label": "Report Type: Z-Wave",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Binary Switch Report",
-					"value": 0
 				},
 				{
-					"label": "Basic Report",
-					"value": 1
+					"label": "Basic reports for Z-Wave and sensor control",
+					"value": 2
 				}
 			]
 		}

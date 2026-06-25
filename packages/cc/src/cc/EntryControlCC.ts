@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -33,6 +32,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -50,6 +50,7 @@ import {
 	EntryControlDataTypes,
 	EntryControlEventTypes,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 
 export const EntryControlCCValues = V.defineCCValues(
@@ -64,7 +65,7 @@ export const EntryControlCCValues = V.defineCCValues(
 					"Number of character that must be stored before sending",
 				min: 1,
 				max: 32,
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"keyCacheTimeout",
@@ -76,7 +77,7 @@ export const EntryControlCCValues = V.defineCCValues(
 					"How long the key cache must wait for additional characters",
 				min: 1,
 				max: 10,
-			} as const,
+			},
 		),
 		...V.staticProperty("supportedDataTypes", undefined, {
 			internal: true,
@@ -360,6 +361,7 @@ max key cache timeout: ${eventCapabilities.maxKeyCacheTimeout} seconds`,
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -368,7 +370,7 @@ max key cache timeout: ${eventCapabilities.maxKeyCacheTimeout} seconds`,
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {

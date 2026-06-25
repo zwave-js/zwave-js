@@ -175,13 +175,13 @@ export class Duration {
 		let ret = "";
 		switch (this.unit) {
 			case "minutes":
-				if (this._value > 60) {
+				if (this._value >= 60) {
 					ret += `${Math.floor(this._value / 60)}h`;
 				}
 				ret += `${this._value % 60}m`;
 				return ret;
 			case "seconds":
-				if (this._value > 60) {
+				if (this._value >= 60) {
 					ret += `${Math.floor(this._value / 60)}m`;
 				}
 				ret += `${this._value % 60}s`;

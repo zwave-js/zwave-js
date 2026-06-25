@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -38,6 +37,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -50,6 +50,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { IndicatorCommand, type IndicatorTimeout } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 function isManufacturerDefinedIndicator(indicatorId: number): boolean {
 	return indicatorId >= 0x80 && indicatorId <= 0x9f;
@@ -145,7 +146,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 			ccSpecific: {
 				indicatorId: 0,
 			},
-		} as const,
+		},
 	),
 	...V.staticProperty(
 		"identify",
@@ -155,8 +156,8 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 			states: {
 				true: "Identify",
 			},
-		} as const,
-		{ minVersion: 3 } as const,
+		},
+		{ minVersion: 3 },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"supportedPropertyIDs",
@@ -184,7 +185,7 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 				propertyId,
 			},
 		}),
-		{ minVersion: 2 } as const,
+		{ minVersion: 2 },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"timeout",
@@ -200,14 +201,14 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 				indicatorId,
 			},
 		}),
-		{ minVersion: 3 } as const,
+		{ minVersion: 3 },
 	),
 	...V.dynamicPropertyWithName(
 		"indicatorDescription",
 		(indicatorId: number) => indicatorId,
 		({ property }) => typeof property === "number",
 		undefined,
-		{ internal: true, minVersion: 4 } as const,
+		{ internal: true, minVersion: 4 },
 	),
 });
 
@@ -841,15 +842,26 @@ export class IndicatorCC extends CommandClass {
 						direction: "outbound",
 					});
 
-					for (const id of manufacturerDefinedIndicatorIds) {
+					for (
+						const [i, id] of manufacturerDefinedIndicatorIds
+							.entries()
+					) {
 						await api.getDescription(id);
+
+						node.reportInterviewProgress(
+							i + 1,
+							manufacturerDefinedIndicatorIds.length,
+						);
 					}
 				}
 			}
 		}
 
 		// Query current values
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -857,6 +869,7 @@ export class IndicatorCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -865,7 +878,7 @@ export class IndicatorCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		if (api.version === 1) {
@@ -880,7 +893,7 @@ export class IndicatorCC extends CommandClass {
 				ctx,
 				IndicatorCCValues.supportedIndicatorIds,
 			) ?? [];
-			for (const indicatorId of supportedIndicatorIds) {
+			for (const [i, indicatorId] of supportedIndicatorIds.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `requesting current indicator value (id = ${
@@ -891,6 +904,8 @@ export class IndicatorCC extends CommandClass {
 					direction: "outbound",
 				});
 				await api.get(indicatorId);
+
+				options?.onProgress?.(i + 1, supportedIndicatorIds.length);
 			}
 		}
 	}

@@ -53,6 +53,8 @@ export default tseslint.config(
 			".vscode/extensions/**",
 			// Remove warning on this config file
 			"eslint.config.mjs",
+			// And on generated source files
+			"packages/*/src_gen/**",
 		],
 	},
 	{
@@ -66,6 +68,13 @@ export default tseslint.config(
 		files: ["packages/**/*.ts"],
 		rules: {
 			"@zwave-js/no-unnecessary-bytes-from": "error",
+		},
+	},
+	// Prevent self-imports in the CC package
+	{
+		files: ["packages/cc/src/**/*.ts"],
+		rules: {
+			"@zwave-js/no-workspace-self-import": "error",
 		},
 	},
 	// Disable unnecessarily strict rules for test files
@@ -101,6 +110,7 @@ export default tseslint.config(
 		files: ["packages/cc/src/**"],
 		rules: {
 			"@zwave-js/consistent-cc-classes": "error",
+			"@zwave-js/consistent-cc-value-definitions": "error",
 		},
 	},
 	// Enable consistent mock node behaviors for mock CC behaviors

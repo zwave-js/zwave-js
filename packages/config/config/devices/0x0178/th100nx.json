@@ -17,6 +17,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$purpose": "reporting_interval.battery",
 			"label": "Time Between Battery Reports",
 			"valueSize": 1,
 			"unit": "hours",
@@ -124,6 +125,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Delta Report Threshold (Group 1)",
 			"valueSize": 1,
 			"unit": "0.1°",
@@ -134,6 +136,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Periodic Temperature Report Interval (Group 1)",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -149,6 +152,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Delta Report Threshold (Group 2)",
 			"valueSize": 1,
 			"unit": "0.1°",
@@ -158,6 +162,7 @@
 		},
 		{
 			"#": "11",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Periodic Temperature Report Interval (Group 2)",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -233,6 +238,7 @@
 		},
 		{
 			"#": "16",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Group 1 Humidity Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -242,6 +248,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Group 1 Humidity Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -257,6 +264,7 @@
 		},
 		{
 			"#": "18",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Group 3 Humidity Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -266,6 +274,7 @@
 		},
 		{
 			"#": "19",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Group 3 Humidity Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -307,6 +316,7 @@
 		},
 		{
 			"#": "21",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset Correction",
 			"description": "Correct deviations in the device's temperature reading.",
 			"valueSize": 1,
@@ -318,6 +328,7 @@
 		},
 		{
 			"#": "22",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset Correction",
 			"description": "Correct deviations in the device's humidity reading.",
 			"valueSize": 1,

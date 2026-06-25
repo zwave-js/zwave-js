@@ -13,26 +13,10 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
-		},
-		"2": {
-			"label": "Basic Set",
-			"maxNodes": 5
-		}
-	},
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Off Delay After Motion",
-			"valueSize": 4,
-			"unit": "seconds",
-			"minValue": 10,
-			"maxValue": 3600,
-			"defaultValue": 10
+			"$import": "templates/homeseer_template.json#off_delay_after_motion"
 		},
 		{
 			"#": "2",

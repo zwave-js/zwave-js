@@ -42,6 +42,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "motion_sensitivity",
 			"label": "Sensitivity Level",
 			"description": "1 Means lowest sensitivity and 10 means highest.",
 			"valueSize": 1,
@@ -51,6 +52,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Re-Trigger Interval",
 			"description": "Adjust the interval of being re-triggered after a trigger",
 			"valueSize": 2,

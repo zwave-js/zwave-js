@@ -11,7 +11,7 @@ export function checkCCToLogEntry(): void {
 	// Create a Program to represent the project, then pull out the
 	// source file to parse its AST.
 
-	const tsConfig = loadTSConfig("cc");
+	const tsConfig = loadTSConfig("cc", "");
 	const program = ts.createProgram(tsConfig.fileNames, tsConfig.options);
 
 	const results = new Map<

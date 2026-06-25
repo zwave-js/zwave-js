@@ -78,6 +78,7 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion >= 2.4",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -95,6 +96,7 @@
 		{
 			"#": "4",
 			"$if": "firmwareVersion >= 2.4",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",

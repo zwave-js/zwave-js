@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -38,6 +37,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -54,6 +54,7 @@ import {
 	ThermostatSetpointCommand,
 	ThermostatSetpointType,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // This array is used to map the advertised supported types (interpretation A)
 // to the actual enum values
@@ -101,7 +102,7 @@ export const ThermostatSetpointCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { setpointType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
@@ -408,6 +409,13 @@ export class ThermostatSetpointCC extends CommandClass {
 					message: logMessage,
 					direction: "inbound",
 				});
+
+				node.reportInterviewProgress(
+					type - ThermostatSetpointType.Heating + 1,
+					ThermostatSetpointType["Full Power"]
+						- ThermostatSetpointType.Heating
+						+ 1,
+				);
 			}
 
 			// Remember which setpoint types are actually supported
@@ -451,7 +459,7 @@ export class ThermostatSetpointCC extends CommandClass {
 				return;
 			}
 
-			for (const type of setpointTypes) {
+			for (const [i, type] of setpointTypes.entries()) {
 				const setpointName = getEnumMemberName(
 					ThermostatSetpointType,
 					type,
@@ -481,10 +489,15 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 						direction: "inbound",
 					});
 				}
+
+				node.reportInterviewProgress(i + 1, setpointTypes.length);
 			}
 
 			// Query the current value for all setpoint types
-			await this.refreshValues(ctx);
+			await this.refreshValues(ctx, {
+				onProgress: (completed, total) =>
+					node.reportInterviewProgress(completed, total),
+			});
 		}
 
 		// Remember that the interview is complete
@@ -493,6 +506,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -501,7 +515,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const setpointTypes: ThermostatSetpointType[] = this.getValue(
@@ -510,7 +524,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 		) ?? [];
 
 		// Query each setpoint's current value
-		for (const type of setpointTypes) {
+		for (const [i, type] of setpointTypes.entries()) {
 			const setpointName = getEnumMemberName(
 				ThermostatSetpointType,
 				type,
@@ -534,6 +548,8 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 					direction: "inbound",
 				});
 			}
+
+			options?.onProgress?.(i + 1, setpointTypes.length);
 		}
 	}
 }

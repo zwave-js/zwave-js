@@ -44,7 +44,7 @@
 		},
 		{
 			"#": "39",
-			"$import": "templates/aeotec_template.json#low_battery_threshold"
+			"$import": "templates/aeotec_template.json#reporting_threshold.low_battery"
 		},
 		{
 			"#": "111",

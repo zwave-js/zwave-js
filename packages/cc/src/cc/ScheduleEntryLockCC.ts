@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -56,6 +55,7 @@ import {
 	type Timezone,
 } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { UserCodeCC } from "./UserCodeCC.js";
 
 export const ScheduleEntryLockCCValues = V.defineCCValues(
@@ -1278,6 +1278,15 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 			}
 		}
 
+		validatePayload(
+			weekday == undefined
+				|| weekday <= ScheduleEntryLockWeekday.Saturday,
+			startHour == undefined || startHour <= 23,
+			startMinute == undefined || startMinute <= 59,
+			stopHour == undefined || stopHour <= 23,
+			stopMinute == undefined || stopMinute <= 59,
+		);
+
 		if (
 			weekday != undefined
 			&& startHour != undefined
@@ -1673,6 +1682,18 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 				stopMinute = raw.payload[11];
 			}
 		}
+
+		validatePayload(
+			startMonth == undefined
+				|| (startMonth >= 1 && startMonth <= 12),
+			startDay == undefined || (startDay >= 1 && startDay <= 31),
+			startHour == undefined || startHour <= 23,
+			startMinute == undefined || startMinute <= 59,
+			stopMonth == undefined || (stopMonth >= 1 && stopMonth <= 12),
+			stopDay == undefined || (stopDay >= 1 && stopDay <= 31),
+			stopHour == undefined || stopHour <= 23,
+			stopMinute == undefined || stopMinute <= 59,
+		);
 
 		if (
 			startYear != undefined
@@ -2150,6 +2171,13 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 			const startMinute = raw.payload[4];
 			const durationHour = raw.payload[5];
 			const durationMinute = raw.payload[6];
+
+			validatePayload(
+				startHour <= 23,
+				startMinute <= 59,
+				durationHour <= 23,
+				durationMinute <= 59,
+			);
 
 			return new this({
 				nodeId: ctx.sourceNodeId,

@@ -149,6 +149,94 @@ integrationTest(
 );
 
 integrationTest(
+	"When the serial port cannot be reopened during unresponsive controller recovery, the driver emits an error and destroys itself",
+	{
+		// debug: true,
+
+		connectViaTCP: true,
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+			timeouts: {
+				// Shorten the timeouts to speed up the test
+				ack: 400,
+			},
+			attempts: {
+				// Spend less time waiting, but make sure
+				// we excercise the loops at least
+				controller: 2,
+				openSerialPort: 2,
+			},
+		},
+
+		async customSetup(driver, mockController, mockNode) {
+			const doNotRespond: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (!shouldRespond) return true;
+
+					return false;
+				},
+			};
+			mockController.defineBehavior(doNotRespond);
+		},
+
+		async testBody(t, driver, node, mockController, mockNode, context) {
+			shouldRespond = false;
+			mockController.autoAckHostMessages = false;
+			// Restore the shared flag, so the following tests in this file
+			// start with a responsive controller
+			t.onTestFinished(() => {
+				shouldRespond = true;
+			});
+
+			// Simulate a remote endpoint that lost power: the established
+			// connection stays half-open without traffic, but reconnection
+			// attempts are refused
+			context.tcpServer!.close();
+
+			const errorPromise = new Promise<Error>((resolve) => {
+				driver.on("error", resolve);
+			});
+
+			// The command fails since the controller is unresponsive
+			await assertZWaveError(
+				t.expect,
+				() =>
+					driver.sendMessage<GetControllerIdResponse>(
+						new GetControllerIdRequest(),
+						{ supportCheck: false },
+					),
+				{
+					errorCode: ZWaveErrorCodes.Controller_Timeout,
+					context: "ACK",
+				},
+			);
+
+			// The recovery via soft reset and reopening the serial port fails.
+			// Instead of emitting an unhandled exception, this should be surfaced
+			// as a Driver_Failed error.
+			const error = await Promise.race([
+				errorPromise,
+				wait(10000).then(() => {
+					throw new Error(
+						"The driver did not emit an error event",
+					);
+				}),
+			]);
+			assertZWaveError(t.expect, error, {
+				errorCode: ZWaveErrorCodes.Driver_Failed,
+			});
+
+			// And the driver should be destroyed
+			await wait(100);
+			t.expect(driver["wasDestroyed"]).toBe(true);
+		},
+	},
+);
+
+integrationTest(
 	"The unresponsive controller recovery does not kick in when it was enabled via config",
 	{
 		// debug: true,

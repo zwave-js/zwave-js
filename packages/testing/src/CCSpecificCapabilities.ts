@@ -1,9 +1,19 @@
 import type {
 	ColorComponent,
+	DoorHandleStatus,
+	DoorLockMode,
+	DoorLockOperationType,
 	KeypadMode,
 	SwitchType,
 	ThermostatMode,
 	ThermostatSetpointType,
+	UserCredentialCapability,
+	UserCredentialKeyLockerEntryCapability,
+	UserCredentialKeyLockerEntryType,
+	UserCredentialNameEncoding,
+	UserCredentialRule,
+	UserCredentialType,
+	UserCredentialUserType,
 	UserIDStatus,
 	WindowCoveringParameter,
 } from "@zwave-js/cc";
@@ -42,6 +52,35 @@ export interface ConfigurationCCCapabilities {
 	}[];
 }
 
+export interface LockCCCapabilities {
+	/**
+	 * Time in milliseconds for the lock to travel.
+	 * Set to 0 to lock/unlock instantly.
+	 * Default: 0
+	 */
+	travelTime?: number;
+}
+
+export interface DoorLockCCCapabilities {
+	supportedOperationTypes: DoorLockOperationType[];
+	supportedDoorLockModes: DoorLockMode[];
+	supportedOutsideHandles?: DoorHandleStatus;
+	supportedInsideHandles?: DoorHandleStatus;
+	doorSupported?: boolean;
+	boltSupported?: boolean;
+	latchSupported?: boolean;
+	blockToBlockSupported?: boolean;
+	twistAssistSupported?: boolean;
+	holdAndReleaseSupported?: boolean;
+	autoRelockSupported?: boolean;
+	/**
+	 * Time in milliseconds for the lock to travel.
+	 * Set to 0 to lock/unlock instantly.
+	 * Default: 0
+	 */
+	travelTime?: number;
+}
+
 export interface ColorSwitchCCCapabilities {
 	/** Supported colors and their default values */
 	colorComponents: Partial<Record<ColorComponent, number | undefined>>;
@@ -61,6 +100,11 @@ export interface IndicatorCCCapabilities {
 export interface NotificationCCCapabilities {
 	supportsV1Alarm: boolean;
 	notificationTypesAndEvents: Record<number, number[]>;
+}
+
+export interface NodeNamingAndLocationCCCapabilities {
+	name?: string;
+	location?: string;
 }
 
 export interface MeterCCCapabilities {
@@ -98,6 +142,8 @@ export interface MultilevelSensorCCCapabilities {
 export interface MultilevelSwitchCCCapabilities {
 	defaultValue?: MaybeUnknown<number>;
 	primarySwitchType: SwitchType;
+	/** Full travel time from 0 to 99 in milliseconds. Default: 0 (instant) */
+	travelTime?: number;
 }
 
 export interface SoundSwitchCCCapabilities {
@@ -111,6 +157,8 @@ export interface SoundSwitchCCCapabilities {
 
 export interface WindowCoveringCCCapabilities {
 	supportedParameters: WindowCoveringParameter[];
+	/** Full travel time from 0 to 99 in milliseconds. Default: 5000 */
+	travelTime?: number;
 }
 
 export interface EnergyProductionCCCapabilities {
@@ -171,11 +219,36 @@ export interface ScheduleEntryLockCCCapabilities {
 	numDailyRepeatingSlots: number;
 }
 
+export interface UserCredentialCCCapabilities {
+	numberOfSupportedUsers: number;
+	supportedCredentialRules: UserCredentialRule[];
+	maxUserNameLength: number;
+	supportsUserSchedule?: boolean;
+	supportsAllUsersChecksum?: boolean;
+	supportsUserChecksum?: boolean;
+	supportedUserNameEncodings?: UserCredentialNameEncoding[];
+	supportedUserTypes?: UserCredentialUserType[];
+	supportsCredentialChecksum?: boolean;
+	supportsAdminCode?: boolean;
+	supportsAdminCodeDeactivation?: boolean;
+	supportedCredentialTypes: Map<
+		UserCredentialType,
+		UserCredentialCapability
+	>;
+	supportedKeyLockerEntryTypes?: Map<
+		UserCredentialKeyLockerEntryType,
+		UserCredentialKeyLockerEntryCapability
+	>;
+}
+
 export type CCSpecificCapabilities = {
 	[CommandClasses.Configuration]: ConfigurationCCCapabilities;
 	[CommandClasses.Notification]: NotificationCCCapabilities;
+	[0x77 /* Node Naming and Location */]: NodeNamingAndLocationCCCapabilities;
 	[48 /* Binary Sensor */]: BinarySensorCCCapabilities;
 	[0x25 /* Binary Switch */]: BinarySwitchCCCapabilities;
+	[0x62 /* Door Lock */]: DoorLockCCCapabilities;
+	[0x76 /* Lock */]: LockCCCapabilities;
 	[49 /* Multilevel Sensor */]: MultilevelSensorCCCapabilities;
 	[0x26 /* Multilevel Switch */]: MultilevelSwitchCCCapabilities;
 	[51 /* Color Switch */]: ColorSwitchCCCapabilities;
@@ -186,6 +259,7 @@ export type CCSpecificCapabilities = {
 	[67 /* Thermostat Setpoint */]: ThermostatSetpointCCCapabilities;
 	[99 /* User Code */]: UserCodeCCCapabilities;
 	[78 /* Schedule Entry Lock */]: ScheduleEntryLockCCCapabilities;
+	[0x83 /* User Credential */]: UserCredentialCCCapabilities;
 	[CommandClasses.Meter]: MeterCCCapabilities;
 	[CommandClasses.Indicator]: IndicatorCCCapabilities;
 };

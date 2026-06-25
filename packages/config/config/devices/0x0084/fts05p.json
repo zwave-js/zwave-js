@@ -57,24 +57,20 @@
 		{
 			"#": "1",
 			"label": "Temperature Low Threshold",
-			"description": "Use this to change the low temperature alarm threshold. Set the range between -10 and 69 deg C.Note: The user configuration value is a positive decimal integer 0 through 255, but the device interprets the value as 8-bit Two's complement. Examples: -10 in Two's complement is 246 decimal (0xF6). -2 in Two's complement is 254 decimal (xFE) -1 in Two's complement is 255 decimal (xFF) 0 in Two's complement is 0 decimal (0x00). 69 in Two's complement is 69 decimal (0x45). Thus the valid range the user may enter is 0-69 and 246-255.",
 			"valueSize": 1,
 			"unit": "°C",
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 4,
-			"unsigned": true
+			"minValue": -10,
+			"maxValue": 69,
+			"defaultValue": 4
 		},
 		{
 			"#": "2",
 			"label": "Temperature High Threshold",
-			"description": "Use this to change the high temperature alarm threshold. Set the range between -9 and 70 deg C.Note: The user configuration value is a positive decimal integer 0 through 255, but the device interprets the value as 8-bit Two's complement. Examples: -9 in Two's complement is 247 decimal (0xF7). -2 in Two's complement is 254 decimal (xFE) -1 in Two's complement is 255 decimal (xFF) 0 in Two's complement is 0 decimal (0x00). 70 in Two's complement is 70 decimal (0x46). Thus the valid range the user may enter is 0-70 and 247-255.",
 			"valueSize": 1,
 			"unit": "°C",
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 70,
-			"unsigned": true
+			"minValue": -9,
+			"maxValue": 70,
+			"defaultValue": 70
 		},
 		{
 			"#": "3",

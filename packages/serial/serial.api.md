@@ -1190,7 +1190,7 @@ export function expectedCallback<TSent extends typeof Message>(typeOrPredicate: 
 // Warning: (ae-missing-release-tag) "expectedResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export const expectedResponse: <TTarget extends typeof Message>(typeOrPredicate: typeof Message | FunctionType | ResponsePredicate<Message>) => TypedClassDecorator<TTarget>;
+export const expectedResponse: <TTarget extends typeof Message>(typeOrPredicate: ResponsePredicate<Message> | typeof Message | FunctionType) => TypedClassDecorator<TTarget>;
 
 // Warning: (ae-missing-release-tag) "ExtendedNVMOperationsCloseRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

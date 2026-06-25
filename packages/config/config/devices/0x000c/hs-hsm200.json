@@ -42,16 +42,13 @@
 		},
 		{
 			"#": "2",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Dim Level",
-			"description": "Allowable range: 0-99, 255",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "3",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Light Level Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -68,6 +65,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 1,
 			"unit": "minutes",
@@ -84,6 +82,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "0.1 °F",

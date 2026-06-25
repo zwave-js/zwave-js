@@ -60,6 +60,7 @@
 		},
 		{
 			"#": "27",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 4,
 			"unit": "°C",
@@ -168,161 +169,36 @@
 		{
 			"#": "123",
 			"label": "LCD Backlight Standby",
-			"description": "Allowable range: 10-100 (increment by 10)",
 			"valueSize": 4,
-			"defaultValue": 10,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "10 %",
-					"value": 10
-				},
-				{
-					"label": "20 %",
-					"value": 20
-				},
-				{
-					"label": "30 %",
-					"value": 30
-				},
-				{
-					"label": "40 %",
-					"value": 40
-				},
-				{
-					"label": "50 %",
-					"value": 50
-				},
-				{
-					"label": "60 %",
-					"value": 60
-				},
-				{
-					"label": "70 %",
-					"value": 70
-				},
-				{
-					"label": "80 %",
-					"value": 80
-				},
-				{
-					"label": "90 %",
-					"value": 90
-				},
-				{
-					"label": "100 %",
-					"value": 100
-				}
-			]
+			"unit": "%",
+			"allowed": [
+				{ "range": [10, 100], "step": 10 }
+			],
+			"defaultValue": 10
 		},
 		{
 			"#": "124",
 			"label": "LCD Backlight Work",
-			"description": "Allowable range: 10-100 (increment by 10)",
 			"valueSize": 4,
-			"defaultValue": 100,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "10 %",
-					"value": 10
-				},
-				{
-					"label": "20 %",
-					"value": 20
-				},
-				{
-					"label": "30 %",
-					"value": 30
-				},
-				{
-					"label": "40 %",
-					"value": 40
-				},
-				{
-					"label": "50 %",
-					"value": 50
-				},
-				{
-					"label": "60 %",
-					"value": 60
-				},
-				{
-					"label": "70 %",
-					"value": 70
-				},
-				{
-					"label": "80 %",
-					"value": 80
-				},
-				{
-					"label": "90 %",
-					"value": 90
-				},
-				{
-					"label": "100 %",
-					"value": 100
-				}
-			]
+			"unit": "%",
+			"allowed": [
+				{ "range": [10, 100], "step": 10 }
+			],
+			"defaultValue": 100
 		},
 		{
 			"#": "127",
 			"label": "Regulator Percentage",
-			"description": "Allowable range: 0-100 (increment by 10)",
 			"valueSize": 4,
-			"defaultValue": 20,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "0 %",
-					"value": 0
-				},
-				{
-					"label": "10 %",
-					"value": 10
-				},
-				{
-					"label": "20 %",
-					"value": 20
-				},
-				{
-					"label": "30 %",
-					"value": 30
-				},
-				{
-					"label": "40 %",
-					"value": 40
-				},
-				{
-					"label": "50 %",
-					"value": 50
-				},
-				{
-					"label": "60 %",
-					"value": 60
-				},
-				{
-					"label": "70 %",
-					"value": 70
-				},
-				{
-					"label": "80 %",
-					"value": 80
-				},
-				{
-					"label": "90 %",
-					"value": 90
-				},
-				{
-					"label": "100 %",
-					"value": 100
-				}
-			]
+			"unit": "%",
+			"allowed": [
+				{ "range": [0, 100], "step": 10 }
+			],
+			"defaultValue": 20
 		},
 		{
 			"#": "134",
 			"label": "Differential (Celsius)",
-			"description": "Allowable range: 5-100 (increment by 5)",
 			"valueSize": 4,
 			"unit": "°C",
 			"allowed": [
@@ -333,61 +209,62 @@
 		{
 			"#": "135",
 			"label": "Differential (Fahrenheit)",
-			"description": "Allowable range: 10-180 (increment by 10)",
 			"valueSize": 4,
 			"unit": "°C",
-			"minValue": 10,
-			"maxValue": 180,
+			"allowed": [
+				{ "range": [10, 180], "step": 10 }
+			],
 			"defaultValue": 20
 		},
 		{
 			"#": "136",
 			"label": "Frost (Celsius)",
-			"description": "Allowable range: 50-100 (increment by 10)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 100,
+			"allowed": [
+				{ "range": [50, 100], "step": 10 }
+			],
 			"defaultValue": 50
 		},
 		{
 			"#": "137",
 			"label": "Frost (Fahrenheit)",
-			"description": "Allowable range: 410-500 (increment by 20)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
-			"minValue": 410,
-			"maxValue": 500,
+			"allowed": [
+				// Documentation says step size 20, but that cannot work
+				{ "range": [410, 500], "step": 10 }
+			],
 			"defaultValue": 410
 		},
 		{
 			"#": "183",
 			"label": "Dry",
-			"description": "Allowable range: 0-120 (increment by 5)",
 			"valueSize": 4,
 			"unit": "minutes",
-			"minValue": 0,
-			"maxValue": 120,
+			"allowed": [
+				{ "range": [0, 120], "step": 5 }
+			],
 			"defaultValue": 30
 		},
 		{
 			"#": "185",
 			"label": "Floor Limit Temp (Celsius)",
-			"description": "Allowable range: 50-600 (increment by 5)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 600,
+			"allowed": [
+				{ "range": [50, 600], "step": 5 }
+			],
 			"defaultValue": 270
 		},
 		{
 			"#": "186",
 			"label": "Floor Limit Temp (Fahrenheit)",
-			"description": "Allowable range: 410-1400 (increment by 10)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
-			"minValue": 410,
-			"maxValue": 1400,
+			"allowed": [
+				{ "range": [410, 1400], "step": 10 }
+			],
 			"defaultValue": 810
 		},
 		{

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	type ApplicationNodeInformation,
 	CommandClasses,
@@ -50,6 +49,7 @@ import {
 } from "../lib/EncapsulatingCommandClass.js";
 import { V } from "../lib/Values.js";
 import { MultiChannelCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // TODO: Handle removal reports of dynamic endpoints
 
@@ -571,7 +571,12 @@ identical capabilities:      ${multiResponse.identicalCapabilities}`;
 
 		// Step 3: Query endpoints
 		let hasQueriedCapabilities = false;
+		let completedEndpoints = 0;
 		for (const endpoint of allEndpoints) {
+			node.reportInterviewProgress(
+				++completedEndpoints,
+				allEndpoints.length,
+			);
 			if (
 				endpoint > multiResponse.individualEndpointCount
 				&& ccVersion >= 4
@@ -1165,8 +1170,8 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
 		};
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

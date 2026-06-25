@@ -92,8 +92,10 @@
 			"label": "Dimming Speed - Up (Remote)",
 			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 254,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 254] }
+			],
 			"defaultValue": 25,
 			"unsigned": true,
 			"options": [
@@ -181,6 +183,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -231,6 +234,7 @@
 		},
 		{
 			"#": "18",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -247,11 +251,12 @@
 		{
 			"#": "19",
 			"label": "Power & Energy Report Interval",
-			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32767] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -262,6 +267,7 @@
 		},
 		{
 			"#": "20",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Change Report Threshold",
 			"valueSize": 2,
 			"unit": "0.01 kWh",
@@ -348,7 +354,7 @@
 			"#": "23",
 			"$if": "firmwareVersion >= 1.4",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on. Allowable range: 0-60.",
+			"description": "Duration of initial increased power output when light turns on.",
 			"valueSize": 1,
 			"unit": "1/60 seconds",
 			"minValue": 0,
@@ -815,7 +821,7 @@
 		},
 		{
 			"#": "158",
-			"$if": "firmwareVersion <= 1.4",
+			"$if": "firmwareVersion <= 2.0",
 			"label": "Dimmer Mode",
 			"valueSize": 1,
 			"defaultValue": 1,
@@ -897,14 +903,33 @@
 		},
 		{
 			"#": "240",
-			"$if": "firmwareVersion > 1.4",
+			"$if": "firmwareVersion <= 2.0",
 			"label": "Factory Reset",
 			"description": "Set to 120935937 to perform a factory reset",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 4294967295,
 			"defaultValue": 0,
-			"unsigned": true
+			"unsigned": true,
+			"hidden": true
+		},
+		{
+			"#": "240",
+			"label": "Factory Reset",
+			"valueSize": 4,
+			"defaultValue": 0,
+			"destructive": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Default",
+					"value": 0
+				},
+				{
+					"label": "Perform a factory reset",
+					"value": 120935937
+				}
+			]
 		}
 	],
 	"metadata": {

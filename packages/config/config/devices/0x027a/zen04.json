@@ -47,15 +47,16 @@
 		},
 		{
 			"#": "9",
-			"$import": "templates/zooz_template.json#led_indicator_brightness"
+			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"defaultValue": 2
 		},
 		{
 			"#": "2",
-			"$import": "templates/zooz_template.json#auto_off_timer_duration"
+			"$import": "templates/zooz_template.json#auto_off_timer_0x_1x_3x_7x"
 		},
 		{
 			"#": "3",
-			"$import": "templates/zooz_template.json#auto_on_timer_duration"
+			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x"
 		},
 		{
 			"#": "4",
@@ -71,6 +72,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion < 2.30",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power (W) Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -81,6 +83,7 @@
 		{
 			"#": "5",
 			"$if": "firmwareVersion >= 2.30",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power (W) Report Threshold",
 			"valueSize": 1,
 			"unit": "W",
@@ -96,6 +99,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "minutes",
@@ -113,6 +117,7 @@
 		{
 			"#": "7",
 			"$if": "firmwareVersion < 2.30",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current (A) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -123,6 +128,7 @@
 		{
 			"#": "7",
 			"$if": "firmwareVersion >= 2.30",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current (A) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 A",
@@ -139,6 +145,7 @@
 		{
 			"#": "12",
 			"$if": "firmwareVersion >= 1.30",
+			"$purpose": "reporting_interval.current",
 			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "minutes",
@@ -157,6 +164,7 @@
 		{
 			"#": "8",
 			"$if": "firmwareVersion < 2.30",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy (kWh) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.01 kWh",
@@ -167,6 +175,7 @@
 		{
 			"#": "8",
 			"$if": "firmwareVersion >= 2.30",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy (kWh) Report Threshold",
 			"valueSize": 1,
 			"unit": "0.01 kWh",
@@ -184,6 +193,7 @@
 		{
 			"#": "14",
 			"$if": "firmwareVersion >= 2.30",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 4,
 			"unit": "minutes",
@@ -194,6 +204,7 @@
 		{
 			"#": "13",
 			"$if": "firmwareVersion >= 1.30",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage Report (V) Interval",
 			"valueSize": 4,
 			"unit": "minutes",

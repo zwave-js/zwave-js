@@ -13,6 +13,10 @@
 			"productType": "0x0102",
 			"productId": "0x0013",
 			"zwaveAllianceId": 3951
+		},
+		{
+			"productType": "0x0202",
+			"productId": "0x0013"
 		}
 	],
 	"firmwareVersion": {
@@ -85,6 +89,7 @@
 		},
 		{
 			"#": "16",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Trigger",
 			"valueSize": 1,
 			"unit": "0.1 °(C/F)",
@@ -100,6 +105,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Change Report Trigger",
 			"valueSize": 1,
 			"unit": "%",

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -48,6 +47,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -65,6 +65,7 @@ import {
 	MultilevelSensorCommand,
 	type MultilevelSensorValue,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import type { GetUserPreferences } from "../lib/traits.js";
 
 export const MultilevelSensorCCValues = V.defineCCValues(
@@ -97,7 +98,7 @@ export const MultilevelSensorCCValues = V.defineCCValues(
 				// Just the base metadata, to be extended using a config manager
 				...ValueMetadata.ReadOnlyNumber,
 				label: sensorTypeName,
-			} as const),
+			}),
 		),
 	},
 );
@@ -435,7 +436,7 @@ export class MultilevelSensorCC extends CommandClass {
 
 			// As well as the supported scales for each sensor
 
-			for (const type of sensorTypes) {
+			for (const [i, type] of sensorTypes.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `querying supported scales for ${
@@ -468,10 +469,15 @@ export class MultilevelSensorCC extends CommandClass {
 					});
 					return;
 				}
+
+				node.reportInterviewProgress(i + 1, sensorTypes.length);
 			}
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -479,6 +485,7 @@ export class MultilevelSensorCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -487,7 +494,7 @@ export class MultilevelSensorCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 		const valueDB = this.getValueDB(ctx);
 
@@ -523,7 +530,7 @@ value:       ${mlsResponse.value}${
 				endpoint: this.endpointIndex,
 			}) || [];
 
-			for (const type of sensorTypes) {
+			for (const [i, type] of sensorTypes.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: `querying ${
@@ -543,6 +550,8 @@ value:       ${mlsResponse.value}${
 						direction: "inbound",
 					});
 				}
+
+				options?.onProgress?.(i + 1, sensorTypes.length);
 			}
 		}
 	}

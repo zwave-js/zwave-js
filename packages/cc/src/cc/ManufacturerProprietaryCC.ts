@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetNode,
@@ -17,6 +16,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -24,6 +24,7 @@ import {
 	expectedCCResponse,
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { ManufacturerSpecificCCValues } from "./ManufacturerSpecificCC.js";
 import {
 	getManufacturerId,
@@ -255,6 +256,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 
@@ -267,7 +269,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 		}
 		const pcInstance = this.createSpecificInstance();
 		if (pcInstance) {
-			await pcInstance.refreshValues(ctx);
+			await pcInstance.refreshValues(ctx, options);
 		} else {
 			ctx.logNode(node.id, {
 				message:

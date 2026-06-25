@@ -70,6 +70,7 @@ The **Command Classes API** provides a high-to-mid level entrypoint which allows
 - [Time CC](api/CCs/Time.md) · `0x8a`
 - [Time Parameters CC](api/CCs/TimeParameters.md) · `0x8b`
 - [User Code CC](api/CCs/UserCode.md) · `0x63`
+- [User Credential CC](api/CCs/UserCredential.md) · `0x83`
 - [Version CC](api/CCs/Version.md) · `0x86`
 - [Wake Up CC](api/CCs/WakeUp.md) · `0x84`
 - [Window Covering CC](api/CCs/WindowCovering.md) · `0x6a`

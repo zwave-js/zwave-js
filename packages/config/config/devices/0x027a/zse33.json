@@ -123,8 +123,7 @@
 		{
 			"#": "9",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "LED Notifications for Chime",
-			"defaultValue": 1
+			"label": "LED Notifications for Chime"
 		}
 	]
 }

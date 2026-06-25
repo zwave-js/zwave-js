@@ -69,6 +69,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "timer.auto_on",
 			"label": "Auto-on Timer",
 			"description": "Defines the time after which the device is turned to last known state.",
 			"valueSize": 2,
@@ -79,6 +80,7 @@
 		},
 		{
 			"#": "11",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"description": "Defines the time after which the device is turned to last known state.",
 			"valueSize": 2,

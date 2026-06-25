@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -8,8 +7,6 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
 import {
@@ -34,6 +31,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -47,6 +45,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { NodeNamingAndLocationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const NodeNamingAndLocationCCValues = V.defineCCValues(
 	CommandClasses["Node Naming and Location"],
@@ -56,7 +55,7 @@ export const NodeNamingAndLocationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.String,
 				label: "Node name",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.staticProperty(
@@ -64,7 +63,7 @@ export const NodeNamingAndLocationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.String,
 				label: "Node location",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 	},
@@ -72,6 +71,38 @@ export const NodeNamingAndLocationCCValues = V.defineCCValues(
 
 function isASCII(str: string): boolean {
 	return /^[\x00-\x7F]*$/.test(str);
+}
+
+function decodeNodeTextPayload(raw: CCRaw): string {
+	validatePayload(raw.payload.length >= 1);
+	const encoding = raw.payload[0] === 2 ? "utf16le" : "ascii";
+	const textBuffer = raw.payload.subarray(1);
+	validatePayload(textBuffer.length <= 16);
+
+	if (encoding === "utf16le") {
+		validatePayload(textBuffer.length % 2 === 0);
+		return uint8ArrayToStringUTF16BE(textBuffer);
+	}
+
+	return textBuffer.toString("ascii");
+}
+
+function encodeNodeTextPayload(text: string): Bytes {
+	const encoding = isASCII(text) ? "ascii" : "utf16le";
+	let textBuffer: BytesView;
+	if (encoding === "utf16le") {
+		textBuffer = stringToUint8ArrayUTF16BE(text);
+	} else {
+		textBuffer = Bytes.from(text, "ascii");
+	}
+
+	// The length of this field MUST be in the range 1..16 bytes
+	const textLength = Math.min(16, textBuffer.length);
+
+	return Bytes.concat([
+		[encoding === "ascii" ? 0x0 : 0x2],
+		textBuffer.subarray(0, textLength),
+	]);
 }
 
 @API(CommandClasses["Node Naming and Location"])
@@ -232,6 +263,7 @@ export class NodeNamingAndLocationCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -240,7 +272,7 @@ export class NodeNamingAndLocationCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {
@@ -285,39 +317,20 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): NodeNamingAndLocationCCNameSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new NodeNamingAndLocationCCNameSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		const name = decodeNodeTextPayload(raw);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			name,
+		});
 	}
 
 	public name: string;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const encoding = isASCII(this.name) ? "ascii" : "utf16le";
-		this.payload = new Bytes(
-			1 + this.name.length * (encoding === "ascii" ? 1 : 2),
-		);
-		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let nameBuffer: BytesView;
-		if (encoding === "utf16le") {
-			nameBuffer = stringToUint8ArrayUTF16BE(this.name);
-		} else {
-			nameBuffer = Bytes.from(this.name, "ascii");
-		}
-		// Copy at most 16 bytes
-		this.payload.set(
-			nameBuffer.subarray(0, Math.min(16, nameBuffer.length)),
-			0,
-		);
+		this.payload = encodeNodeTextPayload(this.name);
 		return super.serialize(ctx);
 	}
 
@@ -348,16 +361,7 @@ export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): NodeNamingAndLocationCCNameReport {
-		validatePayload(raw.payload.length >= 1);
-		const encoding = raw.payload[0] === 2 ? "utf16le" : "ascii";
-		const nameBuffer = raw.payload.subarray(1);
-		let name: string;
-		if (encoding === "utf16le") {
-			validatePayload(nameBuffer.length % 2 === 0);
-			name = uint8ArrayToStringUTF16BE(nameBuffer);
-		} else {
-			name = nameBuffer.toString("ascii");
-		}
+		const name = decodeNodeTextPayload(raw);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -366,6 +370,11 @@ export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
 	}
 
 	public readonly name: string;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeNodeTextPayload(this.name);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -397,39 +406,20 @@ export class NodeNamingAndLocationCCLocationSet
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): NodeNamingAndLocationCCLocationSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new NodeNamingAndLocationCCLocationSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		const location = decodeNodeTextPayload(raw);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			location,
+		});
 	}
 
 	public location: string;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const encoding = isASCII(this.location) ? "ascii" : "utf16le";
-		this.payload = new Bytes(
-			1 + this.location.length * (encoding === "ascii" ? 1 : 2),
-		);
-		this.payload[0] = encoding === "ascii" ? 0x0 : 0x2;
-		let locationBuffer: BytesView;
-		if (encoding === "utf16le") {
-			locationBuffer = stringToUint8ArrayUTF16BE(this.location);
-		} else {
-			locationBuffer = Bytes.from(this.location, "ascii");
-		}
-		// Copy at most 16 bytes
-		this.payload.set(
-			locationBuffer.subarray(0, Math.min(16, locationBuffer.length)),
-			0,
-		);
+		this.payload = encodeNodeTextPayload(this.location);
 		return super.serialize(ctx);
 	}
 
@@ -462,16 +452,7 @@ export class NodeNamingAndLocationCCLocationReport
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): NodeNamingAndLocationCCLocationReport {
-		validatePayload(raw.payload.length >= 1);
-		const encoding = raw.payload[0] === 2 ? "utf16le" : "ascii";
-		const locationBuffer = raw.payload.subarray(1);
-		let location: string;
-		if (encoding === "utf16le") {
-			validatePayload(locationBuffer.length % 2 === 0);
-			location = uint8ArrayToStringUTF16BE(locationBuffer);
-		} else {
-			location = locationBuffer.toString("ascii");
-		}
+		const location = decodeNodeTextPayload(raw);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -480,6 +461,11 @@ export class NodeNamingAndLocationCCLocationReport
 	}
 
 	public readonly location: string;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeNodeTextPayload(this.location);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {

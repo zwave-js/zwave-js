@@ -7,11 +7,14 @@ import type {
 	MultilevelSwitchCommand,
 	Powerlevel,
 	PowerlevelTestStatus,
+	UserCredentialLearnStatus,
+	UserCredentialType,
 	Weekday,
 } from "@zwave-js/cc";
 import type { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import type {
 	CommandClasses,
+	InterviewProgress,
 	MetadataUpdatedArgs,
 	NodeStatus,
 	TranslatedValueID,
@@ -24,6 +27,7 @@ import type { AllOrNone, BytesView } from "@zwave-js/shared";
 import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
+import type { UserData } from "./feature-apis/AccessControl.js";
 
 export {
 	EntryControlDataTypes,
@@ -33,7 +37,12 @@ export {
 	Powerlevel,
 	PowerlevelTestStatus,
 } from "@zwave-js/cc";
-export { ControllerStatus, InterviewStage, NodeStatus } from "@zwave-js/core";
+export {
+	ControllerStatus,
+	type InterviewProgress,
+	InterviewStage,
+	NodeStatus,
+} from "@zwave-js/core";
 
 export type NodeInterviewFailedEventArgs =
 	& {
@@ -85,6 +94,10 @@ export type ZWaveInterviewFailedCallback = (
 export type ZWaveNodeFirmwareUpdateProgressCallback = (
 	node: ZWaveNode,
 	progress: FirmwareUpdateProgress,
+) => void;
+export type ZWaveNodeInterviewProgressCallback = (
+	node: ZWaveNode,
+	progress: InterviewProgress,
 ) => void;
 export type ZWaveNodeFirmwareUpdateFinishedCallback = (
 	node: ZWaveNode,
@@ -233,6 +246,39 @@ export interface ZWaveNodeValueEventCallbacks {
 	"value notification": ZWaveNodeValueNotificationCallback;
 }
 
+export interface UserDeletedArgs {
+	userId: number;
+}
+
+export interface CredentialChangedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	data?: string | Uint8Array;
+}
+
+export interface CredentialDeletedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+}
+
+export interface CredentialLearnProgressArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	stepsRemaining: number;
+	status: UserCredentialLearnStatus;
+}
+
+export interface CredentialLearnCompletedArgs {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	status: UserCredentialLearnStatus;
+	success: boolean;
+}
+
 export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	notification: ZWaveNotificationCallback;
 	"interview failed": ZWaveInterviewFailedCallback;
@@ -245,8 +291,32 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	"interview completed": (node: ZWaveNode) => void;
 	ready: (node: ZWaveNode) => void;
 	"interview stage completed": (node: ZWaveNode, stageName: string) => void;
+	"interview progress": ZWaveNodeInterviewProgressCallback;
 	"interview started": (node: ZWaveNode) => void;
 	"node info received": (node: ZWaveNode) => void;
+	"user added": (endpoint: Endpoint, args: UserData) => void;
+	"user modified": (endpoint: Endpoint, args: UserData) => void;
+	"user deleted": (endpoint: Endpoint, args: UserDeletedArgs) => void;
+	"credential added": (
+		endpoint: Endpoint,
+		args: CredentialChangedArgs,
+	) => void;
+	"credential modified": (
+		endpoint: Endpoint,
+		args: CredentialChangedArgs,
+	) => void;
+	"credential deleted": (
+		endpoint: Endpoint,
+		args: CredentialDeletedArgs,
+	) => void;
+	"credential learn progress": (
+		endpoint: Endpoint,
+		args: CredentialLearnProgressArgs,
+	) => void;
+	"credential learn completed": (
+		endpoint: Endpoint,
+		args: CredentialLearnCompletedArgs,
+	) => void;
 }
 
 export type ZWaveNodeEvents = Extract<keyof ZWaveNodeEventCallbacks, string>;
@@ -263,12 +333,21 @@ export const zWaveNodeEvents = [
 	"interview completed",
 	"ready",
 	"interview stage completed",
+	"interview progress",
 	"interview started",
 	"value added",
 	"value updated",
 	"value removed",
 	"metadata updated",
 	"value notification",
+	"user added",
+	"user modified",
+	"user deleted",
+	"credential added",
+	"credential modified",
+	"credential deleted",
+	"credential learn progress",
+	"credential learn completed",
 ] as const satisfies readonly ZWaveNodeEvents[];
 
 /** Represents the result of one health check round of a node's lifeline */

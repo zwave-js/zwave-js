@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -44,6 +43,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { TimeParametersCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const TimeParametersCCValues = V.defineCCValues(
 	CommandClasses["Time Parameters"],
@@ -53,7 +53,7 @@ export const TimeParametersCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.Any,
 				label: "Date and Time",
-			} as const,
+			},
 		),
 	},
 );
@@ -282,6 +282,13 @@ export class TimeParametersCCReport extends TimeParametersCC {
 			minute: raw.payload[5],
 			second: raw.payload[6],
 		};
+		validatePayload(
+			dateSegments.month >= 1 && dateSegments.month <= 12,
+			dateSegments.day >= 1 && dateSegments.day <= 31,
+			dateSegments.hour >= 0 && dateSegments.hour <= 23,
+			dateSegments.minute >= 0 && dateSegments.minute <= 59,
+			dateSegments.second >= 0 && dateSegments.second <= 59,
+		);
 		const dateAndTime: Date = segmentsToDate(
 			dateSegments,
 			// Assume we can use UTC and correct this assumption in persistValues

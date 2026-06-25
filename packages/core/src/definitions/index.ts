@@ -3,7 +3,7 @@ export * from "./ControllerCapabilities.js";
 export * from "./ControllerStatus.js";
 export * from "./EncapsulationFlags.js";
 export * from "./Frame.js";
-export * from "./InterviewStage.js";
+export * from "./Interview.js";
 export * from "./LibraryTypes.js";
 export * from "./MessagePriority.js";
 export * from "./NodeID.js";

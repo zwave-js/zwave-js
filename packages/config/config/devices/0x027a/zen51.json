@@ -34,7 +34,8 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$import": "~/templates/master_template.json#enable_led_indicator"
+			"$import": "~/templates/master_template.json#enable_led_indicator",
+			"defaultValue": 1
 		},
 		{
 			"#": "2",
@@ -79,6 +80,11 @@
 		{
 			"#": "12",
 			"$import": "templates/zooz_template.json#zen5x_external_switch_multiple_click"
+		},
+		{
+			"#": "13",
+			"$if": "firmwareVersion >= 1.80",
+			"$import": "templates/zooz_template.json#input_trigger"
 		}
 	],
 	"metadata": {

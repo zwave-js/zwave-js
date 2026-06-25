@@ -2,15 +2,6 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"plugins": [
-			{
-				"transform": "@zwave-js/transformers/validateArgs/program",
-				"transformProgram": true
-			},
-			{
-				"transform": "@zwave-js/transformers/validateArgs/decorators"
-			}
-		],
 		"typeRoots": [
 			"src/lib/@types",
 			"node_modules/@types",

@@ -424,6 +424,10 @@ export class ValueDB extends TypedEventTarget<ValueDBEventCallbacks> {
 			throw e;
 		}
 
+		// Avoid emitting events when nothing actually changed
+		const existing = this._metadata.get(dbKey);
+		if (valueEquals(existing, metadata)) return;
+
 		if (metadata) {
 			this._index.add(dbKey);
 			this._metadata.set(dbKey, metadata);

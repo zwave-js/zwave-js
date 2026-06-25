@@ -125,6 +125,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Percentage Change",
 			"valueSize": 1,
 			"minValue": 0,
@@ -134,6 +135,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"valueSize": 2,
 			"minValue": 0,

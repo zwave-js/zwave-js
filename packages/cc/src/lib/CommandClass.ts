@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig, LookupManufacturer } from "@zwave-js/config";
 import {
 	type BroadcastCC,
@@ -19,6 +18,7 @@ import {
 	type ListenBehavior,
 	type LogNode,
 	type MessageOrCCLogEntry,
+	type MessagePriority,
 	type MessageRecord,
 	type ModifyCCs,
 	type MulticastCC,
@@ -74,7 +74,8 @@ import {
 	type StaticCCValue,
 	defaultCCValueOptions,
 } from "./Values.js";
-import type { GetInterviewOptions } from "./traits.js";
+import type { CCEncodingContext, CCParsingContext } from "./traits.js";
+import type { GetInterviewOptions, ReportInterviewProgress } from "./traits.js";
 
 export interface CommandClassOptions extends CCAddress {
 	ccId?: number; // Used to overwrite the declared CC ID
@@ -111,6 +112,7 @@ export type InterviewContext =
 		& ControlsCC
 		& QuerySecurityClasses
 		& SetSecurityClass
+		& ReportInterviewProgress
 		& GetEndpoint<EndpointId & GetCCs & SupportsCC & ControlsCC & ModifyCCs>
 		& GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>
 	>
@@ -120,6 +122,15 @@ export type InterviewContext =
 export type RefreshValuesContext = CCAPIHost<
 	CCAPINode & GetEndpoint<EndpointId & SupportsCC & ControlsCC>
 >;
+
+export interface RefreshValuesOptions {
+	/** The priority to use for the refresh value queries */
+	priority?: MessagePriority;
+	/**
+	 * An optional callback to report fine-grained progress while refreshing values.
+	 */
+	onProgress?: (completed: number, total: number) => void;
+}
 
 export type PersistValuesContext =
 	& HostIDs
@@ -457,7 +468,10 @@ export class CommandClass implements CCId {
 	/**
 	 * Refreshes all dynamic values of this CC
 	 */
-	public async refreshValues(_ctx: RefreshValuesContext): Promise<void> {
+	public async refreshValues(
+		_ctx: RefreshValuesContext,
+		_options?: RefreshValuesOptions,
+	): Promise<void> {
 		// This needs to be overwritten per command class. In the default implementation, don't do anything
 	}
 
@@ -944,14 +958,19 @@ export class CommandClass implements CCId {
 	}
 
 	/**
-	 * When a CC supports to be split into multiple partial CCs, this indicates that the last report hasn't been received yet.
-	 * @param _session The previously received set of messages received in this partial CC session
+	 * When a CC supports to be split into multiple partial CCs, this returns how many
+	 * more segments are expected after this one (e.g. the value of a "reports to follow" field).
+	 * The counter doubles as the segment's position within the session, which is used
+	 * to detect missing, duplicated and reordered segments.
 	 */
-	public expectMoreMessages(_session: CommandClass[]): boolean {
-		return false; // By default, all CCs are monolithic
+	public getRemainingSegments(): number | undefined {
+		return undefined; // By default, all CCs are monolithic
 	}
 
-	/** Include previously received partial responses into a final CC */
+	/**
+	 * Include previously received partial responses into a final CC.
+	 * The partials are deduplicated and ordered like they were transmitted by the node.
+	 */
 	public async mergePartialCCs(
 		_partials: CommandClass[],
 		_ctx: CCParsingContext,

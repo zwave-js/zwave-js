@@ -106,6 +106,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power (W) Report Threshold",
 			"valueSize": 2,
 			"unit": "W",
@@ -122,6 +123,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "reporting_interval.power",
 			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -137,6 +139,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -152,6 +155,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "reporting_threshold.voltage",
 			"label": "Voltage Report Threshold",
 			"valueSize": 1,
 			"unit": "V",
@@ -168,6 +172,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "reporting_interval.voltage",
 			"label": "Voltage Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -183,6 +188,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current (A) Report Threshold",
 			"valueSize": 2,
 			"unit": "0.001 A",
@@ -199,6 +205,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_interval.current",
 			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -309,6 +316,7 @@
 		},
 		{
 			"#": "19",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °F",
@@ -324,6 +332,7 @@
 		},
 		{
 			"#": "20",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 4,
 			"unit": "seconds",

@@ -18,7 +18,7 @@
 			"#": "1",
 			"label": "Siren Playback Mode",
 			"valueSize": 1,
-			"defaultValue": 0,
+			"defaultValue": 3,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -235,6 +235,7 @@
 		},
 		{
 			"#": "15",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"valueSize": 1,
 			"unit": "hours",

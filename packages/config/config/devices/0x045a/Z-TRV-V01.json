@@ -32,6 +32,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
 			"valueSize": 1,
 			"unit": "°C",
@@ -61,6 +62,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -76,6 +78,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -85,6 +88,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -100,6 +104,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

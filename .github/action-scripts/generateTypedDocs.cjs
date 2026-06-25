@@ -3,8 +3,6 @@
 // @ts-check
 /// <reference path="../bot-scripts/types.d.ts" />
 
-const exec = require("@actions/exec");
-
 const options = {
 	owner: "zwave-js",
 	repo: "zwave-js",
@@ -19,10 +17,11 @@ const checkPaths = ["docs/", "packages/*/*.api.md"];
  * @param {{github: Github, context: Context}} param
  */
 async function main(param) {
+	const { exec } = await import("@actions/exec");
 	const { github } = param;
 
 	// check if our local working copy has any changes in the docs directory
-	const isChanged = !!(await exec.exec(
+	const isChanged = !!(await exec(
 		"git",
 		["diff", "--exit-code", "--", ...checkPaths],
 		{
@@ -40,7 +39,7 @@ async function main(param) {
 	let prNumber = firstPR && firstPR.number;
 
 	// Check if the action's branch exists on the remote (exit code 0) or not (exit code 2)
-	const branchExists = !(await exec.exec(
+	const branchExists = !(await exec(
 		"git",
 		["ls-remote", "--exit-code", "--heads", "origin", branchName],
 		{
@@ -56,12 +55,12 @@ async function main(param) {
 	}
 
 	// create new branch for PR
-	await exec.exec("git", ["fetch", "origin"]);
-	await exec.exec("git", ["checkout", "-b", `${branchName}`]);
+	await exec("git", ["fetch", "origin"]);
+	await exec("git", ["checkout", "-b", `${branchName}`]);
 
 	if (branchExists) {
 		// check if our local working copy is different from the remote branch
-		const isChanged = !!(await exec.exec(
+		const isChanged = !!(await exec(
 			"git",
 			[
 				"diff",
@@ -82,21 +81,21 @@ async function main(param) {
 		}
 
 		// point the local branch to the remote branch
-		await exec.exec("git", ["branch", "-u", `origin/${branchName}`]);
+		await exec("git", ["branch", "-u", `origin/${branchName}`]);
 	}
 
 	// Would the real Al Calzone please stand up?
-	await exec.exec("git", [
+	await exec("git", [
 		"config",
 		"--global",
 		"user.email",
 		"d.griesel@gmx.net",
 	]);
-	await exec.exec("git", ["config", "--global", "user.name", "Al Calzone"]);
+	await exec("git", ["config", "--global", "user.name", "Al Calzone"]);
 
 	// Create a commit
-	await exec.exec("git", ["add", "."]);
-	await exec.exec(
+	await exec("git", ["add", "."]);
+	await exec(
 		"git",
 		["commit", "-m", "docs: update typed documentation and API report"],
 		// Don't care if this fails due to no changes
@@ -108,10 +107,10 @@ async function main(param) {
 	// And push it (real good)
 	if (branchExists) {
 		console.log(`Force-pushing to remote...`);
-		await exec.exec("git", ["push", "origin", branchName, "--force"]);
+		await exec("git", ["push", "origin", branchName, "--force"]);
 	} else {
 		console.log(`Pushing new branch...`);
-		await exec.exec("git", [
+		await exec("git", [
 			"push",
 			"--set-upstream",
 			"origin",

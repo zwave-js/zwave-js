@@ -69,7 +69,7 @@
 		{
 			"#": "1",
 			"$import": "~/templates/master_template.json#led_indicator_four_options",
-			"label": "LED Indicator (Relay)"
+			"label": "LED Indicator (Dimmer)"
 		},
 		{
 			"#": "2",
@@ -94,7 +94,7 @@
 		{
 			"#": "6",
 			"$import": "templates/zooz_template.json#led_indicator_color_extended",
-			"label": "LED Indicator Color (Relay)",
+			"label": "LED Indicator Color (Dimmer)",
 			"defaultValue": 0
 		},
 		{
@@ -123,52 +123,88 @@
 		},
 		{
 			"#": "11",
+			"$if": "firmwareVersion < 1.40",
 			"$import": "templates/zooz_template.json#led_indicator_brightness",
-			"label": "LED Indicator Brightness (Relay)"
+			"label": "LED Indicator Brightness (Dimmer)"
+		},
+		{
+			"#": "11",
+			"$if": "firmwareVersion >= 1.40",
+			"$import": "templates/zooz_template.json#led_indicator_brightness_1_10",
+			"label": "LED Indicator Brightness (Dimmer)"
 		},
 		{
 			"#": "12",
+			"$if": "firmwareVersion < 1.40",
 			"$import": "templates/zooz_template.json#led_indicator_brightness",
 			"label": "LED Indicator Brightness (Button 1)"
 		},
 		{
+			"#": "12",
+			"$if": "firmwareVersion >= 1.40",
+			"$import": "templates/zooz_template.json#led_indicator_brightness_1_10",
+			"label": "LED Indicator Brightness (Button 1)"
+		},
+		{
 			"#": "13",
+			"$if": "firmwareVersion < 1.40",
 			"$import": "templates/zooz_template.json#led_indicator_brightness",
 			"label": "LED Indicator Brightness (Button 2)"
 		},
 		{
+			"#": "13",
+			"$if": "firmwareVersion >= 1.40",
+			"$import": "templates/zooz_template.json#led_indicator_brightness_1_10",
+			"label": "LED Indicator Brightness (Button 2)"
+		},
+		{
 			"#": "14",
+			"$if": "firmwareVersion < 1.40",
 			"$import": "templates/zooz_template.json#led_indicator_brightness",
 			"label": "LED Indicator Brightness (Button 3)"
 		},
 		{
+			"#": "14",
+			"$if": "firmwareVersion >= 1.40",
+			"$import": "templates/zooz_template.json#led_indicator_brightness_1_10",
+			"label": "LED Indicator Brightness (Button 3)"
+		},
+		{
 			"#": "15",
+			"$if": "firmwareVersion < 1.40",
 			"$import": "templates/zooz_template.json#led_indicator_brightness",
+			"label": "LED Indicator Brightness (Button 4)"
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion >= 1.40",
+			"$import": "templates/zooz_template.json#led_indicator_brightness_1_10",
 			"label": "LED Indicator Brightness (Button 4)"
 		},
 		{
 			"#": "16",
 			"$import": "templates/zooz_template.json#auto_off_timer_0x_1x_3x_7x",
-			"label": "Auto-Off Timer (Relay)"
+			"label": "Auto-Off Timer (Dimmer)"
 		},
 		{
 			"#": "17",
 			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x",
-			"label": "Auto-On Timer (Relay)"
+			"label": "Auto-On Timer (Dimmer)"
 		},
 		{
 			"#": "18",
-			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev",
+			"defaultValue": 0
 		},
 		{
 			"#": "19",
 			"$import": "~/templates/master_template.json#smart_switch_mode_0-2",
-			"label": "Relay Control"
+			"label": "Load Control (Smart Bulb Mode)"
 		},
 		{
 			"#": "20",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
-			"label": "Send Report and Toggle LED on Button Press If Relay Disabled",
+			"label": "Send Report and Toggle LED on Button Press If Dimmer Disabled",
 			"defaultValue": 0
 		},
 		{
@@ -220,7 +256,7 @@
 					"value": 1
 				},
 				{
-					"label": "Configured maximum brightness",
+					"label": "Configured maximum brightness  (Parameter 28)",
 					"value": 2
 				},
 				{
@@ -231,8 +267,28 @@
 		},
 		{
 			"#": "30",
-			"$import": "#paramInformation/29",
-			"label": "Dimmer Button Single Tap"
+			"label": "Dimmer Button Single Tap",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Last brightness level",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (Parameter 31)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness (Parameter 28)",
+					"value": 2
+				},
+				{
+					"label": "Full brightness",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "31",
@@ -249,7 +305,8 @@
 		},
 		{
 			"#": "34",
-			"$import": "templates/zooz_template.json#local_programming"
+			"$import": "templates/zooz_template.json#local_programming",
+			"defaultValue": 0
 		},
 		{
 			"#": "35[0x01]",

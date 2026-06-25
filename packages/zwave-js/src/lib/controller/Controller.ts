@@ -1675,7 +1675,9 @@ export class ZWaveController
 	 * @internal
 	 * Performs additional controller configuration
 	 */
-	public async configure(): Promise<void> {
+	public async configure(
+		knownNodeIds: readonly number[],
+	): Promise<void> {
 		// Enable TX status report if supported
 		if (
 			this.isSerialAPISetupCommandSupported(
@@ -1704,10 +1706,17 @@ export class ZWaveController
 			{ supportCheck: false },
 		);
 		this._sucNodeId = suc.sucNodeId;
+		const sucNodeMissing = this._sucNodeId !== 0
+			&& this._sucNodeId !== this._ownNodeId
+			&& !knownNodeIds.includes(this._sucNodeId);
 		if (this._sucNodeId === 0) {
 			this.driver.controllerLog.print(`No SUC present in the network`);
 		} else if (this._sucNodeId === this._ownNodeId) {
 			this.driver.controllerLog.print(`This is the SUC`);
+		} else if (sucNodeMissing) {
+			this.driver.controllerLog.print(
+				`SUC node ID ${this.sucNodeId} is not part of the network`,
+			);
 		} else {
 			this.driver.controllerLog.print(
 				`SUC has node ID ${this.sucNodeId}`,
@@ -1715,13 +1724,18 @@ export class ZWaveController
 		}
 
 		// There needs to be a SUC/SIS in the network. If not, we promote ourselves to one if the following conditions are met:
-		// We are the primary controller, but we are not SUC, there is no SUC and there is no SIS, and there are no nodes in the network yet
+		// We are the primary controller, but we are not SUC, there is no SUC and there is no SIS, and there are no nodes in the network yet -
+		// OR the configured SUC node ID is not actually part of the network (this is an edge case observed on some controllers
+		// which prevents that controller from entering inclusion mode).
 		if (
 			this.role === ControllerRole.Primary
-			&& this._noNodesIncluded
-			&& this._sucNodeId === 0
 			&& !this._isSUC
-			&& !this._isSISPresent
+			&& (
+				(this._noNodesIncluded
+					&& this._sucNodeId === 0
+					&& !this._isSISPresent)
+				|| sucNodeMissing
+			)
 		) {
 			this.driver.controllerLog.print(
 				`There is no SUC/SIS in the network - promoting ourselves...`,

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -47,6 +46,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -68,6 +68,7 @@ import {
 	type ColorTable,
 	LevelChangeDirection,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 const hexColorRegex =
 	/^#?(?<red>[0-9a-f]{2})(?<green>[0-9a-f]{2})(?<blue>[0-9a-f]{2})$/i;
@@ -114,7 +115,7 @@ export const ColorSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnly,
 				label: `Current color`,
-			} as const,
+			},
 		),
 		...V.staticPropertyWithName(
 			"targetColor",
@@ -123,14 +124,14 @@ export const ColorSwitchCCValues = V.defineCCValues(
 				...ValueMetadata.Any,
 				label: `Target color`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"duration",
 			{
 				...ValueMetadata.ReadOnlyDuration,
 				label: "Remaining duration",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"hexColor",
@@ -140,7 +141,7 @@ export const ColorSwitchCCValues = V.defineCCValues(
 				maxLength: 7, // to allow #rrggbb
 				label: `RGB Color`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"currentColorChannel",
@@ -615,7 +616,10 @@ export class ColorSwitchCC extends CommandClass {
 		}
 
 		// Query all color components
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -623,6 +627,7 @@ export class ColorSwitchCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -631,7 +636,7 @@ export class ColorSwitchCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const supportedColors: readonly ColorComponent[] = this.getValue(
@@ -639,7 +644,7 @@ export class ColorSwitchCC extends CommandClass {
 			ColorSwitchCCValues.supportedColorComponents,
 		) ?? [];
 
-		for (const color of supportedColors) {
+		for (const [i, color] of supportedColors.entries()) {
 			// Some devices report invalid colors, but the CC API checks
 			// for valid values and throws otherwise.
 			if (!isEnumMember(ColorComponent, color)) continue;
@@ -651,6 +656,8 @@ export class ColorSwitchCC extends CommandClass {
 				direction: "outbound",
 			});
 			await api.get(color);
+
+			options?.onProgress?.(i + 1, supportedColors.length);
 		}
 	}
 
@@ -768,6 +775,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 	public static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCReport {
 		validatePayload(raw.payload.length >= 2);
 		const colorComponent: ColorComponent = raw.payload[0];
+		validatePayload(isEnumMember(ColorComponent, colorComponent));
 		const currentValue = raw.payload[1];
 		let targetValue: number | undefined;
 		let duration: Duration | undefined;
@@ -1001,8 +1009,10 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 			const component = raw.payload[offset];
 			const value = raw.payload[offset + 1];
 			const key = colorComponentToTableKey(component);
-			// @ts-expect-error
-			if (key) this.colorTable[key] = value;
+			if (key) {
+				// @ts-expect-error
+				this.colorTable[key] = value;
+			}
 			offset += 2;
 		}
 

@@ -63,6 +63,7 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion < 2.0",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °F/C",
@@ -73,6 +74,7 @@
 		{
 			"#": "3",
 			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Report Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °F/C",
@@ -89,6 +91,7 @@
 		{
 			"#": "4",
 			"$if": "firmwareVersion < 2.0",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -99,6 +102,7 @@
 		{
 			"#": "4",
 			"$if": "firmwareVersion >= 2.0",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Humidity Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -350,6 +354,7 @@
 		},
 		{
 			"#": "14",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"description": "0=-10, 100=0, 200=+10",
 			"valueSize": 1,
@@ -361,6 +366,8 @@
 		},
 		{
 			"#": "15",
+			"$if": "firmwareVersion < 2.40.0",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset",
 			"description": "0=-10, 100=0, 200=+10",
 			"valueSize": 1,
@@ -371,7 +378,20 @@
 			"unsigned": true
 		},
 		{
+			"#": "15",
+			"$if": "firmwareVersion >= 2.40.0",
+			"$purpose": "calibration.humidity",
+			"label": "Humidity Offset",
+			"description": "0=-20%, 200=0, 400=+20%",
+			"valueSize": 2,
+			"unit": "0.1 %",
+			"minValue": 0,
+			"maxValue": 400,
+			"defaultValue": 200
+		},
+		{
 			"#": "16",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 2,
 			"unit": "minutes",
@@ -387,6 +407,7 @@
 		},
 		{
 			"#": "17",
+			"$purpose": "reporting_interval.humidity",
 			"label": "Humidity Reporting Interval",
 			"valueSize": 2,
 			"unit": "minutes",

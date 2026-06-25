@@ -56,7 +56,9 @@
 	"paramInformation": [
 		{
 			"#": "2",
-			"$import": "templates/philio_template.json#basic_set_value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Basic Set Value",
+			"defaultValue": 255
 		},
 		{
 			"#": "7[0x01]",

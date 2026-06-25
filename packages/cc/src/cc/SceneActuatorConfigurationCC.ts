@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -44,6 +43,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { SceneActuatorConfigurationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const SceneActuatorConfigurationCCValues = V.defineCCValues(
 	CommandClasses["Scene Actuator Configuration"],
@@ -58,7 +58,7 @@ export const SceneActuatorConfigurationCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				label: `Level (${sceneId})`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
@@ -70,7 +70,7 @@ export const SceneActuatorConfigurationCCValues = V.defineCCValues(
 			(sceneId: number) => ({
 				...ValueMetadata.Duration,
 				label: `Dimming duration (${sceneId})`,
-			} as const),
+			}),
 		),
 	},
 );

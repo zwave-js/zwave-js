@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -35,6 +34,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -47,6 +47,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { SceneControllerConfigurationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { AssociationCC } from "./AssociationCC.js";
 
 export const SceneControllerConfigurationCCValues = V.defineCCValues(
@@ -62,7 +63,7 @@ export const SceneControllerConfigurationCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				label: `Associated Scene ID (${groupId})`,
 				valueChangeOptions: ["transitionDuration"],
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"dimmingDuration",
@@ -74,7 +75,7 @@ export const SceneControllerConfigurationCCValues = V.defineCCValues(
 			(groupId: number) => ({
 				...ValueMetadata.Duration,
 				label: `Dimming duration (${groupId})`,
-			} as const),
+			}),
 		),
 	},
 );
@@ -416,6 +417,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -424,7 +426,7 @@ export class SceneControllerConfigurationCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const groupCount = SceneControllerConfigurationCC.getGroupCountCached(
@@ -455,6 +457,7 @@ dimming duration: ${group.dimmingDuration.toString()}`;
 					direction: "inbound",
 				});
 			}
+			options?.onProgress?.(groupId, groupCount);
 		}
 	}
 

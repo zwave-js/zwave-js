@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	EncapsulationFlags,
@@ -50,6 +49,7 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { SecurityCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { CRC16CC } from "./CRC16CC.js";
 import { Security2CC } from "./Security2CC.js";
 import { TransportServiceCC } from "./TransportServiceCC.js";
@@ -710,9 +710,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		const sequenceCounter = frameControl & 0b1111;
 		const sequenced = !!(frameControl & 0b1_0000);
 		const secondFrame = !!(frameControl & 0b10_0000);
-		const decryptedCCBytes: BytesView | undefined =
-			frameControlAndDecryptedCC
-				.subarray(1);
+		const decryptedCCBytes = frameControlAndDecryptedCC.subarray(1);
 
 		const ret = new SecurityCCCommandEncapsulation({
 			nodeId: ctx.sourceNodeId,
@@ -764,8 +762,10 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		}
 	}
 
-	public expectMoreMessages(): boolean {
-		return !!this.sequenced && !this.secondFrame;
+	public getRemainingSegments(): number | undefined {
+		// Sequenced S0 commands are always split into exactly two frames
+		if (!this.sequenced) return 0;
+		return this.secondFrame ? 0 : 1;
 	}
 
 	public async mergePartialCCs(
@@ -1082,8 +1082,8 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 		return {};
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

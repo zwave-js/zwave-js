@@ -1457,13 +1457,12 @@ export enum ThermostatMode {
 }
 
 export enum ThermostatOperatingStateCommand {
+	LoggingSupportedGet = 0x01,
 	Get = 0x02,
 	Report = 0x03,
-	// TODO: Implement V2 commands
-	// LoggingSupportedGet = 0x01,
-	// LoggingSupportedReport = 0x04,
-	// LoggingGet = 0x05,
-	// LoggingReport = 0x06,
+	LoggingSupportedReport = 0x04,
+	LoggingGet = 0x05,
+	LoggingReport = 0x06,
 }
 
 export enum ThermostatOperatingState {
@@ -1479,6 +1478,13 @@ export enum ThermostatOperatingState {
 	"2nd Stage Cooling" = 0x09,
 	"2nd Stage Aux Heat" = 0x0a,
 	"3rd Stage Aux Heat" = 0x0b,
+}
+
+export interface ThermostatOperatingStateLoggingData {
+	usageTodayHours: number;
+	usageTodayMinutes: number;
+	usageYesterdayHours: number;
+	usageYesterdayMinutes: number;
 }
 
 export enum ThermostatSetbackCommand {
@@ -1610,6 +1616,168 @@ export enum KeypadMode {
 	Vacation,
 	Privacy,
 	LockedOut,
+}
+
+export enum UserCredentialCommand {
+	UserCapabilitiesGet = 0x01,
+	UserCapabilitiesReport = 0x02,
+	CredentialCapabilitiesGet = 0x03,
+	CredentialCapabilitiesReport = 0x04,
+	UserSet = 0x05,
+	UserGet = 0x06,
+	UserReport = 0x07,
+	CredentialSet = 0x0a,
+	CredentialGet = 0x0b,
+	CredentialReport = 0x0c,
+	CredentialLearnStart = 0x0f,
+	CredentialLearnCancel = 0x10,
+	CredentialLearnReport = 0x11,
+	UserCredentialAssociationSet = 0x12,
+	UserCredentialAssociationReport = 0x13,
+	AllUsersChecksumGet = 0x14,
+	AllUsersChecksumReport = 0x15,
+	UserChecksumGet = 0x16,
+	UserChecksumReport = 0x17,
+	CredentialChecksumGet = 0x18,
+	CredentialChecksumReport = 0x19,
+	AdminPinCodeSet = 0x1a,
+	AdminPinCodeGet = 0x1b,
+	AdminPinCodeReport = 0x1c,
+	// V2
+	KeyLockerCapabilitiesGet = 0x1d,
+	KeyLockerCapabilitiesReport = 0x1e,
+	KeyLockerEntrySet = 0x1f,
+	KeyLockerEntryGet = 0x20,
+	KeyLockerEntryReport = 0x21,
+}
+
+export enum UserCredentialType {
+	None = 0x00,
+	PINCode = 0x01,
+	Password = 0x02,
+	RFIDCode = 0x03,
+	BLE = 0x04,
+	NFC = 0x05,
+	UWB = 0x06,
+	EyeBiometric = 0x07,
+	FaceBiometric = 0x08,
+	FingerBiometric = 0x09,
+	HandBiometric = 0x0a,
+	UnspecifiedBiometric = 0x0b,
+	// V2
+	DESFire = 0x0c,
+}
+
+export enum UserCredentialUserType {
+	General = 0x00,
+	Programming = 0x03,
+	NonAccess = 0x04,
+	Duress = 0x05,
+	Disposable = 0x06,
+	Expiring = 0x07,
+	RemoteOnly = 0x09,
+}
+
+export enum UserCredentialRule {
+	Single = 0x01,
+	Dual = 0x02,
+	Triple = 0x03,
+}
+
+export enum UserCredentialOperationType {
+	Add = 0x00,
+	Modify = 0x01,
+	Delete = 0x02,
+}
+
+export enum UserCredentialUserReportType {
+	UserAdded = 0x00,
+	UserModified = 0x01,
+	UserDeleted = 0x02,
+	UserUnchanged = 0x03,
+	ResponseToGet = 0x04,
+	UserAddRejectedLocationOccupied = 0x05,
+	UserModifyRejectedLocationEmpty = 0x06,
+	ZeroExpiringMinutesInvalid = 0x07,
+}
+
+export enum UserCredentialCredentialReportType {
+	CredentialAdded = 0x00,
+	CredentialModified = 0x01,
+	CredentialDeleted = 0x02,
+	CredentialUnchanged = 0x03,
+	ResponseToGet = 0x04,
+	CredentialAddRejectedLocationOccupied = 0x05,
+	CredentialModifyRejectedLocationEmpty = 0x06,
+	DuplicateCredential = 0x07,
+	ManufacturerSecurityRules = 0x08,
+	WrongUserUniqueIdentifier = 0x09,
+	DuplicateAdminPINCode = 0x0a,
+}
+
+export enum UserCredentialLearnStatus {
+	Started = 0x00,
+	Success = 0x01,
+	AlreadyInProgress = 0x02,
+	EndedNotDueToTimeout = 0x03,
+	Timeout = 0x04,
+	StepRetry = 0x05,
+	InvalidAddOperationType = 0xfe,
+	InvalidModifyOperationType = 0xff,
+}
+
+export enum UserCredentialModifierType {
+	DoesNotExist = 0x00,
+	Unknown = 0x01,
+	ZWave = 0x02,
+	Locally = 0x03,
+	Other = 0x04,
+}
+
+export enum UserCredentialNameEncoding {
+	ASCII = 0x00,
+	ExtendedASCII = 0x01,
+	UTF16BE = 0x02,
+}
+
+export enum UserCredentialAdminCodeOperationResult {
+	Modified = 0x01,
+	Unmodified = 0x03,
+	ResponseToGet = 0x04,
+	FailDuplicateCredential = 0x07,
+	FailManufacturerSecurityRule = 0x08,
+	ErrorNotSupported = 0x0d,
+	ErrorDisablingNotSupported = 0x0e,
+	UnspecifiedNodeError = 0x0f,
+}
+
+export enum UserCredentialKeyLockerEntryType {
+	DESFireApplicationIdAndKey = 0x01,
+}
+
+export type UserCredentialCapability =
+	& {
+		numberOfCredentialSlots: number;
+		minCredentialLength: number;
+		maxCredentialLength: number;
+		maxCredentialHashLength: number;
+	}
+	& (
+		{
+			supportsCredentialLearn: true;
+			credentialLearnRecommendedTimeout: number;
+			credentialLearnNumberOfSteps: number;
+		} | {
+			supportsCredentialLearn: false;
+			credentialLearnRecommendedTimeout?: undefined;
+			credentialLearnNumberOfSteps?: undefined;
+		}
+	);
+
+export interface UserCredentialKeyLockerEntryCapability {
+	numberOfEntrySlots: number;
+	minEntryDataLength: number;
+	maxEntryDataLength: number;
 }
 
 export enum VersionCommand {

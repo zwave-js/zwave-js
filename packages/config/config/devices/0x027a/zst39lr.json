@@ -19,7 +19,7 @@
 			// https://www.support.getzooz.com/kb/article/1352-zst39-800-long-range-z-wave-stick-change-log/
 			// 1.50 = SDK 7.22.1
 			{
-				"$if": "firmwareVersion < 1.50",
+				"$if": "sdkVersion < 7.22.1",
 				"$import": "~/templates/master_template.json#8xx_firmware_bug_pre_7_22_1"
 			}
 		]

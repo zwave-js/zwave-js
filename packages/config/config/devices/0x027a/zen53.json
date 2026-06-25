@@ -142,6 +142,10 @@
 				{
 					"label": "Reversed",
 					"value": 1
+				},
+				{
+					"label": "Venetian",
+					"value": 2
 				}
 			]
 		},
@@ -223,6 +227,45 @@
 		{
 			"#": "16",
 			"$import": "templates/zooz_template.json#association_reports_multilevel"
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Stop Motor When Limit Switches Detected"
+		},
+		{
+			"#": "19",
+			"$if": "firmwareVersion >= 1.40",
+			"label": "Motor Cycle Duration (Open/Up)",
+			"valueSize": 2,
+			"unit": "10ms",
+			"minValue": 0,
+			"maxValue": 65535,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Use shutter/venetian cycle duration",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "20",
+			"$if": "firmwareVersion >= 1.40",
+			"label": "Motor Cycle Duration (Closed/Down)",
+			"valueSize": 2,
+			"unit": "10ms",
+			"minValue": 0,
+			"maxValue": 65535,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Use shutter/venetian cycle duration",
+					"value": 0
+				}
+			]
 		}
 	],
 	"metadata": {

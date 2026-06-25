@@ -2,11 +2,11 @@ import sinon from "sinon";
 import { afterAll, beforeAll, test, vi } from "vitest";
 import { throttle } from "./utils.js";
 
-beforeAll((t) => {
+beforeAll(() => {
 	vi.useFakeTimers();
 });
 
-afterAll((t) => {
+afterAll(() => {
 	vi.useRealTimers();
 });
 

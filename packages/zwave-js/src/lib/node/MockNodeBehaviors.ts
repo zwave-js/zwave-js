@@ -2,8 +2,12 @@ import {
 	type CommandClass,
 	Security2CC,
 	Security2CCMessageEncapsulation,
+	VersionCCCapabilitiesGet,
+	VersionCCCapabilitiesReport,
 	VersionCCCommandClassGet,
 	VersionCCCommandClassReport,
+	VersionCCGet,
+	VersionCCReport,
 	ZWavePlusNodeType,
 	ZWavePlusRoleType,
 } from "@zwave-js/cc";
@@ -12,7 +16,7 @@ import {
 	ZWaveProtocolCCNodeInformationFrame,
 	ZWaveProtocolCCRequestNodeInformationFrame,
 } from "@zwave-js/cc/ZWaveProtocolCC";
-import { CommandClasses } from "@zwave-js/core";
+import { CommandClasses, ZWaveLibraryTypes } from "@zwave-js/core";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 
 import { BasicCCBehaviors } from "./mockCCBehaviors/Basic.js";
@@ -20,8 +24,10 @@ import { BinarySensorCCBehaviors } from "./mockCCBehaviors/BinarySensor.js";
 import { BinarySwitchCCBehaviors } from "./mockCCBehaviors/BinarySwitch.js";
 import { ColorSwitchCCBehaviors } from "./mockCCBehaviors/ColorSwitch.js";
 import { ConfigurationCCBehaviors } from "./mockCCBehaviors/Configuration.js";
+import { DoorLockCCBehaviors } from "./mockCCBehaviors/DoorLock.js";
 import { EnergyProductionCCBehaviors } from "./mockCCBehaviors/EnergyProduction.js";
 import { IndicatorCCBehaviors } from "./mockCCBehaviors/Indicator.js";
+import { LockCCBehaviors } from "./mockCCBehaviors/Lock.js";
 import { ManufacturerSpecificCCBehaviors } from "./mockCCBehaviors/ManufacturerSpecific.js";
 import { MeterCCBehaviors } from "./mockCCBehaviors/Meter.js";
 import {
@@ -30,6 +36,7 @@ import {
 } from "./mockCCBehaviors/MultiChannel.js";
 import { MultilevelSensorCCBehaviors } from "./mockCCBehaviors/MultilevelSensor.js";
 import { MultilevelSwitchCCBehaviors } from "./mockCCBehaviors/MultilevelSwitch.js";
+import { NodeNamingAndLocationCCBehaviors } from "./mockCCBehaviors/NodeNamingAndLocation.js";
 import { NotificationCCBehaviors } from "./mockCCBehaviors/Notification.js";
 import { ScheduleEntryLockCCBehaviors } from "./mockCCBehaviors/ScheduleEntryLock.js";
 import {
@@ -41,10 +48,12 @@ import {
 	Security2CCHooks,
 } from "./mockCCBehaviors/Security2.js";
 import { SoundSwitchCCBehaviors } from "./mockCCBehaviors/SoundSwitch.js";
+import { SupervisionCCHooks } from "./mockCCBehaviors/Supervision.js";
 import { ThermostatModeCCBehaviors } from "./mockCCBehaviors/ThermostatMode.js";
 import { ThermostatSetbackCCBehaviors } from "./mockCCBehaviors/ThermostatSetback.js";
 import { ThermostatSetpointCCBehaviors } from "./mockCCBehaviors/ThermostatSetpoint.js";
 import { UserCodeCCBehaviors } from "./mockCCBehaviors/UserCode.js";
+import { UserCredentialCCBehaviors } from "./mockCCBehaviors/UserCredential.js";
 import { WindowCoveringCCBehaviors } from "./mockCCBehaviors/WindowCovering.js";
 
 const respondToRequestNodeInfo: MockNodeBehavior = {
@@ -63,6 +72,27 @@ const respondToRequestNodeInfo: MockNodeBehavior = {
 					.filter(([, info]) => info.isSupported)
 					// FIXME: Filter out secure CCs if the node isn't secure
 					.map(([ccId]) => ccId),
+				controlledCCs: [...self.implementedCCs]
+					// Basic CC must not be included in the NIF
+					.filter(([ccId]) => ccId !== CommandClasses.Basic)
+					// Only include controlled CCs
+					.filter(([, info]) => info.isControlled)
+					.map(([ccId]) => ccId),
+			});
+			return { action: "sendCC", cc };
+		}
+	},
+};
+
+const respondToVersionCCGet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof VersionCCGet) {
+			const cc = new VersionCCReport({
+				nodeId: controller.ownNodeId,
+				libraryType: ZWaveLibraryTypes["Enhanced Slave"],
+				protocolVersion: "7.0",
+				firmwareVersions: [self.capabilities.firmwareVersion],
+				hardwareVersion: 1,
 			});
 			return { action: "sendCC", cc };
 		}
@@ -98,6 +128,19 @@ const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 				endpointIndex: "index" in endpoint ? endpoint.index : undefined,
 				requestedCC: receivedCC.requestedCC,
 				ccVersion: version,
+			});
+			return { action: "sendCC", cc };
+		}
+	},
+};
+
+const respondToVersionCCCapabilitiesGet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof VersionCCCapabilitiesGet) {
+			const cc = new VersionCCCapabilitiesReport({
+				nodeId: controller.ownNodeId,
+				endpointIndex: receivedCC.endpointIndex,
+				supportsZWaveSoftwareGet: false,
 			});
 			return { action: "sendCC", cc };
 		}
@@ -165,7 +208,11 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...MultiChannelCCHooks,
 		...MultiChannelCCBehaviors,
 
+		...SupervisionCCHooks,
+
+		respondToVersionCCGet,
 		respondToVersionCCCommandClassGet,
+		respondToVersionCCCapabilitiesGet,
 
 		respondToZWavePlusCCGet,
 		respondToS2ZWavePlusCCGet,
@@ -175,12 +222,15 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...BinarySwitchCCBehaviors,
 		...ColorSwitchCCBehaviors,
 		...ConfigurationCCBehaviors,
+		...DoorLockCCBehaviors,
 		...EnergyProductionCCBehaviors,
+		...LockCCBehaviors,
 		...IndicatorCCBehaviors,
 		...ManufacturerSpecificCCBehaviors,
 		...MeterCCBehaviors,
 		...MultilevelSensorCCBehaviors,
 		...MultilevelSwitchCCBehaviors,
+		...NodeNamingAndLocationCCBehaviors,
 		...NotificationCCBehaviors,
 		...ScheduleEntryLockCCBehaviors,
 		...SoundSwitchCCBehaviors,
@@ -188,6 +238,7 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...ThermostatSetpointCCBehaviors,
 		...ThermostatSetbackCCBehaviors,
 		...UserCodeCCBehaviors,
+		...UserCredentialCCBehaviors,
 		...WindowCoveringCCBehaviors,
 	];
 }

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -37,6 +36,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -55,6 +55,7 @@ import {
 	HumidityControlSetpointType,
 	type HumidityControlSetpointValue,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const HumidityControlSetpointCCValues = V.defineCCValues(
 	CommandClasses["Humidity Control Setpoint"],
@@ -78,7 +79,7 @@ export const HumidityControlSetpointCCValues = V.defineCCValues(
 					)
 				})`,
 				ccSpecific: { setpointType },
-			} as const),
+			}),
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"setpointScale",
@@ -94,7 +95,7 @@ export const HumidityControlSetpointCCValues = V.defineCCValues(
 						setpointType,
 					)
 				})`,
-			} as const),
+			}),
 		),
 	},
 );
@@ -462,6 +463,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -470,7 +472,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const setpointTypes: HumidityControlSetpointType[] = this.getValue(

@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/mcp-server-dev",
-  "version": "15.20.0",
+  "version": "15.24.2",
   "private": true,
   "description": "MCP development server for Z-Wave JS tooling",
   "keywords": [
@@ -38,19 +38,24 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
-    "nano-spawn": "^2.0.0"
+    "@zwave-js/config": "workspace:*",
+    "@zwave-js/core": "workspace:*",
+    "@zwave-js/shared": "workspace:*",
+    "jsonc-parser": "^3.2.0",
+    "p-queue": "^9.1.0",
+    "vscode-json-languageservice": "^5.1.3",
+    "vscode-languageserver-textdocument": "^1.0.13"
   },
   "devDependencies": {
-    "@types/node": "^20.19.23",
-    "typescript": "5.9.3"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@types/node": "^20.19.35",
+    "@typescript/native-preview": "7.0.0-dev.20260423.1",
+    "nano-spawn": "^2.1.0"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsgo -b",
     "bootstrap": "yarn build",
-    "clean": "del-cli build/ *.tsbuildinfo",
-    "lint:ts": "eslint --cache --cache-location .eslintcache/ -c ../../eslint.config.mjs src/**/*.ts",
-    "lint:ts:fix": "yarn run lint:ts --fix"
+    "clean": "del-cli build/ *.tsbuildinfo"
   },
   "publishConfig": {
     "access": "public"

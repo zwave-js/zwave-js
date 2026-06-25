@@ -1,0 +1,9 @@
+{
+	"mcpServers": {
+		"zwave-dev": {
+			"command": "node",
+			"args": ["packages/mcp-server-dev/build/index.js"],
+			"env": {}
+		}
+	}
+}

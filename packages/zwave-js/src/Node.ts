@@ -19,3 +19,19 @@ export { VirtualEndpoint } from "./lib/node/VirtualEndpoint.js";
 export { VirtualNode } from "./lib/node/VirtualNode.js";
 export type { VirtualValueID } from "./lib/node/VirtualNode.js";
 export * from "./lib/node/_Types.js";
+export {
+	AccessControlAPI,
+	AssignCredentialResult,
+	SetCredentialResult,
+	SetUserResult,
+} from "./lib/node/feature-apis/AccessControl.js";
+export type {
+	AddUserResult,
+	CredentialCapabilities,
+	CredentialData,
+	DeleteCredentialsOptions,
+	SetUserOptions,
+	UserCapabilities,
+	UserData,
+} from "./lib/node/feature-apis/AccessControl.js";
+export { FeatureAPI } from "./lib/node/feature-apis/FeatureAPI.js";

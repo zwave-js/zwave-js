@@ -8,6 +8,10 @@
 			"productType": "0x0007",
 			"productId": "0x0000",
 			"zwaveAllianceId": 2590
+		},
+		{
+			"productType": "0x0007",
+			"productId": "0x01ba"
 		}
 	],
 	"firmwareVersion": {
@@ -65,6 +69,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Brightness",
 			"description": "Minimum internal dimming value",
 			"valueSize": 1,
@@ -75,6 +80,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Brightness",
 			"description": "Maximum internal dimming value",
 			"valueSize": 1,
@@ -117,6 +123,7 @@
 		},
 		{
 			"#": "11",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Timer",
 			"description": "Values 1-127 = seconds; 128-254 = minutes (minus 127)",
 			"valueSize": 1,

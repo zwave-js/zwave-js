@@ -364,13 +364,13 @@ export class VirtualNode extends VirtualEndpoint {
 		// Zero is the root endpoint - i.e. this node. Also accept undefined if an application misbehaves
 		if (!index) return this;
 
-		// Check if the Multi Channel CC interviews for all nodes are completed,
-		// because we don't have all the information before that
+		// Check if the Multi Channel CC interview for at least one node is completed,
+		// because we don't have any endpoint information before that
 		if (!this.isMultiChannelInterviewComplete) {
 			this.driver.driverLog.print(
 				`Virtual node ${
 					this.id ?? "??"
-				}, Endpoint ${index}: Trying to access endpoint instance before the Multi Channel interview of all nodes was completed!`,
+				}, Endpoint ${index}: Trying to access endpoint instance before the Multi Channel interview of any node was completed!`,
 				"error",
 			);
 			return undefined;
@@ -413,8 +413,8 @@ export class VirtualNode extends VirtualEndpoint {
 
 	private get isMultiChannelInterviewComplete(): boolean {
 		for (const node of this.physicalNodes) {
-			if (!node["isMultiChannelInterviewComplete"]) return false;
+			if (node["isMultiChannelInterviewComplete"]) return true;
 		}
-		return true;
+		return false;
 	}
 }

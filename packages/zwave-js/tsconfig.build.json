@@ -1,14 +1,9 @@
-// tsconfig for building - only applies to the src directory
+// tsconfig for building
 {
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"rootDir": "src",
 		"outDir": "build/esm",
-		"typeRoots": [
-			"src/lib/@types",
-			"node_modules/@types",
-			"../../node_modules/@types"
-		],
 		// Do not use the @@dev export for compiling
 		"customConditions": []
 	},
@@ -39,11 +34,8 @@
 		},
 		{
 			"path": "../maintenance/tsconfig.build.json"
-		},
-		{
-			"path": "../transformers/tsconfig.build.json"
 		}
 	],
 	"include": ["src/**/*.ts"],
-	"exclude": ["src/lib/test", "src/**/*.test.ts"]
+	"exclude": ["**/*.test.ts"]
 }

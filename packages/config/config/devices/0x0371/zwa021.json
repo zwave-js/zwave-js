@@ -66,6 +66,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Measured Temperature Report",
 			"valueSize": 1,
 			"unit": "0.1 °C",
@@ -122,12 +123,14 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
-			"description": "Allowable range: -50 to 50 (-5 °C to +5 °C)",
 			"valueSize": 1,
 			"unit": "0.1 °C",
-			"minValue": -128,
-			"maxValue": 50,
+			"allowed": [
+				{ "value": -128 },
+				{ "range": [-50, 50] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{

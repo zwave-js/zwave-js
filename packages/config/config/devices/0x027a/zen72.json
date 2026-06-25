@@ -77,34 +77,22 @@
 		{
 			"#": "7[0x01]",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.30",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Send Status Change Report: Local Control",
-			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
-			"defaultValue": 1
+			"$import": "templates/zooz_template.json#control_device_trigger_physical"
 		},
 		{
 			"#": "7[0x02]",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.30",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Send Status Change Report: 3-Way",
-			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
-			"defaultValue": 1
+			"$import": "templates/zooz_template.json#control_device_trigger_3way"
 		},
 		{
 			"#": "7[0x04]",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.30",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Send Status Change Report: Z-Wave",
-			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
-			"defaultValue": 1
+			"$import": "templates/zooz_template.json#control_device_trigger_zwave"
 		},
 		{
 			"#": "7[0x08]",
 			"$if": "firmwareVersion >= 2.10 && firmwareVersion < 10.0 || firmwareVersion >= 10.30",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Send Status Change Report: Timer",
-			"description": "Determine whether a trigger of this type should prompt a status change report to associated devices.",
-			"defaultValue": 1
+			"$import": "templates/zooz_template.json#control_device_trigger_timer"
 		},
 		{
 			"#": "8",
@@ -125,17 +113,18 @@
 		{
 			"#": "27",
 			"$if": "firmwareVersion >= 2.0 && firmwareVersion < 10.0 || firmwareVersion >= 10.20",
-			"$import": "templates/zooz_template.json#dimmer_off_ramp_rate"
+			"$import": "templates/zooz_template.json#dimmer_off_ramp_rate",
+			"defaultValue": 2
 		},
 		{
 			"#": "28",
 			"$if": "firmwareVersion >= 2.0 && firmwareVersion < 10.0 || firmwareVersion >= 10.20",
-			"$import": "templates/zooz_template.json#zwave_on_dimmer_ramp_rate"
+			"$import": "templates/zooz_template.json#zwave_on_dimmer_ramp_rate_match_manual_255"
 		},
 		{
 			"#": "29",
 			"$if": "firmwareVersion >= 2.0 && firmwareVersion < 10.0 || firmwareVersion >= 10.20",
-			"$import": "templates/zooz_template.json#zwave_off_dimmer_ramp_rate"
+			"$import": "templates/zooz_template.json#zwave_off_dimmer_ramp_rate_match_manual_255"
 		},
 		{
 			"#": "10",
@@ -211,6 +200,24 @@
 			"$if": "firmwareVersion >= 3.50 && firmwareVersion < 10.0",
 			"$import": "templates/zooz_template.json#custom_brightness",
 			"label": "Custom Brightness Level (Z-Wave Control)"
+		},
+		{
+			"#": "35",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
+		},
+		{
+			"#": "36",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#led_indicator_multi_color"
+		},
+		{
+			"#": "37",
+			"$if": "firmwareVersion >= 3.60 && firmwareVersion < 10.0",
+			"$import": "templates/zooz_template.json#gamma_factor"
 		}
 	],
 	"compat": {

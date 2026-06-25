@@ -83,6 +83,7 @@
 		},
 		{
 			"#": "6",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset",
 			"valueSize": 2,
 			"minValue": 0,

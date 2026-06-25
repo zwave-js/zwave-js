@@ -103,6 +103,15 @@ export function getInitial500SeriesNVMBackupChunkSize(
 		return 48;
 	}
 
+	if (
+		manufacturerId === 0x0115
+		&& productType === 0x0400
+		&& productId === 0x0001
+	) {
+		// Z-Wave.me UZB
+		return 48;
+	}
+
 	// Use the maximum chunk size the Z-Wave stack supports.
 	// All other known controllers are fine with that.
 	return 168;

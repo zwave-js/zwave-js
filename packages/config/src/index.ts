@@ -1,4 +1,10 @@
 export * from "./ConfigManager.js";
+export {
+	clearTemplateCache,
+	readJsonWithTemplate,
+	resolveImportPath,
+	resolveTemplateImport,
+} from "./JsonTemplate.js";
 export * from "./Logger_safe.js";
 export * from "./Manufacturers.js";
 export { PACKAGE_VERSION } from "./_version.js";
@@ -9,5 +15,5 @@ export * from "./devices/DeviceMetadata.js";
 export * from "./devices/EndpointConfig.js";
 export * from "./devices/ParamInformation.js";
 export * from "./devices/SceneConfig.js";
-export * from "./devices/shared.js";
+export type * from "./devices/shared.js";
 export type * from "./traits.js";

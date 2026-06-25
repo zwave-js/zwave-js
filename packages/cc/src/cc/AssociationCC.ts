@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
@@ -24,6 +23,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -37,6 +37,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { type AssociationAddress, AssociationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 
 export const AssociationCCValues = V.defineCCValues(
@@ -423,7 +424,10 @@ export class AssociationCC extends CommandClass {
 		}
 
 		// Query each association group for its members
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Skip the remaining Association CC interview in favor of Multi Channel Association if possible
 		if (endpoint.supportsCC(CommandClasses["Multi Channel Association"])) {
@@ -446,6 +450,7 @@ export class AssociationCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -454,7 +459,7 @@ export class AssociationCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const groupCount = AssociationCC.getGroupCountCached(
@@ -481,6 +486,7 @@ currently assigned nodes: ${group.nodeIds.map(String).join(", ")}`;
 					direction: "inbound",
 				});
 			}
+			options?.onProgress?.(groupId, groupCount);
 		}
 	}
 }
@@ -670,8 +676,8 @@ export class AssociationCCReport extends AssociationCC {
 		return { groupId: this.groupId };
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

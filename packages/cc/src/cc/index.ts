@@ -1300,16 +1300,29 @@ export {
 	ThermostatModeCCSupportedReport,
 	ThermostatModeCCValues,
 };
-export type { ThermostatOperatingStateCCReportOptions } from "./ThermostatOperatingStateCC.js";
+export type {
+	ThermostatOperatingStateCCLoggingGetOptions,
+	ThermostatOperatingStateCCLoggingReportOptions,
+	ThermostatOperatingStateCCLoggingSupportedReportOptions,
+	ThermostatOperatingStateCCReportOptions,
+} from "./ThermostatOperatingStateCC.js";
 import {
 	ThermostatOperatingStateCC,
 	ThermostatOperatingStateCCGet,
+	ThermostatOperatingStateCCLoggingGet,
+	ThermostatOperatingStateCCLoggingReport,
+	ThermostatOperatingStateCCLoggingSupportedGet,
+	ThermostatOperatingStateCCLoggingSupportedReport,
 	ThermostatOperatingStateCCReport,
 	ThermostatOperatingStateCCValues,
 } from "./ThermostatOperatingStateCC.js";
 export {
 	ThermostatOperatingStateCC,
 	ThermostatOperatingStateCCGet,
+	ThermostatOperatingStateCCLoggingGet,
+	ThermostatOperatingStateCCLoggingReport,
+	ThermostatOperatingStateCCLoggingSupportedGet,
+	ThermostatOperatingStateCCLoggingSupportedReport,
 	ThermostatOperatingStateCCReport,
 	ThermostatOperatingStateCCValues,
 };
@@ -1488,6 +1501,97 @@ export {
 	UserCodeCCUsersNumberGet,
 	UserCodeCCUsersNumberReport,
 	UserCodeCCValues,
+};
+export type {
+	UserCredentialCCAdminPinCodeReportOptions,
+	UserCredentialCCAdminPinCodeSetOptions,
+	UserCredentialCCAllUsersChecksumReportOptions,
+	UserCredentialCCAssociationReportOptions,
+	UserCredentialCCAssociationSetOptions,
+	UserCredentialCCCredentialCapabilitiesReportOptions,
+	UserCredentialCCCredentialChecksumGetOptions,
+	UserCredentialCCCredentialChecksumReportOptions,
+	UserCredentialCCCredentialGetOptions,
+	UserCredentialCCCredentialLearnReportOptions,
+	UserCredentialCCCredentialLearnStartOptions,
+	UserCredentialCCCredentialReportOptions,
+	UserCredentialCCCredentialSetOptions,
+	UserCredentialCCKeyLockerCapabilitiesReportOptions,
+	UserCredentialCCKeyLockerEntryGetOptions,
+	UserCredentialCCKeyLockerEntryReportOptions,
+	UserCredentialCCKeyLockerEntrySetOptions,
+	UserCredentialCCUserCapabilitiesReportOptions,
+	UserCredentialCCUserChecksumGetOptions,
+	UserCredentialCCUserChecksumReportOptions,
+	UserCredentialCCUserGetOptions,
+	UserCredentialCCUserReportOptions,
+	UserCredentialCCUserSetOptions,
+} from "./UserCredentialCC.js";
+import {
+	UserCredentialCC,
+	UserCredentialCCAdminPinCodeGet,
+	UserCredentialCCAdminPinCodeReport,
+	UserCredentialCCAdminPinCodeSet,
+	UserCredentialCCAllUsersChecksumGet,
+	UserCredentialCCAllUsersChecksumReport,
+	UserCredentialCCAssociationReport,
+	UserCredentialCCAssociationSet,
+	UserCredentialCCCredentialCapabilitiesGet,
+	UserCredentialCCCredentialCapabilitiesReport,
+	UserCredentialCCCredentialChecksumGet,
+	UserCredentialCCCredentialChecksumReport,
+	UserCredentialCCCredentialGet,
+	UserCredentialCCCredentialLearnCancel,
+	UserCredentialCCCredentialLearnReport,
+	UserCredentialCCCredentialLearnStart,
+	UserCredentialCCCredentialReport,
+	UserCredentialCCCredentialSet,
+	UserCredentialCCKeyLockerCapabilitiesGet,
+	UserCredentialCCKeyLockerCapabilitiesReport,
+	UserCredentialCCKeyLockerEntryGet,
+	UserCredentialCCKeyLockerEntryReport,
+	UserCredentialCCKeyLockerEntrySet,
+	UserCredentialCCUserCapabilitiesGet,
+	UserCredentialCCUserCapabilitiesReport,
+	UserCredentialCCUserChecksumGet,
+	UserCredentialCCUserChecksumReport,
+	UserCredentialCCUserGet,
+	UserCredentialCCUserReport,
+	UserCredentialCCUserSet,
+	UserCredentialCCValues,
+} from "./UserCredentialCC.js";
+export {
+	UserCredentialCC,
+	UserCredentialCCAdminPinCodeGet,
+	UserCredentialCCAdminPinCodeReport,
+	UserCredentialCCAdminPinCodeSet,
+	UserCredentialCCAllUsersChecksumGet,
+	UserCredentialCCAllUsersChecksumReport,
+	UserCredentialCCAssociationReport,
+	UserCredentialCCAssociationSet,
+	UserCredentialCCCredentialCapabilitiesGet,
+	UserCredentialCCCredentialCapabilitiesReport,
+	UserCredentialCCCredentialChecksumGet,
+	UserCredentialCCCredentialChecksumReport,
+	UserCredentialCCCredentialGet,
+	UserCredentialCCCredentialLearnCancel,
+	UserCredentialCCCredentialLearnReport,
+	UserCredentialCCCredentialLearnStart,
+	UserCredentialCCCredentialReport,
+	UserCredentialCCCredentialSet,
+	UserCredentialCCKeyLockerCapabilitiesGet,
+	UserCredentialCCKeyLockerCapabilitiesReport,
+	UserCredentialCCKeyLockerEntryGet,
+	UserCredentialCCKeyLockerEntryReport,
+	UserCredentialCCKeyLockerEntrySet,
+	UserCredentialCCUserCapabilitiesGet,
+	UserCredentialCCUserCapabilitiesReport,
+	UserCredentialCCUserChecksumGet,
+	UserCredentialCCUserChecksumReport,
+	UserCredentialCCUserGet,
+	UserCredentialCCUserReport,
+	UserCredentialCCUserSet,
+	UserCredentialCCValues,
 };
 export type {
 	VersionCCCapabilitiesReportOptions,
@@ -2150,6 +2254,10 @@ export function registerCCs(): void {
 	void ThermostatOperatingStateCC;
 	void ThermostatOperatingStateCCReport;
 	void ThermostatOperatingStateCCGet;
+	void ThermostatOperatingStateCCLoggingSupportedReport;
+	void ThermostatOperatingStateCCLoggingSupportedGet;
+	void ThermostatOperatingStateCCLoggingReport;
+	void ThermostatOperatingStateCCLoggingGet;
 	void ThermostatSetbackCC;
 	void ThermostatSetbackCCSet;
 	void ThermostatSetbackCCReport;
@@ -2204,6 +2312,37 @@ export function registerCCs(): void {
 	void UserCodeCCExtendedUserCodeSet;
 	void UserCodeCCExtendedUserCodeReport;
 	void UserCodeCCExtendedUserCodeGet;
+	void UserCredentialCCValues;
+	void UserCredentialCC;
+	void UserCredentialCCUserCapabilitiesReport;
+	void UserCredentialCCUserCapabilitiesGet;
+	void UserCredentialCCCredentialCapabilitiesReport;
+	void UserCredentialCCCredentialCapabilitiesGet;
+	void UserCredentialCCKeyLockerCapabilitiesReport;
+	void UserCredentialCCKeyLockerCapabilitiesGet;
+	void UserCredentialCCUserSet;
+	void UserCredentialCCUserReport;
+	void UserCredentialCCUserGet;
+	void UserCredentialCCCredentialSet;
+	void UserCredentialCCCredentialReport;
+	void UserCredentialCCCredentialGet;
+	void UserCredentialCCCredentialLearnStart;
+	void UserCredentialCCCredentialLearnCancel;
+	void UserCredentialCCCredentialLearnReport;
+	void UserCredentialCCAssociationReport;
+	void UserCredentialCCAssociationSet;
+	void UserCredentialCCAllUsersChecksumReport;
+	void UserCredentialCCAllUsersChecksumGet;
+	void UserCredentialCCUserChecksumReport;
+	void UserCredentialCCUserChecksumGet;
+	void UserCredentialCCCredentialChecksumReport;
+	void UserCredentialCCCredentialChecksumGet;
+	void UserCredentialCCAdminPinCodeSet;
+	void UserCredentialCCAdminPinCodeReport;
+	void UserCredentialCCAdminPinCodeGet;
+	void UserCredentialCCKeyLockerEntrySet;
+	void UserCredentialCCKeyLockerEntryReport;
+	void UserCredentialCCKeyLockerEntryGet;
 	void VersionCCValues;
 	void VersionCC;
 	void VersionCCReport;

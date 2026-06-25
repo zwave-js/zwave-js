@@ -157,6 +157,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Level Alarm Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -166,6 +167,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -175,6 +177,7 @@
 		},
 		{
 			"#": "10",
+			"$purpose": "reporting_threshold.battery",
 			"label": "Battery Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",

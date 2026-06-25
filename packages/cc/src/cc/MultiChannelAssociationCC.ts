@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -24,6 +23,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -41,6 +41,7 @@ import {
 	type EndpointAddress,
 	MultiChannelAssociationCommand,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import * as ccUtils from "../lib/utils.js";
 import { AssociationCCValues } from "./AssociationCC.js";
 
@@ -147,7 +148,9 @@ function deserializeMultiChannelAssociationDestination(data: BytesView): {
 		nodeIds.push(data[i]);
 	}
 	const endpoints: EndpointAddress[] = [];
-	for (let i = endpointOffset; i < data.length; i += 2) {
+	// Each endpoint destination is a (node id, endpoint) pair; stop when a
+	// full pair is no longer available so a dangling trailing byte is ignored
+	for (let i = endpointOffset; i + 1 < data.length; i += 2) {
 		const nodeId = data[i];
 		const isBitMask = !!(data[i + 1] & 0b1000_0000);
 		const destination = data[i + 1] & 0b0111_1111;
@@ -487,7 +490,10 @@ export class MultiChannelAssociationCC extends CommandClass {
 		}
 
 		// Query each association group for its members
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// And set up lifeline associations
 		await ccUtils.configureLifelineAssociations(ctx, endpoint);
@@ -498,6 +504,7 @@ export class MultiChannelAssociationCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -506,14 +513,14 @@ export class MultiChannelAssociationCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 		const assocAPI = CCAPI.create(
 			CommandClasses.Association,
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		const mcGroupCount: number = this.getValue(
@@ -558,6 +565,7 @@ currently assigned endpoints: ${
 				message: logMessage,
 				direction: "inbound",
 			});
+			options?.onProgress?.(groupId, mcGroupCount);
 		}
 
 		// Check if there are more non-multi-channel association groups we haven't queried yet
@@ -830,8 +838,8 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 		return { groupId: this.groupId };
 	}
 
-	public expectMoreMessages(): boolean {
-		return this.reportsToFollow > 0;
+	public getRemainingSegments(): number | undefined {
+		return this.reportsToFollow;
 	}
 
 	public mergePartialCCs(

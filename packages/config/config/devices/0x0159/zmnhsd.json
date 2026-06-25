@@ -101,6 +101,7 @@
 		},
 		{
 			"#": "11",
+			"$purpose": "timer.auto_off",
 			"label": "Automatic Turning Off Output After Set Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -116,6 +117,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "timer.auto_on",
 			"label": "Automatic Turning on Output After Set Time",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -141,6 +143,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"description": "Reporting the power in Watts on power change larger then the setpoint",
 			"valueSize": 1,
@@ -151,6 +154,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -160,6 +164,7 @@
 		},
 		{
 			"#": "60",
+			"$purpose": "minimum_brightness",
 			"label": "Minimum Dimming Value",
 			"valueSize": 1,
 			"unit": "%",
@@ -169,6 +174,7 @@
 		},
 		{
 			"#": "61",
+			"$purpose": "maximum_brightness",
 			"label": "Maximum Dimming Value",
 			"valueSize": 1,
 			"unit": "%",
@@ -223,6 +229,7 @@
 		},
 		{
 			"#": "110",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"description": "32536 = no offset; 1-100 = 0.1 °C added; 1001-1100 = 0.1 °C subtracted",
 			"valueSize": 2,
@@ -233,8 +240,8 @@
 		},
 		{
 			"#": "120",
-			"label": "Digital Temperature Sensor Reporting",
-			"description": "Reporting temperature when change is larger than defined by this parameter",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
 			"unit": "°C",
 			"minValue": 0,

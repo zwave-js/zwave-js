@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -40,6 +39,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -57,7 +57,10 @@ import {
 	LevelChangeDirection,
 	MultilevelSwitchCommand,
 	SwitchType,
+	type WindowCoveringParameter,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+import { WindowCoveringCCValues } from "./WindowCoveringCC.js";
 
 export const MultilevelSwitchCCValues = V.defineCCValues(
 	CommandClasses["Multilevel Switch"],
@@ -67,7 +70,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyLevel,
 				label: "Current value",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"targetValue",
@@ -75,14 +78,14 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				...ValueMetadata.Level,
 				label: "Target value",
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"duration",
 			{
 				...ValueMetadata.ReadOnlyDuration,
 				label: "Remaining duration",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"restorePrevious",
@@ -92,7 +95,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 				states: {
 					true: "Restore",
 				},
-			} as const,
+			},
 		),
 		...V.staticPropertyWithName(
 			"compatEvent",
@@ -100,7 +103,7 @@ export const MultilevelSwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt8,
 				label: "Event value",
-			} as const,
+			},
 			{
 				stateful: false,
 				autoCreate: (applHost, endpoint) =>
@@ -393,6 +396,8 @@ export class MultilevelSwitchCCAPI extends CCAPI {
 				);
 
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				// Multilevel Switch commands may take some time to be executed.
 				// Therefore we try to supervise the command execution and delay the
 				// optimistic update until the final result is received.
@@ -566,6 +571,7 @@ export class MultilevelSwitchCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -574,7 +580,7 @@ export class MultilevelSwitchCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		ctx.logNode(node.id, {
@@ -735,6 +741,73 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public duration: Duration | undefined;
 
 	public currentValue: MaybeUnknown<number> | undefined;
+
+	public persistValues(ctx: PersistValuesContext): boolean {
+		const node = this.getNode(ctx);
+		if (!node) return false;
+
+		const endpoint = node.getEndpoint(this.endpointIndex ?? 0);
+		if (!endpoint) return false;
+
+		if (!endpoint.supportsCC(CommandClasses["Window Covering"])) {
+			return super.persistValues(ctx);
+		}
+
+		const valueDB = this.getValueDB(ctx);
+
+		// If the Window Covering CC interview hasn't completed yet,
+		// don't persist MLS values — they'll be mapped correctly once
+		// the interview completes and subsequent reports arrive.
+		const wcInterviewComplete = valueDB.getValue<boolean>({
+			commandClass: CommandClasses["Window Covering"],
+			endpoint: this.endpointIndex,
+			property: "interviewComplete",
+		});
+		if (!wcInterviewComplete) return true;
+
+		const supportedParameters = valueDB.getValue<
+			readonly WindowCoveringParameter[]
+		>(
+			WindowCoveringCCValues.supportedParameters.endpoint(
+				this.endpointIndex,
+			),
+		);
+		if (!supportedParameters?.length) return super.persistValues(ctx);
+
+		// Odd parameters have position support, prefer those
+		const windowCoveringParameter =
+			supportedParameters.find((p) => p % 2 === 1)
+				?? supportedParameters[0];
+
+		if (this.currentValue !== undefined) {
+			valueDB.setValue(
+				WindowCoveringCCValues.currentValue(
+					windowCoveringParameter,
+				).endpoint(this.endpointIndex),
+				this.currentValue,
+			);
+		}
+
+		if (this.targetValue !== undefined) {
+			valueDB.setValue(
+				WindowCoveringCCValues.targetValue(
+					windowCoveringParameter,
+				).endpoint(this.endpointIndex),
+				this.targetValue,
+			);
+		}
+
+		if (this.duration !== undefined) {
+			valueDB.setValue(
+				WindowCoveringCCValues.duration(
+					windowCoveringParameter,
+				).endpoint(this.endpointIndex),
+				this.duration,
+			);
+		}
+
+		return true;
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([

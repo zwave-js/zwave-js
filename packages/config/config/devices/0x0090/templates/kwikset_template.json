@@ -298,7 +298,7 @@
 		},
 		"to": {
 			"notificationType": 6, // Access Control
-			"notificationEvent": 6, // Lock state: Lock Jammed
+			"notificationEvent": 6, // Keypad unlock operation
 			"eventParameters": {
 				"userId": "alarmLevel"
 			}

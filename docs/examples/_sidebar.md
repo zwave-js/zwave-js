@@ -50,7 +50,6 @@
 
   - [Overview](config-files/overview.md)
   - [File format](config-files/file-format.md)
-  - [Hidden parameters](config-files/hidden-parameters.md)
   - [Contributing device files](config-files/contributing-files.md)
   - [Importing files from other sources](config-files/importing-from-others.md)
   <!-- - [Using telemetry data](config-files/using-telemetry-data.md) -->
@@ -58,6 +57,8 @@
   - [Conditional parameters and settings](config-files/conditional-settings.md)
   - [Using templates](config-files/using-templates.md)
   - [Guide on partial parameters](config-files/partial-parameters.md)
+  - [Parameter purpose](config-files/parameter-purpose.md)
+  - [Hidden parameters](config-files/hidden-parameters.md)
 
 - Development
 

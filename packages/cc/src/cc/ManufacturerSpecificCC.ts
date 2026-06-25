@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -30,6 +29,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ManufacturerSpecificCCValues = V.defineCCValues(
 	CommandClasses["Manufacturer Specific"],
@@ -39,7 +39,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt16,
 				label: "Manufacturer ID",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.staticProperty(
@@ -47,7 +47,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt16,
 				label: "Product type",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.staticProperty(
@@ -55,7 +55,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyUInt16,
 				label: "Product ID",
-			} as const,
+			},
 			{ supportsEndpoints: false },
 		),
 		...V.dynamicPropertyAndKeyWithName(
@@ -70,7 +70,7 @@ export const ManufacturerSpecificCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyString,
 				label: `Device ID (${getEnumMemberName(DeviceIdType, type)})`,
 			}),
-			{ minVersion: 2 } as const,
+			{ minVersion: 2 },
 		),
 	},
 );

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -40,6 +39,7 @@ import {
 	encodeSetbackState,
 	encodeSwitchpoint,
 } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ClimateControlScheduleCCValues = V.defineCCValues(
 	CommandClasses["Climate Control Schedule"],
@@ -50,7 +50,7 @@ export const ClimateControlScheduleCCValues = V.defineCCValues(
 				...ValueMetadata.Number,
 				label: "Override type",
 				states: enumValuesToMetadataStates(ScheduleOverrideType),
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"overrideState",
@@ -58,7 +58,7 @@ export const ClimateControlScheduleCCValues = V.defineCCValues(
 				...ValueMetadata.Number,
 				label: "Override state",
 				min: -12.8,
-			} as const,
+			},
 		),
 		...V.dynamicPropertyAndKeyWithName(
 			"schedule",
@@ -72,7 +72,7 @@ export const ClimateControlScheduleCCValues = V.defineCCValues(
 			(weekday: Weekday) => ({
 				...ValueMetadata.Any,
 				label: `Schedule (${getEnumMemberName(Weekday, weekday)})`,
-			} as const),
+			}),
 		),
 	},
 );

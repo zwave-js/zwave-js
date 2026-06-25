@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -9,6 +8,7 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type SupervisionResult,
+	type ValueID,
 	ValueMetadata,
 	type WithAddress,
 	ZWaveError,
@@ -37,7 +37,9 @@ import {
 	PhysicalCCAPI,
 	type PollValueImplementation,
 	SET_VALUE,
+	SET_VALUE_HOOKS,
 	type SetValueImplementation,
+	type SetValueImplementationHooksFactory,
 	throwMissingPropertyKey,
 	throwUnsupportedProperty,
 	throwUnsupportedPropertyKey,
@@ -49,6 +51,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -64,6 +67,8 @@ import {
 import type { NotificationEventPayload } from "../lib/NotificationEventPayload.js";
 import { V } from "../lib/Values.js";
 import { KeypadMode, UserCodeCommand, UserIDStatus } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+import { UserCredentialCC } from "./UserCredentialCC.js";
 
 export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 	...V.staticProperty("supportedUsers", undefined, { internal: true }),
@@ -113,8 +118,8 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 		{
 			...ValueMetadata.ReadOnlyNumber,
 			label: "Keypad Mode",
-		} as const,
-		{ minVersion: 2 } as const,
+		},
+		{ minVersion: 2 },
 	),
 	...V.staticProperty(
 		"adminCode",
@@ -123,11 +128,20 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 			label: "Admin Code",
 			minLength: 4,
 			maxLength: 10,
-		} as const,
+		},
 		{
 			minVersion: 2,
 			secret: true,
-		} as const,
+		},
+	),
+	...V.staticPropertyWithName(
+		"_deprecated_masterCode",
+		"masterCode",
+		undefined,
+		{
+			internal: true,
+			autoCreate: false,
+		},
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"userIdStatus",
@@ -138,7 +152,7 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 		(userId: number) => ({
 			...ValueMetadata.Number,
 			label: `User ID status (${userId})`,
-		} as const),
+		}),
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"userCode",
@@ -398,15 +412,62 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 				throwUnsupportedProperty(this.ccId, property);
 			}
 
-			// Verify the change after a short delay, unless the command was supervised and successful
-			if (this.isSinglecast() && !supervisedCommandSucceeded(result)) {
-				this.schedulePoll({ property, propertyKey }, value, {
-					transition: "fast",
-				});
-			}
-
 			return result;
 		};
+	}
+
+	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = (
+		{ property, propertyKey },
+		value,
+	) => {
+		const valueId = {
+			commandClass: this.ccId,
+			endpoint: this.endpoint.index,
+			property,
+			propertyKey,
+		};
+
+		if (
+			UserCodeCCValues.keypadMode.is(valueId)
+			|| UserCodeCCValues.adminCode.is(valueId)
+			// Support devices that were interviewed before the rename to adminCode
+			|| UserCodeCCValues._deprecated_masterCode.is(valueId)
+		) {
+			// Keypad mode, admin/master code should update immediately.
+			// Optimistically update when supervised successfully, otherwise verify
+			// For the deprecated masterCode, the canonical target is adminCode
+			return {
+				forceVerifyChanges: () => true,
+				verifyChanges: (result) => {
+					if (supervisedCommandSucceeded(result)) {
+						this.tryGetValueDB()?.setValue(valueId, value);
+					} else if (this.isSinglecast()) {
+						this.schedulePoll(valueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		} else if (
+			UserCodeCCValues.userCode.is(valueId)
+			|| UserCodeCCValues.userIdStatus.is(valueId)
+		) {
+			// Simply verify the change in any case
+			return {
+				forceVerifyChanges: () => true,
+				verifyChanges: (_result) => {
+					if (this.isSinglecast()) {
+						this.schedulePoll(valueId, value, {
+							transition: "fast",
+						});
+					}
+				},
+			};
+		}
+	};
+
+	public isSetValueOptimistic(_valueId: ValueID): boolean {
+		return false; // Always verify changes, do not assume changes were applied
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
@@ -883,11 +944,53 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 export class UserCodeCC extends CommandClass {
 	declare ccCommand: UserCodeCommand;
 
+	public determineRequiredCCInterviews(): readonly CommandClasses[] {
+		return [
+			...super.determineRequiredCCInterviews(),
+			// CL:0083.01.21.00.2 ff: The controlling node MUST only use ONE of
+			// the User Management Command Classes to control a supporting node,
+			// and cache which User Management CC is used for each node.
+			//
+			// We determine this by interviewing U3C first, and then optionally
+			// User Code CC.
+			CommandClasses["User Credential"],
+		];
+	}
+
 	public async interview(
 		ctx: InterviewContext,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+
+		// CL:0083.01.21.00.6: A controlling node MUST NOT control the User
+		// Code on a supporting node that otherwise supports User Credential
+		// unless no Users are currently supported on the supporting node.
+		if (endpoint.supportsCC(CommandClasses["User Credential"])) {
+			const u3cUsers = UserCredentialCC.getSupportedUsersCached(
+				ctx,
+				endpoint,
+			);
+			if (u3cUsers == undefined) {
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message:
+						"Cannot determine if the node uses User Credential CC for user management, skipping User Code CC interview...",
+					level: "warn",
+				});
+				return;
+			} else if (u3cUsers > 0) {
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message:
+						"Node uses User Credential CC for user management, skipping User Code CC interview...",
+					direction: "none",
+				});
+				this.setInterviewComplete(ctx, true);
+				return;
+			}
+		}
+
 		const api = CCAPI.create(
 			CommandClasses["User Code"],
 			ctx,
@@ -942,7 +1045,12 @@ export class UserCodeCC extends CommandClass {
 		// Synchronize user codes and settings
 		await this.refreshValues(
 			ctx,
-			ctx.getInterviewOptions()?.queryAllUserCodes ?? false,
+			{
+				queryAllUserCodes: ctx.getInterviewOptions()?.queryAllUserCodes
+					?? false,
+				onProgress: (completed, total) =>
+					node.reportInterviewProgress(completed, total),
+			},
 		);
 
 		// Remember that the interview is complete
@@ -951,27 +1059,42 @@ export class UserCodeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void>;
 
 	/** @internal */
 	public async refreshValues(
 		ctx: RefreshValuesContext,
-		queryAllUserCodes: boolean,
+		options: RefreshValuesOptions & { queryAllUserCodes: boolean },
 	): Promise<void>;
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
-		queryAllUserCodes: boolean = false,
+		options?: RefreshValuesOptions & { queryAllUserCodes: boolean },
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
+
+		// CL:0083.01.21.00.6: A controlling node MUST NOT control the User
+		// Code on a supporting node that otherwise supports User Credential
+		// unless no Users are currently supported on the supporting node.
+		// This includes the case where that is not determined yet:
+		if (
+			endpoint.supportsCC(CommandClasses["User Credential"])
+			&& UserCredentialCC.getSupportedUsersCached(ctx, endpoint) !== 0
+		) {
+			return;
+		}
+
 		const api = CCAPI.create(
 			CommandClasses["User Code"],
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
+
+		const { queryAllUserCodes = false } = options ?? {};
 
 		const supportsAdminCode: boolean = UserCodeCC.supportsAdminCodeCached(
 			ctx,
@@ -1061,6 +1184,7 @@ export class UserCodeCC extends CommandClass {
 						let nextUserId = 1;
 						while (nextUserId > 0 && nextUserId <= supportedUsers) {
 							const response = await api.get(nextUserId, true);
+							options?.onProgress?.(nextUserId, supportedUsers);
 							if (response) {
 								nextUserId = response.nextUserId;
 							} else {
@@ -1081,6 +1205,7 @@ export class UserCodeCC extends CommandClass {
 							userId++
 						) {
 							await api.get(userId);
+							options?.onProgress?.(userId, supportedUsers);
 						}
 					}
 				}
@@ -1104,6 +1229,7 @@ export class UserCodeCC extends CommandClass {
 				});
 				for (let userId = 1; userId <= supportedUsers; userId++) {
 					await api.get(userId);
+					options?.onProgress?.(userId, supportedUsers);
 				}
 			}
 		}

@@ -214,6 +214,7 @@ where each parameter definition has the following properties:
 | Parameter property | Type    | Required? | Description                                                                                                                                                                                                                                                                                                                                         |
 | ------------------ | ------- | :-------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `#`                | string  |    yes    | The parameter number (e.g. `"1"`, `"2"`, ...). <br />For partial parameters, this includes the bitmask (e.g. `"5[0xff00]"`)                                                                                                                                                                                                                         |
+| `$purpose`         | string  |    no     | Describes the purpose of this parameter, allowing applications to understand what a parameter does without parsing labels. See [Parameter purpose](config-files/parameter-purpose.md) for the list of available purposes.                                                                                                                           |
 | `label`            | string  |    yes    | A short name for the parameter. <br />This **must not** include unnecessary white-space, such as newlines or tabs.                                                                                                                                                                                                                                  |
 | `description`      | string  |    no     | An **optional** longer description of what the parameter does.<br />If a description does not add **significant** value (for example if it just repeats the allowed values), it should be removed instead.<br />This **must not** include unnecessary white-space, such as newlines or tabs.                                                        |
 | `valueSize`        | number  |    yes    | How many bytes the device uses for this value                                                                                                                                                                                                                                                                                                       |
@@ -587,6 +588,48 @@ Many devices unnecessarily use endpoints when they could (or do) provide all fun
 ### `preserveRootApplicationCCValueIDs`
 
 The Z-Wave+ specs mandate that the root endpoint must **mirror** the application functionality of endpoint 1 (and potentially others). For this reason, `zwave-js` hides these superfluous values. However, some legacy devices offer additional functionality through the root endpoint, which should not be hidden. To achieve this, set `preserveRootApplicationCCValueIDs` to `true`.
+
+### `remapNotifications`
+
+This option is used to remap notification events to different notification events or variables. This is useful for devices that use suboptimal notification events for specific behaviors, e.g. sending "Manual lock operation" when they should be reporting a "Door handle state" variable.
+
+This property has the following shape:
+
+```json
+"compat": {
+	"remapNotifications": [
+		{
+			"from": {
+				"notificationType": 6, // The notification type to remap
+				"notificationEvent": 1, // The notification event to remap
+			},
+			"to": {
+				"notificationType": 6, // The target notification type
+				"notificationEvent": 25, // The target notification event
+			}
+		},
+		// Example with action: clear/idle multiple target variables
+		{
+			"from": {
+				"notificationType": 6,
+				"notificationEvent": 7,
+			},
+			"clear": [
+				{ "notificationType": 6, "notificationEvent": 24 },
+				{ "notificationType": 6, "notificationEvent": 25 }
+			]
+		}
+	]
+}
+```
+
+The `from` object specifies which incoming notification event should be remapped.
+
+- With `to`: the incoming notification is treated as if the device sent the target notification event instead.
+- With `clear`: receiving the source notification causes each listed target notification value to be set to unknown state (`UNKNOWN_STATE`).
+- With `idle`: receiving the source notification causes each listed target notification value to be set to idle (0).
+
+When a notification is remapped, the original notification event is removed from the list of supported events and the mapping target is added instead. Mappings with `clear` or `idle` do not add to the list of supported notification events.
 
 ### `removeEndpoints`
 

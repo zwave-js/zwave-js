@@ -1,24 +1,20 @@
+import { BasicCCGet, BasicCCReport, SupervisionCommand } from "@zwave-js/cc";
 import {
-	BasicCCGet,
-	BasicCCReport,
-	SupervisionCCGet,
-	SupervisionCCReport,
-} from "@zwave-js/cc";
-import {
+	CommandClasses,
 	SecurityClass,
-	SupervisionStatus,
 	TransmitStatus,
 	isSupervisionResult,
 } from "@zwave-js/core";
 import {
 	SendDataAbort,
 	SendDataBridgeRequest,
-	SendDataRequestTransmitReport,
+	SendDataBridgeRequestTransmitReport,
 } from "@zwave-js/serial";
 import {
 	type MockControllerBehavior,
 	type MockNodeBehavior,
 } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import path from "node:path";
 import {
 	MockControllerCommunicationState,
@@ -58,7 +54,7 @@ integrationTest(
 					}
 					if (msg instanceof SendDataAbort && lastCallbackId) {
 						// Finish the transmission by sending the callback
-						const cb = new SendDataRequestTransmitReport({
+						const cb = new SendDataBridgeRequestTransmitReport({
 							callbackId: lastCallbackId,
 							transmitStatus: TransmitStatus.NoAck,
 						});
@@ -99,15 +95,12 @@ integrationTest(
 			const respondToSupervisionGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC instanceof SupervisionCCGet
+						receivedCC.isEncapsulatedWith(
+							CommandClasses.Supervision,
+							SupervisionCommand.Get,
+						)
 					) {
-						const cc = new SupervisionCCReport({
-							nodeId: controller.ownNodeId,
-							sessionId: receivedCC.sessionId,
-							moreUpdatesFollow: false,
-							status: SupervisionStatus.Success,
-						});
-						return { action: "sendCC", cc };
+						return { action: "ok" };
 					}
 				},
 			};
@@ -129,6 +122,16 @@ integrationTest(
 			// Send a supervised command. The NonceReport should arrive before the transmit report.
 			const result = await node.commandClasses.Basic.set(99);
 			t.expect(isSupervisionResult(result)).toBe(true);
+
+			// Clear received messages and wait to check for retransmissions
+			mockController.clearReceivedHostMessages();
+			await wait(200);
+
+			// Verify that no retransmission happened
+			const retransmissions = mockController.receivedHostMessages.filter(
+				(msg) => msg instanceof SendDataBridgeRequest,
+			);
+			t.expect(retransmissions.length).toBe(0);
 		},
 	},
 );

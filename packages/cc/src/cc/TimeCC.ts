@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type DSTInfo,
@@ -32,6 +31,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { TimeCommand } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 // @noSetValueAPI
 // Only the timezone information can be set and that accepts a non-primitive value
@@ -316,6 +316,13 @@ export class TimeCCDateReport extends TimeCC {
 		const year = raw.payload.readUInt16BE(0);
 		const month = raw.payload[2];
 		const day = raw.payload[3];
+
+		validatePayload(
+			month >= 1,
+			month <= 12,
+			day >= 1,
+			day <= 31,
+		);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,

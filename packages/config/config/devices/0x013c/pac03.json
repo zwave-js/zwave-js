@@ -1,0 +1,19 @@
+{
+	"manufacturer": "Philio",
+	"manufacturerId": "0x013c",
+	"label": "PAC03",
+	"description": "Mitsubishi IT Communication Adapter",
+	"devices": [
+		{
+			"productType": "0x0001",
+			"productId": "0x0059"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"metadata": {
+		"manual": "https://static1.squarespace.com/static/5c1afbd1266c07479bc41525/t/69df237cf858b76bb8308060/1776231292799/PAC03_UserManual_V2-20260415.pdf"
+	}
+}

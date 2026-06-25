@@ -5,6 +5,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+import path from "node:path";
 import sinon from "sinon";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -67,6 +68,63 @@ integrationTest(
 					NotificationCCValues.supportedNotificationEvents(0x06).id,
 				);
 			t.expect(supportedAccessControlEvents?.includes(0x05)).toBe(true);
+		},
+	},
+);
+
+integrationTest(
+	"the alarmMapping compat flag adds to supported notification types and events",
+	{
+		nodeCapabilities: {
+			manufacturerId: 0xdead,
+			productType: 0xbeef,
+			productId: 0xcafe,
+
+			commandClasses: [
+				{
+					ccId: CommandClasses.Notification,
+					version: 8,
+					isSupported: true,
+					notificationTypesAndEvents: {
+						[0x06]: [0x16],
+						[0x07]: [0x03],
+					},
+				},
+				CommandClasses["Manufacturer Specific"],
+				CommandClasses.Version,
+			],
+		},
+
+		additionalDriverOptions: {
+			storage: {
+				deviceConfigPriorityDir: path.join(
+					__dirname,
+					"fixtures/alarmMappingAdditive",
+				),
+			},
+		},
+
+		async testBody(t, driver, node, mockController, mockNode) {
+			t.expect(node.deviceConfig?.compat?.alarmMapping).toBeDefined();
+
+			const supportedNotificationTypes: number[] | undefined = node
+				.getValue(NotificationCCValues.supportedNotificationTypes.id);
+			t.expect(supportedNotificationTypes).toContain(0x06);
+			t.expect(supportedNotificationTypes).toContain(0x07);
+
+			const supportedAccessControlEvents: number[] | undefined = node
+				.getValue(
+					NotificationCCValues.supportedNotificationEvents(0x06).id,
+				);
+			// 0x05 is added by the alarmMapping compat flag
+			t.expect(supportedAccessControlEvents).toContain(0x05);
+			t.expect(supportedAccessControlEvents).toContain(0x16);
+
+			const supportedHomeSecurityEvents: number[] | undefined = node
+				.getValue(
+					NotificationCCValues.supportedNotificationEvents(0x07).id,
+				);
+			t.expect(supportedHomeSecurityEvents).toContain(0x03);
 		},
 	},
 );

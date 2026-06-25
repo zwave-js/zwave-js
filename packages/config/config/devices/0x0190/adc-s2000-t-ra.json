@@ -27,6 +27,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Level",
 			"valueSize": 2,
 			"minValue": 1000,
@@ -35,9 +36,11 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Temperature Reporting Threshold",
 			"description": "Tenths of a degree Fahrenheit. A value of 10 would be 1.0F.",
 			"valueSize": 2,
+			"unit": "0.1 °F",
 			"minValue": 0,
 			"maxValue": 100,
 			"defaultValue": 100
@@ -61,6 +64,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "reporting_interval.battery",
 			"label": "Battery Reporting Interval",
 			"valueSize": 2,
 			"minValue": 0,
@@ -69,6 +73,7 @@
 		},
 		{
 			"#": "7",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Temperature Reporting Interval",
 			"valueSize": 2,
 			"minValue": 0,
@@ -77,6 +82,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration Offset",
 			"valueSize": 2,
 			"minValue": -100,
@@ -85,6 +91,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_interval.temperature",
 			"label": "Mandatory Temperature Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",

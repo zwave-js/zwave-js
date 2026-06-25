@@ -33,6 +33,7 @@
 		{
 			"#": "4",
 			"$if": "firmwareVersion <= 2.255",
+			"$purpose": "ramp_rate",
 			"label": "Ramp Rate Control",
 			"description": "Choose from 2 ramp rate options (fade-in / fade-out effect)",
 			"valueSize": 1,
@@ -64,6 +65,26 @@
 			"#": "6",
 			"$if": "firmwareVersion >= 3.0",
 			"$import": "templates/zooz_template.json#auto_on_timer_duration"
+		},
+		{
+			"#": "7[0x01]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_physical"
+		},
+		{
+			"#": "7[0x02]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_3way"
+		},
+		{
+			"#": "7[0x04]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_zwave"
+		},
+		{
+			"#": "7[0x08]",
+			"$if": "firmwareVersion >= 3.0",
+			"$import": "templates/zooz_template.json#control_device_trigger_timer"
 		},
 		{
 			"#": "8",

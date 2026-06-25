@@ -54,13 +54,10 @@
 		},
 		{
 			"#": "4",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Basic Set Value",
 			"description": "Value to be transmitted to devices in association group",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "5",

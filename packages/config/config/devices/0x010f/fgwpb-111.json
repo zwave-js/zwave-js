@@ -54,6 +54,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Reporting Threshold",
 			"valueSize": 2,
 			"unit": "0.01 kWh",

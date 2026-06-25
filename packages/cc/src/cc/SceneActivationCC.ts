@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -32,6 +31,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { SceneActivationCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const SceneActivationCCValues = V.defineCCValues(
 	CommandClasses["Scene Activation"],
@@ -43,7 +43,7 @@ export const SceneActivationCCValues = V.defineCCValues(
 				min: 1,
 				label: "Scene ID",
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 			{ stateful: false },
 		),
 		...V.staticProperty(
@@ -51,7 +51,7 @@ export const SceneActivationCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.Duration,
 				label: "Dimming duration",
-			} as const,
+			},
 		),
 	},
 );

@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -40,6 +39,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -53,6 +53,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { ThermostatMode, ThermostatModeCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ThermostatModeCCValues = V.defineCCValues(
 	CommandClasses["Thermostat Mode"],
@@ -64,14 +65,14 @@ export const ThermostatModeCCValues = V.defineCCValues(
 				...ValueMetadata.UInt8,
 				states: enumValuesToMetadataStates(ThermostatMode),
 				label: "Thermostat mode",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"manufacturerData",
 			{
 				...ValueMetadata.ReadOnlyBuffer,
 				label: "Manufacturer data",
-			} as const,
+			},
 		),
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
 	},
@@ -280,6 +281,7 @@ export class ThermostatModeCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -288,7 +290,7 @@ export class ThermostatModeCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Query the current status

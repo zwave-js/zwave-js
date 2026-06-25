@@ -134,6 +134,7 @@
 		},
 		{
 			"#": "40",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting in Watts on Power Change",
 			"valueSize": 1,
 			"minValue": 0,
@@ -142,6 +143,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting in Watts by Time Interval",
 			"description": "Set value means time interval when power report is send",
 			"valueSize": 2,
@@ -253,6 +255,7 @@
 		},
 		{
 			"#": "110",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Offset Settings",
 			"valueSize": 2,
 			"minValue": 0,
@@ -262,8 +265,10 @@
 		},
 		{
 			"#": "120",
-			"label": "Digital Temperature Sensor Reporting",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Change Report Threshold",
 			"valueSize": 1,
+			"unit": "°C",
 			"minValue": 0,
 			"maxValue": 127,
 			"defaultValue": 5

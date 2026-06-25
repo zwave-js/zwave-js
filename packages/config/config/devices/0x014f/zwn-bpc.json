@@ -23,6 +23,7 @@
 	"paramInformation": [
 		{
 			"#": "0",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Timeout",
 			"valueSize": 1,
 			"unit": "minutes",

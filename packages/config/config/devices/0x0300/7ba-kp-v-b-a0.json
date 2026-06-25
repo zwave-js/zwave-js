@@ -33,6 +33,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "reporting_threshold.low_battery",
 			"label": "Low Battery Threshold",
 			"valueSize": 1,
 			"unit": "%",

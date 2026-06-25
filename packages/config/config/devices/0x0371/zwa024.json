@@ -77,12 +77,17 @@
 	"paramInformation": [
 		{
 			"#": "2",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Retrigger Timeout",
-			"description": "Allowable range: 0, 30-3600. Values 1-29 are equivalent to 30.",
+			// Values 1-29 are equivalent to 30 on this device
+			// We don't model this though, so applications can better understand
+			// this parameter automatically.
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 3600,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 3600] }
+			],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -93,6 +98,7 @@
 		},
 		{
 			"#": "3",
+			"$purpose": "motion_clear_delay",
 			"label": "Motion Reset Timeout",
 			"description": "Specifies the interval after which the device will clear its status",
 			"valueSize": 2,
@@ -103,6 +109,7 @@
 		},
 		{
 			"#": "4",
+			"$purpose": "motion_sensitivity",
 			"label": "Motion Sensitivity",
 			"valueSize": 1,
 			"minValue": 0,
@@ -139,7 +146,7 @@
 		{
 			"#": "6",
 			"label": "Vibration Sensor",
-			"description": "Enables vibration sensor and specifies the timeout after which the sensor will clear its status; Allowable range: 1-254 minutes",
+			"description": "Enables vibration sensor and specifies the timeout after which the sensor will clear its status",
 			"valueSize": 1,
 			"unit": "minutes",
 			"minValue": 0,
@@ -334,6 +341,7 @@
 		},
 		{
 			"#": "41",
+			"$purpose": "reporting_threshold.temperature",
 			"label": "Change Threshold Reporting: Temperature",
 			"description": "Defines the degree of change that will induce a report",
 			"valueSize": 1,
@@ -351,6 +359,7 @@
 		},
 		{
 			"#": "42",
+			"$purpose": "reporting_threshold.humidity",
 			"label": "Change Threshold Reporting: Humidity",
 			"description": "Defines the degree of change that will induce a report",
 			"valueSize": 1,
@@ -367,6 +376,7 @@
 		},
 		{
 			"#": "43",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Change Threshold Reporting: Luminance",
 			"description": "Defines the degree of change that will induce a report",
 			"valueSize": 2,
@@ -661,7 +671,7 @@
 		},
 		{
 			"#": "39",
-			"$import": "~/0x0086/templates/aeotec_template.json#low_battery_threshold",
+			"$import": "~/0x0086/templates/aeotec_template.json#reporting_threshold.low_battery",
 			"maxValue": 90,
 			"defaultValue": 50
 		},
@@ -737,6 +747,7 @@
 		},
 		{
 			"#": "201",
+			"$purpose": "calibration.temperature",
 			"label": "Temperature Offset Value",
 			"valueSize": 2,
 			"unit": "0.1 °C/°F",
@@ -746,6 +757,7 @@
 		},
 		{
 			"#": "202",
+			"$purpose": "calibration.humidity",
 			"label": "Humidity Offset Value",
 			"valueSize": 1,
 			"unit": "%",
@@ -755,6 +767,7 @@
 		},
 		{
 			"#": "203",
+			"$purpose": "calibration.brightness",
 			"label": "Luminance Offset Value",
 			"valueSize": 2,
 			"unit": "lux",

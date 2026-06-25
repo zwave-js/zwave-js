@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	Duration,
@@ -35,6 +34,7 @@ import {
 	CommandClass,
 	type InterviewContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
@@ -49,6 +49,7 @@ import {
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
 import { BinarySwitchCommand } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const BinarySwitchCCValues = V.defineCCValues(
 	CommandClasses["Binary Switch"],
@@ -58,7 +59,7 @@ export const BinarySwitchCCValues = V.defineCCValues(
 			{
 				...ValueMetadata.ReadOnlyBoolean,
 				label: "Current value",
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"targetValue",
@@ -66,15 +67,15 @@ export const BinarySwitchCCValues = V.defineCCValues(
 				...ValueMetadata.Boolean,
 				label: "Target value",
 				valueChangeOptions: ["transitionDuration"],
-			} as const,
+			},
 		),
 		...V.staticProperty(
 			"duration",
 			{
 				...ValueMetadata.ReadOnlyDuration,
 				label: "Remaining duration",
-			} as const,
-			{ minVersion: 2 } as const,
+			},
+			{ minVersion: 2 },
 		),
 	},
 );
@@ -173,6 +174,8 @@ export class BinarySwitchCCAPI extends CCAPI {
 				.endpoint(this.endpoint.index);
 
 			return {
+				// This is the target value for a split target/current state pair.
+				isSplitStateTargetValue: true,
 				optimisticallyUpdateRelatedValues: (
 					_supervisedAndSuccessful,
 				) => {
@@ -256,6 +259,7 @@ export class BinarySwitchCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -264,7 +268,7 @@ export class BinarySwitchCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
 		});
 
 		// Query the current state

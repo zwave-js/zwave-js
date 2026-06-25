@@ -43,7 +43,6 @@ export const noValueInOptionLabel: JSONCRule.RuleModule = {
 		};
 	},
 	meta: {
-		// @ts-expect-error Something is off about the rule types
 		docs: {
 			description: `Prevents option labels which start with their value`,
 		},

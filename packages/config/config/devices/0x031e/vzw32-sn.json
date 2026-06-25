@@ -54,8 +54,10 @@
 			"label": "Dimming Speed - Up (Remote)",
 			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 254,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 254] }
+			],
 			"defaultValue": 25,
 			"unsigned": true,
 			"options": [
@@ -143,6 +145,7 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "timer.auto_off",
 			"label": "Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
@@ -193,6 +196,7 @@
 		},
 		{
 			"#": "18",
+			"$purpose": "reporting_threshold.power",
 			"label": "Power Change Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
@@ -209,11 +213,12 @@
 		{
 			"#": "19",
 			"label": "Power & Energy Report Interval",
-			"description": "Allowable range: 0, 30-32767",
 			"valueSize": 2,
 			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32767,
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32767] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -224,6 +229,7 @@
 		},
 		{
 			"#": "20",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Change Report Threshold",
 			"valueSize": 2,
 			"unit": "0.01 kWh",
@@ -275,7 +281,7 @@
 		{
 			"#": "23",
 			"label": "Quick Start Time",
-			"description": "Duration of initial increased power output when light turns on. Allowable range: 0-60.",
+			"description": "Duration of initial increased power output when light turns on.",
 			"valueSize": 1,
 			"unit": "1/60 seconds",
 			"minValue": 0,
@@ -864,6 +870,7 @@
 		},
 		{
 			"#": "114",
+			"$purpose": "motion_clear_delay",
 			"label": "mmWave Detection Timeout",
 			"description": "Amount of time in seconds after presence detection that a no-presence report is sent.",
 			"valueSize": 4,
@@ -886,22 +893,25 @@
 		{
 			"#": "116[0xff]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 1 (Read Only)"
+			"label": "mmWave Person in the Reporting Area 1 (Read Only)",
+			"hidden": true
 		},
 		{
 			"#": "116[0xff00]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 2 (Read Only)"
+			"label": "mmWave Person in the Reporting Area 2 (Read Only)",
+			"hidden": true
 		},
 		{
 			"#": "116[0xff0000]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 3 (Read Only)"
+			"label": "mmWave Person in the Reporting Area 3 (Read Only)",
+			"hidden": true
 		},
 		{
 			"#": "116[0xff000000]",
 			"$import": "templates/inovelli_templates.json#mmwave_person_in_zone",
-			"label": "mmWave Person in the Reporting Area 4 (Read Only)"
+			"label": "mmWave Person in the Reporting Area (Read Only)"
 		},
 		{
 			"#": "117",
@@ -944,6 +954,7 @@
 		},
 		{
 			"#": "118",
+			"$purpose": "reporting_threshold.brightness",
 			"label": "Lux Threshold",
 			"valueSize": 2,
 			"minValue": 0,
@@ -952,6 +963,7 @@
 		},
 		{
 			"#": "119",
+			"$purpose": "reporting_interval.brightness",
 			"label": "Lux Interval",
 			"valueSize": 2,
 			"minValue": 0,
@@ -1093,12 +1105,20 @@
 		{
 			"#": "240",
 			"label": "Factory Reset",
-			"description": "Set to 120935937 to perform a factory reset",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 4294967295,
 			"defaultValue": 0,
-			"unsigned": true
+			"destructive": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Default",
+					"value": 0
+				},
+				{
+					"label": "Perform a factory reset",
+					"value": 120935937
+				}
+			]
 		}
 	],
 	"metadata": {

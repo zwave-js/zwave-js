@@ -106,8 +106,10 @@
 		},
 		{
 			"#": "12",
+			"$purpose": "reporting_threshold.power",
 			"label": "Minimum Change in Wattage Triggering Report",
 			"valueSize": 1,
+			"unit": "W",
 			"minValue": 0,
 			"maxValue": 255,
 			"defaultValue": 10,

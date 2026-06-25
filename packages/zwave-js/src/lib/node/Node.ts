@@ -74,6 +74,12 @@ import { Security2CCNonceGet } from "@zwave-js/cc/Security2CC";
 import { SecurityCCNonceGet } from "@zwave-js/cc/SecurityCC";
 import { ThermostatModeCCSet } from "@zwave-js/cc/ThermostatModeCC";
 import {
+	UserCredentialCCAssociationReport,
+	UserCredentialCCCredentialLearnReport,
+	UserCredentialCCCredentialReport,
+	UserCredentialCCUserReport,
+} from "@zwave-js/cc/UserCredentialCC";
+import {
 	VersionCCCapabilitiesGet,
 	VersionCCCommandClassGet,
 	VersionCCGet,
@@ -176,7 +182,10 @@ import {
 	handleAGINameGet,
 	handleAssociationSupportedGroupingsGet,
 } from "./CCHandlers/AssociationGroupInformationCC.js";
-import { handleBasicCommand } from "./CCHandlers/BasicCC.js";
+import {
+	getBasicMappingTarget,
+	handleBasicCommand,
+} from "./CCHandlers/BasicCC.js";
 import { handleBatteryReport } from "./CCHandlers/BatteryCC.js";
 import { handleBinarySwitchCommand } from "./CCHandlers/BinarySwitchCC.js";
 import {
@@ -229,6 +238,12 @@ import {
 	handleTimeGet,
 	handleTimeOffsetGet,
 } from "./CCHandlers/TimeCC.js";
+import {
+	handleUserCredentialAssociationReport,
+	handleUserCredentialCredentialLearnReport,
+	handleUserCredentialCredentialReport,
+	handleUserCredentialUserReport,
+} from "./CCHandlers/UserCredentialCC.js";
 import {
 	handleVersionCapabilitiesGet,
 	handleVersionCommandClassGet,
@@ -599,12 +614,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 			// Figure out if optimistic value updates, both for the actual value
 			// and related values, should be performed:
-			// Whether updating optimistically is even an option for this value/API/device
-			const canUpdateOptimistically = api.isSetValueOptimistic(valueId)
-				// Check if the device class supports optimistic value updates
-				&& (endpointInstance.deviceClass?.specific
-					.supportsOptimisticValueUpdate
-					?? true);
+			const isAPIOptimistic = api.isSetValueOptimistic(valueId);
+
+			// Whether the device class is slow (e.g. motors, window coverings)
+			const isSlowDeviceClass = endpointInstance.deviceClass?.specific
+				.supportsOptimisticValueUpdate === false;
 			// Whether the device has at least started executing the command
 			const supervisedAndAccepted = supervisedCommandSucceeded(result);
 			// Whether the device has completed the command successfully
@@ -617,14 +631,17 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				!this.driver.options.disableOptimisticValueUpdate
 				&& result == undefined;
 
-			// The actual value may be updated optimistically once the command has started
-			const shouldUpdateActualValueOptimistically =
-				canUpdateOptimistically
+			// The actual value may be updated optimistically once the command has started.
+			const shouldUpdateActualValueOptimistically = isAPIOptimistic
+				// For slow device classes, this is only allowed when the value is a
+				// target value that is distinct from the current physical state.
+				&& (!isSlowDeviceClass || hooks?.isSplitStateTargetValue)
 				&& (supervisedAndAccepted
 					|| unsupervisedAndOptimisticValueUpdateEnabled);
 			// Related values may only be updated optimistically once the command has completed successfully
-			const shouldUpdateRelatedValuesOptimistically =
-				canUpdateOptimistically
+			const shouldUpdateRelatedValuesOptimistically = isAPIOptimistic
+				// And only for fast device classes
+				&& !isSlowDeviceClass
 				&& (supervisedAndCompletedSuccessfully
 					|| unsupervisedAndOptimisticValueUpdateEnabled);
 
@@ -674,9 +691,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 						supervisedAndCompletedSuccessfully,
 					);
 				}
-
-				const isSlowDeviceClass = endpointInstance.deviceClass?.specific
-					.supportsOptimisticValueUpdate === false;
 
 				// Verify the current value after a delay, unless...
 				// ...the command was supervised and successful
@@ -795,10 +809,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				valueId.commandClass
 			] as CCAPI
 		).withOptions({
-			// We do not want to delay more important communication by polling, so give it
-			// the lowest priority and don't retry unless overwritten by the options
+			// We do not want to delay more important communication by polling, so...
+			// ...don't retry
 			maxSendAttempts: 1,
-			priority: MessagePriority.Poll,
+			// ...and give it the lowest priority for user interactions
+			priority: MessagePriority.NodeQuery,
+			// ...unless overwritten by the options
 			...sendCommandOptions,
 		});
 
@@ -1035,6 +1051,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				`new node, doing a full interview...`,
 			);
 			this.emit("interview started", this);
+			// Reset the progress baseline and announce the 0% starting point for a fresh interview
+			this.resetInterviewProgressBaseline();
 			await this.queryProtocolInfo();
 		}
 
@@ -1051,6 +1069,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 
 			if (this.interviewStage === InterviewStage.ProtocolInfo) {
+				this.reportInterviewStageStarted(InterviewStage.NodeInfo);
 				if (
 					!(await tryInterviewStage(() => this.interviewNodeInfo()))
 				) {
@@ -1061,6 +1080,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			// At this point the basic interview of new nodes is done. Start here when re-interviewing known nodes
 			// to get updated information about command classes
 			if (this.interviewStage === InterviewStage.NodeInfo) {
+				this.reportInterviewStageStarted(InterviewStage.CommandClasses);
 				// Only advance the interview if it was completed, otherwise abort
 				if (await this.interviewCCs()) {
 					this.setInterviewStage(InterviewStage.CommandClasses);
@@ -1076,6 +1096,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			|| (!this.isControllerNode
 				&& this.interviewStage === InterviewStage.CommandClasses)
 		) {
+			this.reportInterviewStageStarted(InterviewStage.OverwriteConfig);
 			// Load a config file for this node if it exists and overwrite the previously reported information
 			await this.overwriteConfig();
 		}
@@ -1084,6 +1105,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		this.cachedDeviceConfigHash = await this.deviceConfig?.getHash();
 
 		this.setInterviewStage(InterviewStage.Complete);
+		this.reportInterviewStageStarted(InterviewStage.Complete);
 		this.updateReadyMachine({ value: "INTERVIEW_DONE" });
 
 		// Tell listeners that the interview is completed
@@ -1320,8 +1342,26 @@ protocol version:      ${this.protocolVersion}`;
 		);
 	}
 
-	/** Step #? of the node interview */
 	protected async interviewCCs(): Promise<boolean> {
+		// Interviewing CCs happens in two phases, because the full amount of work is unknown up
+		// front (endpoints are revealed by Multi Channel, secure CCs by Security):
+		//
+		// Discovery phase — establishes the complete CC inventory:
+		//   - Root device: Security S2/S0 → Manufacturer Specific → Version (loads device config)
+		//     → Wake Up → Multi Channel (discovers endpoints)
+		//   - Endpoint prefix pass: Security S2/S0 → Version per endpoint; remembers each
+		//     endpoint's interview order
+		//
+		// Bulk phase — inventory is final, interview the rest:
+		//   - Root device non-application CCs
+		//   - Each endpoint's remaining CCs
+		//   - Root device application CCs
+		//   - Basic CC for root device and endpoints
+		//
+		// Progress reporting (see the InterviewProgress mixin) mirrors this:
+		//   - Discovery: each CC advances the CommandClasses band by a small, capped fixed amount
+		//   - Bulk: the remaining band is split proportionally to the remaining interview weight.
+		//     CCs can report sub-progress in their progress slice.
 		if (this.isControllerNode) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1331,15 +1371,15 @@ protocol version:      ${this.protocolVersion}`;
 			return true;
 		}
 
+		// Reset the per-stage progress tracking for this run of the CC interview
+		this.resetCCInterviewProgress();
+
 		const securityManager2 = this.driver.getSecurityManager2(this.id);
 
-		/**
-		 * @param force When this is `true`, the interview will be attempted even when the CC is not supported by the endpoint.
-		 */
-		const interviewEndpoint = async (
+		const runCCInterview = async (
 			endpoint: Endpoint,
 			cc: CommandClasses,
-			force: boolean = false,
+			force: boolean,
 		): Promise<"continue" | false | void> => {
 			let instance: CommandClass;
 			try {
@@ -1383,7 +1423,9 @@ protocol version:      ${this.protocolVersion}`;
 			}
 
 			// Skip this step if the CC was already interviewed
-			if (instance.isInterviewComplete(this.driver)) return "continue";
+			if (instance.isInterviewComplete(this.driver)) {
+				return "continue";
+			}
 
 			try {
 				await instance.interview(this.driver);
@@ -1397,6 +1439,27 @@ protocol version:      ${this.protocolVersion}`;
 				throw e;
 			}
 		};
+
+		/**
+		 * @param force When this is `true`, the interview will be attempted even when the CC is not supported by the endpoint.
+		 */
+		const interviewEndpoint = async (
+			endpoint: Endpoint,
+			cc: CommandClasses,
+			force: boolean = false,
+		): Promise<"continue" | false | void> => {
+			// Reserve a progress slice for this CC so that fine-grained progress
+			// reported during its interview maps into the correct range.
+			this.reserveCCInterviewStepProgress(endpoint.index, cc);
+			const result = await runCCInterview(endpoint, cc, force);
+			// Count this CC as completed (interviewed or skipped) unless the interview was aborted
+			if (result !== false) this.completeCCInterviewStepProgress();
+			return result;
+		};
+
+		// =====================================================================
+		// Discovery phase: root device
+		// -> Security, device identification, discover endpoints
 
 		// Always interview Security first because it changes the interview order
 		if (this.supportsCC(CommandClasses["Security 2"])) {
@@ -1584,6 +1647,27 @@ protocol version:      ${this.protocolVersion}`;
 
 		this.modifySupportedCCBeforeInterview(this);
 
+		// In order to be able to approximate the interview progress, we need to know
+		// early which endpoints exist and which CCs have to be interviewed on them.
+		if (this.supportsCC(CommandClasses["Multi Channel"])) {
+			this.driver.controllerLog.logNode(
+				this.id,
+				"Root device interview: Multi Channel",
+				"silly",
+			);
+
+			const action = await interviewEndpoint(
+				this,
+				CommandClasses["Multi Channel"],
+			);
+			if (typeof action === "boolean") return action;
+
+			// Now that the Multi Channel interview has discovered the endpoints, we may need to
+			// make some more changes to the CCs the device reports. This time, the non-root
+			// endpoints are relevant.
+			this.applyCommandClassesCompatFlag();
+		}
+
 		// We determine the correct interview order of the remaining CCs by topologically sorting two dependency graph
 		// In order to avoid emitting unnecessary value events for the root endpoint,
 		// we defer the application CC interview until after the other endpoints have been interviewed
@@ -1595,6 +1679,8 @@ protocol version:      ${this.protocolVersion}`;
 			CommandClasses["Manufacturer Specific"],
 			CommandClasses.Version,
 			CommandClasses["Wake Up"],
+			// Multi Channel is interviewed early because it discovers the endpoints
+			CommandClasses["Multi Channel"],
 			// Basic CC is interviewed last
 			CommandClasses.Basic,
 		];
@@ -1645,24 +1731,10 @@ protocol version:      ${this.protocolVersion}`;
 			"silly",
 		);
 
-		// Now that we know the correct order, do the interview in sequence
-		for (const cc of rootInterviewOrderBeforeEndpoints) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				`Root device interview: ${getCCName(cc)}`,
-				"silly",
-			);
-
-			const action = await interviewEndpoint(this, cc);
-			if (action === "continue") continue;
-			else if (typeof action === "boolean") return action;
-		}
-
-		// Before querying the endpoints, we may need to make some more changes to the CCs the device reports
-		// This time, the non-root endpoints are relevant
-		this.applyCommandClassesCompatFlag();
-
-		// Now query ALL endpoints
+		// =====================================================================
+		// Discovery phase: endpoints
+		// -> discover supported CCs on each endpoint that differ from the root device
+		const endpointInterviewOrders = new Map<number, CommandClasses[]>();
 		for (const endpointIndex of this.getEndpointIndizes()) {
 			const endpoint = this.getEndpoint(endpointIndex);
 			if (!endpoint) continue;
@@ -1912,6 +1984,55 @@ protocol version:      ${this.protocolVersion}`;
 				level: "silly",
 			});
 
+			// Remember the order; the actual CC interview happens in the bulk phase below
+			endpointInterviewOrders.set(endpointIndex, endpointInterviewOrder);
+		}
+
+		// =====================================================================
+		// Discovery → bulk boundary
+		// We now know exactly which CCs are supported, so we can switch to
+		// proportional progress reporting.
+
+		// Basic CC is interviewed conditionally at the very end (root device + each endpoint),
+		// outside the interview orders above. Include an allowance for it so the bar keeps
+		// moving during those interviews instead of sitting at the band end.
+		const remainingBasicCCs = Array.from(
+			{ length: 1 + endpointInterviewOrders.size },
+			() => CommandClasses.Basic,
+		);
+		this.setupCCInterviewBulkProgress(
+			rootInterviewOrderBeforeEndpoints,
+			...endpointInterviewOrders.values(),
+			rootInterviewOrderAfterEndpoints,
+			remainingBasicCCs,
+		);
+
+		// =====================================================================
+		// Bulk phase: root device
+		// -> Remaining non-application CCs
+		for (const cc of rootInterviewOrderBeforeEndpoints) {
+			this.driver.controllerLog.logNode(
+				this.id,
+				`Root device interview: ${getCCName(cc)}`,
+				"silly",
+			);
+
+			const action = await interviewEndpoint(this, cc);
+			if (action === "continue") continue;
+			else if (typeof action === "boolean") return action;
+		}
+
+		// =====================================================================
+		// Bulk phase: endpoints
+		// -> All remaining CCs
+		for (const endpointIndex of this.getEndpointIndizes()) {
+			const endpoint = this.getEndpoint(endpointIndex);
+			if (!endpoint) continue;
+			const endpointInterviewOrder = endpointInterviewOrders.get(
+				endpointIndex,
+			);
+			if (!endpointInterviewOrder) continue;
+
 			// Now that we know the correct order, do the interview in sequence
 			for (const cc of endpointInterviewOrder) {
 				this.driver.controllerLog.logNode(this.id, {
@@ -1930,7 +2051,9 @@ protocol version:      ${this.protocolVersion}`;
 			}
 		}
 
-		// Continue with the application CCs for the root endpoint
+		// =====================================================================
+		// Bulk phase: root device
+		// -> Application CCs
 		for (const cc of rootInterviewOrderAfterEndpoints) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1943,15 +2066,33 @@ protocol version:      ${this.protocolVersion}`;
 			else if (typeof action === "boolean") return action;
 		}
 
-		// At the very end, figure out if Basic CC is supposed to be supported
+		// =====================================================================
+		// Bulk phase: Basic CC -> Figure out if it is supposed to be supported
 		// First on the root device
 		const compat = this.deviceConfig?.compat;
 		if (
 			!this.wasCCRemovedViaConfig(CommandClasses.Basic)
 			&& this.getCCVersion(CommandClasses.Basic) > 0
 		) {
-			if (this.maySupportBasicCC()) {
-				// The device probably supports Basic CC and is allowed to.
+			// When Basic Sets are mapped to another supported CC, we don't need
+			// to interview Basic CC at all, and we can hide the values.
+			const basicSetMappingTarget =
+				compat?.mapBasicSet === "Binary Sensor"
+					? CommandClasses["Binary Sensor"]
+					: compat?.mapBasicSet === "auto"
+					? getBasicMappingTarget(this.deviceClass)
+					: undefined;
+
+			const basicSetMappingWillSucceed =
+				basicSetMappingTarget != undefined
+				&& this.supportsCC(basicSetMappingTarget);
+
+			if (
+				this.wasCCSupportAddedViaConfig(CommandClasses.Basic)
+				|| (this.maySupportBasicCC() && !basicSetMappingWillSucceed)
+			) {
+				// Either the device probably supports Basic CC and is allowed to.
+				// Or we force-added support through a config file.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(
 					this.id,
@@ -1965,6 +2106,9 @@ protocol version:      ${this.protocolVersion}`;
 					true,
 				);
 				if (typeof action === "boolean") return action;
+			} else if (basicSetMappingWillSucceed) {
+				// Hide the Basic CC because its functionality is exposed through another CC
+				this.removeCC(CommandClasses.Basic);
 			} else {
 				// Consider the device to control Basic CC, but only if we want to expose the currentValue
 				if (
@@ -1984,8 +2128,23 @@ protocol version:      ${this.protocolVersion}`;
 			if (endpoint.wasCCRemovedViaConfig(CommandClasses.Basic)) continue;
 			if (endpoint.getCCVersion(CommandClasses.Basic) === 0) continue;
 
-			if (endpoint.maySupportBasicCC()) {
+			const basicSetMappingTarget =
+				compat?.mapBasicSet === "Binary Sensor"
+					? CommandClasses["Binary Sensor"]
+					: compat?.mapBasicSet === "auto"
+					? getBasicMappingTarget(endpoint.deviceClass)
+					: undefined;
+
+			const basicSetMappingWillSucceed =
+				basicSetMappingTarget != undefined
+				&& endpoint.supportsCC(basicSetMappingTarget);
+
+			if (
+				endpoint.wasCCSupportAddedViaConfig(CommandClasses.Basic)
+				|| (endpoint.maySupportBasicCC() && !basicSetMappingWillSucceed)
+			) {
 				// The endpoint probably supports Basic CC and is allowed to.
+				// Or we force-added support through a config file.
 				// Interview the Basic CC to figure out if it actually supports it
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: endpoint.index,
@@ -1999,6 +2158,9 @@ protocol version:      ${this.protocolVersion}`;
 					true,
 				);
 				if (typeof action === "boolean") return action;
+			} else if (basicSetMappingWillSucceed) {
+				// Hide the Basic CC because its functionality is exposed through another CC
+				endpoint.removeCC(CommandClasses.Basic);
 			} else {
 				// Consider the device to control Basic CC, but only if we want to expose the currentValue
 				if (
@@ -2028,6 +2190,17 @@ protocol version:      ${this.protocolVersion}`;
 					continue;
 				}
 				this.addCC(cc, { isSupported: true });
+			}
+			// CC:0000.00.00.12.004: Nodes SHOULD NOT advertise controlled CCs, so we normally
+			// ignore them. However, some devices advertise CCs like Scene Activation ONLY as
+			// controlled, so we remember the controlled list as well. Whether values are exposed
+			// for a controlled CC is decided separately in getDefinedValueIDs().
+			for (const cc of nodeInfo.controlledCCs ?? []) {
+				if (cc === CommandClasses.Basic) {
+					// Basic CC MUST not be in the NIF and we have special rules to determine support
+					continue;
+				}
+				this.addCC(cc, { isControlled: true });
 			}
 		}
 
@@ -2174,7 +2347,10 @@ protocol version:      ${this.protocolVersion}`;
 				});
 
 				try {
-					await cc.refreshValues(this.driver);
+					await cc.refreshValues(
+						this.driver,
+						{ priority: MessagePriority.Poll },
+					);
 				} catch (e) {
 					this.driver.controllerLog.logNode(this.id, {
 						message: `failed to refresh values for ${
@@ -2416,6 +2592,16 @@ protocol version:      ${this.protocolVersion}`;
 				command,
 				this.entryControlHandlerStore,
 			);
+		} else if (command instanceof UserCredentialCCUserReport) {
+			return handleUserCredentialUserReport(this, command);
+		} else if (command instanceof UserCredentialCCCredentialReport) {
+			return handleUserCredentialCredentialReport(this, command);
+		} else if (command instanceof UserCredentialCCCredentialLearnReport) {
+			return handleUserCredentialCredentialLearnReport(this, command);
+		} else if (
+			command instanceof UserCredentialCCAssociationReport
+		) {
+			return handleUserCredentialAssociationReport(this, command);
 		} else if (command instanceof TimeCCTimeGet) {
 			return handleTimeGet(this.driver, this, command);
 		} else if (command instanceof TimeCCDateGet) {

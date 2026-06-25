@@ -27,8 +27,6 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.commandClasses.Notification.getSupportedEvents(0x0f);
-
 			const valveOperationStatusId =
 				NotificationCCValues.notificationVariable(
 					"Water Valve",
@@ -105,8 +103,6 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.commandClasses.Notification.getSupportedEvents(0x06);
-
 			const doorStateValueId = NotificationCCValues.notificationVariable(
 				"Access Control",
 				"Door state",
@@ -210,8 +206,6 @@ integrationTest("The 'simple' Door state value works correctly", {
 	},
 
 	testBody: async (t, driver, node, mockController, mockNode) => {
-		await node.commandClasses.Notification.getSupportedEvents(0x06);
-
 		const valueIDs = node.getDefinedValueIDs();
 		const simpleVID = valueIDs.find(
 			(vid) =>
@@ -238,7 +232,7 @@ integrationTest("The 'simple' Door state value works correctly", {
 			"Access Control",
 			"Door state",
 		);
-		const valueSimple = NotificationCCValues.doorStateSimple;
+		const valueSimple = NotificationCCValues.deprecated_doorStateSimple;
 
 		let cc = new NotificationCCReport({
 			nodeId: mockController.ownNodeId,
@@ -314,170 +308,315 @@ integrationTest("The 'simple' Door state value works correctly", {
 	},
 });
 
-integrationTest("The synthetic 'Door tilt state' value works correctly", {
-	// debug: true,
+integrationTest(
+	"The synthetic 'Opening state' value works correctly",
+	{
+		// debug: true,
 
-	nodeCapabilities: {
-		commandClasses: [
-			CommandClasses.Version,
-			{
-				ccId: CommandClasses.Notification,
-				isSupported: true,
-				version: 8,
-				supportsV1Alarm: false,
-				notificationTypesAndEvents: {
-					// Access Control - Window open and Window closed
-					[0x06]: [0x16, 0x17],
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				{
+					ccId: CommandClasses.Notification,
+					isSupported: true,
+					version: 8,
+					supportsV1Alarm: false,
+					notificationTypesAndEvents: {
+						// Access Control - Window open and Window closed
+						[0x06]: [0x16, 0x17],
+					},
 				},
-			},
-		],
-	},
+			],
+		},
 
-	testBody: async (t, driver, node, mockController, mockNode) => {
-		await node.commandClasses.Notification.getSupportedEvents(0x06);
-
-		const tiltVID = NotificationCCValues.doorTiltState.id;
-
-		const hasTiltVID = () =>
-			node.getDefinedValueIDs().some(
-				(vid) => NotificationCCValues.doorTiltState.is(vid),
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const valueIDs = node.getDefinedValueIDs();
+			const openingStateVID = valueIDs.find(
+				(vid) =>
+					vid.commandClass === CommandClasses.Notification
+					&& vid.propertyKey === "Opening state",
 			);
-		// Before receiving any notifications with the tilt enum, the synthetic value should not exist
-		t.expect(hasTiltVID()).toBe(false);
+			t.expect(openingStateVID).toBeTruthy();
 
-		// Send a notification to the node where the window is not tilted
-		let cc = new NotificationCCReport({
-			nodeId: mockController.ownNodeId,
-			notificationType: 0x06,
-			notificationEvent: 0x16, // Window/door is open
-			eventParameters: Uint8Array.from([0x00]), // ... in regular position
-		});
-		await mockNode.sendToController(
-			createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}),
-		);
-		// wait a bit for the value to be updated
-		await wait(100);
+			const getOpeningStateMeta = () =>
+				node.getValueMetadata(openingStateVID!) as ValueMetadataNumeric;
 
-		// The value should still not exist
-		t.expect(hasTiltVID()).toBe(false);
+			t.expect(getOpeningStateMeta()).toMatchObject({
+				ccSpecific: { notificationType: 6 },
+				label: "Opening state",
+				readable: true,
+				states: {
+					[0x00]: "Closed",
+					[0x01]: "Open",
+				},
+				type: "number",
+				writeable: false,
+			});
 
-		// ===
+			let cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
 
-		// Again with tilt
-		cc = new NotificationCCReport({
-			nodeId: mockController.ownNodeId,
-			notificationType: 0x06,
-			notificationEvent: 0x16, // Window/door is open
-			eventParameters: Uint8Array.from([0x01]), // ... in tilt position
-		});
-		await mockNode.sendToController(
-			createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}),
-		);
-		// wait a bit for the value to be updated
-		await wait(100);
+			t.expect(node.getValue(openingStateVID!)).toBe(0x01);
+			t.expect(getOpeningStateMeta().states).toStrictEqual({
+				[0x00]: "Closed",
+				[0x01]: "Open",
+			});
 
-		// The value should now exist
-		t.expect(hasTiltVID()).toBe(true);
-		t.expect(node.getValue(tiltVID)).toBe(0x01);
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+				eventParameters: Uint8Array.from([0x00]), // ... in regular position
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
 
-		// ===
+			t.expect(node.getValue(openingStateVID!)).toBe(0x01);
+			t.expect(getOpeningStateMeta().states).toStrictEqual({
+				[0x00]: "Closed",
+				[0x01]: "Open",
+			});
 
-		// Again without tilt
-		cc = new NotificationCCReport({
-			nodeId: mockController.ownNodeId,
-			notificationType: 0x06,
-			notificationEvent: 0x16, // Window/door is open
-			eventParameters: Uint8Array.from([0x00]), // ... in regular position
-		});
-		await mockNode.sendToController(
-			createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}),
-		);
-		// wait a bit for the value to be updated
-		await wait(100);
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+				eventParameters: Uint8Array.from([0x01]), // ... in tilt position
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
 
-		t.expect(node.getValue(tiltVID)).toBe(0x00);
+			t.expect(node.getValue(openingStateVID!)).toBe(0x02);
+			t.expect(getOpeningStateMeta().states).toStrictEqual({
+				[0x00]: "Closed",
+				[0x01]: "Open",
+				[0x02]: "Tilted",
+			});
 
-		// ===
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x17, // Window/door is closed
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
 
-		// Again with tilt to be able to detect changes
-		cc = new NotificationCCReport({
-			nodeId: mockController.ownNodeId,
-			notificationType: 0x06,
-			notificationEvent: 0x16, // Window/door is open
-			eventParameters: Uint8Array.from([0x01]), // ... in tilt position
-		});
-		await mockNode.sendToController(
-			createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}),
-		);
-		// wait a bit for the value to be updated
-		await wait(100);
+			t.expect(node.getValue(openingStateVID!)).toBe(0x00);
+			t.expect(getOpeningStateMeta().states).toStrictEqual({
+				[0x00]: "Closed",
+				[0x01]: "Open",
+				[0x02]: "Tilted",
+			});
 
-		t.expect(node.getValue(tiltVID)).toBe(0x01);
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			await wait(100);
 
-		// ===
-
-		// And now without the enum
-		cc = new NotificationCCReport({
-			nodeId: mockController.ownNodeId,
-			notificationType: 0x06,
-			notificationEvent: 0x17, // Window/door is closed
-		});
-		await mockNode.sendToController(
-			createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}),
-		);
-		// wait a bit for the value to be updated
-		await wait(100);
-
-		t.expect(node.getValue(tiltVID)).toBe(0x00);
-
-		// ===
-
-		// Again with tilt to be able to detect changes
-		cc = new NotificationCCReport({
-			nodeId: mockController.ownNodeId,
-			notificationType: 0x06,
-			notificationEvent: 0x16, // Window/door is open
-			eventParameters: Uint8Array.from([0x01]), // ... in tilt position
-		});
-		await mockNode.sendToController(
-			createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}),
-		);
-		// wait a bit for the value to be updated
-		await wait(100);
-
-		t.expect(node.getValue(tiltVID)).toBe(0x01);
-
-		// ===
-
-		// And again without the enum
-		cc = new NotificationCCReport({
-			nodeId: mockController.ownNodeId,
-			notificationType: 0x06,
-			notificationEvent: 0x16, // Window/door is open
-		});
-		await mockNode.sendToController(
-			createMockZWaveRequestFrame(cc, {
-				ackRequested: false,
-			}),
-		);
-		// wait a bit for the value to be updated
-		await wait(100);
-
-		t.expect(node.getValue(tiltVID)).toBe(0x00);
+			t.expect(node.getValue(openingStateVID!)).toBe(0x01);
+			t.expect(getOpeningStateMeta().states).toStrictEqual({
+				[0x00]: "Closed",
+				[0x01]: "Open",
+				[0x02]: "Tilted",
+			});
+		},
 	},
-});
+);
+
+integrationTest(
+	"The synthetic 'Door tilt state' value works correctly",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				{
+					ccId: CommandClasses.Notification,
+					isSupported: true,
+					version: 8,
+					supportsV1Alarm: false,
+					notificationTypesAndEvents: {
+						// Access Control - Window open and Window closed
+						[0x06]: [0x16, 0x17],
+					},
+				},
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const tiltVID = NotificationCCValues.deprecated_doorTiltState.id;
+
+			const hasTiltVID = () =>
+				node.getDefinedValueIDs().some(
+					(vid) =>
+						NotificationCCValues.deprecated_doorTiltState.is(vid),
+				);
+			// Before receiving any notifications with the tilt enum, the synthetic value should not exist
+			t.expect(hasTiltVID()).toBe(false);
+
+			// Send a notification to the node where the window is not tilted
+			let cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+				eventParameters: Uint8Array.from([0x00]), // ... in regular position
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			// wait a bit for the value to be updated
+			await wait(100);
+
+			// The value should still not exist
+			t.expect(hasTiltVID()).toBe(false);
+
+			// ===
+
+			// Again with tilt
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+				eventParameters: Uint8Array.from([0x01]), // ... in tilt position
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			// wait a bit for the value to be updated
+			await wait(100);
+
+			// The value should now exist
+			t.expect(hasTiltVID()).toBe(true);
+			t.expect(node.getValue(tiltVID)).toBe(0x01);
+
+			// ===
+
+			// Again without tilt
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+				eventParameters: Uint8Array.from([0x00]), // ... in regular position
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			// wait a bit for the value to be updated
+			await wait(100);
+
+			t.expect(node.getValue(tiltVID)).toBe(0x00);
+
+			// ===
+
+			// Again with tilt to be able to detect changes
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+				eventParameters: Uint8Array.from([0x01]), // ... in tilt position
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			// wait a bit for the value to be updated
+			await wait(100);
+
+			t.expect(node.getValue(tiltVID)).toBe(0x01);
+
+			// ===
+
+			// And now without the enum
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x17, // Window/door is closed
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			// wait a bit for the value to be updated
+			await wait(100);
+
+			t.expect(node.getValue(tiltVID)).toBe(0x00);
+
+			// ===
+
+			// Again with tilt to be able to detect changes
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+				eventParameters: Uint8Array.from([0x01]), // ... in tilt position
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			// wait a bit for the value to be updated
+			await wait(100);
+
+			t.expect(node.getValue(tiltVID)).toBe(0x01);
+
+			// ===
+
+			// And again without the enum
+			cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x16, // Window/door is open
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, {
+					ackRequested: false,
+				}),
+			);
+			// wait a bit for the value to be updated
+			await wait(100);
+
+			t.expect(node.getValue(tiltVID)).toBe(0x00);
+		},
+	},
+);
 
 integrationTest(
 	"Notification types with 'replace'-type enums fall back to the default value if the event parameter is not contained in the CC",

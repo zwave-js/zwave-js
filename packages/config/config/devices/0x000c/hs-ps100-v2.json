@@ -1,0 +1,99 @@
+{
+	"manufacturer": "HomeSeer Technologies",
+	"manufacturerId": "0x000c",
+	"label": "PS100",
+	"description": "Z-Wave Presence Sensor",
+	"devices": [
+		{
+			"productType": "0x0204",
+			"productId": "0x0003"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "templates/homeseer_template.json#off_delay_after_motion"
+		},
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Bluetooth",
+			"description": "After changing this setting, the unit will need to be power cycled before it will take effect."
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Motion LED",
+			"description": "Enable / Disable the LED flash when motion is sensed (red) and times out (green).",
+			"defaultValue": 1
+		},
+		{
+			"#": "6",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 0-75cm (0-2.4ft) Sensitivity",
+			"defaultValue": 50
+		},
+		{
+			"#": "7",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 75-150cm (2.4-4.9ft) Sensitivity",
+			"defaultValue": 50
+		},
+		{
+			"#": "8",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 150-225cm (4.9-7.3ft) Sensitivity",
+			"defaultValue": 0
+		},
+		{
+			"#": "9",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 225-300cm (7.3-9.8ft) Sensitivity",
+			"defaultValue": 0
+		},
+		{
+			"#": "10",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 300-375cm (9.8-12.3ft) Sensitivity",
+			"defaultValue": 0
+		},
+		{
+			"#": "11",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 375-450cm (12.3-14.7ft) Sensitivity",
+			"defaultValue": 0
+		},
+		{
+			"#": "12",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 450-525cm (14.7-17.2ft) Sensitivity",
+			"defaultValue": 0
+		},
+		{
+			"#": "13",
+			"$import": "templates/homeseer_template.json#range_sensitivity",
+			"label": "Range 525-600cm (17.2-19.6ft) Sensitivity",
+			"defaultValue": 0
+		},
+		{
+			"#": "20",
+			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"label": "Left LED Color"
+		},
+		{
+			"#": "21",
+			"$import": "templates/homeseer_template.json#status_mode_choices",
+			"label": "Right LED Color"
+		}
+	],
+	"metadata": {
+		"inclusion": "Press and release the Z-Wave network button.",
+		"exclusion": "Press and release the Z-Wave network button.",
+		"reset": "Press and hold the Z-Wave network button for 30 seconds.",
+		"manual": "https://docs.homeseer.com/products/ps100-v2-user-guide"
+	}
+}

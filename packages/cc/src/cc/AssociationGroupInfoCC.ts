@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -23,6 +22,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -38,6 +38,7 @@ import {
 	AssociationGroupInfoCommand,
 	AssociationGroupInfoProfile,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 import { AssociationCC } from "./AssociationCC.js";
 import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC.js";
 
@@ -396,10 +397,20 @@ export class AssociationGroupInfoCC extends CommandClass {
 			});
 			await api.getCommands(groupId);
 			// Not sure how to log this
+
+			// This loop and the info query in refreshValues() each iterate over all groups,
+			// so they make up the first and second half of this CC's interview progress.
+			node.reportInterviewProgress(groupId, 2 * associationGroupCount);
 		}
 
 		// Finally query each group for its information
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, {
+			onProgress: (completed) =>
+				node.reportInterviewProgress(
+					associationGroupCount + completed,
+					2 * associationGroupCount,
+				),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -407,6 +418,7 @@ export class AssociationGroupInfoCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -414,7 +426,9 @@ export class AssociationGroupInfoCC extends CommandClass {
 			CommandClasses["Association Group Information"],
 			ctx,
 			endpoint,
-		).withOptions({ priority: MessagePriority.NodeQuery });
+		).withOptions({
+			priority: options?.priority ?? MessagePriority.NodeQuery,
+		});
 
 		// Query the information for each group (this is the only thing that could be dynamic)
 		const associationGroupCount = AssociationGroupInfoCC
@@ -451,6 +465,7 @@ profile:         ${
 					direction: "inbound",
 				});
 			}
+			options?.onProgress?.(groupId, associationGroupCount);
 		}
 	}
 }
@@ -479,6 +494,8 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 		validatePayload(raw.payload.length >= 2);
 		const groupId = raw.payload[0];
 		const nameLength = raw.payload[1];
+		// CC:0059.01.02.11.001: The Name Length field MUST be in the range 0..42
+		validatePayload(nameLength <= 42);
 		validatePayload(raw.payload.length >= 2 + nameLength);
 		// The specs don't allow 0-terminated string, but some devices use them
 		// So we need to cut them off

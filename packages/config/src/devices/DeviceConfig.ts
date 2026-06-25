@@ -4,6 +4,7 @@ import {
 	ZWaveErrorCodes,
 	deflateSync,
 	digest,
+	inflateSync,
 } from "@zwave-js/core";
 import {
 	Bytes,
@@ -787,7 +788,7 @@ scene number ${keyNum} must be between 1 and 255`,
 	}
 }
 
-export type DeviceConfigHashVersion = 0 | 1 | 2 | 3;
+export type DeviceConfigHashVersion = 0 | 1 | 2 | 3 | 4;
 
 export class DeviceConfig {
 	public static async from(
@@ -1034,7 +1035,7 @@ export class DeviceConfig {
 		}
 
 		if (version >= 2) {
-			// From version 2 and on, we ignore labels and descriptions, and load them dynamically
+			// From version 2 and on, we ignore labels, descriptions and $purpose, and load them dynamically
 			for (
 				const ep of Object.values<Record<string, any>>(
 					hashable.endpoints ?? {},
@@ -1043,6 +1044,7 @@ export class DeviceConfig {
 				for (const param of ep.paramInformation ?? []) {
 					delete param.label;
 					delete param.description;
+					delete param.$purpose; // added later, but the point still stands
 					for (const opt of param.options ?? []) {
 						delete opt.label;
 					}
@@ -1080,16 +1082,45 @@ export class DeviceConfig {
 			}
 		}
 
+		if (version >= 4) {
+			// From version 4 and on, all param information is applied dynamically
+			// so it does not need to be part of the hash anymore.
+			if (hashable.endpoints) {
+				for (
+					const [key, ep] of Object.entries<Record<string, any>>(
+						hashable.endpoints,
+					)
+				) {
+					delete ep.paramInformation;
+					if (Object.keys(ep).length === 0) {
+						delete hashable.endpoints[key];
+					}
+				}
+				if (Object.keys(hashable.endpoints).length === 0) {
+					delete hashable.endpoints;
+				}
+			}
+		}
+
 		hashable = sortObject(hashable);
 		return hashable;
 	}
 
 	/**
-	 * Returns a hash code that can be used to check whether a device config has changed enough to require a re-interview.
+	 * Returns a hash code that can be used to check whether a device config
+	 * has changed enough to require a re-interview.
 	 */
 	public async getHash(
 		version: DeviceConfigHashVersion = DeviceConfig.maxHashVersion,
 	): Promise<BytesView> {
+		// As of hash version 4, this includes:
+		// - Association settings (maxNodes, isLifeline, multiChannel)
+		// - Compat flags (addCCs, removeCCs, mapBasicSet, etc.)
+		// - Proprietary config
+		//
+		// Configuration parameter metadata is NOT included, as changes
+		// to it are applied dynamically without requiring re-interview.
+
 		// Figure out what to hash
 		const hashable = this.getHashable(version);
 
@@ -1115,37 +1146,64 @@ export class DeviceConfig {
 		return Bytes.concat([prefixBytes, hash]);
 	}
 
-	public static get maxHashVersion(): 3 {
-		return 3;
+	public static get maxHashVersion(): 4 {
+		return 4;
 	}
 
-	public static areHashesEqual(hash: BytesView, other: BytesView): boolean {
-		const parsedHash = parseHash(hash);
-		const parsedOther = parseHash(other);
+	/**
+	 * Compares a cached device config hash against the current one.
+	 * @param currentHash must be at the latest hash version
+	 * @param cachedHash may be at any version and will be normalized for comparison
+	 */
+	public static areHashesEqual(
+		currentHash: BytesView,
+		cachedHash: BytesView,
+	): boolean {
+		const current = parseHash(currentHash);
+		const cached = parseHash(cachedHash);
 		// If one of the hashes could not be parsed, they are not equal
-		if (!parsedHash || !parsedOther) return false;
+		if (!current || !cached) return false;
 
 		// For legacy hashes, we only compare the hash data. We already make sure during
 		// parsing of the cache files that we only need to compare hashes of the same version,
 		// so simply comparing the contents is sufficient.
-		if (parsedHash.version < 2 && parsedOther.version < 2) {
-			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		if (current.version < 2 && cached.version < 2) {
+			return Bytes.view(current.hashData).equals(cached.hashData);
 		}
 		// We take care during loading to downlevel the current config hash to legacy versions if needed.
 		// If we end up with just one legacy hash here, something went wrong. Just bail in that case.
-		if (parsedHash.version < 2 || parsedOther.version < 2) {
+		if (current.version < 2 || cached.version < 2) {
 			return false;
 		}
 
-		// This is a versioned hash. If both versions are equal, it's simple - just compare the hash data
-		if (parsedHash.version === parsedOther.version) {
-			return Bytes.view(parsedHash.hashData).equals(parsedOther.hashData);
+		// The cached hash may need normalization (v2 fix, version upgrade)
+		let hashable: Record<string, any>;
+		try {
+			hashable = JSON.parse(
+				Bytes.view(inflateSync(
+					Bytes.view(cached.hashData),
+					{ dictionary: deflateDict },
+				)).toString("utf8"),
+			);
+		} catch {
+			return false;
 		}
 
-		// For different versions, we have to do some case by case checks. For example, a newer hash version
-		// might remove or add data into the hashable, so we cannot simply convert between versions easily.
-		// Implement when that is actually needed.
-		return false;
+		// Some Z-Wave JS versions had an issue where the optional "hidden"
+		// property was included in the hashable, causing incorrect hashes.
+		fixBrokenV2Hashable(hashable, cached.version);
+		// If the cached hash has an older version, we need to upgrade it to
+		// the current version. This is necessary because some of the version upgrades
+		// remove the need for some information to be included in the hash, so
+		// a newer version gets by with less information than an older version.
+		upgradeHashable(hashable, cached.version, current.version);
+
+		// Recompress and compare against the current hash
+		const normalizedData = deflateSync(
+			Bytes.from(JSON.stringify(hashable), "utf8"),
+			{ level: 9, dictionary: deflateDict },
+		);
+		return Bytes.view(normalizedData).equals(current.hashData);
 	}
 }
 
@@ -1183,5 +1241,59 @@ function parseHash(hash: BytesView): {
 		default:
 			// This is not a valid hash
 			return undefined;
+	}
+}
+
+export { parseHash as parseDeviceConfigHash };
+
+/**
+ * Fixes broken v2 hashables that incorrectly included `hidden: false`.
+ * Mutates the hashable in place.
+ */
+function fixBrokenV2Hashable(
+	hashable: Record<string, any>,
+	version: number,
+): void {
+	if (version !== 2) return;
+
+	for (
+		const ep of Object.values<Record<string, any>>(
+			hashable.endpoints ?? {},
+		)
+	) {
+		for (const param of ep.paramInformation ?? []) {
+			if (param.hidden === false) {
+				delete param.hidden;
+			}
+		}
+	}
+}
+
+/**
+ * Upgrades a hashable to a newer version by stripping fields that are
+ * now applied dynamically. Mutates the hashable in place.
+ */
+function upgradeHashable(
+	hashable: Record<string, any>,
+	fromVersion: number,
+	targetVersion: number,
+): void {
+	if (fromVersion >= targetVersion) return;
+
+	if (targetVersion >= 4 && fromVersion < 4 && hashable.endpoints) {
+		for (
+			const [key, ep] of Object.entries<Record<string, any>>(
+				hashable.endpoints,
+			)
+		) {
+			delete ep.paramInformation;
+			if (Object.keys(ep).length === 0) {
+				delete hashable.endpoints[key];
+			}
+		}
+		if (Object.keys(hashable.endpoints).length === 0) {
+			delete hashable.endpoints;
+		}
+		fromVersion = 4;
 	}
 }

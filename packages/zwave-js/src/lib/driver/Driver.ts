@@ -39,7 +39,6 @@ import {
 	SupervisionCC,
 	type SupervisionCCGet,
 	SupervisionCCReport,
-	TransportServiceCC,
 	TransportServiceCCFirstSegment,
 	TransportServiceCCSegmentComplete,
 	TransportServiceCCSegmentRequest,
@@ -52,6 +51,7 @@ import {
 	WakeUpCCValues,
 	type ZWaveProtocolCC,
 	getImplementedVersion,
+	getInnermostCommandClass,
 	isEncapsulatingCommandClass,
 	isMultiEncapsulatingCommandClass,
 	isTransportServiceEncapsulation,
@@ -258,6 +258,10 @@ import {
 	migrateLegacyNetworkCache,
 	serializeNetworkCacheValue,
 } from "./NetworkCache.js";
+import {
+	type PartialCCSession,
+	PartialCCSessionManager,
+} from "./PartialCCSessionManager.js";
 import { type SerialAPIQueueItem, TransactionQueue } from "./Queue.js";
 import {
 	type SerialAPICommandMachineInput,
@@ -323,6 +327,7 @@ const defaultOptions: ZWaveOptions = {
 		refreshValue: 5000, // Default should handle most slow devices until we have a better solution
 		refreshValueAfterTransition: 1000, // To account for delays in the device
 		serialAPIStarted: 5000,
+		pollTime: 10000, // PollTime SHOULD be 10 seconds + CommandTime as per the spec
 	},
 	attempts: {
 		openSerialPort: 10,
@@ -332,6 +337,7 @@ const defaultOptions: ZWaveOptions = {
 		nodeInterview: 5,
 		smartStartInclusion: 5,
 		firmwareUpdateOTW: 3,
+		partialReports: 2,
 	},
 	disableOptimisticValueUpdate: false,
 	features: {
@@ -416,6 +422,15 @@ function checkOptions(options: ZWaveOptions): void {
 	if (options.timeouts.sendDataCallback < 10000) {
 		throw new ZWaveError(
 			`The Send Data Callback timeout must be at least 10000 milliseconds!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.timeouts.pollTime < 1000
+		|| options.timeouts.pollTime > 30000
+	) {
+		throw new ZWaveError(
+			`The Poll Time must be between 1000 and 30000 milliseconds!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
@@ -506,6 +521,15 @@ function checkOptions(options: ZWaveOptions): void {
 	) {
 		throw new ZWaveError(
 			`The OTW firmware update attempts must be between 1 and 5!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.attempts.partialReports < 0
+		|| options.attempts.partialReports > 3
+	) {
+		throw new ZWaveError(
+			`The partial reports attempts must be between 0 and 3!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
@@ -656,8 +680,9 @@ type AwaitedIdleEntry = Omit<
 >;
 
 interface TransportServiceSession {
-	fragmentSize: number;
 	machine: TransportServiceRXMachine;
+	/** The reassembled datagram. Segments are copied here as they are received. */
+	datagram: Bytes;
 	timeout?: NodeJS.Timeout;
 }
 
@@ -907,6 +932,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	// Timers for delayed transaction re-queuing
 	private requeueTimers: Map<number, Set<Timer>> = new Map();
 
+	// Poll timing state per the Z-Wave specification.
+	// After any transaction completes, we must wait at least pollTime
+	// before starting the next poll transaction.
+	private _lastTransactionEnd: number = 0;
+	// CommandTime is measured from when the poll command is sent to when
+	// the successful transmit report is received. The required wait before
+	// the next poll is pollTime + commandTime.
+	private _lastPollCommandTime: number = 0;
+	private _pollDelayTimer: Timer | undefined;
+
 	/** Gives access to the transaction queues, ordered by priority */
 	private get queues(): TransactionQueue[] {
 		return [this.immediateQueue, this.queue];
@@ -958,6 +993,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		}
 		this.requeueTimers.clear();
+
+		// Clear the poll delay timer
+		this._pollDelayTimer?.clear();
+		this._pollDelayTimer = undefined;
 
 		// The queues might not have been initialized yet
 		for (const queue of this.queues) {
@@ -2062,7 +2101,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			await this.controller.identify();
 
 			// Perform additional configuration
-			await this.controller.configure();
+			await this.controller.configure(nodeIds);
 
 			// now that we know the home ID, we can open the databases
 			await this.initNetworkCache(this.controller.homeId!);
@@ -2631,12 +2670,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// Make sure to handle the pending messages as quickly as possible
 		if (oldStatus === NodeStatus.Asleep) {
-			void this.reduceQueues(({ message }) => {
+			void this.reduceQueues((transaction, source) => {
+				const { message } = transaction;
 				// Ignore messages that are not for this node
 				if (message.getNodeId() !== node.id) return { type: "keep" };
 				// Resolve pings, so we don't need to send them (we know the node is awake)
 				if (messageIsPing(message)) {
 					return { type: "resolve", message: undefined };
+				}
+				// Don't interfere with active transactions where the sending portion
+				// is already complete (e.g. waiting for a response from the node,
+				// or verifying non-supervised S2 delivery)
+				if (
+					source === "active"
+					&& transaction.parts.current?.completedTimestamp
+				) {
+					return { type: "keep" };
 				}
 				// Re-queue all other transactions for this node, so they get added in front of the others
 				return { type: "requeue" };
@@ -3527,7 +3576,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Make sure we're able to communicate with the controller again
 		if (!(await this.ensureSerialAPI())) {
 			if (destroyOnError) {
-				await this.destroy();
+				// Notify applications that the driver failed, so they can
+				// clean up and restart, instead of just disappearing
+				await this.destroyWithMessage(
+					"The Serial API did not respond after soft-reset",
+				);
 			} else {
 				throw new ZWaveError(
 					"The Serial API did not respond after soft-reset",
@@ -3980,10 +4033,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...[...this.requeueTimers.values()].flatMap(
 					(t) => [...t.values()],
 				),
+				this._pollDelayTimer,
 			]
 		) {
 			timeout?.clear();
 		}
+
+		this.partialCCSessions.clear();
 	}
 
 	private async handleSerialData(serial: ZWaveSerialStream): Promise<void> {
@@ -4187,7 +4243,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		// If the message could be decoded, forward it to the send thread
 		if (msg) {
-			let wasMessageLogged = false;
 			if (isCommandRequest(msg) && containsCC(msg)) {
 				// SecurityCCCommandEncapsulationNonceGet is two commands in one, but
 				// we're not set up to handle things like this. Reply to the nonce get
@@ -4209,45 +4264,59 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						secondaryTags: ["partial"],
 						direction: "inbound",
 					});
-					wasMessageLogged = true;
 
-					void this.handleTransportServiceCommand(msg.command).catch(
-						() => {
-							// Don't care about errors in incoming transport service commands
-						},
-					);
+					const reassembled = await this
+						.handleTransportServiceCommand(
+							msg.command,
+						);
+					if (!reassembled) {
+						// The datagram is not complete yet.
+						// Check if a message timer needs to be refreshed.
+						this.refreshAwaitedMessageTimers(msg);
+						return;
+					}
+
+					// The reassembled command continues through the normal receive
+					// path and is logged again there, so its contents are visible.
+					// Transport Service is always the outermost CC, so nothing else
+					// needs to be preserved.
+					msg.command = reassembled;
 				}
 
-				// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
-				if (!(await this.assemblePartialCCs(msg))) {
-					// Check if a message timer needs to be refreshed.
-					for (const entry of this.awaitedMessages) {
-						if (entry.refreshPredicate?.(msg)) {
-							entry.timeout?.refresh();
-							// Since this is a partial message there may be no clear 1:1 match.
-							// Therefore we loop through all awaited messages
-						}
-					}
+				// Make sure the command was received at the expected security level
+				// BEFORE assembling partial CCs. Otherwise it would be possible to
+				// inject unencrypted segments into a partial CC session.
+				if (this.isSecurityLevelTooLow(msg.command)) {
+					this.driverLog.logMessage(msg, {
+						direction: "inbound",
+						secondaryTags: ["discarded"],
+					});
 					return;
 				}
 
-				// Make sure we are allowed to handle this command
-				if (
-					this.isSecurityLevelTooLow(msg.command)
-					|| this.shouldDiscardCC(msg.command)
-				) {
-					if (!wasMessageLogged) {
-						this.driverLog.logMessage(msg, {
-							direction: "inbound",
-							secondaryTags: ["discarded"],
-						});
-					}
+				// Assemble partial CCs on the driver level. Only forward complete messages to the send thread machine
+				const completeMsg = await this.assemblePartialCCs(msg);
+				if (!completeMsg) {
+					// Check if a message timer needs to be refreshed.
+					this.refreshAwaitedMessageTimers(msg);
+					return;
+				}
+				// Responses split into multiple messages are completed by the message
+				// containing the final segment, which may not be the current one
+				msg = completeMsg;
+
+				// Now that the command is complete, the checks that depend on the actual payload can be done
+				if (this.shouldDiscardCC(completeMsg.command)) {
+					this.driverLog.logMessage(msg, {
+						direction: "inbound",
+						secondaryTags: ["discarded"],
+					});
 					return;
 				}
 
 				// When we have a complete CC, save its values
 				try {
-					this.persistCCValues(msg.command);
+					this.persistCCValues(completeMsg.command);
 				} catch (e) {
 					// Indicate invalid payloads with a special CC type
 					if (
@@ -4269,26 +4338,17 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						throw e;
 					}
 				}
-
-				// Transport Service CC can be eliminated from the encapsulation stack, since it is always the outermost CC
-				if (isTransportServiceEncapsulation(msg.command)) {
-					msg.command = msg.command.encapsulated;
-					// Now we do want to log the command again, so we can see what was inside
-					wasMessageLogged = false;
-				}
 			}
 
-			if (!wasMessageLogged) {
-				try {
-					this.driverLog.logMessage(msg, {
-						direction: "inbound",
-					});
-				} catch (e) {
-					// We shouldn't throw just because logging a message fails
-					this.driverLog.print(
-						`Logging a message failed: ${getErrorMessage(e)}`,
-					);
-				}
+			try {
+				this.driverLog.logMessage(msg, {
+					direction: "inbound",
+				});
+			} catch (e) {
+				// We shouldn't throw just because logging a message fails
+				this.driverLog.print(
+					`Logging a message failed: ${getErrorMessage(e)}`,
+				);
 			}
 
 			// // Check if this message is unsolicited by passing it to the Serial API command interpreter if possible
@@ -4673,7 +4733,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			);
 			if (this.serial.isOpen) await this.serial.close();
 			await wait(1000);
-			await this.openSerialport();
+			try {
+				await this.openSerialport();
+			} catch (e) {
+				// The serial port cannot be reopened, e.g. because a TCP-based
+				// connection to the controller is gone. The driver cannot
+				// recover from this, so notify applications that it failed,
+				// allowing them to clean up and restart.
+				void this.destroyWithMessage(getErrorMessage(e));
+				return;
+			}
 
 			this.driverLog.print(
 				"Serial port reopened. Returning to normal operation and hoping for the best...",
@@ -4986,116 +5055,172 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		);
 	}
 
-	private partialCCSessions = new Map<string, CommandClass[]>();
-	private getPartialCCSession(
-		command: CommandClass,
-		createIfMissing: false,
-	): { partialSessionKey: string; session?: CommandClass[] } | undefined;
-	private getPartialCCSession(
-		command: CommandClass,
-		createIfMissing: true,
-	): { partialSessionKey: string; session: CommandClass[] } | undefined;
-	private getPartialCCSession(
-		command: CommandClass,
-		createIfMissing: boolean,
-	): { partialSessionKey: string; session?: CommandClass[] } | undefined {
-		const sessionId = command.getPartialCCSessionId();
-
-		if (sessionId) {
-			// This CC belongs to a partial session
-			const partialSessionKey = JSON.stringify({
-				nodeId: command.nodeId,
-				ccId: command.ccId,
-				ccCommand: command.ccCommand!,
-				...sessionId,
+	private partialCCSessions = new PartialCCSessionManager({
+		getSegmentTimeout: () => this._options.timeouts.report,
+		getMaxReRequestAttempts: () => this._options.attempts.partialReports,
+		findRequestCC: (command) => this.findPartialCCSessionRequest(command),
+		rerequestSession: (session) => this.rerequestPartialCCSession(session),
+		onSessionLost: (session) => {
+			this.controllerLog.logNode(session.nodeId, {
+				message: `Dropping incomplete partial CC session`,
+				level: "warn",
+				direction: "inbound",
 			});
-			if (
-				createIfMissing
-				&& !this.partialCCSessions.has(partialSessionKey)
-			) {
-				this.partialCCSessions.set(partialSessionKey, []);
-			}
-			return {
-				partialSessionKey,
-				session: this.partialCCSessions.get(partialSessionKey),
-			};
-		}
-	}
+		},
+	});
+
 	/**
-	 * Assembles partial CCs of in a message body. Returns `true` when the message is complete and can be handled further.
-	 * If the message expects another partial one, this returns `false`.
+	 * Determines the request a new partial CC session is the response to, if any.
+	 * This is used to re-request the response when segments are missing.
+	 */
+	private findPartialCCSessionRequest(
+		command: CommandClass,
+	): CommandClass | undefined {
+		const currentMessage = this.queue.currentTransaction
+			?.getCurrentMessage();
+		if (
+			!currentMessage
+			|| !containsCC(currentMessage)
+			|| currentMessage.getNodeId() !== command.nodeId
+			|| !currentMessage.expectsNodeUpdate(this)
+		) {
+			return;
+		}
+
+		// The predicate does not check for complete commands or encapsulation,
+		// which is good enough to correlate a partial report with its request
+		const request = getInnermostCommandClass(currentMessage.command);
+		if (
+			!request.isExpectedCCResponse(
+				this,
+				getInnermostCommandClass(command),
+			)
+		) {
+			return;
+		}
+		return request;
+	}
+
+	/** Re-requests the response a partial CC session belongs to because segments are missing */
+	private rerequestPartialCCSession(session: PartialCCSession): void {
+		// Give the node more time to respond by refreshing the report timeout
+		// of the transaction the partial reports belong to
+		this.refreshAwaitedMessageTimers(session.lastSegmentMsg);
+
+		this.controllerLog.logNode(session.nodeId, {
+			message:
+				`Some expected reports were not received, requesting the response again...`,
+			level: "warn",
+			direction: "outbound",
+		});
+
+		// The original transaction is still waiting for the response, so the
+		// re-requested one must not be awaited again
+		void this.sendCommand(session.requestCC!, {
+			priority: MessagePriority.Immediate,
+			maxSendAttempts: 1,
+			ignoreNodeUpdate: true,
+		}).catch(noop);
+	}
+
+	/**
+	 * Assembles partial CCs in a message body. Returns the message containing the complete
+	 * command to continue handling. This is not necessarily the passed message, since responses
+	 * may be split into multiple messages.
+	 * If the message contains a partial CC and more segments are expected, this returns `undefined`.
 	 */
 	private async assemblePartialCCs(
 		msg: CommandRequest & ContainsCC,
-	): Promise<boolean> {
+	): Promise<(CommandRequest & ContainsCC) | undefined> {
 		let command: CommandClass | undefined = msg.command;
 		// We search for the every CC that provides us with a session ID
 		// There might be newly-completed CCs that contain a partial CC,
 		// so investigate the entire CC encapsulation stack.
 		while (true) {
-			const { partialSessionKey, session } =
-				this.getPartialCCSession(command, true) ?? {};
-			if (session) {
-				// This CC belongs to a partial session
-				if (command.expectMoreMessages(session)) {
-					// this is not the final one, store it
-					session.push(command);
-					if (!isTransportServiceEncapsulation(msg.command)) {
-						// and don't handle the command now
-						this.driverLog.logMessage(msg, {
-							secondaryTags: ["partial"],
-							direction: "inbound",
-						});
-					}
-					return false;
-				} else {
-					// this is the final one, merge the previous responses
-					this.partialCCSessions.delete(partialSessionKey!);
-					try {
-						await command.mergePartialCCs(session, {
-							...this.getCCParsingContext(),
-							sourceNodeId: msg.command.nodeId as number,
-							frameType: msg.frameType,
-						});
-						// Ensure there are no errors
-						assertValidCCs(msg);
-					} catch (e) {
-						if (isZWaveError(e)) {
-							switch (e.code) {
-								case ZWaveErrorCodes
-									.Deserialization_NotImplemented:
-								case ZWaveErrorCodes.CC_NotImplemented:
-									this.driverLog.print(
-										`Dropping message because it could not be deserialized: ${e.message}`,
-										"warn",
-									);
-									// Don't continue handling this message
-									return false;
-
-								case ZWaveErrorCodes
-									.PacketFormat_InvalidPayload:
-									this.driverLog.print(
-										`Could not assemble partial CCs because the payload is invalid. Dropping them.`,
-										"warn",
-									);
-									// Don't continue handling this message
-									return false;
-
-								case ZWaveErrorCodes.Driver_NotReady:
-									this.driverLog.print(
-										`Could not assemble partial CCs because the driver is not ready yet. Dropping them`,
-										"warn",
-									);
-									// Don't continue handling this message
-									return false;
-							}
-						}
-						throw e;
-					}
-					// Assembling this CC was successful - but it might contain another partial CC
+			const update = this.partialCCSessions.handleCommand(command, msg);
+			if (update?.type === "segment") {
+				if (update.duplicate) {
+					this.controllerLog.logNode(command.nodeId as number, {
+						message: `Ignoring duplicate partial CC segment:`,
+						level: "debug",
+						direction: "inbound",
+					});
 				}
-			} else {
-				// No partial CC, just continue
+				// This is not the final segment, don't handle the command now
+				this.driverLog.logMessage(msg, {
+					secondaryTags: ["partial"],
+					direction: "inbound",
+				});
+				return undefined;
+			} else if (update?.type === "complete") {
+				if (update.partials.length > 0) {
+					// Log the current segment like it was received. The merged
+					// command is logged when handling the final message continues.
+					this.driverLog.logMessage(msg, {
+						secondaryTags: ["partial"],
+						direction: "inbound",
+					});
+				}
+
+				// All segments were received, merge them into the final one
+				try {
+					await update.command.mergePartialCCs(update.partials, {
+						...this.getCCParsingContext(),
+						sourceNodeId: update.command.nodeId as number,
+						frameType: update.finalMsg.frameType,
+					});
+					// Ensure there are no errors
+					assertValidCCs(update.finalMsg);
+
+					if (update.partials.length > 0) {
+						this.controllerLog.logNode(
+							update.command.nodeId as number,
+							{
+								message: `Assembled partial CC from ${
+									update.partials.length + 1
+								} segments`,
+								level: "debug",
+								direction: "inbound",
+							},
+						);
+					}
+				} catch (e) {
+					if (isZWaveError(e)) {
+						switch (e.code) {
+							case ZWaveErrorCodes
+								.Deserialization_NotImplemented:
+							case ZWaveErrorCodes.CC_NotImplemented:
+								this.driverLog.print(
+									`Dropping message because it could not be deserialized: ${e.message}`,
+									"warn",
+								);
+								// Don't continue handling this message
+								return undefined;
+
+							case ZWaveErrorCodes
+								.PacketFormat_InvalidPayload:
+								this.driverLog.print(
+									`Could not assemble partial CCs because the payload is invalid. Dropping them.`,
+									"warn",
+								);
+								// Don't continue handling this message
+								return undefined;
+
+							case ZWaveErrorCodes.Driver_NotReady:
+								this.driverLog.print(
+									`Could not assemble partial CCs because the driver is not ready yet. Dropping them`,
+									"warn",
+								);
+								// Don't continue handling this message
+								return undefined;
+						}
+					}
+					throw e;
+				}
+				// Continue handling the message which contained the final segment.
+				// Assembling this CC was successful - but it might contain another partial CC
+				msg = update.finalMsg;
+				command = update.command;
 			}
 
 			// If this is an encapsulating CC, we need to look one level deeper
@@ -5105,25 +5230,52 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				break;
 			}
 		}
-		return true;
+		return msg;
 	}
 
-	/** Is called when a Transport Service command is received */
+	/** Refreshes the timeouts of awaited messages which a partial message may belong to */
+	private refreshAwaitedMessageTimers(msg: Message): void {
+		// Since this is a partial message there may be no clear 1:1 match.
+		// Therefore we loop through all awaited messages
+		for (const entry of this.awaitedMessages) {
+			if (entry.refreshPredicate?.(msg)) {
+				entry.timeout?.refresh();
+			}
+		}
+	}
+
+	/**
+	 * Is called when a Transport Service command is received.
+	 * When the command completes a datagram, the reassembled command is returned.
+	 */
 	private async handleTransportServiceCommand(
 		command:
 			| TransportServiceCCFirstSegment
 			| TransportServiceCCSubsequentSegment,
-	): Promise<void> {
+	): Promise<CommandClass | undefined> {
 		const nodeSessions = this.ensureNodeSessions(command.nodeId);
 
 		// TODO: Figure out how to know which timeout is the correct one. For now use the larger one
 		const missingSegmentTimeout =
 			TransportServiceTimeouts.requestMissingSegmentR2;
 
-		const advanceTransportServiceSession = async (
+		const sendSegmentComplete = () => {
+			const cc = new TransportServiceCCSegmentComplete({
+				nodeId: command.nodeId,
+				sessionId: command.sessionId,
+			});
+			void this.sendCommand(cc, {
+				maxSendAttempts: 1,
+				priority: MessagePriority.Immediate,
+			}).catch(noop);
+		};
+
+		// The state handling is synchronous, all outgoing commands are sent in the
+		// background so the receive path is not blocked
+		const advanceTransportServiceSession = (
 			session: TransportServiceSession,
 			input: TransportServiceRXMachineInput,
-		): Promise<void> => {
+		): "completed" | undefined => {
 			const machine = session.machine;
 
 			// Figure out what needs to be done for this input
@@ -5147,12 +5299,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						sessionId: command.sessionId,
 						datagramOffset: machine.state.offset,
 					});
-					await this.sendCommand(cc, {
+					this.sendCommand(cc, {
 						maxSendAttempts: 1,
 						priority: MessagePriority.Immediate,
-					}).catch(noop);
-
-					startMissingSegmentTimeout(session);
+					})
+						.catch(noop)
+						// Only time out waiting for the missing segment after requesting it
+						.finally(() => startMissingSegmentTimeout(session));
 				} else if (machine.state.value === "failure") {
 					this.controllerLog.logNode(command.nodeId, {
 						message:
@@ -5165,30 +5318,25 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					if (session.timeout) {
 						clearTimeout(session.timeout);
 					}
-				}
-			}
+				} else if (machine.state.value === "success") {
+					this.controllerLog.logNode(command.nodeId, {
+						message:
+							`Transport Service RX session #${command.sessionId} complete`,
+						level: "debug",
+						direction: "inbound",
+					});
+					if (session.timeout) {
+						clearTimeout(session.timeout);
+					}
 
-			if (machine.state.value === "success") {
-				// This state may happen without a transition if we received the last segment before
-				// but the SegmentComplete message got lost
-				this.controllerLog.logNode(command.nodeId, {
-					message:
-						`Transport Service RX session #${command.sessionId} complete`,
-					level: "debug",
-					direction: "inbound",
-				});
-				if (session.timeout) {
-					clearTimeout(session.timeout);
+					sendSegmentComplete();
+					return "completed";
 				}
-
-				const cc = new TransportServiceCCSegmentComplete({
-					nodeId: command.nodeId,
-					sessionId: command.sessionId,
-				});
-				await this.sendCommand(cc, {
-					maxSendAttempts: 1,
-					priority: MessagePriority.Immediate,
-				}).catch(noop);
+			} else if (machine.state.value === "success") {
+				// The session was already complete, but the node re-sent the last segment
+				// because the SegmentComplete message got lost. Acknowledge it again, but
+				// do not hand the datagram to the application a second time.
+				sendSegmentComplete();
 			}
 		};
 
@@ -5201,11 +5349,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 			session.timeout = setTimeout(() => {
 				session.timeout = undefined;
-				void advanceTransportServiceSession(session, {
+				advanceTransportServiceSession(session, {
 					value: "timeout",
 				});
 			}, missingSegmentTimeout);
 		}
+
+		let session: TransportServiceSession | undefined;
+		let datagramOffset: number;
 
 		if (command instanceof TransportServiceCCFirstSegment) {
 			// This is the first message in a sequence. Create or re-initialize the session
@@ -5226,26 +5377,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				command.partialDatagram.length,
 			);
 
-			const session: TransportServiceSession = {
-				fragmentSize: command.partialDatagram.length,
+			session = {
 				machine,
+				datagram: new Bytes(command.datagramSize),
 			};
 			nodeSessions.transportService.set(command.sessionId, session);
-
-			// Time out waiting for subsequent segments
-			startMissingSegmentTimeout(session);
+			datagramOffset = 0;
 		} else {
 			// This is a subsequent message in a sequence. Continue executing the state machine
-			const transportSession = nodeSessions.transportService.get(
-				command.sessionId,
-			);
-			if (transportSession) {
-				await advanceTransportServiceSession(transportSession, {
-					value: "segment",
-					offset: command.datagramOffset,
-					length: command.partialDatagram.length,
-				});
-			} else {
+			session = nodeSessions.transportService.get(command.sessionId);
+			if (!session) {
 				// This belongs to a session we don't know... tell the sending node to try again
 				const cc = new TransportServiceCCSegmentWait({
 					nodeId: command.nodeId,
@@ -5255,7 +5396,49 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					maxSendAttempts: 1,
 					priority: MessagePriority.Immediate,
 				}).catch(noop);
+				return;
 			}
+			datagramOffset = command.datagramOffset;
+		}
+
+		// Ensure that we don't try to write out-of-bounds
+		if (
+			datagramOffset + command.partialDatagram.length
+				> session.datagram.length
+		) {
+			this.controllerLog.logNode(command.nodeId, {
+				message:
+					`Transport Service RX session #${command.sessionId}: Ignoring segment because it is incompatible with the datagram length`,
+				level: "warn",
+				direction: "inbound",
+			});
+			return;
+		}
+		session.datagram.set(command.partialDatagram, datagramOffset);
+
+		const result = advanceTransportServiceSession(session, {
+			value: "segment",
+			offset: datagramOffset,
+			length: command.partialDatagram.length,
+		});
+		if (result !== "completed") return;
+
+		// The datagram is complete, reassemble the command it contains
+		try {
+			return await CommandClass.parse(session.datagram, {
+				...this.getCCParsingContext(),
+				sourceNodeId: command.nodeId,
+				// Transport Service is only used for singlecast commands
+				frameType: command.frameType ?? "singlecast",
+			});
+		} catch (e) {
+			this.driverLog.print(
+				`Dropping Transport Service datagram because the contained command could not be deserialized: ${
+					getErrorMessage(e)
+				}`,
+				"warn",
+			);
+			return;
 		}
 	}
 
@@ -5423,8 +5606,6 @@ ${handlers.length} left`,
 			return true;
 		}
 
-		// Transport Service has a special handler
-		if (cc instanceof TransportServiceCC) return false;
 		// CRC16 belongs outside of Security encapsulation
 		if (cc instanceof CRC16CCCommandEncapsulation) {
 			return this.isSecurityLevelTooLow(cc.encapsulated);
@@ -5528,7 +5709,7 @@ ${handlers.length} left`,
 			// none found, don't accept the CC
 			this.controllerLog.logNode(
 				cc.nodeId as number,
-				`command was received at a lower security level than expected - discarding it...`,
+				`command was received at a lower security level than expected - discarding it:`,
 				"warn",
 			);
 			return true;
@@ -5663,13 +5844,9 @@ ${handlers.length} left`,
 				// The message we're currently sending is still in progress but expects this message in response,
 				// which has just been received. The message generator is not waiting for it yet, so it ended up here.
 
-				// A S0/S2 nonce report is treated like an expected node update,
-				// but it is not considered a valid result of the ongoing transaction.
-				if (isNonceReport) {
-					// Due to how the message generators are architected, it is currently not possible to short-circuit
-					// waiting for the transmit report, so we remember the Nonce Report for later processing.
-					currentMessage.prematureNodeUpdate = msg;
-				}
+				// Due to how the message generators are architected, it is currently not possible to short-circuit
+				// waiting for the transmit report, so we remember the premature response for later processing.
+				currentMessage.prematureNodeUpdate = msg;
 
 				if (isSendData(currentMessage)) {
 					// Also abort the ongoing transaction to avoid unnecessarily waiting for the ACK (or timeout)
@@ -5683,9 +5860,21 @@ ${handlers.length} left`,
 					void this.abortSendData();
 				}
 
+				// A S0/S2 nonce report is treated like an expected node update,
+				// but it is not considered a valid result of the ongoing transaction.
+				// Calling abortSendData will allow the message generator to continue normally,
+				// eventually resulting in a NoAck transmit report, at which point
+				// simpleMessageGenerator returns the premature nonce report as if it was received
+				// normally.
+
 				// If this is a valid result of the current transaction, abort the
 				// transaction with the received message as the result.
-				if (!isNonceReport) currentTransaction!.abort(msg);
+				// This will short-circuit all the way to the catch block in
+				// Driver.executeTransaction, where prematureNodeUpdate is returned
+				// as the result.
+				if (!isNonceReport) {
+					currentTransaction!.abort(msg);
+				}
 
 				return;
 			}
@@ -6574,6 +6763,24 @@ ${handlers.length} left`,
 		// Pings may always be sent
 		if (messageIsPing(message)) return true;
 
+		// Enforce polling timing requirements from the spec.
+		// After a poll transaction completes, wait at least 10 seconds before starting the next one.
+		if (transaction.priority === MessagePriority.Poll) {
+			const elapsed = Date.now() - this._lastTransactionEnd;
+			const requiredDelay = this._options.timeouts.pollTime
+				+ this._lastPollCommandTime;
+			if (elapsed < requiredDelay) {
+				// Schedule a re-trigger of the queue when the delay has elapsed
+				if (!this._pollDelayTimer) {
+					this._pollDelayTimer = setTimer(() => {
+						this._pollDelayTimer = undefined;
+						this.queue.trigger();
+					}, requiredDelay - elapsed).unref();
+				}
+				return false;
+			}
+		}
+
 		return (
 			targetNode.status !== NodeStatus.Asleep
 			|| (!targetNode.supportsCC(CommandClasses["Wake Up"])
@@ -6602,6 +6809,9 @@ ${handlers.length} left`,
 			}
 			this.markQueueBusy(queue, true);
 
+			const isPoll = transaction.priority === MessagePriority.Poll;
+			const pollStart = isPoll ? Date.now() : undefined;
+
 			let error: ZWaveError | undefined;
 			try {
 				await this.executeTransaction(transaction);
@@ -6609,6 +6819,18 @@ ${handlers.length} left`,
 				error = e as ZWaveError;
 			} finally {
 				queue.finalizeTransaction();
+			}
+
+			// Per spec, PollTime MUST NOT be less than 1 second + CommandTime after any
+			// command, including failed ones. Track when the last transaction ended.
+			this._lastTransactionEnd = Date.now();
+			if (isPoll) {
+				// CommandTime is measured from when the poll was first sent to when the
+				// transmit report was received. For simplicity, we approximate it as the
+				// full transaction duration, which includes retransmissions in case of failure
+				// but also the time it takes the node to respond. So we tend to wait a bit
+				// longer than necessary.
+				this._lastPollCommandTime = Date.now() - pollStart!;
 			}
 
 			// Handle errors after clearing the current transaction.
@@ -7362,6 +7584,10 @@ ${handlers.length} left`,
 
 		if (!!options.reportTimeoutMs) {
 			msg.nodeUpdateTimeout = options.reportTimeoutMs;
+		}
+
+		if (options.ignoreNodeUpdate) {
+			msg.ignoreNodeUpdate = true;
 		}
 
 		return msg as SendDataMessage & ContainsCC;
@@ -8297,21 +8523,23 @@ ${handlers.length} left`,
 
 		// Sends a node to sleep if it has no more messages.
 		const sendNodeToSleep = (
-			node: ZWaveNodeBase & NodeSchedulePoll & NodeWakeup,
+			node: ZWaveNodeBase & NodeSchedulePoll & NodeValues & NodeWakeup,
 		): void => {
 			this.sendNodeToSleepTimers.delete(node.id);
 			if (!this.hasPendingMessages(node)) {
 				void node.sendNoMoreInformation().catch(() => {
 					/* ignore errors */
 				});
+			} else {
+				// There are still pending messages. Retry in a bit,
+				// in case the remaining transactions don't trigger
+				// debounceSendNodeToSleep when they complete.
+				this.debounceSendNodeToSleep(node);
 			}
 		};
 
-		// If a sleeping node has no messages pending (and supports the Wake Up CC), we may send it back to sleep
-		if (
-			node.supportsCC(CommandClasses["Wake Up"])
-			&& !this.hasPendingMessages(node)
-		) {
+		// If a sleeping node supports the Wake Up CC, we may send it back to sleep
+		if (node.supportsCC(CommandClasses["Wake Up"])) {
 			const wakeUpInterval = node.getValue<number>(
 				WakeUpCCValues.wakeUpInterval.id,
 			);
@@ -9048,7 +9276,9 @@ integrity: ${update.integrity}`;
 			};
 			return result;
 		} finally {
-			await this.leaveBootloader();
+			if (this._options.bootloaderMode !== "stay") {
+				await this.leaveBootloader();
+			}
 			this._otwFirmwareUpdateInProgress = false;
 		}
 	}

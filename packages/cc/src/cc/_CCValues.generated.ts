@@ -48,6 +48,8 @@ import {
 	ThermostatMode,
 	ThermostatOperatingState,
 	ThermostatSetpointType,
+	type UserCredentialKeyLockerEntryType,
+	type UserCredentialType,
 	type ValveId,
 	Weekday,
 	WindowCoveringParameter,
@@ -6919,7 +6921,47 @@ export const NotificationCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
-	doorStateSimple: {
+	openingState: {
+		id: {
+			commandClass: CommandClasses.Notification,
+			property: "Access Control",
+			propertyKey: "Opening state",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses.Notification,
+			endpoint,
+			property: "Access Control",
+			propertyKey: "Opening state",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses.Notification
+				&& valueId.property === "Access Control"
+				&& valueId.propertyKey == "Opening state";
+		},
+		get meta() {
+			return {
+				// Must be a number for compatibility reasons
+				...ValueMetadata.ReadOnlyUInt8,
+				label: "Opening state",
+				states: {
+					[0x00]: "Closed",
+					[0x01]: "Open",
+				},
+				ccSpecific: {
+					notificationType: 0x06,
+				},
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
+		} as const satisfies CCValueOptions,
+	},
+	deprecated_doorStateSimple: {
 		id: {
 			commandClass: CommandClasses.Notification,
 			property: "Access Control",
@@ -6956,10 +6998,10 @@ export const NotificationCCValues = Object.freeze({
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,
-			autoCreate: shouldAutoCreateSimpleDoorSensorValue,
+			autoCreate: shouldAutoCreateSyntheticDoorSensorValue,
 		} as const satisfies CCValueOptions,
 	},
-	doorTiltState: {
+	deprecated_doorTiltState: {
 		id: {
 			commandClass: CommandClasses.Notification,
 			property: "Access Control",
@@ -7166,7 +7208,7 @@ export const NotificationCCValues = Object.freeze({
 	),
 });
 
-function shouldAutoCreateSimpleDoorSensorValue(
+function shouldAutoCreateSyntheticDoorSensorValue(
 	ctx: GetValueDB,
 	endpoint: EndpointId,
 ): boolean {
@@ -8863,6 +8905,33 @@ export const UserCodeCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
+	_deprecated_masterCode: {
+		id: {
+			commandClass: CommandClasses["User Code"],
+			property: "masterCode",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Code"],
+			endpoint,
+			property: "masterCode",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Code"]
+				&& valueId.property === "masterCode"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: false,
+		} as const satisfies CCValueOptions,
+	},
 	userIdStatus: Object.assign(
 		(userId: number) => {
 			const property = "userIdStatus";
@@ -8938,6 +9007,1014 @@ export const UserCodeCCValues = Object.freeze({
 				internal: false,
 				minVersion: 1,
 				secret: true,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+});
+
+export const UserCredentialCCValues = Object.freeze({
+	supportedUsers: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportedUsers",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportedUsers",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportedUsers"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportedCredentialRules: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportedCredentialRules",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportedCredentialRules",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportedCredentialRules"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	maxUserNameLength: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "maxUserNameLength",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "maxUserNameLength",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "maxUserNameLength"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportsUserSchedule: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportsUserSchedule",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportsUserSchedule",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportsUserSchedule"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportsAllUsersChecksum: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportsAllUsersChecksum",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportsAllUsersChecksum",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportsAllUsersChecksum"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportsUserChecksum: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportsUserChecksum",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportsUserChecksum",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportsUserChecksum"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportedUserNameEncodings: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportedUserNameEncodings",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportedUserNameEncodings",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportedUserNameEncodings"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportedUserTypes: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportedUserTypes",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportedUserTypes",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportedUserTypes"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportsCredentialChecksum: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportsCredentialChecksum",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportsCredentialChecksum",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportsCredentialChecksum"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportsAdminCode: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportsAdminCode",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportsAdminCode",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportsAdminCode"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportsAdminCodeDeactivation: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportsAdminCodeDeactivation",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportsAdminCodeDeactivation",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportsAdminCodeDeactivation"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportedCredentialTypes: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportedCredentialTypes",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportedCredentialTypes",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportedCredentialTypes"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	credentialCapabilities: Object.assign(
+		(credentialType: UserCredentialType) => {
+			const property = "credentialCapabilities";
+			const propertyKey = credentialType;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credentialCapabilities"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	allUsersChecksum: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "allUsersChecksum",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "allUsersChecksum",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "allUsersChecksum"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportedKeyLockerEntryTypes: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "supportedKeyLockerEntryTypes",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "supportedKeyLockerEntryTypes",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "supportedKeyLockerEntryTypes"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 2,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	keyLockerCapabilities: Object.assign(
+		(entryType: UserCredentialKeyLockerEntryType) => {
+			const property = "keyLockerCapabilities";
+			const propertyKey = entryType;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "keyLockerCapabilities"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 2,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	userType: Object.assign(
+		(userId: number) => {
+			const property = "userType";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "userType"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	userActive: Object.assign(
+		(userId: number) => {
+			const property = "userActive";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "userActive"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	credentialRule: Object.assign(
+		(userId: number) => {
+			const property = "credentialRule";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credentialRule"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	expiringTimeoutMinutes: Object.assign(
+		(userId: number) => {
+			const property = "expiringTimeoutMinutes";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "expiringTimeoutMinutes"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	userName: Object.assign(
+		(userId: number) => {
+			const property = "userName";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "userName"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	userModifierType: Object.assign(
+		(userId: number) => {
+			const property = "userModifierType";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "userModifierType"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	userModifierNodeId: Object.assign(
+		(userId: number) => {
+			const property = "userModifierNodeId";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "userModifierNodeId"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	userChecksum: Object.assign(
+		(userId: number) => {
+			const property = "userChecksum";
+			const propertyKey = userId;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "userChecksum"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	credentialOwner: Object.assign(
+		(type: UserCredentialType, slot: number) => {
+			const property = "credentialOwner";
+			const propertyKey = (type << 16) | slot;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credentialOwner"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	credentialModifierType: Object.assign(
+		(type: UserCredentialType, slot: number) => {
+			const property = "credentialModifierType";
+			const propertyKey = (type << 16) | slot;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credentialModifierType"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	credentialModifierNodeId: Object.assign(
+		(type: UserCredentialType, slot: number) => {
+			const property = "credentialModifierNodeId";
+			const propertyKey = (type << 16) | slot;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credentialModifierNodeId"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	credential: Object.assign(
+		(type: UserCredentialType, slot: number) => {
+			const property = "credential";
+			const propertyKey = (type << 16) | slot;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "credential"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 1,
+				secret: true,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+	adminPinCode: {
+		id: {
+			commandClass: CommandClasses["User Credential"],
+			property: "adminPinCode",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["User Credential"],
+			endpoint,
+			property: "adminPinCode",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["User Credential"]
+				&& valueId.property === "adminPinCode"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: true,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	keyLockerEntry: Object.assign(
+		(type: UserCredentialKeyLockerEntryType, slot: number) => {
+			const property = "keyLockerEntry";
+			const propertyKey = (type << 16) | slot;
+
+			return {
+				id: {
+					commandClass: CommandClasses["User Credential"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses["User Credential"],
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass
+						=== CommandClasses["User Credential"]
+					&& (({ property, propertyKey }) =>
+						property === "keyLockerEntry"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 2,
+				secret: false,
 				stateful: true,
 				supportsEndpoints: true,
 				autoCreate: true,
@@ -9962,6 +11039,7 @@ export const CCValues = {
 	[CommandClasses["Thermostat Setpoint"]]: ThermostatSetpointCCValues,
 	[CommandClasses["Time Parameters"]]: TimeParametersCCValues,
 	[CommandClasses["User Code"]]: UserCodeCCValues,
+	[CommandClasses["User Credential"]]: UserCredentialCCValues,
 	[CommandClasses.Version]: VersionCCValues,
 	[CommandClasses["Wake Up"]]: WakeUpCCValues,
 	[CommandClasses["Window Covering"]]: WindowCoveringCCValues,
