@@ -15,7 +15,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 integrationTest(
 	"S2: The node's next encrypted command counts as verified delivery and does not delay subsequent responses",
 	{
-		debug: true,
+		// debug: true,
 
 		nodeCapabilities: {
 			commandClasses: [
