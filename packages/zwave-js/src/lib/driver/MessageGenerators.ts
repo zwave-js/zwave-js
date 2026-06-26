@@ -692,12 +692,16 @@ export const secureMessageGeneratorS2: MessageGeneratorImplementation<
 		if (expectedSequenceNumber != undefined) {
 			verifications.push(
 				driver
-					.waitForS2MessageEncapsulation(
+					.waitForCommand<Security2CCMessageEncapsulation>(
 						(cc) =>
 							cc.nodeId === nodeId
+							&& cc instanceof Security2CCMessageEncapsulation
 							&& cc.sequenceNumber === expectedSequenceNumber,
 						500,
 						verifyAbort.signal,
+						// Receiving the node's next command must not consume it,
+						// so it is still handled (and answered) normally.
+						{ consume: false },
 					)
 					.catch(() => undefined),
 			);
