@@ -309,6 +309,18 @@ export class SecurityManager2 {
 		);
 	}
 
+	/**
+	 * Returns the sequence number that is expected for the next message received from the given peer node ID,
+	 * or `undefined` if no message has been received yet.
+	 */
+	public getNextPeerSequenceNumber(peerNodeId: number): number | undefined {
+		const lastSequenceNumber = this.peerSequenceNumbers
+			.get(peerNodeId)
+			?.at(-1);
+		if (lastSequenceNumber == undefined) return undefined;
+		return (lastSequenceNumber + 1) & 0xff;
+	}
+
 	/** Stores the latest sequence number for the given peer node ID and returns the previous one */
 	public storeSequenceNumber(
 		peerNodeId: number,

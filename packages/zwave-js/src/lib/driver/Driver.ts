@@ -672,6 +672,7 @@ interface AwaitedThing<T> {
 type AwaitedMessageHeader = AwaitedThing<MessageHeaders>;
 type AwaitedMessageEntry = AwaitedThing<Message>;
 type AwaitedCommandEntry = AwaitedThing<CCId>;
+type AwaitedS2MessageEntry = AwaitedThing<Security2CCMessageEncapsulation>;
 type AwaitedCLIChunkEntry = AwaitedThing<CLIChunk>;
 export type AwaitedBootloaderChunkEntry = AwaitedThing<BootloaderChunk>;
 type AwaitedIdleEntry = Omit<
@@ -1076,6 +1077,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	private awaitedMessages: AwaitedMessageEntry[] = [];
 	/** A list of awaited commands */
 	private awaitedCommands: AwaitedCommandEntry[] = [];
+	/**
+	 * A list of awaited S2-encapsulated messages. Unlike {@link awaitedCommands},
+	 * these are tested against the still-encapsulated command and do not consume it.
+	 */
+	private awaitedS2Messages: AwaitedS2MessageEntry[] = [];
 	/** A list of awaited chunks from the bootloader */
 	private awaitedBootloaderChunks: AwaitedBootloaderChunkEntry[] = [];
 	/** A list of awaited chunks from the end device CLI */
@@ -5879,6 +5885,17 @@ ${handlers.length} left`,
 				return;
 			}
 
+			// Notify observers waiting for a specific S2-encapsulated message before
+			// we unwrap it. This is used to verify successful delivery of a previous
+			// command without consuming the message, so it is still handled normally.
+			if (msg.command instanceof Security2CCMessageEncapsulation) {
+				for (const entry of this.awaitedS2Messages) {
+					if (entry.predicate(msg.command)) {
+						entry.handler(msg.command);
+					}
+				}
+			}
+
 			// For further actions, we are only interested in the innermost CC
 			this.unwrapCommands(msg);
 
@@ -7987,6 +8004,59 @@ ${handlers.length} left`,
 			// When the abort signal is used, silently remove the wait entry
 			abortSignal?.addEventListener("abort", removeEntry);
 		});
+	}
+
+	/**
+	 * Waits until an S2-encapsulated message matching the given predicate is received, or an optional timeout has elapsed.
+	 * Unlike {@link waitForCommand}, the predicate is tested against the still-encapsulated command, and a match does
+	 * not consume the message, so it is still handled normally afterwards.
+	 * @param predicate A predicate function to test all incoming S2-encapsulated messages
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param abortSignal An optional abort signal to cancel the wait
+	 */
+	public waitForS2MessageEncapsulation(
+		predicate: (cc: Security2CCMessageEncapsulation) => boolean,
+		timeout?: number,
+		abortSignal?: AbortSignal,
+	): Promise<Security2CCMessageEncapsulation> {
+		return new Promise<Security2CCMessageEncapsulation>(
+			(resolve, reject) => {
+				const promise = createDeferredPromise<
+					Security2CCMessageEncapsulation
+				>();
+				const entry: AwaitedS2MessageEntry = {
+					predicate,
+					handler: (cc) => promise.resolve(cc),
+					timeout: undefined,
+				};
+				this.awaitedS2Messages.push(entry);
+				const removeEntry = () => {
+					entry.timeout?.clear();
+					abortSignal?.removeEventListener("abort", removeEntry);
+					const index = this.awaitedS2Messages.indexOf(entry);
+					if (index !== -1) this.awaitedS2Messages.splice(index, 1);
+				};
+				// When the timeout elapses, remove the wait entry and reject the returned Promise
+				if (timeout) {
+					entry.timeout = setTimer(() => {
+						removeEntry();
+						reject(
+							new ZWaveError(
+								`Received no matching S2 message within the provided timeout!`,
+								ZWaveErrorCodes.Controller_NodeTimeout,
+							),
+						);
+					}, timeout);
+				}
+				// When the promise is resolved, remove the wait entry and resolve the returned Promise
+				void promise.then((cc) => {
+					removeEntry();
+					resolve(cc);
+				});
+				// When the abort signal is used, silently remove the wait entry
+				abortSignal?.addEventListener("abort", removeEntry);
+			},
+		);
 	}
 
 	/**
