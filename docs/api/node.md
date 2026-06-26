@@ -268,6 +268,38 @@ getAllEndpoints(): Endpoint[]
 
 This method returns an array of all endpoints on this node. At each index `i` the returned array contains the endpoint instance that would be returned by `getEndpoint(i)`.
 
+### `endpointCountIsDynamic`
+
+```ts
+readonly endpointCountIsDynamic: MaybeNotKnown<boolean>
+```
+
+Whether the endpoint count is dynamic, i.e. can change at runtime.
+
+### `endpointsHaveIdenticalCapabilities`
+
+```ts
+readonly endpointsHaveIdenticalCapabilities: MaybeNotKnown<boolean>
+```
+
+Whether all endpoints have identical capabilities.
+
+### `individualEndpointCount`
+
+```ts
+readonly individualEndpointCount: MaybeNotKnown<number>
+```
+
+The number of individual endpoints.
+
+### `aggregatedEndpointCount`
+
+```ts
+readonly aggregatedEndpointCount: MaybeNotKnown<number>
+```
+
+The number of aggregated endpoints.
+
 ### `hasSecurityClass`
 
 ```ts
@@ -780,6 +812,97 @@ The health rating expressed as a number from 0 (not working at all) to 10 (perfe
 
 > [!NOTE] The test results are also printed to the driver logs. If you want to format the results in the same way in your application, you can use the `formatRouteHealthCheckSummary` and/or `formatRouteHealthCheckRound` methods which are exposed from `zwave-js/Utils`.
 
+### `checkLinkReliability`
+
+```ts
+async checkLinkReliability(
+	options: LinkReliabilityCheckOptions,
+): Promise<LinkReliabilityCheckResult>
+```
+
+Tests the reliability of the link between the controller and this node and returns the results.
+
+The options parameter has the following shape:
+
+<!-- #import LinkReliabilityCheckOptions from "zwave-js" -->
+
+```ts
+interface LinkReliabilityCheckOptions {
+	mode: LinkReliabilityCheckMode;
+	interval: number;
+	rounds?: number;
+	onProgress?: (progress: LinkReliabilityCheckResult) => void;
+}
+```
+
+where the mode is one of the following:
+
+<!-- #import LinkReliabilityCheckMode from "zwave-js" -->
+
+```ts
+enum LinkReliabilityCheckMode {
+	BasicSetOnOff,
+}
+```
+
+The returned result (and progress callback argument) has the following shape:
+
+<!-- #import LinkReliabilityCheckResult from "zwave-js" -->
+
+```ts
+interface LinkReliabilityCheckResult {
+	rounds: number;
+
+	commandsSent: number;
+	commandErrors: number;
+	missingResponses?: number;
+
+	latency?: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	rtt: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	ackRSSI: {
+		min: number;
+		max: number;
+		average: number;
+	};
+
+	responseRSSI?: {
+		min: number;
+		max: number;
+		average: number;
+	};
+}
+```
+
+> [!NOTE] This call will throw when there is already a link reliability check in progress for this node.
+
+### `isLinkReliabilityCheckInProgress`
+
+```ts
+isLinkReliabilityCheckInProgress(): boolean
+```
+
+Returns whether a link reliability check is currently in progress for this node.
+
+### `abortLinkReliabilityCheck`
+
+```ts
+abortLinkReliabilityCheck(): void
+```
+
+Aborts an ongoing link reliability check if one is currently in progress.
+
+> [!NOTE] The link reliability check may take a few seconds to actually be aborted. When it is, the promise returned by `checkLinkReliability` will be resolved with the results obtained so far.
+
 ### `isFirmwareUpdateInProgress`
 
 ```ts
@@ -871,6 +994,14 @@ Z-Wave JS discovers a lot of device metadata by interviewing the device. However
 
 When a device config file is updated, this information may be stale and and the device must be re-interviewed using `refreshInfo()` to pick up the changes. This method can be used to determine whether a re-interview is necessary.
 
+### `createDump`
+
+```ts
+createDump(): NodeDump
+```
+
+Returns a dump of this node's information for debugging purposes. The dump includes device metadata, endpoint information, and current values.
+
 ## ZWaveNode properties
 
 ### `id`
@@ -937,6 +1068,14 @@ readonly isControllerNode: boolean
 
 Returns whether this node is the controller node, i.e. has the ID of the primary controller.
 
+### `interviewAttempts`
+
+```ts
+readonly interviewAttempts: number
+```
+
+How many attempts to interview this node have already been made.
+
 ### `interviewStage`
 
 ```ts
@@ -978,6 +1117,14 @@ enum InterviewStage {
 > [!WARNING]
 > DO NOT rely on the numeric values of the enum if you're using it in your application.
 > The ordinal values are likely to change in future updates. Instead, refer to the enum properties directly.
+
+### `nodeType`
+
+```ts
+readonly nodeType: MaybeNotKnown<NodeType>
+```
+
+The node type of this node (Controller or End Node).
 
 ### `deviceClass`
 
@@ -1108,6 +1255,14 @@ readonly canSleep: boolean | undefined;
 
 Whether this node can sleep. If this is the case it must be expected to be asleep most of the time.
 
+### `supportsWakeUpOnDemand`
+
+```ts
+readonly supportsWakeUpOnDemand: MaybeNotKnown<boolean>
+```
+
+Whether this node supports waking up on demand (via a beam).
+
 ### `isRouting`
 
 ```ts
@@ -1149,6 +1304,14 @@ readonly isSecure: boolean | "unknown";
 ```
 
 Whether this node is communicating securely with the controller, meaning that it was granted at least one security class. More specific information can be retrieved with the [`hasSecurityClass`](#hasSecurityClass) or the [`getHighestSecurityClass`](#getHighestSecurityClass) methods.
+
+### `dsk`
+
+```ts
+readonly dsk: BytesView | undefined;
+```
+
+The device specific key (DSK) of this node in binary format. This is only set if the node was included with Security S2.
 
 ### `supportsBeaming`
 
@@ -1192,6 +1355,14 @@ readonly firmwareVersion: string
 ```
 
 The version of this node's firmware.
+
+### `hardwareVersion`
+
+```ts
+readonly hardwareVersion: MaybeNotKnown<number>
+```
+
+The hardware version of this node.
 
 ### `manufacturerId`, `productId` and `productType`
 
@@ -1269,6 +1440,22 @@ readonly protocol: Protocols
 ```
 
 Which protocol is used to communicate with this node, Z-Wave (Classic) or Z-Wave Long Range.
+
+### `hasSUCReturnRoute`
+
+```ts
+readonly hasSUCReturnRoute: boolean
+```
+
+Whether a SUC return route was configured for this node.
+
+### `statistics`
+
+```ts
+readonly statistics: Readonly<NodeStatistics>
+```
+
+Returns the current statistics for this node. The shape of the statistics object is described in the [`"statistics updated"` event](#statistics-updated).
 
 ## ZWaveNode events
 
