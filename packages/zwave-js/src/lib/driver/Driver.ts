@@ -676,7 +676,6 @@ type AwaitedMessageEntry = AwaitedThing<Message>;
 type AwaitedCommandEntry = AwaitedThing<CCId>;
 type AwaitedCLIChunkEntry = AwaitedThing<CLIChunk>;
 export type AwaitedBootloaderChunkEntry = AwaitedThing<BootloaderChunk>;
-
 type AwaitedIdleEntry = Omit<
 	AwaitedThing<void>,
 	"predicate" | "refreshPredicate"
