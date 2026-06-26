@@ -573,6 +573,8 @@ export class AccessControlAPI extends FeatureAPI {
 			data: string | Uint8Array;
 		},
 	): Promise<AddUserResult> {
+		this.#assertValidUser(userId);
+
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			const userType = options.userType
@@ -632,8 +634,7 @@ export class AccessControlAPI extends FeatureAPI {
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
-
-			this.#assertValidSlot(credential.type, userId);
+			this.#assertValidUCCredentialType(credential.type);
 
 			const active = options.active ?? true;
 			const userType = options.userType
@@ -1085,6 +1086,8 @@ export class AccessControlAPI extends FeatureAPI {
 		slot: number,
 		data: string | Uint8Array,
 	): Promise<SetCredentialResult> {
+		this.#assertValidUser(userId);
+
 		if (this.#usesUserCredentialCC) {
 			this.#assertValidSlot(type, slot);
 
@@ -1113,8 +1116,9 @@ export class AccessControlAPI extends FeatureAPI {
 		} else {
 			// User Code CC stores exactly one credential per user slot. Ignore the
 			// caller-provided unified slot and write back to the owning user's slot
-			// so events and cached state stay internally consistent.
-			this.#assertValidSlot(type, userId);
+			// so events and cached state stay internally consistent. The user was
+			// already validated above; here we only reject unsupported types.
+			this.#assertValidUCCredentialType(type);
 			const api = this.#ucAPI();
 
 			// Determine the current status; default to Enabled for new users
@@ -1209,6 +1213,8 @@ export class AccessControlAPI extends FeatureAPI {
 		const type = typeOrSlot as UserCredentialType;
 
 		if (this.#usesUserCredentialCC) {
+			// userId 0 is the wildcard owner, so only range-check a specific user.
+			if (userId !== 0) this.#assertValidUser(userId);
 			this.#assertValidSlot(type, slot);
 
 			const api = this.#u3cAPI();
@@ -1231,9 +1237,10 @@ export class AccessControlAPI extends FeatureAPI {
 				return SetCredentialResult.Error_ModifyRejectedLocationEmpty;
 			}
 
-			// Make sure the addressed slot is valid
+			// Make sure the addressed user is valid and the type is supported
 			const targetUserId = userId === 0 ? slot : userId;
-			this.#assertValidSlot(type, targetUserId);
+			this.#assertValidUser(targetUserId);
+			this.#assertValidUCCredentialType(type);
 
 			// Only emit deleted events if we knew about the credential beforehand.
 			const existed = this.#getCredentialCached_UC(
@@ -1860,6 +1867,35 @@ export class AccessControlAPI extends FeatureAPI {
 				`Credential slot ${slot} is out of range for credential type ${
 					getEnumMemberName(UserCredentialType, type)
 				}`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+	}
+
+	#assertValidUser(userId: number): void {
+		const maxUsers = this.getUserCapabilitiesCached().maxUsers;
+		if (maxUsers === undefined || maxUsers === 0) {
+			// Allow calling the API anyways if the node's interview failed
+			return;
+		}
+		if (userId < 1 || userId > maxUsers) {
+			throw new ZWaveError(
+				`User ID ${userId} is out of range`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+	}
+
+	/**
+	 * Asserts that the given credential type is the one used to represent
+	 * User Code CC credentials on this node, which only supports a single type.
+	 */
+	#assertValidUCCredentialType(type: UserCredentialType): void {
+		if (type !== this.#ucCredentialType) {
+			throw new ZWaveError(
+				`Credential type ${
+					getEnumMemberName(UserCredentialType, type)
+				} is not supported by this node`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
