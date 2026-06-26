@@ -35,6 +35,11 @@ export type BasicReportMapping = (typeof basicReportMappings)[number];
 // @public
 export type BasicSetMapping = (typeof basicSetMappings)[number];
 
+// Warning: (ae-missing-release-tag) "clearTemplateCache" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function clearTemplateCache(): void;
+
 // Warning: (ae-missing-release-tag) "CompatAddCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -730,7 +735,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.23.0";
+export const PACKAGE_VERSION = "15.25.1";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -762,6 +767,29 @@ export function parseDeviceConfigHash(hash: BytesView): {
     version: number;
     hashData: BytesView;
 } | undefined;
+
+// Warning: (ae-missing-release-tag) "readJsonWithTemplate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function readJsonWithTemplate(fs: ReadFileSystemInfo & ReadFile, filename: string, rootDirs?: string | string[]): Promise<Record<string, unknown>>;
+
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (ae-missing-release-tag) "resolveImportPath" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function resolveImportPath(fs: ReadFileSystemInfo & ReadFile, contextFilename: string, specifier: string, rootDirs?: string | string[]): Promise<string | undefined>;
+
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (ae-missing-release-tag) "resolveTemplateImport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function resolveTemplateImport(fs: ReadFileSystemInfo & ReadFile, contextFilename: string, specifier: string, rootDirs?: string | string[]): Promise<Record<string, unknown>>;
 
 // Warning: (ae-missing-release-tag) "saveManufacturersInternal" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

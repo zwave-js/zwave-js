@@ -84,6 +84,7 @@ import { GraphNode } from '@zwave-js/core';
 import { guessFirmwareFileFormat } from '@zwave-js/core';
 import { InterviewContext } from '@zwave-js/cc';
 import { InterviewOptions } from '@zwave-js/cc';
+import { InterviewProgress } from '@zwave-js/core';
 import { InterviewStage } from '@zwave-js/core';
 import { IsCCSecure } from '@zwave-js/core';
 import { isCommandRequest } from '@zwave-js/serial/serialapi';
@@ -221,7 +222,66 @@ import { ZWaveSerialBindingFactory } from '@zwave-js/serial';
 import { ZWaveSerialPortImplementation } from '@zwave-js/serial';
 import type { ZWaveSerialStream } from '@zwave-js/serial';
 
+// Warning: (ae-missing-release-tag) "AccessControlAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class AccessControlAPI extends FeatureAPI {
+    addUser(userId: number, options: SetUserOptions, credential?: {
+        type: UserCredentialType;
+        slot: number;
+        data: string | Uint8Array;
+    }): Promise<AddUserResult>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getCredentialCapabilitiesCached"
+    assignCredential(type: UserCredentialType, slot: number, destinationUserId: number): Promise<AssignCredentialResult>;
+    cancelCredentialLearn(): Promise<SupervisionResult | undefined>;
+    deleteAllUsers(): Promise<SetUserResult>;
+    deleteCredential(type: UserCredentialType, slot: number): Promise<SetCredentialResult>;
+    // (undocumented)
+    deleteCredential(userId: number | undefined, type: UserCredentialType, slot: number): Promise<SetCredentialResult>;
+    deleteCredentials(options?: DeleteCredentialsOptions): Promise<SetCredentialResult>;
+    deleteUser(userId: number): Promise<SetUserResult>;
+    getAdminCode(): Promise<string | undefined>;
+    getAllCredentials(): Promise<CredentialData[]>;
+    getAllCredentialsCached(): CredentialData[];
+    getCredential(type: UserCredentialType, slot: number): Promise<CredentialData | undefined>;
+    getCredentialCached(type: UserCredentialType, slot: number): CredentialData | undefined;
+    getCredentialCapabilitiesCached(): CredentialCapabilities;
+    getCredentialsByType(type: UserCredentialType): Promise<CredentialData[]>;
+    getCredentialsByTypeCached(type: UserCredentialType): CredentialData[];
+    getCredentialsForUser(userId: number, type?: UserCredentialType): Promise<CredentialData[]>;
+    getCredentialsForUserCached(userId: number, type?: UserCredentialType): CredentialData[];
+    getUser(userId: number): Promise<UserData | undefined>;
+    getUserCached(userId: number): UserData | undefined;
+    getUserCapabilitiesCached(): UserCapabilities;
+    getUsers(): Promise<UserData[]>;
+    getUsersCached(): UserData[];
+    setAdminCode(code: string): Promise<SupervisionResult | undefined>;
+    setCredential(userId: number, type: UserCredentialType, slot: number, data: string | Uint8Array): Promise<SetCredentialResult>;
+    setUser(userId: number, options: SetUserOptions): Promise<SetUserResult>;
+    startCredentialLearn(userId: number, type: UserCredentialType, slot: number, timeout?: number): Promise<SupervisionResult | undefined>;
+}
+
+// Warning: (ae-missing-release-tag) "AddUserResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface AddUserResult {
+    credential?: SetCredentialResult;
+    user: SetUserResult;
+}
+
 export { AllowedValue }
+
+// Warning: (ae-missing-release-tag) "AssignCredentialResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum AssignCredentialResult {
+    Error_InvalidCredential = 1,
+    Error_InvalidUser = 2,
+    // (undocumented)
+    Error_Unknown = 255,
+    // (undocumented)
+    OK = 0
+}
 
 // Warning: (ae-missing-release-tag) "BeamFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -385,6 +445,7 @@ export interface CredentialCapabilities {
     supportsAdminCode: boolean;
     // (undocumented)
     supportsAdminCodeDeactivation: boolean;
+    supportsCredentialAssignment: boolean;
 }
 
 // Warning: (ae-missing-release-tag) "CredentialChangedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -481,6 +542,15 @@ export type DateAndTime = AllOrNone<{
     dstOffset: number;
     standardOffset: number;
 }>;
+
+// Warning: (ae-missing-release-tag) "DeleteCredentialsOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface DeleteCredentialsOptions {
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
+    credentialType?: UserCredentialType;
+    userId?: number;
+}
 
 // Warning: (ae-missing-release-tag) "DeviceClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -591,7 +661,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     get queueIdle(): boolean;
     get ready(): boolean;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    registerCommandHandler<T extends CCId>(predicate: (cc: CCId) => boolean, handler: (cc: T) => void): {
+    registerCommandHandler(predicate: (cc: CCId) => boolean, handler: (cc: CCId) => void): {
         unregister: () => void;
     };
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
@@ -649,10 +719,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     waitForCLIChunk<T extends CLIChunk>(predicate: (chunk: CLIChunk) => chunk is T, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
     // (undocumented)
     waitForCLIChunk<T extends CLIChunk>(predicate: (chunk: CLIChunk) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    // Warning: (ae-forgotten-export) The symbol "WaitForCommandOptions" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    waitForCommand<T extends CCId, U extends T>(predicate: (cc: CCId) => cc is U, timeout?: number, abortSignal?: AbortSignal): Promise<U>;
+    waitForCommand<T extends CCId, U extends T>(predicate: (cc: CCId) => cc is U, timeout?: number, abortSignal?: AbortSignal, options?: WaitForCommandOptions): Promise<U>;
     // (undocumented)
-    waitForCommand<T extends CCId>(predicate: (cc: CCId) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
+    waitForCommand<T extends CCId>(predicate: (cc: CCId) => boolean, timeout?: number, abortSignal?: AbortSignal, options?: WaitForCommandOptions): Promise<T>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     waitForIdle(timeout?: number, abortSignal?: AbortSignal): Promise<void>;
@@ -779,6 +851,19 @@ export enum ExplorerFrameCommand {
 }
 
 export { extractFirmware }
+
+// Warning: (ae-missing-release-tag) "FeatureAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export abstract class FeatureAPI {
+    constructor(endpoint: EndpointBase);
+    // Warning: (ae-forgotten-export) The symbol "EndpointBase" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly endpoint: EndpointBase;
+    // (undocumented)
+    protected getValue<T = unknown>(valueId: ValueID): MaybeNotKnown<T>;
+}
 
 export { FileSystem }
 
@@ -960,6 +1045,8 @@ export interface InclusionUserCallbacks {
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     validateDSKAndEnterPIN(dsk: string): Promise<string | false>;
 }
+
+export { InterviewProgress }
 
 export { InterviewStage }
 
@@ -1616,6 +1703,28 @@ export { SerialAPISetupCommand }
 
 export { SetbackState }
 
+// Warning: (ae-missing-release-tag) "SetCredentialResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum SetCredentialResult {
+    // (undocumented)
+    Error_AddRejectedLocationOccupied = 1,
+    // (undocumented)
+    Error_DuplicateAdminPINCode = 5,
+    // (undocumented)
+    Error_DuplicateCredential = 3,
+    // (undocumented)
+    Error_ManufacturerSecurityRules = 4,
+    // (undocumented)
+    Error_ModifyRejectedLocationEmpty = 2,
+    // (undocumented)
+    Error_Unknown = 255,
+    // (undocumented)
+    Error_WrongUserUniqueIdentifier = 6,
+    // (undocumented)
+    OK = 0
+}
+
 // Warning: (ae-missing-release-tag) "SetUserOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1630,6 +1739,20 @@ export interface SetUserOptions {
     userName?: string;
     // (undocumented)
     userType?: UserCredentialUserType;
+}
+
+// Warning: (ae-missing-release-tag) "SetUserResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum SetUserResult {
+    // (undocumented)
+    Error_AddRejectedLocationOccupied = 1,
+    // (undocumented)
+    Error_ModifyRejectedLocationEmpty = 2,
+    // (undocumented)
+    Error_Unknown = 255,
+    // (undocumented)
+    OK = 0
 }
 
 // Warning: (ae-missing-release-tag) "SmartStartProvisioningEntry" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1657,6 +1780,8 @@ export interface UserCapabilities {
     supportedCredentialRules: readonly UserCredentialRule[];
     // (undocumented)
     supportedUserTypes: readonly UserCredentialUserType[];
+    // (undocumented)
+    supportsUsersWithoutCredentials: boolean;
 }
 
 // Warning: (ae-missing-release-tag) "UserData" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2285,6 +2410,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     interview(): Promise<void>;
     get interviewAttempts(): number;
     interviewCC(cc: CommandClasses): Promise<void>;
+    // (undocumented)
     protected interviewCCs(): Promise<boolean>;
     protected interviewNodeInfo(): Promise<void>;
     isHealthCheckInProgress(): boolean;
@@ -2341,6 +2467,8 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
     // (undocumented)
     "interview failed": ZWaveInterviewFailedCallback;
     // (undocumented)
+    "interview progress": ZWaveNodeInterviewProgressCallback;
+    // (undocumented)
     "interview stage completed": (node: ZWaveNode, stageName: string) => void;
     // (undocumented)
     "interview started": (node: ZWaveNode) => void;
@@ -2374,7 +2502,7 @@ export type ZWaveNodeEvents = Extract<keyof ZWaveNodeEventCallbacks, string>;
 // Warning: (ae-missing-release-tag) "zWaveNodeEvents" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const zWaveNodeEvents: readonly ["notification", "interview failed", "firmware update progress", "firmware update finished", "wake up", "sleep", "dead", "alive", "interview completed", "ready", "interview stage completed", "interview started", "value added", "value updated", "value removed", "metadata updated", "value notification", "user added", "user modified", "user deleted", "credential added", "credential modified", "credential deleted", "credential learn progress", "credential learn completed"];
+export const zWaveNodeEvents: readonly ["notification", "interview failed", "firmware update progress", "firmware update finished", "wake up", "sleep", "dead", "alive", "interview completed", "ready", "interview stage completed", "interview progress", "interview started", "value added", "value updated", "value removed", "metadata updated", "value notification", "user added", "user modified", "user deleted", "credential added", "credential modified", "credential deleted", "credential learn progress", "credential learn completed"];
 
 // Warning: (ae-missing-release-tag) "ZWaveNodeFirmwareUpdateFinishedCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2385,6 +2513,11 @@ export type ZWaveNodeFirmwareUpdateFinishedCallback = (node: ZWaveNode, result: 
 //
 // @public (undocumented)
 export type ZWaveNodeFirmwareUpdateProgressCallback = (node: ZWaveNode, progress: FirmwareUpdateProgress) => void;
+
+// Warning: (ae-missing-release-tag) "ZWaveNodeInterviewProgressCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type ZWaveNodeInterviewProgressCallback = (node: ZWaveNode, progress: InterviewProgress) => void;
 
 // Warning: (ae-missing-release-tag) "ZWaveNodeMetadataUpdatedArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2607,6 +2740,7 @@ export interface ZWaveOptions {
         nodeInterview: number;
         smartStartInclusion: number;
         firmwareUpdateOTW: number;
+        partialReports: number;
     };
     bootloaderMode?: "recover" | "allow" | "stay";
     disableOptimisticValueUpdate?: boolean;
@@ -2708,10 +2842,10 @@ export * from "@zwave-js/cc";
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:109:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // src/lib/controller/Controller.ts:914:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
-// src/lib/driver/Driver.ts:1071:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:7648:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/driver/ZWaveOptions.ts:376:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2251:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:1098:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/driver/Driver.ts:7824:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/ZWaveOptions.ts:382:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/node/Node.ts:2372:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:740:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
