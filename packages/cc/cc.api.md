@@ -549,11 +549,11 @@ export interface AssociationCCRemoveOptions {
 export class AssociationCCReport extends AssociationCC {
     constructor(options: WithAddress<AssociationCCReportOptions>);
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): AssociationCCReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     groupId: number;
     // (undocumented)
@@ -4797,8 +4797,6 @@ export class CommandClass implements CCId {
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (ae-forgotten-export) The symbol "CCValue" needs to be exported by the entry point index.d.ts
     protected ensureMetadata(ctx: GetValueDB, ccValue: CCValue, meta?: ValueMetadata): void;
-    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    expectMoreMessages(_session: CommandClass[]): boolean;
     expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean;
     readonly frameType?: FrameType;
     // (undocumented)
@@ -4813,6 +4811,7 @@ export class CommandClass implements CCId {
     protected getMetadata<T extends ValueMetadata>(ctx: GetValueDB, ccValue: CCValue): T | undefined;
     getNode<T extends NodeId>(ctx: GetNode<T>): T | undefined;
     getPartialCCSessionId(): Record<string, any> | undefined;
+    getRemainingSegments(): number | undefined;
     protected getValue<T>(ctx: GetValueDB, ccValue: CCValue): T | undefined;
     protected getValueDB(ctx: GetValueDB): ValueDB;
     protected getValueTimestamp(ctx: GetValueDB, ccValue: CCValue): number | undefined;
@@ -4961,13 +4960,15 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
     // (undocumented)
     defaultValues: boolean;
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCBulkReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
+    getRemainingSegments(): number | undefined;
+    // (undocumented)
     isHandshakeResponse: boolean;
+    // (undocumented)
+    mergePartialCCs(partials: ConfigurationCCBulkReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -5089,11 +5090,11 @@ export class ConfigurationCCInfoGet extends ConfigurationCC {
 export class ConfigurationCCInfoReport extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCInfoReportOptions>);
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCInfoReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     info: string;
     // (undocumented)
@@ -5144,11 +5145,11 @@ export class ConfigurationCCNameGet extends ConfigurationCC {
 export class ConfigurationCCNameReport extends ConfigurationCC {
     constructor(options: WithAddress<ConfigurationCCNameReportOptions>);
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ConfigurationCCNameReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     mergePartialCCs(partials: ConfigurationCCNameReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
@@ -8333,7 +8334,7 @@ export function getCCValueProperties<TTarget extends CommandClass>(target: TTarg
 // Warning: (ae-missing-release-tag) "getCCValues" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getCCValues<T extends CommandClass>(cc: T | CommandClasses): Record<string, StaticCCValue | DynamicCCValue | undefined> | undefined;
+export function getCCValues(cc: CommandClass | CommandClasses): Record<string, StaticCCValue | DynamicCCValue | undefined> | undefined;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getCommandClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -8345,7 +8346,7 @@ export function getCommandClass(cc: CommandClass | CCAPI): CommandClasses;
 // Warning: (ae-missing-release-tag) "getCommandClassStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getCommandClassStatic<T extends CCConstructor<CommandClass>>(classConstructor: T): CommandClasses;
+export function getCommandClassStatic(classConstructor: CCConstructor<CommandClass>): CommandClasses;
 
 // Warning: (ae-missing-release-tag) "getEffectiveCCVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -8397,13 +8398,13 @@ export const getFibaroCCId: (target: FibaroCC) => number | undefined;
 // Warning: (ae-missing-release-tag) "getImplementedVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getImplementedVersion<T extends CommandClass>(cc: T | CommandClasses): number;
+export function getImplementedVersion(cc: CommandClass | CommandClasses): number;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getImplementedVersionStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getImplementedVersionStatic<T extends CCConstructor<CommandClass>>(classConstructor: T): number;
+export function getImplementedVersionStatic(classConstructor: CCConstructor<CommandClass>): number;
 
 // Warning: (ae-missing-release-tag) "getInnermostCommandClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -8433,7 +8434,7 @@ export const getManufacturerId: (target: ManufacturerProprietaryCC) => number | 
 // Warning: (ae-missing-release-tag) "getManufacturerIdStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getManufacturerIdStatic<T extends ManufacturerProprietaryCCConstructor>(classConstructor: T): number;
+export function getManufacturerIdStatic(classConstructor: ManufacturerProprietaryCCConstructor): number;
 
 // Warning: (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // Warning: (ae-missing-release-tag) "getManufacturerProprietaryAPI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -9753,7 +9754,7 @@ export interface IndicatorTimeout {
 // Warning: (ae-missing-release-tag) "InterviewContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export type InterviewContext = CCAPIHost<CCAPINode & GetCCs & SupportsCC & ControlsCC & QuerySecurityClasses & SetSecurityClass & GetEndpoint<EndpointId & GetCCs & SupportsCC & ControlsCC & ModifyCCs> & GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>> & GetInterviewOptions & LookupManufacturer;
+export type InterviewContext = CCAPIHost<CCAPINode & GetCCs & SupportsCC & ControlsCC & QuerySecurityClasses & SetSecurityClass & ReportInterviewProgress & GetEndpoint<EndpointId & GetCCs & SupportsCC & ControlsCC & ModifyCCs> & GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>> & GetInterviewOptions & LookupManufacturer;
 
 // Warning: (ae-missing-release-tag) "InterviewOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -12753,11 +12754,11 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
     // (undocumented)
     endpoints: EndpointAddress[];
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelAssociationCCReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     readonly groupId: number;
     // (undocumented)
@@ -13176,8 +13177,6 @@ export interface MultiChannelCCEndPointFindOptions {
 export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
     constructor(options: WithAddress<MultiChannelCCEndPointFindReportOptions>);
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     foundEndpoints: number[];
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): MultiChannelCCEndPointFindReport;
@@ -13185,6 +13184,8 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
     genericClass: number;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     mergePartialCCs(partials: MultiChannelCCEndPointFindReport[], _ctx: CCParsingContext): Promise<void>;
     // (undocumented)
@@ -15461,6 +15462,8 @@ export class ProtectionCCExclusiveControlReport extends ProtectionCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCExclusiveControlReport;
     // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
+    // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
@@ -15480,7 +15483,7 @@ export class ProtectionCCExclusiveControlSet extends ProtectionCC {
     // (undocumented)
     exclusiveControlNodeId: number;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext): ProtectionCCExclusiveControlSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCExclusiveControlSet;
     // (undocumented)
     serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
@@ -15513,6 +15516,8 @@ export class ProtectionCCReport extends ProtectionCC {
     // (undocumented)
     readonly rf?: RFProtectionState;
     // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
+    // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
 }
 
@@ -15532,7 +15537,7 @@ export interface ProtectionCCReportOptions {
 export class ProtectionCCSet extends ProtectionCC {
     constructor(options: WithAddress<ProtectionCCSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext): ProtectionCCSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCSet;
     // (undocumented)
     local: LocalProtectionState;
     // (undocumented)
@@ -15568,6 +15573,8 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
     static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCSupportedReport;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     readonly supportedLocalStates: LocalProtectionState[];
     // (undocumented)
@@ -15608,6 +15615,8 @@ export class ProtectionCCTimeoutReport extends ProtectionCC {
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCTimeoutReport;
     // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
+    // (undocumented)
     readonly timeout: Timeout;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
@@ -15627,7 +15636,7 @@ export interface ProtectionCCTimeoutReportOptions {
 export class ProtectionCCTimeoutSet extends ProtectionCC {
     constructor(options: WithAddress<ProtectionCCTimeoutSetOptions>);
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext): ProtectionCCTimeoutSet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ProtectionCCTimeoutSet;
     // (undocumented)
     serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
@@ -15907,6 +15916,7 @@ export type RefreshValuesContext = CCAPIHost<CCAPINode & GetEndpoint<EndpointId 
 //
 // @public (undocumented)
 export interface RefreshValuesOptions {
+    onProgress?: (completed: number, total: number) => void;
     priority?: MessagePriority;
 }
 
@@ -15927,6 +15937,14 @@ export function registerCCs(): void;
 //
 // @public (undocumented)
 function removeAssociations(ctx: CCAPIHost, endpoint: EndpointId & SupportsCC & ControlsCC, group: number, destinations: AssociationAddress[]): Promise<void>;
+
+// Warning: (ae-missing-release-tag) "ReportInterviewProgress" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface ReportInterviewProgress {
+    getInterviewProgressWeight(cc: CommandClasses): number;
+    reportInterviewProgress(completed: number, total: number): void;
+}
 
 // Warning: (ae-missing-release-tag) "ReturnWithTXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -17682,11 +17700,11 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): Promise<SecurityCCCommandEncapsulation>;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     mergePartialCCs(partials: SecurityCCCommandEncapsulation[], ctx: CCParsingContext): Promise<void>;
     // (undocumented)
@@ -17733,11 +17751,11 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
     // (undocumented)
     controlledCCs: CommandClasses[];
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): SecurityCCCommandsSupportedReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     mergePartialCCs(partials: SecurityCCCommandsSupportedReport[]): Promise<void>;
     // (undocumented)
@@ -19247,11 +19265,11 @@ export interface ThermostatOperatingStateCCLoggingGetOptions {
 export class ThermostatOperatingStateCCLoggingReport extends ThermostatOperatingStateCC {
     constructor(options: WithAddress<ThermostatOperatingStateCCLoggingReportOptions>);
     // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ThermostatOperatingStateCCLoggingReport;
     // (undocumented)
     getPartialCCSessionId(): Record<string, any> | undefined;
+    // (undocumented)
+    getRemainingSegments(): number | undefined;
     // (undocumented)
     loggingData: Map<ThermostatOperatingState, ThermostatOperatingStateLoggingData>;
     // (undocumented)
@@ -20193,13 +20211,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
     // (undocumented)
     datagramSize: number;
     // (undocumented)
-    encapsulated: CommandClass;
-    // (undocumented)
-    expectMoreMessages(): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): TransportServiceCCFirstSegment;
-    // (undocumented)
-    getPartialCCSessionId(): Record<string, any> | undefined;
     // (undocumented)
     headerExtension: BytesView | undefined;
     // (undocumented)
@@ -20311,23 +20323,9 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
     // (undocumented)
     datagramSize: number;
     // (undocumented)
-    get encapsulated(): CommandClass;
-    // (undocumented)
-    expectMoreMessages(session: [
-    TransportServiceCCFirstSegment,
-    ...TransportServiceCCSubsequentSegment[]
-    ]): boolean;
-    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): TransportServiceCCSubsequentSegment;
     // (undocumented)
-    getPartialCCSessionId(): Record<string, any> | undefined;
-    // (undocumented)
     headerExtension: BytesView | undefined;
-    // (undocumented)
-    mergePartialCCs(partials: [
-    TransportServiceCCFirstSegment,
-    ...TransportServiceCCSubsequentSegment[]
-    ], ctx: CCParsingContext): Promise<void>;
     // (undocumented)
     partialDatagram: BytesView;
     // (undocumented)
@@ -20381,6 +20379,8 @@ export const TransportServiceTimeouts: {
 export class UserCodeCC extends CommandClass {
     // (undocumented)
     ccCommand: UserCodeCommand;
+    // (undocumented)
+    determineRequiredCCInterviews(): readonly CommandClasses[];
     static getSupportedASCIICharsCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<string>;
     static getSupportedKeypadModesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<KeypadMode[]>;
     static getSupportedUserIDStatusesCached(ctx: GetValueDB, endpoint: EndpointId): MaybeNotKnown<UserIDStatus[]>;
@@ -21334,7 +21334,7 @@ export class UserCredentialCC extends CommandClass {
     // (undocumented)
     interview(ctx: InterviewContext): Promise<void>;
     // (undocumented)
-    refreshValues(ctx: RefreshValuesContext): Promise<void>;
+    refreshValues(ctx: RefreshValuesContext, options?: RefreshValuesOptions): Promise<void>;
     // (undocumented)
     static supportsAdminCodeCached(ctx: GetValueDB, endpoint: EndpointId): boolean;
 }
@@ -21424,6 +21424,74 @@ export class UserCredentialCCAllUsersChecksumReport extends UserCredentialCC {
 export interface UserCredentialCCAllUsersChecksumReportOptions {
     // (undocumented)
     checksum: number;
+}
+
+// Warning: (ae-missing-release-tag) "UserCredentialCCAssociationReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class UserCredentialCCAssociationReport extends UserCredentialCC {
+    constructor(options: WithAddress<UserCredentialCCAssociationReportOptions>);
+    // (undocumented)
+    readonly credentialSlot: number;
+    // (undocumented)
+    readonly credentialType: UserCredentialType;
+    // (undocumented)
+    readonly destinationUserId: number;
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCredentialCCAssociationReport;
+    // (undocumented)
+    persistValues(ctx: PersistValuesContext): boolean;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    readonly status: number;
+    // (undocumented)
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "UserCredentialCCAssociationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UserCredentialCCAssociationReportOptions {
+    // (undocumented)
+    credentialSlot: number;
+    // (undocumented)
+    credentialType: UserCredentialType;
+    // (undocumented)
+    destinationUserId: number;
+    // (undocumented)
+    status: number;
+}
+
+// Warning: (ae-missing-release-tag) "UserCredentialCCAssociationSet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class UserCredentialCCAssociationSet extends UserCredentialCC {
+    constructor(options: WithAddress<UserCredentialCCAssociationSetOptions>);
+    // (undocumented)
+    credentialSlot: number;
+    // (undocumented)
+    credentialType: UserCredentialType;
+    // (undocumented)
+    destinationUserId: number;
+    // (undocumented)
+    static from(raw: CCRaw, ctx: CCParsingContext): UserCredentialCCAssociationSet;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "UserCredentialCCAssociationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface UserCredentialCCAssociationSetOptions {
+    // (undocumented)
+    credentialSlot: number;
+    // (undocumented)
+    credentialType: UserCredentialType;
+    // (undocumented)
+    destinationUserId: number;
 }
 
 // Warning: (ae-missing-release-tag) "UserCredentialCCCredentialCapabilitiesGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -21640,9 +21708,7 @@ export interface UserCredentialCCCredentialLearnStartOptions {
 export class UserCredentialCCCredentialReport extends UserCredentialCC {
     constructor(options: WithAddress<UserCredentialCCCredentialReportOptions>);
     // (undocumented)
-    readonly credentialData: Bytes;
-    // (undocumented)
-    readonly credentialLength: number;
+    readonly credentialData?: Bytes;
     // (undocumented)
     readonly credentialReadBack: boolean;
     // (undocumented)
@@ -21656,9 +21722,9 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
     // (undocumented)
     readonly modifierType: UserCredentialModifierType;
     // (undocumented)
-    readonly nextCredentialSlot: number;
+    readonly nextCredentialSlot?: number;
     // (undocumented)
-    readonly nextCredentialType: UserCredentialType;
+    readonly nextCredentialType?: UserCredentialType;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -21674,30 +21740,27 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 // Warning: (ae-missing-release-tag) "UserCredentialCCCredentialReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export interface UserCredentialCCCredentialReportOptions {
-    // (undocumented)
-    credentialData: Bytes;
-    // (undocumented)
-    credentialLength: number;
-    // (undocumented)
-    credentialReadBack: boolean;
-    // (undocumented)
-    credentialSlot: number;
-    // (undocumented)
-    credentialType: UserCredentialType;
-    // (undocumented)
-    modifierNodeId: number;
-    // (undocumented)
-    modifierType: UserCredentialModifierType;
-    // (undocumented)
-    nextCredentialSlot: number;
-    // (undocumented)
-    nextCredentialType: UserCredentialType;
-    // (undocumented)
-    reportType: UserCredentialCredentialReportType;
-    // (undocumented)
+export type UserCredentialCCCredentialReportOptions = {
     userId: number;
-}
+    credentialType: UserCredentialType;
+    credentialSlot: number;
+    modifierType: UserCredentialModifierType;
+    modifierNodeId: number;
+} & ({
+    credentialReadBack: true;
+    credentialData: Bytes;
+} | {
+    credentialReadBack: false;
+    credentialData?: undefined;
+}) & ({
+    reportType: UserCredentialCredentialReportType.ResponseToGet;
+    nextCredentialType: UserCredentialType;
+    nextCredentialSlot: number;
+} | {
+    reportType: Exclude<UserCredentialCredentialReportType, UserCredentialCredentialReportType.ResponseToGet>;
+    nextCredentialType?: undefined;
+    nextCredentialSlot?: undefined;
+});
 
 // Warning: (ae-missing-release-tag) "UserCredentialCCCredentialSet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -21970,72 +22033,6 @@ export interface UserCredentialCCUserChecksumReportOptions {
     userId: number;
 }
 
-// Warning: (ae-missing-release-tag) "UserCredentialCCUserCredentialAssociationReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export class UserCredentialCCUserCredentialAssociationReport extends UserCredentialCC {
-    constructor(options: WithAddress<UserCredentialCCUserCredentialAssociationReportOptions>);
-    // (undocumented)
-    readonly credentialSlot: number;
-    // (undocumented)
-    readonly credentialType: UserCredentialType;
-    // (undocumented)
-    readonly destinationUserId: number;
-    // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): UserCredentialCCUserCredentialAssociationReport;
-    // (undocumented)
-    serialize(ctx: CCEncodingContext): Promise<Bytes>;
-    // (undocumented)
-    readonly status: number;
-    // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
-}
-
-// Warning: (ae-missing-release-tag) "UserCredentialCCUserCredentialAssociationReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface UserCredentialCCUserCredentialAssociationReportOptions {
-    // (undocumented)
-    credentialSlot: number;
-    // (undocumented)
-    credentialType: UserCredentialType;
-    // (undocumented)
-    destinationUserId: number;
-    // (undocumented)
-    status: number;
-}
-
-// Warning: (ae-missing-release-tag) "UserCredentialCCUserCredentialAssociationSet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export class UserCredentialCCUserCredentialAssociationSet extends UserCredentialCC {
-    constructor(options: WithAddress<UserCredentialCCUserCredentialAssociationSetOptions>);
-    // (undocumented)
-    credentialSlot: number;
-    // (undocumented)
-    credentialType: UserCredentialType;
-    // (undocumented)
-    destinationUserId: number;
-    // (undocumented)
-    static from(raw: CCRaw, ctx: CCParsingContext): UserCredentialCCUserCredentialAssociationSet;
-    // (undocumented)
-    serialize(ctx: CCEncodingContext): Promise<Bytes>;
-    // (undocumented)
-    toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
-}
-
-// Warning: (ae-missing-release-tag) "UserCredentialCCUserCredentialAssociationSetOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface UserCredentialCCUserCredentialAssociationSetOptions {
-    // (undocumented)
-    credentialSlot: number;
-    // (undocumented)
-    credentialType: UserCredentialType;
-    // (undocumented)
-    destinationUserId: number;
-}
-
 // Warning: (ae-missing-release-tag) "UserCredentialCCUserGet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -22079,7 +22076,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
     // (undocumented)
     readonly nameEncoding: UserCredentialNameEncoding;
     // (undocumented)
-    readonly nextUserId: number;
+    readonly nextUserId?: number;
     // (undocumented)
     persistValues(ctx: PersistValuesContext): boolean;
     // (undocumented)
@@ -22099,30 +22096,23 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 // Warning: (ae-missing-release-tag) "UserCredentialCCUserReportOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export interface UserCredentialCCUserReportOptions {
-    // (undocumented)
-    active: boolean;
-    // (undocumented)
-    credentialRule: UserCredentialRule;
-    // (undocumented)
-    expiringTimeoutMinutes: number;
-    // (undocumented)
-    modifierNodeId: number;
-    // (undocumented)
+export type UserCredentialCCUserReportOptions = {
     modifierType: UserCredentialModifierType;
-    // (undocumented)
-    nameEncoding: UserCredentialNameEncoding;
-    // (undocumented)
-    nextUserId: number;
-    // (undocumented)
-    reportType: UserCredentialUserReportType;
-    // (undocumented)
+    modifierNodeId: number;
     userId: number;
-    // (undocumented)
-    userName: string;
-    // (undocumented)
     userType: UserCredentialUserType;
-}
+    active: boolean;
+    credentialRule: UserCredentialRule;
+    expiringTimeoutMinutes: number;
+    nameEncoding: UserCredentialNameEncoding;
+    userName: string;
+} & ({
+    reportType: UserCredentialUserReportType.ResponseToGet;
+    nextUserId: number;
+} | {
+    reportType: Exclude<UserCredentialUserReportType, UserCredentialUserReportType.ResponseToGet>;
+    nextUserId?: undefined;
+});
 
 // Warning: (ae-missing-release-tag) "UserCredentialCCUserSet" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -22814,7 +22804,35 @@ export const UserCredentialCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    credentialModifierType: ((userId: number, type: UserCredentialType, slot: number) => {
+    credentialOwner: ((type: UserCredentialType, slot: number) => {
+        id: {
+            readonly commandClass: (typeof CommandClasses)["User Credential"];
+            readonly property: "credentialOwner";
+            readonly propertyKey: number;
+        };
+        endpoint: (endpoint?: number) => {
+            readonly commandClass: (typeof CommandClasses)["User Credential"];
+            readonly endpoint: number;
+            readonly property: "credentialOwner";
+            readonly propertyKey: number;
+        };
+        readonly meta: Readonly<{
+            readonly type: "any";
+            readonly readable: true;
+            readonly writeable: true;
+        }>;
+    }) & {
+        is: (valueId: ValueID) => boolean;
+        options: {
+            readonly internal: true;
+            readonly minVersion: 1;
+            readonly secret: false;
+            readonly stateful: true;
+            readonly supportsEndpoints: true;
+            readonly autoCreate: true;
+        };
+    };
+    credentialModifierType: ((type: UserCredentialType, slot: number) => {
         id: {
             readonly commandClass: (typeof CommandClasses)["User Credential"];
             readonly property: "credentialModifierType";
@@ -22842,7 +22860,7 @@ export const UserCredentialCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    credentialModifierNodeId: ((userId: number, type: UserCredentialType, slot: number) => {
+    credentialModifierNodeId: ((type: UserCredentialType, slot: number) => {
         id: {
             readonly commandClass: (typeof CommandClasses)["User Credential"];
             readonly property: "credentialModifierNodeId";
@@ -22870,7 +22888,7 @@ export const UserCredentialCCValues: Readonly<{
             readonly autoCreate: true;
         };
     };
-    credential: ((userId: number, type: UserCredentialType, slot: number) => {
+    credential: ((type: UserCredentialType, slot: number) => {
         id: {
             readonly commandClass: (typeof CommandClasses)["User Credential"];
             readonly property: "credential";
@@ -25103,6 +25121,8 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC implements
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
     // (undocumented)
+    controlledCCs: CommandClasses[];
+    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNewNodeRegistered;
     // (undocumented)
     genericDeviceClass: number;
@@ -25174,6 +25194,8 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC impleme
     constructor(options: WithAddress<ZWaveProtocolCCNodeInformationFrameOptions>);
     // (undocumented)
     basicDeviceClass: BasicDeviceClass;
+    // (undocumented)
+    controlledCCs: CommandClasses[];
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ZWaveProtocolCCNodeInformationFrame;
     // (undocumented)

@@ -53,6 +53,8 @@ export const applicationCCs: readonly CommandClasses[];
 // @public (undocumented)
 export interface ApplicationNodeInformation {
     // (undocumented)
+    controlledCCs?: CommandClasses[];
+    // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
     specificDeviceClass: number;
@@ -1092,7 +1094,7 @@ export interface EndpointId {
 // Warning: (ae-missing-release-tag) "enumValuesToMetadataStates" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function enumValuesToMetadataStates<T extends Record<string, any>>(enumeration: T, values?: readonly number[]): Record<number, string>;
+export function enumValuesToMetadataStates(enumeration: Record<string, any>, values?: readonly number[]): Record<number, string>;
 
 // Warning: (ae-missing-release-tag) "extractFirmware" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1462,7 +1464,7 @@ export function getNotificationValueName(type: number, event: number): string;
 // Warning: (ae-missing-release-tag) "getNumericEnumValues" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getNumericEnumValues<T extends Record<string, any>>(enumeration: T): readonly number[];
+export function getNumericEnumValues(enumeration: Record<string, any>): readonly number[];
 
 // Warning: (ae-missing-release-tag) "GetSafeCCVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1882,6 +1884,16 @@ export interface Interviewable {
     id: number;
     // (undocumented)
     interviewStage: InterviewStage;
+}
+
+// Warning: (ae-missing-release-tag) "InterviewProgress" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface InterviewProgress {
+    commandClass?: CommandClasses;
+    endpoint?: number;
+    progress: number;
+    stage: InterviewStage;
 }
 
 // Warning: (ae-missing-release-tag) "InterviewStage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3334,6 +3346,7 @@ export class SecurityManager2 {
         key: BytesView;
         iv: BytesView;
     }>;
+    getNextPeerSequenceNumber(peerNodeId: number): number | undefined;
     getPeerMPAN(peerNodeId: number, groupId: number): MPANTableEntry | {
         type: MPANState.None;
     };
@@ -3396,6 +3409,7 @@ export type SendCommandOptions = SendMessageOptions & SupervisionOptions & SendC
     encapsulationFlags?: EncapsulationFlags;
     transmitOptions?: TransmitOptions;
     reportTimeoutMs?: number;
+    ignoreNodeUpdate?: boolean;
 };
 
 // Warning: (ae-missing-release-tag) "SendCommandReturnType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
