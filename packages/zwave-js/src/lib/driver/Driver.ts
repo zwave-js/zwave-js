@@ -667,6 +667,8 @@ interface AwaitedThing<T> {
 	timeout?: Timer;
 	predicate: (msg: T) => boolean;
 	refreshPredicate?: (msg: T) => boolean;
+	/** Whether a matching thing is consumed (default) or only observed. */
+	consume?: boolean;
 }
 
 type AwaitedMessageHeader = AwaitedThing<MessageHeaders>;
@@ -678,6 +680,16 @@ type AwaitedIdleEntry = Omit<
 	AwaitedThing<void>,
 	"predicate" | "refreshPredicate"
 >;
+
+interface WaitForCommandOptions {
+	/**
+	 * Whether a matching command is consumed (default) or only observed.
+	 * When `false`, the predicate is additionally tested against the command
+	 * before encapsulation is unwrapped (so it can inspect e.g. the S2 sequence
+	 * number), and the command is still handled normally afterwards.
+	 */
+	consume?: boolean;
+}
 
 interface TransportServiceSession {
 	machine: TransportServiceRXMachine;
@@ -5879,6 +5891,16 @@ ${handlers.length} left`,
 				return;
 			}
 
+			// Notify non-consuming observers before unwrapping, so their predicate can
+			// inspect the command as received (e.g. encapsulation details like the S2
+			// sequence number). These do not consume the command, so it is still
+			// handled normally afterwards.
+			for (const entry of this.awaitedCommands) {
+				if (entry.consume === false && entry.predicate(msg.command)) {
+					entry.handler(msg.command);
+				}
+			}
+
 			// For further actions, we are only interested in the innermost CC
 			this.unwrapCommands(msg);
 
@@ -6041,6 +6063,10 @@ ${handlers.length} left`,
 				if (entry.predicate(msg.command)) {
 					// there is!
 					entry.handler(msg.command);
+
+					// Non-consuming observers only inspect the command, so we
+					// continue handling it normally.
+					if (entry.consume === false) continue;
 
 					// and possibly reply to a supervised command
 					await reply(SupervisionStatus.Success);
@@ -7935,23 +7961,27 @@ ${handlers.length} left`,
 		predicate: (cc: CCId) => cc is U,
 		timeout?: number,
 		abortSignal?: AbortSignal,
+		options?: WaitForCommandOptions,
 	): Promise<U>;
 
 	public waitForCommand<T extends CCId>(
 		predicate: (cc: CCId) => boolean,
 		timeout?: number,
 		abortSignal?: AbortSignal,
+		options?: WaitForCommandOptions,
 	): Promise<T>;
 
 	/**
 	 * Waits until a CommandClass is received or an optional timeout has elapsed. Returns the received command.
-	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming command classes
+	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
+	 * @param abortSignal An optional abort signal to cancel the wait
 	 */
 	public waitForCommand<T extends CCId>(
 		predicate: (cc: CCId) => boolean,
 		timeout?: number,
 		abortSignal?: AbortSignal,
+		options?: WaitForCommandOptions,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			const promise = createDeferredPromise<CCId>();
@@ -7959,6 +7989,7 @@ ${handlers.length} left`,
 				predicate,
 				handler: (cc) => promise.resolve(cc),
 				timeout: undefined,
+				consume: options?.consume,
 			};
 			this.awaitedCommands.push(entry);
 			const removeEntry = () => {

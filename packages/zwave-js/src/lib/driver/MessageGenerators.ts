@@ -670,14 +670,49 @@ export const secureMessageGeneratorS2: MessageGeneratorImplementation<
 			SupervisionCommand.Get,
 		)
 	) {
-		nonceReport = await driver
-			.waitForCommand<Security2CCNonceReport>(
-				(cc) =>
-					cc.nodeId === nodeId
-					&& cc instanceof Security2CCNonceReport,
-				500,
-			)
-			.catch(() => undefined);
+		// Wait for a possible Nonce Report, which would indicate that the node could
+		// not decrypt our command. Receiving the node's next encrypted command (i.e.
+		// with the next sequence number) instead proves a successful delivery, so we
+		// stop waiting early in that case to avoid artificially delaying command sequences.
+		const verifyAbort = new AbortController();
+		const expectedSequenceNumber = secMan.getNextPeerSequenceNumber(nodeId);
+		const verifications: Promise<
+			Security2CCNonceReport | Security2CCMessageEncapsulation | undefined
+		>[] = [
+			driver
+				.waitForCommand<Security2CCNonceReport>(
+					(cc) =>
+						cc.nodeId === nodeId
+						&& cc instanceof Security2CCNonceReport,
+					500,
+					verifyAbort.signal,
+				)
+				.catch(() => undefined),
+		];
+		if (expectedSequenceNumber != undefined) {
+			verifications.push(
+				driver
+					.waitForCommand<Security2CCMessageEncapsulation>(
+						(cc) =>
+							cc.nodeId === nodeId
+							&& cc instanceof Security2CCMessageEncapsulation
+							&& cc.sequenceNumber === expectedSequenceNumber,
+						500,
+						verifyAbort.signal,
+						// Receiving the node's next command must not consume it,
+						// so it is still handled (and answered) normally.
+						{ consume: false },
+					)
+					.catch(() => undefined),
+			);
+		}
+		const verification = await Promise.race(verifications);
+		// Clean up the remaining wait(s)
+		verifyAbort.abort();
+
+		if (verification instanceof Security2CCNonceReport) {
+			nonceReport = verification;
+		}
 	} else if (
 		containsCC(response)
 		&& response.command instanceof Security2CCNonceReport
