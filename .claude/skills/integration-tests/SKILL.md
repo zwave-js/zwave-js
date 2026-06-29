@@ -174,6 +174,71 @@ nodeCapabilities: {
 }
 ```
 
+## Custom Device Config Files
+
+Some behavior is driven by the device config file (`packages/config/config/devices/**`), not by the CCs alone — most importantly the `compat` flags (`commandClasses.add`/`remove`, `mapBasicSet`, `treatBasicSetAsEvent`, `alarmMapping`, …) and config-param metadata. To exercise that behavior in a test, ship a small fixture config file and point the driver at it. This is also the right tool when you want to reproduce a problem report against a specific device.
+
+Three pieces have to line up:
+
+1. **Give the mock node a fingerprint.** Set `manufacturerId`, `productType`, and `productId` in `nodeCapabilities`. These are what the driver looks up after the Manufacturer Specific + Version interviews.
+2. **Write a fixture config** next to the test (e.g. `fixtures/<name>/deviceConfig.json`) whose `manufacturerId` / `devices[].productType` / `devices[].productId` match that fingerprint exactly.
+3. **Load the fixture** via `additionalDriverOptions.storage.deviceConfigPriorityDir`, pointing at the fixture's directory. Files in this directory take priority over the bundled configs.
+
+```typescript
+import path from "node:path";
+
+integrationTest("compat flag removes Window Covering CC", {
+	nodeCapabilities: {
+		manufacturerId: 0x1234,
+		productType: 0x5678,
+		productId: 0x9abc,
+		commandClasses: [
+			CommandClasses["Manufacturer Specific"],
+			CommandClasses.Version,
+			ccCaps({ ccId: CommandClasses["Window Covering"], isSupported: true }),
+		],
+	},
+
+	additionalDriverOptions: {
+		storage: {
+			deviceConfigPriorityDir: path.join(__dirname, "fixtures/myDevice"),
+		},
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		// deviceConfig is now loaded and compat flags applied
+		t.expect(node.deviceConfig?.label).toBe("Test Device");
+	},
+});
+```
+
+`fixtures/myDevice/deviceConfig.json`:
+
+```json
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0x1234",
+	"label": "Test Device",
+	"description": "Device used by the integration test",
+	"devices": [{ "productType": "0x5678", "productId": "0x9abc" }],
+	"firmwareVersion": { "min": "0.0", "max": "255.255" },
+	"compat": {
+		"commandClasses": {
+			"remove": { "0x6a": { "endpoints": "*" } }
+		}
+	}
+}
+```
+
+**Gotchas:**
+
+- **Firmware version must be in range.** The config only matches if the node's reported firmware version falls within `firmwareVersion.min`–`max`. The mock node reports `"1.0"` by default (override with the `firmwareVersion` capability). Use `"min": "0.0", "max": "255.255"` unless the test specifically needs a firmware-gated config. If the config doesn't load, the driver logs `No device config found`.
+- **All three IDs must match**, and `productType`/`productId` are compared as 4-digit hex strings (`"0x0004"`), while the capability is a number (`0x0004`).
+- The node must support Manufacturer Specific + Version CC so the driver can read the fingerprint; otherwise the config is never looked up.
+- To assert the config loaded, check `node.deviceConfig` in the test body, or that a compat flag took effect (e.g. `node.getEndpoint(1)?.supportsCC(...)`).
+
+See `packages/zwave-js/src/lib/test/compat/forceAddBasicCC.test.ts` and its fixture for a working example.
+
 ## Mock Node State and Behaviors
 
 ### Default Behaviors
