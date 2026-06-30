@@ -195,7 +195,10 @@ integrationTest("compat flag removes Window Covering CC", {
 		commandClasses: [
 			CommandClasses["Manufacturer Specific"],
 			CommandClasses.Version,
-			ccCaps({ ccId: CommandClasses["Window Covering"], isSupported: true }),
+			ccCaps({
+				ccId: CommandClasses["Window Covering"],
+				isSupported: true,
+			}),
 		],
 	},
 
