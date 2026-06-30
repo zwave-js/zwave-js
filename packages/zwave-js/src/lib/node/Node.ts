@@ -122,6 +122,7 @@ import {
 	getCCName,
 	getDSTInfo,
 	getNotification,
+	isActuatorCC,
 	isRssiError,
 	isSupervisionResult,
 	isTransmissionError,
@@ -616,9 +617,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			// and related values, should be performed:
 			const isAPIOptimistic = api.isSetValueOptimistic(valueId);
 
-			// Whether the device class is slow (e.g. motors, window coverings)
-			const isSlowDeviceClass = endpointInstance.deviceClass?.specific
-				.supportsOptimisticValueUpdate === false;
+			// Whether the device class has slow actuators (e.g. motors, window coverings)
+			const isSlowActuator = isActuatorCC(valueId.commandClass)
+				&& !!endpointInstance.deviceClass?.specific
+					.isSlowActuator;
 			// Whether the device has at least started executing the command
 			const supervisedAndAccepted = supervisedCommandSucceeded(result);
 			// Whether the device has completed the command successfully
@@ -633,15 +635,15 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 			// The actual value may be updated optimistically once the command has started.
 			const shouldUpdateActualValueOptimistically = isAPIOptimistic
-				// For slow device classes, this is only allowed when the value is a
+				// For slow actuators, this is only allowed when the value is a
 				// target value that is distinct from the current physical state.
-				&& (!isSlowDeviceClass || hooks?.isSplitStateTargetValue)
+				&& (!isSlowActuator || hooks?.isSplitStateTargetValue)
 				&& (supervisedAndAccepted
 					|| unsupervisedAndOptimisticValueUpdateEnabled);
 			// Related values may only be updated optimistically once the command has completed successfully
 			const shouldUpdateRelatedValuesOptimistically = isAPIOptimistic
-				// And only for fast device classes
-				&& !isSlowDeviceClass
+				// And only for fast actuators or non-actuators
+				&& !isSlowActuator
 				&& (supervisedAndCompletedSuccessfully
 					|| unsupervisedAndOptimisticValueUpdateEnabled);
 
@@ -692,13 +694,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 					);
 				}
 
-				// Verify the current value after a delay, unless...
-				// ...the command was supervised and successful
-				//    ... and this is not a slow device class
-				// ...and the CC API decides not to verify anyways
+				// Verify the current value after a delay when the command
+				// hasn't already completed successfully, the device is a slow
+				// actuator, or the CC API forces verification.
 				if (
 					!supervisedCommandSucceeded(result)
-					|| isSlowDeviceClass
+					|| isSlowActuator
 					|| hooks.forceVerifyChanges?.()
 				) {
 					// Let the CC API implementation handle the verification.
