@@ -674,7 +674,7 @@ export class TypedEventTarget<TEvents extends Record<keyof TEvents, EventListene
     // (undocumented)
     once<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
     // (undocumented)
-    removeAllListeners<TEvent extends keyof TEvents>(event?: TEvent): this;
+    removeAllListeners(event?: keyof TEvents): this;
     // (undocumented)
     removeListener<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
 }
