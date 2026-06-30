@@ -1,0 +1,54 @@
+{
+	"manufacturer": "Test Corp",
+	"manufacturerId": "0xdead",
+	"label": "Test Motor Controller",
+	"description": "Test device with partial config params",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1[0x01]",
+			"label": "Bit 0",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "1[0x02]",
+			"label": "Bit 1",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "1[0x04]",
+			"label": "Bit 2",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "1[0x08]",
+			"label": "Bit 3",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 0,
+			"unsigned": true
+		}
+	]
+}
