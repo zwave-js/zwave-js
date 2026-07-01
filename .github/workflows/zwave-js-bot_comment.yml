@@ -23,7 +23,7 @@ jobs:
     steps:
     # Checkout master branch first to get trusted bot scripts for security checks
     - name: Checkout master branch (trusted)
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: trusted
 
@@ -95,7 +95,7 @@ jobs:
           })
 
     - name: Checkout merged code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         token: ${{secrets.BOT_TOKEN}}
         fetch-depth: 0 # We need the history for versioning with yarn
@@ -140,7 +140,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: trusted
 
@@ -182,7 +182,7 @@ jobs:
       if: |
         steps.check-permissions.outputs.result == 'true' &&
         !fromJSON(steps.pr-info.outputs.result).pending
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         token: ${{secrets.BOT_TOKEN}}
         repository: ${{ fromJSON(steps.pr-info.outputs.result).repoName }}
@@ -247,7 +247,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
  
     - name: Check user's permissions to do this
       id: check-permissions
@@ -287,7 +287,7 @@ jobs:
 
     - name: Checkout pull request
       if: steps.check-permissions.outputs.result == 'true'
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         token: ${{secrets.BOT_TOKEN}}
         repository: ${{ fromJSON(steps.get-pr.outputs.result).head.repo.full_name }}
@@ -344,7 +344,7 @@ jobs:
 
   #   steps:
   #   - name: Checkout master branch
-  #     uses: actions/checkout@v6
+  #     uses: actions/checkout@v7
  
   #   - name: Check permissions and necessity
   #     id: check-permissions
@@ -377,7 +377,7 @@ jobs:
 
   #   - name: Checkout pull request
   #     if: steps.check-permissions.outputs.result == 'true'
-  #     uses: actions/checkout@v6
+  #     uses: actions/checkout@v7
   #     with:
   #       fetch-depth: 0 # Fetch the history, or this action will break everything!
   #       token: ${{secrets.BOT_TOKEN}}
@@ -435,7 +435,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
  
     - name: Check user's permissions to do this
       id: check-permissions
@@ -540,7 +540,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
  
     - name: Check user's permissions to do this
       id: check-permissions
@@ -657,7 +657,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
  
     - name: Check user's permissions to do this
       id: check-permissions
@@ -776,7 +776,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Check user's permissions to do this
       id: check-permissions
@@ -841,7 +841,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Check user's permissions to do this
       id: check-permissions
@@ -905,7 +905,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Check user's permissions to do this
       id: check-permissions
