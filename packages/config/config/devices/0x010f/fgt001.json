@@ -22,7 +22,7 @@
 		"max": "255.255"
 	},
 	"metadata": {
-		"manual": "https://manuals.fibaro.com/content/manuals/en/FGT-001/FGT-001-EN-T-v1.6.pdf"
+		"manual": "https://manuals.fibaro.com/heat-controller/"
 	},
 	"paramInformation": [
 		{
@@ -192,7 +192,7 @@
 							"states": {
 								"0": "Off",
 								"1": "Heat",
-								"31": "Manufacturer specific"
+								"31": "Fully Open"
 							}
 						}
 					}
