@@ -1,10 +1,18 @@
 import { CommandClasses, InterviewStage, SecurityClass } from "@zwave-js/core";
+import {
+	ReplaceFailedNodeRequest,
+	ReplaceFailedNodeResponse,
+	ReplaceFailedNodeRequestStatusReport,
+	ReplaceFailedNodeStartFlags,
+	ReplaceFailedNodeStatus,
+} from "@zwave-js/serial";
 import { wait } from "alcalzone-shared/async";
 import path from "node:path";
 import { InclusionStrategy } from "../../controller/Inclusion.js";
 import type { ZWaveNode } from "../../node/Node.js";
 import { integrationTest } from "../integrationTestSuite.js";
 import { integrationTest as integrationTestMulti } from "../integrationTestSuiteMulti.js";
+import { vi } from "vitest";
 
 integrationTestMulti(
 	"When S2 bootstrapping fails due to wrong PIN, the interview should not start",
@@ -88,6 +96,46 @@ integrationTestMulti(
 
 			t.expect(includedNode!.interviewStage).toBe(InterviewStage.None);
 			t.expect(includedNode!.ready).toBe(false);
+		},
+	},
+);
+
+integrationTest(
+	"When replacing a failed node fails, the inclusion failed event should include the node ID",
+	{
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			t.onTestFinished(() => {
+				vi.restoreAllMocks();
+			});
+
+			vi.spyOn(driver.controller as any, "pauseSmartStart")
+				.mockResolvedValue(undefined);
+			vi.spyOn(node, "ping").mockResolvedValue(false);
+			vi.spyOn(driver, "sendMessage").mockImplementation(async (msg) => {
+				if (msg instanceof ReplaceFailedNodeRequest) {
+					return new ReplaceFailedNodeResponse({
+						replaceStatus: ReplaceFailedNodeStartFlags.OK,
+					}) as any;
+				}
+				throw new Error("Unexpected sendMessage call");
+			});
+			vi.spyOn(driver, "waitForMessage").mockResolvedValue(
+				new ReplaceFailedNodeRequestStatusReport({
+					callbackId: 1,
+					replaceStatus: ReplaceFailedNodeStatus.NodeOK,
+				}) as any,
+			);
+
+			const inclusionFailedPromise = new Promise<void>((resolve) => {
+				driver.controller.once("inclusion failed", (nodeId) => {
+					t.expect(nodeId).toBe(node.id);
+					resolve();
+				});
+			});
+
+			await t.expect(driver.controller.replaceFailedNode(node.id))
+				.rejects.toThrow(/could not be replaced because it has responded/i);
+			await inclusionFailedPromise;
 		},
 	},
 );
