@@ -561,10 +561,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dprint/typescript@npm:^0.95.15":
-  version: 0.95.15
-  resolution: "@dprint/typescript@npm:0.95.15"
-  checksum: 10/109153ee07cfed3801cffe0034a77bbd328da1b8e467d1ca4645025f50690af164d12285de35071298bfb5279529a413688dcc8124135752fb780fade2570640
+"@dprint/typescript@npm:^0.96.1":
+  version: 0.96.1
+  resolution: "@dprint/typescript@npm:0.96.1"
+  checksum: 10/7d98138926970cb1c157c7a9bc0038035f2ea3827d765e75e7ce69cd83ccfddd95a616c52004ae482b28c4d21050fd9b32b8588c33d74326c093e1bf1bf31149
   languageName: node
   linkType: hard
 
@@ -3141,7 +3141,7 @@ __metadata:
     "@dprint/formatter": "npm:^0.5.1"
     "@dprint/json": "npm:^0.21.3"
     "@dprint/markdown": "npm:^0.21.1"
-    "@dprint/typescript": "npm:^0.95.15"
+    "@dprint/typescript": "npm:^0.96.1"
     "@types/globrex": "npm:^0.1.4"
     "@types/node": "npm:^20.19.35"
     "@types/yargs": "npm:^17.0.35"
@@ -3227,7 +3227,7 @@ __metadata:
     "@dprint/formatter": "npm:^0.5.1"
     "@dprint/json": "npm:^0.21.3"
     "@dprint/markdown": "npm:^0.21.1"
-    "@dprint/typescript": "npm:^0.95.15"
+    "@dprint/typescript": "npm:^0.96.1"
     "@microsoft/api-extractor": "npm:^7.58.7"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
     "@tsconfig/node20": "npm:^20.1.9"
