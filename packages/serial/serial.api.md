@@ -2281,42 +2281,42 @@ export interface GetControllerVersionResponseOptions {
 // Warning: (ae-missing-release-tag) "getDefaultPriority" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getDefaultPriority<T extends Message>(messageClass: T): MessagePriority | undefined;
+export function getDefaultPriority(messageClass: Message): MessagePriority | undefined;
 
 // Warning: (ae-missing-release-tag) "getDefaultPriorityStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getDefaultPriorityStatic<T extends MessageConstructor<Message>>(classConstructor: T): MessagePriority | undefined;
+export function getDefaultPriorityStatic(classConstructor: MessageConstructor<Message>): MessagePriority | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedCallback<T extends Message>(messageClass: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedCallback(messageClass: Message): FunctionType | typeof Message | ResponsePredicate | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedCallbackStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedCallbackStatic<T extends MessageConstructor<Message>>(classConstructor: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedCallbackStatic(classConstructor: MessageConstructor<Message>): FunctionType | typeof Message | ResponsePredicate | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedResponse<T extends Message>(messageClass: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedResponse(messageClass: Message): FunctionType | typeof Message | ResponsePredicate | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedResponseStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedResponseStatic<T extends MessageConstructor<Message>>(classConstructor: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedResponseStatic(classConstructor: MessageConstructor<Message>): FunctionType | typeof Message | ResponsePredicate | undefined;
 
 // Warning: (ae-missing-release-tag) "getFunctionType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getFunctionType<T extends Message>(messageClass: T): FunctionType | undefined;
+export function getFunctionType(messageClass: Message): FunctionType | undefined;
 
 // Warning: (ae-missing-release-tag) "getFunctionTypeStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getFunctionTypeStatic<T extends MessageConstructor<Message>>(classConstructor: T): FunctionType | undefined;
+export function getFunctionTypeStatic(classConstructor: MessageConstructor<Message>): FunctionType | undefined;
 
 // Warning: (ae-missing-release-tag) "GetLongRangeChannelRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2404,12 +2404,12 @@ export interface GetLongRangeNodesResponseOptions {
 // Warning: (ae-missing-release-tag) "getMessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getMessageType<T extends Message>(messageClass: T): MessageType | undefined;
+export function getMessageType(messageClass: Message): MessageType | undefined;
 
 // Warning: (ae-missing-release-tag) "getMessageTypeStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getMessageTypeStatic<T extends MessageConstructor<Message>>(classConstructor: T): MessageType | undefined;
+export function getMessageTypeStatic(classConstructor: MessageConstructor<Message>): MessageType | undefined;
 
 // Warning: (ae-missing-release-tag) "GetNodeProtocolInfoRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2976,6 +2976,7 @@ export class Message {
     hasCallbackId(): this is this & {
         callbackId: number;
     };
+    ignoreNodeUpdate: boolean;
     isExpectedCallback(msg: Message): boolean;
     isExpectedNodeUpdate(ctx: GetNode<NodeId & SupportsCC>, msg: Message): boolean;
     isExpectedResponse(msg: Message): boolean;

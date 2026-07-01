@@ -350,12 +350,12 @@ export function getNVMFileConstructor(id: number): NVMFileConstructor<NVMFile> |
 // Warning: (ae-missing-release-tag) "getNVMFileID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getNVMFileID<T extends NVMFile>(id: T): number | ((id: number) => boolean);
+export function getNVMFileID(id: NVMFile): number | ((id: number) => boolean);
 
 // Warning: (ae-missing-release-tag) "getNVMFileIDStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getNVMFileIDStatic<T extends NVMFileConstructor<NVMFile>>(classConstructor: T): number | ((id: number) => boolean);
+export function getNVMFileIDStatic(classConstructor: NVMFileConstructor<NVMFile>): number | ((id: number) => boolean);
 
 // Warning: (ae-missing-release-tag) "getNVMSection" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
