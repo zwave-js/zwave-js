@@ -8834,6 +8834,13 @@ ${handlers.length} left`,
 	public async firmwareUpdateOTW(
 		data: BytesView | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
+		// If the data is provided as a FirmwareUpdateInfo, we need to download the firmware first.
+		// This must happen before the busy checks, so no concurrent update can slip in between them
+		// and queueing the task.
+		if (isFirmwareUpdateInfo(data)) {
+			data = await this.extractOTWUpdateInfo(data);
+		}
+
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
 			const message =
@@ -8848,11 +8855,6 @@ ${handlers.length} left`,
 				`Failed to start the update: The controller is currently being updated!`;
 			this.controllerLog.print(message, "error");
 			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
-		}
-
-		// If the data is provided as a FirmwareUpdateInfo, we need to download the firmware first
-		if (isFirmwareUpdateInfo(data)) {
-			data = await this.extractOTWUpdateInfo(data);
 		}
 
 		return this._scheduler.queueTask(this.getFirmwareUpdateOTWTask(data));
