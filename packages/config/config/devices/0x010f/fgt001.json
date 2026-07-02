@@ -144,8 +144,16 @@
 		// Hide CCs from root endpoint that are duplicated on the manually preserved endpoint 1
 		"commandClasses": {
 			"add": {
+				// The following command classes are added manually because the device
+				// does not correctly advertise them in its NIF (Node Information Frame).
+				// Without these entries, ZWaveJS would not interview these CCs on the
+				// respective endpoints, even though the device fully supports them.
+
 				"Multilevel Sensor": {
 					"endpoints": {
+						// Add Multilevel Sensor to endpoint 2 (external temperature sensor).
+						// This allows ZWaveJS to read the temperature from the external
+						// sensor connected to the device.
 						"2": {
 							"isSupported": true
 						}
@@ -153,6 +161,11 @@
 				},
 				"Battery": {
 					"endpoints": {
+						// Add Battery to endpoint 2 (external temperature sensor).
+						// The FGT001 has two separate battery sets: endpoint 1 for the
+						// thermostat valve and endpoint 2 for the external temperature
+						// sensor. Without this entry, only the battery of endpoint 1
+						// would be queried.
 						"2": {
 							"isSupported": true
 						}
@@ -160,6 +173,9 @@
 				},
 				"Notification": {
 					"endpoints": {
+						// Add Notification to endpoints 1 and 2, as both endpoints send
+						// notifications (e.g. battery status, hardware alerts) that are
+						// not declared in their NIF.
 						"1": {
 							"isSupported": true
 						},
@@ -171,6 +187,11 @@
 			},
 			"remove": {
 				"Battery": {
+					// Remove Battery from the root endpoint (endpoint 0), as the device
+					// correctly reports battery information on endpoint 1 and 2 only.
+					// Without this entry, ZWaveJS would also query the battery on the
+					// root endpoint, resulting in a duplicate and potentially incorrect
+					// battery value.
 					"endpoints": [0]
 				}
 			}
