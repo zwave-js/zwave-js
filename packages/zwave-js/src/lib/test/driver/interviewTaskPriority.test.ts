@@ -1,14 +1,17 @@
 import { type CommandClass, WakeUpCCWakeUpNotification } from "@zwave-js/cc";
 import { CommandClasses, InterviewStage, NodeStatus } from "@zwave-js/core";
 import {
-	MockNode,
+	type MockNode,
 	type MockNodeBehavior,
 	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import path from "node:path";
 import type { ZWaveNode } from "../../node/Node.js";
-import { integrationTest, IntegrationTestOptions } from "../integrationTestSuiteMulti.js";
+import {
+	type IntegrationTestOptions,
+	integrationTest,
+} from "../integrationTestSuiteMulti.js";
 
 function sendWakeUpNotification(
 	mockNode: MockNode,
@@ -22,30 +25,29 @@ function sendWakeUpNotification(
 	);
 }
 
-const nodeCapabilities: IntegrationTestOptions["nodeCapabilities"] =
-	[
-		{
-			id: 2,
-			capabilities: {
-				isListening: false,
-				isFrequentListening: false,
-				commandClasses: [
-					CommandClasses["Wake Up"],
-					CommandClasses.Version,
-				],
-			},
+const nodeCapabilities: IntegrationTestOptions["nodeCapabilities"] = [
+	{
+		id: 2,
+		capabilities: {
+			isListening: false,
+			isFrequentListening: false,
+			commandClasses: [
+				CommandClasses["Wake Up"],
+				CommandClasses.Version,
+			],
 		},
-		{
-			id: 3,
-			capabilities: {
-				isListening: true,
-				isFrequentListening: false,
-				commandClasses: [
-					CommandClasses.Version,
-				],
-			},
+	},
+	{
+		id: 3,
+		capabilities: {
+			isListening: true,
+			isFrequentListening: false,
+			commandClasses: [
+				CommandClasses.Version,
+			],
 		},
-	];
+	},
+];
 
 const fixtureDir = path.join(
 	__dirname,

@@ -902,7 +902,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		);
 		if (existingTask) return existingTask;
 
-		// Give sleeping nodes higher priority so they are interviewed first
+		// Prioritize sleepy nodes over always-listening ones, since their
+		// availability window is limited to the time they are awake
 		const priority = self.canSleep
 			? TaskPriority.Low
 			: TaskPriority.Lower;
@@ -926,9 +927,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				) {
 					yield;
 
-					const success: boolean = yield* waitFor(
-						self.interviewInternal(),
-					);
+					// Exit while the node is asleep. The interview is
+					// re-queued when it wakes up.
+					const statusBeforeAttempt: NodeStatus = self.status;
+					if (statusBeforeAttempt === NodeStatus.Asleep) return;
+
+					const success: boolean = yield* self.interviewInternal();
 
 					if (success) {
 						// Report missing device config on success
@@ -1002,15 +1006,19 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				}
 			},
 			cleanup: async () => {
-				// Reject pending transactions from this interview
-				await self.driver.rejectTransactions(
-					(t) =>
-						t.message.getNodeId() === self.id
-						&& (t.priority === MessagePriority.NodeQuery
-							|| t.tag === "interview"),
-					"The interview was restarted",
-					ZWaveErrorCodes.Controller_InterviewRestarted,
-				);
+				// Reject pending transactions from an unfinished interview.
+				// After a completed one, pending NodeQuery transactions belong
+				// to someone else and must be left alone.
+				if (self.interviewStage !== InterviewStage.Complete) {
+					await self.driver.rejectTransactions(
+						(t) =>
+							t.message.getNodeId() === self.id
+							&& (t.priority === MessagePriority.NodeQuery
+								|| t.tag === "interview"),
+						"The interview was restarted",
+						ZWaveErrorCodes.Controller_InterviewRestarted,
+					);
+				}
 				// Restore keepAwake state
 				self.keepAwake = keepAwake;
 				if (!keepAwake) {
@@ -1183,7 +1191,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * WARNING: Do not call this method from application code. To refresh the information
 	 * for a specific node, use `node.refreshInfo()` instead
 	 */
-	public async interviewInternal(): Promise<boolean> {
+	public async *interviewInternal(): AsyncGenerator<
+		(() => Promise<unknown>) | undefined,
+		boolean
+	> {
 		if (this.interviewStage === InterviewStage.Complete) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1196,22 +1207,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// Remember that we tried to interview this node
 		this._interviewAttempts++;
-
-		// Wrapper around interview methods to return false in case of a communication error
-		// This way the single methods don't all need to have the same error handler
-		const tryInterviewStage = async (
-			method: () => Promise<void>,
-		): Promise<boolean> => {
-			try {
-				await method();
-				return true;
-			} catch (e) {
-				if (isTransmissionError(e)) {
-					return false;
-				}
-				throw e;
-			}
-		};
 
 		// The interview is done in several stages. At each point, the interview process might be aborted
 		// due to a stage failing. The reached stage is saved, so we can continue it later without
@@ -1247,20 +1242,23 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 
 			if (this.interviewStage === InterviewStage.ProtocolInfo) {
+				yield;
 				this.reportInterviewStageStarted(InterviewStage.NodeInfo);
-				if (
-					!(await tryInterviewStage(() => this.interviewNodeInfo()))
-				) {
-					return false;
+				try {
+					yield* waitFor(this.interviewNodeInfo());
+				} catch (e) {
+					if (isTransmissionError(e)) return false;
+					throw e;
 				}
 			}
 
 			// At this point the basic interview of new nodes is done. Start here when re-interviewing known nodes
 			// to get updated information about command classes
 			if (this.interviewStage === InterviewStage.NodeInfo) {
+				yield;
 				this.reportInterviewStageStarted(InterviewStage.CommandClasses);
 				// Only advance the interview if it was completed, otherwise abort
-				if (await this.interviewCCs()) {
+				if (yield* this.interviewCCs()) {
 					this.setInterviewStage(InterviewStage.CommandClasses);
 				} else {
 					return false;
@@ -1274,6 +1272,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			|| (!this.isControllerNode
 				&& this.interviewStage === InterviewStage.CommandClasses)
 		) {
+			yield;
 			this.reportInterviewStageStarted(InterviewStage.OverwriteConfig);
 			// Load a config file for this node if it exists and overwrite the previously reported information
 			await this.overwriteConfig();
@@ -1520,7 +1519,10 @@ protocol version:      ${this.protocolVersion}`;
 		);
 	}
 
-	protected async interviewCCs(): Promise<boolean> {
+	protected async *interviewCCs(): AsyncGenerator<
+		(() => Promise<unknown>) | undefined,
+		boolean
+	> {
 		// Interviewing CCs happens in two phases, because the full amount of work is unknown up
 		// front (endpoints are revealed by Multi Channel, secure CCs by Security):
 		//
@@ -1682,10 +1684,10 @@ protocol version:      ${this.protocolVersion}`;
 						this._hasEmittedNoS2NetworkKeyError = true;
 					}
 				} else {
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						this,
 						CommandClasses["Security 2"],
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -1742,10 +1744,10 @@ protocol version:      ${this.protocolVersion}`;
 						this._hasEmittedNoS0NetworkKeyError = true;
 					}
 				} else {
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						this,
 						CommandClasses.Security,
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -1765,10 +1767,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses["Manufacturer Specific"],
-			);
+			));
 			if (typeof action === "boolean") return action;
 		}
 
@@ -1779,10 +1781,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses.Version,
-			);
+			));
 			if (typeof action === "boolean") return action;
 
 			// After the version CC interview of the root endpoint, we have enough info to load the correct device config file
@@ -1816,10 +1818,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses["Wake Up"],
-			);
+			));
 			if (typeof action === "boolean") return action;
 		}
 
@@ -1834,10 +1836,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses["Multi Channel"],
-			);
+			));
 			if (typeof action === "boolean") return action;
 
 			// Now that the Multi Channel interview has discovered the endpoints, we may need to
@@ -1959,10 +1961,10 @@ protocol version:      ${this.protocolVersion}`;
 						level: "silly",
 					});
 
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						endpoint,
 						CommandClasses["Security 2"],
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -1983,10 +1985,10 @@ protocol version:      ${this.protocolVersion}`;
 						level: "silly",
 					});
 
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						endpoint,
 						CommandClasses.Security,
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -2099,11 +2101,11 @@ protocol version:      ${this.protocolVersion}`;
 					level: "silly",
 				});
 
-				const action = await interviewEndpoint(
+				const action = yield* waitFor(interviewEndpoint(
 					endpoint,
 					CommandClasses.Version,
 					true,
-				);
+				));
 				if (typeof action === "boolean") return action;
 			} else {
 				this.driver.controllerLog.logNode(this.id, {
@@ -2195,7 +2197,7 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(this, cc);
+			const action = yield* waitFor(interviewEndpoint(this, cc));
 			if (action === "continue") continue;
 			else if (typeof action === "boolean") return action;
 		}
@@ -2223,7 +2225,7 @@ protocol version:      ${this.protocolVersion}`;
 					level: "silly",
 				});
 
-				const action = await interviewEndpoint(endpoint, cc);
+				const action = yield* waitFor(interviewEndpoint(endpoint, cc));
 				if (action === "continue") continue;
 				else if (typeof action === "boolean") return action;
 			}
@@ -2239,7 +2241,7 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(this, cc);
+			const action = yield* waitFor(interviewEndpoint(this, cc));
 			if (action === "continue") continue;
 			else if (typeof action === "boolean") return action;
 		}
@@ -2278,11 +2280,11 @@ protocol version:      ${this.protocolVersion}`;
 					"silly",
 				);
 
-				const action = await interviewEndpoint(
+				const action = yield* waitFor(interviewEndpoint(
 					this,
 					CommandClasses.Basic,
 					true,
-				);
+				));
 				if (typeof action === "boolean") return action;
 			} else if (basicSetMappingWillSucceed) {
 				// Hide the Basic CC because its functionality is exposed through another CC
@@ -2330,11 +2332,11 @@ protocol version:      ${this.protocolVersion}`;
 					level: "silly",
 				});
 
-				const action = await interviewEndpoint(
+				const action = yield* waitFor(interviewEndpoint(
 					endpoint,
 					CommandClasses.Basic,
 					true,
-				);
+				));
 				if (typeof action === "boolean") return action;
 			} else if (basicSetMappingWillSucceed) {
 				// Hide the Basic CC because its functionality is exposed through another CC

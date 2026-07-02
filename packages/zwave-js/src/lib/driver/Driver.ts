@@ -2524,13 +2524,19 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 */
 	public interviewNodeInternal(node: ZWaveNode): Promise<void> {
 		const task = node.getInterviewTask();
-		if (task instanceof Promise) return task;
 
-		// Cancel any pending delayed re-interview (e.g. after firmware update)
-		this.reinterviewTimers.get(node.id)?.clear();
-		this.reinterviewTimers.delete(node.id);
+		let promise: Promise<void>;
+		if (task instanceof Promise) {
+			promise = task;
+		} else {
+			// Cancel any pending delayed re-interview (e.g. after firmware update)
+			this.reinterviewTimers.get(node.id)?.clear();
+			this.reinterviewTimers.delete(node.id);
 
-		return this._scheduler.queueTask(task).catch((e) => {
+			promise = this._scheduler.queueTask(task);
+		}
+
+		return promise.catch((e) => {
 			if (isZWaveError(e)) {
 				if (
 					e.code === ZWaveErrorCodes.Driver_NotReady
@@ -2642,11 +2648,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// This clears the current transaction and continues sending the next messages
 		this.moveMessagesToWakeupQueue(node.id);
 
-		// Cancel the interview task so it releases the concurrency group
-		// slot for other nodes. onNodeWakeUp re-queues incomplete interviews.
-		void this.scheduler.removeTasks(
+		// Reject a running interview's pending transactions. The task treats this
+		// as a failed attempt and exits, releasing the concurrency group slot for
+		// other nodes. onNodeWakeUp re-queues incomplete interviews.
+		const interviewTask = this.scheduler.findTask(
 			(t) => t.tag?.id === "interview" && t.tag.nodeId === node.id,
 		);
+		if (interviewTask) {
+			void this.rejectTransactions(
+				(t) =>
+					t.message.getNodeId() === node.id
+					&& (t.priority === MessagePriority.NodeQuery
+						|| t.tag === "interview"),
+				"The node is asleep",
+				ZWaveErrorCodes.Controller_MessageDropped,
+			);
+		}
 	}
 
 	/** Is called when a previously dead node starts communicating again */
