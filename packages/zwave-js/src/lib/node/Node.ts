@@ -1263,13 +1263,14 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 		}
 
+		// After this point we should not yield - everything is basically instant anyways.
+
 		if (
 			(this.isControllerNode
 				&& this.interviewStage === InterviewStage.ProtocolInfo)
 			|| (!this.isControllerNode
 				&& this.interviewStage === InterviewStage.CommandClasses)
 		) {
-			yield;
 			this.reportInterviewStageStarted(InterviewStage.OverwriteConfig);
 			// Load a config file for this node if it exists and overwrite the previously reported information
 			await this.overwriteConfig();
