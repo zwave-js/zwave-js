@@ -126,6 +126,8 @@ export type RefreshValuesContext = CCAPIHost<
 export interface RefreshValuesOptions {
 	/** The priority to use for the refresh value queries */
 	priority?: MessagePriority;
+	/** An optional tag to identify the transactions created by the refresh value queries */
+	tag?: any;
 	/**
 	 * An optional callback to report fine-grained progress while refreshing values.
 	 */

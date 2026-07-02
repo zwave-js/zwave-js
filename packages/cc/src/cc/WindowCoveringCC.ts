@@ -539,6 +539,7 @@ export class WindowCoveringCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -597,6 +598,7 @@ ${
 
 			// Query current values for all supported parameters
 			await this.refreshValues(ctx, {
+				tag: "interview",
 				onProgress: (completed, total) =>
 					node.reportInterviewProgress(completed, total),
 			});
@@ -618,6 +620,7 @@ ${
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const parameters: number[] = this.getValue(

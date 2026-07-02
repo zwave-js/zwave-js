@@ -291,7 +291,7 @@ export class BatteryCC extends CommandClass {
 		});
 
 		// Query the Battery status
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -309,6 +309,7 @@ export class BatteryCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		ctx.logNode(node.id, {

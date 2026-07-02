@@ -330,7 +330,7 @@ export class FibaroVenetianBlindCC extends FibaroCC {
 		});
 
 		// Nothing special, just get the values
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 	}
 
 	public async refreshValues(
@@ -350,6 +350,7 @@ export class FibaroVenetianBlindCC extends FibaroCC {
 			}),
 			{
 				priority: options?.priority,
+				tag: options?.tag,
 			},
 		);
 		if (resp) {

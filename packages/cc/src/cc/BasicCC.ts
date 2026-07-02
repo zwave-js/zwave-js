@@ -276,7 +276,7 @@ export class BasicCC extends CommandClass {
 		endpoint.addCC(CommandClasses.Basic, { isSupported: true });
 
 		// try to query the current state
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remove Basic CC support again when there was no response
 		if (
@@ -311,6 +311,7 @@ export class BasicCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		// try to query the current state

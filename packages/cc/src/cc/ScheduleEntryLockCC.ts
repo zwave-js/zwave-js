@@ -694,6 +694,7 @@ export class ScheduleEntryLockCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {

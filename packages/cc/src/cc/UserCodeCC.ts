@@ -997,6 +997,7 @@ export class UserCodeCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -1092,6 +1093,7 @@ export class UserCodeCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const { queryAllUserCodes = false } = options ?? {};

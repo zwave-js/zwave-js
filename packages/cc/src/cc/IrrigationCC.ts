@@ -1125,6 +1125,7 @@ export class IrrigationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -1175,6 +1176,7 @@ max. valve table size: ${systemInfo.maxValveTableSize}`;
 
 		// Query current values
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed, total) =>
 				node.reportInterviewProgress(completed, total),
 		});
@@ -1195,6 +1197,7 @@ max. valve table size: ${systemInfo.maxValveTableSize}`;
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		// Query the current system config

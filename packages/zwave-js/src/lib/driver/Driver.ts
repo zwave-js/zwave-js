@@ -242,7 +242,6 @@ import type { ZWaveNodeBase } from "../node/mixins/00_Base.js";
 import type { NodeWakeup } from "../node/mixins/30_Wakeup.js";
 import type { NodeValues } from "../node/mixins/40_Values.js";
 import type { NodeSchedulePoll } from "../node/mixins/60_ScheduledPoll.js";
-import { reportMissingDeviceConfig } from "../telemetry/deviceConfig.js";
 import {
 	type AppInfo,
 	compileStatistics,
@@ -2433,20 +2432,21 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						if (node.canSleep) {
 							// A node that can sleep should be assumed to be sleeping after resuming from cache
 							node.markAsAsleep();
+							// Don't queue the interview — it would pin the
+							// concurrency group slot. It will be queued when
+							// the node wakes up.
+							continue;
 						}
 
-						void (async () => {
-							// Continue the interview if necessary. If that is not necessary, at least
-							// determine the node's status
-							if (node.interviewStage < InterviewStage.Complete) {
-								await this.interviewNodeInternal(node);
-							} else if (
-								node.isListening || node.isFrequentListening
-							) {
-								// Ping non-sleeping nodes to determine their status
-								await node.ping();
-							}
-						})();
+						// Continue the interview if necessary, otherwise determine the node's status
+						if (node.interviewStage < InterviewStage.Complete) {
+							void this.interviewNodeInternal(node);
+						} else if (
+							node.isListening || node.isFrequentListening
+						) {
+							// Ping non-sleeping nodes to determine their status
+							void node.ping();
+						}
 					}
 				}
 			}
@@ -2512,7 +2512,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	private autoRefreshNodeValueTimers = new Map<number, Interval>();
-	private retryNodeInterviewTimeouts = new Map<number, Timer>();
+	private reinterviewTimers = new Map<number, Timer>();
+
 	/**
 	 * @internal
 	 * Starts or resumes the interview of a Z-Wave node. It is advised to NOT
@@ -2521,115 +2522,33 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 * WARNING: Do not call this method from application code. To refresh the information
 	 * for a specific node, use `node.refreshInfo()` instead
 	 */
-	public async interviewNodeInternal(node: ZWaveNode): Promise<void> {
-		if (node.interviewStage === InterviewStage.Complete) {
-			return;
+	public interviewNodeInternal(node: ZWaveNode): Promise<void> {
+		const task = node.getInterviewTask();
+
+		let promise: Promise<void>;
+		if (task instanceof Promise) {
+			promise = task;
+		} else {
+			// Cancel any pending delayed re-interview (e.g. after firmware update)
+			this.reinterviewTimers.get(node.id)?.clear();
+			this.reinterviewTimers.delete(node.id);
+
+			promise = this._scheduler.queueTask(task);
 		}
 
-		if (node.failedS2Bootstrapping) {
-			this.controllerLog.logNode(
-				node.id,
-				"has failed S2 bootstrapping and cannot be interviewed",
-				"warn",
-			);
-			return;
-		}
-
-		// Avoid having multiple restart timeouts active
-		if (this.retryNodeInterviewTimeouts.has(node.id)) {
-			this.retryNodeInterviewTimeouts.get(node.id)?.clear();
-			this.retryNodeInterviewTimeouts.delete(node.id);
-		}
-
-		// Drop all pending messages that come from a previous interview attempt
-		await this.rejectTransactions(
-			(t) =>
-				t.message.getNodeId() === node.id
-				&& (t.priority === MessagePriority.NodeQuery
-					|| t.tag === "interview"),
-			"The interview was restarted",
-			ZWaveErrorCodes.Controller_InterviewRestarted,
-		);
-
-		const maxInterviewAttempts = this._options.attempts.nodeInterview;
-
-		try {
-			if (!(await node.interviewInternal())) {
-				// Find out if we may retry the interview
-				if (node.status === NodeStatus.Dead) {
-					this.controllerLog.logNode(
-						node.id,
-						`Interview attempt (${node.interviewAttempts}/${maxInterviewAttempts}) failed, node is dead.`,
-						"warn",
-					);
-					node.emit("interview failed", node, {
-						errorMessage: "The node is dead",
-						isFinal: true,
-					});
-				} else if (node.interviewAttempts < maxInterviewAttempts) {
-					// This is most likely because the node is unable to handle our load of requests now. Give it some time
-					const retryTimeout = Math.min(
-						30000,
-						node.interviewAttempts * 5000,
-					);
-					this.controllerLog.logNode(
-						node.id,
-						`Interview attempt ${node.interviewAttempts}/${maxInterviewAttempts} failed, retrying in ${retryTimeout} ms...`,
-						"warn",
-					);
-					node.emit("interview failed", node, {
-						errorMessage:
-							`Attempt ${node.interviewAttempts}/${maxInterviewAttempts} failed`,
-						isFinal: false,
-						attempt: node.interviewAttempts,
-						maxAttempts: maxInterviewAttempts,
-					});
-					// Schedule the retry and remember the timeout instance
-					this.retryNodeInterviewTimeouts.set(
-						node.id,
-						setTimer(() => {
-							this.retryNodeInterviewTimeouts.delete(node.id);
-							void this.interviewNodeInternal(node);
-						}, retryTimeout).unref(),
-					);
-				} else {
-					this.controllerLog.logNode(
-						node.id,
-						`Failed all interview attempts, giving up.`,
-						"warn",
-					);
-					node.emit("interview failed", node, {
-						errorMessage: `Maximum interview attempts reached`,
-						isFinal: true,
-						attempt: maxInterviewAttempts,
-						maxAttempts: maxInterviewAttempts,
-					});
-				}
-			} else if (
-				node.manufacturerId != undefined
-				&& node.productType != undefined
-				&& node.productId != undefined
-				&& node.firmwareVersion != undefined
-				&& !node.deviceConfig
-				&& process.env.NODE_ENV !== "test"
-			) {
-				// The interview succeeded, but we don't have a device config for this node.
-				// Report it, so we can add a config file
-
-				void reportMissingDeviceConfig(this, node as any).catch(noop);
-			}
-		} catch (e) {
+		return promise.catch((e) => {
 			if (isZWaveError(e)) {
 				if (
 					e.code === ZWaveErrorCodes.Driver_NotReady
 					|| e.code === ZWaveErrorCodes.Controller_NodeRemoved
 				) {
-					// This only happens when a node is removed during the interview - we don't log this
+					// This only happens when a node is removed during the interview
 					return;
 				} else if (
 					e.code === ZWaveErrorCodes.Controller_InterviewRestarted
+					|| e.code === ZWaveErrorCodes.Driver_TaskRemoved
 				) {
-					// The interview was restarted by a user - we don't log this
+					// The interview was restarted or cancelled
 					return;
 				}
 				this.controllerLog.logNode(
@@ -2640,7 +2559,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			} else {
 				throw e;
 			}
-		}
+		});
 	}
 
 	/** Adds the necessary event handlers for a node instance */
@@ -2704,6 +2623,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			});
 		}
 
+		// Re-queue incomplete interview
+		if (
+			node.interviewStage !== InterviewStage.Complete
+			&& !this._options.testingHooks?.skipNodeInterview
+		) {
+			void this.interviewNodeInternal(node);
+		}
+
 		// Start the timer for sending the node to sleep again
 		this.debounceSendNodeToSleep(node);
 	}
@@ -2720,6 +2647,22 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		// Move all its pending messages to the WakeupQueue
 		// This clears the current transaction and continues sending the next messages
 		this.moveMessagesToWakeupQueue(node.id);
+
+		// Reject a running interview's pending transactions. The task treats this
+		// as a failed attempt and exits, releasing the concurrency group slot for
+		// other nodes. onNodeWakeUp re-queues incomplete interviews.
+		const interviewTask = this.scheduler.findTask(
+			(t) => t.tag?.id === "interview" && t.tag.nodeId === node.id,
+		);
+		if (interviewTask) {
+			void this.rejectTransactions(
+				(t) =>
+					t.message.getNodeId() === node.id
+					&& t.tag === "interview",
+				"The node is asleep",
+				ZWaveErrorCodes.Controller_MessageDropped,
+			);
+		}
 	}
 
 	/** Is called when a previously dead node starts communicating again */
@@ -3043,9 +2986,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this.sendNodeToSleepTimers.get(node.id)?.clear();
 			this.sendNodeToSleepTimers.delete(node.id);
 		}
-		if (this.retryNodeInterviewTimeouts.has(node.id)) {
-			this.retryNodeInterviewTimeouts.get(node.id)?.clear();
-			this.retryNodeInterviewTimeouts.delete(node.id);
+		void this._scheduler.removeTasks(
+			(t) => t.tag?.id === "interview" && t.tag.nodeId === node.id,
+			new ZWaveError(
+				"The node was removed",
+				ZWaveErrorCodes.Controller_NodeRemoved,
+			),
+		);
+		if (this.reinterviewTimers.has(node.id)) {
+			this.reinterviewTimers.get(node.id)?.clear();
+			this.reinterviewTimers.delete(node.id);
 		}
 		if (this.autoRefreshNodeValueTimers.has(node.id)) {
 			this.autoRefreshNodeValueTimers.get(node.id)?.clear();
@@ -3199,13 +3149,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				node.id,
 				`Firmware updated, scheduling interview in ${waitTime} seconds...`,
 			);
-			// We reuse the retryNodeInterviewTimeouts here because they serve a similar purpose
-			this.retryNodeInterviewTimeouts.set(
+			this.reinterviewTimers.set(
 				node.id,
 				setTimer(() => {
-					this.retryNodeInterviewTimeouts.delete(node.id);
+					this.reinterviewTimers.delete(node.id);
+					// After a firmware update, refresh the node info
 					void node.refreshInfo({
-						// After a firmware update, we need to refresh the node info
 						waitForWakeup: false,
 					});
 				}, waitTime * 1000).unref(),
@@ -4032,8 +3981,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 		for (
 			const timeout of [
-				...this.retryNodeInterviewTimeouts.values(),
 				...this.autoRefreshNodeValueTimers.values(),
+				...this.reinterviewTimers.values(),
 				this.statisticsTimeout,
 				this.pollBackgroundRSSITimer,
 				...this.sendNodeToSleepTimers.values(),
@@ -7420,10 +7369,6 @@ ${handlers.length} left`,
 			// Nonces and responses to Supervision Get have to be sent immediately
 			&& options.priority !== MessagePriority.Immediate
 		) {
-			if (options.priority === MessagePriority.NodeQuery) {
-				// Remember that this transaction was part of an interview
-				options.tag = "interview";
-			}
 			options.priority = MessagePriority.WakeUp;
 		}
 
@@ -8185,20 +8130,13 @@ ${handlers.length} left`,
 			// Reset the transaction so it doesn't simply resolve to `undefined` when we attempt to continue it
 			reset: true,
 		};
-		const requeueAndTagAsInterview: TransactionReducerResult = {
-			...requeue,
-			tag: "interview",
-		};
-
 		void this.reduceQueues((transaction, _source) => {
 			const msg = transaction.message;
 			if (msg.getNodeId() !== nodeId) return { type: "keep" };
 			// Drop all messages that are not allowed in the wakeup queue
 			// For all other messages, change the priority to wakeup
 			return this.mayMoveToWakeupQueue(transaction)
-				? transaction.priority === MessagePriority.NodeQuery
-					? requeueAndTagAsInterview
-					: requeue
+				? requeue
 				: reject;
 		});
 	}

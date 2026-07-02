@@ -158,8 +158,10 @@ import {
 	formatId,
 	getEnumMemberName,
 	getErrorMessage,
+	noop,
 	pick,
 } from "@zwave-js/shared";
+import { waitFor } from "@zwave-js/waddle";
 import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,
@@ -170,6 +172,8 @@ import path from "pathe";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
+import { type TaskBuilder, TaskPriority } from "../driver/Task.js";
+import { reportMissingDeviceConfig } from "../telemetry/deviceConfig.js";
 import { handleApplicationBusy } from "./CCHandlers/ApplicationStatusCC.js";
 import {
 	handleAssociationGet,
@@ -860,10 +864,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 *
 	 * **NOTE:** It is advised to NOT await this method as it can take a very long time (minutes to hours)!
 	 */
-	public async interview(): Promise<void> {
+	public interview(): Promise<void> {
 		// The initial interview of the controller node is always done
 		// and cannot be deferred.
-		if (this.isControllerNode) return;
+		if (this.isControllerNode) return Promise.resolve();
 
 		if (!this.driver.options.interview?.disableOnNodeAdded) {
 			throw new ZWaveError(
@@ -873,6 +877,154 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		}
 
 		return this.driver.interviewNodeInternal(this);
+	}
+
+	/** @internal */
+	public getInterviewTask(): Promise<void> | TaskBuilder<void> {
+		const self = this;
+
+		if (self.interviewStage === InterviewStage.Complete) {
+			return Promise.resolve();
+		}
+
+		if (self.failedS2Bootstrapping) {
+			self.driver.controllerLog.logNode(
+				self.id,
+				"has failed S2 bootstrapping and cannot be interviewed",
+				"warn",
+			);
+			return Promise.resolve();
+		}
+
+		// Return the existing task's promise if already running
+		const existingTask = self.driver.scheduler.findTask<void>(
+			(t) => t.tag?.id === "interview" && t.tag.nodeId === self.id,
+		);
+		if (existingTask) return existingTask;
+
+		// Prioritize sleepy nodes over always-listening ones, since their
+		// availability window is limited to the time they are awake
+		const priority = self.canSleep
+			? TaskPriority.Low
+			: TaskPriority.Lower;
+
+		let keepAwake: boolean;
+
+		return {
+			priority,
+			tag: { id: "interview", nodeId: self.id },
+			group: { id: "interview" },
+			task: async function* interviewTask() {
+				keepAwake = self.keepAwake;
+				self.keepAwake = true;
+
+				const maxAttempts = self.driver.options.attempts.nodeInterview;
+
+				for (
+					let attempt = 1;
+					attempt <= maxAttempts;
+					attempt++
+				) {
+					yield;
+
+					// Exit while the node is asleep. The interview is
+					// re-queued when it wakes up.
+					const statusBeforeAttempt: NodeStatus = self.status;
+					if (statusBeforeAttempt === NodeStatus.Asleep) return;
+
+					const success: boolean = yield* self.interviewInternal();
+
+					if (success) {
+						// Report missing device config on success
+						if (
+							self.manufacturerId != undefined
+							&& self.productType != undefined
+							&& self.productId != undefined
+							&& self.firmwareVersion != undefined
+							&& !self.deviceConfig
+							&& process.env.NODE_ENV !== "test"
+						) {
+							void reportMissingDeviceConfig(
+								self.driver,
+								self as any,
+							).catch(noop);
+						}
+						return;
+					}
+
+					// Node is asleep - exit and wait for wake-up to re-queue
+					if (self.status === NodeStatus.Asleep) {
+						return;
+					}
+
+					if (self.status === NodeStatus.Dead) {
+						self.driver.controllerLog.logNode(
+							self.id,
+							`Interview attempt (${self.interviewAttempts}/${maxAttempts}) failed, node is dead.`,
+							"warn",
+						);
+						self.emit("interview failed", self, {
+							errorMessage: "The node is dead",
+							isFinal: true,
+						});
+						return;
+					}
+
+					if (attempt >= maxAttempts) {
+						self.driver.controllerLog.logNode(
+							self.id,
+							`Failed all interview attempts, giving up.`,
+							"warn",
+						);
+						self.emit("interview failed", self, {
+							errorMessage: `Maximum interview attempts reached`,
+							isFinal: true,
+							attempt: maxAttempts,
+							maxAttempts,
+						});
+						return;
+					}
+
+					const retryTimeout = Math.min(
+						30000,
+						attempt * 5000,
+					);
+					self.driver.controllerLog.logNode(
+						self.id,
+						`Interview attempt ${self.interviewAttempts}/${maxAttempts} failed, retrying in ${retryTimeout} ms...`,
+						"warn",
+					);
+					self.emit("interview failed", self, {
+						errorMessage:
+							`Attempt ${self.interviewAttempts}/${maxAttempts} failed`,
+						isFinal: false,
+						attempt: self.interviewAttempts,
+						maxAttempts,
+					});
+
+					yield* waitFor(wait(retryTimeout, true));
+				}
+			},
+			cleanup: async () => {
+				// Reject pending transactions from an unfinished interview
+				if (self.interviewStage !== InterviewStage.Complete) {
+					await self.driver.rejectTransactions(
+						(t) =>
+							t.message.getNodeId() === self.id
+							&& t.tag === "interview",
+						"The interview was restarted",
+						ZWaveErrorCodes.Controller_InterviewRestarted,
+					);
+				}
+				// Restore keepAwake state
+				self.keepAwake = keepAwake;
+				if (!keepAwake) {
+					setImmediate(() => {
+						self.driver.debounceSendNodeToSleep(self);
+					});
+				}
+			},
+		};
 	}
 
 	private _refreshInfoPending: boolean = false;
@@ -889,119 +1041,144 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		// directly via the serial API
 		if (this.isControllerNode) return;
 
-		// The driver does deduplicate re-interview requests, but only at the end of this method.
-		// Without blocking here, many re-interview tasks for sleeping nodes may be queued, leading to parallel interviews
+		// Interview tasks are deduplicated, resetting/transferring the node status is not.
+		// Bail here if a refresh is already scheduled to avoid inconsistent node information.
 		if (this._refreshInfoPending) return;
 		this._refreshInfoPending = true;
 
-		const { resetSecurityClasses = false, waitForWakeup = true } = options;
-		// Unless desired, don't forget the information about sleeping nodes immediately, so they continue to function
-		let didWakeUp = false;
-		const wasAwake = this.status === NodeStatus.Awake;
-		if (
-			waitForWakeup
-			&& this.canSleep
-			&& !wasAwake
-			&& this.supportsCC(CommandClasses["Wake Up"])
-		) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				"Re-interview scheduled, waiting for node to wake up...",
+		try {
+			const {
+				resetSecurityClasses = false,
+				waitForWakeup = true,
+			} = options;
+
+			// Unless desired, don't forget the information about sleeping nodes immediately, so they continue to function
+			let didWakeUp = false;
+			const wasAwake = this.status === NodeStatus.Awake;
+			if (
+				waitForWakeup
+				&& this.canSleep
+				&& !wasAwake
+				&& this.supportsCC(CommandClasses["Wake Up"])
+			) {
+				this.driver.controllerLog.logNode(
+					this.id,
+					"Re-interview scheduled, waiting for node to wake up...",
+				);
+				didWakeUp = await this.waitForWakeup()
+					.then(() => true)
+					.catch(() => false);
+			}
+
+			// Cancel the existing interview task (runs its cleanup, rejects in-flight transactions)
+			await this.driver.scheduler.removeTasks(
+				(t) =>
+					t.tag?.id === "interview"
+					&& t.tag.nodeId === this.id,
+				new ZWaveError(
+					"The interview was restarted",
+					ZWaveErrorCodes.Controller_InterviewRestarted,
+				),
 			);
-			didWakeUp = await this.waitForWakeup()
-				.then(() => true)
-				.catch(() => false);
+
+			// preserve the node name and location, since they might not be stored on the node
+			const name = this.name;
+			const location = this.location;
+
+			// Preserve user codes if they aren't queried during the interview
+			const preservedValues: (ValueID & { value: unknown })[] = [];
+			const preservedMetadata: (ValueID & {
+				metadata: ValueMetadata;
+			})[] = [];
+			if (
+				this.supportsCC(CommandClasses["User Code"])
+				&& !this.driver.options.interview.queryAllUserCodes
+			) {
+				const mustBackup = (v: ValueID) =>
+					UserCodeCCValues.userCode.is(v)
+					|| UserCodeCCValues.userIdStatus.is(v)
+					|| UserCodeCCValues.userCodeChecksum.is(v);
+
+				const values = this.valueDB
+					.getValues(CommandClasses["User Code"])
+					.filter(mustBackup);
+				preservedValues.push(...values);
+
+				const meta = this.valueDB
+					.getAllMetadata(CommandClasses["User Code"])
+					.filter(mustBackup);
+				preservedMetadata.push(...meta);
+			}
+
+			// Force a new detection of security classes if desired
+			if (resetSecurityClasses) this.securityClasses.clear();
+
+			this._interviewAttempts = 0;
+			this.interviewStage = InterviewStage.None;
+			this.ready = false;
+			this.deviceClass = undefined;
+			this.isListening = undefined;
+			this.isFrequentListening = undefined;
+			this.isRouting = undefined;
+			this.supportedDataRates = undefined;
+			this.protocolVersion = undefined;
+			this.nodeType = undefined;
+			this.supportsSecurity = undefined;
+			this.supportsBeaming = undefined;
+			this.deviceConfig = undefined;
+			this.currentDeviceConfigHash = undefined;
+			this.cachedDeviceConfigHash = undefined;
+			this._hasEmittedNoS0NetworkKeyError = false;
+			this._hasEmittedNoS2NetworkKeyError = false;
+			for (const ep of this.getAllEndpoints()) {
+				ep["reset"]();
+			}
+			this._valueDB.clear({ noEvent: true });
+			this._endpointInstances.clear();
+			super.reset();
+
+			// Restart all state machines
+			this.restartReadyMachine();
+			this.restartStatusMachine();
+
+			// Remove queued polls that would interfere with the interview
+			this.cancelAllScheduledPolls();
+
+			// Restore the previously saved name/location
+			if (name != undefined) this.name = name;
+			if (location != undefined) this.location = location;
+
+			// And preserved values/metadata
+			for (const { value, ...valueId } of preservedValues) {
+				this.valueDB.setValue(valueId, value, { noEvent: true });
+			}
+			for (
+				const { metadata, ...valueId } of preservedMetadata
+			) {
+				this.valueDB.setMetadata(valueId, metadata, {
+					noEvent: true,
+				});
+			}
+
+			// Don't keep the node awake after the interview
+			this.keepAwake = false;
+
+			// If we did wait for the wakeup, mark the node as awake again so it does not
+			// get considered asleep after querying protocol info.
+			if (didWakeUp || wasAwake) {
+				// Re-interviewing forgets the node's capabilities. To be able to mark it
+				// as awake, we need to set those again.
+				this.isListening = false;
+				this.isFrequentListening = false;
+
+				this.markAsAwake();
+			}
+
+			// Queue a fresh interview
+			void this.driver.interviewNodeInternal(this);
+		} finally {
+			this._refreshInfoPending = false;
 		}
-
-		// preserve the node name and location, since they might not be stored on the node
-		const name = this.name;
-		const location = this.location;
-
-		// Preserve user codes if they aren't queried during the interview
-		const preservedValues: (ValueID & { value: unknown })[] = [];
-		const preservedMetadata: (ValueID & { metadata: ValueMetadata })[] = [];
-		if (
-			this.supportsCC(CommandClasses["User Code"])
-			&& !this.driver.options.interview.queryAllUserCodes
-		) {
-			const mustBackup = (v: ValueID) =>
-				UserCodeCCValues.userCode.is(v)
-				|| UserCodeCCValues.userIdStatus.is(v)
-				|| UserCodeCCValues.userCodeChecksum.is(v);
-
-			const values = this.valueDB
-				.getValues(CommandClasses["User Code"])
-				.filter(mustBackup);
-			preservedValues.push(...values);
-
-			const meta = this.valueDB
-				.getAllMetadata(CommandClasses["User Code"])
-				.filter(mustBackup);
-			preservedMetadata.push(...meta);
-		}
-
-		// Force a new detection of security classes if desired
-		if (resetSecurityClasses) this.securityClasses.clear();
-
-		this._interviewAttempts = 0;
-		this.interviewStage = InterviewStage.None;
-		this.ready = false;
-		this.deviceClass = undefined;
-		this.isListening = undefined;
-		this.isFrequentListening = undefined;
-		this.isRouting = undefined;
-		this.supportedDataRates = undefined;
-		this.protocolVersion = undefined;
-		this.nodeType = undefined;
-		this.supportsSecurity = undefined;
-		this.supportsBeaming = undefined;
-		this.deviceConfig = undefined;
-		this.currentDeviceConfigHash = undefined;
-		this.cachedDeviceConfigHash = undefined;
-		this._hasEmittedNoS0NetworkKeyError = false;
-		this._hasEmittedNoS2NetworkKeyError = false;
-		for (const ep of this.getAllEndpoints()) {
-			ep["reset"]();
-		}
-		this._valueDB.clear({ noEvent: true });
-		this._endpointInstances.clear();
-		super.reset();
-
-		// Restart all state machines
-		this.restartReadyMachine();
-		this.restartStatusMachine();
-
-		// Remove queued polls that would interfere with the interview
-		this.cancelAllScheduledPolls();
-
-		// Restore the previously saved name/location
-		if (name != undefined) this.name = name;
-		if (location != undefined) this.location = location;
-
-		// And preserved values/metadata
-		for (const { value, ...valueId } of preservedValues) {
-			this.valueDB.setValue(valueId, value, { noEvent: true });
-		}
-		for (const { metadata, ...valueId } of preservedMetadata) {
-			this.valueDB.setMetadata(valueId, metadata, { noEvent: true });
-		}
-
-		// Don't keep the node awake after the interview
-		this.keepAwake = false;
-
-		// If we did wait for the wakeup, mark the node as awake again so it does not
-		// get considered asleep after querying protocol info.
-		if (didWakeUp || wasAwake) {
-			// Re-interviewing forgets the node's capabilities. To be able to mark it
-			// as awake, we need to set those again.
-			this.isListening = false;
-			this.isFrequentListening = false;
-
-			this.markAsAwake();
-		}
-
-		void this.driver.interviewNodeInternal(this);
-		this._refreshInfoPending = false;
 	}
 
 	/**
@@ -1011,7 +1188,10 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	 * WARNING: Do not call this method from application code. To refresh the information
 	 * for a specific node, use `node.refreshInfo()` instead
 	 */
-	public async interviewInternal(): Promise<boolean> {
+	public async *interviewInternal(): AsyncGenerator<
+		(() => Promise<unknown>) | undefined,
+		boolean
+	> {
 		if (this.interviewStage === InterviewStage.Complete) {
 			this.driver.controllerLog.logNode(
 				this.id,
@@ -1024,22 +1204,6 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// Remember that we tried to interview this node
 		this._interviewAttempts++;
-
-		// Wrapper around interview methods to return false in case of a communication error
-		// This way the single methods don't all need to have the same error handler
-		const tryInterviewStage = async (
-			method: () => Promise<void>,
-		): Promise<boolean> => {
-			try {
-				await method();
-				return true;
-			} catch (e) {
-				if (isTransmissionError(e)) {
-					return false;
-				}
-				throw e;
-			}
-		};
 
 		// The interview is done in several stages. At each point, the interview process might be aborted
 		// due to a stage failing. The reached stage is saved, so we can continue it later without
@@ -1058,6 +1222,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		}
 
 		if (!this.isControllerNode) {
+			// Sleeping nodes can't be reached until they wake up
+			if (this.status === NodeStatus.Asleep) {
+				return false;
+			}
+
 			if (
 				(this.isListening || this.isFrequentListening)
 				&& this.status !== NodeStatus.Alive
@@ -1070,26 +1239,31 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 
 			if (this.interviewStage === InterviewStage.ProtocolInfo) {
+				yield;
 				this.reportInterviewStageStarted(InterviewStage.NodeInfo);
-				if (
-					!(await tryInterviewStage(() => this.interviewNodeInfo()))
-				) {
-					return false;
+				try {
+					yield* waitFor(this.interviewNodeInfo());
+				} catch (e) {
+					if (isTransmissionError(e)) return false;
+					throw e;
 				}
 			}
 
 			// At this point the basic interview of new nodes is done. Start here when re-interviewing known nodes
 			// to get updated information about command classes
 			if (this.interviewStage === InterviewStage.NodeInfo) {
+				yield;
 				this.reportInterviewStageStarted(InterviewStage.CommandClasses);
 				// Only advance the interview if it was completed, otherwise abort
-				if (await this.interviewCCs()) {
+				if (yield* this.interviewCCs()) {
 					this.setInterviewStage(InterviewStage.CommandClasses);
 				} else {
 					return false;
 				}
 			}
 		}
+
+		// After this point we should not yield - everything is basically instant anyways.
 
 		if (
 			(this.isControllerNode
@@ -1311,7 +1485,11 @@ protocol version:      ${this.protocolVersion}`;
 	public async requestNodeInfo(): Promise<NodeUpdatePayload> {
 		const resp = await this.driver.sendMessage<
 			RequestNodeInfoResponse | ApplicationUpdateRequest
-		>(new RequestNodeInfoRequest({ nodeId: this.id }));
+		>(new RequestNodeInfoRequest({ nodeId: this.id }), {
+			// Tag as part of the interview, so the transaction gets rejected
+			// when the interview is aborted
+			tag: "interview",
+		});
 		if (resp instanceof RequestNodeInfoResponse && !resp.wasSent) {
 			// TODO: handle this in SendThreadMachine
 			throw new ZWaveError(
@@ -1343,7 +1521,10 @@ protocol version:      ${this.protocolVersion}`;
 		);
 	}
 
-	protected async interviewCCs(): Promise<boolean> {
+	protected async *interviewCCs(): AsyncGenerator<
+		(() => Promise<unknown>) | undefined,
+		boolean
+	> {
 		// Interviewing CCs happens in two phases, because the full amount of work is unknown up
 		// front (endpoints are revealed by Multi Channel, secure CCs by Security):
 		//
@@ -1505,10 +1686,10 @@ protocol version:      ${this.protocolVersion}`;
 						this._hasEmittedNoS2NetworkKeyError = true;
 					}
 				} else {
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						this,
 						CommandClasses["Security 2"],
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -1565,10 +1746,10 @@ protocol version:      ${this.protocolVersion}`;
 						this._hasEmittedNoS0NetworkKeyError = true;
 					}
 				} else {
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						this,
 						CommandClasses.Security,
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -1588,10 +1769,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses["Manufacturer Specific"],
-			);
+			));
 			if (typeof action === "boolean") return action;
 		}
 
@@ -1602,10 +1783,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses.Version,
-			);
+			));
 			if (typeof action === "boolean") return action;
 
 			// After the version CC interview of the root endpoint, we have enough info to load the correct device config file
@@ -1639,10 +1820,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses["Wake Up"],
-			);
+			));
 			if (typeof action === "boolean") return action;
 		}
 
@@ -1657,10 +1838,10 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(
+			const action = yield* waitFor(interviewEndpoint(
 				this,
 				CommandClasses["Multi Channel"],
-			);
+			));
 			if (typeof action === "boolean") return action;
 
 			// Now that the Multi Channel interview has discovered the endpoints, we may need to
@@ -1782,10 +1963,10 @@ protocol version:      ${this.protocolVersion}`;
 						level: "silly",
 					});
 
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						endpoint,
 						CommandClasses["Security 2"],
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -1806,10 +1987,10 @@ protocol version:      ${this.protocolVersion}`;
 						level: "silly",
 					});
 
-					const action = await interviewEndpoint(
+					const action = yield* waitFor(interviewEndpoint(
 						endpoint,
 						CommandClasses.Security,
-					);
+					));
 					if (typeof action === "boolean") return action;
 				}
 			}
@@ -1922,11 +2103,11 @@ protocol version:      ${this.protocolVersion}`;
 					level: "silly",
 				});
 
-				const action = await interviewEndpoint(
+				const action = yield* waitFor(interviewEndpoint(
 					endpoint,
 					CommandClasses.Version,
 					true,
-				);
+				));
 				if (typeof action === "boolean") return action;
 			} else {
 				this.driver.controllerLog.logNode(this.id, {
@@ -2018,7 +2199,7 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(this, cc);
+			const action = yield* waitFor(interviewEndpoint(this, cc));
 			if (action === "continue") continue;
 			else if (typeof action === "boolean") return action;
 		}
@@ -2046,7 +2227,7 @@ protocol version:      ${this.protocolVersion}`;
 					level: "silly",
 				});
 
-				const action = await interviewEndpoint(endpoint, cc);
+				const action = yield* waitFor(interviewEndpoint(endpoint, cc));
 				if (action === "continue") continue;
 				else if (typeof action === "boolean") return action;
 			}
@@ -2062,7 +2243,7 @@ protocol version:      ${this.protocolVersion}`;
 				"silly",
 			);
 
-			const action = await interviewEndpoint(this, cc);
+			const action = yield* waitFor(interviewEndpoint(this, cc));
 			if (action === "continue") continue;
 			else if (typeof action === "boolean") return action;
 		}
@@ -2101,11 +2282,11 @@ protocol version:      ${this.protocolVersion}`;
 					"silly",
 				);
 
-				const action = await interviewEndpoint(
+				const action = yield* waitFor(interviewEndpoint(
 					this,
 					CommandClasses.Basic,
 					true,
-				);
+				));
 				if (typeof action === "boolean") return action;
 			} else if (basicSetMappingWillSucceed) {
 				// Hide the Basic CC because its functionality is exposed through another CC
@@ -2153,11 +2334,11 @@ protocol version:      ${this.protocolVersion}`;
 					level: "silly",
 				});
 
-				const action = await interviewEndpoint(
+				const action = yield* waitFor(interviewEndpoint(
 					endpoint,
 					CommandClasses.Basic,
 					true,
-				);
+				));
 				if (typeof action === "boolean") return action;
 			} else if (basicSetMappingWillSucceed) {
 				// Hide the Basic CC because its functionality is exposed through another CC

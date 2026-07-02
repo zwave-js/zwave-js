@@ -355,6 +355,7 @@ export class HumidityControlSetpointCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -455,7 +456,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 		}
 
 		// Query the current value for all setpoint types
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -473,6 +474,7 @@ maximum value: ${setpointCaps.maxValue} ${maxValueUnit}`;
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const setpointTypes: HumidityControlSetpointType[] = this.getValue(
