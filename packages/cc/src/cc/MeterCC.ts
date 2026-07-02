@@ -637,6 +637,7 @@ export class MeterCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -691,6 +692,7 @@ supports reset:       ${suppResp.supportsReset}`;
 
 		// Query current meter values
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed, total) =>
 				node.reportInterviewProgress(completed, total),
 		});
@@ -711,6 +713,7 @@ supports reset:       ${suppResp.supportsReset}`;
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		if (api.version === 1) {

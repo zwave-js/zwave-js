@@ -491,6 +491,7 @@ export class MultiChannelAssociationCC extends CommandClass {
 
 		// Query each association group for its members
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed, total) =>
 				node.reportInterviewProgress(completed, total),
 		});
@@ -514,6 +515,7 @@ export class MultiChannelAssociationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 		const assocAPI = CCAPI.create(
 			CommandClasses.Association,
@@ -521,6 +523,7 @@ export class MultiChannelAssociationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const mcGroupCount: number = this.getValue(

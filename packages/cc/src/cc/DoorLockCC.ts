@@ -636,6 +636,7 @@ export class DoorLockCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -746,7 +747,7 @@ supports block to block:   ${resp.blockToBlockSupported}`;
 			);
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		if (!hadCriticalTimeout) this.setInterviewComplete(ctx, true);
@@ -764,6 +765,7 @@ supports block to block:   ${resp.blockToBlockSupported}`;
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		ctx.logNode(node.id, {

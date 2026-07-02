@@ -180,7 +180,10 @@ export class ManufacturerSpecificCC extends CommandClass {
 			CommandClasses["Manufacturer Specific"],
 			ctx,
 			endpoint,
-		).withOptions({ priority: MessagePriority.NodeQuery });
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+			tag: "interview",
+		});
 
 		if (node.id !== ctx.ownNodeId) {
 			ctx.logNode(node.id, {

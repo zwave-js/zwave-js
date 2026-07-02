@@ -1232,6 +1232,7 @@ export class ConfigurationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -1407,6 +1408,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		}
 
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed, total) => {
 				// To support reporting granular progress for devices where we don't
 				// know the parameter count in advance, we let the scan phase
@@ -1522,6 +1524,7 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		if (api.version < 3) {

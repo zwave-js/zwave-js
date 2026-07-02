@@ -42,6 +42,11 @@ export type TaskTag =
 		nodeId: number;
 	}
 	| {
+		// Interview a node
+		id: "interview";
+		nodeId: number;
+	}
+	| {
 		// Refresh CC values of a node
 		id: "refresh-values";
 		nodeId: number;

@@ -429,6 +429,7 @@ export class VersionCC extends CommandClass {
 			node,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {

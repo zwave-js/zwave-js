@@ -140,7 +140,7 @@ export class EnergyProductionCC extends CommandClass {
 		});
 
 		// Query current values
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -158,6 +158,7 @@ export class EnergyProductionCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		for (

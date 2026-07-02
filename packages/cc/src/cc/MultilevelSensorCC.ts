@@ -397,6 +397,7 @@ export class MultilevelSensorCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -475,6 +476,7 @@ export class MultilevelSensorCC extends CommandClass {
 		}
 
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed, total) =>
 				node.reportInterviewProgress(completed, total),
 		});
@@ -495,6 +497,7 @@ export class MultilevelSensorCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 		const valueDB = this.getValueDB(ctx);
 
