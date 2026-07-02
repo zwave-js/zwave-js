@@ -21,9 +21,6 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"metadata": {
-		"manual": "https://manuals.fibaro.com/heat-controller/"
-	},
 	"paramInformation": [
 		{
 			"#": "1",
@@ -199,5 +196,8 @@
 				}
 			]
 		}
+	},
+	"metadata": {
+		"manual": "https://manuals.fibaro.com/heat-controller/"
 	}
 }
