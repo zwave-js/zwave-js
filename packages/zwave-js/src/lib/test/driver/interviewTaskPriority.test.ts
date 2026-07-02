@@ -62,7 +62,7 @@ integrationTest(
 
 		testBody: async (t, driver, nodes, mockController, mockNodes) => {
 			const [node2, node3] = nodes;
-			const [mockNode2, mockNode3] = mockNodes;
+			const [mockNode2] = mockNodes;
 
 			t.expect(node2.interviewStage).toBe(InterviewStage.Complete);
 			t.expect(node3.interviewStage).toBe(InterviewStage.Complete);
