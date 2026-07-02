@@ -2474,78 +2474,176 @@ protocol version:      ${this.protocolVersion}`;
 	 * Refreshes all non-static values from this node's actuator and sensor CCs.
 	 * WARNING: It is not recommended to await this method!
 	 */
-	public async refreshValues(): Promise<void> {
-		for (const endpoint of this.getAllEndpoints()) {
-			for (const cc of endpoint.getSupportedCCInstances()) {
-				// Only query actuator and sensor CCs
-				if (
-					!actuatorCCs.includes(cc.ccId)
-					&& !sensorCCs.includes(cc.ccId)
-				) {
-					continue;
-				}
-				try {
-					await cc.refreshValues(this.driver);
-				} catch (e) {
-					this.driver.controllerLog.logNode(
-						this.id,
-						`failed to refresh values for ${
-							getCCName(
-								cc.ccId,
-							)
-						}, endpoint ${endpoint.index}: ${getErrorMessage(e)}`,
-						"error",
-					);
-				}
-			}
-		}
+	public refreshValues(): Promise<void> {
+		const task = this.getRefreshValuesTask("user");
+		const promise = task instanceof Promise
+			? task
+			: this.driver.scheduler.queueTask(task);
+		// A canceled refresh is not an error
+		return promise.catch(noop);
 	}
 
 	/**
 	 * Refreshes the values of all CCs that should be reporting regularly, but haven't been updated recently
 	 * @internal
 	 */
-	public async autoRefreshValues(): Promise<void> {
+	public autoRefreshValues(): Promise<void> {
 		// Do not attempt to communicate with dead nodes automatically
-		if (this.status === NodeStatus.Dead) return;
+		if (this.status === NodeStatus.Dead) return Promise.resolve();
 
-		for (const endpoint of this.getAllEndpoints()) {
-			for (
-				const cc of endpoint
-					.getSupportedCCInstances() as readonly SinglecastCC<
-						CommandClass
-					>[]
-			) {
-				if (!cc.shouldRefreshValues(this.driver)) continue;
+		const task = this.getRefreshValuesTask("auto");
+		const promise = task instanceof Promise
+			? task
+			: this.driver.scheduler.queueTask(task);
+		// A canceled refresh is not an error
+		return promise.catch(noop);
+	}
 
-				this.driver.controllerLog.logNode(this.id, {
-					message: `${
-						getCCName(
-							cc.ccId,
-						)
-					} CC values may be stale, refreshing...`,
-					endpoint: endpoint.index,
-					direction: "outbound",
+	private _refreshValuesKeepAwake: boolean | undefined;
+
+	private getRefreshValuesTask(
+		mode: "user" | "auto",
+	): Promise<void> | TaskBuilder<void> {
+		// User-requested and automatic refreshes query different CC sets,
+		// so they are deduplicated separately
+		const existingTask = this.driver.scheduler.findTask<void>(
+			(t) =>
+				t.tag?.id === "refresh-values"
+				&& t.tag.nodeId === this.id
+				&& t.tag.mode === mode,
+		);
+		if (existingTask) return existingTask;
+
+		const self = this;
+		let removeSleepListener: (() => void) | undefined;
+
+		// Prioritize sleepy nodes over always-listening ones, since their
+		// availability window is limited to the time they are awake
+		const priority = self.canSleep
+			? TaskPriority.Low
+			: TaskPriority.Lower;
+
+		// Keep sleepy nodes awake while the refresh is queued, otherwise they
+		// may be sent to sleep before the task gets a chance to run. The first
+		// queued refresh task remembers the original keepAwake state.
+		self._refreshValuesKeepAwake ??= self.keepAwake;
+		self.keepAwake = true;
+
+		return {
+			// Value refreshes can cause a lot of traffic. Execute them in the background.
+			priority,
+			tag: { id: "refresh-values", nodeId: self.id, mode },
+			group: { id: "value-refresh" },
+			task: async function* refreshValuesTask() {
+				// Detect the node falling asleep, so pending queries in the
+				// wakeup queue don't stall the task until the next wakeup
+				const nodeAsleep = new Promise<void>((resolve) => {
+					const listener = () => resolve();
+					self.once("sleep", listener);
+					removeSleepListener = () => self.off("sleep", listener);
 				});
 
-				try {
-					await cc.refreshValues(
-						this.driver,
-						{ priority: MessagePriority.Poll },
-					);
-				} catch (e) {
-					this.driver.controllerLog.logNode(this.id, {
-						message: `failed to refresh values for ${
-							getCCName(
-								cc.ccId,
-							)
-						} CC: ${getErrorMessage(e)}`,
-						endpoint: endpoint.index,
-						level: "error",
-					});
+				for (const endpoint of self.getAllEndpoints()) {
+					for (
+						const cc of endpoint
+							.getSupportedCCInstances() as readonly SinglecastCC<
+								CommandClass
+							>[]
+					) {
+						if (mode === "user") {
+							// Only query actuator and sensor CCs
+							if (
+								!actuatorCCs.includes(cc.ccId)
+								&& !sensorCCs.includes(cc.ccId)
+							) {
+								continue;
+							}
+						} else {
+							if (!cc.shouldRefreshValues(self.driver)) continue;
+						}
+
+						yield;
+
+						// Sleeping and dead nodes cannot be queried
+						if (
+							self.status === NodeStatus.Asleep
+							|| self.status === NodeStatus.Dead
+						) {
+							return;
+						}
+
+						if (mode === "auto") {
+							self.driver.controllerLog.logNode(self.id, {
+								message: `${
+									getCCName(
+										cc.ccId,
+									)
+								} CC values may be stale, refreshing...`,
+								endpoint: endpoint.index,
+								direction: "outbound",
+							});
+						}
+
+						const refreshCCValues = async () => {
+							try {
+								if (mode === "user") {
+									await cc.refreshValues(self.driver);
+								} else {
+									await cc.refreshValues(
+										self.driver,
+										{ priority: MessagePriority.Poll },
+									);
+								}
+							} catch (e) {
+								self.driver.controllerLog.logNode(self.id, {
+									message: `failed to refresh values for ${
+										getCCName(
+											cc.ccId,
+										)
+									} CC: ${getErrorMessage(e)}`,
+									endpoint: endpoint.index,
+									level: "error",
+								});
+							}
+						};
+
+						// Abandon the refresh when the node falls asleep mid-query.
+						// The wake-up triggers a new refresh of stale values.
+						const completed: boolean = yield* waitFor(
+							Promise.race([
+								refreshCCValues().then(() => true),
+								nodeAsleep.then(() => false),
+							]),
+						);
+						if (!completed) return;
+					}
 				}
-			}
-		}
+			},
+			cleanup: () => {
+				removeSleepListener?.();
+				// Restore the original keepAwake state when the last pending
+				// refresh task for this node finishes
+				const otherPending = self.driver.scheduler.findTask(
+					(t) =>
+						t.tag?.id === "refresh-values"
+						&& t.tag.nodeId === self.id,
+				);
+				if (
+					!otherPending
+					&& self._refreshValuesKeepAwake != undefined
+				) {
+					const keepAwake = self._refreshValuesKeepAwake;
+					self._refreshValuesKeepAwake = undefined;
+					self.keepAwake = keepAwake;
+					if (!keepAwake) {
+						setImmediate(() => {
+							self.driver.debounceSendNodeToSleep(self);
+						});
+					}
+				}
+				return Promise.resolve();
+			},
+		};
 	}
 
 	/**

@@ -47,6 +47,12 @@ export type TaskTag =
 		nodeId: number;
 	}
 	| {
+		// Refresh CC values of a node
+		id: "refresh-values";
+		nodeId: number;
+		mode: "user" | "auto";
+	}
+	| {
 		// Update the controller's firmware
 		id: "firmware-update-otw";
 	}
