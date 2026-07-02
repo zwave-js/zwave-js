@@ -307,7 +307,11 @@ import { isObject } from "alcalzone-shared/typeguards";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacks } from "../driver/Statistics.js";
-import { type TaskBuilder, TaskPriority } from "../driver/Task.js";
+import {
+	type TaskBuilder,
+	TaskInterruptBehavior,
+	TaskPriority,
+} from "../driver/Task.js";
 import { DeviceClass } from "../node/DeviceClass.js";
 import { ZWaveNode } from "../node/Node.js";
 import { VirtualNode } from "../node/VirtualNode.js";
@@ -8446,44 +8450,72 @@ export class ZWaveController
 	 * @param onProgress Can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size
 	 * @returns The raw NVM buffer
 	 */
-	public async backupNVMRaw(
+	public backupNVMRaw(
 		onProgress?: (bytesRead: number, total: number) => void,
 	): Promise<BytesView> {
-		this.driver.controllerLog.print("Backing up NVM...");
+		return this.driver.scheduler.queueTask(
+			this.getBackupNVMRawTask(onProgress),
+		);
+	}
 
-		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
-		if (!(await this.toggleRF(false))) {
-			throw new ZWaveError(
-				"Could not turn off the Z-Wave radio before creating NVM backup!",
-				ZWaveErrorCodes.Controller_ResponseNOK,
-			);
-		}
+	private getBackupNVMRawTask(
+		onProgress?: (bytesRead: number, total: number) => void,
+	): TaskBuilder<BytesView> {
+		const self = this;
 
-		// Disable watchdog to prevent resets during NVM access
-		await this.stopWatchdog();
+		let rfRestored = false;
 
-		let ret: BytesView;
-		try {
-			if (this.sdkVersionGte("7.0")) {
-				ret = await this.backupNVMRaw700(onProgress);
-				// All 7.xx versions so far seem to have a bug where the NVM is not properly closed after reading
-				// resulting in extremely strange controller behavior after a backup. To work around this, restart the stick if possible
-				await this.driver.trySoftReset();
-				// Soft-resetting will enable the watchdog again
-			} else {
-				ret = await this.backupNVMRaw500(onProgress);
-			}
-			this.driver.controllerLog.print("NVM backup completed");
-		} finally {
-			// Whatever happens, turn Z-Wave radio back on
-			await this.toggleRF(true);
-		}
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "nvm-backup" },
+			group: { id: "controller-exclusive" },
+			// The radio is off during the backup, so other tasks cannot communicate anyways
+			interrupt: TaskInterruptBehavior.Forbidden,
+			task: async function* backupNVMRawTask() {
+				self.driver.controllerLog.print("Backing up NVM...");
 
-		// TODO: You can also get away with eliding all the 0xff pages. The NVR also holds the page size of the NVM (NVMP),
-		// so you can figure out which pages you don't have to save or restore. If you do this, you need to make sure to issue a
-		// "factory reset" before restoring the NVM - that'll blank out the NVM to 0xffs before initializing it.
+				// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
+				if (!(yield* waitFor(self.toggleRF(false)))) {
+					throw new ZWaveError(
+						"Could not turn off the Z-Wave radio before creating NVM backup!",
+						ZWaveErrorCodes.Controller_ResponseNOK,
+					);
+				}
 
-		return ret;
+				// Disable watchdog to prevent resets during NVM access
+				yield* waitFor(self.stopWatchdog());
+
+				let ret: BytesView;
+				try {
+					if (self.sdkVersionGte("7.0")) {
+						ret = yield* waitFor(self.backupNVMRaw700(onProgress));
+						// All 7.xx versions so far seem to have a bug where the NVM is not properly closed after reading
+						// resulting in extremely strange controller behavior after a backup. To work around this, restart the stick if possible
+						yield* waitFor(self.driver.trySoftReset());
+						// Soft-resetting will enable the watchdog again
+					} else {
+						ret = yield* waitFor(self.backupNVMRaw500(onProgress));
+					}
+					self.driver.controllerLog.print("NVM backup completed");
+				} finally {
+					// Whatever happens, turn Z-Wave radio back on
+					yield* waitFor(self.toggleRF(true));
+					rfRestored = true;
+				}
+
+				// TODO: You can also get away with eliding all the 0xff pages. The NVR also holds the page size of the NVM (NVMP),
+				// so you can figure out which pages you don't have to save or restore. If you do this, you need to make sure to issue a
+				// "factory reset" before restoring the NVM - that'll blank out the NVM to 0xffs before initializing it.
+
+				return ret;
+			},
+			cleanup: async () => {
+				// Turn the radio back on when the task is dropped before it could do so itself
+				if (!rfRestored) {
+					await self.toggleRF(true);
+				}
+			},
+		};
 	}
 
 	private async backupNVMRaw500(
@@ -8610,85 +8642,139 @@ export class ZWaveController
 	 * @param restoreProgress Can be used to monitor the progress of the restore operation, which may take several seconds up to a few minutes depending on the NVM size
 	 * @param migrateOptions Influence which data should be preserved during a migration
 	 */
-	public async restoreNVM(
+	public restoreNVM(
 		nvmData: BytesView,
 		convertProgress?: (bytesRead: number, total: number) => void,
 		restoreProgress?: (bytesWritten: number, total: number) => void,
 		migrateOptions?: MigrateNVMOptions,
 	): Promise<void> {
-		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
-		if (!(await this.toggleRF(false))) {
-			throw new ZWaveError(
-				"Could not turn off the Z-Wave radio before restoring NVM backup!",
-				ZWaveErrorCodes.Controller_ResponseNOK,
-			);
-		}
-
-		// Disable watchdog to prevent resets during NVM access
-		await this.stopWatchdog();
-
-		// Restoring a potentially incompatible NVM happens in three steps:
-		// 1. the current NVM is read
-		// 2. the given NVM data is converted to match the current format
-		// 3. the converted data is written to the NVM
-
-		this.driver.controllerLog.print(
-			"Converting NVM to target format...",
-		);
-		let targetNVM: BytesView;
-		let convertedNVM: BytesView;
-		try {
-			if (this.sdkVersionGte("7.0")) {
-				targetNVM = await this.backupNVMRaw700(convertProgress);
-			} else {
-				targetNVM = await this.backupNVMRaw500(convertProgress);
-			}
-
-			convertedNVM = await migrateNVM(
+		return this.driver.scheduler.queueTask(
+			this.getRestoreNVMTask(
 				nvmData,
-				targetNVM,
+				convertProgress,
+				restoreProgress,
 				migrateOptions,
-			);
-		} catch (e) {
-			// If the process fails, at least turn the Z-Wave radio back on
-			await this.toggleRF(true);
+			),
+		);
+	}
 
-			// And re-throw the error with a more descriptive message
-			const message = "Failed to convert NVM to target format: "
-				+ (e as Error).message;
-			this.driver.controllerLog.print(message, "error");
-			(e as Error).message = message;
-			throw e;
-		}
+	private getRestoreNVMTask(
+		nvmData: BytesView,
+		convertProgress?: (bytesRead: number, total: number) => void,
+		restoreProgress?: (bytesWritten: number, total: number) => void,
+		migrateOptions?: MigrateNVMOptions,
+	): TaskBuilder<void> {
+		const self = this;
 
-		try {
-			this.driver.controllerLog.print("Restoring NVM backup...");
-			if (this.sdkVersionGte("7.0")) {
-				await this.restoreNVMRaw700(convertedNVM, restoreProgress);
-			} else {
-				await this.restoreNVMRaw500(convertedNVM, restoreProgress);
-			}
-			this.driver.controllerLog.print(
-				"NVM backup restored. Restarting to activate the restored backup...",
-			);
-		} catch (e) {
-			// If the process fails, at least turn the Z-Wave radio back on
-			await this.toggleRF(true);
+		let rfRestored = false;
 
-			// And re-throw the error with a more descriptive message
-			const message = "Failed to restore NVM backup: "
-				+ (e as Error).message;
-			this.driver.controllerLog.print(message, "error");
-			(e as Error).message = message;
-			throw e;
-		}
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "nvm-restore" },
+			group: { id: "controller-exclusive" },
+			// The radio is off during the restore, so other tasks cannot communicate anyways
+			interrupt: TaskInterruptBehavior.Forbidden,
+			task: async function* restoreNVMTask() {
+				// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
+				if (!(yield* waitFor(self.toggleRF(false)))) {
+					throw new ZWaveError(
+						"Could not turn off the Z-Wave radio before restoring NVM backup!",
+						ZWaveErrorCodes.Controller_ResponseNOK,
+					);
+				}
 
-		// After restoring an NVM backup, the controller's capabilities may have changed.
-		// Also, we could be talking to different nodes than the cache file contains.
-		// Reset all info about all nodes, so they get re-interviewed.
-		this._nodes.clear();
+				// Disable watchdog to prevent resets during NVM access
+				yield* waitFor(self.stopWatchdog());
 
-		await this.driver.softResetAndRestart();
+				// Restoring a potentially incompatible NVM happens in three steps:
+				// 1. the current NVM is read
+				// 2. the given NVM data is converted to match the current format
+				// 3. the converted data is written to the NVM
+
+				self.driver.controllerLog.print(
+					"Converting NVM to target format...",
+				);
+				let targetNVM: BytesView;
+				let convertedNVM: BytesView;
+				try {
+					if (self.sdkVersionGte("7.0")) {
+						targetNVM = yield* waitFor(
+							self.backupNVMRaw700(convertProgress),
+						);
+					} else {
+						targetNVM = yield* waitFor(
+							self.backupNVMRaw500(convertProgress),
+						);
+					}
+
+					convertedNVM = yield* waitFor(migrateNVM(
+						nvmData,
+						targetNVM,
+						migrateOptions,
+					));
+				} catch (e) {
+					// If the process fails, at least turn the Z-Wave radio back on
+					yield* waitFor(self.toggleRF(true));
+					rfRestored = true;
+
+					// And re-throw the error with a more descriptive message
+					const message = "Failed to convert NVM to target format: "
+						+ (e as Error).message;
+					self.driver.controllerLog.print(message, "error");
+					(e as Error).message = message;
+					throw e;
+				}
+
+				try {
+					self.driver.controllerLog.print("Restoring NVM backup...");
+					if (self.sdkVersionGte("7.0")) {
+						yield* waitFor(
+							self.restoreNVMRaw700(
+								convertedNVM,
+								restoreProgress,
+							),
+						);
+					} else {
+						yield* waitFor(
+							self.restoreNVMRaw500(
+								convertedNVM,
+								restoreProgress,
+							),
+						);
+					}
+					self.driver.controllerLog.print(
+						"NVM backup restored. Restarting to activate the restored backup...",
+					);
+				} catch (e) {
+					// If the process fails, at least turn the Z-Wave radio back on
+					yield* waitFor(self.toggleRF(true));
+					rfRestored = true;
+
+					// And re-throw the error with a more descriptive message
+					const message = "Failed to restore NVM backup: "
+						+ (e as Error).message;
+					self.driver.controllerLog.print(message, "error");
+					(e as Error).message = message;
+					throw e;
+				}
+
+				// The soft reset that follows a successful restore re-enables the radio
+				rfRestored = true;
+
+				// After restoring an NVM backup, the controller's capabilities may have changed.
+				// Also, we could be talking to different nodes than the cache file contains.
+				// Reset all info about all nodes, so they get re-interviewed.
+				self._nodes.clear();
+
+				yield* waitFor(self.driver.softResetAndRestart());
+			},
+			cleanup: async () => {
+				// Turn the radio back on when the task is dropped before it could do so itself
+				if (!rfRestored) {
+					await self.toggleRF(true);
+				}
+			},
+		};
 	}
 
 	/**
@@ -8704,31 +8790,9 @@ export class ZWaveController
 		nvmData: BytesView,
 		onProgress?: (bytesWritten: number, total: number) => void,
 	): Promise<void> {
-		this.driver.controllerLog.print("Restoring NVM...");
-
-		// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
-		if (!(await this.toggleRF(false))) {
-			throw new ZWaveError(
-				"Could not turn off the Z-Wave radio before restoring NVM backup!",
-				ZWaveErrorCodes.Controller_ResponseNOK,
-			);
-		}
-
-		try {
-			if (this.sdkVersionGte("7.0")) {
-				await this.restoreNVMRaw700(nvmData, onProgress);
-			} else {
-				await this.restoreNVMRaw500(nvmData, onProgress);
-			}
-			this.driver.controllerLog.print("NVM backup restored");
-		} finally {
-			// Whatever happens, turn Z-Wave radio back on
-			await this.toggleRF(true);
-		}
-
-		// TODO: You can also get away with eliding all the 0xff pages. The NVR also holds the page size of the NVM (NVMP),
-		// so you can figure out which pages you don't have to save or restore. If you do this, you need to make sure to issue a
-		// "factory reset" before restoring the NVM - that'll blank out the NVM to 0xffs before initializing it.
+		await this.driver.scheduler.queueTask(
+			this.getRestoreNVMRawTask(nvmData, onProgress),
+		);
 
 		// After a restored NVM backup, the controller's capabilities may have changed.
 		// Normally we'd only need to soft reset the stick, but we also need to re-interview the controller and potentially all nodes.
@@ -8758,6 +8822,61 @@ export class ZWaveController
 			),
 		);
 		await this.driver.destroy();
+	}
+
+	private getRestoreNVMRawTask(
+		nvmData: BytesView,
+		onProgress?: (bytesWritten: number, total: number) => void,
+	): TaskBuilder<void> {
+		const self = this;
+
+		let rfRestored = false;
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "nvm-restore" },
+			group: { id: "controller-exclusive" },
+			// The radio is off during the restore, so other tasks cannot communicate anyways
+			interrupt: TaskInterruptBehavior.Forbidden,
+			task: async function* restoreNVMRawTask() {
+				self.driver.controllerLog.print("Restoring NVM...");
+
+				// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
+				if (!(yield* waitFor(self.toggleRF(false)))) {
+					throw new ZWaveError(
+						"Could not turn off the Z-Wave radio before restoring NVM backup!",
+						ZWaveErrorCodes.Controller_ResponseNOK,
+					);
+				}
+
+				try {
+					if (self.sdkVersionGte("7.0")) {
+						yield* waitFor(
+							self.restoreNVMRaw700(nvmData, onProgress),
+						);
+					} else {
+						yield* waitFor(
+							self.restoreNVMRaw500(nvmData, onProgress),
+						);
+					}
+					self.driver.controllerLog.print("NVM backup restored");
+				} finally {
+					// Whatever happens, turn Z-Wave radio back on
+					yield* waitFor(self.toggleRF(true));
+					rfRestored = true;
+				}
+
+				// TODO: You can also get away with eliding all the 0xff pages. The NVR also holds the page size of the NVM (NVMP),
+				// so you can figure out which pages you don't have to save or restore. If you do this, you need to make sure to issue a
+				// "factory reset" before restoring the NVM - that'll blank out the NVM to 0xffs before initializing it.
+			},
+			cleanup: async () => {
+				// Turn the radio back on when the task is dropped before it could do so itself
+				if (!rfRestored) {
+					await self.toggleRF(true);
+				}
+			},
+		};
 	}
 
 	private async restoreNVMRaw500(

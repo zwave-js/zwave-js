@@ -51,6 +51,18 @@ export type TaskTag =
 		id: "refresh-values";
 		nodeId: number;
 		mode: "user" | "auto";
+	}
+	| {
+		// Update the controller's firmware
+		id: "firmware-update-otw";
+	}
+	| {
+		// Back up the controller's NVM
+		id: "nvm-backup";
+	}
+	| {
+		// Restore a backup to the controller's NVM
+		id: "nvm-restore";
 	};
 
 export type Task<T> = WaddleTask<T, TaskTag, ZWaveError>;
