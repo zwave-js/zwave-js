@@ -45,6 +45,12 @@ export type TaskTag =
 		// Interview a node
 		id: "interview";
 		nodeId: number;
+	}
+	| {
+		// Refresh CC values of a node
+		id: "refresh-values";
+		nodeId: number;
+		mode: "user" | "auto";
 	};
 
 export type Task<T> = WaddleTask<T, TaskTag, ZWaveError>;

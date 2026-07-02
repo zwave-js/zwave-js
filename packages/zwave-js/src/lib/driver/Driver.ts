@@ -3001,6 +3001,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this.autoRefreshNodeValueTimers.get(node.id)?.clear();
 			this.autoRefreshNodeValueTimers.delete(node.id);
 		}
+		void this._scheduler.removeTasks(
+			(t) => t.tag?.id === "refresh-values" && t.tag.nodeId === node.id,
+			new ZWaveError(
+				"The node was removed",
+				ZWaveErrorCodes.Controller_NodeRemoved,
+			),
+		);
 		if (this.requeueTimers.has(node.id)) {
 			for (const timer of this.requeueTimers.get(node.id)!) {
 				timer.clear();
