@@ -206,6 +206,7 @@ import type {
 	ReadFile,
 	ReadFileSystemInfo,
 } from "@zwave-js/shared/bindings";
+import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
 import {
@@ -273,7 +274,12 @@ import {
 	createMessageDroppedUnexpectedError,
 	serialAPICommandErrorToZWaveError,
 } from "./StateMachineShared.js";
-import { TaskScheduler } from "./Task.js";
+import {
+	type TaskBuilder,
+	TaskInterruptBehavior,
+	TaskPriority,
+	TaskScheduler,
+} from "./Task.js";
 import { throttlePresets } from "./ThrottlePresets.js";
 import { Transaction } from "./Transaction.js";
 import {
@@ -8806,13 +8812,13 @@ ${handlers.length} left`,
 
 	// region OTW Firmware Updates
 
-	private _otwFirmwareUpdateInProgress: boolean = false;
-
 	/**
 	 * Returns whether a firmware update is in progress for the Z-Wave module.
 	 */
 	public isOTWFirmwareUpdateInProgress(): boolean {
-		return this._otwFirmwareUpdateInProgress;
+		return !!this._scheduler.findTask(
+			(t) => t.tag?.id === "firmware-update-otw",
+		);
 	}
 
 	/**
@@ -8849,39 +8855,58 @@ ${handlers.length} left`,
 			data = await this.extractOTWUpdateInfo(data);
 		}
 
-		// When in bootloader mode, we can use the 700 series update method
-		if (this.mode === DriverMode.Bootloader) {
-			return this.firmwareUpdateOTW700(data);
-		} else if (this.mode === DriverMode.SerialAPI) {
-			if (this.controller.sdkVersionGte("7.0")) {
-				// This is at least a 700 series controller, so we can use the 700 series update method
-				return this.firmwareUpdateOTW700(data);
-			} else if (
-				this.controller.sdkVersionGte("6.50.0")
-				&& this.controller.supportedFunctionTypes
-					?.includes(FunctionType.FirmwareUpdateNVM)
-			) {
-				// This is a 500 series controller, use the 500 series update method
-				const wasUpdated = await this.firmwareUpdateOTW500(data);
-				if (wasUpdated.success) {
-					// After updating the firmware on 500 series sticks, we MUST soft-reset them
-					this.driverLog.print(
-						"Activating new firmware and restarting driver...",
-					);
-					await this.softResetAndRestart();
-				}
-				return wasUpdated;
-			}
-		} else if (this.mode === DriverMode.CLI) {
-			// If the CLI has an option to enter bootloader, we can use the 700 series update method,
-			// since it tries to execute that.
-			return this.firmwareUpdateOTW700(data);
-		}
+		return this._scheduler.queueTask(this.getFirmwareUpdateOTWTask(data));
+	}
 
-		throw new ZWaveError(
-			`Firmware updates are not supported on this Z-Wave module`,
-			ZWaveErrorCodes.Controller_NotSupported,
-		);
+	private getFirmwareUpdateOTWTask(
+		data: BytesView,
+	): TaskBuilder<OTWFirmwareUpdateResult> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "firmware-update-otw" },
+			group: { id: "controller-exclusive" },
+			// An interrupted update may leave the controller in recovery mode
+			interrupt: TaskInterruptBehavior.Forbidden,
+			task: async function* firmwareUpdateOTWTask() {
+				// When in bootloader mode, we can use the 700 series update method
+				if (self.mode === DriverMode.Bootloader) {
+					return yield* self.firmwareUpdateOTW700(data);
+				} else if (self.mode === DriverMode.SerialAPI) {
+					if (self.controller.sdkVersionGte("7.0")) {
+						// This is at least a 700 series controller, so we can use the 700 series update method
+						return yield* self.firmwareUpdateOTW700(data);
+					} else if (
+						self.controller.sdkVersionGte("6.50.0")
+						&& self.controller.supportedFunctionTypes
+							?.includes(FunctionType.FirmwareUpdateNVM)
+					) {
+						// This is a 500 series controller, use the 500 series update method
+						const wasUpdated = yield* waitFor(
+							self.firmwareUpdateOTW500(data),
+						);
+						if (wasUpdated.success) {
+							// After updating the firmware on 500 series sticks, we MUST soft-reset them
+							self.driverLog.print(
+								"Activating new firmware and restarting driver...",
+							);
+							yield* waitFor(self.softResetAndRestart());
+						}
+						return wasUpdated;
+					}
+				} else if (self.mode === DriverMode.CLI) {
+					// If the CLI has an option to enter bootloader, we can use the 700 series update method,
+					// since it tries to execute that.
+					return yield* self.firmwareUpdateOTW700(data);
+				}
+
+				throw new ZWaveError(
+					`Firmware updates are not supported on this Z-Wave module`,
+					ZWaveErrorCodes.Controller_NotSupported,
+				);
+			},
+		};
 	}
 
 	/**
@@ -8974,7 +8999,6 @@ integrity: ${update.integrity}`;
 	private async firmwareUpdateOTW500(
 		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
-		this._otwFirmwareUpdateInProgress = true;
 		let turnedRadioOff = false;
 		try {
 			this.controllerLog.print("Beginning firmware update");
@@ -9055,19 +9079,21 @@ integrity: ${update.integrity}`;
 			this.emit("firmware update finished", result);
 			return result;
 		} finally {
-			this._otwFirmwareUpdateInProgress = false;
 			if (turnedRadioOff) await this.controller.toggleRF(true);
 		}
 	}
 
-	private async firmwareUpdateOTW700(
+	private async *firmwareUpdateOTW700(
 		data: BytesView,
-	): Promise<OTWFirmwareUpdateResult> {
+	): AsyncGenerator<
+		(() => Promise<unknown>) | undefined,
+		OTWFirmwareUpdateResult
+	> {
 		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
 		let result!: OTWFirmwareUpdateResult;
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-			result = await this.firmwareUpdateOTW700Internal(data);
+			result = yield* waitFor(this.firmwareUpdateOTW700Internal(data));
 			if (result.success) break;
 
 			// If this was an aborted update, check if it's an XMODEM communication error
@@ -9083,7 +9109,7 @@ integrity: ${update.integrity}`;
 						}, attempt ${attempt}/${maxAttempts}...`,
 						"warn",
 					);
-					await wait(250);
+					yield* waitFor(wait(250));
 					continue;
 				}
 
@@ -9105,8 +9131,6 @@ integrity: ${update.integrity}`;
 	private async firmwareUpdateOTW700Internal(
 		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
-		this._otwFirmwareUpdateInProgress = true;
-
 		try {
 			await this.enterBootloader();
 
@@ -9310,7 +9334,6 @@ integrity: ${update.integrity}`;
 			if (this._options.bootloaderMode !== "stay") {
 				await this.leaveBootloader();
 			}
-			this._otwFirmwareUpdateInProgress = false;
 		}
 	}
 

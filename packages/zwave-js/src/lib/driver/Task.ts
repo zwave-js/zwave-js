@@ -42,6 +42,10 @@ export type TaskTag =
 		nodeId: number;
 	}
 	| {
+		// Update the controller's firmware
+		id: "firmware-update-otw";
+	}
+	| {
 		// Back up the controller's NVM
 		id: "nvm-backup";
 	}
