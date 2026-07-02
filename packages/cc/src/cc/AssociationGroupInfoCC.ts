@@ -356,7 +356,10 @@ export class AssociationGroupInfoCC extends CommandClass {
 			CommandClasses["Association Group Information"],
 			ctx,
 			endpoint,
-		).withOptions({ priority: MessagePriority.NodeQuery });
+		).withOptions({
+			priority: MessagePriority.NodeQuery,
+			tag: "interview",
+		});
 
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
@@ -405,6 +408,7 @@ export class AssociationGroupInfoCC extends CommandClass {
 
 		// Finally query each group for its information
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed) =>
 				node.reportInterviewProgress(
 					associationGroupCount + completed,
@@ -428,6 +432,7 @@ export class AssociationGroupInfoCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		// Query the information for each group (this is the only thing that could be dynamic)

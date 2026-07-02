@@ -19,7 +19,7 @@ import type { PartialZWaveOptions } from "../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../node/Node.js";
 import { prepareDriver, prepareMocks } from "./integrationTestSuiteShared.js";
 
-interface IntegrationTestOptions {
+export interface IntegrationTestOptions {
 	/** Enable debugging for this integration tests. When enabled, a driver logfile will be written and the test directory will not be deleted after each test. Default: false */
 	debug?: boolean;
 	/** If given, the files from this directory will be copied into the test cache directory prior to starting the driver. */

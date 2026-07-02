@@ -388,6 +388,7 @@ export class AssociationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -425,6 +426,7 @@ export class AssociationCC extends CommandClass {
 
 		// Query each association group for its members
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed, total) =>
 				node.reportInterviewProgress(completed, total),
 		});
@@ -460,6 +462,7 @@ export class AssociationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const groupCount = AssociationCC.getGroupCountCached(

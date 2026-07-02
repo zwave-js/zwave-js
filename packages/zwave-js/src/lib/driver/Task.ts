@@ -42,6 +42,11 @@ export type TaskTag =
 		nodeId: number;
 	}
 	| {
+		// Interview a node
+		id: "interview";
+		nodeId: number;
+	}
+	| {
 		// Update the controller's firmware
 		id: "firmware-update-otw";
 	}

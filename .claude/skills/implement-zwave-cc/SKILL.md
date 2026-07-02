@@ -355,7 +355,9 @@ if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
 - `interview()` - Called once during node interview, discovers capabilities
 - `refreshValues()` - Called to refresh current state, can be triggered by users
 
-If `refreshValues()` is implemented, call it from `interview()` to avoid code duplication:
+If `refreshValues()` is implemented, call it from `interview()` to avoid code duplication.
+
+All queries sent during the interview must be tagged with `tag: "interview"`, so their transactions can be dropped when the interview is aborted. `refreshValues()` takes the priority and tag from its options, so callers other than the interview are not affected:
 
 ```typescript
 @commandClass(CommandClasses["My Command Class"])
@@ -373,6 +375,7 @@ export class MyCommandClassCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -400,12 +403,25 @@ export class MyCommandClassCC extends CommandClass {
 		}
 
 		// Refresh current values (reuse refreshValues if defined)
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		this.setInterviewComplete(ctx, true);
 	}
 
-	public async refreshValues(ctx: RefreshValuesContext): Promise<void> {
+	public async refreshValues(
+		ctx: RefreshValuesContext,
+		options?: RefreshValuesOptions,
+	): Promise<void> {
+		const endpoint = this.getEndpoint(ctx)!;
+		const api = CCAPI.create(
+			CommandClasses["My Command Class"],
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
+		});
+
 		// ... query current state
 	}
 

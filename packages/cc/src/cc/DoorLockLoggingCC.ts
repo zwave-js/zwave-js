@@ -181,7 +181,7 @@ export class DoorLockLoggingCC extends CommandClass {
 			direction: "none",
 		});
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -199,6 +199,7 @@ export class DoorLockLoggingCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		ctx.logNode(node.id, {
