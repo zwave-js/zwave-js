@@ -40,6 +40,11 @@ export type TaskTag =
 		// Replace a failed node
 		id: "replace-failed-node";
 		nodeId: number;
+	}
+	| {
+		// Refresh CC values of a node
+		id: "refresh-values";
+		nodeId: number;
 	};
 
 export type Task<T> = WaddleTask<T, TaskTag, ZWaveError>;
