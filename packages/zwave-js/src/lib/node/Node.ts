@@ -2321,12 +2321,18 @@ protocol version:      ${this.protocolVersion}`;
 		return promise.catch(noop);
 	}
 
+	private _refreshValuesKeepAwake: boolean | undefined;
+
 	private getRefreshValuesTask(
 		mode: "user" | "auto",
 	): Promise<void> | TaskBuilder<void> {
-		// A node's values are refreshed by one task at a time
+		// User-requested and automatic refreshes query different CC sets,
+		// so they are deduplicated separately
 		const existingTask = this.driver.scheduler.findTask<void>(
-			(t) => t.tag?.id === "refresh-values" && t.tag.nodeId === this.id,
+			(t) =>
+				t.tag?.id === "refresh-values"
+				&& t.tag.nodeId === this.id
+				&& t.tag.mode === mode,
 		);
 		if (existingTask) return existingTask;
 
@@ -2340,14 +2346,15 @@ protocol version:      ${this.protocolVersion}`;
 			: TaskPriority.Lower;
 
 		// Keep sleepy nodes awake while the refresh is queued, otherwise they
-		// may be sent to sleep before the task gets a chance to run
-		const keepAwake = self.keepAwake;
+		// may be sent to sleep before the task gets a chance to run. The first
+		// queued refresh task remembers the original keepAwake state.
+		self._refreshValuesKeepAwake ??= self.keepAwake;
 		self.keepAwake = true;
 
 		return {
 			// Value refreshes can cause a lot of traffic. Execute them in the background.
 			priority,
-			tag: { id: "refresh-values", nodeId: self.id },
+			tag: { id: "refresh-values", nodeId: self.id, mode },
 			group: { id: "value-refresh" },
 			task: async function* refreshValuesTask() {
 				// Detect the node falling asleep, so pending queries in the
@@ -2436,12 +2443,25 @@ protocol version:      ${this.protocolVersion}`;
 			},
 			cleanup: () => {
 				removeSleepListener?.();
-				// Restore the previous keepAwake state
-				self.keepAwake = keepAwake;
-				if (!keepAwake) {
-					setImmediate(() => {
-						self.driver.debounceSendNodeToSleep(self);
-					});
+				// Restore the original keepAwake state when the last pending
+				// refresh task for this node finishes
+				const otherPending = self.driver.scheduler.findTask(
+					(t) =>
+						t.tag?.id === "refresh-values"
+						&& t.tag.nodeId === self.id,
+				);
+				if (
+					!otherPending
+					&& self._refreshValuesKeepAwake != undefined
+				) {
+					const keepAwake = self._refreshValuesKeepAwake;
+					self._refreshValuesKeepAwake = undefined;
+					self.keepAwake = keepAwake;
+					if (!keepAwake) {
+						setImmediate(() => {
+							self.driver.debounceSendNodeToSleep(self);
+						});
+					}
 				}
 				return Promise.resolve();
 			},

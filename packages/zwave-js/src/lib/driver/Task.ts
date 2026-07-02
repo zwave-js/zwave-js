@@ -45,6 +45,7 @@ export type TaskTag =
 		// Refresh CC values of a node
 		id: "refresh-values";
 		nodeId: number;
+		mode: "user" | "auto";
 	};
 
 export type Task<T> = WaddleTask<T, TaskTag, ZWaveError>;
