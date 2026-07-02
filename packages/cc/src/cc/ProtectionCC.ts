@@ -390,6 +390,7 @@ export class ProtectionCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -438,7 +439,7 @@ RF protection states:    ${
 			}
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		if (!hadCriticalTimeout) this.setInterviewComplete(ctx, true);
@@ -456,6 +457,7 @@ RF protection states:    ${
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const supportsExclusiveControl = !!this.getValue(

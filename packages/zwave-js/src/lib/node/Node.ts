@@ -1006,15 +1006,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				}
 			},
 			cleanup: async () => {
-				// Reject pending transactions from an unfinished interview.
-				// After a completed one, pending NodeQuery transactions belong
-				// to someone else and must be left alone.
+				// Reject pending transactions from an unfinished interview
 				if (self.interviewStage !== InterviewStage.Complete) {
 					await self.driver.rejectTransactions(
 						(t) =>
 							t.message.getNodeId() === self.id
-							&& (t.priority === MessagePriority.NodeQuery
-								|| t.tag === "interview"),
+							&& t.tag === "interview",
 						"The interview was restarted",
 						ZWaveErrorCodes.Controller_InterviewRestarted,
 					);
@@ -1487,7 +1484,11 @@ protocol version:      ${this.protocolVersion}`;
 	public async requestNodeInfo(): Promise<NodeUpdatePayload> {
 		const resp = await this.driver.sendMessage<
 			RequestNodeInfoResponse | ApplicationUpdateRequest
-		>(new RequestNodeInfoRequest({ nodeId: this.id }));
+		>(new RequestNodeInfoRequest({ nodeId: this.id }), {
+			// Tag as part of the interview, so the transaction gets rejected
+			// when the interview is aborted
+			tag: "interview",
+		});
 		if (resp instanceof RequestNodeInfoResponse && !resp.wasSent) {
 			// TODO: handle this in SendThreadMachine
 			throw new ZWaveError(

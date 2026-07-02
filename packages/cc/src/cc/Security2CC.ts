@@ -1024,6 +1024,7 @@ export class Security2CC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 		// Only on the highest security class the response includes the supported commands
 		const secClass = node.getHighestSecurityClass();

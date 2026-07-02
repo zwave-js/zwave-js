@@ -467,6 +467,7 @@ export class MultiChannelCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 		const valueDB = this.getValueDB(ctx);
 

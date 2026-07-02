@@ -436,6 +436,7 @@ export class BarrierOperatorCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -484,7 +485,7 @@ export class BarrierOperatorCC extends CommandClass {
 			}
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -502,6 +503,7 @@ export class BarrierOperatorCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const supportedSubsystems: SubsystemType[] = this.getValue(

@@ -2658,8 +2658,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			void this.rejectTransactions(
 				(t) =>
 					t.message.getNodeId() === node.id
-					&& (t.priority === MessagePriority.NodeQuery
-						|| t.tag === "interview"),
+					&& t.tag === "interview",
 				"The node is asleep",
 				ZWaveErrorCodes.Controller_MessageDropped,
 			);
@@ -7370,10 +7369,6 @@ ${handlers.length} left`,
 			// Nonces and responses to Supervision Get have to be sent immediately
 			&& options.priority !== MessagePriority.Immediate
 		) {
-			if (options.priority === MessagePriority.NodeQuery) {
-				// Remember that this transaction was part of an interview
-				options.tag = "interview";
-			}
 			options.priority = MessagePriority.WakeUp;
 		}
 
@@ -8135,20 +8130,13 @@ ${handlers.length} left`,
 			// Reset the transaction so it doesn't simply resolve to `undefined` when we attempt to continue it
 			reset: true,
 		};
-		const requeueAndTagAsInterview: TransactionReducerResult = {
-			...requeue,
-			tag: "interview",
-		};
-
 		void this.reduceQueues((transaction, _source) => {
 			const msg = transaction.message;
 			if (msg.getNodeId() !== nodeId) return { type: "keep" };
 			// Drop all messages that are not allowed in the wakeup queue
 			// For all other messages, change the priority to wakeup
 			return this.mayMoveToWakeupQueue(transaction)
-				? transaction.priority === MessagePriority.NodeQuery
-					? requeueAndTagAsInterview
-					: requeue
+				? requeue
 				: reject;
 		});
 	}

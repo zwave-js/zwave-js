@@ -197,6 +197,7 @@ export class AlarmSensorCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -235,7 +236,7 @@ export class AlarmSensorCC extends CommandClass {
 		}
 
 		// Query (all of) the sensor's current value(s)
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -253,6 +254,7 @@ export class AlarmSensorCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const supportedSensorTypes: readonly AlarmSensorType[] =

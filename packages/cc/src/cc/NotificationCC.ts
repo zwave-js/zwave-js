@@ -605,6 +605,7 @@ export class NotificationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -728,12 +729,14 @@ export class NotificationCC extends CommandClass {
 
 			if (notificationMode === "pull") {
 				await this.refreshValues(ctx, {
+					tag: "interview",
 					onProgress: (completed, total) =>
 						node.reportInterviewProgress(completed, total),
 				});
 			} /* if (notificationMode === "push") */ else {
 				// First, query the current state of each supported notification
 				await this.refreshValues(ctx, {
+					tag: "interview",
 					onProgress: (completed, total) =>
 						node.reportInterviewProgress(completed, total),
 				});
@@ -1040,6 +1043,7 @@ export class NotificationCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		// Load supported notification types and events from cache

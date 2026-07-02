@@ -279,6 +279,7 @@ export class EntryControlCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -353,7 +354,7 @@ max key cache timeout: ${eventCapabilities.maxKeyCacheTimeout} seconds`,
 			});
 		}
 
-		await this.refreshValues(ctx);
+		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -371,6 +372,7 @@ max key cache timeout: ${eventCapabilities.maxKeyCacheTimeout} seconds`,
 			endpoint,
 		).withOptions({
 			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		ctx.logNode(node.id, {

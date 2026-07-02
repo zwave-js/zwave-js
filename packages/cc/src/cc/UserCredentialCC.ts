@@ -1001,6 +1001,7 @@ export class UserCredentialCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -1059,6 +1060,7 @@ export class UserCredentialCC extends CommandClass {
 		}
 
 		await this.refreshValues(ctx, {
+			tag: "interview",
 			onProgress: (completed, total) =>
 				node.reportInterviewProgress(completed, total),
 		});
@@ -1091,7 +1093,8 @@ export class UserCredentialCC extends CommandClass {
 			ctx,
 			endpoint,
 		).withOptions({
-			priority: MessagePriority.NodeQuery,
+			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
 		});
 
 		const supportsAllUsersChecksum = this.getValue<boolean>(
