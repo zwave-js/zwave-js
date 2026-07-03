@@ -4,6 +4,24 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* When sending S2 encapsulated commands with delivery verification, receiving a command with the next expected sequence number is now treated as a delivery verification instead of continuing to wait for a potential `NonceReport` (#8906)
+* Fixes an issue where cached User Code CC values could get out of sync by using the unified Access Control API on devices supporting Supervision (#8927)
+* When devices are not known to the firmware update service, this information is now cached instead of causing repeated checks (#8926)
+* On slow devices, Z-Wave JS now distinguishes between actuator and non-actuator command classes when deciding whether a value should be updated optimistically (#8911)
+
+### Config file changes
+* Correct value size for Zooz ZEN78, params 13/14 (#8904)
+* Add Fortune Brands YRD4X0-F-ZW4 (#8892)
+* Add fingerprint for Leviton VRCZ4-1LX (#8907)
+
+### Changes under the hood
+* Migrate device interviews to the task scheduler (#8923)
+* Migrate NVM backup/restore and OTW updates to the task scheduler (#8925)
+* Migrate node value refresh to the task scheduler (#8924)
+* Improve argument assertions in AccessControl API (#8894)
+
 ## 15.25.1 (2026-06-25)
 ### Config file changes
 * Correct MCOHome MH-5900 parameters (#8565)
