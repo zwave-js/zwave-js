@@ -215,6 +215,22 @@ function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 // Characters known to be used by nodes that obfuscate user codes in reports
 const USER_CODE_OBFUSCATION_CHARS = ["*"];
 
+/** Compares two user codes, which may be given as strings or binary */
+function userCodeEquals(
+	expected: string | Uint8Array,
+	actual: string | Uint8Array | undefined,
+): boolean {
+	if (actual == undefined) return false;
+
+	// Compare byte-wise unless both codes are strings
+	if (typeof expected !== "string" || typeof actual !== "string") {
+		const toBytes = (v: string | Uint8Array) =>
+			typeof v === "string" ? Bytes.from(v, "ascii") : Bytes.view(v);
+		return toBytes(actual).equals(toBytes(expected));
+	}
+	return actual === expected;
+}
+
 /**
  * Some version 1 nodes obfuscate codes in the report (e.g. "******"), so
  * we need to be a bit lenient when verifying that a code was set correctly.
@@ -226,14 +242,7 @@ function userCodeReadBackConfirmsSet(
 ): boolean {
 	if (actual == undefined) return false;
 
-	// Compare byte-wise unless both codes are strings
-	if (typeof expected !== "string" || typeof actual !== "string") {
-		const toBytes = (v: string | Uint8Array) =>
-			typeof v === "string" ? Bytes.from(v, "ascii") : Bytes.view(v);
-		if (toBytes(actual).equals(toBytes(expected))) return true;
-	} else if (actual === expected) {
-		return true;
-	}
+	if (userCodeEquals(expected, actual)) return true;
 
 	// It has been found that some version 1 nodes wrongfully report obfuscated
 	// User Codes in the User Code Report (e.g. "******").
@@ -663,17 +672,20 @@ export class AccessControlAPI extends FeatureAPI {
 						verified?.userCode,
 						api.version,
 					);
+			} else if (supervisedCommandSucceeded(result)) {
+				succeeded = true;
+				// Supervision replaces the verification GET, so persist
+				// the written slot state to the value DB ourselves
+				this.#persistCachedUserCode(userId, status, codeData);
 			} else {
-				succeeded = supervisedCommandSucceeded(result);
-				if (succeeded) {
-					// Supervision replaces the verification GET, so persist
-					// the written slot state to the value DB ourselves
-					this.#persistCachedUserCode(userId, status, codeData);
-				} else {
-					// Re-read the slot so the cache reflects the device's
-					// actual state
-					await api.get(userId);
-				}
+				// Re-read the slot so the cache reflects the device's
+				// actual state. Treat devices that applied the change but
+				// reported failure as success. Require an exact readback match
+				// though, since the V1 obfuscation leniency would wrongly
+				// confirm a previous code after an explicit failure.
+				const verified = await api.get(userId);
+				succeeded = verified?.userIdStatus === status
+					&& userCodeEquals(codeData, verified.userCode);
 			}
 
 			if (succeeded) {
@@ -798,6 +810,7 @@ export class AccessControlAPI extends FeatureAPI {
 				existingCode,
 			);
 			let succeeded: boolean;
+			let failure = SetUserResult.Error_Unknown;
 			if (result == undefined) {
 				// Unsupervised - verify the change
 				const verified = await api.get(userId);
@@ -805,16 +818,23 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = verifiedStatus != undefined
 					&& verifiedStatus !== existingStatus
 					&& verifiedStatus !== UserIDStatus.Available;
+			} else if (supervisedCommandSucceeded(result)) {
+				succeeded = true;
+				// Supervision replaces the verification GET, so persist
+				// the written slot state to the value DB ourselves
+				this.#persistCachedUserCode(userId, status, existingCode);
 			} else {
-				succeeded = supervisedCommandSucceeded(result);
-				if (succeeded) {
-					// Supervision replaces the verification GET, so persist
-					// the written slot state to the value DB ourselves
-					this.#persistCachedUserCode(userId, status, existingCode);
-				} else {
-					// Re-read the slot so the cache reflects the device's
-					// actual state
-					await api.get(userId);
+				// Re-read the slot so the cache reflects the device's actual
+				// state. Treat devices that applied the change but reported
+				// failure as success.
+				const verified = await api.get(userId);
+				succeeded = verified?.userIdStatus === status;
+				if (
+					!succeeded
+					&& verified?.userIdStatus === UserIDStatus.Available
+				) {
+					// There is no user to modify on the device
+					failure = SetUserResult.Error_ModifyRejectedLocationEmpty;
 				}
 			}
 			if (succeeded) {
@@ -828,7 +848,7 @@ export class AccessControlAPI extends FeatureAPI {
 					);
 				}
 			}
-			return succeeded ? SetUserResult.OK : SetUserResult.Error_Unknown;
+			return succeeded ? SetUserResult.OK : failure;
 		}
 	}
 
@@ -861,17 +881,15 @@ export class AccessControlAPI extends FeatureAPI {
 			const api = this.#ucAPI();
 			const result = await api.clear(userId);
 			let succeeded: boolean;
-			if (result == undefined) {
-				// Unsupervised - verify the change
+			if (result != undefined && supervisedCommandSucceeded(result)) {
+				succeeded = true;
+			} else {
+				// Unsupervised, or the device reported failure - verify by
+				// readback, which also reconciles the cache after a failure.
+				// An Available slot is the desired end state, even if the
+				// device rejected clearing an already-empty slot.
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
-			} else {
-				succeeded = supervisedCommandSucceeded(result);
-				if (!succeeded) {
-					// Re-read the slot so the cache reflects the device's
-					// actual state
-					await api.get(userId);
-				}
 			}
 			if (succeeded) {
 				this.#clearCachedUserCodes(userId);
@@ -1171,6 +1189,7 @@ export class AccessControlAPI extends FeatureAPI {
 				codeData,
 			);
 			let succeeded: boolean;
+			let failure = SetCredentialResult.Error_Unknown;
 			if (result == undefined) {
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === status
@@ -1179,16 +1198,28 @@ export class AccessControlAPI extends FeatureAPI {
 						verified?.userCode,
 						api.version,
 					);
+			} else if (supervisedCommandSucceeded(result)) {
+				succeeded = true;
+				// Supervision replaces the verification GET, so persist
+				// the written slot state to the value DB ourselves
+				this.#persistCachedUserCode(userId, status, codeData);
 			} else {
-				succeeded = supervisedCommandSucceeded(result);
-				if (succeeded) {
-					// Supervision replaces the verification GET, so persist
-					// the written slot state to the value DB ourselves
-					this.#persistCachedUserCode(userId, status, codeData);
-				} else {
-					// Re-read the slot so the cache reflects the device's
-					// actual state
-					await api.get(userId);
+				// Re-read the slot so the cache reflects the device's
+				// actual state. Treat devices that applied the change but
+				// reported failure as success. Require an exact readback match
+				// though, since the V1 obfuscation leniency would wrongly
+				// confirm a previous code after an explicit failure.
+				const verified = await api.get(userId);
+				succeeded = verified?.userIdStatus === status
+					&& userCodeEquals(codeData, verified.userCode);
+				if (
+					!succeeded
+					&& existingCred
+					&& verified?.userIdStatus === UserIDStatus.Available
+				) {
+					// There is no credential to modify on the device
+					failure = SetCredentialResult
+						.Error_ModifyRejectedLocationEmpty;
 				}
 			}
 			if (succeeded) {
@@ -1210,7 +1241,7 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return succeeded
 				? SetCredentialResult.OK
-				: SetCredentialResult.Error_Unknown;
+				: failure;
 		}
 	}
 
@@ -1283,16 +1314,15 @@ export class AccessControlAPI extends FeatureAPI {
 			const api = this.#ucAPI();
 			const result = await api.clear(targetUserId);
 			let succeeded: boolean;
-			if (result == undefined) {
+			if (result != undefined && supervisedCommandSucceeded(result)) {
+				succeeded = true;
+			} else {
+				// Unsupervised, or the device reported failure - verify by
+				// readback, which also reconciles the cache after a failure.
+				// An Available slot is the desired end state, even if the
+				// device rejected clearing an already-empty slot.
 				const verified = await api.get(targetUserId);
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
-			} else {
-				succeeded = supervisedCommandSucceeded(result);
-				if (!succeeded) {
-					// Re-read the slot so the cache reflects the device's
-					// actual state
-					await api.get(targetUserId);
-				}
 			}
 			if (succeeded) {
 				this.#clearCachedUserCodes(targetUserId);
@@ -1370,20 +1400,20 @@ export class AccessControlAPI extends FeatureAPI {
 			const api = this.#ucAPI();
 			const result = await api.clear(userId);
 			let succeeded: boolean;
-			if (userId !== 0 && result == undefined) {
+			if (result != undefined && supervisedCommandSucceeded(result)) {
+				succeeded = true;
+			} else if (userId !== 0) {
+				// Unsupervised, or the device reported failure - verify by
+				// readback, which also reconciles the cache after a failure.
+				// An Available slot is the desired end state, even if the
+				// device rejected clearing an already-empty slot.
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			} else {
 				// Verifying all users being deleted is unrealistic
 				// since there can be up to 65535 users. So we just
 				// assume it worked when the command was not supervised.
-				succeeded = result == undefined
-					|| supervisedCommandSucceeded(result);
-				if (!succeeded && userId !== 0) {
-					// Re-read the slot so the cache reflects the device's
-					// actual state
-					await api.get(userId);
-				}
+				succeeded = result == undefined;
 			}
 			if (succeeded) {
 				this.#clearCachedUserCodes(userId);

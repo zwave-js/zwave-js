@@ -1701,7 +1701,10 @@ integrationTest(
 //
 // Supervision replaces the verification GET, so a successful supervised write
 // must persist the written slot state directly, and a failed one must re-read
-// the slot to reconcile the cache with the device's actual state.
+// the slot to reconcile the cache with the device's actual state. The readback
+// after a failure is also used to infer a more specific result than
+// Error_Unknown: a slot that already matches the desired end state means
+// success, an empty slot on a modify/delete means there was nothing to change.
 // =============================================================================
 
 const supervisedUserCodeCapabilities = {
@@ -1863,7 +1866,11 @@ integrationTest(
 				2,
 				"1234",
 			);
-			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+			// The cache claimed an existing credential, so this was a modify,
+			// and the readback shows there is nothing to modify
+			t.expect(result).toBe(
+				SetCredentialResult.Error_ModifyRejectedLocationEmpty,
+			);
 
 			t.expect(node.valueDB.getValue(statusVid)).toBe(
 				UserIDStatus.Available,
@@ -1880,7 +1887,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteUser reconciles the cache on supervised failure (UC)",
+	"deleteUser returns OK when the device fails clearing an already-empty slot (UC)",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1896,7 +1903,8 @@ integrationTest(
 			node.valueDB.setValue(codeVid, "1234");
 
 			const result = await node.accessControl!.deleteUser(1);
-			t.expect(result).toBe(SetUserResult.Error_Unknown);
+			// The readback shows the desired end state, so this is a success
+			t.expect(result).toBe(SetUserResult.OK);
 
 			t.expect(node.valueDB.getValue(statusVid)).toBe(
 				UserIDStatus.Available,
@@ -1907,7 +1915,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteCredential reconciles the cache on supervised failure (UC)",
+	"deleteCredential returns OK when the device fails clearing an already-empty slot (UC)",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1927,7 +1935,8 @@ integrationTest(
 				UserCredentialType.PINCode,
 				2,
 			);
-			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+			// The readback shows the desired end state, so this is a success
+			t.expect(result).toBe(SetCredentialResult.OK);
 
 			t.expect(node.valueDB.getValue(statusVid)).toBe(
 				UserIDStatus.Available,
@@ -1938,7 +1947,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteCredentials reconciles the cache on supervised failure (UC)",
+	"deleteCredentials returns OK when the device fails clearing an already-empty slot (UC)",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1956,7 +1965,177 @@ integrationTest(
 			const result = await node.accessControl!.deleteCredentials({
 				userId: 4,
 			});
+			// The readback shows the desired end state, so this is a success
+			t.expect(result).toBe(SetCredentialResult.OK);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
+		},
+	},
+);
+
+integrationTest(
+	"setCredential returns OK when the device applies the change but reports failure (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Quirky device: the code was actually applied despite the
+			// supervision failure. Defined here instead of customSetup so the
+			// interview does not already see the code.
+			mockNode.defineBehavior(
+				{
+					handleCC(controller, self, receivedCC) {
+						if (
+							receivedCC instanceof UserCodeCCGet
+							&& receivedCC.userId === 1
+						) {
+							const cc = new UserCodeCCReport({
+								nodeId: controller.ownNodeId,
+								userId: 1,
+								userIdStatus: UserIDStatus.Enabled,
+								userCode: "1234",
+							});
+							return { action: "sendCC", cc };
+						}
+					},
+				} satisfies MockNodeBehavior,
+			);
+
+			const result = await node.accessControl!.setCredential(
+				1,
+				UserCredentialType.PINCode,
+				1,
+				"1234",
+			);
+			t.expect(result).toBe(SetCredentialResult.OK);
+
+			t.expect(
+				node.valueDB.getValue(UserCodeCCValues.userIdStatus(1).id),
+			).toBe(UserIDStatus.Enabled);
+			t.expect(
+				node.valueDB.getValue(UserCodeCCValues.userCode(1).id),
+			).toBe("1234");
+		},
+	},
+);
+
+integrationTest(
+	"setCredential does not accept an obfuscated readback after a supervised failure (V1)",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				CommandClasses.Supervision,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 1,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+			mockNode.defineBehavior(obfuscateUserCodeReadBack("******"));
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// After an explicit supervision failure, an obfuscated readback
+			// must not be treated as confirmation like it is on the
+			// unsupervised path
+			const result = await node.accessControl!.setCredential(
+				1,
+				UserCredentialType.PINCode,
+				1,
+				"1234",
+			);
 			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+		},
+	},
+);
+
+integrationTest(
+	"deleteUser reconciles the cache when the device fails and keeps the code (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The device refuses the deletion and still has a code that
+			// differs from the cached one. Defined here instead of customSetup
+			// so the interview does not already see the code.
+			mockNode.defineBehavior(
+				{
+					handleCC(controller, self, receivedCC) {
+						if (
+							receivedCC instanceof UserCodeCCGet
+							&& receivedCC.userId === 1
+						) {
+							const cc = new UserCodeCCReport({
+								nodeId: controller.ownNodeId,
+								userId: 1,
+								userIdStatus: UserIDStatus.Enabled,
+								userCode: "5678",
+							});
+							return { action: "sendCC", cc };
+						}
+					},
+				} satisfies MockNodeBehavior,
+			);
+
+			const statusVid = UserCodeCCValues.userIdStatus(1).id;
+			const codeVid = UserCodeCCValues.userCode(1).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1234");
+
+			const result = await node.accessControl!.deleteUser(1);
+			t.expect(result).toBe(SetUserResult.Error_Unknown);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Enabled,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("5678");
+		},
+	},
+);
+
+integrationTest(
+	"setUser returns ModifyRejectedLocationEmpty on supervised failure for a missing user (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The cache is wrong: the device's slot is actually empty
+			const statusVid = UserCodeCCValues.userIdStatus(1).id;
+			const codeVid = UserCodeCCValues.userCode(1).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1234");
+
+			const result = await node.accessControl!.setUser(1, {
+				active: false,
+			});
+			t.expect(result).toBe(
+				SetUserResult.Error_ModifyRejectedLocationEmpty,
+			);
 
 			t.expect(node.valueDB.getValue(statusVid)).toBe(
 				UserIDStatus.Available,
