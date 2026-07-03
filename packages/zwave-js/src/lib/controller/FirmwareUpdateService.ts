@@ -41,11 +41,13 @@ const deviceFirmwareCache = new ObjectKeyMap<
 	CachedDeviceResponse
 >();
 interface CachedDeviceResponse {
-	updates: FirmwareUpdateInfo[];
+	/** The available updates, or `undefined` if the device is unknown to the update service */
+	updates?: FirmwareUpdateInfo[];
 	staleDate: number;
 }
 
-// Queue requests to the firmware update service. Only allow few parallel requests so we can make some use of the cache.
+// Queue requests to the firmware update service, so requests made while
+// another one is in flight can be answered from the cache
 let requestQueue: PQueue | undefined;
 
 let cleanCacheTimeout: Timer | undefined;
@@ -181,22 +183,16 @@ export async function getAvailableFirmwareUpdatesBulk(
 				),
 	);
 
-	const now = Date.now();
-	const freshDevices: FirmwareUpdateDeviceID[] = [];
-	const staleDevices: FirmwareUpdateDeviceID[] = [];
+	// Determine which devices need a request inside the queued task, so calls
+	// waiting in the queue can use the cache entries of previous requests
+	const checkStaleDevices = async () => {
+		const now = Date.now();
+		const staleDevices = uniqueDeviceIds.filter((device) => {
+			const cached = deviceFirmwareCache.get(device);
+			return !cached || cached.staleDate <= now;
+		});
+		if (staleDevices.length === 0) return;
 
-	// Split devices into those with fresh cache and those needing updates
-	for (const device of uniqueDeviceIds) {
-		const cached = deviceFirmwareCache.get(device);
-		if (cached && cached.staleDate > now) {
-			freshDevices.push(device);
-		} else {
-			staleDevices.push(device);
-		}
-	}
-
-	// If we have devices with stale cache, make a request for them
-	if (staleDevices.length > 0) {
 		const headers = new Headers({
 			"User-Agent": options.userAgent,
 			"Content-Type": "application/json",
@@ -227,15 +223,11 @@ export async function getAvailableFirmwareUpdatesBulk(
 			timeout: CHECK_TIMEOUT,
 		};
 
-		if (!requestQueue) {
-			// I just love ESM
-			const PQueue = (await import("p-queue")).default;
-			requestQueue = new PQueue({ concurrency: 2 });
-		}
+		const { data: result, expiry } = await makeRequest<
+			FirmwareUpdateBulkInfo[]
+		>(url, config);
 
-		const { data: result, expiry } = await requestQueue.add(() =>
-			makeRequest<FirmwareUpdateBulkInfo[]>(url, config)
-		);
+		const foundDevices = new Set<FirmwareUpdateDeviceID>();
 
 		for (const deviceResponse of result) {
 			// Find the original device info to get the RF region
@@ -251,6 +243,8 @@ export async function getAvailableFirmwareUpdatesBulk(
 			);
 
 			if (originalDevice) {
+				foundDevices.add(originalDevice);
+
 				const updates: FirmwareUpdateInfo[] = deviceResponse.updates
 					.map(
 						(update) => ({
@@ -266,7 +260,27 @@ export async function getAvailableFirmwareUpdatesBulk(
 				});
 			}
 		}
+
+		// The update service omits devices it does not know. Cache those too,
+		// so they are not re-requested before the cache entry becomes stale
+		for (const device of staleDevices) {
+			if (!foundDevices.has(device)) {
+				deviceFirmwareCache.set(device, {
+					updates: undefined,
+					staleDate: expiry,
+				});
+			}
+		}
+	};
+
+	if (!requestQueue) {
+		// I just love ESM
+		const PQueue = (await import("p-queue")).default;
+		// Concurrent calls can reach this point simultaneously. Make sure they share one queue
+		requestQueue ??= new PQueue({ concurrency: 1 });
 	}
+
+	await requestQueue.add(checkStaleDevices);
 
 	// Build the final result map with all requested devices that have updates
 	const ret = new ObjectKeyMap<
