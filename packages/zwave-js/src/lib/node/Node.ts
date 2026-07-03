@@ -74,6 +74,11 @@ import { Security2CCNonceGet } from "@zwave-js/cc/Security2CC";
 import { SecurityCCNonceGet } from "@zwave-js/cc/SecurityCC";
 import { ThermostatModeCCSet } from "@zwave-js/cc/ThermostatModeCC";
 import {
+	UserCodeCCAdminCodeReport,
+	UserCodeCCExtendedUserCodeReport,
+	UserCodeCCReport,
+} from "@zwave-js/cc/UserCodeCC";
+import {
 	UserCredentialCCAssociationReport,
 	UserCredentialCCCredentialLearnReport,
 	UserCredentialCCCredentialReport,
@@ -239,6 +244,11 @@ import {
 	handleTimeGet,
 	handleTimeOffsetGet,
 } from "./CCHandlers/TimeCC.js";
+import {
+	handleAdminCodeReport,
+	handleExtendedUserCodeReport,
+	handleUserCodeReport,
+} from "./CCHandlers/UserCodeCC.js";
 import {
 	handleUserCredentialAssociationReport,
 	handleUserCredentialCredentialLearnReport,
@@ -2868,6 +2878,12 @@ protocol version:      ${this.protocolVersion}`;
 				command,
 				this.entryControlHandlerStore,
 			);
+		} else if (command instanceof UserCodeCCReport) {
+			return handleUserCodeReport(this.driver, this, command);
+		} else if (command instanceof UserCodeCCExtendedUserCodeReport) {
+			return handleExtendedUserCodeReport(this.driver, this, command);
+		} else if (command instanceof UserCodeCCAdminCodeReport) {
+			return handleAdminCodeReport(this.driver, command);
 		} else if (command instanceof UserCredentialCCUserReport) {
 			return handleUserCredentialUserReport(this, command);
 		} else if (command instanceof UserCredentialCCCredentialReport) {

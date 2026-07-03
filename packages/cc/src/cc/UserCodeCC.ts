@@ -40,9 +40,7 @@ import {
 	SET_VALUE_HOOKS,
 	type SetValueImplementation,
 	type SetValueImplementationHooksFactory,
-	throwMissingPropertyKey,
 	throwUnsupportedProperty,
-	throwUnsupportedPropertyKey,
 	throwWrongValueType,
 } from "../lib/API.js";
 import {
@@ -130,17 +128,9 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 			maxLength: 10,
 		},
 		{
+			internal: true,
 			minVersion: 2,
 			secret: true,
-		},
-	),
-	...V.staticPropertyWithName(
-		"_deprecated_masterCode",
-		"masterCode",
-		undefined,
-		{
-			internal: true,
-			autoCreate: false,
 		},
 	),
 	...V.dynamicPropertyAndKeyWithName(
@@ -153,6 +143,7 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 			...ValueMetadata.Number,
 			label: `User ID status (${userId})`,
 		}),
+		{ internal: true },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"userCode",
@@ -162,7 +153,7 @@ export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
 			property === "userCode" && typeof propertyKey === "number",
 		// The user code metadata is dynamically created
 		undefined,
-		{ secret: true },
+		{ internal: true, secret: true },
 	),
 });
 
@@ -262,8 +253,59 @@ function persistUserCode(
 		this.setValue(ctx, statusValue, userIdStatus);
 		this.setValue(ctx, codeValue, userCode);
 	}
+}
 
-	return true;
+function persistAdminCode(
+	this: UserCodeCC,
+	ctx: GetValueDB,
+	adminCode: string,
+) {
+	this.ensureMetadata(ctx, UserCodeCCValues.adminCode);
+	this.setValue(ctx, UserCodeCCValues.adminCode, adminCode);
+}
+
+/**
+ * Updates the cache with the state contained in the report. This does not
+ * happen automatically, so the receiver can diff the report against the cache
+ * before updating it.
+ */
+export function persistUserCodeReport(
+	report: UserCodeCCReport,
+	ctx: GetValueDB & GetSupportedCCVersion,
+): void {
+	persistUserCode.call(
+		report,
+		ctx,
+		report.userId,
+		report.userIdStatus,
+		report.userCode,
+	);
+}
+
+/**
+ * Updates the cache with the state contained in the report. This does not
+ * happen automatically, so the receiver can diff the report against the cache
+ * before updating it.
+ */
+export function persistExtendedUserCodeReport(
+	report: UserCodeCCExtendedUserCodeReport,
+	ctx: GetValueDB & GetSupportedCCVersion,
+): void {
+	for (const { userId, userIdStatus, userCode } of report.userCodes) {
+		persistUserCode.call(report, ctx, userId, userIdStatus, userCode);
+	}
+}
+
+/**
+ * Updates the cache with the state contained in the report. This does not
+ * happen automatically, so the receiver can diff the report against the cache
+ * before updating it.
+ */
+export function persistAdminCodeReport(
+	report: UserCodeCCAdminCodeReport,
+	ctx: GetValueDB,
+): void {
+	persistAdminCode.call(report, ctx, report.adminCode);
 }
 
 /** Formats a user code in a way that's safe to print in public logs */
@@ -313,10 +355,9 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	protected override get [SET_VALUE](): SetValueImplementation {
 		return async function(
 			this: UserCodeCCAPI,
-			{ property, propertyKey },
+			{ property },
 			value,
 		) {
-			let result: SupervisionResult | undefined;
 			if (property === "keypadMode") {
 				if (typeof value !== "number") {
 					throwWrongValueType(
@@ -326,93 +367,10 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 						typeof value,
 					);
 				}
-				result = await this.setKeypadMode(value);
-			} else if (
-				property === "adminCode"
-				// Support devices that were interviewed before the rename to adminCode
-				|| property === "masterCode"
-			) {
-				if (typeof value !== "string") {
-					throwWrongValueType(
-						this.ccId,
-						property,
-						"string",
-						typeof value,
-					);
-				}
-				result = await this.setAdminCode(value);
-			} else if (property === "userIdStatus") {
-				if (propertyKey == undefined) {
-					throwMissingPropertyKey(this.ccId, property);
-				} else if (typeof propertyKey !== "number") {
-					throwUnsupportedPropertyKey(
-						this.ccId,
-						property,
-						propertyKey,
-					);
-				}
-				if (typeof value !== "number") {
-					throwWrongValueType(
-						this.ccId,
-						property,
-						"number",
-						typeof value,
-					);
-				}
-
-				if (value === UserIDStatus.Available) {
-					// Clear Code
-					result = await this.clear(propertyKey);
-				} else {
-					// We need to set the user code along with the status
-					const userCode = this.getValueDB().getValue<string>(
-						UserCodeCCValues.userCode(propertyKey).endpoint(
-							this.endpoint.index,
-						),
-					);
-					result = await this.set(propertyKey, value, userCode!);
-				}
-			} else if (property === "userCode") {
-				if (propertyKey == undefined) {
-					throwMissingPropertyKey(this.ccId, property);
-				} else if (typeof propertyKey !== "number") {
-					throwUnsupportedPropertyKey(
-						this.ccId,
-						property,
-						propertyKey,
-					);
-				}
-				if (typeof value !== "string" && !isUint8Array(value)) {
-					throwWrongValueType(
-						this.ccId,
-						property,
-						"string or Buffer",
-						typeof value,
-					);
-				}
-
-				// We need to set the user id status along with the code
-				let userIdStatus = this.getValueDB().getValue<UserIDStatus>(
-					UserCodeCCValues.userIdStatus(propertyKey).endpoint(
-						this.endpoint.index,
-					),
-				);
-				if (
-					userIdStatus === UserIDStatus.Available
-					|| userIdStatus == undefined
-				) {
-					userIdStatus = UserIDStatus.Enabled;
-				}
-				result = await this.set(
-					propertyKey,
-					userIdStatus as any,
-					value,
-				);
+				return this.setKeypadMode(value);
 			} else {
 				throwUnsupportedProperty(this.ccId, property);
 			}
-
-			return result;
 		};
 	}
 
@@ -427,36 +385,15 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			propertyKey,
 		};
 
-		if (
-			UserCodeCCValues.keypadMode.is(valueId)
-			|| UserCodeCCValues.adminCode.is(valueId)
-			// Support devices that were interviewed before the rename to adminCode
-			|| UserCodeCCValues._deprecated_masterCode.is(valueId)
-		) {
-			// Keypad mode, admin/master code should update immediately.
+		if (UserCodeCCValues.keypadMode.is(valueId)) {
+			// The keypad mode should update immediately.
 			// Optimistically update when supervised successfully, otherwise verify
-			// For the deprecated masterCode, the canonical target is adminCode
 			return {
 				forceVerifyChanges: () => true,
 				verifyChanges: (result) => {
 					if (supervisedCommandSucceeded(result)) {
 						this.tryGetValueDB()?.setValue(valueId, value);
 					} else if (this.isSinglecast()) {
-						this.schedulePoll(valueId, value, {
-							transition: "fast",
-						});
-					}
-				},
-			};
-		} else if (
-			UserCodeCCValues.userCode.is(valueId)
-			|| UserCodeCCValues.userIdStatus.is(valueId)
-		) {
-			// Simply verify the change in any case
-			return {
-				forceVerifyChanges: () => true,
-				verifyChanges: (_result) => {
-					if (this.isSinglecast()) {
 						this.schedulePoll(valueId, value, {
 							transition: "fast",
 						});
@@ -471,25 +408,10 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: UserCodeCCAPI, { property, propertyKey }) {
+		return async function(this: UserCodeCCAPI, { property }) {
 			switch (property) {
 				case "keypadMode":
 					return this.getKeypadMode();
-				case "adminCode":
-					return this.getAdminCode();
-				case "userIdStatus":
-				case "userCode": {
-					if (propertyKey == undefined) {
-						throwMissingPropertyKey(this.ccId, property);
-					} else if (typeof propertyKey !== "number") {
-						throwUnsupportedPropertyKey(
-							this.ccId,
-							property,
-							propertyKey,
-						);
-					}
-					return (await this.get(propertyKey))?.[property];
-				}
 				default:
 					throwUnsupportedProperty(this.ccId, property);
 			}
@@ -549,7 +471,13 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			);
 			if (!response) {
 				return;
-			} else if (multiple) {
+			}
+			// Reports are not persisted automatically, so their contents can be
+			// diffed against the cache elsewhere. Solicited responses are
+			// persisted here instead.
+			persistExtendedUserCodeReport(response, this.host);
+
+			if (multiple) {
 				return pick(response, ["userCodes", "nextUserId"]);
 			} else {
 				return pick(response.userCodes[0], [
@@ -569,7 +497,13 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 				cc,
 				this.commandOptions,
 			);
-			if (response) return pick(response, ["userIdStatus", "userCode"]);
+			if (response) {
+				// Reports are not persisted automatically, so their contents can
+				// be diffed against the cache elsewhere. Solicited responses are
+				// persisted here instead.
+				persistUserCodeReport(response, this.host);
+				return pick(response, ["userIdStatus", "userCode"]);
+			}
 		}
 	}
 
@@ -866,6 +800,12 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			cc,
 			this.commandOptions,
 		);
+		if (response) {
+			// Reports are not persisted automatically, so their contents can be
+			// diffed against the cache elsewhere. Solicited responses are
+			// persisted here instead.
+			persistAdminCodeReport(response, this.host);
+		}
 		return response?.adminCode;
 	}
 
@@ -1607,19 +1547,6 @@ export class UserCodeCCReport extends UserCodeCC
 	public readonly userIdStatus: UserIDStatus;
 	public readonly userCode: string | Bytes;
 
-	public persistValues(ctx: PersistValuesContext): boolean {
-		if (!super.persistValues(ctx)) return false;
-
-		persistUserCode.call(
-			this,
-			ctx,
-			this.userId,
-			this.userIdStatus,
-			this.userCode,
-		);
-		return true;
-	}
-
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let userCodeBuffer: Bytes;
 		if (typeof this.userCode === "string") {
@@ -2131,7 +2058,6 @@ export interface UserCodeCCAdminCodeReportOptions {
 }
 
 @CCCommand(UserCodeCommand.AdminCodeReport)
-@ccValueProperty("adminCode", UserCodeCCValues.adminCode)
 export class UserCodeCCAdminCodeReport extends UserCodeCC {
 	public constructor(
 		options: WithAddress<UserCodeCCAdminCodeReportOptions>,
@@ -2382,23 +2308,32 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 		});
 	}
 
-	public persistValues(ctx: PersistValuesContext): boolean {
-		if (!super.persistValues(ctx)) return false;
-
-		for (const { userId, userIdStatus, userCode } of this.userCodes) {
-			persistUserCode.call(
-				this,
-				ctx,
-				userId,
-				userIdStatus,
-				userCode,
-			);
-		}
-		return true;
-	}
-
 	public readonly userCodes: readonly UserCode[];
 	public readonly nextUserId: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const userCodeBuffers = this.userCodes.map((code) => {
+			const ret = Bytes.concat([
+				[
+					0,
+					0,
+					code.userIdStatus,
+					code.userCode.length,
+				],
+				Bytes.from(code.userCode, "ascii"),
+			]);
+			ret.writeUInt16BE(code.userId, 0);
+			return ret;
+		});
+		const nextUserIdBuffer = new Bytes(2);
+		nextUserIdBuffer.writeUInt16BE(this.nextUserId, 0);
+		this.payload = Bytes.concat([
+			[this.userCodes.length],
+			...userCodeBuffers,
+			nextUserIdBuffer,
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};

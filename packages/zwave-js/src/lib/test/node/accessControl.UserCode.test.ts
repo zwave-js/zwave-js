@@ -1,12 +1,15 @@
 import {
+	SetValueStatus,
 	UserCredentialRule,
 	UserCredentialType,
 	UserCredentialUserType,
 	UserIDStatus,
 } from "@zwave-js/cc";
+import { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
 import {
 	UserCodeCCAdminCodeGet,
 	UserCodeCCAdminCodeSet,
+	UserCodeCCExtendedUserCodeReport,
 	UserCodeCCExtendedUserCodeSet,
 	UserCodeCCGet,
 	UserCodeCCReport,
@@ -14,8 +17,13 @@ import {
 	UserCodeCCValues,
 } from "@zwave-js/cc/UserCodeCC";
 import { CommandClasses } from "@zwave-js/core";
-import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
+import {
+	MockZWaveFrameType,
+	ccCaps,
+	createMockZWaveRequestFrame,
+} from "@zwave-js/testing";
 import type { MockNodeBehavior } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import {
 	SetCredentialResult,
 	SetUserResult,
@@ -1208,8 +1216,8 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
-			const credEvent = createDeferredPromise<unknown>();
+			const userEvent = Promise.withResolvers<unknown>();
+			const credEvent = Promise.withResolvers<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
 			node.on(
 				"credential added",
@@ -1234,12 +1242,12 @@ integrationTest(
 				credential: SetCredentialResult.OK,
 			});
 
-			t.expect(await userEvent).toMatchObject({
+			t.expect(await userEvent.promise).toMatchObject({
 				userId: 3,
 				active: true,
 				userType: UserCredentialUserType.General,
 			});
-			t.expect(await credEvent).toMatchObject({
+			t.expect(await credEvent.promise).toMatchObject({
 				userId: 3,
 				credentialType: UserCredentialType.PINCode,
 				credentialSlot: 3,
@@ -1689,6 +1697,528 @@ integrationTest(
 				"1234",
 			);
 			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+		},
+	},
+);
+const userCodeCapabilities = ccCaps({
+	ccId: CommandClasses["User Code"],
+	version: 1,
+	numUsers: 10,
+	supportedASCIIChars: "0123456789",
+});
+
+// =============================================================================
+// Unsolicited User Code Reports
+// =============================================================================
+
+integrationTest(
+	"Unsolicited report for a new slot emits user added and credential added",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				userCodeCapabilities,
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userEvent = Promise.withResolvers<unknown>();
+			node.on("user added", (_node, args) => userEvent.resolve(args));
+			const credEvent = Promise.withResolvers<unknown>();
+			node.on(
+				"credential added",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			const cc = new UserCodeCCReport({
+				nodeId: mockController.ownNodeId,
+				userId: 1,
+				userIdStatus: UserIDStatus.Enabled,
+				userCode: "1234",
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+
+			t.expect(await userEvent.promise).toMatchObject({
+				userId: 1,
+				active: true,
+			});
+			t.expect(await credEvent.promise).toMatchObject({
+				userId: 1,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 1,
+				data: "1234",
+			});
+
+			// The cache must reflect the reported state
+			t.expect(
+				node.getValue(UserCodeCCValues.userIdStatus(1).id),
+			).toBe(UserIDStatus.Enabled);
+			t.expect(node.getValue(UserCodeCCValues.userCode(1).id)).toBe(
+				"1234",
+			);
+		},
+	},
+);
+
+integrationTest(
+	"Unsolicited report with a changed code emits only credential modified",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				userCodeCapabilities,
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(2).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1111");
+
+			const events: string[] = [];
+			const credEvent = Promise.withResolvers<unknown>();
+			node.on("user added", () => void events.push("user added"));
+			node.on("user modified", () => void events.push("user modified"));
+			node.on("user deleted", () => void events.push("user deleted"));
+			node.on("credential modified", (_node, args) => {
+				events.push("credential modified");
+				credEvent.resolve(args);
+			});
+
+			const cc = new UserCodeCCReport({
+				nodeId: mockController.ownNodeId,
+				userId: 2,
+				userIdStatus: UserIDStatus.Enabled,
+				userCode: "2222",
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+
+			t.expect(await credEvent.promise).toMatchObject({
+				userId: 2,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 2,
+				data: "2222",
+			});
+			await wait(50);
+			t.expect(events).toStrictEqual(["credential modified"]);
+		},
+	},
+);
+
+integrationTest(
+	"Unsolicited report with a changed status emits only user modified",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				userCodeCapabilities,
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(2).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1111");
+
+			const events: string[] = [];
+			const userEvent = Promise.withResolvers<unknown>();
+			node.on("user added", () => void events.push("user added"));
+			node.on("user deleted", () => void events.push("user deleted"));
+			node.on(
+				"credential modified",
+				() => void events.push("credential modified"),
+			);
+			node.on("user modified", (_node, args) => {
+				events.push("user modified");
+				userEvent.resolve(args);
+			});
+
+			const cc = new UserCodeCCReport({
+				nodeId: mockController.ownNodeId,
+				userId: 2,
+				userIdStatus: UserIDStatus.Disabled,
+				userCode: "1111",
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+
+			t.expect(await userEvent.promise).toMatchObject({
+				userId: 2,
+				active: false,
+			});
+			await wait(50);
+			t.expect(events).toStrictEqual(["user modified"]);
+		},
+	},
+);
+
+integrationTest(
+	"Unsolicited report clearing a slot emits user deleted and credential deleted",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				userCodeCapabilities,
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(3).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(3).id, "1234");
+
+			const userEvent = Promise.withResolvers<unknown>();
+			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+			const credEvent = Promise.withResolvers<unknown>();
+			node.on(
+				"credential deleted",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			const cc = new UserCodeCCReport({
+				nodeId: mockController.ownNodeId,
+				userId: 3,
+				userIdStatus: UserIDStatus.Available,
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+
+			t.expect(await userEvent.promise).toMatchObject({ userId: 3 });
+			t.expect(await credEvent.promise).toMatchObject({
+				userId: 3,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 3,
+			});
+		},
+	},
+);
+
+integrationTest(
+	"Unsolicited report matching the cached state emits no events",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				userCodeCapabilities,
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(4).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(4).id, "4444");
+
+			const events: string[] = [];
+			for (
+				const event of [
+					"user added",
+					"user modified",
+					"user deleted",
+					"credential added",
+					"credential modified",
+					"credential deleted",
+				] as const
+			) {
+				node.on(event, () => void events.push(event));
+			}
+
+			const cc = new UserCodeCCReport({
+				nodeId: mockController.ownNodeId,
+				userId: 4,
+				userIdStatus: UserIDStatus.Enabled,
+				userCode: "4444",
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+
+			await wait(100);
+			t.expect(events).toStrictEqual([]);
+		},
+	},
+);
+
+integrationTest(
+	"Unsolicited extended report emits events for each changed slot",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Slot 1 is already known, slot 2 changes, slot 3 is new
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(1).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1111");
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(2).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "2222");
+
+			const events: [string, any][] = [];
+			for (
+				const event of [
+					"user added",
+					"user modified",
+					"user deleted",
+					"credential added",
+					"credential modified",
+					"credential deleted",
+				] as const
+			) {
+				node.on(
+					event,
+					(_node: any, args: any) => void events.push([event, args]),
+				);
+			}
+
+			const cc = new UserCodeCCExtendedUserCodeReport({
+				nodeId: mockController.ownNodeId,
+				userCodes: [
+					{
+						userId: 1,
+						userIdStatus: UserIDStatus.Enabled,
+						userCode: "1111",
+					},
+					{
+						userId: 2,
+						userIdStatus: UserIDStatus.Enabled,
+						userCode: "9999",
+					},
+					{
+						userId: 3,
+						userIdStatus: UserIDStatus.Enabled,
+						userCode: "3333",
+					},
+				],
+				nextUserId: 0,
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+
+			await wait(100);
+			t.expect(events).toStrictEqual([
+				["credential modified", {
+					userId: 2,
+					credentialType: UserCredentialType.PINCode,
+					credentialSlot: 2,
+					data: "9999",
+				}],
+				["user added", {
+					userId: 3,
+					active: true,
+					userType: UserCredentialUserType.General,
+				}],
+				["credential added", {
+					userId: 3,
+					credentialType: UserCredentialType.PINCode,
+					credentialSlot: 3,
+					data: "3333",
+				}],
+			]);
+		},
+	},
+);
+
+// =============================================================================
+// Value API removal
+// =============================================================================
+
+integrationTest(
+	"User code and admin code values are internal and not settable",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportsAdminCode: true,
+					supportedKeypadModes: [1, 2],
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(1).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
+			node.valueDB.setValue(UserCodeCCValues.adminCode.id, "5678");
+
+			const definedProperties = node
+				.getDefinedValueIDs()
+				.filter((v) => v.commandClass === CommandClasses["User Code"])
+				.map((v) => v.property);
+			t.expect(definedProperties).not.toContain("userIdStatus");
+			t.expect(definedProperties).not.toContain("userCode");
+			t.expect(definedProperties).not.toContain("adminCode");
+			t.expect(definedProperties).toContain("keypadMode");
+
+			for (
+				const [valueId, value] of [
+					[
+						UserCodeCCValues.userIdStatus(1).id,
+						UserIDStatus.Available,
+					],
+					[UserCodeCCValues.userCode(1).id, "4321"],
+					[UserCodeCCValues.adminCode.id, "8765"],
+				] as const
+			) {
+				const result = await node.setValue(valueId, value);
+				t.expect(result.status).toBe(SetValueStatus.InvalidValue);
+			}
+		},
+	},
+);
+
+// =============================================================================
+// Persistence of solicited reads
+// =============================================================================
+
+integrationTest(
+	"getUser() persists the queried state without emitting events",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				userCodeCapabilities,
+			],
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			const respondToUserGet: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof UserCodeCCGet) {
+						const cc = new UserCodeCCReport({
+							nodeId: controller.ownNodeId,
+							userId: receivedCC.userId,
+							userIdStatus: UserIDStatus.Enabled,
+							userCode: "1234",
+						});
+						return { action: "sendCC", cc };
+					}
+				},
+			};
+			mockNode.defineBehavior(respondToUserGet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const events: string[] = [];
+			for (
+				const event of [
+					"user added",
+					"user modified",
+					"credential added",
+					"credential modified",
+				] as const
+			) {
+				node.on(event, () => void events.push(event));
+			}
+
+			const user = await node.accessControl!.getUser(1);
+			t.expect(user).toMatchObject({ userId: 1, active: true });
+
+			t.expect(
+				node.getValue(UserCodeCCValues.userIdStatus(1).id),
+			).toBe(UserIDStatus.Enabled);
+			t.expect(node.getValue(UserCodeCCValues.userCode(1).id)).toBe(
+				"1234",
+			);
+
+			// Solicited reads are discovery, not changes
+			await wait(100);
+			t.expect(events).toStrictEqual([]);
+		},
+	},
+);
+
+// =============================================================================
+// Notification-based wipe
+// =============================================================================
+
+integrationTest(
+	"The all user codes deleted notification emits wildcard deletion events",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				userCodeCapabilities,
+				ccCaps({
+					ccId: CommandClasses.Notification,
+					version: 2,
+					notificationTypesAndEvents: {
+						[0x06]: [], // Access Control
+					},
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.valueDB.setValue(
+				UserCodeCCValues.userIdStatus(1).id,
+				UserIDStatus.Enabled,
+			);
+			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
+
+			const userEvent = Promise.withResolvers<unknown>();
+			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+			const credEvent = Promise.withResolvers<unknown>();
+			node.on(
+				"credential deleted",
+				(_node, args) => credEvent.resolve(args),
+			);
+
+			const cc = new NotificationCCReport({
+				nodeId: mockController.ownNodeId,
+				notificationType: 0x06,
+				notificationEvent: 0x0c, // All user codes deleted
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+
+			t.expect(await userEvent.promise).toStrictEqual({ userId: 0 });
+			t.expect(await credEvent.promise).toStrictEqual({
+				userId: 0,
+				credentialType: UserCredentialType.PINCode,
+				credentialSlot: 0,
+			});
+
+			// The cache must be cleared as well
+			t.expect(
+				node.getValue(UserCodeCCValues.userIdStatus(1).id),
+			).toBe(UserIDStatus.Available);
+			t.expect(node.getValue(UserCodeCCValues.userCode(1).id)).toBe("");
 		},
 	},
 );
