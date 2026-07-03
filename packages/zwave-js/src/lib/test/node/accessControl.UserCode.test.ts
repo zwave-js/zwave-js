@@ -1742,7 +1742,7 @@ const failSupervisedUserCodeSet: MockNodeBehavior = {
 };
 
 integrationTest(
-	"setCredential persists status and code on supervised success (UC)",
+	"setCredential persists status and code on supervised success",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1794,7 +1794,7 @@ integrationTest(
 );
 
 integrationTest(
-	"setUser persists status on supervised success (UC)",
+	"setUser persists status on supervised success",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1821,7 +1821,7 @@ integrationTest(
 );
 
 integrationTest(
-	"addUser persists user and code on supervised success (UC)",
+	"addUser persists user and code on supervised success",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1845,7 +1845,7 @@ integrationTest(
 );
 
 integrationTest(
-	"setCredential reconciles the cache on supervised failure (UC)",
+	"setCredential reconciles the cache on supervised failure",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1887,7 +1887,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteUser returns OK when the device fails clearing an already-empty slot (UC)",
+	"deleteUser returns OK when the device fails clearing an already-empty slot",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1915,7 +1915,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteCredential returns OK when the device fails clearing an already-empty slot (UC)",
+	"deleteCredential returns OK when the device fails clearing an already-empty slot",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1947,7 +1947,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteCredentials returns OK when the device fails clearing an already-empty slot (UC)",
+	"deleteCredentials returns OK when the device fails clearing an already-empty slot",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -1977,7 +1977,7 @@ integrationTest(
 );
 
 integrationTest(
-	"setCredential returns OK when the device applies the change but reports failure (UC)",
+	"setCredential returns OK when the device applies the change but reports failure",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -2067,7 +2067,7 @@ integrationTest(
 );
 
 integrationTest(
-	"deleteUser reconciles the cache when the device fails and keeps the code (UC)",
+	"deleteUser reconciles the cache when the device fails and keeps the code",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
@@ -2115,7 +2115,7 @@ integrationTest(
 );
 
 integrationTest(
-	"setUser returns ModifyRejectedLocationEmpty on supervised failure for a missing user (UC)",
+	"setUser returns ModifyRejectedLocationEmpty on supervised failure for a missing user",
 	{
 		nodeCapabilities: supervisedUserCodeCapabilities,
 
