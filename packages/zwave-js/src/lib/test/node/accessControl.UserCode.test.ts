@@ -1,4 +1,6 @@
 import {
+	SupervisionCCGet,
+	SupervisionCommand,
 	UserCredentialRule,
 	UserCredentialType,
 	UserCredentialUserType,
@@ -1690,6 +1692,276 @@ integrationTest(
 				"1234",
 			);
 			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+		},
+	},
+);
+
+// =============================================================================
+// Supervised writes and the value DB
+//
+// Supervision replaces the verification GET, so a successful supervised write
+// must persist the written slot state directly, and a failed one must re-read
+// the slot to reconcile the cache with the device's actual state.
+// =============================================================================
+
+const supervisedUserCodeCapabilities = {
+	commandClasses: [
+		CommandClasses.Version,
+		CommandClasses.Supervision,
+		ccCaps({
+			ccId: CommandClasses["User Code"],
+			version: 2,
+			numUsers: 10,
+			supportedASCIIChars: "0123456789",
+			supportedUserIDStatuses: [
+				UserIDStatus.Available,
+				UserIDStatus.Enabled,
+				UserIDStatus.Disabled,
+			],
+		}),
+	],
+};
+
+// Have the node respond to all supervised User Code sets negatively
+const failSupervisedUserCodeSet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (
+			(receivedCC instanceof UserCodeCCSet
+				|| receivedCC instanceof UserCodeCCExtendedUserCodeSet)
+			&& receivedCC.isEncapsulatedWith(
+				CommandClasses.Supervision,
+				SupervisionCommand.Get,
+			)
+		) {
+			return { action: "fail" };
+		}
+	},
+};
+
+integrationTest(
+	"setCredential persists status and code on supervised success (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			mockNode.clearReceivedControllerFrames();
+
+			const result = await node.accessControl!.setCredential(
+				3,
+				UserCredentialType.PINCode,
+				3,
+				"1234",
+			);
+			t.expect(result).toBe(SetCredentialResult.OK);
+
+			// The write must have used Supervision...
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof SupervisionCCGet
+					&& frame.payload.encapsulated
+						instanceof UserCodeCCExtendedUserCodeSet,
+				{
+					errorMessage:
+						"Node should have received a supervised User Code set",
+				},
+			);
+			// ...without a verification GET
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCGet,
+				{ noMatch: true },
+			);
+
+			t.expect(
+				node.valueDB.getValue(UserCodeCCValues.userIdStatus(3).id),
+			).toBe(UserIDStatus.Enabled);
+			t.expect(
+				node.valueDB.getValue(UserCodeCCValues.userCode(3).id),
+			).toBe("1234");
+
+			const cached = node.accessControl!.getCredentialCached(
+				UserCredentialType.PINCode,
+				3,
+			);
+			t.expect(cached?.data).toBe("1234");
+		},
+	},
+);
+
+integrationTest(
+	"setUser persists status on supervised success (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const statusVid = UserCodeCCValues.userIdStatus(1).id;
+			const codeVid = UserCodeCCValues.userCode(1).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1234");
+
+			const result = await node.accessControl!.setUser(1, {
+				active: false,
+			});
+			t.expect(result).toBe(SetUserResult.OK);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Disabled,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("1234");
+
+			const cached = node.accessControl!.getUserCached(1);
+			t.expect(cached?.active).toBe(false);
+		},
+	},
+);
+
+integrationTest(
+	"addUser persists user and code on supervised success (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const result = await node.accessControl!.addUser(2, {}, {
+				type: UserCredentialType.PINCode,
+				slot: 2,
+				data: "5678",
+			});
+			t.expect(result.user).toBe(SetUserResult.OK);
+			t.expect(result.credential).toBe(SetCredentialResult.OK);
+
+			t.expect(
+				node.valueDB.getValue(UserCodeCCValues.userIdStatus(2).id),
+			).toBe(UserIDStatus.Enabled);
+			t.expect(
+				node.valueDB.getValue(UserCodeCCValues.userCode(2).id),
+			).toBe("5678");
+		},
+	},
+);
+
+integrationTest(
+	"setCredential reconciles the cache on supervised failure (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The cache is wrong: the device's slot is actually empty
+			const statusVid = UserCodeCCValues.userIdStatus(2).id;
+			const codeVid = UserCodeCCValues.userCode(2).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "9999");
+
+			const result = await node.accessControl!.setCredential(
+				2,
+				UserCredentialType.PINCode,
+				2,
+				"1234",
+			);
+			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					2,
+				),
+			).toBeUndefined();
+		},
+	},
+);
+
+integrationTest(
+	"deleteUser reconciles the cache on supervised failure (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The cache is wrong: the device's slot is actually empty
+			const statusVid = UserCodeCCValues.userIdStatus(1).id;
+			const codeVid = UserCodeCCValues.userCode(1).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1234");
+
+			const result = await node.accessControl!.deleteUser(1);
+			t.expect(result).toBe(SetUserResult.Error_Unknown);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
+		},
+	},
+);
+
+integrationTest(
+	"deleteCredential reconciles the cache on supervised failure (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The cache is wrong: the device's slot is actually empty
+			const statusVid = UserCodeCCValues.userIdStatus(2).id;
+			const codeVid = UserCodeCCValues.userCode(2).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1234");
+
+			const result = await node.accessControl!.deleteCredential(
+				2,
+				UserCredentialType.PINCode,
+				2,
+			);
+			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
+		},
+	},
+);
+
+integrationTest(
+	"deleteCredentials reconciles the cache on supervised failure (UC)",
+	{
+		nodeCapabilities: supervisedUserCodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(failSupervisedUserCodeSet);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The cache is wrong: the device's slot is actually empty
+			const statusVid = UserCodeCCValues.userIdStatus(4).id;
+			const codeVid = UserCodeCCValues.userCode(4).id;
+			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+			node.valueDB.setValue(codeVid, "1111");
+
+			const result = await node.accessControl!.deleteCredentials({
+				userId: 4,
+			});
+			t.expect(result).toBe(SetCredentialResult.Error_Unknown);
+
+			t.expect(node.valueDB.getValue(statusVid)).toBe(
+				UserIDStatus.Available,
+			);
+			t.expect(node.valueDB.getValue(codeVid)).toBe("");
 		},
 	},
 );

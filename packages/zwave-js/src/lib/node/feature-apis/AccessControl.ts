@@ -665,6 +665,15 @@ export class AccessControlAPI extends FeatureAPI {
 					);
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
+				if (succeeded) {
+					// Supervision replaces the verification GET, so persist
+					// the written slot state to the value DB ourselves
+					this.#persistCachedUserCode(userId, status, codeData);
+				} else {
+					// Re-read the slot so the cache reflects the device's
+					// actual state
+					await api.get(userId);
+				}
 			}
 
 			if (succeeded) {
@@ -798,6 +807,15 @@ export class AccessControlAPI extends FeatureAPI {
 					&& verifiedStatus !== UserIDStatus.Available;
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
+				if (succeeded) {
+					// Supervision replaces the verification GET, so persist
+					// the written slot state to the value DB ourselves
+					this.#persistCachedUserCode(userId, status, existingCode);
+				} else {
+					// Re-read the slot so the cache reflects the device's
+					// actual state
+					await api.get(userId);
+				}
 			}
 			if (succeeded) {
 				const node = this.endpoint.tryGetNode();
@@ -849,6 +867,11 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
+				if (!succeeded) {
+					// Re-read the slot so the cache reflects the device's
+					// actual state
+					await api.get(userId);
+				}
 			}
 			if (succeeded) {
 				this.#clearCachedUserCodes(userId);
@@ -1158,6 +1181,15 @@ export class AccessControlAPI extends FeatureAPI {
 					);
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
+				if (succeeded) {
+					// Supervision replaces the verification GET, so persist
+					// the written slot state to the value DB ourselves
+					this.#persistCachedUserCode(userId, status, codeData);
+				} else {
+					// Re-read the slot so the cache reflects the device's
+					// actual state
+					await api.get(userId);
+				}
 			}
 			if (succeeded) {
 				const node = this.endpoint.tryGetNode();
@@ -1256,6 +1288,11 @@ export class AccessControlAPI extends FeatureAPI {
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			} else {
 				succeeded = supervisedCommandSucceeded(result);
+				if (!succeeded) {
+					// Re-read the slot so the cache reflects the device's
+					// actual state
+					await api.get(targetUserId);
+				}
 			}
 			if (succeeded) {
 				this.#clearCachedUserCodes(targetUserId);
@@ -1342,6 +1379,11 @@ export class AccessControlAPI extends FeatureAPI {
 				// assume it worked when the command was not supervised.
 				succeeded = result == undefined
 					|| supervisedCommandSucceeded(result);
+				if (!succeeded && userId !== 0) {
+					// Re-read the slot so the cache reflects the device's
+					// actual state
+					await api.get(userId);
+				}
 			}
 			if (succeeded) {
 				this.#clearCachedUserCodes(userId);
@@ -1654,6 +1696,28 @@ export class AccessControlAPI extends FeatureAPI {
 		for (const vid of credentialValues) {
 			valueDB.removeValue(vid);
 		}
+	}
+
+	/**
+	 * Persists a User Code CC slot's status and code in the value DB after a
+	 * successful supervised write, which does not trigger a verification GET.
+	 */
+	#persistCachedUserCode(
+		userId: number,
+		status: UserIDStatus,
+		code: string | Uint8Array,
+	): void {
+		const valueDB = this.endpoint.tryGetNode()?.valueDB;
+		if (!valueDB) return;
+
+		valueDB.setValue(
+			UserCodeCCValues.userIdStatus(userId).endpoint(this.endpoint.index),
+			status,
+		);
+		valueDB.setValue(
+			UserCodeCCValues.userCode(userId).endpoint(this.endpoint.index),
+			code,
+		);
 	}
 
 	/**
