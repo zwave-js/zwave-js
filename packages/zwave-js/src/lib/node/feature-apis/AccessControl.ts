@@ -675,14 +675,13 @@ export class AccessControlAPI extends FeatureAPI {
 			} else if (supervisedCommandSucceeded(result)) {
 				succeeded = true;
 				// Supervision replaces the verification GET, so persist
-				// the written slot state to the value DB ourselves
+				// the new state ourselves
 				this.#persistCachedUserCode(userId, status, codeData);
 			} else {
-				// Re-read the slot so the cache reflects the device's
-				// actual state. Treat devices that applied the change but
-				// reported failure as success. Require an exact readback match
-				// though, since the V1 obfuscation leniency would wrongly
-				// confirm a previous code after an explicit failure.
+				// The device reported failure
+				// Determine the actual state and treat an exact match as
+				// success. The obfuscation leniency does not apply here,
+				// since it would confirm the previous code.
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === status
 					&& userCodeEquals(codeData, verified.userCode);
@@ -821,12 +820,12 @@ export class AccessControlAPI extends FeatureAPI {
 			} else if (supervisedCommandSucceeded(result)) {
 				succeeded = true;
 				// Supervision replaces the verification GET, so persist
-				// the written slot state to the value DB ourselves
+				// the new state ourselves
 				this.#persistCachedUserCode(userId, status, existingCode);
 			} else {
-				// Re-read the slot so the cache reflects the device's actual
-				// state. Treat devices that applied the change but reported
-				// failure as success.
+				// The device reported failure
+				// Determine the actual state and treat a matching status as
+				// success.
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === status;
 				if (
@@ -884,10 +883,9 @@ export class AccessControlAPI extends FeatureAPI {
 			if (result != undefined && supervisedCommandSucceeded(result)) {
 				succeeded = true;
 			} else {
-				// Unsupervised, or the device reported failure - verify by
-				// readback, which also reconciles the cache after a failure.
-				// An Available slot is the desired end state, even if the
-				// device rejected clearing an already-empty slot.
+				// Unsupervised, or the device reported failure
+				// Determine the actual state and treat an empty slot as
+				// success in any case.
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			}
@@ -1201,14 +1199,13 @@ export class AccessControlAPI extends FeatureAPI {
 			} else if (supervisedCommandSucceeded(result)) {
 				succeeded = true;
 				// Supervision replaces the verification GET, so persist
-				// the written slot state to the value DB ourselves
+				// the new state ourselves
 				this.#persistCachedUserCode(userId, status, codeData);
 			} else {
-				// Re-read the slot so the cache reflects the device's
-				// actual state. Treat devices that applied the change but
-				// reported failure as success. Require an exact readback match
-				// though, since the V1 obfuscation leniency would wrongly
-				// confirm a previous code after an explicit failure.
+				// The device reported failure
+				// Determine the actual state and treat an exact match as
+				// success. The obfuscation leniency does not apply here,
+				// since it would confirm the previous code.
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === status
 					&& userCodeEquals(codeData, verified.userCode);
@@ -1317,10 +1314,9 @@ export class AccessControlAPI extends FeatureAPI {
 			if (result != undefined && supervisedCommandSucceeded(result)) {
 				succeeded = true;
 			} else {
-				// Unsupervised, or the device reported failure - verify by
-				// readback, which also reconciles the cache after a failure.
-				// An Available slot is the desired end state, even if the
-				// device rejected clearing an already-empty slot.
+				// Unsupervised, or the device reported failure
+				// Determine the actual state and treat an empty slot as
+				// success in any case.
 				const verified = await api.get(targetUserId);
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			}
@@ -1403,10 +1399,9 @@ export class AccessControlAPI extends FeatureAPI {
 			if (result != undefined && supervisedCommandSucceeded(result)) {
 				succeeded = true;
 			} else if (userId !== 0) {
-				// Unsupervised, or the device reported failure - verify by
-				// readback, which also reconciles the cache after a failure.
-				// An Available slot is the desired end state, even if the
-				// device rejected clearing an already-empty slot.
+				// Unsupervised, or the device reported failure
+				// Determine the actual state and treat an empty slot as
+				// success in any case.
 				const verified = await api.get(userId);
 				succeeded = verified?.userIdStatus === UserIDStatus.Available;
 			} else {
