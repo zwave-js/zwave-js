@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.25.2 (2026-07-03)
 ### Bugfixes
 * When sending S2 encapsulated commands with delivery verification, receiving a command with the next expected sequence number is now treated as a delivery verification instead of continuing to wait for a potential `NonceReport` (#8906)
 * Fixes an issue where cached User Code CC values could get out of sync by using the unified Access Control API on devices supporting Supervision (#8927)
