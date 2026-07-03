@@ -212,6 +212,63 @@ function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
 		&& NON_PIN_CHARS.test(supportedASCIIChars);
 }
 
+/**
+ * Returns the unified credential type used to represent User Code CC
+ * credentials, based on the ASCII characters the node accepts in user codes.
+ * @internal
+ */
+export function getUserCodeCredentialType(
+	supportedASCIIChars: string | undefined,
+): UserCredentialType {
+	return supportsNonPINChars(supportedASCIIChars)
+		? UserCredentialType.Password
+		: UserCredentialType.PINCode;
+}
+
+/**
+ * Maps User Code CC's UserIDStatus to the unified active/userType model.
+ * Returns `undefined` for statuses that indicate no configured user.
+ * @internal
+ */
+export function mapUserCodeStatusToUserData(
+	userId: number,
+	status: UserIDStatus | undefined,
+): UserData | undefined {
+	// These statuses indicate no user is configured for this slot
+	if (
+		status == undefined
+		|| status === UserIDStatus.Available
+		|| status === UserIDStatus.StatusNotAvailable
+		|| status === UserIDStatus.PassageMode
+	) {
+		return undefined;
+	}
+
+	let active: boolean;
+	let userType: UserCredentialUserType;
+	switch (status) {
+		case UserIDStatus.Enabled:
+			active = true;
+			userType = UserCredentialUserType.General;
+			break;
+		case UserIDStatus.Disabled:
+			active = false;
+			userType = UserCredentialUserType.General;
+			break;
+		// Messaging is the closest User Code CC equivalent to NonAccess
+		case UserIDStatus.Messaging:
+			active = true;
+			userType = UserCredentialUserType.NonAccess;
+			break;
+		default:
+			active = true;
+			userType = UserCredentialUserType.General;
+			break;
+	}
+
+	return { userId, active, userType };
+}
+
 // Characters known to be used by nodes that obfuscate user codes in reports
 const USER_CODE_OBFUSCATION_CHARS = ["*"];
 
@@ -434,7 +491,7 @@ export class AccessControlAPI extends FeatureAPI {
 			const api = this.#ucAPI();
 			const result = await api.get(userId);
 			if (!result) return undefined;
-			return this.#mapUserCodeStatusToUserData(
+			return mapUserCodeStatusToUserData(
 				userId,
 				result.userIdStatus,
 			);
@@ -502,7 +559,7 @@ export class AccessControlAPI extends FeatureAPI {
 					users.push(
 						...response.userCodes
 							.map((entry) =>
-								this.#mapUserCodeStatusToUserData(
+								mapUserCodeStatusToUserData(
 									entry.userId,
 									entry.userIdStatus,
 								)
@@ -515,7 +572,7 @@ export class AccessControlAPI extends FeatureAPI {
 				for (let userId = 1; userId <= maxUsers; userId++) {
 					const result = await api.get(userId);
 					if (!result) continue;
-					const user = this.#mapUserCodeStatusToUserData(
+					const user = mapUserCodeStatusToUserData(
 						userId,
 						result.userIdStatus,
 					);
@@ -1528,48 +1585,7 @@ export class AccessControlAPI extends FeatureAPI {
 
 	/** Returns the credential type to use for User Code CC based on supported characters */
 	get #ucCredentialType(): UserCredentialType {
-		return supportsNonPINChars(this.#supportedASCIIChars)
-			? UserCredentialType.Password
-			: UserCredentialType.PINCode;
-	}
-
-	/** Maps User Code CC's UserIDStatus to the unified active/userType model */
-	#mapUserCodeStatusToUserData(
-		userId: number,
-		status: UserIDStatus,
-	): UserData | undefined {
-		// These statuses indicate no user is configured for this slot
-		if (
-			status === UserIDStatus.Available
-			|| status === UserIDStatus.StatusNotAvailable
-			|| status === UserIDStatus.PassageMode
-		) {
-			return undefined;
-		}
-
-		let active: boolean;
-		let userType: UserCredentialUserType;
-		switch (status) {
-			case UserIDStatus.Enabled:
-				active = true;
-				userType = UserCredentialUserType.General;
-				break;
-			case UserIDStatus.Disabled:
-				active = false;
-				userType = UserCredentialUserType.General;
-				break;
-			// Messaging is the closest User Code CC equivalent to NonAccess
-			case UserIDStatus.Messaging:
-				active = true;
-				userType = UserCredentialUserType.NonAccess;
-				break;
-			default:
-				active = true;
-				userType = UserCredentialUserType.General;
-				break;
-		}
-
-		return { userId, active, userType };
+		return getUserCodeCredentialType(this.#supportedASCIIChars);
 	}
 
 	/**
@@ -1981,7 +1997,7 @@ export class AccessControlAPI extends FeatureAPI {
 			),
 		);
 		if (status == undefined) return undefined;
-		return this.#mapUserCodeStatusToUserData(userId, status);
+		return mapUserCodeStatusToUserData(userId, status);
 	}
 
 	#getCredentialCached_UC(

@@ -8897,39 +8897,12 @@ export const UserCodeCCValues = Object.freeze({
 			} as const;
 		},
 		options: {
-			internal: false,
+			internal: true,
 			minVersion: 2,
 			secret: true,
 			stateful: true,
 			supportsEndpoints: true,
 			autoCreate: true,
-		} as const satisfies CCValueOptions,
-	},
-	_deprecated_masterCode: {
-		id: {
-			commandClass: CommandClasses["User Code"],
-			property: "masterCode",
-		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "masterCode",
-		} as const),
-		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
-				&& valueId.property === "masterCode"
-				&& valueId.propertyKey == undefined;
-		},
-		get meta() {
-			return ValueMetadata.Any;
-		},
-		options: {
-			internal: true,
-			minVersion: 1,
-			secret: false,
-			stateful: true,
-			supportsEndpoints: true,
-			autoCreate: false,
 		} as const satisfies CCValueOptions,
 	},
 	userIdStatus: Object.assign(
@@ -8965,7 +8938,7 @@ export const UserCodeCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: false,
 				stateful: true,
@@ -9004,7 +8977,7 @@ export const UserCodeCCValues = Object.freeze({
 						&& typeof propertyKey === "number")(valueId);
 			},
 			options: {
-				internal: false,
+				internal: true,
 				minVersion: 1,
 				secret: true,
 				stateful: true,

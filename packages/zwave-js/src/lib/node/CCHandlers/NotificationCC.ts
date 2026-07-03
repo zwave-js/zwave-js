@@ -42,6 +42,7 @@ import type { ZWaveNode } from "../Node.js";
 import type {
 	ZWaveNotificationCallbackArgs_NotificationCC,
 } from "../_Types.js";
+import { getUserCodeCredentialType } from "../feature-apis/AccessControl.js";
 import type { NodeValues } from "../mixins/40_Values.js";
 
 export interface NotificationHandlerStore {
@@ -564,6 +565,18 @@ function handleKnownNotification(
 			);
 			UserCodeCC.setUserCodeCached(ctx, endpoint, userId, "");
 		}
+
+		// Notify applications with wildcard events, matching the unified
+		// bulk-delete semantics where user ID 0 addresses all users
+		const eventTarget = node.getEndpoint(command.endpointIndex) ?? node;
+		node.emit("user deleted", eventTarget, { userId: 0 });
+		node.emit("credential deleted", eventTarget, {
+			userId: 0,
+			credentialType: getUserCodeCredentialType(
+				UserCodeCC.getSupportedASCIICharsCached(ctx, endpoint),
+			),
+			credentialSlot: 0,
+		});
 	}
 }
 
