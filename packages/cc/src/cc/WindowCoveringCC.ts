@@ -468,7 +468,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			WindowCoveringCommand,
-			WindowCoveringCommand.StartLevelChange,
+			WindowCoveringCommand.Set,
 		);
 
 		const cc = new WindowCoveringCCSet({
