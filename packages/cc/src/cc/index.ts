@@ -69,6 +69,7 @@ export {
 	AssociationCCValues,
 };
 export type {
+	AssociationGroupInfo,
 	AssociationGroupInfoCCCommandListGetOptions,
 	AssociationGroupInfoCCCommandListReportOptions,
 	AssociationGroupInfoCCInfoGetOptions,
@@ -779,6 +780,7 @@ export {
 	MultiChannelAssociationCCValues,
 };
 export type {
+	EndpointCapability,
 	MultiChannelCCAggregatedMembersGetOptions,
 	MultiChannelCCAggregatedMembersReportOptions,
 	MultiChannelCCCapabilityGetOptions,
@@ -1444,6 +1446,7 @@ export {
 	isTransportServiceEncapsulation,
 };
 export type {
+	UserCode,
 	UserCodeCCAdminCodeReportOptions,
 	UserCodeCCAdminCodeSetOptions,
 	UserCodeCCCapabilitiesReportOptions,

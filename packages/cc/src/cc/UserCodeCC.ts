@@ -2232,6 +2232,7 @@ export interface UserCodeCCExtendedUserCodeSetOptions {
 	userCodes: UserCodeCCSetOptions[];
 }
 
+// @publicAPI
 export interface UserCode {
 	userId: number;
 	userIdStatus: UserIDStatus;
