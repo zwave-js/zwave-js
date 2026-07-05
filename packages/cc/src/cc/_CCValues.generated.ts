@@ -4617,7 +4617,7 @@ export const IrrigationCCValues = Object.freeze({
 				} as const),
 				get meta() {
 					return {
-						...ValueMetadata.ReadOnlyBoolean,
+						...ValueMetadata.ReadOnlyNumber,
 						label: `${
 							irrigationValveIdToMetadataPrefix(
 								valveId,
@@ -5143,7 +5143,7 @@ export const IrrigationCCValues = Object.freeze({
 							irrigationValveIdToMetadataPrefix(
 								valveId,
 							)
-						}: Error - Flow below high threshold`,
+						}: Error - Flow below low threshold`,
 					} as const;
 				},
 			};
