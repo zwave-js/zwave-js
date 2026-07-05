@@ -304,6 +304,27 @@ compat option treatSetAsReport must be an array of strings`,
 			this.treatSetAsReport = new Set(definition.treatSetAsReport);
 		}
 
+		if (definition.treatAsCover != undefined) {
+			if (
+				definition.treatAsCover !== "*"
+				&& !(
+					isArray(definition.treatAsCover)
+					&& definition.treatAsCover.every(
+						(d: any) =>
+							typeof d === "number" && d % 1 === 0 && d >= 0,
+					)
+				)
+			) {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+compat option treatAsCover must be "*" or an array of endpoint indices`,
+				);
+			}
+
+			this.treatAsCover = definition.treatAsCover;
+		}
+
 		if (definition.treatDestinationEndpointAsSource != undefined) {
 			if (definition.treatDestinationEndpointAsSource !== true) {
 				throwInvalidConfig(
@@ -651,6 +672,7 @@ compat option overrideQueries must be an object!`,
 	public readonly reportTimeout?: number;
 	public readonly skipConfigurationNameQuery?: boolean;
 	public readonly skipConfigurationInfoQuery?: boolean;
+	public readonly treatAsCover?: "*" | readonly number[];
 	public readonly treatMultilevelSwitchSetAsEvent?: boolean;
 	public readonly treatSetAsReport?: ReadonlySet<string>;
 	public readonly treatDestinationEndpointAsSource?: boolean;
@@ -694,6 +716,7 @@ compat option overrideQueries must be an object!`,
 			"removeEndpoints",
 			"skipConfigurationNameQuery",
 			"skipConfigurationInfoQuery",
+			"treatAsCover",
 			"treatMultilevelSwitchSetAsEvent",
 			"treatSetAsReport",
 			"treatDestinationEndpointAsSource",
