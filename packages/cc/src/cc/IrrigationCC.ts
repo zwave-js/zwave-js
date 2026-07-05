@@ -252,7 +252,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 			(typeof property === "number" || property === "master")
 			&& propertyKey === "nominalCurrent",
 		(valveId: ValveId) => ({
-			...ValueMetadata.ReadOnlyBoolean,
+			...ValueMetadata.ReadOnlyNumber,
 			label: `${
 				irrigationValveIdToMetadataPrefix(
 					valveId,
@@ -444,7 +444,7 @@ export const IrrigationCCValues = V.defineCCValues(CommandClasses.Irrigation, {
 				irrigationValveIdToMetadataPrefix(
 					valveId,
 				)
-			}: Error - Flow below high threshold`,
+			}: Error - Flow below low threshold`,
 		}),
 	),
 	...V.dynamicPropertyAndKeyWithName(
