@@ -375,6 +375,7 @@ export class MultiChannelCCAPI extends CCAPI {
 	}
 }
 
+// @publicAPI
 export interface EndpointCapability {
 	generic: GenericDeviceClass;
 	specific: SpecificDeviceClass;

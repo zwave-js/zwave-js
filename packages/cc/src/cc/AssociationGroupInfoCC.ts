@@ -594,6 +594,7 @@ export class AssociationGroupInfoCCNameGet extends AssociationGroupInfoCC {
 	}
 }
 
+// @publicAPI
 export interface AssociationGroupInfo {
 	groupId: number;
 	mode: number;
