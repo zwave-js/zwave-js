@@ -26,6 +26,7 @@ import { ColorSwitchCCBehaviors } from "./mockCCBehaviors/ColorSwitch.js";
 import { ConfigurationCCBehaviors } from "./mockCCBehaviors/Configuration.js";
 import { DoorLockCCBehaviors } from "./mockCCBehaviors/DoorLock.js";
 import { EnergyProductionCCBehaviors } from "./mockCCBehaviors/EnergyProduction.js";
+import { FibaroCCBehaviors } from "./mockCCBehaviors/FibaroCC.js";
 import { IndicatorCCBehaviors } from "./mockCCBehaviors/Indicator.js";
 import { LockCCBehaviors } from "./mockCCBehaviors/Lock.js";
 import { ManufacturerSpecificCCBehaviors } from "./mockCCBehaviors/ManufacturerSpecific.js";
@@ -224,6 +225,7 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		...ConfigurationCCBehaviors,
 		...DoorLockCCBehaviors,
 		...EnergyProductionCCBehaviors,
+		...FibaroCCBehaviors,
 		...LockCCBehaviors,
 		...IndicatorCCBehaviors,
 		...ManufacturerSpecificCCBehaviors,
