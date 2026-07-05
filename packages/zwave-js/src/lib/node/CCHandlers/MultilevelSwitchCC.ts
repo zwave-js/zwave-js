@@ -48,6 +48,7 @@ export function handleMultilevelSwitchCommand(
 				direction: command.direction,
 			},
 		);
+		endpoint.covers?.handleUnsolicitedLevelChange(command.direction);
 	} else if (command instanceof MultilevelSwitchCCStopLevelChange) {
 		ctx.logNode(node.id, {
 			endpoint: command.endpointIndex,
@@ -63,5 +64,6 @@ export function handleMultilevelSwitchCommand(
 				eventTypeLabel: "Stop level change",
 			},
 		);
+		endpoint.covers?.handleUnsolicitedLevelChange("stop");
 	}
 }

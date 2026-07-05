@@ -129,6 +129,18 @@ export class FibaroCCAPI extends ManufacturerProprietaryCCAPI {
 	}
 
 	@validateArgs()
+	public async fibaroVenetianBlindsSet(
+		options: FibaroVenetianBlindCCSetOptions,
+	): Promise<void> {
+		const cc = new FibaroVenetianBlindCCSet({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		await this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
 	public async fibaroVenetianBlindsSetPosition(value: number): Promise<void> {
 		const cc = new FibaroVenetianBlindCCSet({
 			nodeId: this.endpoint.nodeId,
@@ -391,14 +403,23 @@ export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): FibaroVenetianBlindCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		validatePayload(raw.payload.length >= 3);
+		const controlByte = raw.payload[0];
+		const options = {} as FibaroVenetianBlindCCSetOptions;
+		if (!!(controlByte & 0b10)) {
+			(options as { position: number }).position = raw.payload[1];
+		}
+		if (!!(controlByte & 0b01)) {
+			(options as { tilt: number }).tilt = raw.payload[2];
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			...options,
+		});
 	}
 
 	public position: number | undefined;

@@ -325,6 +325,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// Add optional controlled CCs - endpoints don't have this
 		for (const cc of controlledCCs) this.addCC(cc, { isControlled: true });
+
+		this.on("ready", () => {
+			// Recreate feature APIs so they reflect the latest interview
+			// results, and instantiate event-emitting ones so applications
+			// receive their events without accessing the API first
+			for (const endpoint of this.getAllEndpoints()) {
+				endpoint.destroyFeatureAPIs();
+				void endpoint.covers;
+			}
+		});
 	}
 
 	/**
@@ -347,6 +357,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 
 		// Clear all scheduled polls that would interfere with the interview
 		this.cancelAllScheduledPolls();
+
+		// Release resources held by feature APIs
+		for (const endpoint of this.getAllEndpoints()) {
+			endpoint.destroyFeatureAPIs();
+		}
 	}
 
 	/**

@@ -34,4 +34,14 @@ export type {
 	UserCapabilities,
 	UserData,
 } from "./lib/node/feature-apis/AccessControl.js";
+export { CoverAspect, CoversAPI } from "./lib/node/feature-apis/Covers.js";
+export type {
+	CoverAspectCapabilities,
+	CoverAspectState,
+	CoverAspectType,
+	CoverCapabilities,
+	CoverControlOptions,
+	CoverMovement,
+	CoverValueReliability,
+} from "./lib/node/feature-apis/Covers.js";
 export { FeatureAPI } from "./lib/node/feature-apis/FeatureAPI.js";
