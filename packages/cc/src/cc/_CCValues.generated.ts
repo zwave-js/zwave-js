@@ -126,7 +126,7 @@ export const ActiveScheduleCCValues = Object.freeze({
 	enabled: Object.assign(
 		(targetCC: CommandClasses, targetId: number) => {
 			const property = "enabled";
-			const propertyKey = (targetCC << 16) | targetId;
+			const propertyKey = targetCC * 0x1_0000 + targetId;
 
 			return {
 				id: {
@@ -166,7 +166,9 @@ export const ActiveScheduleCCValues = Object.freeze({
 	yearDaySchedule: Object.assign(
 		(targetCC: CommandClasses, targetId: number, slotId: number) => {
 			const property = "yearDaySchedule";
-			const propertyKey = (targetCC << 24) | (targetId << 8) | slotId;
+			const propertyKey = targetCC * 0x1_0000_0000
+				+ targetId * 0x1_0000
+				+ slotId;
 
 			return {
 				id: {
@@ -206,7 +208,9 @@ export const ActiveScheduleCCValues = Object.freeze({
 	dailyRepeatingSchedule: Object.assign(
 		(targetCC: CommandClasses, targetId: number, slotId: number) => {
 			const property = "dailyRepeatingSchedule";
-			const propertyKey = (targetCC << 24) | (targetId << 8) | slotId;
+			const propertyKey = targetCC * 0x1_0000_0000
+				+ targetId * 0x1_0000
+				+ slotId;
 
 			return {
 				id: {

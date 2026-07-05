@@ -19,6 +19,7 @@ import {
 import { CommandClasses, ZWaveLibraryTypes } from "@zwave-js/core";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 
+import { ActiveScheduleCCBehaviors } from "./mockCCBehaviors/ActiveSchedule.js";
 import { BasicCCBehaviors } from "./mockCCBehaviors/Basic.js";
 import { BinarySensorCCBehaviors } from "./mockCCBehaviors/BinarySensor.js";
 import { BinarySwitchCCBehaviors } from "./mockCCBehaviors/BinarySwitch.js";
@@ -217,6 +218,7 @@ export function createDefaultBehaviors(): MockNodeBehavior[] {
 		respondToZWavePlusCCGet,
 		respondToS2ZWavePlusCCGet,
 
+		...ActiveScheduleCCBehaviors,
 		...BasicCCBehaviors,
 		...BinarySensorCCBehaviors,
 		...BinarySwitchCCBehaviors,

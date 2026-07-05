@@ -24,6 +24,17 @@ import type {
 	MaybeUnknown,
 } from "@zwave-js/core";
 
+export interface ActiveScheduleCCCapabilities {
+	targets: Map<
+		CommandClasses | number,
+		{
+			numSupportedTargets: number;
+			numYearDaySlotsPerTarget: number;
+			numDailyRepeatingSlotsPerTarget: number;
+		}
+	>;
+}
+
 export interface BinarySensorCCCapabilities {
 	supportedSensorTypes: number[];
 	getValue?: (sensorType: number | undefined) => boolean | undefined;
@@ -242,6 +253,7 @@ export interface UserCredentialCCCapabilities {
 }
 
 export type CCSpecificCapabilities = {
+	[0xa4 /* Active Schedule */]: ActiveScheduleCCCapabilities;
 	[CommandClasses.Configuration]: ConfigurationCCCapabilities;
 	[CommandClasses.Notification]: NotificationCCCapabilities;
 	[0x77 /* Node Naming and Location */]: NodeNamingAndLocationCCCapabilities;

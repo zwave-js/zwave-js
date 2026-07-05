@@ -1,4 +1,3 @@
-import type { CCEncodingContext, CCParsingContext } from "@zwave-js/cc";
 import {
 	CommandClasses,
 	type EndpointId,
@@ -9,6 +8,8 @@ import {
 	type MessageRecord,
 	type SupervisionResult,
 	type WithAddress,
+	ZWaveError,
+	ZWaveErrorCodes,
 	encodeBitMask,
 	encodeCCId,
 	isUnsupervisedOrSucceeded,
@@ -26,12 +27,13 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
-import { CCAPI } from "../lib/API.js";
+import { CCAPI, type PhysicalCCAPIEndpoint } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
 	type InterviewContext,
 	type PersistValuesContext,
+	type RefreshValuesOptions,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -47,16 +49,17 @@ import { V } from "../lib/Values.js";
 import {
 	ActiveScheduleCommand,
 	type ActiveScheduleDailyRepeatingSchedule,
-	type ScheduleDate,
 	ActiveScheduleReportReason,
 	ActiveScheduleSetAction,
 	type ActiveScheduleSlotId,
 	type ActiveScheduleTarget,
 	type ActiveScheduleTargetCapabilities,
+	type ActiveScheduleYearDaySchedule,
+	type ScheduleDate,
 	type ScheduleTimespan,
 	ScheduleWeekday,
-	type ActiveScheduleYearDaySchedule,
 } from "../lib/_Types.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 /**
  * Parses a date from the given buffer at the given location.
@@ -137,6 +140,80 @@ function encodeTimespan(
 	return 4;
 }
 
+/** Throws if the given date is outside the ranges defined by the CC */
+function assertValidScheduleDate(date: ScheduleDate, which: string): void {
+	// CC:00A4.01.06.11.008: If any of the values above are not in the
+	// respective provided ranges, the command MUST be ignored.
+	if (
+		date.year < 0
+		|| date.year > 0xffff
+		|| date.month < 1
+		|| date.month > 12
+		|| date.day < 1
+		|| date.day > 31
+		|| date.hour < 0
+		|| date.hour > 23
+		|| date.minute < 0
+		|| date.minute > 59
+	) {
+		throw new ZWaveError(
+			`The ${which} date is invalid`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+}
+
+/** Throws if the given timespan is outside the ranges defined by the CC */
+function assertValidScheduleTimespan(timespan: ScheduleTimespan): void {
+	// CC:00A4.01.09.11.009: If any of the numeric values above are not in the
+	// respective provided ranges, the command MUST be ignored by the receiving
+	// node.
+	if (
+		timespan.startHour < 0
+		|| timespan.startHour > 23
+		|| timespan.startMinute < 0
+		|| timespan.startMinute > 59
+		|| timespan.durationHour < 0
+		|| timespan.durationHour > 23
+		|| timespan.durationMinute < 0
+		|| timespan.durationMinute > 59
+	) {
+		throw new ZWaveError(
+			"The timespan is invalid",
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+}
+
+/** Throws if the given metadata is longer than allowed by the CC */
+function assertValidScheduleMetadata(metadata: BytesView | undefined): void {
+	// CC:00A4.01.00.11.018: Schedule Metadata MUST be less than or equal to
+	// seven (7) bytes in length.
+	if (metadata && metadata.length > 7) {
+		throw new ZWaveError(
+			"The schedule metadata must be at most 7 bytes long",
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+}
+
+/** Checks if the target encoded in a schedule value's property key is affected by a batch erase for the given target */
+function scheduleValueKeyMatchesEraseScope(
+	propertyKey: unknown,
+	target: ActiveScheduleTarget,
+): boolean {
+	if (typeof propertyKey !== "number") return false;
+	const targetCC = Math.floor(propertyKey / 0x1_0000_0000);
+	const targetId = Math.floor(propertyKey / 0x1_0000) % 0x1_0000;
+	// CC:00A4.01.06.11.007: Erase all schedules of this type on the node
+	if (target.targetCC === 0) return true;
+	if (targetCC !== target.targetCC) return false;
+	// CC:00A4.01.06.11.007: Erase all schedules of this type attached to all
+	// Targets from the specified Target CC
+	// ...or attached to the specific Target
+	return target.targetId === 0 || targetId === target.targetId;
+}
+
 export const ActiveScheduleCCValues = V.defineCCValues(
 	CommandClasses["Active Schedule"],
 	{
@@ -156,8 +233,10 @@ export const ActiveScheduleCCValues = V.defineCCValues(
 		...V.dynamicPropertyAndKeyWithName(
 			"enabled",
 			"enabled",
+			// Multiply instead of shifting because extended target CCs (16 bit)
+			// would overflow the signed 32-bit range of bitwise operators
 			(targetCC: CommandClasses, targetId: number) =>
-				(targetCC << 16) | targetId,
+				targetCC * 0x1_0000 + targetId,
 			({ property, propertyKey }) =>
 				property === "enabled" && typeof propertyKey === "number",
 			undefined,
@@ -166,8 +245,11 @@ export const ActiveScheduleCCValues = V.defineCCValues(
 		...V.dynamicPropertyAndKeyWithName(
 			"yearDaySchedule",
 			"yearDaySchedule",
+			// Target CC, target ID (16 bit) and slot ID (16 bit) are packed
+			// without overlap. Multiply instead of shifting because the result
+			// exceeds the signed 32-bit range of bitwise operators
 			(targetCC: CommandClasses, targetId: number, slotId: number) =>
-				(targetCC << 24) | (targetId << 8) | slotId,
+				targetCC * 0x1_0000_0000 + targetId * 0x1_0000 + slotId,
 			({ property, propertyKey }) =>
 				property === "yearDaySchedule"
 				&& typeof propertyKey === "number",
@@ -177,8 +259,11 @@ export const ActiveScheduleCCValues = V.defineCCValues(
 		...V.dynamicPropertyAndKeyWithName(
 			"dailyRepeatingSchedule",
 			"dailyRepeatingSchedule",
+			// Target CC, target ID (16 bit) and slot ID (16 bit) are packed
+			// without overlap. Multiply instead of shifting because the result
+			// exceeds the signed 32-bit range of bitwise operators
 			(targetCC: CommandClasses, targetId: number, slotId: number) =>
-				(targetCC << 24) | (targetId << 8) | slotId,
+				targetCC * 0x1_0000_0000 + targetId * 0x1_0000 + slotId,
 			({ property, propertyKey }) =>
 				property === "dailyRepeatingSchedule"
 				&& typeof propertyKey === "number",
@@ -215,6 +300,9 @@ export class ActiveScheduleCCAPI extends CCAPI {
 			ActiveScheduleCommand,
 			ActiveScheduleCommand.CapabilitiesGet,
 		);
+
+		// Get-type commands are only possible in singlecast
+		this.assertPhysicalEndpoint(this.endpoint);
 
 		const cc = new ActiveScheduleCCCapabilitiesGet({
 			nodeId: this.endpoint.nodeId,
@@ -278,6 +366,9 @@ export class ActiveScheduleCCAPI extends CCAPI {
 			ActiveScheduleCommand.EnableGet,
 		);
 
+		// Get-type commands are only possible in singlecast
+		this.assertPhysicalEndpoint(this.endpoint);
+
 		const cc = new ActiveScheduleCCEnableGet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
@@ -305,6 +396,19 @@ export class ActiveScheduleCCAPI extends CCAPI {
 		);
 
 		if (schedule) {
+			// CC:00A4.01.06.13.006: This value MAY be equal to zero *ONLY*
+			// when coupled with an **Erase** Set Action.
+			if (slot.slotId < 1) {
+				throw new ZWaveError(
+					"The slot ID must be at least 1 when modifying a schedule",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+
+			assertValidScheduleDate(schedule.startDate, "start");
+			assertValidScheduleDate(schedule.stopDate, "stop");
+			assertValidScheduleMetadata(schedule.metadata);
+
 			const start = schedule.startDate;
 			const stop = schedule.stopDate;
 			const startDate = new Date(
@@ -321,9 +425,12 @@ export class ActiveScheduleCCAPI extends CCAPI {
 				stop.hour,
 				stop.minute,
 			);
+			// CC:00A4.01.06.11.002: The stop parameters of the time fence MUST
+			// occur after the start parameters.
 			if (stopDate <= startDate) {
-				throw new Error(
-					"The stop date must be after the start date.",
+				throw new ZWaveError(
+					"The stop date must be after the start date",
+					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
 		}
@@ -345,37 +452,70 @@ export class ActiveScheduleCCAPI extends CCAPI {
 		const result = await this.host.sendCommand(cc, this.commandOptions);
 
 		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
-			// Cache the schedule
+			const valueDB = this.host.getValueDB(this.endpoint.nodeId);
 			const scheduleValue = ActiveScheduleCCValues.yearDaySchedule(
 				slot.targetCC,
 				slot.targetId,
 				slot.slotId,
 			);
 			if (schedule) {
-				this.host
-					.getValueDB(this.endpoint.nodeId)
-					.setValue(
-						scheduleValue.endpoint(this.endpoint.index),
-						schedule,
-					);
+				// Cache the schedule
+				valueDB.setValue(
+					scheduleValue.endpoint(this.endpoint.index),
+					schedule,
+				);
+				// CC:00A4.01.06.11.001: When set successfully, scheduling as
+				// reported in the Active Schedule Enable Report Command MUST
+				// be automatically enabled for the identified Target.
+				valueDB.setValue(
+					ActiveScheduleCCValues.enabled(
+						slot.targetCC,
+						slot.targetId,
+					).endpoint(this.endpoint.index),
+					true,
+				);
+			} else if (slot.slotId === 0) {
+				// CC:00A4.01.06.11.007: A Schedule Slot ID value of zero
+				// during an Erase Set Action signifies a batch erase
+				// operation.
+				// Mark all cached schedules in the erased scope as empty
+				const affected = valueDB.findValues((vid) =>
+					vid.endpoint === this.endpoint.index
+					&& ActiveScheduleCCValues.yearDaySchedule.is(vid)
+					&& scheduleValueKeyMatchesEraseScope(vid.propertyKey, slot)
+				);
+				for (const vid of affected) {
+					valueDB.setValue(vid, false);
+				}
 			} else {
-				this.host
-					.getValueDB(this.endpoint.nodeId)
-					.setValue(
-						scheduleValue.endpoint(this.endpoint.index),
-						false,
-					);
+				// Mark the cached schedule as empty
+				valueDB.setValue(
+					scheduleValue.endpoint(this.endpoint.index),
+					false,
+				);
 			}
 		}
 
 		return result;
 	}
 
+	/**
+	 * Requests the year day schedule stored in the given slot.
+	 * A slot ID of 0 requests the first occupied slot for the given target.
+	 *
+	 * @returns The schedule together with the slot it is actually stored in
+	 * and the ID of the next occupied slot (0 if there is none),
+	 * `false` if the requested slot is empty,
+	 * or `undefined` if the node did not respond.
+	 */
 	@validateArgs()
 	public async getYearDaySchedule(
 		slot: ActiveScheduleSlotId,
 	): Promise<
-		| (ActiveScheduleYearDaySchedule & { nextSlotId: number })
+		| (ActiveScheduleYearDaySchedule & {
+			slotId: number;
+			nextSlotId: number;
+		})
 		| false
 		| undefined
 	> {
@@ -383,6 +523,10 @@ export class ActiveScheduleCCAPI extends CCAPI {
 			ActiveScheduleCommand,
 			ActiveScheduleCommand.YearDayScheduleGet,
 		);
+
+		// CC:00A4.01.07.11.002: This command MUST NOT be issued via multicast
+		// addressing.
+		this.assertPhysicalEndpoint(this.endpoint);
 
 		const cc = new ActiveScheduleCCYearDayScheduleGet({
 			nodeId: this.endpoint.nodeId,
@@ -403,6 +547,9 @@ export class ActiveScheduleCCAPI extends CCAPI {
 					startDate: result.startDate,
 					stopDate: result.stopDate!,
 					metadata: result.metadata,
+					// The report echoes the slot the schedule is stored in,
+					// which differs from the requested slot when querying slot 0
+					slotId: result.slotId,
 					nextSlotId: result.nextSlotId,
 				};
 			}
@@ -410,7 +557,7 @@ export class ActiveScheduleCCAPI extends CCAPI {
 		}
 	}
 
-	@validateArgs()
+	@validateArgs({ strictEnums: true })
 	public async setDailyRepeatingSchedule(
 		slot: ActiveScheduleSlotId,
 		schedule?: ActiveScheduleDailyRepeatingSchedule,
@@ -419,6 +566,31 @@ export class ActiveScheduleCCAPI extends CCAPI {
 			ActiveScheduleCommand,
 			ActiveScheduleCommand.DailyRepeatingScheduleSet,
 		);
+
+		if (schedule) {
+			// CC:00A4.01.09.11.005: This field is to be subject to the same
+			// requirements regarding valid values and batch delete operations
+			// as the corresponding field in the Active Schedule Year Day
+			// Schedule Set Command.
+			if (slot.slotId < 1) {
+				throw new ZWaveError(
+					"The slot ID must be at least 1 when modifying a schedule",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+
+			// An empty weekday bitmask signifies an empty slot in reports, so
+			// a schedule must apply to at least one weekday
+			if (schedule.weekdays.length === 0) {
+				throw new ZWaveError(
+					"The schedule must apply to at least one weekday",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+
+			assertValidScheduleTimespan(schedule.timespan);
+			assertValidScheduleMetadata(schedule.metadata);
+		}
 
 		const cc = new ActiveScheduleCCDailyRepeatingScheduleSet({
 			nodeId: this.endpoint.nodeId,
@@ -437,37 +609,70 @@ export class ActiveScheduleCCAPI extends CCAPI {
 		const result = await this.host.sendCommand(cc, this.commandOptions);
 
 		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
-			// Cache the schedule
+			const valueDB = this.host.getValueDB(this.endpoint.nodeId);
 			const scheduleValue = ActiveScheduleCCValues.dailyRepeatingSchedule(
 				slot.targetCC,
 				slot.targetId,
 				slot.slotId,
 			);
 			if (schedule) {
-				this.host
-					.getValueDB(this.endpoint.nodeId)
-					.setValue(
-						scheduleValue.endpoint(this.endpoint.index),
-						schedule,
-					);
+				// Cache the schedule
+				valueDB.setValue(
+					scheduleValue.endpoint(this.endpoint.index),
+					schedule,
+				);
+				// CC:00A4.01.09.11.001: When set successfully, scheduling as
+				// reported in the Active Schedule Enable Report Command MUST
+				// be automatically enabled for the identified Target.
+				valueDB.setValue(
+					ActiveScheduleCCValues.enabled(
+						slot.targetCC,
+						slot.targetId,
+					).endpoint(this.endpoint.index),
+					true,
+				);
+			} else if (slot.slotId === 0) {
+				// CC:00A4.01.09.11.005: The field also MUST also use the same
+				// logic described in the Schedule Erase Definitions table for
+				// deleting multiple schedules.
+				// Mark all cached schedules in the erased scope as empty
+				const affected = valueDB.findValues((vid) =>
+					vid.endpoint === this.endpoint.index
+					&& ActiveScheduleCCValues.dailyRepeatingSchedule.is(vid)
+					&& scheduleValueKeyMatchesEraseScope(vid.propertyKey, slot)
+				);
+				for (const vid of affected) {
+					valueDB.setValue(vid, false);
+				}
 			} else {
-				this.host
-					.getValueDB(this.endpoint.nodeId)
-					.setValue(
-						scheduleValue.endpoint(this.endpoint.index),
-						false,
-					);
+				// Mark the cached schedule as empty
+				valueDB.setValue(
+					scheduleValue.endpoint(this.endpoint.index),
+					false,
+				);
 			}
 		}
 
 		return result;
 	}
 
+	/**
+	 * Requests the daily repeating schedule stored in the given slot.
+	 * A slot ID of 0 requests the first occupied slot for the given target.
+	 *
+	 * @returns The schedule together with the slot it is actually stored in
+	 * and the ID of the next occupied slot (0 if there is none),
+	 * `false` if the requested slot is empty,
+	 * or `undefined` if the node did not respond.
+	 */
 	@validateArgs()
 	public async getDailyRepeatingSchedule(
 		slot: ActiveScheduleSlotId,
 	): Promise<
-		| (ActiveScheduleDailyRepeatingSchedule & { nextSlotId: number })
+		| (ActiveScheduleDailyRepeatingSchedule & {
+			slotId: number;
+			nextSlotId: number;
+		})
 		| false
 		| undefined
 	> {
@@ -475,6 +680,10 @@ export class ActiveScheduleCCAPI extends CCAPI {
 			ActiveScheduleCommand,
 			ActiveScheduleCommand.DailyRepeatingScheduleGet,
 		);
+
+		// CC:00A4.01.0A.11.002: This command MUST NOT be issued via multicast
+		// addressing.
+		this.assertPhysicalEndpoint(this.endpoint);
 
 		const cc = new ActiveScheduleCCDailyRepeatingScheduleGet({
 			nodeId: this.endpoint.nodeId,
@@ -495,6 +704,9 @@ export class ActiveScheduleCCAPI extends CCAPI {
 					weekdays: result.weekdays,
 					timespan: result.timespan!,
 					metadata: result.metadata,
+					// The report echoes the slot the schedule is stored in,
+					// which differs from the requested slot when querying slot 0
+					slotId: result.slotId,
 					nextSlotId: result.nextSlotId,
 				};
 			}
@@ -520,6 +732,7 @@ export class ActiveScheduleCC extends CommandClass {
 			endpoint,
 		).withOptions({
 			priority: MessagePriority.NodeQuery,
+			tag: "interview",
 		});
 
 		ctx.logNode(node.id, {
@@ -534,6 +747,9 @@ export class ActiveScheduleCC extends CommandClass {
 			direction: "outbound",
 		});
 
+		// CL:00A4.01.11.01.1: A node controlling this Command Class MUST
+		// perform a supporting node interview according to the figure
+		// "Active Schedule Command Class Interview"
 		const caps = await api.getCapabilities();
 		if (caps) {
 			const logLines: string[] = [
@@ -551,10 +767,102 @@ export class ActiveScheduleCC extends CommandClass {
 				message: logLines.join("\n"),
 				direction: "inbound",
 			});
+
+			// Per the figure "Active Schedule Command Class Interview", the
+			// schedules of Target CCs with exactly one Target are interviewed
+			// now with Target ID 1. Schedules of Target CCs with more than one
+			// Target are interviewed during their respective Target CC
+			// interview.
+			for (const [targetCC, cap] of caps.targetCapabilities) {
+				if (cap.numSupportedTargets !== 1) continue;
+				await ActiveScheduleCC.interviewTarget(ctx, endpoint, {
+					targetCC,
+					targetId: 1,
+				}, { tag: "interview" });
+			}
 		}
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
+	}
+
+	/**
+	 * Queries all schedule data and the enabled state for a given Target.
+	 * The Active Schedule CC capabilities must be known before calling this.
+	 */
+	public static async interviewTarget(
+		ctx: InterviewContext,
+		endpoint: PhysicalCCAPIEndpoint,
+		target: ActiveScheduleTarget,
+		options?: RefreshValuesOptions,
+	): Promise<void> {
+		const api = CCAPI.create(
+			CommandClasses["Active Schedule"],
+			ctx,
+			endpoint,
+		).withOptions({
+			priority: options?.priority ?? MessagePriority.NodeQuery,
+			tag: options?.tag,
+		});
+
+		const caps = ActiveScheduleCC.getTargetCapabilitiesCached(
+			ctx,
+			endpoint,
+			target.targetCC,
+		);
+		if (!caps) return;
+
+		ctx.logNode(endpoint.nodeId, {
+			endpoint: endpoint.index,
+			message: `Querying schedules for target CC ${
+				getEnumMemberName(CommandClasses, target.targetCC)
+			}, target ID ${target.targetId}...`,
+			direction: "outbound",
+		});
+
+		// CL:00A4.01.11.02.1: Any time schedule data for a Target (distinct
+		// combination of Target CC and Target ID) is queried by a controlling
+		// node, it MUST follow the process defined in the figure
+		// "Active Schedule Target Interview":
+		// Query the first occupied slot (ID 0), then follow the chain of next
+		// occupied slots until it ends.
+		if (caps.numYearDaySlotsPerTarget > 0) {
+			// Protect against nodes reporting a cyclic slot chain
+			const queriedSlots = new Set<number>();
+			let slotId = 0;
+			while (queriedSlots.size <= caps.numYearDaySlotsPerTarget) {
+				const result = await api.getYearDaySchedule({
+					...target,
+					slotId,
+				});
+				// An empty slot or a missing response ends the chain
+				if (!result) break;
+				slotId = result.nextSlotId;
+				if (slotId === 0 || queriedSlots.has(slotId)) break;
+				queriedSlots.add(slotId);
+			}
+		}
+
+		if (caps.numDailyRepeatingSlotsPerTarget > 0) {
+			// Protect against nodes reporting a cyclic slot chain
+			const queriedSlots = new Set<number>();
+			let slotId = 0;
+			while (queriedSlots.size <= caps.numDailyRepeatingSlotsPerTarget) {
+				const result = await api.getDailyRepeatingSchedule({
+					...target,
+					slotId,
+				});
+				// An empty slot or a missing response ends the chain
+				if (!result) break;
+				slotId = result.nextSlotId;
+				if (slotId === 0 || queriedSlots.has(slotId)) break;
+				queriedSlots.add(slotId);
+			}
+		}
+
+		// Query the enabled state, so applications can show whether the
+		// target's schedules are active (CL:00A4.01.61.01.1)
+		await api.getEnabled(target);
 	}
 
 	/**
@@ -687,6 +995,12 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 	): ActiveScheduleCCCapabilitiesReport {
 		validatePayload(raw.payload.length >= 1);
 		const numTargetCCs = raw.payload[0];
+		// CC:00A4.01.02.11.001: A node advertising support for this CC MUST
+		// support at least one (1) valid Target CC.
+		// CC:00A4.01.02.11.008: If any of the numeric values above are not in
+		// the respective provided ranges, the command MUST be ignored by the
+		// receiving node.
+		validatePayload(numTargetCCs >= 1);
 
 		const targetCapabilities = new Map<
 			CommandClasses,
@@ -853,6 +1167,9 @@ export class ActiveScheduleCCEnableSet extends ActiveScheduleCC {
 		const { ccId: targetCC, bytesRead } = parseCCId(raw.payload, 0);
 		validatePayload(raw.payload.length >= bytesRead + 3);
 		const targetId = raw.payload.readUInt16BE(bytesRead);
+		// CC:00A4.01.03.11.001: All other bits are reserved and MUST be set
+		// low (0) by the sending node. If any of the reserved bits are high
+		// (1), they MUST be ignored by the receiving node.
 		const enabled = !!(raw.payload[bytesRead + 2] & 0b1);
 
 		return new this({
@@ -916,6 +1233,8 @@ export class ActiveScheduleCCEnableReport extends ActiveScheduleCC {
 		const { ccId: targetCC, bytesRead } = parseCCId(raw.payload, 0);
 		validatePayload(raw.payload.length >= bytesRead + 3);
 		const targetId = raw.payload.readUInt16BE(bytesRead);
+		// The masks ignore the reserved bits, as required by
+		// CC:00A4.01.03.11.001 (referenced for this command's fields)
 		const reportReason = (raw.payload[bytesRead + 2] >> 1) & 0b111;
 		const enabled = !!(raw.payload[bytesRead + 2] & 0b1);
 
@@ -975,6 +1294,8 @@ export class ActiveScheduleCCEnableReport extends ActiveScheduleCC {
 // @publicAPI
 export type ActiveScheduleCCEnableGetOptions = ActiveScheduleTarget;
 
+// CC:00A4.01.04.11.001: The Active Schedule Enable Report Command MUST be
+// returned as a response to this command.
 @CCCommand(ActiveScheduleCommand.EnableGet)
 @expectedCCResponse(ActiveScheduleCCEnableReport)
 export class ActiveScheduleCCEnableGet extends ActiveScheduleCC {
@@ -1061,7 +1382,12 @@ export class ActiveScheduleCCYearDayScheduleSet extends ActiveScheduleCC {
 		ctx: CCParsingContext,
 	): ActiveScheduleCCYearDayScheduleSet {
 		validatePayload(raw.payload.length >= 1);
+		// CC:00A4.01.06.11.003: These bits MUST be set to 0 by a sending node
+		// and MUST be ignored by a receiving node.
 		const action: ActiveScheduleSetAction = raw.payload[0] & 0b11;
+		// CC:00A4.01.06.11.004: All other values are reserved and MUST NOT be
+		// used by a sending node. Reserved values MUST be ignored by a
+		// receiving node.
 		validatePayload(
 			action === ActiveScheduleSetAction.Modify
 				|| action === ActiveScheduleSetAction.Erase,
@@ -1078,9 +1404,9 @@ export class ActiveScheduleCCYearDayScheduleSet extends ActiveScheduleCC {
 		const slotId = raw.payload.readUInt16BE(offset);
 		offset += 2;
 
-		// During an Erase Operation, all other fields with the exception of the
-		// Target and Schedule Slot fields are not required and MAY be set to
-		// zero or omitted.
+		// CC:00A4.01.06.13.005: During an Erase Operation, all other fields
+		// with the exception of the Target and Schedule Slot fields are not
+		// required and MAY be set to zero or omitted.
 		if (action !== ActiveScheduleSetAction.Modify) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
@@ -1102,6 +1428,8 @@ export class ActiveScheduleCCYearDayScheduleSet extends ActiveScheduleCC {
 		);
 		offset += stopDateBytes;
 		validatePayload(raw.payload.length >= offset + 1);
+		// CC:00A4.01.06.11.009: These bits MUST be set to 0 by a sending node
+		// and MUST be ignored by a receiving node.
 		const metadataLength = raw.payload[offset++] & 0b111;
 
 		let metadata: BytesView | undefined;
@@ -1227,6 +1555,8 @@ export class ActiveScheduleCCYearDayScheduleReport extends ActiveScheduleCC {
 		ctx: CCParsingContext,
 	): ActiveScheduleCCYearDayScheduleReport {
 		validatePayload(raw.payload.length >= 1);
+		// CC:00A4.01.08.11.001: These bits MUST be set to 0 by a sending node
+		// and MUST be ignored by a receiving node.
 		const reportReason =
 			(raw.payload[0] & 0b111) as ActiveScheduleReportReason;
 		const { ccId: targetCC, bytesRead: ccBytes } = parseCCId(
@@ -1262,7 +1592,8 @@ export class ActiveScheduleCCYearDayScheduleReport extends ActiveScheduleCC {
 			);
 			offset += stopDateBytes;
 
-			// Check if not empty (all zeros means empty)
+			// CC:00A4.01.08.11.004: If a requested schedule slot is
+			// erased/empty the time fields MUST be set to 0x00.
 			if (
 				startDate.year !== 0
 				|| startDate.month !== 0
@@ -1310,6 +1641,10 @@ export class ActiveScheduleCCYearDayScheduleReport extends ActiveScheduleCC {
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
+
+		// Slot ID 0 in a report means the target has no occupied slots.
+		// There is no specific slot to persist in that case.
+		if (this.slotId === 0) return true;
 
 		const scheduleValue = ActiveScheduleCCValues.yearDaySchedule(
 			this.targetCC,
@@ -1403,6 +1738,8 @@ export class ActiveScheduleCCYearDayScheduleReport extends ActiveScheduleCC {
 // @publicAPI
 export type ActiveScheduleCCYearDayScheduleGetOptions = ActiveScheduleSlotId;
 
+// CC:00A4.01.07.11.001: The Active Schedule Year Day Schedule Report Command
+// MUST be returned in response to this command.
 @CCCommand(ActiveScheduleCommand.YearDayScheduleGet)
 @expectedCCResponse(ActiveScheduleCCYearDayScheduleReport)
 export class ActiveScheduleCCYearDayScheduleGet extends ActiveScheduleCC {
@@ -1498,7 +1835,12 @@ export class ActiveScheduleCCDailyRepeatingScheduleSet
 		ctx: CCParsingContext,
 	): ActiveScheduleCCDailyRepeatingScheduleSet {
 		validatePayload(raw.payload.length >= 1);
+		// CC:00A4.01.09.11.003: These bits MUST be set to 0 by a sending node
+		// and MUST be ignored by a receiving node.
 		const action: ActiveScheduleSetAction = raw.payload[0] & 0b11;
+		// CC:00A4.01.09.11.004: All other values are reserved and MUST NOT be
+		// used by a sending node. Reserved values MUST be ignored by a
+		// receiving node.
 		validatePayload(
 			action === ActiveScheduleSetAction.Modify
 				|| action === ActiveScheduleSetAction.Erase,
@@ -1515,6 +1857,9 @@ export class ActiveScheduleCCDailyRepeatingScheduleSet
 		const slotId = raw.payload.readUInt16BE(offset);
 		offset += 2;
 
+		// CC:00A4.01.09.13.002: During an Erase Operation, all other fields
+		// with the exception of the Target and Schedule Slot fields are not
+		// required and MAY be set to zero or omitted.
 		if (action !== ActiveScheduleSetAction.Modify) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
@@ -1526,8 +1871,10 @@ export class ActiveScheduleCCDailyRepeatingScheduleSet
 		}
 
 		validatePayload(raw.payload.length >= offset + 1);
+		// CC:00A4.01.09.11.008: Reserved bits MUST be ignored by a receiving
+		// node.
 		const weekdays: ScheduleWeekday[] = parseBitMask(
-			[raw.payload[offset++]],
+			[raw.payload[offset++] & 0b0111_1111],
 			ScheduleWeekday.Sunday,
 		);
 		const { timespan, bytesRead: timespanBytes } = parseTimespan(
@@ -1535,6 +1882,9 @@ export class ActiveScheduleCCDailyRepeatingScheduleSet
 			offset,
 		);
 		offset += timespanBytes;
+		validatePayload(raw.payload.length >= offset + 1);
+		// CC:00A4.01.06.11.009: These bits MUST be set to 0 by a sending node
+		// and MUST be ignored by a receiving node.
 		const metadataLength = raw.payload[offset++] & 0b111;
 
 		let metadata: BytesView | undefined;
@@ -1582,6 +1932,8 @@ export class ActiveScheduleCCDailyRepeatingScheduleSet
 		offset += 2;
 
 		if (this.action === ActiveScheduleSetAction.Modify) {
+			// CC:00A4.01.09.11.007: The 'Res' bit is reserved and MUST be set
+			// to zero by a sending node.
 			const weekdayBitmask = encodeBitMask(
 				this.weekdays!,
 				ScheduleWeekday.Saturday,
@@ -1672,6 +2024,8 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 		ctx: CCParsingContext,
 	): ActiveScheduleCCDailyRepeatingScheduleReport {
 		validatePayload(raw.payload.length >= 1);
+		// CC:00A4.01.0B.11.001: These bits MUST be set to 0 by a sending node
+		// and MUST be ignored by a receiving node.
 		const reportReason =
 			(raw.payload[0] & 0b111) as ActiveScheduleReportReason;
 		const { ccId: targetCC, bytesRead: ccBytes } = parseCCId(
@@ -1696,11 +2050,14 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 		};
 
 		if (raw.payload.length >= offset + 1) {
-			const weekdayBitmask = raw.payload[offset];
-			// Check if not empty (0 bitmask means empty)
+			// CC:00A4.01.09.11.008: Reserved bits MUST be ignored by a
+			// receiving node.
+			const weekdayBitmask = raw.payload[offset++] & 0b0111_1111;
+			// CC:00A4.01.0B.11.003: If a requested schedule slot is
+			// erased/empty the time fields MUST be set to 0x00.
 			if (weekdayBitmask !== 0) {
 				const weekdays: ScheduleWeekday[] = parseBitMask(
-					[raw.payload[offset++]],
+					[weekdayBitmask],
 					ScheduleWeekday.Sunday,
 				);
 				const { timespan, bytesRead: timespanBytes } = parseTimespan(
@@ -1708,6 +2065,7 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 					offset,
 				);
 				offset += timespanBytes;
+				validatePayload(raw.payload.length >= offset + 1);
 				const metadataLength = raw.payload[offset++] & 0b111;
 
 				let metadata: BytesView | undefined;
@@ -1747,6 +2105,10 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
+
+		// Slot ID 0 in a report means the target has no occupied slots.
+		// There is no specific slot to persist in that case.
+		if (this.slotId === 0) return true;
 
 		const scheduleValue = ActiveScheduleCCValues.dailyRepeatingSchedule(
 			this.targetCC,
@@ -1849,6 +2211,8 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 export type ActiveScheduleCCDailyRepeatingScheduleGetOptions =
 	ActiveScheduleSlotId;
 
+// CC:00A4.01.0A.11.001: The Active Schedule Daily Repeating Report Command
+// MUST be returned in response to this command.
 @CCCommand(ActiveScheduleCommand.DailyRepeatingScheduleGet)
 @expectedCCResponse(ActiveScheduleCCDailyRepeatingScheduleReport)
 export class ActiveScheduleCCDailyRepeatingScheduleGet
