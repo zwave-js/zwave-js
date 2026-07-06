@@ -352,7 +352,7 @@
 	},
 	"ThermostatSetpointType": {
 		"href": "#/api/CCs/ThermostatSetpoint?id=thermostatsetpointtype",
-		"definition": "enum ThermostatSetpointType {\n\t\"N/A\" = 0x00,\n\t\"Heating\" = 0x01, // CC v1\n\t\"Cooling\" = 0x02, // CC v1\n\t\"Furnace\" = 0x07, // CC v1\n\t\"Dry Air\" = 0x08, // CC v1\n\t\"Moist Air\" = 0x09, // CC v1\n\t\"Auto Changeover\" = 0x0a, // CC v1\n\t\"Energy Save Heating\" = 0x0b, // CC v2\n\t\"Energy Save Cooling\" = 0x0c, // CC v2\n\t\"Away Heating\" = 0x0d, // CC v2\n\t\"Away Cooling\" = 0x0e, // CC v3\n\t\"Full Power\" = 0x0f, // CC v3\n\t// Update the interview procecure when adding new types\n}"
+		"definition": "enum ThermostatSetpointType {\n\t\"N/A\" = 0x00,\n\t\"Heating\" = 0x01, // CC v1\n\t\"Cooling\" = 0x02, // CC v1\n\t\"Furnace\" = 0x07, // CC v1\n\t\"Dry Air\" = 0x08, // CC v1\n\t\"Moist Air\" = 0x09, // CC v1\n\t\"Auto Changeover\" = 0x0a, // CC v1\n\t\"Energy Save Heating\" = 0x0b, // CC v2\n\t\"Energy Save Cooling\" = 0x0c, // CC v2\n\t\"Away Heating\" = 0x0d, // CC v2\n\t\"Away Cooling\" = 0x0e, // CC v3\n\t\"Full Power\" = 0x0f, // CC v3\n\t// Update the interview procedure when adding new types\n}"
 	},
 	"Timeout": {
 		"href": "#/api/shared-types?id=timeout",

@@ -280,10 +280,12 @@ export function getTransformedSource(
 			node: InterfaceDeclaration | TypeLiteralNode,
 		) => {
 			for (const member of node.getMembers()) {
-				const name = Node.isPropertySignature(member)
-					? member.getName()
-					: "";
-				if (isInternalMember(name, getJsDocTagNames(member))) {
+				if (
+					isInternalMember(
+						getInterfaceMemberKey(member),
+						getJsDocTagNames(member),
+					)
+				) {
 					membersToRemove.push(member);
 				}
 				if (Node.isInterfaceDeclaration(member)) {

@@ -201,10 +201,23 @@
 		hideTooltip();
 	}
 
+	// Keyboard users reach the links by tab, so mirror the hover preview on focus
+	function handleFocusIn(event) {
+		const link = event.target.closest("a.type-link[data-type-name]");
+		if (link) showTooltip(link);
+	}
+
+	function handleFocusOut(event) {
+		const link = event.target.closest("a.type-link[data-type-name]");
+		if (link) hideTooltip();
+	}
+
 	function install(hook) {
 		hook.mounted(function() {
 			document.body.addEventListener("mouseover", handleMouseOver);
 			document.body.addEventListener("mouseout", handleMouseOut);
+			document.body.addEventListener("focusin", handleFocusIn);
+			document.body.addEventListener("focusout", handleFocusOut);
 		});
 
 		hook.doneEach(async function() {
