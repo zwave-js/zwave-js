@@ -43,14 +43,18 @@ function stripHtmlTags(str) {
 	return str;
 }
 
+// Matches the characters docsify's slugify removes from heading anchors
+const docsifySlugStripRegex =
+	/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g;
+
 /**
  * Approximates docsify's heading anchor slugs
  * @param {string} heading
  */
 function slugify(heading) {
 	return stripHtmlTags(heading.toLowerCase().trim())
-		.replace(/[\s\n\t]+/g, "-")
-		.replace(/[<>"'|?*!:@#$%^&()[\]{},;+=~`’“”…]/g, "");
+		.replace(docsifySlugStripRegex, "")
+		.replace(/\s/g, "-");
 }
 
 /**
