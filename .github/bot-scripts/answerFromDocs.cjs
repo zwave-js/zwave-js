@@ -123,7 +123,7 @@ async function main(param) {
 			return;
 		}
 	} else {
-		// Device config requests are no questions the docs can answer
+		// Device config requests are not questions the docs can answer
 		const labels = (post.labels ?? []).map(
 			(/** @type {any} */ l) => l.name,
 		);
