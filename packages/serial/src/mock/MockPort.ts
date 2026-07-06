@@ -66,8 +66,7 @@ export class MockPort {
 		try {
 			this.#sourceController?.enqueue(data);
 		} catch {
-			// The stream may already be closed while the driver is being torn down.
-			// Late frames from the mock during teardown can be dropped safely.
+			// Drop late frames during teardown
 		}
 	}
 

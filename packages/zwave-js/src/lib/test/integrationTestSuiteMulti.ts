@@ -172,9 +172,6 @@ function suite(
 		});
 	}
 
-	// Tests within a file run concurrently by default, overlapping their many mock
-	// round-trip waits for a large speedup. Each test has an isolated in-memory mock
-	// port and cache dir. Timing-sensitive tests opt out via `integrationTest.sequential`.
 	const base = concurrency === "sequential"
 		? test.sequential
 		: test.concurrent;

@@ -157,9 +157,7 @@ export class MockNode {
 			}
 		}
 
-		// Basic CC is mandatory and not advertised in the NIF; controllers determine its
-		// support by probing with a Basic Get. Default mock nodes to supporting it so the
-		// probe succeeds, unless a test explicitly configures Basic CC.
+		// Answer the mandatory Basic CC support probe (spec CL:0020.01.21.02.2)
 		if (!this.implementedCCs.has(CommandClasses.Basic)) {
 			this.addCC(CommandClasses.Basic, { isSupported: true });
 		}

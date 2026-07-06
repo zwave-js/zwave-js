@@ -210,7 +210,7 @@ integrationTest(
 			__dirname,
 			"fixtures/nodeDeadReject",
 		),
-		// A dead node must not answer the Basic Get, so the command fails via the missing callback
+		// Opt out of the default Basic CC support so the node stays dead
 		nodeCapabilities: {
 			commandClasses: [
 				{ ccId: CommandClasses.Basic, isSupported: false },
