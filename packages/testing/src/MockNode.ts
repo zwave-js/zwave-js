@@ -157,7 +157,7 @@ export class MockNode {
 			}
 		}
 
-		// Answer the mandatory Basic CC support probe (spec CL:0020.01.21.02.2)
+		// Avoid ~1s interview timeout per test from the Basic CC support probe
 		if (!this.implementedCCs.has(CommandClasses.Basic)) {
 			this.addCC(CommandClasses.Basic, { isSupported: true });
 		}
