@@ -31,14 +31,24 @@ function estimateTokens(str) {
 }
 
 /**
+ * Removes HTML tags, repeating to avoid leaving partial tags behind
+ * @param {string} str
+ */
+function stripHtmlTags(str) {
+	let prev;
+	do {
+		prev = str;
+		str = str.replace(/<[^>]*>/g, "");
+	} while (str !== prev);
+	return str;
+}
+
+/**
  * Approximates docsify's heading anchor slugs
  * @param {string} heading
  */
 function slugify(heading) {
-	return heading
-		.toLowerCase()
-		.trim()
-		.replace(/<[^>]+>/g, "")
+	return stripHtmlTags(heading.toLowerCase().trim())
 		.replace(/[\s\n\t]+/g, "-")
 		.replace(/[<>"'|?*!:@#$%^&()[\]{},;+=~`’“”…]/g, "");
 }
@@ -84,7 +94,7 @@ function chunkMarkdown(file, content) {
 		if (heading) {
 			pushChunk();
 			const level = heading[1].length;
-			const title = heading[2].replace(/<[^>]+>/g, "").trim();
+			const title = stripHtmlTags(heading[2]).trim();
 			while (
 				headingStack.length
 				&& headingStack[headingStack.length - 1].level >= level
