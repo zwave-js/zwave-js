@@ -7,7 +7,12 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<BarrierOperatorCCReport, "currentState" | "position"> | undefined>;
+async get(): Promise<
+	{
+		currentState: MaybeUnknown<BarrierState>;
+		position: MaybeUnknown<number>;
+	} | undefined
+>;
 ```
 
 ### `set`
@@ -125,3 +130,35 @@ async setEventSignaling(
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 255
+
+## Related types
+
+### `BarrierState`
+
+```ts
+enum BarrierState {
+	Closed = 0x00,
+	Closing = 0xfc,
+	Stopped = 0xfd,
+	Opening = 0xfe,
+	Open = 0xff,
+}
+```
+
+### `SubsystemState`
+
+```ts
+enum SubsystemState {
+	Off = 0x00,
+	On = 0xff,
+}
+```
+
+### `SubsystemType`
+
+```ts
+enum SubsystemType {
+	Audible = 0x01,
+	Visual = 0x02,
+}
+```

@@ -7,7 +7,13 @@
 ### `get`
 
 ```ts
-async get(): Promise<{ currentValue: boolean; targetValue: MaybeUnknown<boolean> | undefined; duration: Duration | undefined; } | undefined>;
+async get(): Promise<
+	{
+		currentValue: boolean;
+		targetValue: MaybeUnknown<boolean> | undefined;
+		duration: Duration | undefined;
+	} | undefined
+>;
 ```
 
 ### `set`

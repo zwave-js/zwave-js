@@ -27,7 +27,7 @@ These can be considered to represent an hierarchical structure, like the followi
 
 Since both `property` and `propertyKey` can be cryptic, value IDs are exposed to consuming applications in a "translated" form, which contains all properties from `ValueID` plus the following ones:
 
-<!-- #import TranslatedValueID from "zwave-js" -->
+<!-- #import TranslatedValueID from "zwave-js" with no-flatten -->
 
 ```ts
 interface TranslatedValueID extends ValueID {
@@ -80,7 +80,7 @@ Just `ValueMetadataAny`, no additional properties.
 
 #### `number`
 
-<!-- #import ValueMetadataNumeric from "zwave-js" with no-jsdoc -->
+<!-- #import ValueMetadataNumeric from "zwave-js" with no-jsdoc, no-flatten -->
 
 ```ts
 interface ValueMetadataNumeric extends ValueMetadataAny {
@@ -117,7 +117,7 @@ type AllowedValue =
 
 #### `boolean`
 
-<!-- #import ValueMetadataBoolean from "zwave-js" with no-jsdoc -->
+<!-- #import ValueMetadataBoolean from "zwave-js" with no-jsdoc, no-flatten -->
 
 ```ts
 interface ValueMetadataBoolean extends ValueMetadataAny {
@@ -137,7 +137,7 @@ interface ValueMetadataBoolean extends ValueMetadataAny {
 
 #### `string`
 
-<!-- #import ValueMetadataString from "zwave-js" with no-jsdoc -->
+<!-- #import ValueMetadataString from "zwave-js" with no-jsdoc, no-flatten -->
 
 ```ts
 interface ValueMetadataString extends ValueMetadataAny {

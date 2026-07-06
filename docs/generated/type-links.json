@@ -1,0 +1,474 @@
+{
+	"AlarmSensorType": {
+		"href": "#/api/CCs/AlarmSensor?id=alarmsensortype",
+		"definition": "enum AlarmSensorType {\n\t\"General Purpose\" = 0x00,\n\tSmoke,\n\tCO,\n\tCO2,\n\tHeat,\n\t\"Water Leak\",\n\tAny = 0xff,\n}"
+	},
+	"AssociationGroupInfo": {
+		"href": "#/api/CCs/AssociationGroupInfo?id=associationgroupinfo",
+		"definition": "interface AssociationGroupInfo {\n\tgroupId: number;\n\tmode: number;\n\tprofile: number;\n\teventCode: number;\n}"
+	},
+	"BarrierState": {
+		"href": "#/api/CCs/BarrierOperator?id=barrierstate",
+		"definition": "enum BarrierState {\n\tClosed = 0x00,\n\tClosing = 0xfc,\n\tStopped = 0xfd,\n\tOpening = 0xfe,\n\tOpen = 0xff,\n}"
+	},
+	"BatteryChargingStatus": {
+		"href": "#/api/CCs/Battery?id=batterychargingstatus",
+		"definition": "enum BatteryChargingStatus {\n\tDischarging = 0x00,\n\tCharging = 0x01,\n\tMaintaining = 0x02,\n}"
+	},
+	"BatteryReplacementStatus": {
+		"href": "#/api/CCs/Battery?id=batteryreplacementstatus",
+		"definition": "enum BatteryReplacementStatus {\n\tNo = 0x00,\n\tSoon = 0x01,\n\tNow = 0x02,\n}"
+	},
+	"BinarySensorType": {
+		"href": "#/api/CCs/BinarySensor?id=binarysensortype",
+		"definition": "enum BinarySensorType {\n\t\"General Purpose\" = 0x01,\n\tSmoke = 0x02,\n\tCO = 0x03,\n\tCO2 = 0x04,\n\tHeat = 0x05,\n\tWater = 0x06,\n\tFreeze = 0x07,\n\tTamper = 0x08,\n\tAux = 0x09,\n\t\"Door/Window\" = 0x0a,\n\tTilt = 0x0b,\n\tMotion = 0x0c,\n\t\"Glass Break\" = 0x0d,\n\tAny = 0xff,\n}"
+	},
+	"CCAPIs": {
+		"href": "#/api/CCs/index"
+	},
+	"CentralSceneKeys": {
+		"href": "#/api/CCs/CentralScene?id=centralscenekeys",
+		"definition": "enum CentralSceneKeys {\n\tKeyPressed = 0x00,\n\tKeyReleased = 0x01,\n\tKeyHeldDown = 0x02,\n\tKeyPressed2x = 0x03,\n\tKeyPressed3x = 0x04,\n\tKeyPressed4x = 0x05,\n\tKeyPressed5x = 0x06,\n}"
+	},
+	"ColorComponent": {
+		"href": "#/api/CCs/ColorSwitch?id=colorcomponent",
+		"definition": "enum ColorComponent {\n\t\"Warm White\" = 0,\n\t\"Cold White\",\n\tRed,\n\tGreen,\n\tBlue,\n\tAmber,\n\tCyan,\n\tPurple,\n\tIndex,\n}"
+	},
+	"ColorKey": {
+		"href": "#/api/CCs/ColorSwitch?id=colorkey",
+		"definition": "type ColorKey = keyof typeof ColorComponentMap;"
+	},
+	"ColorTable": {
+		"href": "#/api/CCs/ColorSwitch?id=colortable",
+		"definition": "type ColorTable =\n\t| Partial<Record<ColorKey, number>>\n\t| Partial<Record<ColorComponent, number>>;",
+		"description": "This type is used to accept both the kebabCase names and numeric components as table keys"
+	},
+	"ConfigurationCCAPISetOptions": {
+		"href": "#/api/CCs/Configuration?id=configurationccapisetoptions",
+		"definition": "type ConfigurationCCAPISetOptions =\n\t& {\n\t\tparameter: number;\n\t}\n\t& (\n\t\t| {\n\t\t\t// Variant 1: Normal parameter, defined in a config file\n\t\t\tbitMask?: undefined;\n\t\t\tvalue: ConfigValue;\n\t\t}\n\t\t| {\n\t\t\t// Variant 2: Normal parameter, not defined in a config file\n\t\t\tbitMask?: undefined;\n\t\t\tvalue: ConfigValue;\n\t\t\tvalueSize: 1 | 2 | 4;\n\t\t\tvalueFormat: ConfigValueFormat;\n\t\t}\n\t\t| {\n\t\t\t// Variant 3: Partial parameter, must be defined in a config file\n\t\t\tbitMask: number;\n\t\t\tvalue: number;\n\t\t}\n\t);"
+	},
+	"ConfigValue": {
+		"href": "#/api/CCs/Configuration?id=configvalue",
+		"definition": "type ConfigValue = number;"
+	},
+	"ConfigValueFormat": {
+		"href": "#/api/CCs/Configuration?id=configvalueformat",
+		"definition": "enum ConfigValueFormat {\n\tSignedInteger = 0x00,\n\tUnsignedInteger = 0x01,\n\tEnumerated = 0x02, // UnsignedInt, Radio Buttons\n\tBitField = 0x03, // Check Boxes\n}",
+		"description": "Defines how a configuration value is encoded"
+	},
+	"DeviceIdType": {
+		"href": "#/api/CCs/ManufacturerSpecific?id=deviceidtype",
+		"definition": "enum DeviceIdType {\n\tFactoryDefault = 0x00,\n\tSerialNumber = 0x01,\n\tPseudoRandom = 0x02,\n}"
+	},
+	"DoorHandleStatus": {
+		"href": "#/api/CCs/DoorLock?id=doorhandlestatus",
+		"definition": "type DoorHandleStatus = [boolean, boolean, boolean, boolean];"
+	},
+	"DoorLockLoggingEventType": {
+		"href": "#/api/CCs/DoorLockLogging?id=doorlockloggingeventtype",
+		"definition": "enum DoorLockLoggingEventType {\n\tLockCode = 0x01,\n\tUnlockCode = 0x02,\n\tLockButton = 0x03,\n\tUnlockButton = 0x04,\n\tLockCodeOutOfSchedule = 0x05,\n\tUnlockCodeOutOfSchedule = 0x06,\n\tIllegalCode = 0x07,\n\tLockManual = 0x08,\n\tUnlockManual = 0x09,\n\tLockAuto = 0x0a,\n\tUnlockAuto = 0x0b,\n\tLockRemoteCode = 0x0c,\n\tUnlockRemoteCode = 0x0d,\n\tLockRemote = 0x0e,\n\tUnlockRemote = 0x0f,\n\tLockRemoteCodeOutOfSchedule = 0x10,\n\tUnlockRemoteCodeOutOfSchedule = 0x11,\n\tRemoteIllegalCode = 0x12,\n\tLockManual2 = 0x13,\n\tUnlockManual2 = 0x14,\n\tLockSecured = 0x15,\n\tLockUnsecured = 0x16,\n\tUserCodeAdded = 0x17,\n\tUserCodeDeleted = 0x18,\n\tAllUserCodesDeleted = 0x19,\n\tAdminCodeChanged = 0x1a,\n\tUserCodeChanged = 0x1b,\n\tLockReset = 0x1c,\n\tConfigurationChanged = 0x1d,\n\tLowBattery = 0x1e,\n\tNewBattery = 0x1f,\n\tUnknown = 0x20,\n}"
+	},
+	"DoorLockLoggingRecord": {
+		"href": "#/api/CCs/DoorLockLogging?id=doorlockloggingrecord",
+		"definition": "interface DoorLockLoggingRecord {\n\ttimestamp: string;\n\teventType: DoorLockLoggingEventType;\n\tlabel: string;\n\tuserId?: number;\n\tuserCode?: string | BytesView;\n}"
+	},
+	"DoorLockMode": {
+		"href": "#/api/CCs/DoorLock?id=doorlockmode",
+		"definition": "enum DoorLockMode {\n\tUnsecured = 0x00,\n\tUnsecuredWithTimeout = 0x01,\n\tInsideUnsecured = 0x10,\n\tInsideUnsecuredWithTimeout = 0x11,\n\tOutsideUnsecured = 0x20,\n\tOutsideUnsecuredWithTimeout = 0x21,\n\tUnknown = 0xfe,\n\tSecured = 0xff,\n}"
+	},
+	"DoorLockOperationType": {
+		"href": "#/api/CCs/DoorLock?id=doorlockoperationtype",
+		"definition": "enum DoorLockOperationType {\n\tConstant = 0x01,\n\tTimed = 0x02,\n}"
+	},
+	"DSTInfo": {
+		"href": "#/api/CCs/Time?id=dstinfo",
+		"definition": "interface DSTInfo {\n\tstartDate: Date;\n\tendDate: Date;\n\tstandardOffset: number;\n\tdstOffset: number;\n}"
+	},
+	"Duration": {
+		"href": "#/api/shared-types?id=duration",
+		"definition": "interface Duration {\n\tunit: DurationUnit;\n\tvalue: number;\n}",
+		"description": "Represents a duration that is used by some command classes"
+	},
+	"DurationUnit": {
+		"href": "#/api/shared-types?id=durationunit",
+		"definition": "type DurationUnit = \"seconds\" | \"minutes\" | \"unknown\" | \"default\";"
+	},
+	"ECDHProfiles": {
+		"href": "#/api/CCs/Security2?id=ecdhprofiles",
+		"definition": "enum ECDHProfiles {\n\tCurve25519 = 0,\n}"
+	},
+	"EncapsulationFlags": {
+		"href": "#/api/CCs/Supervision?id=encapsulationflags",
+		"definition": "enum EncapsulationFlags {\n\tNone = 0,\n\tSupervision = 1 << 0,\n\t// Multi Channel is tracked through the endpoint index\n\tSecurity = 1 << 1,\n\tCRC16 = 1 << 2,\n}"
+	},
+	"EndpointAddress": {
+		"href": "#/api/CCs/MultiChannelAssociation?id=endpointaddress",
+		"definition": "interface EndpointAddress {\n\tnodeId: number;\n\tendpoint: number | number[];\n}"
+	},
+	"EndpointCapability": {
+		"href": "#/api/CCs/MultiChannel?id=endpointcapability",
+		"definition": "interface EndpointCapability {\n\tgeneric: GenericDeviceClass;\n\tspecific: SpecificDeviceClass;\n\tsupportedCCs: CommandClasses[];\n\tisDynamic: boolean;\n\twasRemoved: boolean;\n}"
+	},
+	"EnergyProductionParameter": {
+		"href": "#/api/CCs/EnergyProduction?id=energyproductionparameter",
+		"definition": "enum EnergyProductionParameter {\n\tPower = 0x00,\n\t\"Production Total\" = 0x01,\n\t\"Production Today\" = 0x02,\n\t\"Total Time\" = 0x03,\n}"
+	},
+	"EnergyProductionScale": {
+		"href": "#/api/CCs/EnergyProduction?id=energyproductionscale",
+		"definition": "interface EnergyProductionScale {\n\tkey: number;\n\tunit: string;\n}"
+	},
+	"EntryControlDataTypes": {
+		"href": "#/api/CCs/EntryControl?id=entrycontroldatatypes",
+		"definition": "enum EntryControlDataTypes {\n\tNone = 0x00,\n\tRaw = 0x01,\n\tASCII = 0x02,\n\tMD5 = 0x03,\n}"
+	},
+	"EntryControlEventTypes": {
+		"href": "#/api/CCs/EntryControl?id=entrycontroleventtypes",
+		"definition": "enum EntryControlEventTypes {\n\tCaching = 0x00,\n\tCachedKeys = 0x01,\n\tEnter = 0x02,\n\tDisarmAll = 0x03,\n\tArmAll = 0x04,\n\tArmAway = 0x05,\n\tArmHome = 0x06,\n\tExitDelay = 0x07,\n\tArm1 = 0x08,\n\tArm2 = 0x09,\n\tArm3 = 0x0a,\n\tArm4 = 0x0b,\n\tArm5 = 0x0c,\n\tArm6 = 0x0d,\n\tRfid = 0x0e,\n\tBell = 0x0f,\n\tFire = 0x10,\n\tPolice = 0x11,\n\tAlertPanic = 0x12,\n\tAlertMedical = 0x13,\n\tGateOpen = 0x14,\n\tGateClose = 0x15,\n\tLock = 0x16,\n\tUnlock = 0x17,\n\tTest = 0x18,\n\tCancel = 0x19,\n}"
+	},
+	"FirmwareDownloadStatus": {
+		"href": "#/api/CCs/FirmwareUpdateMetaData?id=firmwaredownloadstatus",
+		"definition": "enum FirmwareDownloadStatus {\n\tError_InvalidManufacturerOrFirmwareID = 0,\n\tError_AuthenticationExpected = 1,\n\tError_FragmentSizeTooLarge = 2,\n\tError_NotDownloadable = 3,\n\tError_InvalidHardwareVersion = 4,\n\tOK = 0xff,\n}"
+	},
+	"FirmwareUpdateActivationStatus": {
+		"href": "#/api/CCs/FirmwareUpdateMetaData?id=firmwareupdateactivationstatus",
+		"definition": "enum FirmwareUpdateActivationStatus {\n\tError_InvalidFirmware = 0,\n\tError_ActivationFailed = 1,\n\tOK = 0xff,\n}"
+	},
+	"FirmwareUpdateMetaData": {
+		"href": "#/api/CCs/FirmwareUpdateMetaData?id=firmwareupdatemetadata",
+		"definition": "interface FirmwareUpdateMetaData {\n\tmanufacturerId: number;\n\tfirmwareId: number;\n\tchecksum: number;\n\tfirmwareUpgradable: boolean;\n\tmaxFragmentSize?: number;\n\tadditionalFirmwareIDs: readonly number[];\n\thardwareVersion?: number;\n\tcontinuesToFunction: MaybeNotKnown<boolean>;\n\tsupportsActivation: MaybeNotKnown<boolean>;\n\tsupportsResuming?: MaybeNotKnown<boolean>;\n\tsupportsNonSecureTransfer?: MaybeNotKnown<boolean>;\n}"
+	},
+	"FirmwareUpdateMetaDataCCRequestReport": {
+		"href": "#/api/CCs/FirmwareUpdateMetaData?id=firmwareupdatemetadataccrequestreport",
+		"definition": "interface FirmwareUpdateMetaDataCCRequestReport {\n\treadonly status: FirmwareUpdateRequestStatus;\n\tresume?: boolean;\n\tnonSecureTransfer?: boolean;\n}"
+	},
+	"FirmwareUpdateRequestStatus": {
+		"href": "#/api/CCs/FirmwareUpdateMetaData?id=firmwareupdaterequeststatus",
+		"definition": "enum FirmwareUpdateRequestStatus {\n\tError_InvalidManufacturerOrFirmwareID = 0,\n\tError_AuthenticationExpected = 1,\n\tError_FragmentSizeTooLarge = 2,\n\tError_NotUpgradable = 3,\n\tError_InvalidHardwareVersion = 4,\n\tError_FirmwareUpgradeInProgress = 5,\n\tError_BatteryLow = 6,\n\tOK = 0xff,\n}"
+	},
+	"GenericDeviceClass": {
+		"href": "#/api/CCs/MultiChannel?id=genericdeviceclass",
+		"definition": "interface GenericDeviceClass {\n\treadonly key: number;\n\treadonly label: string;\n\treadonly zwavePlusDeviceType?: string;\n\treadonly requiresSecurity: boolean;\n\treadonly maySupportBasicCC: boolean;\n\treadonly isSlowActuator: boolean;\n}"
+	},
+	"HumidityControlMode": {
+		"href": "#/api/CCs/HumidityControlMode?id=humiditycontrolmode",
+		"definition": "enum HumidityControlMode {\n\t\"Off\" = 0x00,\n\t\"Humidify\" = 0x01,\n\t\"De-humidify\" = 0x02,\n\t\"Auto\" = 0x03,\n}"
+	},
+	"HumidityControlOperatingState": {
+		"href": "#/api/CCs/HumidityControlOperatingState?id=humiditycontroloperatingstate",
+		"definition": "enum HumidityControlOperatingState {\n\t\"Idle\" = 0x00,\n\t\"Humidifying\" = 0x01,\n\t\"De-humidifying\" = 0x02,\n}"
+	},
+	"HumidityControlSetpointCapabilities": {
+		"href": "#/api/CCs/HumidityControlSetpoint?id=humiditycontrolsetpointcapabilities",
+		"definition": "interface HumidityControlSetpointCapabilities {\n\tminValue: number;\n\tminValueScale: number;\n\tmaxValue: number;\n\tmaxValueScale: number;\n}"
+	},
+	"HumidityControlSetpointType": {
+		"href": "#/api/CCs/HumidityControlSetpoint?id=humiditycontrolsetpointtype",
+		"definition": "enum HumidityControlSetpointType {\n\t\"N/A\" = 0x00,\n\t\"Humidifier\" = 0x01, // CC v1\n\t\"De-humidifier\" = 0x02, // CC v1\n\t\"Auto\" = 0x03, // CC v2\n}"
+	},
+	"HumidityControlSetpointValue": {
+		"href": "#/api/CCs/HumidityControlSetpoint?id=humiditycontrolsetpointvalue",
+		"definition": "interface HumidityControlSetpointValue {\n\tvalue: number;\n\tscale: number;\n}"
+	},
+	"InclusionControllerStatus": {
+		"href": "#/api/CCs/InclusionController?id=inclusioncontrollerstatus",
+		"definition": "enum InclusionControllerStatus {\n\tOK = 0x01,\n\tUserRejected = 0x02,\n\tFailed = 0x03,\n\tNotSupported = 0x04,\n}"
+	},
+	"InclusionControllerStep": {
+		"href": "#/api/CCs/InclusionController?id=inclusioncontrollerstep",
+		"definition": "enum InclusionControllerStep {\n\tProxyInclusion = 0x01,\n\tS0Inclusion = 0x02,\n\tProxyInclusionReplace = 0x03,\n}"
+	},
+	"IndicatorObject": {
+		"href": "#/api/CCs/Indicator?id=indicatorobject",
+		"definition": "interface IndicatorObject {\n\tindicatorId: number;\n\tpropertyId: number;\n\tvalue: number | boolean;\n}"
+	},
+	"IndicatorTimeout": {
+		"href": "#/api/CCs/Indicator?id=indicatortimeout",
+		"definition": "interface IndicatorTimeout {\n\t/** Whole hours (0-255) */\n\thours?: number;\n\t/** Whole minutes (0-255) */\n\tminutes?: number;\n\t/** Whole and 1/100th seconds (0-59.99) */\n\tseconds?: number;\n}",
+		"description": "Specifies a timeout for an indicator. At least one of the properties must be present."
+	},
+	"IrrigationSensorPolarity": {
+		"href": "#/api/CCs/Irrigation?id=irrigationsensorpolarity",
+		"definition": "enum IrrigationSensorPolarity {\n\tLow = 0,\n\tHigh = 1,\n}"
+	},
+	"KEXFailType": {
+		"href": "#/api/CCs/Security2?id=kexfailtype",
+		"definition": "enum KEXFailType {\n\tNoKeyMatch = 0x01, // KEX_KEY\n\tNoSupportedScheme = 0x02, // KEX_SCHEME\n\tNoSupportedCurve = 0x03, // KEX_CURVES\n\tDecrypt = 0x05,\n\tBootstrappingCanceled = 0x06, // CANCEL\n\tWrongSecurityLevel = 0x07, // AUTH\n\tKeyNotGranted = 0x08, // GET\n\tNoVerify = 0x09, // VERIFY\n\tDifferentKey = 0x0a, // REPORT\n}"
+	},
+	"KEXSchemes": {
+		"href": "#/api/CCs/Security2?id=kexschemes",
+		"definition": "enum KEXSchemes {\n\tKEXScheme1 = 1,\n}"
+	},
+	"KeypadMode": {
+		"href": "#/api/CCs/UserCode?id=keypadmode",
+		"definition": "enum KeypadMode {\n\tNormal = 0x00,\n\tVacation,\n\tPrivacy,\n\tLockedOut,\n}"
+	},
+	"LocalProtectionState": {
+		"href": "#/api/CCs/Protection?id=localprotectionstate",
+		"definition": "enum LocalProtectionState {\n\tUnprotected = 0,\n\tProtectedBySequence = 1,\n\tNoOperationPossible = 2,\n}"
+	},
+	"MaybeNotKnown": {
+		"href": "#/api/shared-types?id=maybenotknown",
+		"definition": "type MaybeNotKnown<T> = T | undefined;"
+	},
+	"MaybeUnknown": {
+		"href": "#/api/shared-types?id=maybeunknown",
+		"definition": "type MaybeUnknown<T> = T | null;"
+	},
+	"MeterReading": {
+		"href": "#/api/CCs/Meter?id=meterreading",
+		"definition": "interface MeterReading {\n\trateType: RateType;\n\tvalue: number;\n\tpreviousValue: MaybeNotKnown<number>;\n\tdeltaTime: MaybeUnknown<number>;\n\ttype: number;\n\tscale: MeterScale;\n}"
+	},
+	"MeterScale": {
+		"href": "#/api/CCs/Meter?id=meterscale",
+		"definition": "interface MeterScale {\n\treadonly label: string;\n\treadonly unit?: string;\n\treadonly key: number;\n}"
+	},
+	"MultiChannelCCDestination": {
+		"href": "#/api/CCs/MultiChannel?id=multichannelccdestination",
+		"definition": "type MultiChannelCCDestination = number | (1 | 2 | 3 | 4 | 5 | 6 | 7)[];"
+	},
+	"MultilevelSensorValue": {
+		"href": "#/api/CCs/MultilevelSensor?id=multilevelsensorvalue",
+		"definition": "interface MultilevelSensorValue {\n\tvalue: number;\n\tscale: Scale;\n}"
+	},
+	"NotificationCCReport": {
+		"href": "#/api/CCs/Notification?id=notificationccreport",
+		"definition": "interface NotificationCCReport {\n\talarmType: number | undefined;\n\talarmLevel: number | undefined;\n\tnotificationType: number | undefined;\n\tnotificationStatus: number | boolean | undefined;\n\tnotificationEvent: number | undefined;\n\teventParameters: any;\n\tsequenceNumber: number | undefined;\n}"
+	},
+	"Powerlevel": {
+		"href": "#/api/CCs/Powerlevel?id=powerlevel",
+		"definition": "enum Powerlevel {\n\t\"Normal Power\" = 0x00,\n\t\"-1 dBm\" = 0x01,\n\t\"-2 dBm\" = 0x02,\n\t\"-3 dBm\" = 0x03,\n\t\"-4 dBm\" = 0x04,\n\t\"-5 dBm\" = 0x05,\n\t\"-6 dBm\" = 0x06,\n\t\"-7 dBm\" = 0x07,\n\t\"-8 dBm\" = 0x08,\n\t\"-9 dBm\" = 0x09,\n}"
+	},
+	"PowerlevelTestStatus": {
+		"href": "#/api/CCs/Powerlevel?id=powerlevelteststatus",
+		"definition": "enum PowerlevelTestStatus {\n\tFailed = 0x00,\n\tSuccess = 0x01,\n\t\"In Progress\" = 0x02,\n}"
+	},
+	"RateType": {
+		"href": "#/api/CCs/Meter?id=ratetype",
+		"definition": "enum RateType {\n\tUnspecified = 0x00,\n\tConsumed = 0x01,\n\tProduced = 0x02,\n}"
+	},
+	"RFProtectionState": {
+		"href": "#/api/CCs/Protection?id=rfprotectionstate",
+		"definition": "enum RFProtectionState {\n\tUnprotected = 0,\n\tNoControl = 1,\n\tNoResponse = 2,\n}"
+	},
+	"Scale": {
+		"href": "#/api/shared-types?id=scale",
+		"definition": "interface Scale {\n\treadonly label: string;\n\treadonly unit?: string;\n\treadonly description?: string;\n\treadonly key: number;\n}"
+	},
+	"ScheduleEntryLockDailyRepeatingSchedule": {
+		"href": "#/api/CCs/ScheduleEntryLock?id=scheduleentrylockdailyrepeatingschedule",
+		"definition": "interface ScheduleEntryLockDailyRepeatingSchedule {\n\tweekdays: ScheduleEntryLockWeekday[];\n\tstartHour: number;\n\tstartMinute: number;\n\tdurationHour: number;\n\tdurationMinute: number;\n}"
+	},
+	"ScheduleEntryLockSlotId": {
+		"href": "#/api/CCs/ScheduleEntryLock?id=scheduleentrylockslotid",
+		"definition": "interface ScheduleEntryLockSlotId {\n\tuserId: number;\n\tslotId: number;\n}"
+	},
+	"ScheduleEntryLockWeekday": {
+		"href": "#/api/CCs/ScheduleEntryLock?id=scheduleentrylockweekday",
+		"definition": "enum ScheduleEntryLockWeekday {\n\t// Yay, consistency!\n\tSunday = 0x00,\n\tMonday = 0x01,\n\tTuesday = 0x02,\n\tWednesday = 0x03,\n\tThursday = 0x04,\n\tFriday = 0x05,\n\tSaturday = 0x06,\n}"
+	},
+	"ScheduleEntryLockWeekDaySchedule": {
+		"href": "#/api/CCs/ScheduleEntryLock?id=scheduleentrylockweekdayschedule",
+		"definition": "interface ScheduleEntryLockWeekDaySchedule {\n\tweekday: ScheduleEntryLockWeekday;\n\tstartHour: number;\n\tstartMinute: number;\n\tstopHour: number;\n\tstopMinute: number;\n}"
+	},
+	"ScheduleEntryLockYearDaySchedule": {
+		"href": "#/api/CCs/ScheduleEntryLock?id=scheduleentrylockyeardayschedule",
+		"definition": "interface ScheduleEntryLockYearDaySchedule {\n\tstartYear: number;\n\tstartMonth: number;\n\tstartDay: number;\n\tstartHour: number;\n\tstartMinute: number;\n\tstopYear: number;\n\tstopMonth: number;\n\tstopDay: number;\n\tstopHour: number;\n\tstopMinute: number;\n}"
+	},
+	"ScheduleOverrideType": {
+		"href": "#/api/CCs/ClimateControlSchedule?id=scheduleoverridetype",
+		"definition": "enum ScheduleOverrideType {\n\tNone = 0x00,\n\tTemporary = 0x01,\n\tPermanent = 0x02,\n}"
+	},
+	"Security2CCKEXFail": {
+		"href": "#/api/CCs/Security2?id=security2cckexfail",
+		"definition": "interface Security2CCKEXFail {\n\tfailType: KEXFailType;\n}"
+	},
+	"Security2CCKEXReport": {
+		"href": "#/api/CCs/Security2?id=security2cckexreport",
+		"definition": "interface Security2CCKEXReport {\n\treadonly requestCSA: boolean;\n\treadonly echo: boolean;\n\treadonly supportedKEXSchemes: readonly KEXSchemes[];\n\treadonly supportedECDHProfiles: readonly ECDHProfiles[];\n\treadonly requestedKeys: readonly SecurityClass[];\n}"
+	},
+	"SecurityClass": {
+		"href": "#/api/shared-types?id=securityclass",
+		"definition": "enum SecurityClass {\n\t/**\n\t * Used internally during inclusion of a node. Don't use this!\n\t */\n\tTemporary = -2,\n\t/**\n\t * `None` is used to indicate that a node is included without security.\n\t * It is not meant as input to methods that accept a security class.\n\t */\n\tNone = -1,\n\tS2_Unauthenticated = 0,\n\tS2_Authenticated = 1,\n\tS2_AccessControl = 2,\n\tS0_Legacy = 7,\n}"
+	},
+	"SetbackSpecialState": {
+		"href": "#/api/CCs/ClimateControlSchedule?id=setbackspecialstate",
+		"definition": "type SetbackSpecialState =\n\t| \"Frost Protection\"\n\t| \"Energy Saving\"\n\t| \"Unused\";"
+	},
+	"SetbackState": {
+		"href": "#/api/CCs/ClimateControlSchedule?id=setbackstate",
+		"definition": "type SetbackState = number | SetbackSpecialState;"
+	},
+	"SetbackType": {
+		"href": "#/api/CCs/ThermostatSetback?id=setbacktype",
+		"definition": "enum SetbackType {\n\tNone = 0x00,\n\tTemporary = 0x01,\n\tPermanent = 0x02,\n}"
+	},
+	"SpecificDeviceClass": {
+		"href": "#/api/CCs/MultiChannel?id=specificdeviceclass",
+		"definition": "type SpecificDeviceClass = GenericDeviceClass;"
+	},
+	"SubsystemState": {
+		"href": "#/api/CCs/BarrierOperator?id=subsystemstate",
+		"definition": "enum SubsystemState {\n\tOff = 0x00,\n\tOn = 0xff,\n}"
+	},
+	"SubsystemType": {
+		"href": "#/api/CCs/BarrierOperator?id=subsystemtype",
+		"definition": "enum SubsystemType {\n\tAudible = 0x01,\n\tVisual = 0x02,\n}"
+	},
+	"SupervisionResult": {
+		"href": "#/api/shared-types?id=supervisionresult",
+		"definition": "type SupervisionResult =\n\t| {\n\t\tstatus:\n\t\t\t| SupervisionStatus.NoSupport\n\t\t\t| SupervisionStatus.Fail\n\t\t\t| SupervisionStatus.Success;\n\t\tremainingDuration?: undefined;\n\t}\n\t| {\n\t\tstatus: SupervisionStatus.Working;\n\t\tremainingDuration: Duration;\n\t};"
+	},
+	"SupervisionStatus": {
+		"href": "#/api/shared-types?id=supervisionstatus",
+		"definition": "enum SupervisionStatus {\n\tNoSupport = 0x00,\n\tWorking = 0x01,\n\tFail = 0x02,\n\tSuccess = 0xff,\n}"
+	},
+	"Switchpoint": {
+		"href": "#/api/CCs/ClimateControlSchedule?id=switchpoint",
+		"definition": "interface Switchpoint {\n\thour: number;\n\tminute: number;\n\tstate: SetbackState | undefined;\n}"
+	},
+	"SwitchType": {
+		"href": "#/api/CCs/MultilevelSwitch?id=switchtype",
+		"definition": "enum SwitchType {\n\t\"not supported\" = 0x00,\n\t\"Off/On\" = 0x01,\n\t\"Down/Up\" = 0x02,\n\t\"Close/Open\" = 0x03,\n\t\"CCW/CW\" = 0x04,\n\t\"Left/Right\" = 0x05,\n\t\"Reverse/Forward\" = 0x06,\n\t\"Pull/Push\" = 0x07,\n}"
+	},
+	"ThermostatFanMode": {
+		"href": "#/api/CCs/ThermostatFanMode?id=thermostatfanmode",
+		"definition": "enum ThermostatFanMode {\n\t\"Auto low\" = 0x00,\n\t\"Low\" = 0x01,\n\t\"Auto high\" = 0x02,\n\t\"High\" = 0x03,\n\t\"Auto medium\" = 0x04,\n\t\"Medium\" = 0x05,\n\t\"Circulation\" = 0x06,\n\t\"Humidity circulation\" = 0x07,\n\t\"Left and right\" = 0x08,\n\t\"Up and down\" = 0x09,\n\t\"Quiet\" = 0x0a,\n\t\"External circulation\" = 0x0b,\n}"
+	},
+	"ThermostatFanState": {
+		"href": "#/api/CCs/ThermostatFanState?id=thermostatfanstate",
+		"definition": "enum ThermostatFanState {\n\t\"Idle / off\" = 0x00,\n\t\"Running / running low\" = 0x01,\n\t\"Running high\" = 0x02,\n\t\"Running medium\" = 0x03,\n\t\"Circulation mode\" = 0x04,\n\t\"Humidity circulation mode\" = 0x05,\n\t\"Right - left circulation mode\" = 0x06,\n\t\"Up - down circulation mode\" = 0x07,\n\t\"Quiet circulation mode\" = 0x08,\n}"
+	},
+	"ThermostatMode": {
+		"href": "#/api/CCs/ThermostatMode?id=thermostatmode",
+		"definition": "enum ThermostatMode {\n\t\"Off\" = 0x00,\n\t\"Heat\" = 0x01,\n\t\"Cool\" = 0x02,\n\t\"Auto\" = 0x03,\n\t\"Auxiliary\" = 0x04,\n\t\"Resume (on)\" = 0x05,\n\t\"Fan\" = 0x06,\n\t\"Furnace\" = 0x07,\n\t\"Dry\" = 0x08,\n\t\"Moist\" = 0x09,\n\t\"Auto changeover\" = 0x0a,\n\t\"Energy heat\" = 0x0b,\n\t\"Energy cool\" = 0x0c,\n\t\"Away\" = 0x0d,\n\t\"Full power\" = 0x0f,\n\t\"Manufacturer specific\" = 0x1f,\n}"
+	},
+	"ThermostatOperatingState": {
+		"href": "#/api/CCs/ThermostatOperatingState?id=thermostatoperatingstate",
+		"definition": "enum ThermostatOperatingState {\n\t\"Idle\" = 0x00,\n\t\"Heating\" = 0x01,\n\t\"Cooling\" = 0x02,\n\t\"Fan Only\" = 0x03,\n\t\"Pending Heat\" = 0x04,\n\t\"Pending Cool\" = 0x05,\n\t\"Vent/Economizer\" = 0x06,\n\t\"Aux Heating\" = 0x07,\n\t\"2nd Stage Heating\" = 0x08,\n\t\"2nd Stage Cooling\" = 0x09,\n\t\"2nd Stage Aux Heat\" = 0x0a,\n\t\"3rd Stage Aux Heat\" = 0x0b,\n}"
+	},
+	"ThermostatOperatingStateLoggingData": {
+		"href": "#/api/CCs/ThermostatOperatingState?id=thermostatoperatingstateloggingdata",
+		"definition": "interface ThermostatOperatingStateLoggingData {\n\tusageTodayHours: number;\n\tusageTodayMinutes: number;\n\tusageYesterdayHours: number;\n\tusageYesterdayMinutes: number;\n}"
+	},
+	"ThermostatSetpointType": {
+		"href": "#/api/CCs/ThermostatSetpoint?id=thermostatsetpointtype",
+		"definition": "enum ThermostatSetpointType {\n\t\"N/A\" = 0x00,\n\t\"Heating\" = 0x01, // CC v1\n\t\"Cooling\" = 0x02, // CC v1\n\t\"Furnace\" = 0x07, // CC v1\n\t\"Dry Air\" = 0x08, // CC v1\n\t\"Moist Air\" = 0x09, // CC v1\n\t\"Auto Changeover\" = 0x0a, // CC v1\n\t\"Energy Save Heating\" = 0x0b, // CC v2\n\t\"Energy Save Cooling\" = 0x0c, // CC v2\n\t\"Away Heating\" = 0x0d, // CC v2\n\t\"Away Cooling\" = 0x0e, // CC v3\n\t\"Full Power\" = 0x0f, // CC v3\n\t// Update the interview procecure when adding new types\n}"
+	},
+	"Timeout": {
+		"href": "#/api/shared-types?id=timeout",
+		"definition": "interface Timeout {\n\tunit: TimeoutUnit;\n\tvalue: number;\n}",
+		"description": "Represents a timeout that is used by some command classes"
+	},
+	"TimeoutUnit": {
+		"href": "#/api/shared-types?id=timeoutunit",
+		"definition": "type TimeoutUnit = \"seconds\" | \"minutes\" | \"none\" | \"infinite\";"
+	},
+	"Timezone": {
+		"href": "#/api/CCs/ScheduleEntryLock?id=timezone",
+		"definition": "interface Timezone {\n\tstandardOffset: number;\n\tdstOffset: number;\n}"
+	},
+	"UserCode": {
+		"href": "#/api/CCs/UserCode?id=usercode",
+		"definition": "interface UserCode {\n\tuserId: number;\n\tuserIdStatus: UserIDStatus;\n\tuserCode: string;\n}"
+	},
+	"UserCodeCCSetOptions": {
+		"href": "#/api/CCs/UserCode?id=usercodeccsetoptions",
+		"definition": "type UserCodeCCSetOptions =\n\t| {\n\t\tuserId: 0;\n\t\tuserIdStatus: UserIDStatus.Available;\n\t\tuserCode?: undefined;\n\t}\n\t| {\n\t\tuserId: number;\n\t\tuserIdStatus: UserIDStatus.Available;\n\t\tuserCode?: undefined;\n\t}\n\t| {\n\t\tuserId: number;\n\t\tuserIdStatus: Exclude<\n\t\t\tUserIDStatus,\n\t\t\tUserIDStatus.Available | UserIDStatus.StatusNotAvailable\n\t\t>;\n\t\tuserCode: string | BytesView;\n\t};"
+	},
+	"UserCredentialAdminCodeOperationResult": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialadmincodeoperationresult",
+		"definition": "enum UserCredentialAdminCodeOperationResult {\n\tModified = 0x01,\n\tUnmodified = 0x03,\n\tResponseToGet = 0x04,\n\tFailDuplicateCredential = 0x07,\n\tFailManufacturerSecurityRule = 0x08,\n\tErrorNotSupported = 0x0d,\n\tErrorDisablingNotSupported = 0x0e,\n\tUnspecifiedNodeError = 0x0f,\n}"
+	},
+	"UserCredentialCapability": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialcapability",
+		"definition": "type UserCredentialCapability =\n\t& {\n\t\tnumberOfCredentialSlots: number;\n\t\tminCredentialLength: number;\n\t\tmaxCredentialLength: number;\n\t\tmaxCredentialHashLength: number;\n\t}\n\t& (\n\t\t{\n\t\t\tsupportsCredentialLearn: true;\n\t\t\tcredentialLearnRecommendedTimeout: number;\n\t\t\tcredentialLearnNumberOfSteps: number;\n\t\t} | {\n\t\t\tsupportsCredentialLearn: false;\n\t\t\tcredentialLearnRecommendedTimeout?: undefined;\n\t\t\tcredentialLearnNumberOfSteps?: undefined;\n\t\t}\n\t);"
+	},
+	"UserCredentialCCAssociationReport": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialccassociationreport",
+		"definition": "interface UserCredentialCCAssociationReport {\n\treadonly credentialType: UserCredentialType;\n\treadonly credentialSlot: number;\n\treadonly destinationUserId: number;\n\treadonly status: number;\n}"
+	},
+	"UserCredentialCCCredentialReport": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialcccredentialreport",
+		"definition": "interface UserCredentialCCCredentialReport {\n\treadonly reportType: UserCredentialCredentialReportType;\n\treadonly userId: number;\n\treadonly credentialType: UserCredentialType;\n\treadonly credentialSlot: number;\n\treadonly credentialReadBack: boolean;\n\treadonly credentialData?: any;\n\treadonly modifierType: UserCredentialModifierType;\n\treadonly modifierNodeId: number;\n\treadonly nextCredentialType?: any;\n\treadonly nextCredentialSlot?: number;\n}"
+	},
+	"UserCredentialCCUserReport": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialccuserreport",
+		"definition": "interface UserCredentialCCUserReport {\n\treadonly reportType: UserCredentialUserReportType;\n\treadonly nextUserId?: number;\n\treadonly modifierType: UserCredentialModifierType;\n\treadonly modifierNodeId: number;\n\treadonly userId: number;\n\treadonly userType: UserCredentialUserType;\n\treadonly active: boolean;\n\treadonly credentialRule: UserCredentialRule;\n\treadonly expiringTimeoutMinutes: number;\n\treadonly nameEncoding: UserCredentialNameEncoding;\n\treadonly userName: string;\n}"
+	},
+	"UserCredentialCredentialReportType": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialcredentialreporttype",
+		"definition": "enum UserCredentialCredentialReportType {\n\tCredentialAdded = 0x00,\n\tCredentialModified = 0x01,\n\tCredentialDeleted = 0x02,\n\tCredentialUnchanged = 0x03,\n\tResponseToGet = 0x04,\n\tCredentialAddRejectedLocationOccupied = 0x05,\n\tCredentialModifyRejectedLocationEmpty = 0x06,\n\tDuplicateCredential = 0x07,\n\tManufacturerSecurityRules = 0x08,\n\tWrongUserUniqueIdentifier = 0x09,\n\tDuplicateAdminPINCode = 0x0a,\n}"
+	},
+	"UserCredentialKeyLockerEntryCapability": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialkeylockerentrycapability",
+		"definition": "interface UserCredentialKeyLockerEntryCapability {\n\tnumberOfEntrySlots: number;\n\tminEntryDataLength: number;\n\tmaxEntryDataLength: number;\n}"
+	},
+	"UserCredentialKeyLockerEntryType": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialkeylockerentrytype",
+		"definition": "enum UserCredentialKeyLockerEntryType {\n\tDESFireApplicationIdAndKey = 0x01,\n}"
+	},
+	"UserCredentialLearnStatus": {
+		"href": "#/api/endpoint?id=usercredentiallearnstatus",
+		"definition": "enum UserCredentialLearnStatus {\n\tStarted = 0x00,\n\tSuccess = 0x01,\n\tAlreadyInProgress = 0x02,\n\tEndedNotDueToTimeout = 0x03,\n\tTimeout = 0x04,\n\tStepRetry = 0x05,\n\tInvalidAddOperationType = 0xfe,\n\tInvalidModifyOperationType = 0xff,\n}"
+	},
+	"UserCredentialModifierType": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialmodifiertype",
+		"definition": "enum UserCredentialModifierType {\n\tDoesNotExist = 0x00,\n\tUnknown = 0x01,\n\tZWave = 0x02,\n\tLocally = 0x03,\n\tOther = 0x04,\n}"
+	},
+	"UserCredentialNameEncoding": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialnameencoding",
+		"definition": "enum UserCredentialNameEncoding {\n\tASCII = 0x00,\n\tExtendedASCII = 0x01,\n\tUTF16BE = 0x02,\n}"
+	},
+	"UserCredentialOperationType": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialoperationtype",
+		"definition": "enum UserCredentialOperationType {\n\tAdd = 0x00,\n\tModify = 0x01,\n\tDelete = 0x02,\n}"
+	},
+	"UserCredentialRule": {
+		"href": "#/api/endpoint?id=usercredentialrule",
+		"definition": "enum UserCredentialRule {\n\tSingle = 0x01,\n\tDual = 0x02,\n\tTriple = 0x03,\n}"
+	},
+	"UserCredentialType": {
+		"href": "#/api/endpoint?id=usercredentialtype",
+		"definition": "enum UserCredentialType {\n\tNone = 0x00,\n\tPINCode = 0x01,\n\tPassword = 0x02,\n\tRFIDCode = 0x03,\n\tBLE = 0x04,\n\tNFC = 0x05,\n\tUWB = 0x06,\n\tEyeBiometric = 0x07,\n\tFaceBiometric = 0x08,\n\tFingerBiometric = 0x09,\n\tHandBiometric = 0x0a,\n\tUnspecifiedBiometric = 0x0b,\n\tDESFire = 0x0c,\n}"
+	},
+	"UserCredentialUserReportType": {
+		"href": "#/api/CCs/UserCredential?id=usercredentialuserreporttype",
+		"definition": "enum UserCredentialUserReportType {\n\tUserAdded = 0x00,\n\tUserModified = 0x01,\n\tUserDeleted = 0x02,\n\tUserUnchanged = 0x03,\n\tResponseToGet = 0x04,\n\tUserAddRejectedLocationOccupied = 0x05,\n\tUserModifyRejectedLocationEmpty = 0x06,\n\tZeroExpiringMinutesInvalid = 0x07,\n}"
+	},
+	"UserCredentialUserType": {
+		"href": "#/api/endpoint?id=usercredentialusertype",
+		"definition": "enum UserCredentialUserType {\n\tGeneral = 0x00,\n\tProgramming = 0x03,\n\tNonAccess = 0x04,\n\tDuress = 0x05,\n\tDisposable = 0x06,\n\tExpiring = 0x07,\n\tRemoteOnly = 0x09,\n}"
+	},
+	"UserIDStatus": {
+		"href": "#/api/CCs/UserCode?id=useridstatus",
+		"definition": "enum UserIDStatus {\n\tAvailable = 0x00,\n\tEnabled,\n\tDisabled,\n\tMessaging,\n\tPassageMode,\n\tStatusNotAvailable = 0xfe,\n}"
+	},
+	"ValveId": {
+		"href": "#/api/CCs/Irrigation?id=valveid",
+		"definition": "type ValveId = \"master\" | number;"
+	},
+	"ValveTableEntry": {
+		"href": "#/api/CCs/Irrigation?id=valvetableentry",
+		"definition": "interface ValveTableEntry {\n\tvalveId: number;\n\tduration: number;\n}"
+	},
+	"Weekday": {
+		"href": "#/api/CCs/ClimateControlSchedule?id=weekday",
+		"definition": "enum Weekday {\n\tUnknown = 0x00,\n\tMonday = 0x01,\n\tTuesday = 0x02,\n\tWednesday = 0x03,\n\tThursday = 0x04,\n\tFriday = 0x05,\n\tSaturday = 0x06,\n\tSunday = 0x07,\n}"
+	},
+	"WindowCoveringParameter": {
+		"href": "#/api/CCs/WindowCovering?id=windowcoveringparameter",
+		"definition": "enum WindowCoveringParameter {\n\t\"Outbound Left (no position)\",\n\t\"Outbound Left\",\n\t\"Outbound Right (no position)\",\n\t\"Outbound Right\",\n\t\"Inbound Left (no position)\",\n\t\"Inbound Left\",\n\t\"Inbound Right (no position)\",\n\t\"Inbound Right\",\n\t\"Inbound Left/Right (no position)\",\n\t\"Inbound Left/Right\",\n\t\"Vertical Slats Angle (no position)\",\n\t\"Vertical Slats Angle\",\n\t\"Outbound Bottom (no position)\",\n\t\"Outbound Bottom\",\n\t\"Outbound Top (no position)\",\n\t\"Outbound Top\",\n\t\"Inbound Bottom (no position)\",\n\t\"Inbound Bottom\",\n\t\"Inbound Top (no position)\",\n\t\"Inbound Top\",\n\t\"Inbound Top/Bottom (no position)\",\n\t\"Inbound Top/Bottom\",\n\t\"Horizontal Slats Angle (no position)\",\n\t\"Horizontal Slats Angle\",\n}"
+	},
+	"ZWaveLibraryTypes": {
+		"href": "#/api/CCs/Version?id=zwavelibrarytypes",
+		"definition": "enum ZWaveLibraryTypes {\n\t\"Unknown\",\n\t\"Static Controller\",\n\t\"Controller\",\n\t\"Enhanced Slave\",\n\t\"Slave\",\n\t\"Installer\",\n\t\"Routing Slave\",\n\t\"Bridge Controller\",\n\t\"Device under Test\",\n\t\"N/A\",\n\t\"AV Remote\",\n\t\"AV Device\",\n}"
+	},
+	"ZWavePlusNodeType": {
+		"href": "#/api/CCs/ZWavePlus?id=zwaveplusnodetype",
+		"definition": "enum ZWavePlusNodeType {\n\tNode = 0x00, // ZWave+ Node\n\tIPGateway = 0x02, // ZWave+ for IP Gateway\n}"
+	},
+	"ZWavePlusRoleType": {
+		"href": "#/api/CCs/ZWavePlus?id=zwaveplusroletype",
+		"definition": "enum ZWavePlusRoleType {\n\tCentralStaticController = 0x00,\n\tSubStaticController = 0x01,\n\tPortableController = 0x02,\n\tPortableReportingController = 0x03,\n\tPortableSlave = 0x04,\n\tAlwaysOnSlave = 0x05,\n\tSleepingReportingSlave = 0x06,\n\tSleepingListeningSlave = 0x07,\n\tNetworkAwareSlave = 0x08,\n}"
+	}
+}

@@ -7,13 +7,25 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<VersionCCReport, "libraryType" | "protocolVersion" | "firmwareVersions" | "hardwareVersion"> | undefined>;
+async get(): Promise<
+	{
+		firmwareVersions: string[];
+		hardwareVersion?: number;
+		libraryType: ZWaveLibraryTypes;
+		protocolVersion: string;
+	} | undefined
+>;
 ```
 
 ### `sendReport`
 
 ```ts
-async sendReport(options: VersionCCReportOptions): Promise<void>;
+async sendReport(options: {
+	libraryType: ZWaveLibraryTypes;
+	protocolVersion: string;
+	firmwareVersions: string[];
+	hardwareVersion?: number;
+}): Promise<void>;
 ```
 
 ### `getCCVersion`
@@ -36,7 +48,11 @@ async reportCCVersion(
 ### `getCapabilities`
 
 ```ts
-async getCapabilities(): Promise<Pick<VersionCCCapabilitiesReport, "supportsZWaveSoftwareGet"> | undefined>;
+async getCapabilities(): Promise<
+	{
+		supportsZWaveSoftwareGet: boolean;
+	} | undefined
+>;
 ```
 
 ### `reportCapabilities`
@@ -48,7 +64,19 @@ async reportCapabilities(): Promise<void>;
 ### `getZWaveSoftware`
 
 ```ts
-async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion" | "applicationFrameworkAPIVersion" | "applicationFrameworkBuildNumber" | "hostInterfaceVersion" | "hostInterfaceBuildNumber" | "zWaveProtocolVersion" | "zWaveProtocolBuildNumber" | "applicationVersion" | "applicationBuildNumber"> | undefined>;
+async getZWaveSoftware(): Promise<
+	{
+		applicationBuildNumber: number;
+		applicationFrameworkAPIVersion: string;
+		applicationFrameworkBuildNumber: number;
+		applicationVersion: string;
+		hostInterfaceBuildNumber: number;
+		hostInterfaceVersion: string;
+		sdkVersion: string;
+		zWaveProtocolBuildNumber: number;
+		zWaveProtocolVersion: string;
+	} | undefined
+>;
 ```
 
 ## Version CC values
@@ -286,3 +314,24 @@ async getZWaveSoftware(): Promise<Pick<VersionCCZWaveSoftwareReport, "sdkVersion
 - **stateful:** true
 - **secret:** false
 - **value type:** `"string"`
+
+## Related types
+
+### `ZWaveLibraryTypes`
+
+```ts
+enum ZWaveLibraryTypes {
+	"Unknown",
+	"Static Controller",
+	"Controller",
+	"Enhanced Slave",
+	"Slave",
+	"Installer",
+	"Routing Slave",
+	"Bridge Controller",
+	"Device under Test",
+	"N/A",
+	"AV Remote",
+	"AV Device",
+}
+```

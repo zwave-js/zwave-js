@@ -7,7 +7,13 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<ManufacturerSpecificCCReport, "manufacturerId" | "productType" | "productId"> | undefined>;
+async get(): Promise<
+	{
+		manufacturerId: number;
+		productId: number;
+		productType: number;
+	} | undefined
+>;
 ```
 
 ### `deviceSpecificGet`
@@ -22,7 +28,11 @@ async deviceSpecificGet(
 
 ```ts
 async sendReport(
-	options: ManufacturerSpecificCCReportOptions,
+	options: {
+		manufacturerId: number;
+		productType: number;
+		productId: number;
+	},
 ): Promise<void>;
 ```
 
@@ -106,3 +116,15 @@ async sendReport(
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 65535
+
+## Related types
+
+### `DeviceIdType`
+
+```ts
+enum DeviceIdType {
+	FactoryDefault = 0x00,
+	SerialNumber = 0x01,
+	PseudoRandom = 0x02,
+}
+```

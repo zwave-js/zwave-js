@@ -25,7 +25,14 @@ async set(
 ### `getCapabilities`
 
 ```ts
-async getCapabilities(setpointType: ThermostatSetpointType): Promise<Pick<ThermostatSetpointCCCapabilitiesReport, "minValue" | "maxValue" | "minValueScale" | "maxValueScale"> | undefined>;
+async getCapabilities(setpointType: ThermostatSetpointType): Promise<
+	{
+		maxValue: number;
+		maxValueScale: number;
+		minValue: number;
+		minValueScale: number;
+	} | undefined
+>;
 ```
 
 ### `getSupportedSetpointTypes`
@@ -60,3 +67,25 @@ during node interview.
 - **stateful:** true
 - **secret:** false
 - **value type:** `"number"`
+
+## Related types
+
+### `ThermostatSetpointType`
+
+```ts
+enum ThermostatSetpointType {
+	"N/A" = 0x00,
+	"Heating" = 0x01, // CC v1
+	"Cooling" = 0x02, // CC v1
+	"Furnace" = 0x07, // CC v1
+	"Dry Air" = 0x08, // CC v1
+	"Moist Air" = 0x09, // CC v1
+	"Auto Changeover" = 0x0a, // CC v1
+	"Energy Save Heating" = 0x0b, // CC v2
+	"Energy Save Cooling" = 0x0c, // CC v2
+	"Away Heating" = 0x0d, // CC v2
+	"Away Cooling" = 0x0e, // CC v3
+	"Full Power" = 0x0f, // CC v3
+	// Update the interview procecure when adding new types
+}
+```

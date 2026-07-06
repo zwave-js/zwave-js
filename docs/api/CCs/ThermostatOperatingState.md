@@ -55,3 +55,35 @@ async getLogging(
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 255
+
+## Related types
+
+### `ThermostatOperatingState`
+
+```ts
+enum ThermostatOperatingState {
+	"Idle" = 0x00,
+	"Heating" = 0x01,
+	"Cooling" = 0x02,
+	"Fan Only" = 0x03,
+	"Pending Heat" = 0x04,
+	"Pending Cool" = 0x05,
+	"Vent/Economizer" = 0x06,
+	"Aux Heating" = 0x07,
+	"2nd Stage Heating" = 0x08,
+	"2nd Stage Cooling" = 0x09,
+	"2nd Stage Aux Heat" = 0x0a,
+	"3rd Stage Aux Heat" = 0x0b,
+}
+```
+
+### `ThermostatOperatingStateLoggingData`
+
+```ts
+interface ThermostatOperatingStateLoggingData {
+	usageTodayHours: number;
+	usageTodayMinutes: number;
+	usageYesterdayHours: number;
+	usageYesterdayMinutes: number;
+}
+```

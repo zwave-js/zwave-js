@@ -13,7 +13,12 @@ async getToneCount(): Promise<MaybeNotKnown<number>>;
 ### `getToneInfo`
 
 ```ts
-async getToneInfo(toneId: number): Promise<Pick<SoundSwitchCCToneInfoReport, "duration" | "name"> | undefined>;
+async getToneInfo(toneId: number): Promise<
+	{
+		duration: number;
+		name: string;
+	} | undefined
+>;
 ```
 
 ### `setConfiguration`
@@ -33,7 +38,12 @@ async setConfiguration(
 ### `getConfiguration`
 
 ```ts
-async getConfiguration(): Promise<Pick<SoundSwitchCCConfigurationReport, "defaultToneId" | "defaultVolume"> | undefined>;
+async getConfiguration(): Promise<
+	{
+		defaultToneId: number;
+		defaultVolume: number;
+	} | undefined
+>;
 ```
 
 ### `play`
@@ -54,7 +64,12 @@ async stopPlaying(): Promise<SupervisionResult | undefined>;
 ### `getPlaying`
 
 ```ts
-async getPlaying(): Promise<Pick<SoundSwitchCCTonePlayReport, "toneId" | "volume"> | undefined>;
+async getPlaying(): Promise<
+	{
+		toneId: number;
+		volume?: number;
+	} | undefined
+>;
 ```
 
 ## Sound Switch CC values

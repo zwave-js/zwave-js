@@ -47,3 +47,16 @@ async getSupportedModes(): Promise<
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 255
+
+## Related types
+
+### `HumidityControlMode`
+
+```ts
+enum HumidityControlMode {
+	"Off" = 0x00,
+	"Humidify" = 0x01,
+	"De-humidify" = 0x02,
+	"Auto" = 0x03,
+}
+```

@@ -7,13 +7,26 @@
 ### `getSupported`
 
 ```ts
-async getSupported(): Promise<Pick<CentralSceneCCSupportedReport, "sceneCount" | "supportsSlowRefresh" | "supportedKeyAttributes"> | undefined>;
+async getSupported(): Promise<
+	{
+		sceneCount: number;
+		supportedKeyAttributes: ReadonlyMap<
+			number,
+			readonly CentralSceneKeys[]
+		>;
+		supportsSlowRefresh: MaybeNotKnown<boolean>;
+	} | undefined
+>;
 ```
 
 ### `getConfiguration`
 
 ```ts
-async getConfiguration(): Promise<Pick<CentralSceneCCConfigurationReport, "slowRefresh"> | undefined>;
+async getConfiguration(): Promise<
+	{
+		slowRefresh: boolean;
+	} | undefined
+>;
 ```
 
 ### `setConfiguration`
@@ -65,3 +78,19 @@ async setConfiguration(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"boolean"`
+
+## Related types
+
+### `CentralSceneKeys`
+
+```ts
+enum CentralSceneKeys {
+	KeyPressed = 0x00,
+	KeyReleased = 0x01,
+	KeyHeldDown = 0x02,
+	KeyPressed2x = 0x03,
+	KeyPressed3x = 0x04,
+	KeyPressed4x = 0x05,
+	KeyPressed5x = 0x06,
+}
+```

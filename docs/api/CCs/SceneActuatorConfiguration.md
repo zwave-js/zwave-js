@@ -19,10 +19,11 @@ async set(
 ```ts
 async getActive(): Promise<
 	MaybeNotKnown<
-		Pick<
-			SceneActuatorConfigurationCCReport,
-			"sceneId" | "level" | "dimmingDuration"
-		>
+		{
+			dimmingDuration?: Duration;
+			level?: number;
+			sceneId: number;
+		}
 	>
 >;
 ```
@@ -34,10 +35,10 @@ async get(
 	sceneId: number,
 ): Promise<
 	MaybeNotKnown<
-		Pick<
-			SceneActuatorConfigurationCCReport,
-			"level" | "dimmingDuration"
-		>
+		{
+			dimmingDuration?: Duration;
+			level?: number;
+		}
 	>
 >;
 ```

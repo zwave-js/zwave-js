@@ -25,6 +25,53 @@
 				/* Reset the font size to the headline size */
 				font-size: inherit;
 			}
+
+			/*
+				Custom styling for type previews on hover and type-links in listings
+			*/
+			.markdown-section pre {
+				/* Match the tab width used in the source files */
+				tab-size: 4;
+				-moz-tab-size: 4;
+			}
+			.markdown-section pre a.type-link {
+				color: inherit;
+				text-decoration: underline dotted;
+				text-underline-offset: 3px;
+			}
+			.markdown-section pre a.type-link:hover {
+				text-decoration: underline;
+			}
+			.type-link-tooltip {
+				position: absolute;
+				z-index: 100;
+				max-width: min(600px, calc(100vw - 20px));
+				max-height: 320px;
+				overflow: auto;
+				background: #f8f8f8;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+			}
+			.type-link-tooltip pre {
+				margin: 0;
+				padding: 8px 12px;
+				font-family: "Roboto Mono", Monaco, courier, monospace;
+				font-size: 0.85em;
+				line-height: 1.4;
+				white-space: pre;
+				tab-size: 4;
+			}
+			.type-link-tooltip-desc {
+				margin: 0;
+				padding: 8px 12px;
+				font-size: 0.85em;
+				line-height: 1.4;
+				color: #333;
+			}
+			.type-link-tooltip-desc + pre {
+				border-top: 1px solid #eee;
+			}
 		</style>
 	</head>
 	<body>
@@ -68,5 +115,6 @@
 		</script>
 		<script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
 		<script src="//unpkg.com/docsify-plugin-flexible-alerts"></script>
+		<script src="plugins/type-links.js"></script>
 	</body>
 </html>

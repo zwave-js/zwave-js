@@ -15,7 +15,13 @@ async getSupported(): Promise<
 ### `get`
 
 ```ts
-async get(parameter: WindowCoveringParameter): Promise<Pick<WindowCoveringCCReport, "currentValue" | "targetValue" | "duration"> | undefined>;
+async get(parameter: WindowCoveringParameter): Promise<
+	{
+		currentValue: number;
+		duration: Duration;
+		targetValue: number;
+	} | undefined
+>;
 ```
 
 ### `set`
@@ -35,7 +41,7 @@ async set(
 ```ts
 async startLevelChange(
 	parameter: WindowCoveringParameter,
-	direction: keyof typeof LevelChangeDirection,
+	direction: "up" | "down",
 	duration?: Duration | string,
 ): Promise<SupervisionResult | undefined>;
 ```
@@ -148,3 +154,36 @@ async stopLevelChange(
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 99
+
+## Related types
+
+### `WindowCoveringParameter`
+
+```ts
+enum WindowCoveringParameter {
+	"Outbound Left (no position)",
+	"Outbound Left",
+	"Outbound Right (no position)",
+	"Outbound Right",
+	"Inbound Left (no position)",
+	"Inbound Left",
+	"Inbound Right (no position)",
+	"Inbound Right",
+	"Inbound Left/Right (no position)",
+	"Inbound Left/Right",
+	"Vertical Slats Angle (no position)",
+	"Vertical Slats Angle",
+	"Outbound Bottom (no position)",
+	"Outbound Bottom",
+	"Outbound Top (no position)",
+	"Outbound Top",
+	"Inbound Bottom (no position)",
+	"Inbound Bottom",
+	"Inbound Top (no position)",
+	"Inbound Top",
+	"Inbound Top/Bottom (no position)",
+	"Inbound Top/Bottom",
+	"Horizontal Slats Angle (no position)",
+	"Horizontal Slats Angle",
+}
+```

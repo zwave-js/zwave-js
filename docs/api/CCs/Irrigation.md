@@ -7,47 +7,116 @@
 ### `getSystemInfo`
 
 ```ts
-async getSystemInfo(): Promise<Pick<IrrigationCCSystemInfoReport, "numValves" | "numValveTables" | "supportsMasterValve" | "maxValveTableSize"> | undefined>;
+async getSystemInfo(): Promise<
+	{
+		maxValveTableSize: number;
+		numValves: number;
+		numValveTables: number;
+		supportsMasterValve: boolean;
+	} | undefined
+>;
 ```
 
 ### `getSystemStatus`
 
 ```ts
-async getSystemStatus(): Promise<Pick<IrrigationCCSystemStatusReport, "systemVoltage" | "flowSensorActive" | "pressureSensorActive" | "rainSensorActive" | "moistureSensorActive" | "flow" | "pressure" | "shutoffDuration" | "errorNotProgrammed" | "errorEmergencyShutdown" | "errorHighPressure" | "errorLowPressure" | "errorValve" | "masterValveOpen" | "firstOpenZoneId"> | undefined>;
+async getSystemStatus(): Promise<
+	{
+		errorEmergencyShutdown: boolean;
+		errorHighPressure: boolean;
+		errorLowPressure: boolean;
+		errorNotProgrammed: boolean;
+		errorValve: boolean;
+		firstOpenZoneId?: number;
+		flow?: number;
+		flowSensorActive: boolean;
+		masterValveOpen: boolean;
+		moistureSensorActive: boolean;
+		pressure?: number;
+		pressureSensorActive: boolean;
+		rainSensorActive: boolean;
+		shutoffDuration: number;
+		systemVoltage: number;
+	} | undefined
+>;
 ```
 
 ### `getSystemConfig`
 
 ```ts
-async getSystemConfig(): Promise<Pick<IrrigationCCSystemConfigReport, "masterValveDelay" | "highPressureThreshold" | "lowPressureThreshold" | "rainSensorPolarity" | "moistureSensorPolarity"> | undefined>;
+async getSystemConfig(): Promise<
+	{
+		highPressureThreshold: number;
+		lowPressureThreshold: number;
+		masterValveDelay: number;
+		moistureSensorPolarity?: IrrigationSensorPolarity;
+		rainSensorPolarity?: IrrigationSensorPolarity;
+	} | undefined
+>;
 ```
 
 ### `setSystemConfig`
 
 ```ts
 async setSystemConfig(
-	config: IrrigationCCSystemConfigSetOptions,
+	config: {
+		masterValveDelay: number;
+		highPressureThreshold: number;
+		lowPressureThreshold: number;
+		rainSensorPolarity?: IrrigationSensorPolarity;
+		moistureSensorPolarity?: IrrigationSensorPolarity;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getValveInfo`
 
 ```ts
-async getValveInfo(valveId: ValveId): Promise<Pick<IrrigationCCValveInfoReport, "connected" | "nominalCurrent" | "errorShortCircuit" | "errorHighCurrent" | "errorLowCurrent" | "errorMaximumFlow" | "errorHighFlow" | "errorLowFlow"> | undefined>;
+async getValveInfo(valveId: ValveId): Promise<
+	{
+		connected: boolean;
+		errorHighCurrent: boolean;
+		errorHighFlow?: boolean;
+		errorLowCurrent: boolean;
+		errorLowFlow?: boolean;
+		errorMaximumFlow?: boolean;
+		errorShortCircuit: boolean;
+		nominalCurrent: number;
+	} | undefined
+>;
 ```
 
 ### `setValveConfig`
 
 ```ts
 async setValveConfig(
-	options: IrrigationCCValveConfigSetOptions,
+	options: {
+		valveId: ValveId;
+		nominalCurrentHighThreshold: number;
+		nominalCurrentLowThreshold: number;
+		maximumFlow: number;
+		highFlowThreshold: number;
+		lowFlowThreshold: number;
+		useRainSensor: boolean;
+		useMoistureSensor: boolean;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getValveConfig`
 
 ```ts
-async getValveConfig(valveId: ValveId): Promise<Pick<IrrigationCCValveConfigReport, "nominalCurrentHighThreshold" | "nominalCurrentLowThreshold" | "maximumFlow" | "highFlowThreshold" | "lowFlowThreshold" | "useRainSensor" | "useMoistureSensor"> | undefined>;
+async getValveConfig(valveId: ValveId): Promise<
+	{
+		highFlowThreshold: number;
+		lowFlowThreshold: number;
+		maximumFlow: number;
+		nominalCurrentHighThreshold: number;
+		nominalCurrentLowThreshold: number;
+		useMoistureSensor: boolean;
+		useRainSensor: boolean;
+	} | undefined
+>;
 ```
 
 ### `runValve`
@@ -836,3 +905,29 @@ Shuts off the entire system permanently and prevents schedules from running.
 - **stateful:** true
 - **secret:** false
 - **value type:** `"boolean"`
+
+## Related types
+
+### `IrrigationSensorPolarity`
+
+```ts
+enum IrrigationSensorPolarity {
+	Low = 0,
+	High = 1,
+}
+```
+
+### `ValveId`
+
+```ts
+type ValveId = "master" | number;
+```
+
+### `ValveTableEntry`
+
+```ts
+interface ValveTableEntry {
+	valveId: number;
+	duration: number;
+}
+```

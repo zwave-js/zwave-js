@@ -44,8 +44,31 @@ When the node does not respond due to a timeout, the `value` in the returned arr
 ### `set`
 
 ```ts
+// Variant 1: Normal parameter, defined in a config file
 async set(
-	options: ConfigurationCCAPISetOptions,
+	options: {
+		parameter: number;
+		value: ConfigValue;
+	},
+): Promise<SupervisionResult | undefined>;
+
+// Variant 2: Normal parameter, not defined in a config file
+async set(
+	options: {
+		parameter: number;
+		value: ConfigValue;
+		valueSize: 1 | 2 | 4;
+		valueFormat: ConfigValueFormat;
+	},
+): Promise<SupervisionResult | undefined>;
+
+// Variant 3: Partial parameter, must be defined in a config file
+async set(
+	options: {
+		parameter: number;
+		bitMask: number;
+		value: number;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
@@ -96,7 +119,20 @@ Resets all configuration parameters to their default value.
 ### `getProperties`
 
 ```ts
-async getProperties(parameter: number): Promise<Pick<ConfigurationCCPropertiesReport, "valueSize" | "valueFormat" | "minValue" | "maxValue" | "defaultValue" | "nextParameter" | "altersCapabilities" | "isReadonly" | "isAdvanced" | "noBulkSupport"> | undefined>;
+async getProperties(parameter: number): Promise<
+	{
+		altersCapabilities: MaybeNotKnown<boolean>;
+		defaultValue: MaybeNotKnown<number>;
+		isAdvanced: MaybeNotKnown<boolean>;
+		isReadonly: MaybeNotKnown<boolean>;
+		maxValue: MaybeNotKnown<number>;
+		minValue: MaybeNotKnown<number>;
+		nextParameter: number;
+		noBulkSupport: MaybeNotKnown<boolean>;
+		valueFormat: ConfigValueFormat;
+		valueSize: number;
+	} | undefined
+>;
 ```
 
 ### `getName`
@@ -150,3 +186,52 @@ WARNING: On nodes implementing V2, all parameters after 255 will be ignored.
 - **stateful:** true
 - **secret:** false
 - **value type:** `"any"`
+
+## Related types
+
+### `ConfigurationCCAPISetOptions`
+
+```ts
+type ConfigurationCCAPISetOptions =
+	& {
+		parameter: number;
+	}
+	& (
+		| {
+			// Variant 1: Normal parameter, defined in a config file
+			bitMask?: undefined;
+			value: ConfigValue;
+		}
+		| {
+			// Variant 2: Normal parameter, not defined in a config file
+			bitMask?: undefined;
+			value: ConfigValue;
+			valueSize: 1 | 2 | 4;
+			valueFormat: ConfigValueFormat;
+		}
+		| {
+			// Variant 3: Partial parameter, must be defined in a config file
+			bitMask: number;
+			value: number;
+		}
+	);
+```
+
+### `ConfigValue`
+
+```ts
+type ConfigValue = number;
+```
+
+### `ConfigValueFormat`
+
+Defines how a configuration value is encoded
+
+```ts
+enum ConfigValueFormat {
+	SignedInteger = 0x00,
+	UnsignedInteger = 0x01,
+	Enumerated = 0x02, // UnsignedInt, Radio Buttons
+	BitField = 0x03, // Check Boxes
+}
+```

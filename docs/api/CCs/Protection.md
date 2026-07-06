@@ -7,7 +7,12 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<ProtectionCCReport, "local" | "rf"> | undefined>;
+async get(): Promise<
+	{
+		local: LocalProtectionState;
+		rf?: RFProtectionState;
+	} | undefined
+>;
 ```
 
 ### `set`
@@ -22,7 +27,14 @@ async set(
 ### `getSupported`
 
 ```ts
-async getSupported(): Promise<Pick<ProtectionCCSupportedReport, "supportsExclusiveControl" | "supportsTimeout" | "supportedLocalStates" | "supportedRFStates"> | undefined>;
+async getSupported(): Promise<
+	{
+		supportedLocalStates: LocalProtectionState[];
+		supportedRFStates: RFProtectionState[];
+		supportsExclusiveControl: boolean;
+		supportsTimeout: boolean;
+	} | undefined
+>;
 ```
 
 ### `getExclusiveControl`
@@ -128,3 +140,25 @@ async setTimeout(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"timeout"`
+
+## Related types
+
+### `LocalProtectionState`
+
+```ts
+enum LocalProtectionState {
+	Unprotected = 0,
+	ProtectedBySequence = 1,
+	NoOperationPossible = 2,
+}
+```
+
+### `RFProtectionState`
+
+```ts
+enum RFProtectionState {
+	Unprotected = 0,
+	NoControl = 1,
+	NoResponse = 2,
+}
+```

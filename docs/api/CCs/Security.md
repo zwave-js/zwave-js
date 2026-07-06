@@ -63,7 +63,12 @@ async verifyNetworkKey(): Promise<void>;
 ### `getSupportedCommands`
 
 ```ts
-async getSupportedCommands(): Promise<Pick<SecurityCCCommandsSupportedReport, "supportedCCs" | "controlledCCs"> | undefined>;
+async getSupportedCommands(): Promise<
+	{
+		controlledCCs: CommandClasses[];
+		supportedCCs: CommandClasses[];
+	} | undefined
+>;
 ```
 
 ### `reportSupportedCommands`

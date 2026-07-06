@@ -16,5 +16,8 @@ async sendData(
 ### `sendAndReceiveData`
 
 ```ts
-async sendAndReceiveData(manufacturerId: number, data?: BytesView): Promise<{ manufacturerId: number | undefined; data: Bytes; } | undefined>;
+async sendAndReceiveData(
+	manufacturerId: number,
+	data?: BytesView,
+): Promise<{ manufacturerId: number | undefined; data: Bytes } | undefined>;
 ```

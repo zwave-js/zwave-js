@@ -24,7 +24,15 @@ async set(
 
 ```ts
 async sendReport(
-	options: IndicatorCCReportOptions,
+	options: {
+		value: number;
+	},
+): Promise<void>;
+
+async sendReport(
+	options: {
+		values: IndicatorObject[];
+	},
 ): Promise<void>;
 ```
 
@@ -180,3 +188,30 @@ async getDescription(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"any"`
+
+## Related types
+
+### `IndicatorObject`
+
+```ts
+interface IndicatorObject {
+	indicatorId: number;
+	propertyId: number;
+	value: number | boolean;
+}
+```
+
+### `IndicatorTimeout`
+
+Specifies a timeout for an indicator. At least one of the properties must be present.
+
+```ts
+interface IndicatorTimeout {
+	/** Whole hours (0-255) */
+	hours?: number;
+	/** Whole minutes (0-255) */
+	minutes?: number;
+	/** Whole and 1/100th seconds (0-59.99) */
+	seconds?: number;
+}
+```

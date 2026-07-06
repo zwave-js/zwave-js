@@ -32,3 +32,25 @@ async get(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"number"`
+
+## Related types
+
+### `EnergyProductionParameter`
+
+```ts
+enum EnergyProductionParameter {
+	Power = 0x00,
+	"Production Total" = 0x01,
+	"Production Today" = 0x02,
+	"Total Time" = 0x03,
+}
+```
+
+### `EnergyProductionScale`
+
+```ts
+interface EnergyProductionScale {
+	key: number;
+	unit: string;
+}
+```

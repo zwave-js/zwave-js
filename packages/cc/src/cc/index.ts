@@ -784,6 +784,7 @@ export type {
 	MultiChannelCCCapabilityGetOptions,
 	MultiChannelCCCapabilityReportOptions,
 	MultiChannelCCCommandEncapsulationOptions,
+	MultiChannelCCDestination,
 	MultiChannelCCEndPointFindOptions,
 	MultiChannelCCEndPointFindReportOptions,
 	MultiChannelCCEndPointReportOptions,

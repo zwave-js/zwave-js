@@ -7,7 +7,12 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<ThermostatSetbackCCReport, "setbackType" | "setbackState"> | undefined>;
+async get(): Promise<
+	{
+		setbackState: SetbackState;
+		setbackType: SetbackType;
+	} | undefined
+>;
 ```
 
 ### `set`
@@ -17,4 +22,31 @@ async set(
 	setbackType: SetbackType,
 	setbackState: SetbackState,
 ): Promise<SupervisionResult | undefined>;
+```
+
+## Related types
+
+### `SetbackSpecialState`
+
+```ts
+type SetbackSpecialState =
+	| "Frost Protection"
+	| "Energy Saving"
+	| "Unused";
+```
+
+### `SetbackState`
+
+```ts
+type SetbackState = number | SetbackSpecialState;
+```
+
+### `SetbackType`
+
+```ts
+enum SetbackType {
+	None = 0x00,
+	Temporary = 0x01,
+	Permanent = 0x02,
+}
 ```
