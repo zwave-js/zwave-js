@@ -228,6 +228,7 @@ export class MockController {
 	public readonly mockPort: MockPort;
 	public readonly serial: ZWaveSerialStream;
 
+	private destroyed: boolean = false;
 	private expectedHostACKs: TimedExpectation[] = [];
 	private expectedHostMessages: TimedExpectation<Message, Message>[] = [];
 	private expectedNodeFrames: Map<
@@ -385,6 +386,9 @@ export class MockController {
 		timeout: number,
 		errorMessage?: string,
 	): Promise<void> {
+		// During teardown the host (driver) is gone and will never ACK, so don't
+		// wait for one - otherwise the expectation rejects with nobody to catch it.
+		if (this.destroyed) return;
 		const ack = new TimedExpectation(
 			timeout,
 			undefined,
@@ -704,7 +708,14 @@ export class MockController {
 	}
 
 	public destroy(): void {
+		this.destroyed = true;
 		this.air.abort();
+		// Resolve any in-flight host-ACK expectations so their timeouts don't
+		// reject after the driver has been torn down.
+		for (const ack of this.expectedHostACKs) {
+			ack.resolve();
+		}
+		this.expectedHostACKs = [];
 	}
 }
 
