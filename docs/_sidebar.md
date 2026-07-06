@@ -21,6 +21,7 @@
   - [Endpoint](api/endpoint.md)
   - [Virtual nodes and endpoints](api/virtual-node-endpoint.md)
   - [Values and Metadata](api/valueid.md)
+  - [Shared types](api/shared-types.md)
   - [ConfigManager](api/config-manager.md)
   - [Registries](api/registries.md)
   - [Utilities](api/utils.md)
@@ -60,6 +61,7 @@
 
   - [Introduction](development/intro.md)
   - [Implementing a Command Class](development/implementing-cc.md)
+  - [Type rendering in the docs](development/documenting-types.md)
   - [Installing from GitHub](development/installing-from-github.md)
   - [Releasing](development/releasing.md)
 

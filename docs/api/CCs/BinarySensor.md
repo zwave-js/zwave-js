@@ -62,3 +62,26 @@ async reportSupportedSensorTypes(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"boolean"`
+
+## Related types
+
+### `BinarySensorType`
+
+```ts
+enum BinarySensorType {
+	"General Purpose" = 0x01,
+	Smoke = 0x02,
+	CO = 0x03,
+	CO2 = 0x04,
+	Heat = 0x05,
+	Water = 0x06,
+	Freeze = 0x07,
+	Tamper = 0x08,
+	Aux = 0x09,
+	"Door/Window" = 0x0a,
+	Tilt = 0x0b,
+	Motion = 0x0c,
+	"Glass Break" = 0x0d,
+	Any = 0xff,
+}
+```

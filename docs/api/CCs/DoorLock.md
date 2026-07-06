@@ -7,13 +7,39 @@
 ### `getCapabilities`
 
 ```ts
-async getCapabilities(): Promise<Pick<DoorLockCCCapabilitiesReport, "autoRelockSupported" | "blockToBlockSupported" | "boltSupported" | "doorSupported" | "holdAndReleaseSupported" | "latchSupported" | "twistAssistSupported" | "supportedDoorLockModes" | "supportedInsideHandles" | "supportedOperationTypes" | "supportedOutsideHandles"> | undefined>;
+async getCapabilities(): Promise<
+	{
+		autoRelockSupported: boolean;
+		blockToBlockSupported: boolean;
+		boltSupported: boolean;
+		doorSupported: boolean;
+		holdAndReleaseSupported: boolean;
+		latchSupported: boolean;
+		supportedDoorLockModes: readonly DoorLockMode[];
+		supportedInsideHandles: DoorHandleStatus;
+		supportedOperationTypes: readonly DoorLockOperationType[];
+		supportedOutsideHandles: DoorHandleStatus;
+		twistAssistSupported: boolean;
+	} | undefined
+>;
 ```
 
 ### `get`
 
 ```ts
-async get(): Promise<Pick<DoorLockCCOperationReport, "currentMode" | "targetMode" | "duration" | "outsideHandlesCanOpenDoor" | "insideHandlesCanOpenDoor" | "latchStatus" | "boltStatus" | "doorStatus" | "lockTimeout"> | undefined>;
+async get(): Promise<
+	{
+		boltStatus?: "locked" | "unlocked";
+		currentMode: DoorLockMode;
+		doorStatus?: "open" | "closed";
+		duration?: Duration;
+		insideHandlesCanOpenDoor: DoorHandleStatus;
+		latchStatus?: "open" | "closed";
+		lockTimeout?: number;
+		outsideHandlesCanOpenDoor: DoorHandleStatus;
+		targetMode?: DoorLockMode;
+	} | undefined
+>;
 ```
 
 ### `set`
@@ -28,14 +54,48 @@ async set(
 
 ```ts
 async setConfiguration(
-	configuration: DoorLockCCConfigurationSetOptions,
+	configuration: {
+		operationType: DoorLockOperationType.Timed;
+		lockTimeoutConfiguration: number;
+		outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+		insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+		// V4+
+		autoRelockTime?: number;
+		holdAndReleaseTime?: number;
+		twistAssist?: boolean;
+		blockToBlock?: boolean;
+	},
+): Promise<SupervisionResult | undefined>;
+
+async setConfiguration(
+	configuration: {
+		operationType: DoorLockOperationType.Constant;
+		outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+		insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+		// V4+
+		autoRelockTime?: number;
+		holdAndReleaseTime?: number;
+		twistAssist?: boolean;
+		blockToBlock?: boolean;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getConfiguration`
 
 ```ts
-async getConfiguration(): Promise<Pick<DoorLockCCConfigurationReport, "operationType" | "outsideHandlesCanOpenDoorConfiguration" | "insideHandlesCanOpenDoorConfiguration" | "lockTimeoutConfiguration" | "autoRelockTime" | "holdAndReleaseTime" | "twistAssist" | "blockToBlock"> | undefined>;
+async getConfiguration(): Promise<
+	{
+		autoRelockTime?: number;
+		blockToBlock?: boolean;
+		holdAndReleaseTime?: number;
+		insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+		lockTimeoutConfiguration?: number;
+		operationType: DoorLockOperationType;
+		outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+		twistAssist?: boolean;
+	} | undefined
+>;
 ```
 
 ## Door Lock CC values
@@ -359,3 +419,35 @@ async getConfiguration(): Promise<Pick<DoorLockCCConfigurationReport, "operation
 - **stateful:** true
 - **secret:** false
 - **value type:** `"boolean"`
+
+## Related types
+
+### `DoorHandleStatus`
+
+```ts
+type DoorHandleStatus = [boolean, boolean, boolean, boolean];
+```
+
+### `DoorLockMode`
+
+```ts
+enum DoorLockMode {
+	Unsecured = 0x00,
+	UnsecuredWithTimeout = 0x01,
+	InsideUnsecured = 0x10,
+	InsideUnsecuredWithTimeout = 0x11,
+	OutsideUnsecured = 0x20,
+	OutsideUnsecuredWithTimeout = 0x21,
+	Unknown = 0xfe,
+	Secured = 0xff,
+}
+```
+
+### `DoorLockOperationType`
+
+```ts
+enum DoorLockOperationType {
+	Constant = 0x01,
+	Timed = 0x02,
+}
+```

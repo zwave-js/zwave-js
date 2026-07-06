@@ -52,6 +52,7 @@ export function findImportRanges(docFile: string): ImportRange[] {
 		options: {
 			comments: !!match.groups?.options?.includes("comments"),
 			jsdoc: !match.groups?.options?.includes("no-jsdoc"),
+			flattenExtends: !match.groups?.options?.includes("no-flatten"),
 		},
 	}));
 }
@@ -64,6 +65,7 @@ function getImportKey(
 		range.symbol,
 		!!range.options.comments,
 		!!range.options.jsdoc,
+		range.options.flattenExtends !== false,
 	]);
 }
 

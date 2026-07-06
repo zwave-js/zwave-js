@@ -32,3 +32,15 @@ async get(): Promise<HumidityControlOperatingState | undefined>;
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 255
+
+## Related types
+
+### `HumidityControlOperatingState`
+
+```ts
+enum HumidityControlOperatingState {
+	"Idle" = 0x00,
+	"Humidifying" = 0x01,
+	"De-humidifying" = 0x02,
+}
+```

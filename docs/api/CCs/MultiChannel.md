@@ -7,7 +7,14 @@
 ### `getEndpoints`
 
 ```ts
-async getEndpoints(): Promise<{ isDynamicEndpointCount: boolean; identicalCapabilities: boolean; individualEndpointCount: number; aggregatedEndpointCount: MaybeNotKnown<number>; } | undefined>;
+async getEndpoints(): Promise<
+	{
+		isDynamicEndpointCount: boolean;
+		identicalCapabilities: boolean;
+		individualEndpointCount: number;
+		aggregatedEndpointCount: MaybeNotKnown<number>;
+	} | undefined
+>;
 ```
 
 ### `getEndpointCapabilities`
@@ -39,7 +46,10 @@ async getAggregatedMembers(
 
 ```ts
 async sendEncapsulated(
-	options: MultiChannelCCCommandEncapsulationOptions,
+	options: {
+		encapsulated: CommandClass;
+		destination: MultiChannelCCDestination;
+	},
 ): Promise<void>;
 ```
 
@@ -55,4 +65,43 @@ async getEndpointCountV1(
 
 ```ts
 async sendEncapsulatedV1(encapsulated: CommandClass): Promise<void>;
+```
+
+## Related types
+
+### `EndpointCapability`
+
+```ts
+interface EndpointCapability {
+	generic: GenericDeviceClass;
+	specific: SpecificDeviceClass;
+	supportedCCs: CommandClasses[];
+	isDynamic: boolean;
+	wasRemoved: boolean;
+}
+```
+
+### `GenericDeviceClass`
+
+```ts
+interface GenericDeviceClass {
+	readonly key: number;
+	readonly label: string;
+	readonly zwavePlusDeviceType?: string;
+	readonly requiresSecurity: boolean;
+	readonly maySupportBasicCC: boolean;
+	readonly isSlowActuator: boolean;
+}
+```
+
+### `MultiChannelCCDestination`
+
+```ts
+type MultiChannelCCDestination = number | (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
+```
+
+### `SpecificDeviceClass`
+
+```ts
+type SpecificDeviceClass = GenericDeviceClass;
 ```

@@ -31,3 +31,21 @@ async get(): Promise<ThermostatFanState | undefined>;
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 255
+
+## Related types
+
+### `ThermostatFanState`
+
+```ts
+enum ThermostatFanState {
+	"Idle / off" = 0x00,
+	"Running / running low" = 0x01,
+	"Running high" = 0x02,
+	"Running medium" = 0x03,
+	"Circulation mode" = 0x04,
+	"Humidity circulation mode" = 0x05,
+	"Right - left circulation mode" = 0x06,
+	"Up - down circulation mode" = 0x07,
+	"Quiet circulation mode" = 0x08,
+}
+```

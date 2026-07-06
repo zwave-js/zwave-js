@@ -16,7 +16,12 @@ async getUsersCount(): Promise<MaybeNotKnown<number>>;
 async get(
 	userId: number,
 	multiple?: false,
-): Promise<MaybeNotKnown<Pick<UserCode, "userIdStatus" | "userCode">>>;
+): Promise<
+	MaybeNotKnown<{
+		userCode: string;
+		userIdStatus: UserIDStatus;
+	}>
+>;
 
 async get(
 	userId: number,
@@ -68,7 +73,18 @@ Clears one or all user code.
 ### `getCapabilities`
 
 ```ts
-async getCapabilities(): Promise<Pick<UserCodeCCCapabilitiesReport, "supportsAdminCode" | "supportsAdminCodeDeactivation" | "supportsUserCodeChecksum" | "supportsMultipleUserCodeReport" | "supportsMultipleUserCodeSet" | "supportedUserIDStatuses" | "supportedKeypadModes" | "supportedASCIIChars"> | undefined>;
+async getCapabilities(): Promise<
+	{
+		supportedASCIIChars: string;
+		supportedKeypadModes: readonly KeypadMode[];
+		supportedUserIDStatuses: readonly UserIDStatus[];
+		supportsAdminCode: boolean;
+		supportsAdminCodeDeactivation: boolean;
+		supportsMultipleUserCodeReport: boolean;
+		supportsMultipleUserCodeSet: boolean;
+		supportsUserCodeChecksum: boolean;
+	} | undefined
+>;
 ```
 
 ### `getKeypadMode`
@@ -181,3 +197,63 @@ async getUserCodeChecksum(): Promise<MaybeNotKnown<number>>;
 - **stateful:** true
 - **secret:** false
 - **value type:** `"number"`
+
+## Related types
+
+### `KeypadMode`
+
+```ts
+enum KeypadMode {
+	Normal = 0x00,
+	Vacation,
+	Privacy,
+	LockedOut,
+}
+```
+
+### `UserCode`
+
+```ts
+interface UserCode {
+	userId: number;
+	userIdStatus: UserIDStatus;
+	userCode: string;
+}
+```
+
+### `UserCodeCCSetOptions`
+
+```ts
+type UserCodeCCSetOptions =
+	| {
+		userId: 0;
+		userIdStatus: UserIDStatus.Available;
+		userCode?: undefined;
+	}
+	| {
+		userId: number;
+		userIdStatus: UserIDStatus.Available;
+		userCode?: undefined;
+	}
+	| {
+		userId: number;
+		userIdStatus: Exclude<
+			UserIDStatus,
+			UserIDStatus.Available | UserIDStatus.StatusNotAvailable
+		>;
+		userCode: string | BytesView;
+	};
+```
+
+### `UserIDStatus`
+
+```ts
+enum UserIDStatus {
+	Available = 0x00,
+	Enabled,
+	Disabled,
+	Messaging,
+	PassageMode,
+	StatusNotAvailable = 0xfe,
+}
+```

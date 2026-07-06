@@ -559,7 +559,7 @@ export class AssociationCCSet extends AssociationCC {
 
 // @publicAPI
 export interface AssociationCCRemoveOptions {
-	/** The group from which to remove the nodes. If none is specified, the nodes will be removed from all nodes. */
+	/** The group from which to remove the nodes. If none is specified, the nodes will be removed from all groups. */
 	groupId?: number;
 	/** The nodes to remove. If none are specified, ALL nodes will be removed. */
 	nodeIds?: number[];

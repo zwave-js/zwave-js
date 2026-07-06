@@ -25,3 +25,26 @@ async completeStep(
 ```
 
 Indicate to the other node that the given inclusion step has been completed.
+
+## Related types
+
+### `InclusionControllerStatus`
+
+```ts
+enum InclusionControllerStatus {
+	OK = 0x01,
+	UserRejected = 0x02,
+	Failed = 0x03,
+	NotSupported = 0x04,
+}
+```
+
+### `InclusionControllerStep`
+
+```ts
+enum InclusionControllerStep {
+	ProxyInclusion = 0x01,
+	S0Inclusion = 0x02,
+	ProxyInclusionReplace = 0x03,
+}
+```

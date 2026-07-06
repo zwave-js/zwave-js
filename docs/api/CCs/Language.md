@@ -7,7 +7,12 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<LanguageCCReport, "language" | "country"> | undefined>;
+async get(): Promise<
+	{
+		country: MaybeNotKnown<string>;
+		language: string;
+	} | undefined
+>;
 ```
 
 ### `set`

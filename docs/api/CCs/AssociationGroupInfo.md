@@ -19,14 +19,28 @@ async reportGroupName(groupId: number, name: string): Promise<void>;
 ### `getGroupInfo`
 
 ```ts
-async getGroupInfo(groupId: number, refreshCache: boolean = false): Promise<{ mode: number; profile: number; eventCode: number; hasDynamicInfo: boolean; } | undefined>;
+async getGroupInfo(
+	groupId: number,
+	refreshCache: boolean = false,
+): Promise<
+	{
+		mode: number;
+		profile: number;
+		eventCode: number;
+		hasDynamicInfo: boolean;
+	} | undefined
+>;
 ```
 
 ### `reportGroupInfo`
 
 ```ts
 async reportGroupInfo(
-	options: AssociationGroupInfoCCInfoReportOptions,
+	options: {
+		isListMode: boolean;
+		hasDynamicInfo: boolean;
+		groups: AssociationGroupInfo[];
+	},
 ): Promise<void>;
 ```
 
@@ -37,7 +51,7 @@ async getCommands(
 	groupId: number,
 	allowCache: boolean = true,
 ): Promise<
-	MaybeNotKnown<AssociationGroupInfoCCCommandListReport["commands"]>
+	MaybeNotKnown<ReadonlyMap<CommandClasses, readonly number[]>>
 >;
 ```
 
@@ -48,4 +62,17 @@ async reportCommands(
 	groupId: number,
 	commands: ReadonlyMap<CommandClasses, readonly number[]>,
 ): Promise<void>;
+```
+
+## Related types
+
+### `AssociationGroupInfo`
+
+```ts
+interface AssociationGroupInfo {
+	groupId: number;
+	mode: number;
+	profile: number;
+	eventCode: number;
+}
 ```

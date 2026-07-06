@@ -7,7 +7,13 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<BasicCCReport, "currentValue" | "targetValue" | "duration"> | undefined>;
+async get(): Promise<
+	{
+		currentValue?: MaybeUnknown<number>;
+		duration?: Duration;
+		targetValue?: MaybeUnknown<number>;
+	} | undefined
+>;
 ```
 
 ### `set`

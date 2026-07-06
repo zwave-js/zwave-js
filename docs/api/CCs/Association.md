@@ -22,7 +22,9 @@ async reportGroupCount(groupCount: number): Promise<void>;
 ### `getGroup`
 
 ```ts
-async getGroup(groupId: number): Promise<{ maxNodes: number; nodeIds: number[]; } | undefined>;
+async getGroup(
+	groupId: number,
+): Promise<{ maxNodes: number; nodeIds: number[] } | undefined>;
 ```
 
 Returns information about an association group.
@@ -31,7 +33,12 @@ Returns information about an association group.
 
 ```ts
 async sendReport(
-	options: AssociationCCReportOptions,
+	options: {
+		groupId: number;
+		maxNodes: number;
+		nodeIds: number[];
+		reportsToFollow: number;
+	},
 ): Promise<void>;
 ```
 
@@ -50,7 +57,12 @@ Adds new nodes to an association group.
 
 ```ts
 async removeNodeIds(
-	options: AssociationCCRemoveOptions,
+	options: {
+		/** The group from which to remove the nodes. If none is specified, the nodes will be removed from all groups. */
+		groupId?: number;
+		/** The nodes to remove. If none are specified, ALL nodes will be removed. */
+		nodeIds?: number[];
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 

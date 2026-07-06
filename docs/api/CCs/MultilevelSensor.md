@@ -66,3 +66,14 @@ async sendReport(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"number"`
+
+## Related types
+
+### `MultilevelSensorValue`
+
+```ts
+interface MultilevelSensorValue {
+	value: number;
+	scale: Scale;
+}
+```
