@@ -148,6 +148,35 @@
 					"endpoints": [0]
 				}
 			}
+		},
+		"overrideQueries": {
+			"Thermostat Mode": [
+				{
+					// The device does not report "Manufacturer specific" as a supported thermostat mode
+					"endpoint": 1,
+					"method": "getSupportedModes",
+					"result": [0, 1, 31],
+
+					// Prevent overwriting the supported modes with the values reported by the device.
+					"persistValues": {
+						"supportedModes": [0, 1, 31]
+					},
+
+					// Extend the metadata since mode 31 is manufacturer-specific and has no standard label.
+					"extendMetadata": {
+						"thermostatMode": {
+							"states": {
+								"0": "Off",
+								"1": "Heat",
+								"31": "Fully Open"
+							}
+						}
+					}
+				}
+			]
 		}
+	},
+	"metadata": {
+		"manual": "https://manuals.fibaro.com/heat-controller/"
 	}
 }
