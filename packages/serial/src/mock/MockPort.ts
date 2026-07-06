@@ -63,15 +63,21 @@ export class MockPort {
 	}
 
 	public emitData(data: BytesView): void {
-		this.#sourceController?.enqueue(data);
+		try {
+			this.#sourceController?.enqueue(data);
+		} catch {
+			// The stream may already be closed while the driver is being torn down.
+			// Late frames from the mock during teardown can be dropped safely.
+		}
 	}
 
 	public destroy(): void {
 		try {
 			this.#sourceController?.close();
-			this.#sourceController = undefined;
 		} catch {
 			// Ignore - the controller might already be closed
+		} finally {
+			this.#sourceController = undefined;
 		}
 	}
 }
