@@ -182,6 +182,9 @@ jobs:
   # Answer questions that are covered by the documentation
   answer-from-docs:
     runs-on: [ubuntu-latest]
+    permissions:
+      contents: read
+      models: read
     if: |
       github.event.action == 'opened' &&
       github.event.issue.user.login != 'AlCalzone' &&
@@ -204,7 +207,7 @@ jobs:
       if: steps.restore-index.outputs.cache-matched-key != ''
       uses: actions/github-script@v9
       env:
-        MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
+        MODELS_TOKEN: ${{ github.token }}
         DOCS_INDEX_PATH: .docs-index/index.json
         DRY_RUN: ${{ vars.DOCS_ANSWER_DRY_RUN }}
       with:
