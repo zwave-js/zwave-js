@@ -1,5 +1,10 @@
 import { BasicCCGet, BasicCCSet } from "@zwave-js/cc";
-import { NodeStatus, ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
+import {
+	CommandClasses,
+	NodeStatus,
+	ZWaveErrorCodes,
+	assertZWaveError,
+} from "@zwave-js/core";
 import {
 	MockZWaveFrameType,
 	type MockZWaveRequestFrame,
@@ -205,6 +210,12 @@ integrationTest(
 			__dirname,
 			"fixtures/nodeDeadReject",
 		),
+		// A dead node must not answer the Basic Get, so the command fails via the missing callback
+		nodeCapabilities: {
+			commandClasses: [
+				{ ccId: CommandClasses.Basic, isSupported: false },
+			],
+		},
 
 		testBody: async (t, driver, node2, mockController, mockNode) => {
 			node2.markAsAlive();

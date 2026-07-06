@@ -1,7 +1,7 @@
 import { type CCEncodingContext, type CommandClass } from "@zwave-js/cc";
 import {
 	type CommandClassInfo,
-	type CommandClasses,
+	CommandClasses,
 	type MaybeNotKnown,
 	NOT_KNOWN,
 	SecurityClass,
@@ -155,6 +155,13 @@ export class MockNode {
 				const { ccId, ...ccInfo } = cc;
 				this.addCC(ccId, ccInfo);
 			}
+		}
+
+		// Basic CC is mandatory and not advertised in the NIF; controllers determine its
+		// support by probing with a Basic Get. Default mock nodes to supporting it so the
+		// probe succeeds, unless a test explicitly configures Basic CC.
+		if (!this.implementedCCs.has(CommandClasses.Basic)) {
+			this.addCC(CommandClasses.Basic, { isSupported: true });
 		}
 
 		let index = 0;
