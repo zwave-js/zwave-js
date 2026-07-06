@@ -43,6 +43,18 @@ function stripHtmlTags(str) {
 	return str;
 }
 
+/**
+ * Normalizes a heading to the text docsify renders, stripping HTML tags,
+ * docsify directives and markdown link syntax
+ * @param {string} heading
+ */
+function cleanHeading(heading) {
+	return stripHtmlTags(heading)
+		.replace(/\{docsify-[^}]*\}/g, "")
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+		.trim();
+}
+
 // Matches the characters docsify's slugify removes from heading anchors
 const docsifySlugStripRegex =
 	/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g;
@@ -52,7 +64,7 @@ const docsifySlugStripRegex =
  * @param {string} heading
  */
 function slugify(heading) {
-	return stripHtmlTags(heading.toLowerCase().trim())
+	return cleanHeading(heading.toLowerCase())
 		.replace(docsifySlugStripRegex, "")
 		.replace(/\s/g, "-");
 }
@@ -98,7 +110,7 @@ function chunkMarkdown(file, content) {
 		if (heading) {
 			pushChunk();
 			const level = heading[1].length;
-			const title = stripHtmlTags(heading[2]).trim();
+			const title = cleanHeading(heading[2]);
 			while (
 				headingStack.length
 				&& headingStack[headingStack.length - 1].level >= level
