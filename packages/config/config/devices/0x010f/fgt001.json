@@ -199,24 +199,17 @@
 		"overrideQueries": {
 			"Thermostat Mode": [
 				{
-					// Override the getSupportedModes query for endpoint 1, because the device
-					// reports incorrect supported modes via the Z-Wave protocol.
+					// The device does not report "Manufacturer specific" as a supported thermostat mode
 					"endpoint": 1,
 					"method": "getSupportedModes",
-
-					// The device natively reports only [Off, Heat], but also supports
-					// "Fully Open" (mode 31 / 0x1F, manufacturer-specific).
 					"result": [0, 1, 31],
 
-					// Persist the corrected supported modes so ZWaveJS does not overwrite
-					// them with the incorrect values reported by the device.
+					// Prevent overwriting the supported modes with the values reported by the device.
 					"persistValues": {
 						"supportedModes": [0, 1, 31]
 					},
 
-					// Extend the metadata with human-readable labels for each mode,
-					// since mode 31 is manufacturer-specific and has no standard label.
-					// Without this, ZWaveJS would display it as "Manufacturer specific".
+					// Extend the metadata since mode 31 is manufacturer-specific and has no standard label.
 					"extendMetadata": {
 						"thermostatMode": {
 							"states": {
