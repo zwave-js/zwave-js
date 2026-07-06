@@ -260,7 +260,7 @@ jobs:
       if: steps.restore-index.outputs.cache-matched-key != ''
       uses: actions/github-script@v9
       env:
-        MODELS_TOKEN: ${{ secrets.BOT_TOKEN }}
+        MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
         DOCS_INDEX_PATH: .docs-index/index.json
         DRY_RUN: ${{ vars.DOCS_ANSWER_DRY_RUN }}
       with:

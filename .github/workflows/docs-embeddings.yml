@@ -39,5 +39,5 @@ jobs:
       # An exact cache hit means the index is already up to date
       if: steps.cache.outputs.cache-hit != 'true'
       env:
-        GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.MODELS_TOKEN }}
       run: node .github/bot-scripts/buildDocsIndex.cjs docs .docs-index/index.json
