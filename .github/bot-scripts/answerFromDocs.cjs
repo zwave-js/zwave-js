@@ -261,17 +261,27 @@ ${excerpts}`;
 		})
 		.join("\n");
 
-	let body = `**Beep, boop! 🤖**\n\n`;
+	let body = `**Beep, boop! 🤖**
+
+_I've tried to answer your question based on the documentation. If this doesn't help, please wait for a human to show up._
+
+`;
+	const single = deduped.length === 1;
 	if (result.confidence >= ANSWER_CONFIDENCE && result.answer) {
-		body += `It looks like the documentation answers your question:
+		body += `${result.answer}
 
-${result.answer}
-
-These sections have more details:
+${
+			single
+				? "This section of the documentation has more details:"
+				: "These sections of the documentation have more details:"
+		}
 ${links}`;
 	} else {
-		body +=
-			`While you're waiting for a human to show up, these sections of the documentation might answer your question:
+		body += `${
+			single
+				? "This section of the documentation might answer your question:"
+				: "These sections of the documentation might answer your question:"
+		}
 
 ${links}`;
 	}
