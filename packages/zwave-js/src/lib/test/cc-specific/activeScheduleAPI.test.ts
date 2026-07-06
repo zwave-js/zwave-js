@@ -69,9 +69,12 @@ integrationTest(
 			const target = { targetCC: TARGET_CC, targetId: 1 };
 			const enabledValue = ActiveScheduleCCValues.enabled(TARGET_CC, 1);
 
-			// CL:00A4.01.51.01.1: ...the device MUST allow the controller to
-			// enable and disable all schedules attached to a target using the
-			// Active Schedule Enable Set Command
+			// CL:00A4.01.51.01.1: If the supporting node supports both the
+			// Active Schedule Command Class, version 1 and a compatible
+			// command class in in the Supported Target CCs table, and the
+			// respective Target CC enables scheduling, the device MUST allow
+			// the controller to enable and disable all schedules attached to
+			// a target using the Active Schedule Enable Set Command.
 			await api.setEnabled(target, true);
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
@@ -85,9 +88,12 @@ integrationTest(
 			// The enabled state is cached optimistically on success
 			t.expect(node.getValue(enabledValue.id)).toBe(true);
 
-			// CL:00A4.01.31.01.1: ...the device MUST allow the controller to
-			// query a Target's scheduling enabled/disabled state using the
-			// Active Schedule Enable Get Command
+			// CL:00A4.01.31.01.1: If the supporting node supports both the
+			// Active Schedule Command Class, version 1 and a compatible
+			// command class in in the Supported Target CCs table, and the
+			// respective Target CC enables scheduling, the device MUST allow
+			// the controller to query a Target's scheduling enabled/disabled
+			// state using the Active Schedule Enable Get Command.
 			t.expect(await api.getEnabled(target)).toBe(true);
 
 			await api.setEnabled(target, false);
@@ -105,10 +111,13 @@ integrationTest("Active Schedule CC API: year day schedule lifecycle", {
 		const target = { targetCC: TARGET_CC, targetId: 1 };
 		const enabledValue = ActiveScheduleCCValues.enabled(TARGET_CC, 1);
 
-		// CL:00A4.01.21.01.1: ...the device MUST allow adding, modifying and
+		// CL:00A4.01.21.01.1: If the supporting node supports both the Active
+		// Schedule Command Class, version 1 and a compatible command class in
+		// in the Supported Target CCs table, and the respective Target CC
+		// enables scheduling, the device MUST allow adding, modifying and
 		// deleting schedules for a target by the controller using the Active
 		// Schedule Year Day Schedule Set Command or the Active Schedule Daily
-		// Repeating Schedule Set Command
+		// Repeating Schedule Set Command.
 		await api.setYearDaySchedule(
 			{ ...target, slotId: 2 },
 			yearDaySchedule,
@@ -169,7 +178,7 @@ integrationTest("Active Schedule CC API: year day schedule lifecycle", {
 		t.expect(withNext && withNext.nextSlotId).toBe(4);
 
 		// Erasing a single slot marks the cached schedule as empty
-		await api.setYearDaySchedule({ ...target, slotId: 2 });
+		await api.setYearDaySchedule({ ...target, slotId: 2 }, undefined);
 		t.expect(
 			node.getValue(
 				ActiveScheduleCCValues.yearDaySchedule(TARGET_CC, 1, 2).id,
@@ -189,10 +198,13 @@ integrationTest("Active Schedule CC API: daily repeating schedule lifecycle", {
 		const target = { targetCC: TARGET_CC, targetId: 2 };
 		const enabledValue = ActiveScheduleCCValues.enabled(TARGET_CC, 2);
 
-		// CL:00A4.01.21.01.1: ...the device MUST allow adding, modifying and
+		// CL:00A4.01.21.01.1: If the supporting node supports both the Active
+		// Schedule Command Class, version 1 and a compatible command class in
+		// in the Supported Target CCs table, and the respective Target CC
+		// enables scheduling, the device MUST allow adding, modifying and
 		// deleting schedules for a target by the controller using the Active
 		// Schedule Year Day Schedule Set Command or the Active Schedule Daily
-		// Repeating Schedule Set Command
+		// Repeating Schedule Set Command.
 		await api.setDailyRepeatingSchedule(
 			{ ...target, slotId: 1 },
 			dailyRepeatingSchedule,
@@ -242,7 +254,10 @@ integrationTest("Active Schedule CC API: daily repeating schedule lifecycle", {
 		).toBe(false);
 
 		// Erasing a single slot marks the cached schedule as empty
-		await api.setDailyRepeatingSchedule({ ...target, slotId: 1 });
+		await api.setDailyRepeatingSchedule(
+			{ ...target, slotId: 1 },
+			undefined,
+		);
 		t.expect(
 			node.getValue(
 				ActiveScheduleCCValues.dailyRepeatingSchedule(TARGET_CC, 2, 1)
@@ -277,9 +292,11 @@ integrationTest("Active Schedule CC API: batch erase clears cached schedules", {
 		);
 
 		// CC:00A4.01.06.11.007: A Schedule Slot ID value of zero during an
-		// Erase Set Action signifies a batch erase operation.
+		// Erase Set Action signifies a batch erase operation. Assuming that
+		// the target is otherwise valid, the operation MUST execute based on
+		// the target values outlined in the Schedule Erase Definitions table:
 		// "Erase all schedules of this type attached to the Target."
-		await api.setYearDaySchedule({ ...target, slotId: 0 });
+		await api.setYearDaySchedule({ ...target, slotId: 0 }, undefined);
 
 		t.expect(
 			node.getValue(
@@ -335,8 +352,11 @@ integrationTest(
 				yearDaySchedule,
 			);
 
-			// CC:00A4.01.07.11.004 / CC:00A4.01.08.11.004: start at slot 0 and
-			// follow the reported next slot until the chain ends
+			// CC:00A4.01.07.11.004: A Schedule Slot ID of zero MUST signify to
+			// the receiving node that the first occupied Schedule Slot for the
+			// given Target is to be returned the report.
+			// The report's Next Schedule Slot ID field allows walking the
+			// chain of occupied slots until it ends
 			const visited: number[] = [];
 			let slotId = 0;
 			for (let i = 0; i < 10; i++) {
@@ -417,8 +437,8 @@ integrationTest("Active Schedule CC API: rejects invalid arguments", {
 			}),
 		).rejects.toThrow("timespan");
 
-		// A daily repeating schedule that applies to no weekdays would be
-		// indistinguishable from an empty slot
+		// An empty weekday bitmask signifies an empty slot, so a schedule
+		// must apply to at least one weekday
 		await t.expect(
 			api.setDailyRepeatingSchedule({ ...target, slotId: 1 }, {
 				...dailyRepeatingSchedule,
@@ -448,7 +468,9 @@ integrationTest(
 		nodeCapabilities,
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// CC:00A4.01.05.11.001 (Report Code 0x01, Schedule(s) Modified
+			// CC:00A4.01.05.11.001: The value of this field MUST comply with
+			// the Active Schedule::Report Code table.
+			// (Report Code 0x01, Schedule(s) Modified
 			// (External)): The data in the specified applicable schedule
 			// slot(s) was/were overwritten with the provided data from an
 			// external source. Reports of this type MUST be sent to the

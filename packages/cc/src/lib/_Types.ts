@@ -26,8 +26,8 @@ export enum ActiveScheduleCommand {
 }
 
 export enum ActiveScheduleSetAction {
-	Erase,
-	Modify,
+	Erase = 0x00,
+	Modify = 0x01,
 }
 
 export enum ActiveScheduleReportReason {
@@ -37,8 +37,8 @@ export enum ActiveScheduleReportReason {
 }
 
 export enum ActiveScheduleScheduleKind {
-	YearDay = 0,
-	DailyRepeating = 1,
+	YearDay = 0x00,
+	DailyRepeating = 0x01,
 }
 
 export interface ActiveScheduleTarget {
@@ -63,7 +63,6 @@ export interface ActiveScheduleDailyRepeatingSchedule {
 }
 
 export interface ActiveScheduleTargetCapabilities {
-	targetCC: CommandClasses;
 	numSupportedTargets: number;
 	numYearDaySlotsPerTarget: number;
 	numDailyRepeatingSlotsPerTarget: number;
@@ -1369,19 +1368,11 @@ export interface ScheduleEntryLockSlotId {
 	slotId: number;
 }
 
-export enum ScheduleEntryLockWeekday {
-	// Yay, consistency!
-	Sunday = 0x00,
-	Monday = 0x01,
-	Tuesday = 0x02,
-	Wednesday = 0x03,
-	Thursday = 0x04,
-	Friday = 0x05,
-	Saturday = 0x06,
-}
+/** @deprecated Use {@link ScheduleWeekday} instead */
+export import ScheduleEntryLockWeekday = ScheduleWeekday;
 
 export interface ScheduleEntryLockDailyRepeatingSchedule {
-	weekdays: ScheduleEntryLockWeekday[];
+	weekdays: ScheduleWeekday[];
 	startHour: number;
 	startMinute: number;
 	durationHour: number;
@@ -1402,7 +1393,7 @@ export interface ScheduleEntryLockYearDaySchedule {
 }
 
 export interface ScheduleEntryLockWeekDaySchedule {
-	weekday: ScheduleEntryLockWeekday;
+	weekday: ScheduleWeekday;
 	startHour: number;
 	startMinute: number;
 	stopHour: number;

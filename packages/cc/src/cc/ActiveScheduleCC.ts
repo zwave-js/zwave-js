@@ -67,18 +67,17 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
  * @returns The date components and the number of bytes read (always 6).
  */
 function parseDate(
-	payload: BytesView,
+	payload: Bytes,
 	offset: number = 0,
 ): { date: ScheduleDate; bytesRead: number } {
 	validatePayload(payload.length >= offset + 6);
-	const view = Bytes.view(payload);
 	return {
 		date: {
-			year: view.readUInt16BE(offset),
-			month: view.readUInt8(offset + 2),
-			day: view.readUInt8(offset + 3),
-			hour: view.readUInt8(offset + 4),
-			minute: view.readUInt8(offset + 5),
+			year: payload.readUInt16BE(offset),
+			month: payload[offset + 2],
+			day: payload[offset + 3],
+			hour: payload[offset + 4],
+			minute: payload[offset + 5],
 		},
 		bytesRead: 6,
 	};
@@ -197,20 +196,44 @@ function assertValidScheduleMetadata(metadata: BytesView | undefined): void {
 	}
 }
 
+// Target CC, target ID (16 bit) and slot ID (16 bit) are packed without
+// overlap. Multiply/divide instead of shifting because the result exceeds
+// the signed 32-bit range of bitwise operators
+function packScheduleSlotKey(
+	targetCC: CommandClasses,
+	targetId: number,
+	slotId: number,
+): number {
+	return targetCC * 0x1_0000_0000 + targetId * 0x1_0000 + slotId;
+}
+
+function unpackScheduleSlotKey(
+	key: number,
+): { targetCC: CommandClasses; targetId: number; slotId: number } {
+	return {
+		targetCC: Math.floor(key / 0x1_0000_0000),
+		targetId: Math.floor(key / 0x1_0000) % 0x1_0000,
+		slotId: key % 0x1_0000,
+	};
+}
+
 /** Checks if the target encoded in a schedule value's property key is affected by a batch erase for the given target */
 function scheduleValueKeyMatchesEraseScope(
 	propertyKey: unknown,
 	target: ActiveScheduleTarget,
 ): boolean {
 	if (typeof propertyKey !== "number") return false;
-	const targetCC = Math.floor(propertyKey / 0x1_0000_0000);
-	const targetId = Math.floor(propertyKey / 0x1_0000) % 0x1_0000;
-	// CC:00A4.01.06.11.007: Erase all schedules of this type on the node
+	const { targetCC, targetId } = unpackScheduleSlotKey(propertyKey);
+	// CC:00A4.01.06.11.007: A Schedule Slot ID value of zero during an Erase
+	// Set Action signifies a batch erase operation. Assuming that the target
+	// is otherwise valid, the operation MUST execute based on the target
+	// values outlined in the Schedule Erase Definitions table:
+
+	// "Erase all schedules of this type on the node."
 	if (target.targetCC === 0) return true;
 	if (targetCC !== target.targetCC) return false;
-	// CC:00A4.01.06.11.007: Erase all schedules of this type attached to all
-	// Targets from the specified Target CC
-	// ...or attached to the specific Target
+	// "Erase all schedules of this type attached to all Targets from the
+	// specified Target CC." ...or attached to the specific Target
 	return target.targetId === 0 || targetId === target.targetId;
 }
 
@@ -245,11 +268,8 @@ export const ActiveScheduleCCValues = V.defineCCValues(
 		...V.dynamicPropertyAndKeyWithName(
 			"yearDaySchedule",
 			"yearDaySchedule",
-			// Target CC, target ID (16 bit) and slot ID (16 bit) are packed
-			// without overlap. Multiply instead of shifting because the result
-			// exceeds the signed 32-bit range of bitwise operators
 			(targetCC: CommandClasses, targetId: number, slotId: number) =>
-				targetCC * 0x1_0000_0000 + targetId * 0x1_0000 + slotId,
+				packScheduleSlotKey(targetCC, targetId, slotId),
 			({ property, propertyKey }) =>
 				property === "yearDaySchedule"
 				&& typeof propertyKey === "number",
@@ -259,11 +279,8 @@ export const ActiveScheduleCCValues = V.defineCCValues(
 		...V.dynamicPropertyAndKeyWithName(
 			"dailyRepeatingSchedule",
 			"dailyRepeatingSchedule",
-			// Target CC, target ID (16 bit) and slot ID (16 bit) are packed
-			// without overlap. Multiply instead of shifting because the result
-			// exceeds the signed 32-bit range of bitwise operators
 			(targetCC: CommandClasses, targetId: number, slotId: number) =>
-				targetCC * 0x1_0000_0000 + targetId * 0x1_0000 + slotId,
+				packScheduleSlotKey(targetCC, targetId, slotId),
 			({ property, propertyKey }) =>
 				property === "dailyRepeatingSchedule"
 				&& typeof propertyKey === "number",
@@ -388,7 +405,7 @@ export class ActiveScheduleCCAPI extends CCAPI {
 	@validateArgs()
 	public async setYearDaySchedule(
 		slot: ActiveScheduleSlotId,
-		schedule?: ActiveScheduleYearDaySchedule,
+		schedule: ActiveScheduleYearDaySchedule | undefined,
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			ActiveScheduleCommand,
@@ -451,52 +468,72 @@ export class ActiveScheduleCCAPI extends CCAPI {
 
 		const result = await this.host.sendCommand(cc, this.commandOptions);
 
-		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
-			const valueDB = this.host.getValueDB(this.endpoint.nodeId);
-			const scheduleValue = ActiveScheduleCCValues.yearDaySchedule(
-				slot.targetCC,
-				slot.targetId,
-				slot.slotId,
+		if (isUnsupervisedOrSucceeded(result)) {
+			this.cacheScheduleResult(
+				ActiveScheduleCCValues.yearDaySchedule,
+				slot,
+				schedule,
 			);
-			if (schedule) {
-				// Cache the schedule
-				valueDB.setValue(
-					scheduleValue.endpoint(this.endpoint.index),
-					schedule,
-				);
-				// CC:00A4.01.06.11.001: When set successfully, scheduling as
-				// reported in the Active Schedule Enable Report Command MUST
-				// be automatically enabled for the identified Target.
-				valueDB.setValue(
-					ActiveScheduleCCValues.enabled(
-						slot.targetCC,
-						slot.targetId,
-					).endpoint(this.endpoint.index),
-					true,
-				);
-			} else if (slot.slotId === 0) {
-				// CC:00A4.01.06.11.007: A Schedule Slot ID value of zero
-				// during an Erase Set Action signifies a batch erase
-				// operation.
-				// Mark all cached schedules in the erased scope as empty
-				const affected = valueDB.findValues((vid) =>
-					vid.endpoint === this.endpoint.index
-					&& ActiveScheduleCCValues.yearDaySchedule.is(vid)
-					&& scheduleValueKeyMatchesEraseScope(vid.propertyKey, slot)
-				);
-				for (const vid of affected) {
-					valueDB.setValue(vid, false);
-				}
-			} else {
-				// Mark the cached schedule as empty
-				valueDB.setValue(
-					scheduleValue.endpoint(this.endpoint.index),
-					false,
-				);
-			}
 		}
 
 		return result;
+	}
+
+	/** Updates the schedule cache after a successful Set command */
+	private cacheScheduleResult(
+		scheduleValue:
+			| typeof ActiveScheduleCCValues.yearDaySchedule
+			| typeof ActiveScheduleCCValues.dailyRepeatingSchedule,
+		slot: ActiveScheduleSlotId,
+		schedule:
+			| ActiveScheduleYearDaySchedule
+			| ActiveScheduleDailyRepeatingSchedule
+			| undefined,
+	): void {
+		if (!this.isSinglecast()) return;
+
+		const valueDB = this.host.getValueDB(this.endpoint.nodeId);
+		if (schedule) {
+			// Cache the schedule
+			valueDB.setValue(
+				scheduleValue(slot.targetCC, slot.targetId, slot.slotId)
+					.endpoint(this.endpoint.index),
+				schedule,
+			);
+			// CC:00A4.01.06.11.001 / CC:00A4.01.09.11.001: When set
+			// successfully, scheduling as reported in the Active Schedule
+			// Enable Report Command MUST be automatically enabled for the
+			// identified Target.
+			valueDB.setValue(
+				ActiveScheduleCCValues.enabled(
+					slot.targetCC,
+					slot.targetId,
+				).endpoint(this.endpoint.index),
+				true,
+			);
+		} else if (slot.slotId === 0) {
+			// CC:00A4.01.06.11.007: A Schedule Slot ID value of zero
+			// during an Erase Set Action signifies a batch erase
+			// operation. Assuming that the target is otherwise valid, the
+			// operation MUST execute based on the target values outlined
+			// in the Schedule Erase Definitions table:
+			// Mark all cached schedules in the erased scope as empty
+			const affected = valueDB.findValues((vid) =>
+				vid.endpoint === this.endpoint.index
+				&& scheduleValue.is(vid)
+				&& scheduleValueKeyMatchesEraseScope(vid.propertyKey, slot)
+			);
+			for (const vid of affected) {
+				valueDB.setValue(vid, false);
+			}
+		} else {
+			// Mark the cached schedule as empty
+			valueDB.setValue(
+				scheduleValue(slot.targetCC, slot.targetId, slot.slotId)
+					.endpoint(this.endpoint.index),
+				false,
+			);
+		}
 	}
 
 	/**
@@ -547,8 +584,8 @@ export class ActiveScheduleCCAPI extends CCAPI {
 					startDate: result.startDate,
 					stopDate: result.stopDate!,
 					metadata: result.metadata,
-					// The report echoes the slot the schedule is stored in,
-					// which differs from the requested slot when querying slot 0
+					// The report echoes the slot the schedule is actually
+					// stored in, so a slot 0 query returns the first occupied slot
 					slotId: result.slotId,
 					nextSlotId: result.nextSlotId,
 				};
@@ -560,7 +597,7 @@ export class ActiveScheduleCCAPI extends CCAPI {
 	@validateArgs({ strictEnums: true })
 	public async setDailyRepeatingSchedule(
 		slot: ActiveScheduleSlotId,
-		schedule?: ActiveScheduleDailyRepeatingSchedule,
+		schedule: ActiveScheduleDailyRepeatingSchedule | undefined,
 	): Promise<SupervisionResult | undefined> {
 		this.assertSupportsCommand(
 			ActiveScheduleCommand,
@@ -571,7 +608,9 @@ export class ActiveScheduleCCAPI extends CCAPI {
 			// CC:00A4.01.09.11.005: This field is to be subject to the same
 			// requirements regarding valid values and batch delete operations
 			// as the corresponding field in the Active Schedule Year Day
-			// Schedule Set Command.
+			// Schedule Set Command. The field also MUST also use the same
+			// logic described in the Schedule Erase Definitions table for
+			// deleting multiple schedules.
 			if (slot.slotId < 1) {
 				throw new ZWaveError(
 					"The slot ID must be at least 1 when modifying a schedule",
@@ -608,49 +647,15 @@ export class ActiveScheduleCCAPI extends CCAPI {
 
 		const result = await this.host.sendCommand(cc, this.commandOptions);
 
-		if (this.isSinglecast() && isUnsupervisedOrSucceeded(result)) {
-			const valueDB = this.host.getValueDB(this.endpoint.nodeId);
-			const scheduleValue = ActiveScheduleCCValues.dailyRepeatingSchedule(
-				slot.targetCC,
-				slot.targetId,
-				slot.slotId,
+		if (isUnsupervisedOrSucceeded(result)) {
+			// CC:00A4.01.09.11.005: The field also MUST also use the same
+			// logic described in the Schedule Erase Definitions table for
+			// deleting multiple schedules.
+			this.cacheScheduleResult(
+				ActiveScheduleCCValues.dailyRepeatingSchedule,
+				slot,
+				schedule,
 			);
-			if (schedule) {
-				// Cache the schedule
-				valueDB.setValue(
-					scheduleValue.endpoint(this.endpoint.index),
-					schedule,
-				);
-				// CC:00A4.01.09.11.001: When set successfully, scheduling as
-				// reported in the Active Schedule Enable Report Command MUST
-				// be automatically enabled for the identified Target.
-				valueDB.setValue(
-					ActiveScheduleCCValues.enabled(
-						slot.targetCC,
-						slot.targetId,
-					).endpoint(this.endpoint.index),
-					true,
-				);
-			} else if (slot.slotId === 0) {
-				// CC:00A4.01.09.11.005: The field also MUST also use the same
-				// logic described in the Schedule Erase Definitions table for
-				// deleting multiple schedules.
-				// Mark all cached schedules in the erased scope as empty
-				const affected = valueDB.findValues((vid) =>
-					vid.endpoint === this.endpoint.index
-					&& ActiveScheduleCCValues.dailyRepeatingSchedule.is(vid)
-					&& scheduleValueKeyMatchesEraseScope(vid.propertyKey, slot)
-				);
-				for (const vid of affected) {
-					valueDB.setValue(vid, false);
-				}
-			} else {
-				// Mark the cached schedule as empty
-				valueDB.setValue(
-					scheduleValue.endpoint(this.endpoint.index),
-					false,
-				);
-			}
 		}
 
 		return result;
@@ -704,8 +709,8 @@ export class ActiveScheduleCCAPI extends CCAPI {
 					weekdays: result.weekdays,
 					timespan: result.timespan!,
 					metadata: result.metadata,
-					// The report echoes the slot the schedule is stored in,
-					// which differs from the requested slot when querying slot 0
+					// The report echoes the slot the schedule is actually
+					// stored in, so a slot 0 query returns the first occupied slot
 					slotId: result.slotId,
 					nextSlotId: result.nextSlotId,
 				};
@@ -752,27 +757,21 @@ export class ActiveScheduleCC extends CommandClass {
 		// "Active Schedule Command Class Interview"
 		const caps = await api.getCapabilities();
 		if (caps) {
-			const logLines: string[] = [
-				"received supported target CCs:",
-			];
+			let logMessage = "received supported target CCs:";
 			for (const [targetCC, cap] of caps.targetCapabilities) {
-				logLines.push(
-					`  ${
-						getEnumMemberName(CommandClasses, targetCC)
-					}: ${cap.numSupportedTargets} targets, ${cap.numYearDaySlotsPerTarget} year day slots, ${cap.numDailyRepeatingSlotsPerTarget} daily repeating slots`,
-				);
+				logMessage += `
+${
+					getEnumMemberName(CommandClasses, targetCC)
+				}: ${cap.numSupportedTargets} targets, ${cap.numYearDaySlotsPerTarget} year day slots, ${cap.numDailyRepeatingSlotsPerTarget} daily repeating slots`;
 			}
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: logLines.join("\n"),
+				message: logMessage,
 				direction: "inbound",
 			});
 
-			// Per the figure "Active Schedule Command Class Interview", the
-			// schedules of Target CCs with exactly one Target are interviewed
-			// now with Target ID 1. Schedules of Target CCs with more than one
-			// Target are interviewed during their respective Target CC
-			// interview.
+			// Schedules of Target CCs with more than one Target are
+			// interviewed during their respective Target CC interview
 			for (const [targetCC, cap] of caps.targetCapabilities) {
 				if (cap.numSupportedTargets !== 1) continue;
 				await ActiveScheduleCC.interviewTarget(ctx, endpoint, {
@@ -826,42 +825,40 @@ export class ActiveScheduleCC extends CommandClass {
 		// "Active Schedule Target Interview":
 		// Query the first occupied slot (ID 0), then follow the chain of next
 		// occupied slots until it ends.
-		if (caps.numYearDaySlotsPerTarget > 0) {
+		const walkSlotChain = async (
+			numSlots: number,
+			getSchedule: (
+				slot: ActiveScheduleSlotId,
+			) => Promise<{ nextSlotId: number } | false | undefined>,
+		): Promise<void> => {
+			if (numSlots === 0) return;
 			// Protect against nodes reporting a cyclic slot chain
 			const queriedSlots = new Set<number>();
 			let slotId = 0;
-			while (queriedSlots.size <= caps.numYearDaySlotsPerTarget) {
-				const result = await api.getYearDaySchedule({
-					...target,
-					slotId,
-				});
+			while (queriedSlots.size <= numSlots) {
+				const result = await getSchedule({ ...target, slotId });
 				// An empty slot or a missing response ends the chain
 				if (!result) break;
 				slotId = result.nextSlotId;
 				if (slotId === 0 || queriedSlots.has(slotId)) break;
 				queriedSlots.add(slotId);
 			}
-		}
+		};
 
-		if (caps.numDailyRepeatingSlotsPerTarget > 0) {
-			// Protect against nodes reporting a cyclic slot chain
-			const queriedSlots = new Set<number>();
-			let slotId = 0;
-			while (queriedSlots.size <= caps.numDailyRepeatingSlotsPerTarget) {
-				const result = await api.getDailyRepeatingSchedule({
-					...target,
-					slotId,
-				});
-				// An empty slot or a missing response ends the chain
-				if (!result) break;
-				slotId = result.nextSlotId;
-				if (slotId === 0 || queriedSlots.has(slotId)) break;
-				queriedSlots.add(slotId);
-			}
-		}
+		await walkSlotChain(
+			caps.numYearDaySlotsPerTarget,
+			(slot) => api.getYearDaySchedule(slot),
+		);
+		await walkSlotChain(
+			caps.numDailyRepeatingSlotsPerTarget,
+			(slot) => api.getDailyRepeatingSchedule(slot),
+		);
 
-		// Query the enabled state, so applications can show whether the
-		// target's schedules are active (CL:00A4.01.61.01.1)
+		// CL:00A4.01.61.01.1: A controlling node MUST display a UI showing the
+		// following:
+		// - Which Targets on the node have (a) schedule(s) attached
+		// - If that Target's schedules(s) is/are enabled
+		// Query the enabled state, so applications have access to it
 		await api.getEnabled(target);
 	}
 
@@ -966,13 +963,11 @@ export class ActiveScheduleCC extends CommandClass {
 	}
 }
 
-// =============================================================================
-
 // @publicAPI
 export interface ActiveScheduleCCCapabilitiesReportOptions {
 	targetCapabilities: ReadonlyMap<
 		CommandClasses,
-		Omit<ActiveScheduleTargetCapabilities, "targetCC">
+		ActiveScheduleTargetCapabilities
 	>;
 }
 
@@ -1004,11 +999,10 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 
 		const targetCapabilities = new Map<
 			CommandClasses,
-			Omit<ActiveScheduleTargetCapabilities, "targetCC">
+			ActiveScheduleTargetCapabilities
 		>();
 		let offset = 1;
 
-		// Parse target CCs (can be extended CCs, 1 or 2 bytes each)
 		const targetCCs: CommandClasses[] = [];
 		for (let i = 0; i < numTargetCCs; i++) {
 			const { ccId, bytesRead } = parseCCId(raw.payload, offset);
@@ -1016,41 +1010,20 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 			offset += bytesRead;
 		}
 
-		// After the CCs, we expect 3 arrays of 16-bit values (6 bytes per target CC)
+		// The CC list is followed by 3 arrays of 16-bit values (6 bytes per target CC)
 		validatePayload(raw.payload.length >= offset + numTargetCCs * 6);
 
-		// Parse numSupportedTargets for all target CCs
-		const numSupportedTargetsArray: number[] = [];
-		for (let i = 0; i < numTargetCCs; i++) {
-			numSupportedTargetsArray.push(raw.payload.readUInt16BE(offset));
-			offset += 2;
-		}
-
-		// Parse numYearDaySlotsPerTarget for all target CCs
-		const numYearDaySlotsPerTargetArray: number[] = [];
-		for (let i = 0; i < numTargetCCs; i++) {
-			numYearDaySlotsPerTargetArray.push(
-				raw.payload.readUInt16BE(offset),
-			);
-			offset += 2;
-		}
-
-		// Parse numDailyRepeatingSlotsPerTarget for all target CCs
-		const numDailyRepeatingSlotsPerTargetArray: number[] = [];
-		for (let i = 0; i < numTargetCCs; i++) {
-			numDailyRepeatingSlotsPerTargetArray.push(
-				raw.payload.readUInt16BE(offset),
-			);
-			offset += 2;
-		}
-
-		// Combine into target capabilities
 		for (let i = 0; i < numTargetCCs; i++) {
 			targetCapabilities.set(targetCCs[i], {
-				numSupportedTargets: numSupportedTargetsArray[i],
-				numYearDaySlotsPerTarget: numYearDaySlotsPerTargetArray[i],
-				numDailyRepeatingSlotsPerTarget:
-					numDailyRepeatingSlotsPerTargetArray[i],
+				numSupportedTargets: raw.payload.readUInt16BE(
+					offset + i * 2,
+				),
+				numYearDaySlotsPerTarget: raw.payload.readUInt16BE(
+					offset + (numTargetCCs + i) * 2,
+				),
+				numDailyRepeatingSlotsPerTarget: raw.payload.readUInt16BE(
+					offset + (2 * numTargetCCs + i) * 2,
+				),
 			});
 		}
 
@@ -1062,7 +1035,7 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 
 	public targetCapabilities: ReadonlyMap<
 		CommandClasses,
-		Omit<ActiveScheduleTargetCapabilities, "targetCC">
+		ActiveScheduleTargetCapabilities
 	>;
 
 	public get supportedTargetCCs(): CommandClasses[] {
@@ -1072,12 +1045,11 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		// Persist capabilities for each target CC
 		for (const [targetCC, cap] of this.targetCapabilities) {
 			const capValue = ActiveScheduleCCValues.targetCapabilities(
 				targetCC,
 			);
-			this.setValue(ctx, capValue, { targetCC, ...cap });
+			this.setValue(ctx, capValue, cap);
 		}
 
 		return true;
@@ -1091,7 +1063,6 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 
 		this.payload[0] = numTargetCCs;
 
-		// Write target CCs (can be extended CCs, 1 or 2 bytes each)
 		let offset = 1;
 		for (const targetCC of this.targetCapabilities.keys()) {
 			offset += encodeCCId(targetCC, this.payload, offset);
@@ -1118,7 +1089,7 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 			offset += 2;
 		}
 
-		// Trim payload to actual size
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 
 		return super.serialize(ctx);
@@ -1140,8 +1111,6 @@ export class ActiveScheduleCCCapabilitiesReport extends ActiveScheduleCC {
 @CCCommand(ActiveScheduleCommand.CapabilitiesGet)
 @expectedCCResponse(ActiveScheduleCCCapabilitiesReport)
 export class ActiveScheduleCCCapabilitiesGet extends ActiveScheduleCC {}
-
-// =============================================================================
 
 // @publicAPI
 export interface ActiveScheduleCCEnableSetOptions extends ActiveScheduleTarget {
@@ -1190,6 +1159,7 @@ export class ActiveScheduleCCEnableSet extends ActiveScheduleCC {
 		this.payload.writeUInt16BE(this.targetId, offset);
 		offset += 2;
 		this.payload[offset++] = this.enabled ? 0x01 : 0x00;
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -1233,8 +1203,10 @@ export class ActiveScheduleCCEnableReport extends ActiveScheduleCC {
 		const { ccId: targetCC, bytesRead } = parseCCId(raw.payload, 0);
 		validatePayload(raw.payload.length >= bytesRead + 3);
 		const targetId = raw.payload.readUInt16BE(bytesRead);
-		// The masks ignore the reserved bits, as required by
-		// CC:00A4.01.03.11.001 (referenced for this command's fields)
+		// CC:00A4.01.03.11.001 (referenced for this command's fields): All
+		// other bits are reserved and MUST be set low (0) by the sending node.
+		// If any of the reserved bits are high (1), they MUST be ignored by
+		// the receiving node.
 		const reportReason = (raw.payload[bytesRead + 2] >> 1) & 0b111;
 		const enabled = !!(raw.payload[bytesRead + 2] & 0b1);
 
@@ -1271,6 +1243,7 @@ export class ActiveScheduleCCEnableReport extends ActiveScheduleCC {
 		offset += 2;
 		this.payload[offset++] = ((this.reportReason & 0b111) << 1)
 			| (this.enabled ? 0b1 : 0);
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -1330,6 +1303,7 @@ export class ActiveScheduleCCEnableGet extends ActiveScheduleCC {
 		let offset = encodeCCId(this.targetCC, this.payload, 0);
 		this.payload.writeUInt16BE(this.targetId, offset);
 		offset += 2;
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -1344,8 +1318,6 @@ export class ActiveScheduleCCEnableGet extends ActiveScheduleCC {
 		};
 	}
 }
-
-// =============================================================================
 
 /** @publicAPI */
 export type ActiveScheduleCCYearDayScheduleSetOptions =
@@ -1486,6 +1458,7 @@ export class ActiveScheduleCCYearDayScheduleSet extends ActiveScheduleCC {
 			offset += metadataLength;
 		}
 
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -1642,8 +1615,8 @@ export class ActiveScheduleCCYearDayScheduleReport extends ActiveScheduleCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		// Slot ID 0 in a report means the target has no occupied slots.
-		// There is no specific slot to persist in that case.
+		// Slot ID 0 in a report means the target has no occupied slots,
+		// so there is nothing to persist
 		if (this.slotId === 0) return true;
 
 		const scheduleValue = ActiveScheduleCCValues.yearDaySchedule(
@@ -1695,6 +1668,7 @@ export class ActiveScheduleCCYearDayScheduleReport extends ActiveScheduleCC {
 			offset += metadataLength;
 		}
 
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -1780,6 +1754,7 @@ export class ActiveScheduleCCYearDayScheduleGet extends ActiveScheduleCC {
 		offset += 2;
 		this.payload.writeUInt16BE(this.slotId, offset);
 		offset += 2;
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -1795,8 +1770,6 @@ export class ActiveScheduleCCYearDayScheduleGet extends ActiveScheduleCC {
 		};
 	}
 }
-
-// =============================================================================
 
 /** @publicAPI */
 export type ActiveScheduleCCDailyRepeatingScheduleSetOptions =
@@ -1948,6 +1921,7 @@ export class ActiveScheduleCCDailyRepeatingScheduleSet
 			offset += metadataLength;
 		}
 
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -2106,8 +2080,8 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		// Slot ID 0 in a report means the target has no occupied slots.
-		// There is no specific slot to persist in that case.
+		// Slot ID 0 in a report means the target has no occupied slots,
+		// so there is nothing to persist
 		if (this.slotId === 0) return true;
 
 		const scheduleValue = ActiveScheduleCCValues.dailyRepeatingSchedule(
@@ -2135,7 +2109,7 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const metadataLength = this.metadata?.length ?? 0;
-		const hasSchedule = this.weekdays?.length;
+		const hasSchedule = !!this.weekdays?.length;
 		// Max size: 1 (reportReason) + 2 (extended CC) + 2 (targetId) + 2 (slotId) + 2 (nextSlotId) + 6 (schedule) + 7 (metadata)
 		this.payload = new Bytes(hasSchedule ? 15 + metadataLength : 9);
 
@@ -2164,6 +2138,7 @@ export class ActiveScheduleCCDailyRepeatingScheduleReport
 			offset += metadataLength;
 		}
 
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}
@@ -2255,6 +2230,7 @@ export class ActiveScheduleCCDailyRepeatingScheduleGet
 		offset += 2;
 		this.payload.writeUInt16BE(this.slotId, offset);
 		offset += 2;
+		// Trim to the actual length, since the CC id encodes as 1 or 2 bytes
 		this.payload = this.payload.subarray(0, offset);
 		return super.serialize(ctx);
 	}

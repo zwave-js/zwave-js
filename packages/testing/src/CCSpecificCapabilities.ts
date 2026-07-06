@@ -1,4 +1,5 @@
 import type {
+	ActiveScheduleTargetCapabilities,
 	ColorComponent,
 	DoorHandleStatus,
 	DoorLockMode,
@@ -25,14 +26,7 @@ import type {
 } from "@zwave-js/core";
 
 export interface ActiveScheduleCCCapabilities {
-	targets: Map<
-		CommandClasses | number,
-		{
-			numSupportedTargets: number;
-			numYearDaySlotsPerTarget: number;
-			numDailyRepeatingSlotsPerTarget: number;
-		}
-	>;
+	targets: Map<CommandClasses, ActiveScheduleTargetCapabilities>;
 }
 
 export interface BinarySensorCCCapabilities {

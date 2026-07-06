@@ -3,6 +3,7 @@ import {
 	ActiveScheduleReportReason,
 	ActiveScheduleScheduleKind,
 	ActiveScheduleSetAction,
+	type ActiveScheduleTargetCapabilities,
 	type ActiveScheduleYearDaySchedule,
 } from "@zwave-js/cc";
 import {
@@ -27,7 +28,10 @@ import type {
 } from "@zwave-js/testing";
 
 export const defaultCapabilities: ActiveScheduleCCCapabilities = {
-	targets: new Map([
+	targets: new Map<
+		CommandClasses,
+		ActiveScheduleTargetCapabilities
+	>([
 		[CommandClasses["Binary Switch"], {
 			numSupportedTargets: 1,
 			numYearDaySlotsPerTarget: 1,
@@ -111,13 +115,16 @@ function eraseSchedules(
 	targetId: number,
 ): void {
 	// CC:00A4.01.06.11.007: A Schedule Slot ID value of zero during an Erase
-	// Set Action signifies a batch erase operation.
+	// Set Action signifies a batch erase operation. Assuming that the target
+	// is otherwise valid, the operation MUST execute based on the target
+	// values outlined in the Schedule Erase Definitions table:
 	const affectedTargetCCs = targetCC === 0
 		? [...capabilities.targets.keys()]
 		: [targetCC];
 	for (const cc of affectedTargetCCs) {
 		const targetCaps = capabilities.targets.get(cc);
 		if (!targetCaps) continue;
+		const numSlots = numSlotsPerTarget(capabilities, kind, cc);
 		const affectedTargetIds = targetId === 0
 			? Array.from(
 				{ length: targetCaps.numSupportedTargets },
@@ -125,7 +132,6 @@ function eraseSchedules(
 			)
 			: [targetId];
 		for (const id of affectedTargetIds) {
-			const numSlots = numSlotsPerTarget(capabilities, kind, cc);
 			for (let slotId = 1; slotId <= numSlots; slotId++) {
 				self.state.delete(StateKeys.schedule(kind, cc, id, slotId));
 			}

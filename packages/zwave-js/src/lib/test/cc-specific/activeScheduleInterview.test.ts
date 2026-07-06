@@ -162,8 +162,11 @@ integrationTest(
 				},
 			);
 
-			// The enabled state is queried so applications can show whether
-			// the target's schedules are enabled (CL:00A4.01.61.01.1)
+			// CL:00A4.01.61.01.1: A controlling node MUST display a UI
+			// showing the following:
+			// - Which Targets on the node have (a) schedule(s) attached
+			// - If that Target's schedules(s) is/are enabled
+			// The interview queries the enabled state to make it available
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
 					frame.type === MockZWaveFrameType.Request
@@ -185,7 +188,6 @@ integrationTest(
 					ActiveScheduleCCValues.targetCapabilities(TARGET_CC).id,
 				),
 			).toStrictEqual({
-				targetCC: TARGET_CC,
 				numSupportedTargets: 1,
 				numYearDaySlotsPerTarget: 10,
 				numDailyRepeatingSlotsPerTarget: 10,

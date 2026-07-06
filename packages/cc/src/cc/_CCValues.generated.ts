@@ -166,9 +166,7 @@ export const ActiveScheduleCCValues = Object.freeze({
 	yearDaySchedule: Object.assign(
 		(targetCC: CommandClasses, targetId: number, slotId: number) => {
 			const property = "yearDaySchedule";
-			const propertyKey = targetCC * 0x1_0000_0000
-				+ targetId * 0x1_0000
-				+ slotId;
+			const propertyKey = packScheduleSlotKey(targetCC, targetId, slotId);
 
 			return {
 				id: {
@@ -208,9 +206,7 @@ export const ActiveScheduleCCValues = Object.freeze({
 	dailyRepeatingSchedule: Object.assign(
 		(targetCC: CommandClasses, targetId: number, slotId: number) => {
 			const property = "dailyRepeatingSchedule";
-			const propertyKey = targetCC * 0x1_0000_0000
-				+ targetId * 0x1_0000
-				+ slotId;
+			const propertyKey = packScheduleSlotKey(targetCC, targetId, slotId);
 
 			return {
 				id: {
@@ -248,6 +244,14 @@ export const ActiveScheduleCCValues = Object.freeze({
 		},
 	),
 });
+
+function packScheduleSlotKey(
+	targetCC: CommandClasses,
+	targetId: number,
+	slotId: number,
+): number {
+	return targetCC * 0x1_0000_0000 + targetId * 0x1_0000 + slotId;
+}
 
 export const AlarmSensorCCValues = Object.freeze({
 	state: Object.assign(
