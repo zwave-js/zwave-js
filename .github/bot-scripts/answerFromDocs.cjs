@@ -239,8 +239,22 @@ ${excerpts}`;
 		return;
 	}
 
+	// When linking to a section, don't also link to its subsections
+	const isAncestor = (
+		/** @type {any} */ a,
+		/** @type {any} */ b,
+	) => a.file === b.file
+		&& a.breadcrumbs.length < b.breadcrumbs.length
+		&& a.breadcrumbs.every(
+			(/** @type {string} */ crumb, /** @type {number} */ i) =>
+				crumb === b.breadcrumbs[i],
+		);
+	const deduped = related.filter((chunk) =>
+		!related.some((other) => isAncestor(other, chunk))
+	);
+
 	// Compose the comment
-	const links = related
+	const links = deduped
 		.map((chunk) => {
 			const label = chunk.breadcrumbs.join(" → ");
 			return `- [${label}](${chunkUrl(chunk)})`;
