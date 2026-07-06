@@ -7,7 +7,7 @@ import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest(
+integrationTest.sequential(
 	"Notifications with enum event parameters are evaluated correctly",
 	{
 		// debug: true,
@@ -83,7 +83,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"Notification types with multiple states and optional enums merge/extend states for all of them",
 	{
 		// debug: true,
@@ -186,7 +186,7 @@ integrationTest(
 	},
 );
 
-integrationTest("The 'simple' Door state value works correctly", {
+integrationTest.sequential("The 'simple' Door state value works correctly", {
 	// debug: true,
 
 	nodeCapabilities: {
@@ -308,7 +308,7 @@ integrationTest("The 'simple' Door state value works correctly", {
 	},
 });
 
-integrationTest(
+integrationTest.sequential(
 	"The synthetic 'Opening state' value works correctly",
 	{
 		// debug: true,
@@ -451,7 +451,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"The synthetic 'Door tilt state' value works correctly",
 	{
 		// debug: true,
@@ -618,7 +618,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"Notification types with 'replace'-type enums fall back to the default value if the event parameter is not contained in the CC",
 	{
 		// debug: true,
