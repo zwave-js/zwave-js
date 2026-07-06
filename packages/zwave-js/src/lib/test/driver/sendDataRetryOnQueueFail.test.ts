@@ -24,7 +24,7 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	),
 };
 
-integrationTest(
+integrationTest.sequential(
 	"SendData commands are retried up to 3 times if the frame was not queued",
 	{
 		// debug: true,
@@ -91,7 +91,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"When queuing eventually succeeds, finish the transaction normally",
 	{
 		// debug: true,

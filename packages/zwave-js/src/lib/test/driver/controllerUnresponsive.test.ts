@@ -12,7 +12,7 @@ import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldRespond = true;
 
-integrationTest(
+integrationTest.sequential(
 	"When the controller is unresponsive, retry the command as configured, then soft-reset it to recover",
 	{
 		// debug: true,
@@ -73,7 +73,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"When the controller is still unresponsive after soft reset, re-open the serial port",
 	{
 		// debug: true,
@@ -148,7 +148,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"When the serial port cannot be reopened during unresponsive controller recovery, the driver emits an error and destroys itself",
 	{
 		// debug: true,
@@ -236,7 +236,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"The unresponsive controller recovery does not kick in when it was enabled via config",
 	{
 		// debug: true,

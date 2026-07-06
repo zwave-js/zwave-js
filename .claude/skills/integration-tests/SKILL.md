@@ -89,6 +89,21 @@ integrationTest("Description of what is being tested", {
 | `testBody`                    | `(t, driver, node, controller, mockNode) => Promise<void>` | **required** | Test assertions                                |
 | `additionalDriverOptions`     | `PartialZWaveOptions`                                      | —            | Override driver config                         |
 
+### Concurrency
+
+Tests within a file run **concurrently** by default. Each test gets its own isolated in-memory mock port and cache directory, and concurrency simply overlaps the many waits for mock round-trips, so the whole suite finishes several times faster.
+
+Opt a single test out with `integrationTest.sequential(...)` (also `.sequential.only` / `.sequential.skip`). Reserve this for tests that assert on absolute timing, retry counts, or message ordering — CPU contention from neighboring tests perturbs those and makes them flaky. Everything else should stay on the concurrent default.
+
+```typescript
+// Runs alone, not overlapped with the other tests in this file
+integrationTest.sequential("retries SendData up to 3 times", {
+	// ...
+});
+```
+
+Both harnesses (`integrationTestSuite.ts` and `integrationTestSuiteMulti.ts`) share this behavior.
+
 ## Multi-Node Test Harness
 
 For tests requiring multiple mock nodes, use `integrationTestSuiteMulti.ts`:
@@ -493,6 +508,7 @@ Examples:
    - [ ] Define `nodeCapabilities` with `ccCaps()` for type safety
    - [ ] Add `customSetup` if mock node state needs pre-population
    - [ ] Set `clearMessageStatsBeforeTest: false` if verifying interview frames
+   - [ ] Use `integrationTest.sequential(...)` only if the test asserts on timing, retry counts, or ordering
 
 3. **Write assertions**
    - [ ] Use `node.getValue()` / `node.getValueMetadata()` for value checks

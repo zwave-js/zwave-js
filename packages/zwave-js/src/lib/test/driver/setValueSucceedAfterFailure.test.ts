@@ -64,10 +64,6 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node2, mockController, mockNode) => {
-			driver.updateLogConfig({
-				level: "silly",
-			});
-
 			node2.markAsAlive();
 			// @ts-expect-error
 			node2._deviceConfig = {
@@ -119,8 +115,6 @@ integrationTest(
 
 			await basicSetPromise2;
 			t.expect(node2.status).toBe(NodeStatus.Alive);
-
-			await wait(10000);
 		},
 	},
 );

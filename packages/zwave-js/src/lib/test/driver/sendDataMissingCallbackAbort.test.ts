@@ -46,7 +46,7 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	),
 };
 
-integrationTest(
+integrationTest.sequential(
 	"Abort transmission and soft-reset stick if SendData is missing the callback",
 	{
 		// debug: true,
@@ -151,7 +151,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"Mark node as dead if SendData is still missing the callback after soft-reset",
 	{
 		// Real-world experience has shown that for older controllers this situation can be caused by dead nodes
@@ -251,7 +251,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"Missing callback recovery works if the command can be retried",
 	{
 		// debug: true,
@@ -358,7 +358,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"Missing callback recovery only kicks in for SendData commands",
 	{
 		// debug: true,
@@ -400,7 +400,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"With soft-reset disabled, transmissions do not get stuck after a missing Send Data callback",
 	{
 		// debug: true,
@@ -512,7 +512,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"After a missing Send Data callback, Send Data Abort is not executed twice",
 	{
 		// debug: true,
@@ -747,7 +747,7 @@ integrationTestMulti(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"Retry transmissions if the controller is reset by the watchdog while waiting for the callback",
 	{
 		// debug: true,
