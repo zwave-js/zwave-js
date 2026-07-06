@@ -178,3 +178,37 @@ jobs:
 
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.ensureLogfileFeedback({github, context}, feedback);
+
+  # Answer questions that are covered by the documentation
+  answer-from-docs:
+    runs-on: [ubuntu-latest]
+    if: |
+      github.event.action == 'opened' &&
+      github.event.issue.user.login != 'AlCalzone' &&
+      github.event.issue.user.login != 'zwave-js-bot'
+
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v6
+
+    - name: Restore docs index
+      id: restore-index
+      uses: actions/cache/restore@v4
+      with:
+        path: .docs-index
+        key: docs-embeddings-v1-${{ hashFiles('docs/**/*.md') }}
+        restore-keys: |
+          docs-embeddings-v1-
+
+    - name: Answer from documentation
+      if: steps.restore-index.outputs.cache-matched-key != ''
+      uses: actions/github-script@v9
+      env:
+        MODELS_TOKEN: ${{ secrets.BOT_TOKEN }}
+        DOCS_INDEX_PATH: .docs-index/index.json
+        DRY_RUN: ${{ vars.DOCS_ANSWER_DRY_RUN }}
+      with:
+        github-token: ${{ secrets.BOT_TOKEN }}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          await bot.answerFromDocs({github, context});

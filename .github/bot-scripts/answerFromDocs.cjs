@@ -1,0 +1,335 @@
+// @ts-check
+
+/// <reference path="types.d.ts" />
+
+const fs = require("node:fs/promises");
+
+const EMBEDDINGS_URL = "https://models.github.ai/inference/embeddings";
+const CHAT_URL = "https://models.github.ai/inference/chat/completions";
+const CHAT_MODEL = process.env.CHAT_MODEL || "openai/gpt-4o";
+
+const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
+const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
+
+// Discussion categories where questions are expected
+const QUESTION_CATEGORY_SLUGS = [
+	"request-support-investigate-issue",
+	"q-a",
+];
+// Users whose posts should never be answered automatically
+const EXCLUDED_USERS = ["AlCalzone", "zwave-js-bot"];
+
+const MAX_RETRIEVED_CHUNKS = 5;
+// Cosine similarity floor below which a chunk is considered unrelated
+const MIN_SIMILARITY = 0.3;
+// Confidence thresholds for the different response styles
+const ANSWER_CONFIDENCE = 75;
+const LINKS_CONFIDENCE = 40;
+
+// Limit the question size to keep the prompt within the token budget
+const MAX_QUESTION_LENGTH = 6000;
+
+/**
+ * @param {number[]} a
+ * @param {number[]} b
+ */
+function cosineSimilarity(a, b) {
+	let dot = 0;
+	let normA = 0;
+	let normB = 0;
+	for (let i = 0; i < a.length; i++) {
+		dot += a[i] * b[i];
+		normA += a[i] * a[i];
+		normB += b[i] * b[i];
+	}
+	return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+/**
+ * @param {string} url
+ * @param {object} body
+ * @param {string} token
+ */
+async function modelsRequest(url, body, token) {
+	const response = await fetch(url, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify(body),
+	});
+	if (!response.ok) {
+		const text = await response.text().catch(() => "");
+		throw new Error(
+			`Models API request failed with status ${response.status}: ${text}`,
+		);
+	}
+	return response.json();
+}
+
+/** @param {{file: string, anchor: string}} chunk */
+function chunkUrl(chunk) {
+	const docPath = chunk.file.replace(/(README|index)?\.md$/, "");
+	let url = `${DOCS_BASE_URL}/${docPath}`;
+	if (chunk.anchor) url += `?id=${chunk.anchor}`;
+	return url;
+}
+
+/**
+ * Answers a user's question in an issue or discussion based on the documentation.
+ *
+ * Expects the following environment variables:
+ * - MODELS_TOKEN: token with models:read permission
+ * - DOCS_INDEX_PATH: path to the embeddings index created by buildDocsIndex.cjs
+ * - DRY_RUN: if set to "true", log the would-be comment instead of posting it
+ *
+ * @param {{github: Github, context: Context, core?: any}} param
+ */
+async function main(param) {
+	const { github, context } = param;
+
+	const modelsToken = process.env.MODELS_TOKEN;
+	if (!modelsToken) {
+		console.log("No MODELS_TOKEN provided, skipping");
+		return;
+	}
+	const dryRun = process.env.DRY_RUN === "true";
+
+	// Figure out where the question comes from
+	const isDiscussion = !!context.payload.discussion;
+	const post = context.payload.discussion ?? context.payload.issue;
+	if (!post) {
+		console.log("No issue or discussion in payload, skipping");
+		return;
+	}
+
+	const author = post.user?.login;
+	if (
+		!author
+		|| EXCLUDED_USERS.includes(author)
+		|| post.user?.type === "Bot"
+	) {
+		console.log(`Skipping post by ${author}`);
+		return;
+	}
+
+	if (isDiscussion) {
+		const categorySlug = context.payload.discussion.category?.slug;
+		if (!QUESTION_CATEGORY_SLUGS.includes(categorySlug)) {
+			console.log(
+				`Skipping discussion in category ${categorySlug}`,
+			);
+			return;
+		}
+	} else {
+		// Device config requests are no questions the docs can answer
+		const labels = (post.labels ?? []).map(
+			(/** @type {any} */ l) => l.name,
+		);
+		if (labels.includes("config ⚙")) {
+			console.log("Skipping device config request");
+			return;
+		}
+	}
+
+	// Load the pre-built embeddings index
+	const indexPath = process.env.DOCS_INDEX_PATH;
+	/** @type {any} */
+	let index;
+	try {
+		index = JSON.parse(await fs.readFile(indexPath, "utf8"));
+	} catch {
+		console.log(`No docs index found at ${indexPath}, skipping`);
+		return;
+	}
+	console.log(
+		`Loaded docs index with ${index.chunks.length} chunks (created ${index.createdAt})`,
+	);
+
+	const question = `${post.title}\n\n${post.body ?? ""}`
+		.slice(0, MAX_QUESTION_LENGTH);
+
+	// Retrieve the most relevant doc chunks
+	const embedResponse = await modelsRequest(EMBEDDINGS_URL, {
+		model: index.model,
+		input: [question],
+	}, modelsToken);
+	const questionEmbedding = embedResponse.data[0].embedding;
+
+	const ranked = index.chunks
+		.map((/** @type {any} */ chunk) => ({
+			chunk,
+			similarity: cosineSimilarity(questionEmbedding, chunk.embedding),
+		}))
+		.filter((/** @type {any} */ r) => r.similarity >= MIN_SIMILARITY)
+		.sort((/** @type {any} */ a, /** @type {any} */ b) =>
+			b.similarity - a.similarity
+		)
+		.slice(0, MAX_RETRIEVED_CHUNKS);
+
+	console.log(
+		"Top matches:",
+		ranked.map((/** @type {any} */ r) =>
+			`${r.similarity.toFixed(3)} ${r.chunk.file}#${r.chunk.anchor}`
+		),
+	);
+	if (ranked.length === 0) {
+		console.log("No relevant documentation found, skipping");
+		return;
+	}
+
+	// Ask the model whether the docs answer the question
+	const excerpts = ranked
+		.map((/** @type {any} */ r, /** @type {number} */ i) => `
+<excerpt id="${i}" section="${r.chunk.breadcrumbs.join(" > ")}">
+${r.chunk.text}
+</excerpt>`)
+		.join("\n");
+
+	const systemPrompt = `
+You are a support assistant for the Z-Wave JS project, a Z-Wave driver library written in TypeScript.
+A user has posted a question. You are given excerpts from the project documentation that might answer it.
+
+Determine whether the excerpts actually answer the user's question, and respond with a JSON object with the following fields:
+- "confidence": a number between 0 and 100 indicating how confident you are that the excerpts fully answer the question. Use 0 if the post is not a question, or the excerpts are unrelated to it.
+- "answer": if the excerpts answer the question, a concise answer (a few sentences, markdown) based ONLY on the excerpts. Otherwise null.
+- "relatedExcerpts": an array with the ids (numbers) of the excerpts that are relevant to the question, most relevant first. Leave empty if none are.
+
+Rules:
+1. Base your answer solely on the given excerpts. Do not use outside knowledge.
+2. Do not mention the excerpts in the answer text.
+3. Do not refer to the user's question with phrases like "here's the answer to your question". Just answer directly.
+4. Respond with the JSON object only.`.trim();
+
+	const userPrompt = `## User's post
+
+${question}
+
+## Documentation excerpts
+${excerpts}`;
+
+	const chatResponse = await modelsRequest(CHAT_URL, {
+		model: CHAT_MODEL,
+		messages: [
+			{ role: "system", content: systemPrompt },
+			{ role: "user", content: userPrompt },
+		],
+		response_format: { type: "json_object" },
+		max_tokens: 1000,
+		temperature: 0.2,
+	}, modelsToken);
+
+	/** @type {{confidence: number, answer: string | null, relatedExcerpts: number[]}} */
+	let result;
+	try {
+		result = JSON.parse(chatResponse.choices[0].message.content);
+	} catch (e) {
+		console.log("Failed to parse model response:", e);
+		return;
+	}
+	console.log("Model response:", JSON.stringify(result));
+
+	const related = (result.relatedExcerpts ?? [])
+		.map((i) => ranked[i]?.chunk)
+		.filter(Boolean);
+
+	if (result.confidence < LINKS_CONFIDENCE || related.length === 0) {
+		console.log("Confidence too low, not answering");
+		return;
+	}
+
+	// Compose the comment
+	const links = related
+		.map((chunk) => {
+			const label = chunk.breadcrumbs.join(" → ");
+			return `- [${label}](${chunkUrl(chunk)})`;
+		})
+		.join("\n");
+
+	let body = `**Beep, boop! 🤖**\n\n`;
+	if (result.confidence >= ANSWER_CONFIDENCE && result.answer) {
+		body += `It looks like the documentation answers your question:
+
+${result.answer}
+
+These sections have more details:
+${links}`;
+	} else {
+		body +=
+			`While you're waiting for a human to show up, these sections of the documentation might answer your question:
+
+${links}`;
+	}
+	body += `
+
+---
+
+_This answer was generated automatically based on the documentation. AI can make mistakes, always check important info._
+${DOCS_ANSWER_COMMENT_TAG}`;
+
+	if (dryRun) {
+		console.log("DRY RUN - would post the following comment:");
+		console.log(body);
+		return;
+	}
+
+	if (isDiscussion) {
+		// Avoid double-posting if the workflow ran twice
+		const existing = await github.graphql(
+			`
+			query getComments($discussionId: ID!) {
+				node(id: $discussionId) {
+					... on Discussion {
+						comments(first: 50) {
+							nodes { body }
+						}
+					}
+				}
+			}
+			`,
+			{ discussionId: post.node_id },
+		);
+		if (
+			existing.node?.comments?.nodes?.some(
+				(/** @type {any} */ c) =>
+					c.body.includes(DOCS_ANSWER_COMMENT_TAG),
+			)
+		) {
+			console.log("Already answered, skipping");
+			return;
+		}
+
+		await github.graphql(
+			`
+			mutation addDiscussionComment($discussionId: ID!, $body: String!) {
+				addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+					comment { id }
+				}
+			}
+			`,
+			{ discussionId: post.node_id, body },
+		);
+	} else {
+		const { data: comments } = await github.rest.issues.listComments({
+			...context.repo,
+			issue_number: post.number,
+			per_page: 100,
+		});
+		if (
+			comments.some((c) => c.body?.includes(DOCS_ANSWER_COMMENT_TAG))
+		) {
+			console.log("Already answered, skipping");
+			return;
+		}
+
+		await github.rest.issues.createComment({
+			...context.repo,
+			issue_number: post.number,
+			body,
+		});
+	}
+	console.log("Posted docs answer comment");
+}
+
+module.exports = main;
