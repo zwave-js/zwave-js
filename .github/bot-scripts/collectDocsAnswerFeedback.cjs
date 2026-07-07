@@ -15,13 +15,13 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const {
-	cleanQuestion,
 	DOCS_ANSWER_COMMENT_TAG,
 	DOCS_ANSWER_METADATA_TAG,
 	DOCS_ANSWER_METADATA_VERSION,
 	DOCS_BASE_URL,
 } = require("./answerFromDocs.cjs");
 const { embed } = require("./modelsApi.cjs");
+const { cleanQuestion } = require("./postsIndex.cjs");
 const { authorizedUsers } = require("./users.cjs");
 
 const BOT_USER = "zwave-js-bot";
@@ -148,7 +148,12 @@ function parseAnswerMetadata(body) {
 			: `${docPath}.md`;
 		sections.push(`${file}#${anchor}`);
 	}
-	return { style: "answer", confidence: null, sections };
+	// Docs answers always link sections, so none means related posts only
+	return {
+		style: sections.length > 0 ? "answer" : "posts",
+		confidence: null,
+		sections,
+	};
 }
 
 /**
@@ -451,7 +456,11 @@ async function main() {
 	// The suppression list makes answerFromDocs.cjs demote responses
 	// to questions similar to these. Embed with the same model as the
 	// docs index so the runtime similarity comparison is valid.
-	const downvoted = records.filter((r) => r.score <= SUPPRESS_SCORE);
+	// Related-posts-only comments say nothing about the docs answer
+	// quality, so they don't suppress anything.
+	const downvoted = records.filter(
+		(r) => r.score <= SUPPRESS_SCORE && r.style !== "posts",
+	);
 	const embeddings = downvoted.length > 0
 		? await embed(downvoted.map((r) => r.question), token, index.model)
 		: [];

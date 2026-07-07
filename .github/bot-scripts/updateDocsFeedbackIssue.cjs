@@ -94,7 +94,11 @@ function renderRecord(record) {
 			record.score > 0 ? "+" : ""
 		}${record.score}`,
 		`[Bot answer](${record.commentUrl})${
-			record.style === "links" ? " (links only)" : ""
+			record.style === "links"
+				? " (links only)"
+				: record.style === "posts"
+				? " (related posts only)"
+				: ""
 		}${
 			record.confidence != null
 				? `, confidence ${record.confidence}`
@@ -109,7 +113,7 @@ function renderRecord(record) {
 			}`,
 		);
 	}
-	if (record.score <= SUPPRESS_SCORE) {
+	if (record.score <= SUPPRESS_SCORE && record.style !== "posts") {
 		lines.push(
 			"🚫 Suppressed: similar questions currently get a demoted response",
 		);

@@ -1,0 +1,26 @@
+[
+	{
+		"question": "Controller connection broken after updating Z-Wave JS UI\n\nI connect to my controller over the network using ser2net. After updating from 13.10.1 to a newer version, the driver fails to start. Rolling back fixes it.",
+		"expectedPosts": [{ "type": "discussion", "number": 7504 }]
+	},
+	{
+		"question": "RF region switches back to Europe (Long Range) on its own\n\nI set the region of my controller to USA (Long Range), but after a restart it is EU (LR) again. How do I make this stick?",
+		"expectedPosts": [{ "type": "discussion", "number": 8900 }]
+	},
+	{
+		"question": "Show which nodes are unreachable\n\nIt would be great if there was an API to figure out which devices in the network are dead or unreachable, so applications can highlight them.",
+		"expectedPosts": [{ "type": "issue", "number": 4207 }]
+	},
+	{
+		"question": "Read firmware from a device\n\nIs it possible to download the currently installed firmware image from a Z-Wave device, e.g. to clone it onto another device?",
+		"expectedPosts": [{ "type": "issue", "number": 1354 }]
+	},
+	{
+		"question": "Using zwave-js as a secondary controller\n\nI want to run zwave-js as a secondary controller in a network managed by another hub, but inclusion and the interview behave strangely. Is this supported?",
+		"expectedPosts": [
+			{ "type": "issue", "number": 7148 },
+			{ "type": "issue", "number": 8100 },
+			{ "type": "issue", "number": 8168 }
+		]
+	}
+]
