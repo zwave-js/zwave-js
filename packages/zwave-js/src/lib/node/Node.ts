@@ -32,6 +32,11 @@ import {
 	supervisionResultToSetValueResult,
 	utils as ccUtils,
 } from "@zwave-js/cc";
+import {
+	ActiveScheduleCCDailyRepeatingScheduleReport,
+	ActiveScheduleCCEnableReport,
+	ActiveScheduleCCYearDayScheduleReport,
+} from "@zwave-js/cc/ActiveScheduleCC";
 import { ApplicationStatusCCBusy } from "@zwave-js/cc/ApplicationStatusCC";
 import {
 	AssociationCCGet,
@@ -175,6 +180,11 @@ import { cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacksWithSelf } from "../driver/Statistics.js";
 import { type TaskBuilder, TaskPriority } from "../driver/Task.js";
 import { reportMissingDeviceConfig } from "../telemetry/deviceConfig.js";
+import {
+	handleActiveScheduleDailyRepeatingScheduleReport,
+	handleActiveScheduleEnableReport,
+	handleActiveScheduleYearDayScheduleReport,
+} from "./CCHandlers/ActiveScheduleCC.js";
 import { handleApplicationBusy } from "./CCHandlers/ApplicationStatusCC.js";
 import {
 	handleAssociationGet,
@@ -2894,6 +2904,17 @@ protocol version:      ${this.protocolVersion}`;
 			command instanceof UserCredentialCCAssociationReport
 		) {
 			return handleUserCredentialAssociationReport(this, command);
+		} else if (command instanceof ActiveScheduleCCEnableReport) {
+			return handleActiveScheduleEnableReport(this, command);
+		} else if (command instanceof ActiveScheduleCCYearDayScheduleReport) {
+			return handleActiveScheduleYearDayScheduleReport(this, command);
+		} else if (
+			command instanceof ActiveScheduleCCDailyRepeatingScheduleReport
+		) {
+			return handleActiveScheduleDailyRepeatingScheduleReport(
+				this,
+				command,
+			);
 		} else if (command instanceof TimeCCTimeGet) {
 			return handleTimeGet(this.driver, this, command);
 		} else if (command instanceof TimeCCDateGet) {

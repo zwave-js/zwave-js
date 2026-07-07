@@ -28,6 +28,11 @@ import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
 import type { UserData } from "./feature-apis/AccessControl.js";
+import type {
+	ScheduleData,
+	ScheduleKind,
+	ScheduleTarget,
+} from "./feature-apis/Scheduling.js";
 
 export {
 	EntryControlDataTypes,
@@ -279,6 +284,18 @@ export interface CredentialLearnCompletedArgs {
 	success: boolean;
 }
 
+export interface ScheduleDeletedArgs {
+	target: ScheduleTarget;
+	kind: ScheduleKind;
+	slot: number;
+}
+
+export interface ScheduleEnabledChangedArgs {
+	/** The target whose schedules were enabled or disabled. Omitted when all targets were affected. */
+	target?: ScheduleTarget;
+	enabled: boolean;
+}
+
 export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	notification: ZWaveNotificationCallback;
 	"interview failed": ZWaveInterviewFailedCallback;
@@ -317,6 +334,16 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 		endpoint: Endpoint,
 		args: CredentialLearnCompletedArgs,
 	) => void;
+	"schedule added": (endpoint: Endpoint, args: ScheduleData) => void;
+	"schedule modified": (endpoint: Endpoint, args: ScheduleData) => void;
+	"schedule deleted": (
+		endpoint: Endpoint,
+		args: ScheduleDeletedArgs,
+	) => void;
+	"schedule enabled changed": (
+		endpoint: Endpoint,
+		args: ScheduleEnabledChangedArgs,
+	) => void;
 }
 
 export type ZWaveNodeEvents = Extract<keyof ZWaveNodeEventCallbacks, string>;
@@ -348,6 +375,10 @@ export const zWaveNodeEvents = [
 	"credential deleted",
 	"credential learn progress",
 	"credential learn completed",
+	"schedule added",
+	"schedule modified",
+	"schedule deleted",
+	"schedule enabled changed",
 ] as const satisfies readonly ZWaveNodeEvents[];
 
 /** Represents the result of one health check round of a node's lifeline */

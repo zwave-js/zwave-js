@@ -35,3 +35,21 @@ export type {
 	UserData,
 } from "./lib/node/feature-apis/AccessControl.js";
 export { FeatureAPI } from "./lib/node/feature-apis/FeatureAPI.js";
+export {
+	ScheduleKind,
+	ScheduleTargetType,
+	SchedulingAPI,
+	SetScheduleResult,
+	isScheduleActive,
+} from "./lib/node/feature-apis/Scheduling.js";
+export type {
+	DailyRepeatingSchedule,
+	DeleteSchedulesOptions,
+	Schedule,
+	ScheduleData,
+	ScheduleTarget,
+	ScheduleTargetCapabilities,
+	SchedulingCapabilities,
+	UserScheduleTarget,
+	YearDaySchedule,
+} from "./lib/node/feature-apis/Scheduling.js";
