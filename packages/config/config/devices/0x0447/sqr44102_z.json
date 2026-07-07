@@ -36,7 +36,24 @@
 		},
 		{
 			"#": "3",
-			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+			"label": "State After Power Failure",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 1
+				},
+				{
+					"label": "Always on",
+					"value": 2
+				},
+				{
+					"label": "Previous state",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "4",
