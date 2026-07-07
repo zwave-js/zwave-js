@@ -36,9 +36,16 @@ const MAX_QUESTION_LENGTH = 6000;
  * @param {string} body
  */
 function cleanQuestion(title, body) {
-	const text = body
-		// Template instructions are hidden in HTML comments
-		.replace(/<!--[\s\S]*?-->/g, "")
+	// Template instructions are hidden in HTML comments.
+	// Replacements can create new comment sequences, repeat until stable.
+	let text = body;
+	let previous;
+	do {
+		previous = text;
+		text = text.replace(/<!--[\s\S]*?-->/g, "");
+	} while (text !== previous);
+
+	text = text
 		// Checked/unchecked checklist items carry no information
 		.replace(/^\s*-\s*\[[ xX]\].*$/gm, "")
 		// Retrieval matches on prose, not logs. Long code blocks would
