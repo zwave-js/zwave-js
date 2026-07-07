@@ -87,3 +87,36 @@ async getSupportedScales(
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 255
+
+## Related types
+
+### `HumidityControlSetpointCapabilities`
+
+```ts
+interface HumidityControlSetpointCapabilities {
+	minValue: number;
+	minValueScale: number;
+	maxValue: number;
+	maxValueScale: number;
+}
+```
+
+### `HumidityControlSetpointType`
+
+```ts
+enum HumidityControlSetpointType {
+	"N/A" = 0x00,
+	"Humidifier" = 0x01, // CC v1
+	"De-humidifier" = 0x02, // CC v1
+	"Auto" = 0x03, // CC v2
+}
+```
+
+### `HumidityControlSetpointValue`
+
+```ts
+interface HumidityControlSetpointValue {
+	value: number;
+	scale: number;
+}
+```

@@ -228,6 +228,7 @@ export class MockController {
 	public readonly mockPort: MockPort;
 	public readonly serial: ZWaveSerialStream;
 
+	private destroyed: boolean = false;
 	private expectedHostACKs: TimedExpectation[] = [];
 	private expectedHostMessages: TimedExpectation<Message, Message>[] = [];
 	private expectedNodeFrames: Map<
@@ -385,6 +386,7 @@ export class MockController {
 		timeout: number,
 		errorMessage?: string,
 	): Promise<void> {
+		if (this.destroyed) return;
 		const ack = new TimedExpectation(
 			timeout,
 			undefined,
@@ -704,7 +706,12 @@ export class MockController {
 	}
 
 	public destroy(): void {
+		this.destroyed = true;
 		this.air.abort();
+		for (const ack of this.expectedHostACKs) {
+			ack.resolve();
+		}
+		this.expectedHostACKs = [];
 	}
 }
 

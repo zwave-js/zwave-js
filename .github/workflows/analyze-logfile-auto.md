@@ -1,25 +1,22 @@
-name: 'Z-Wave Bot: Discussion created/edited'
+---
+description: Automatically analyze Z-Wave JS logfiles posted in new discussions
 
 on:
   discussion:
     types: [created, edited]
-
-jobs:
-  # Notify author when they post the wrong log
-  ensure-discussion-logfile:
-    runs-on: [ubuntu-latest]
-    outputs:
-      result: ${{ steps.feedback.outputs.result }}
-
-    steps:
-    - name: Checkout master branch
+  # Discussions are created by regular users; gating happens via the
+  # deterministic logfile classification below, not via repo roles
+  roles: all
+  reaction: none
+  steps:
+    - name: Checkout repository
       uses: actions/checkout@v6
 
     - name: Extract log file from discussion body
       uses: actions/github-script@v9
       id: extract
       with:
-        github-token: ${{secrets.BOT_TOKEN}}
+        github-token: ${{ secrets.BOT_TOKEN }}
         result-encoding: string
         script: |
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
@@ -132,7 +129,6 @@ jobs:
             - Unrelated
           3. If you are not sure about the classification (less than 75% certainty), return "Unknown".
           4. Do not return anything else.
-        
         prompt: |
           Analyze the following log file and classify it according to the rules above:
 
@@ -144,14 +140,16 @@ jobs:
 
     - name: Give feedback
       uses: actions/github-script@v9
-      if: steps.extract.outputs.shouldContinue == 'true'
       id: feedback
       env:
         AI_RESPONSE: ${{ steps.ai_detection.outputs.response }}
+        SHOULD_CONTINUE: ${{ steps.extract.outputs.shouldContinue }}
       with:
-        github-token: ${{secrets.BOT_TOKEN}}
+        github-token: ${{ secrets.BOT_TOKEN }}
         result-encoding: string
         script: |
+          if (process.env.SHOULD_CONTINUE !== "true") return "SKIP";
+
           const aiResponse = process.env.AI_RESPONSE;
           console.log('Raw AI response:', JSON.stringify(aiResponse));
 
@@ -182,92 +180,74 @@ jobs:
 
           return feedback;
 
-  # Auto-analyze logfile if a valid one is found
-  auto-analyze-logfile:
-    runs-on: [ubuntu-latest]
-    needs: ensure-discussion-logfile
-    if: needs.ensure-discussion-logfile.outputs.result == 'OK'
+    # The step outcome (success vs. skipped) is exposed as a pre-activation
+    # output and gates the agent job below
+    - name: Gate agentic analysis
+      id: gate
+      if: steps.feedback.outputs.result == 'OK'
+      run: "true"
+  permissions:
+    contents: read
+    models: read
+    discussions: write
 
-    strategy:
-      matrix:
-        node-version: [22] # This should be LTS
+# Only run the (expensive) agentic analysis when the pre-checks confirmed
+# a valid Z-Wave JS logfile with the correct log level
+if: needs.pre_activation.outputs.gate_result == 'success'
 
-    steps:
-    - name: Checkout master branch
-      uses: actions/checkout@v6
+permissions:
+  contents: read
+  discussions: read
 
-    - name: Prepare environment
-      uses: ./.github/actions/prepare-env
-      with:
-        node-version: ${{ matrix.node-version }}
-        githubToken: ${{ secrets.GITHUB_TOKEN }}
+engine:
+  id: copilot
 
-    - name: Get logfile URL from discussion
-      id: get_logfile_url
-      uses: actions/github-script@v9
-      with:
-        github-token: ${{ secrets.BOT_TOKEN }}
-        result-encoding: string
-        script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
-          return bot.extractLogfileUrlFromDiscussion({github, context});
+imports:
+  - shared/zwave-log-analysis.md
 
-    - name: Extract query for log analyzer
-      uses: ./.github/actions/extract-log-analyzer-query
-      id: extract_query
-      with:
-        discussion-body: ${{ github.event.discussion.body }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v6
+    with:
+      persist-credentials: false
 
-    - name: Install logfile analyzer
-      run: yarn add --dev @zwave-js/log-analyzer
+  - name: Get logfile URL from discussion
+    id: get_logfile_url
+    uses: actions/github-script@v9
+    with:
+      github-token: ${{ secrets.BOT_TOKEN }}
+      result-encoding: string
+      script: |
+        const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+        return bot.extractLogfileUrlFromDiscussion({github, context});
 
-    - name: Analyze logfile
-      uses: actions/github-script@v9
-      env:
-        LOGFILE_URL: ${{ steps.get_logfile_url.outputs.result }}
-        QUERY: ${{ steps.extract_query.outputs.result }}
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        IS_AUTO_ANALYSIS: 'true'
-      with:
-        github-token: ${{ secrets.BOT_TOKEN }}
-        script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
-          return bot.analyzeLogfileInDiscussion({github, context, core});
+  - name: Download logfile
+    env:
+      LOGFILE_URL: ${{ steps.get_logfile_url.outputs.result }}
+    run: |
+      mkdir -p /tmp/gh-aw/agent
+      curl -fsSL --max-filesize 52428800 --connect-timeout 15 --max-time 120 --retry 3 --retry-delay 2 -o /tmp/gh-aw/agent/logfile.log "$LOGFILE_URL"
+      wc -l /tmp/gh-aw/agent/logfile.log
 
-  # Answer questions that are covered by the documentation
-  answer-from-docs:
-    runs-on: [ubuntu-latest]
-    permissions:
-      contents: read
-      models: read
-    if: |
-      (github.event.action == 'created' || github.event.action == 'edited') &&
-      github.event.discussion.user.login != 'AlCalzone' &&
-      github.event.discussion.user.login != 'zwave-js-bot'
+safe-outputs:
+  add-comment:
+    discussions: true
 
-    steps:
-    - name: Checkout master branch
-      uses: actions/checkout@v6
+network: defaults
 
-    - name: Restore docs index
-      id: restore-index
-      uses: actions/cache/restore@v4
-      with:
-        path: .docs-index
-        key: docs-embeddings-v1-${{ hashFiles('docs/**/*.md') }}
-        restore-keys: |
-          docs-embeddings-v1-
+timeout-minutes: 30
+---
 
-    - name: Answer from documentation
-      if: steps.restore-index.outputs.cache-matched-key != ''
-      uses: actions/github-script@v9
-      env:
-        MODELS_TOKEN: ${{ github.token }}
-        DOCS_INDEX_PATH: .docs-index/index.json
-        DRY_RUN: ${{ vars.DOCS_ANSWER_DRY_RUN }}
-      with:
-        github-token: ${{ secrets.BOT_TOKEN }}
-        script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
-          await bot.answerFromDocs({github, context});
+# Z-Wave JS Logfile Analysis
+
+A user opened a GitHub discussion asking for help and attached a Z-Wave JS driver logfile. The logfile has been downloaded to `/tmp/gh-aw/agent/logfile.log` on this runner.
+
+This is the discussion content (sanitized):
+
+"${{ steps.sanitized.outputs.text }}"
+
+Determine the user's question or problem from the discussion content. If no specific question can be identified, analyze the log for any issues, errors, or notable events that could explain the problem described in the discussion.
+
+Load the logfile with the `loadLogFile` tool, then analyze it thoroughly following your analysis instructions to answer the user's question.
+
+Finally, post your findings as a comment on the discussion using the `add-comment` safe output.

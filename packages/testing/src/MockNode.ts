@@ -1,7 +1,7 @@
 import { type CCEncodingContext, type CommandClass } from "@zwave-js/cc";
 import {
 	type CommandClassInfo,
-	type CommandClasses,
+	CommandClasses,
 	type MaybeNotKnown,
 	NOT_KNOWN,
 	SecurityClass,
@@ -155,6 +155,11 @@ export class MockNode {
 				const { ccId, ...ccInfo } = cc;
 				this.addCC(ccId, ccInfo);
 			}
+		}
+
+		// Avoid ~1s interview timeout per test from the Basic CC support probe
+		if (!this.implementedCCs.has(CommandClasses.Basic)) {
+			this.addCC(CommandClasses.Basic, { isSupported: true });
 		}
 
 		let index = 0;

@@ -7,7 +7,13 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<MultilevelSwitchCCReport, "currentValue" | "targetValue" | "duration"> | undefined>;
+async get(): Promise<
+	{
+		currentValue?: MaybeUnknown<number>;
+		duration?: Duration;
+		targetValue?: MaybeUnknown<number>;
+	} | undefined
+>;
 ```
 
 ### `set`
@@ -30,7 +36,23 @@ Sets the switch to a new value.
 
 ```ts
 async startLevelChange(
-	options: MultilevelSwitchCCStartLevelChangeOptions,
+	options: {
+		direction: "up" | "down";
+		ignoreStartLevel: true;
+		startLevel?: number;
+		// Version >= 2:
+		duration?: Duration | string;
+	},
+): Promise<SupervisionResult | undefined>;
+
+async startLevelChange(
+	options: {
+		direction: "up" | "down";
+		ignoreStartLevel: false;
+		startLevel: number;
+		// Version >= 2:
+		duration?: Duration | string;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
@@ -179,3 +201,20 @@ async getSupported(): Promise<MaybeNotKnown<SwitchType>>;
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 99
+
+## Related types
+
+### `SwitchType`
+
+```ts
+enum SwitchType {
+	"not supported" = 0x00,
+	"Off/On" = 0x01,
+	"Down/Up" = 0x02,
+	"Close/Open" = 0x03,
+	"CCW/CW" = 0x04,
+	"Left/Right" = 0x05,
+	"Reverse/Forward" = 0x06,
+	"Pull/Push" = 0x07,
+}
+```

@@ -23,7 +23,10 @@ async setCustomPowerlevel(
 
 ```ts
 async getPowerlevel(): Promise<
-	MaybeNotKnown<Pick<PowerlevelCCReport, "powerlevel" | "timeout">>
+	MaybeNotKnown<{
+		powerlevel: Powerlevel;
+		timeout?: number;
+	}>
 >;
 ```
 
@@ -31,7 +34,16 @@ async getPowerlevel(): Promise<
 
 ```ts
 async reportPowerlevel(
-	options: PowerlevelCCReportOptions,
+	options: {
+		powerlevel: typeof Powerlevel["Normal Power"];
+	},
+): Promise<void>;
+
+async reportPowerlevel(
+	options: {
+		powerlevel: Exclude<Powerlevel, typeof Powerlevel["Normal Power"]>;
+		timeout: number;
+	},
 ): Promise<void>;
 ```
 
@@ -50,10 +62,11 @@ async startNodeTest(
 ```ts
 async getNodeTestStatus(): Promise<
 	MaybeNotKnown<
-		Pick<
-			PowerlevelCCTestNodeReport,
-			"testNodeId" | "status" | "acknowledgedFrames"
-		>
+		{
+			acknowledgedFrames: number;
+			status: PowerlevelTestStatus;
+			testNodeId: number;
+		}
 	>
 >;
 ```
@@ -62,6 +75,39 @@ async getNodeTestStatus(): Promise<
 
 ```ts
 async sendNodeTestReport(
-	options: PowerlevelCCTestNodeReportOptions,
+	options: {
+		testNodeId: number;
+		status: PowerlevelTestStatus;
+		acknowledgedFrames: number;
+	},
 ): Promise<void>;
+```
+
+## Related types
+
+### `Powerlevel`
+
+```ts
+enum Powerlevel {
+	"Normal Power" = 0x00,
+	"-1 dBm" = 0x01,
+	"-2 dBm" = 0x02,
+	"-3 dBm" = 0x03,
+	"-4 dBm" = 0x04,
+	"-5 dBm" = 0x05,
+	"-6 dBm" = 0x06,
+	"-7 dBm" = 0x07,
+	"-8 dBm" = 0x08,
+	"-9 dBm" = 0x09,
+}
+```
+
+### `PowerlevelTestStatus`
+
+```ts
+enum PowerlevelTestStatus {
+	Failed = 0x00,
+	Success = 0x01,
+	"In Progress" = 0x02,
+}
 ```

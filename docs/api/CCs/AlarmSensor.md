@@ -7,7 +7,13 @@
 ### `get`
 
 ```ts
-async get(sensorType?: AlarmSensorType): Promise<Pick<AlarmSensorCCReport, "state" | "severity" | "duration"> | undefined>;
+async get(sensorType?: AlarmSensorType): Promise<
+	{
+		duration?: number;
+		severity?: number;
+		state: boolean;
+	} | undefined
+>;
 ```
 
 Retrieves the current value from this sensor.
@@ -84,3 +90,19 @@ async getSupportedSensorTypes(): Promise<AlarmSensorType[] | undefined>;
 - **stateful:** true
 - **secret:** false
 - **value type:** `"boolean"`
+
+## Related types
+
+### `AlarmSensorType`
+
+```ts
+enum AlarmSensorType {
+	"General Purpose" = 0x00,
+	Smoke,
+	CO,
+	CO2,
+	Heat,
+	"Water Leak",
+	Any = 0xff,
+}
+```

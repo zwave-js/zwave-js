@@ -60,14 +60,27 @@ async reportSupportedCommands(
 ### `getKeyExchangeParameters`
 
 ```ts
-async getKeyExchangeParameters(): Promise<Pick<Security2CCKEXReport, "requestCSA" | "echo" | "supportedKEXSchemes" | "supportedECDHProfiles" | "requestedKeys" | "_reserved"> | undefined>;
+async getKeyExchangeParameters(): Promise<
+	{
+		echo: boolean;
+		requestCSA: boolean;
+		requestedKeys: readonly SecurityClass[];
+		supportedECDHProfiles: readonly ECDHProfiles[];
+		supportedKEXSchemes: readonly KEXSchemes[];
+	} | undefined
+>;
 ```
 
 ### `requestKeys`
 
 ```ts
 async requestKeys(
-	params: Omit<Security2CCKEXReportOptions, "echo">,
+	params: {
+		requestCSA: boolean;
+		requestedKeys: SecurityClass[];
+		supportedECDHProfiles: ECDHProfiles[];
+		supportedKEXSchemes: KEXSchemes[];
+	},
 ): Promise<void>;
 ```
 
@@ -77,7 +90,12 @@ Requests the given keys from an including node.
 
 ```ts
 async grantKeys(
-	params: Omit<Security2CCKEXSetOptions, "echo">,
+	params: {
+		grantedKeys: SecurityClass[];
+		permitCSA: boolean;
+		selectedECDHProfile: ECDHProfiles;
+		selectedKEXScheme: KEXSchemes;
+	},
 ): Promise<void>;
 ```
 
@@ -87,7 +105,12 @@ Grants the joining node the given keys.
 
 ```ts
 async confirmRequestedKeys(
-	params: Omit<Security2CCKEXReportOptions, "echo">,
+	params: {
+		requestCSA: boolean;
+		requestedKeys: SecurityClass[];
+		supportedECDHProfiles: ECDHProfiles[];
+		supportedKEXSchemes: KEXSchemes[];
+	},
 ): Promise<void>;
 ```
 
@@ -97,7 +120,12 @@ Confirms the keys that were requested by a node.
 
 ```ts
 async confirmGrantedKeys(
-	params: Omit<Security2CCKEXSetOptions, "echo">,
+	params: {
+		grantedKeys: SecurityClass[];
+		permitCSA: boolean;
+		selectedECDHProfile: ECDHProfiles;
+		selectedKEXScheme: KEXSchemes;
+	},
 ): Promise<Security2CCKEXReport | Security2CCKEXFail | undefined>;
 ```
 
@@ -153,4 +181,58 @@ async confirmKeyVerification(): Promise<void>;
 
 ```ts
 async endKeyExchange(): Promise<void>;
+```
+
+## Related types
+
+### `ECDHProfiles`
+
+```ts
+enum ECDHProfiles {
+	Curve25519 = 0,
+}
+```
+
+### `KEXFailType`
+
+```ts
+enum KEXFailType {
+	NoKeyMatch = 0x01, // KEX_KEY
+	NoSupportedScheme = 0x02, // KEX_SCHEME
+	NoSupportedCurve = 0x03, // KEX_CURVES
+	Decrypt = 0x05,
+	BootstrappingCanceled = 0x06, // CANCEL
+	WrongSecurityLevel = 0x07, // AUTH
+	KeyNotGranted = 0x08, // GET
+	NoVerify = 0x09, // VERIFY
+	DifferentKey = 0x0a, // REPORT
+}
+```
+
+### `KEXSchemes`
+
+```ts
+enum KEXSchemes {
+	KEXScheme1 = 1,
+}
+```
+
+### `Security2CCKEXFail`
+
+```ts
+interface Security2CCKEXFail {
+	failType: KEXFailType;
+}
+```
+
+### `Security2CCKEXReport`
+
+```ts
+interface Security2CCKEXReport {
+	readonly requestCSA: boolean;
+	readonly echo: boolean;
+	readonly supportedKEXSchemes: readonly KEXSchemes[];
+	readonly supportedECDHProfiles: readonly ECDHProfiles[];
+	readonly requestedKeys: readonly SecurityClass[];
+}
 ```

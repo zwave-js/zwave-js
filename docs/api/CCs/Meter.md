@@ -8,7 +8,10 @@
 
 ```ts
 async get(
-	options?: MeterCCGetOptions,
+	options?: {
+		scale?: number;
+		rateType?: RateType;
+	},
 ): Promise<MeterReading | undefined>;
 ```
 
@@ -16,7 +19,14 @@ async get(
 
 ```ts
 async sendReport(
-	options: MeterCCReportOptions,
+	options: {
+		type: number;
+		scale: number;
+		value: number;
+		previousValue?: MaybeNotKnown<number>;
+		rateType?: RateType;
+		deltaTime?: MaybeUnknown<number>;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
@@ -31,23 +41,40 @@ async getAll(
 ### `getSupported`
 
 ```ts
-async getSupported(): Promise<Pick<MeterCCSupportedReport, "type" | "supportsReset" | "supportedScales" | "supportedRateTypes"> | undefined>;
+async getSupported(): Promise<
+	{
+		supportedRateTypes: readonly RateType[];
+		supportedScales: readonly number[];
+		supportsReset: boolean;
+		type: number;
+	} | undefined
+>;
 ```
 
 ### `sendSupportedReport`
 
 ```ts
 async sendSupportedReport(
-	options: MeterCCSupportedReportOptions,
+	options: {
+		type: number;
+		supportsReset: boolean;
+		supportedScales: readonly number[];
+		supportedRateTypes: readonly RateType[];
+	},
 ): Promise<void>;
 ```
 
 ### `reset`
 
 ```ts
-async reset(
-	options?: MeterCCResetOptions,
-): Promise<SupervisionResult | undefined>;
+async reset(): Promise<SupervisionResult | undefined>;
+
+async reset(options?: {
+	type: number;
+	scale: number;
+	rateType: RateType;
+	targetValue: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ## Meter CC values
@@ -106,3 +133,38 @@ async reset(
 - **stateful:** true
 - **secret:** false
 - **value type:** `"number"`
+
+## Related types
+
+### `MeterReading`
+
+```ts
+interface MeterReading {
+	rateType: RateType;
+	value: number;
+	previousValue: MaybeNotKnown<number>;
+	deltaTime: MaybeUnknown<number>;
+	type: number;
+	scale: MeterScale;
+}
+```
+
+### `MeterScale`
+
+```ts
+interface MeterScale {
+	readonly label: string;
+	readonly unit?: string;
+	readonly key: number;
+}
+```
+
+### `RateType`
+
+```ts
+enum RateType {
+	Unspecified = 0x00,
+	Consumed = 0x01,
+	Produced = 0x02,
+}
+```

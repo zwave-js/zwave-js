@@ -38,7 +38,7 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	),
 };
 
-integrationTest(
+integrationTest.sequential(
 	"Abort transmission and wait for callback if SendData is missing the response",
 	{
 		// debug: true,
@@ -134,7 +134,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"Recover controller if callback times out after timed out SendData response",
 	{
 		// debug: true,
@@ -211,7 +211,7 @@ integrationTest(
 	},
 );
 
-// integrationTest(
+// integrationTest.sequential(
 // 	"Mark node as dead if SendData is still missing the callback after soft-reset",
 // 	{
 // 		// Real-world experience has shown that for older controllers this situation can be caused by dead nodes
@@ -308,7 +308,7 @@ integrationTest(
 // 	},
 // );
 
-// integrationTest(
+// integrationTest.sequential(
 // 	"Missing callback recovery works if the command can be retried",
 // 	{
 // 		// debug: true,
@@ -413,7 +413,7 @@ integrationTest(
 // 	},
 // );
 
-// integrationTest(
+// integrationTest.sequential(
 // 	"Missing callback recovery only kicks in for SendData commands",
 // 	{
 // 		// debug: true,

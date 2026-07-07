@@ -7,7 +7,13 @@
 ### `getTime`
 
 ```ts
-async getTime(): Promise<Pick<TimeCCTimeReport, "hour" | "minute" | "second"> | undefined>;
+async getTime(): Promise<
+	{
+		hour: number;
+		minute: number;
+		second: number;
+	} | undefined
+>;
 ```
 
 ### `reportTime`
@@ -23,7 +29,13 @@ async reportTime(
 ### `getDate`
 
 ```ts
-async getDate(): Promise<Pick<TimeCCDateReport, "day" | "month" | "year"> | undefined>;
+async getDate(): Promise<
+	{
+		day: number;
+		month: number;
+		year: number;
+	} | undefined
+>;
 ```
 
 ### `reportDate`
@@ -56,4 +68,17 @@ async getTimezone(): Promise<MaybeNotKnown<DSTInfo>>;
 async reportTimezone(
 	timezone: DSTInfo,
 ): Promise<SupervisionResult | undefined>;
+```
+
+## Related types
+
+### `DSTInfo`
+
+```ts
+interface DSTInfo {
+	startDate: Date;
+	endDate: Date;
+	standardOffset: number;
+	dstOffset: number;
+}
 ```

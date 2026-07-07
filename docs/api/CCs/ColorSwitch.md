@@ -15,14 +15,29 @@ async getSupported(): Promise<
 ### `get`
 
 ```ts
-async get(component: ColorComponent): Promise<Pick<ColorSwitchCCReport, "currentValue" | "targetValue" | "duration"> | undefined>;
+async get(component: ColorComponent): Promise<
+	{
+		currentValue: number;
+		duration?: Duration;
+		targetValue?: number;
+	} | undefined
+>;
 ```
 
 ### `set`
 
 ```ts
 async set(
-	options: ColorSwitchCCSetOptions,
+	options: ColorTable & {
+		duration?: Duration | string;
+	},
+): Promise<SupervisionResult | undefined>;
+
+async set(
+	options: {
+		hexColor: string;
+		duration?: Duration | string;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
@@ -30,7 +45,25 @@ async set(
 
 ```ts
 async startLevelChange(
-	options: ColorSwitchCCStartLevelChangeOptions,
+	options: {
+		colorComponent: ColorComponent;
+		direction: "up" | "down";
+		ignoreStartLevel: true;
+		startLevel?: number;
+		// Version >= 3:
+		duration?: Duration | string;
+	},
+): Promise<SupervisionResult | undefined>;
+
+async startLevelChange(
+	options: {
+		colorComponent: ColorComponent;
+		direction: "up" | "down";
+		ignoreStartLevel: false;
+		startLevel: number;
+		// Version >= 3:
+		duration?: Duration | string;
+	},
 ): Promise<SupervisionResult | undefined>;
 ```
 
@@ -161,3 +194,37 @@ async stopLevelChange(
 - **value type:** `"number"`
 - **min. value:** 0
 - **max. value:** 255
+
+## Related types
+
+### `ColorComponent`
+
+```ts
+enum ColorComponent {
+	"Warm White" = 0,
+	"Cold White",
+	Red,
+	Green,
+	Blue,
+	Amber,
+	Cyan,
+	Purple,
+	Index,
+}
+```
+
+### `ColorKey`
+
+```ts
+type ColorKey = keyof typeof ColorComponentMap;
+```
+
+### `ColorTable`
+
+This type is used to accept both the kebabCase names and numeric components as table keys
+
+```ts
+type ColorTable =
+	| Partial<Record<ColorKey, number>>
+	| Partial<Record<ColorComponent, number>>;
+```

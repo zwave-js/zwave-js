@@ -12,7 +12,7 @@ import { wait } from "alcalzone-shared/async";
 import path from "node:path";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest(
+integrationTest.sequential(
 	"remapNotifications compat flag remaps supported events and metadata during interview",
 	{
 		// debug: true,

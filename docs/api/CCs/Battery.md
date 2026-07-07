@@ -7,13 +7,30 @@
 ### `get`
 
 ```ts
-async get(): Promise<Pick<BatteryCCReport, "level" | "chargingStatus" | "rechargeable" | "backup" | "overheating" | "lowFluid" | "rechargeOrReplace" | "lowTemperatureStatus" | "disconnected"> | undefined>;
+async get(): Promise<
+	{
+		backup?: boolean;
+		chargingStatus?: BatteryChargingStatus;
+		disconnected?: boolean;
+		level: number;
+		lowFluid?: boolean;
+		lowTemperatureStatus?: boolean;
+		overheating?: boolean;
+		rechargeable?: boolean;
+		rechargeOrReplace?: BatteryReplacementStatus;
+	} | undefined
+>;
 ```
 
 ### `getHealth`
 
 ```ts
-async getHealth(): Promise<Pick<BatteryCCHealthReport, "maximumCapacity" | "temperature"> | undefined>;
+async getHealth(): Promise<
+	{
+		maximumCapacity?: number;
+		temperature?: number;
+	} | undefined
+>;
 ```
 
 ## Battery CC values
@@ -225,3 +242,25 @@ async getHealth(): Promise<Pick<BatteryCCHealthReport, "maximumCapacity" | "temp
 - **value type:** `"number"`
 - **min. value:** -128
 - **max. value:** 127
+
+## Related types
+
+### `BatteryChargingStatus`
+
+```ts
+enum BatteryChargingStatus {
+	Discharging = 0x00,
+	Charging = 0x01,
+	Maintaining = 0x02,
+}
+```
+
+### `BatteryReplacementStatus`
+
+```ts
+enum BatteryReplacementStatus {
+	No = 0x00,
+	Soon = 0x01,
+	Now = 0x02,
+}
+```

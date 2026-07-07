@@ -46,17 +46,27 @@ export interface IntegrationTestOptions {
 export interface IntegrationTestFn {
 	(name: string, options: IntegrationTestOptions): void;
 }
-export interface IntegrationTest extends IntegrationTestFn {
+export interface IntegrationTestModifiers {
 	/** Only runs the tests inside this `integrationTest` suite for the current file */
 	only: IntegrationTestFn;
 	/** Skips running the tests inside this `integrationTest` suite for the current file */
 	skip: IntegrationTestFn;
+}
+export interface IntegrationTest
+	extends IntegrationTestFn, IntegrationTestModifiers
+{
+	/**
+	 * Runs this test sequentially instead of concurrently with the other tests in the file.
+	 * Use for tests that assert on timing or ordering, which CPU contention would perturb.
+	 */
+	sequential: IntegrationTestFn & IntegrationTestModifiers;
 }
 
 function suite(
 	name: string,
 	options: IntegrationTestOptions,
 	modifier?: "only" | "skip",
+	concurrency: "concurrent" | "sequential" = "concurrent",
 ) {
 	const {
 		controllerCapabilities,
@@ -162,21 +172,27 @@ function suite(
 		});
 	}
 
-	// Integration tests need to run in serial, or they might block the serial port on CI
+	const base = concurrency === "sequential"
+		? test.sequential
+		: test.concurrent;
 	const fn = modifier === "only"
-		? test.sequential.only
+		? base.only
 		: modifier === "skip"
-		? test.sequential.skip
-		: test.sequential;
+		? base.skip
+		: base;
 	fn(name, async (t) => {
 		t.onTestFinished(async () => {
 			// Give everything a chance to settle before destroying the driver.
 			await wait(100);
 
-			await driver.destroy();
-			if (!debug) {
-				await fsp.rm(cacheDir, { recursive: true, force: true })
-					.catch(noop);
+			try {
+				await driver.destroy();
+			} finally {
+				mockController?.destroy();
+				if (!debug) {
+					await fsp.rm(cacheDir, { recursive: true, force: true })
+						.catch(noop);
+				}
 			}
 		});
 
@@ -199,4 +215,25 @@ integrationTest.only = (name: string, options: IntegrationTestOptions) => {
 
 integrationTest.skip = (name: string, options: IntegrationTestOptions) => {
 	suite(name, options, "skip");
+};
+
+integrationTest.sequential = ((
+	name: string,
+	options: IntegrationTestOptions,
+): void => {
+	suite(name, options, undefined, "sequential");
+}) as IntegrationTest["sequential"];
+
+integrationTest.sequential.only = (
+	name: string,
+	options: IntegrationTestOptions,
+) => {
+	suite(name, options, "only", "sequential");
+};
+
+integrationTest.sequential.skip = (
+	name: string,
+	options: IntegrationTestOptions,
+) => {
+	suite(name, options, "skip", "sequential");
 };

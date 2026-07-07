@@ -20,7 +20,13 @@ will be affected.
 ### `getNumSlots`
 
 ```ts
-async getNumSlots(): Promise<Pick<ScheduleEntryLockCCSupportedReport, "numWeekDaySlots" | "numYearDaySlots" | "numDailyRepeatingSlots"> | undefined>;
+async getNumSlots(): Promise<
+	{
+		numDailyRepeatingSlots?: number;
+		numWeekDaySlots: number;
+		numYearDaySlots: number;
+	} | undefined
+>;
 ```
 
 ### `setWeekDaySchedule`
@@ -86,4 +92,80 @@ async getTimezone(): Promise<MaybeNotKnown<Timezone>>;
 async setTimezone(
 	timezone: Timezone,
 ): Promise<SupervisionResult | undefined>;
+```
+
+## Related types
+
+### `ScheduleEntryLockDailyRepeatingSchedule`
+
+```ts
+interface ScheduleEntryLockDailyRepeatingSchedule {
+	weekdays: ScheduleEntryLockWeekday[];
+	startHour: number;
+	startMinute: number;
+	durationHour: number;
+	durationMinute: number;
+}
+```
+
+### `ScheduleEntryLockSlotId`
+
+```ts
+interface ScheduleEntryLockSlotId {
+	userId: number;
+	slotId: number;
+}
+```
+
+### `ScheduleEntryLockWeekday`
+
+```ts
+enum ScheduleEntryLockWeekday {
+	// Yay, consistency!
+	Sunday = 0x00,
+	Monday = 0x01,
+	Tuesday = 0x02,
+	Wednesday = 0x03,
+	Thursday = 0x04,
+	Friday = 0x05,
+	Saturday = 0x06,
+}
+```
+
+### `ScheduleEntryLockWeekDaySchedule`
+
+```ts
+interface ScheduleEntryLockWeekDaySchedule {
+	weekday: ScheduleEntryLockWeekday;
+	startHour: number;
+	startMinute: number;
+	stopHour: number;
+	stopMinute: number;
+}
+```
+
+### `ScheduleEntryLockYearDaySchedule`
+
+```ts
+interface ScheduleEntryLockYearDaySchedule {
+	startYear: number;
+	startMonth: number;
+	startDay: number;
+	startHour: number;
+	startMinute: number;
+	stopYear: number;
+	stopMonth: number;
+	stopDay: number;
+	stopHour: number;
+	stopMinute: number;
+}
+```
+
+### `Timezone`
+
+```ts
+interface Timezone {
+	standardOffset: number;
+	dstOffset: number;
+}
 ```

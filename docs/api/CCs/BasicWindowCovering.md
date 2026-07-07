@@ -8,7 +8,7 @@
 
 ```ts
 async startLevelChange(
-	direction: keyof typeof LevelChangeDirection,
+	direction: "up" | "down",
 ): Promise<SupervisionResult | undefined>;
 ```
 
