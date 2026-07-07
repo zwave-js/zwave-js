@@ -41,7 +41,7 @@ const controllerCapabilitiesNoBridge: MockControllerCapabilities = {
 	),
 };
 
-integrationTest(
+integrationTest.sequential(
 	"update the controller status and wait if TX status is Fail",
 	{
 		// debug: true,
@@ -161,7 +161,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"When sending fails continuously, soft-reset to recover",
 	{
 		// debug: true,

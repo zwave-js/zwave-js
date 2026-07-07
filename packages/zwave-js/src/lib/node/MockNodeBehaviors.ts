@@ -116,13 +116,6 @@ const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 				}
 			}
 
-			// Basic CC is always supported implicitly
-			if (
-				version === 0 && receivedCC.requestedCC === CommandClasses.Basic
-			) {
-				version = 1;
-			}
-
 			const cc = new VersionCCCommandClassReport({
 				nodeId: controller.ownNodeId,
 				endpointIndex: "index" in endpoint ? endpoint.index : undefined,

@@ -9,7 +9,7 @@ import path from "node:path";
 import sinon from "sinon";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest(
+integrationTest.sequential(
 	"the alarmMapping compat flag works correctly (using the example Kwikset 910)",
 	{
 		// debug: true,
@@ -72,7 +72,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"the alarmMapping compat flag adds to supported notification types and events",
 	{
 		nodeCapabilities: {

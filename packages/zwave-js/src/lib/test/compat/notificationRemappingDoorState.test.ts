@@ -8,7 +8,7 @@ import { wait } from "alcalzone-shared/async";
 import path from "node:path";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest(
+integrationTest.sequential(
 	"remapNotifications compat flag syncs doorStateSimple when remapping to/clearing door open/closed events",
 	{
 		// debug: true,
