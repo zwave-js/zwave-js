@@ -41,3 +41,95 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: node .github/bot-scripts/buildDocsIndex.cjs docs .docs-index/index.json
+
+  evaluate:
+    needs: build-index
+    runs-on: [ubuntu-latest]
+    permissions:
+      contents: read
+      models: read
+      issues: write
+
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v6
+
+    - name: Restore docs index
+      id: restore-index
+      uses: actions/cache/restore@v4
+      with:
+        path: .docs-index
+        key: docs-embeddings-v1-${{ hashFiles('docs/**/*.md') }}
+
+    - name: Evaluate retrieval quality
+      id: eval
+      if: steps.restore-index.outputs.cache-hit == 'true'
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: node .github/bot-scripts/evalDocsAnswers.cjs .docs-index/index.json
+
+    - name: Update tracking issue
+      if: steps.restore-index.outputs.cache-hit == 'true'
+      uses: actions/github-script@v8
+      env:
+        EVAL_OUTCOME: ${{ steps.eval.outcome }}
+        EVAL_SUMMARY: ${{ steps.eval.outputs.summary }}
+      with:
+        script: |
+          const TITLE = "🚨 Docs answer bot retrieval quality regression";
+          const failed = process.env.EVAL_OUTCOME === "failure";
+
+          // Find an existing tracking issue, open or closed
+          const { data: issues } = await github.rest.issues.listForRepo({
+            ...context.repo,
+            creator: "github-actions[bot]",
+            state: "all",
+            per_page: 100,
+          });
+          const tracking = issues.find((i) => i.title === TITLE);
+
+          const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          const body = `The daily evaluation of the docs answer bot did not meet the required hit rate.
+
+          ${process.env.EVAL_SUMMARY || "(no summary available)"}
+
+          See the [workflow run](${runUrl}) for details.`;
+
+          if (failed) {
+            if (!tracking) {
+              await github.rest.issues.create({
+                ...context.repo,
+                title: TITLE,
+                body,
+              });
+            } else if (tracking.state === "closed") {
+              await github.rest.issues.update({
+                ...context.repo,
+                issue_number: tracking.number,
+                state: "open",
+              });
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: tracking.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: tracking.number,
+                body,
+              });
+            }
+          } else if (tracking && tracking.state === "open") {
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: tracking.number,
+              body: `The evaluation passed again in the latest [workflow run](${runUrl}). Closing.`,
+            });
+            await github.rest.issues.update({
+              ...context.repo,
+              issue_number: tracking.number,
+              state: "closed",
+            });
+          }

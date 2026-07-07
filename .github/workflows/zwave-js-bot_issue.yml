@@ -186,7 +186,7 @@ jobs:
       contents: read
       models: read
     if: |
-      github.event.action == 'opened' &&
+      (github.event.action == 'opened' || github.event.action == 'edited') &&
       github.event.issue.user.login != 'AlCalzone' &&
       github.event.issue.user.login != 'zwave-js-bot'
 

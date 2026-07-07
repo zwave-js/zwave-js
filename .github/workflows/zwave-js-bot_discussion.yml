@@ -242,7 +242,7 @@ jobs:
       contents: read
       models: read
     if: |
-      github.event.action == 'created' &&
+      (github.event.action == 'created' || github.event.action == 'edited') &&
       github.event.discussion.user.login != 'AlCalzone' &&
       github.event.discussion.user.login != 'zwave-js-bot'
 

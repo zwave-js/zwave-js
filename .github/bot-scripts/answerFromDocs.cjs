@@ -3,10 +3,8 @@
 /// <reference path="types.d.ts" />
 
 const fs = require("node:fs/promises");
-
-const EMBEDDINGS_URL = "https://models.github.ai/inference/embeddings";
-const CHAT_URL = "https://models.github.ai/inference/chat/completions";
-const CHAT_MODEL = process.env.CHAT_MODEL || "openai/gpt-4o";
+const { retrieve } = require("./docsSearch.cjs");
+const { CHAT_MODEL, embed, modelsRequest } = require("./modelsApi.cjs");
 
 const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
@@ -20,8 +18,10 @@ const QUESTION_CATEGORY_SLUGS = [
 const EXCLUDED_USERS = ["AlCalzone", "zwave-js-bot"];
 
 const MAX_RETRIEVED_CHUNKS = 5;
-// Cosine similarity floor below which a chunk is considered unrelated
-const MIN_SIMILARITY = 0.3;
+// If not even the best dense match reaches this cosine similarity,
+// the post is considered off-topic and no chat request is made.
+// The real relevance judgment is left to the chat model.
+const MIN_SIMILARITY = 0.2;
 // Confidence thresholds for the different response styles
 const ANSWER_CONFIDENCE = 75;
 const LINKS_CONFIDENCE = 40;
@@ -30,42 +30,34 @@ const LINKS_CONFIDENCE = 40;
 const MAX_QUESTION_LENGTH = 6000;
 
 /**
- * @param {number[]} a
- * @param {number[]} b
+ * Reduces template boilerplate and log/code dumps in the post body,
+ * which would otherwise dilute the query used for retrieval
+ * @param {string} title
+ * @param {string} body
  */
-function cosineSimilarity(a, b) {
-	let dot = 0;
-	let normA = 0;
-	let normB = 0;
-	for (let i = 0; i < a.length; i++) {
-		dot += a[i] * b[i];
-		normA += a[i] * a[i];
-		normB += b[i] * b[i];
-	}
-	return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-/**
- * @param {string} url
- * @param {object} body
- * @param {string} token
- */
-async function modelsRequest(url, body, token) {
-	const response = await fetch(url, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${token}`,
-		},
-		body: JSON.stringify(body),
-	});
-	if (!response.ok) {
-		const text = await response.text().catch(() => "");
-		throw new Error(
-			`Models API request failed with status ${response.status}: ${text}`,
-		);
-	}
-	return response.json();
+function cleanQuestion(title, body) {
+	const text = body
+		// Template instructions are hidden in HTML comments
+		.replace(/<!--[\s\S]*?-->/g, "")
+		// Checked/unchecked checklist items carry no information
+		.replace(/^\s*-\s*\[[ xX]\].*$/gm, "")
+		// Retrieval matches on prose, not logs. Long code blocks would
+		// dilute the embedding and blow the question length budget, so
+		// they are shortened to head + tail. This is NOT log analysis -
+		// that is the log analyzer's job, this bot only matches the
+		// question against the documentation.
+		.replace(/(```|~~~)[\s\S]*?\1/g, (block) => {
+			const lines = block.split("\n");
+			if (lines.length <= 15) return block;
+			return [
+				...lines.slice(0, 8),
+				"...",
+				...lines.slice(-4),
+			].join("\n");
+		})
+		.replace(/\n{3,}/g, "\n\n")
+		.trim();
+	return `${title}\n\n${text}`.slice(0, MAX_QUESTION_LENGTH);
 }
 
 /** @param {{file: string, anchor: string}} chunk */
@@ -74,6 +66,92 @@ function chunkUrl(chunk) {
 	let url = `${DOCS_BASE_URL}/${docPath}`;
 	if (chunk.anchor) url += `?id=${chunk.anchor}`;
 	return url;
+}
+
+/**
+ * Checks whether the bot already answered this post
+ * @param {{github: Github, context: Context}} param0
+ * @param {any} post
+ * @param {boolean} isDiscussion
+ */
+async function alreadyAnswered({ github, context }, post, isDiscussion) {
+	if (isDiscussion) {
+		const existing = await github.graphql(
+			`
+			query getComments($discussionId: ID!) {
+				node(id: $discussionId) {
+					... on Discussion {
+						comments(first: 50) {
+							nodes { body }
+						}
+					}
+				}
+			}
+			`,
+			{ discussionId: post.node_id },
+		);
+		return !!existing.node?.comments?.nodes?.some(
+			(/** @type {any} */ c) => c.body.includes(DOCS_ANSWER_COMMENT_TAG),
+		);
+	} else {
+		const { data: comments } = await github.rest.issues.listComments({
+			...context.repo,
+			issue_number: post.number,
+			per_page: 100,
+		});
+		return comments.some((c) => c.body?.includes(DOCS_ANSWER_COMMENT_TAG));
+	}
+}
+
+/**
+ * Asks the chat model whether the given doc excerpts answer the question
+ * @param {string} question
+ * @param {{chunk: any}[]} ranked Retrieved chunks, most relevant first
+ * @param {string} token
+ * @returns {Promise<{confidence: number, answer: string | null, relatedExcerpts: number[]}>}
+ */
+async function judgeAnswer(question, ranked, token) {
+	const excerpts = ranked
+		.map((r, i) => `
+<excerpt id="${i}" section="${r.chunk.breadcrumbs.join(" > ")}">
+${r.chunk.text}
+</excerpt>`)
+		.join("\n");
+
+	const systemPrompt = `
+You are a support assistant for the Z-Wave JS project, a Z-Wave driver library written in TypeScript.
+A user has posted a question. You are given excerpts from the project documentation that might answer it.
+
+Determine whether the excerpts actually answer the user's question, and respond with a JSON object with the following fields:
+- "confidence": a number between 0 and 100 indicating how confident you are that the excerpts fully answer the question. Use 0 if the post is not a question, or the excerpts are unrelated to it.
+- "answer": if the excerpts answer the question, a concise answer (a few sentences, markdown) based ONLY on the excerpts. Otherwise null.
+- "relatedExcerpts": an array with the ids (numbers) of the excerpts that are relevant to the question, most relevant first. Leave empty if none are.
+
+Rules:
+1. Base your answer solely on the given excerpts. Do not use outside knowledge.
+2. Do not mention the excerpts in the answer text.
+3. Do not refer to the user's question with phrases like "here's the answer to your question". Just answer directly.
+4. Respond with the JSON object only.`.trim();
+
+	const userPrompt = `## User's post
+
+${question}
+
+## Documentation excerpts
+${excerpts}`;
+
+	const chatResponse = await modelsRequest("/chat/completions", {
+		model: CHAT_MODEL,
+		messages: [
+			{ role: "system", content: systemPrompt },
+			{ role: "user", content: userPrompt },
+		],
+		response_format: { type: "json_object" },
+		max_tokens: 1000,
+		temperature: 0.2,
+	}, token);
+
+	return JSON.parse(chatResponse.choices[0].message.content);
 }
 
 /**
@@ -133,6 +211,16 @@ async function main(param) {
 		}
 	}
 
+	// Check for an existing answer before spending any Models API requests.
+	// This also makes re-runs on edited posts cheap no-ops.
+	if (
+		!dryRun
+		&& await alreadyAnswered({ github, context }, post, isDiscussion)
+	) {
+		console.log("Already answered, skipping");
+		return;
+	}
+
 	// Load the pre-built embeddings index
 	const indexPath = process.env.DOCS_INDEX_PATH;
 	/** @type {any} */
@@ -147,31 +235,36 @@ async function main(param) {
 		`Loaded docs index with ${index.chunks.length} chunks (created ${index.createdAt})`,
 	);
 
-	const question = `${post.title}\n\n${post.body ?? ""}`
-		.slice(0, MAX_QUESTION_LENGTH);
+	const question = cleanQuestion(post.title, post.body ?? "");
 
-	// Retrieve the most relevant doc chunks
-	const embedResponse = await modelsRequest(EMBEDDINGS_URL, {
-		model: index.model,
-		input: [question],
-	}, modelsToken);
-	const questionEmbedding = embedResponse.data[0].embedding;
+	// Hybrid retrieval: 1 embedding request, then in-process search
+	const [questionEmbedding] = await embed(
+		[question],
+		modelsToken,
+		index.model,
+	);
+	const { results: ranked, bestSimilarity } = retrieve(
+		index,
+		questionEmbedding,
+		question,
+		MAX_RETRIEVED_CHUNKS,
+	);
 
-	const ranked = index.chunks
-		.map((/** @type {any} */ chunk) => ({
-			chunk,
-			similarity: cosineSimilarity(questionEmbedding, chunk.embedding),
-		}))
-		.filter((/** @type {any} */ r) => r.similarity >= MIN_SIMILARITY)
-		.sort((/** @type {any} */ a, /** @type {any} */ b) =>
-			b.similarity - a.similarity
-		)
-		.slice(0, MAX_RETRIEVED_CHUNKS);
+	if (bestSimilarity < MIN_SIMILARITY) {
+		console.log(
+			`Best similarity ${
+				bestSimilarity.toFixed(3)
+			} below floor, post is likely off-topic`,
+		);
+		return;
+	}
 
 	console.log(
 		"Top matches:",
-		ranked.map((/** @type {any} */ r) =>
-			`${r.similarity.toFixed(3)} ${r.chunk.file}#${r.chunk.anchor}`
+		ranked.map((r) =>
+			`cos=${r.similarity.toFixed(3)} bm25=${
+				r.lexical.toFixed(1)
+			} ${r.chunk.file}#${r.chunk.anchor}`
 		),
 	);
 	if (ranked.length === 0) {
@@ -180,50 +273,10 @@ async function main(param) {
 	}
 
 	// Ask the model whether the docs answer the question
-	const excerpts = ranked
-		.map((/** @type {any} */ r, /** @type {number} */ i) => `
-<excerpt id="${i}" section="${r.chunk.breadcrumbs.join(" > ")}">
-${r.chunk.text}
-</excerpt>`)
-		.join("\n");
-
-	const systemPrompt = `
-You are a support assistant for the Z-Wave JS project, a Z-Wave driver library written in TypeScript.
-A user has posted a question. You are given excerpts from the project documentation that might answer it.
-
-Determine whether the excerpts actually answer the user's question, and respond with a JSON object with the following fields:
-- "confidence": a number between 0 and 100 indicating how confident you are that the excerpts fully answer the question. Use 0 if the post is not a question, or the excerpts are unrelated to it.
-- "answer": if the excerpts answer the question, a concise answer (a few sentences, markdown) based ONLY on the excerpts. Otherwise null.
-- "relatedExcerpts": an array with the ids (numbers) of the excerpts that are relevant to the question, most relevant first. Leave empty if none are.
-
-Rules:
-1. Base your answer solely on the given excerpts. Do not use outside knowledge.
-2. Do not mention the excerpts in the answer text.
-3. Do not refer to the user's question with phrases like "here's the answer to your question". Just answer directly.
-4. Respond with the JSON object only.`.trim();
-
-	const userPrompt = `## User's post
-
-${question}
-
-## Documentation excerpts
-${excerpts}`;
-
-	const chatResponse = await modelsRequest(CHAT_URL, {
-		model: CHAT_MODEL,
-		messages: [
-			{ role: "system", content: systemPrompt },
-			{ role: "user", content: userPrompt },
-		],
-		response_format: { type: "json_object" },
-		max_tokens: 1000,
-		temperature: 0.2,
-	}, modelsToken);
-
 	/** @type {{confidence: number, answer: string | null, relatedExcerpts: number[]}} */
 	let result;
 	try {
-		result = JSON.parse(chatResponse.choices[0].message.content);
+		result = await judgeAnswer(question, ranked, modelsToken);
 	} catch (e) {
 		console.log("Failed to parse model response:", e);
 		return;
@@ -249,9 +302,16 @@ ${excerpts}`;
 			(/** @type {string} */ crumb, /** @type {number} */ i) =>
 				crumb === b.breadcrumbs[i],
 		);
-	const deduped = related.filter((chunk) =>
-		!related.some((other) => isAncestor(other, chunk))
-	);
+	// Sub-splits of the same section share a URL, only link it once
+	/** @type {Set<string>} */
+	const seenUrls = new Set();
+	const deduped = related.filter((chunk) => {
+		if (related.some((other) => isAncestor(other, chunk))) return false;
+		const url = chunkUrl(chunk);
+		if (seenUrls.has(url)) return false;
+		seenUrls.add(url);
+		return true;
+	});
 
 	// Compose the comment
 	const links = deduped
@@ -299,31 +359,6 @@ ${DOCS_ANSWER_COMMENT_TAG}`;
 	}
 
 	if (isDiscussion) {
-		// Avoid double-posting if the workflow ran twice
-		const existing = await github.graphql(
-			`
-			query getComments($discussionId: ID!) {
-				node(id: $discussionId) {
-					... on Discussion {
-						comments(first: 50) {
-							nodes { body }
-						}
-					}
-				}
-			}
-			`,
-			{ discussionId: post.node_id },
-		);
-		if (
-			existing.node?.comments?.nodes?.some(
-				(/** @type {any} */ c) =>
-					c.body.includes(DOCS_ANSWER_COMMENT_TAG),
-			)
-		) {
-			console.log("Already answered, skipping");
-			return;
-		}
-
 		await github.graphql(
 			`
 			mutation addDiscussionComment($discussionId: ID!, $body: String!) {
@@ -335,18 +370,6 @@ ${DOCS_ANSWER_COMMENT_TAG}`;
 			{ discussionId: post.node_id, body },
 		);
 	} else {
-		const { data: comments } = await github.rest.issues.listComments({
-			...context.repo,
-			issue_number: post.number,
-			per_page: 100,
-		});
-		if (
-			comments.some((c) => c.body?.includes(DOCS_ANSWER_COMMENT_TAG))
-		) {
-			console.log("Already answered, skipping");
-			return;
-		}
-
 		await github.rest.issues.createComment({
 			...context.repo,
 			issue_number: post.number,
@@ -357,3 +380,4 @@ ${DOCS_ANSWER_COMMENT_TAG}`;
 }
 
 module.exports = main;
+module.exports.judgeAnswer = judgeAnswer;

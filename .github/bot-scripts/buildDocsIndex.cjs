@@ -8,10 +8,8 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { embed, EMBEDDING_MODEL } = require("./modelsApi.cjs");
 
-const EMBEDDINGS_URL = "https://models.github.ai/inference/embeddings";
-const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL
-	|| "openai/text-embedding-3-small";
 const INDEX_VERSION = 1;
 
 // Stay well below the 64K tokens/request limit for embedding requests
@@ -22,8 +20,10 @@ const THROTTLE_MS = 4500;
 
 // Chunks shorter than this are unlikely to contain useful information
 const MIN_CHUNK_LENGTH = 50;
-// Truncate huge chunks to stay below the per-input token limit
-const MAX_CHUNK_LENGTH = 6000;
+// Sections longer than this are sub-split so nothing gets truncated away
+const MAX_CHUNK_LENGTH = 4000;
+// Overlap between sub-splits so answers spanning a split boundary aren't lost
+const CHUNK_OVERLAP = 400;
 
 /** @param {string} str */
 function estimateTokens(str) {
@@ -70,6 +70,36 @@ function slugify(heading) {
 }
 
 /**
+ * Splits a long text into overlapping parts, preferring paragraph boundaries
+ * @param {string} text
+ */
+function splitLongText(text) {
+	if (text.length <= MAX_CHUNK_LENGTH) return [text];
+
+	/** @type {string[]} */
+	const parts = [];
+	let start = 0;
+	while (start < text.length) {
+		let end = Math.min(start + MAX_CHUNK_LENGTH, text.length);
+		if (end < text.length) {
+			// Prefer splitting at a paragraph break, then at a line break
+			const window = text.slice(start, end);
+			const paragraphBreak = window.lastIndexOf("\n\n");
+			const lineBreak = window.lastIndexOf("\n");
+			if (paragraphBreak > MAX_CHUNK_LENGTH / 2) {
+				end = start + paragraphBreak;
+			} else if (lineBreak > MAX_CHUNK_LENGTH / 2) {
+				end = start + lineBreak;
+			}
+		}
+		parts.push(text.slice(start, end).trim());
+		if (end >= text.length) break;
+		start = Math.max(start + 1, end - CHUNK_OVERLAP);
+	}
+	return parts;
+}
+
+/**
  * Splits a markdown file into chunks by heading, tracking breadcrumbs and anchors
  * @param {string} file Repo-relative path of the file
  * @param {string} content
@@ -90,13 +120,15 @@ function chunkMarkdown(file, content) {
 	const pushChunk = () => {
 		const text = currentLines.join("\n").trim();
 		if (text.length >= MIN_CHUNK_LENGTH) {
-			chunks.push({
-				file,
-				anchor: currentAnchor,
-				title: currentTitle,
-				breadcrumbs: headingStack.map((h) => h.title),
-				text: text.slice(0, MAX_CHUNK_LENGTH),
-			});
+			for (const part of splitLongText(text)) {
+				chunks.push({
+					file,
+					anchor: currentAnchor,
+					title: currentTitle,
+					breadcrumbs: headingStack.map((h) => h.title),
+					text: part,
+				});
+			}
 		}
 	};
 
@@ -148,35 +180,6 @@ async function* walkMarkdownFiles(dir) {
 			yield full;
 		}
 	}
-}
-
-/**
- * @param {string[]} inputs
- * @param {string} token
- * @returns {Promise<number[][]>}
- */
-async function embed(inputs, token) {
-	const response = await fetch(EMBEDDINGS_URL, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${token}`,
-		},
-		body: JSON.stringify({
-			model: EMBEDDING_MODEL,
-			input: inputs,
-		}),
-	});
-	if (!response.ok) {
-		const text = await response.text().catch(() => "");
-		throw new Error(
-			`Embedding request failed with status ${response.status}: ${text}`,
-		);
-	}
-	const result = await response.json();
-	return result.data
-		.sort((/** @type {any} */ a, /** @type {any} */ b) => a.index - b.index)
-		.map((/** @type {any} */ d) => d.embedding);
 }
 
 async function main() {
