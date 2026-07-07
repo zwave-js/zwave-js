@@ -3,11 +3,13 @@
 /// <reference path="types.d.ts" />
 
 const fs = require("node:fs/promises");
-const { retrieve } = require("./docsSearch.cjs");
+const { cosineSimilarity, retrieve } = require("./docsSearch.cjs");
 const { CHAT_MODEL, embed, modelsRequest } = require("./modelsApi.cjs");
 
 const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
+const DOCS_ANSWER_METADATA_TAG = "DOCS_ANSWER_METADATA";
+const DOCS_ANSWER_METADATA_VERSION = 1;
 
 // Discussion categories where questions are expected
 const QUESTION_CATEGORY_SLUGS = [
@@ -25,6 +27,10 @@ const MIN_SIMILARITY = 0.2;
 // Confidence thresholds for the different response styles
 const ANSWER_CONFIDENCE = 75;
 const LINKS_CONFIDENCE = 40;
+
+// Questions at least this similar to a previously downvoted answer
+// get a demoted response: full answer -> links only, links only -> silence
+const SUPPRESS_SIMILARITY = 0.9;
 
 // Limit the question size to keep the prompt within the token budget
 const MAX_QUESTION_LENGTH = 6000;
@@ -162,6 +168,38 @@ ${excerpts}`;
 }
 
 /**
+ * Determines how the answer to a question must be demoted based on
+ * its similarity to previously downvoted answers: a downvoted full
+ * answer allows links only, downvoted links mean staying silent
+ * @param {number[]} questionEmbedding
+ * @param {{model: string, suppressed: {embedding: number[], style: string, url: string}[]} | undefined} feedback
+ * @param {string} indexModel
+ * @returns {"allow" | "linksOnly" | "silent"}
+ */
+function checkSuppression(questionEmbedding, feedback, indexModel) {
+	// Embeddings from different models are not comparable
+	if (!feedback || feedback.model !== indexModel) return "allow";
+
+	/** @type {"allow" | "linksOnly" | "silent"} */
+	let result = "allow";
+	for (const entry of feedback.suppressed ?? []) {
+		const similarity = cosineSimilarity(
+			questionEmbedding,
+			entry.embedding,
+		);
+		if (similarity < SUPPRESS_SIMILARITY) continue;
+		console.log(
+			`Question is similar (${
+				similarity.toFixed(3)
+			}) to a downvoted answer: ${entry.url}`,
+		);
+		if (entry.style === "links") return "silent";
+		result = "linksOnly";
+	}
+	return result;
+}
+
+/**
  * Answers a user's question in an issue or discussion based on the documentation.
  *
  * Expects the following environment variables:
@@ -250,6 +288,31 @@ async function main(param) {
 		modelsToken,
 		index.model,
 	);
+
+	// Feedback guardrail: check the question against previously
+	// downvoted answers collected by collectDocsAnswerFeedback.cjs
+	let allowAnswer = true;
+	const feedbackPath = process.env.DOCS_FEEDBACK_PATH;
+	if (feedbackPath) {
+		/** @type {any} */
+		let feedback;
+		try {
+			feedback = JSON.parse(await fs.readFile(feedbackPath, "utf8"));
+		} catch {
+			console.log(`No feedback data found at ${feedbackPath}`);
+		}
+		const suppression = checkSuppression(
+			questionEmbedding,
+			feedback,
+			index.model,
+		);
+		if (suppression === "silent") {
+			console.log("Even doc links were downvoted, staying silent");
+			return;
+		}
+		allowAnswer = suppression === "allow";
+	}
+
 	const { results: ranked, bestSimilarity } = retrieve(
 		index,
 		questionEmbedding,
@@ -334,7 +397,10 @@ _I've tried to answer your question based on the documentation. If this doesn't 
 
 `;
 	const single = deduped.length === 1;
-	if (result.confidence >= ANSWER_CONFIDENCE && result.answer) {
+	const fullAnswer = allowAnswer
+		&& result.confidence >= ANSWER_CONFIDENCE
+		&& !!result.answer;
+	if (fullAnswer) {
 		body += `${result.answer}
 
 ${
@@ -352,12 +418,23 @@ ${links}`;
 
 ${links}`;
 	}
+	// Metadata for collectDocsAnswerFeedback.cjs to attribute
+	// reactions to doc sections without re-parsing the comment
+	const metadata = {
+		v: DOCS_ANSWER_METADATA_VERSION,
+		style: fullAnswer ? "answer" : "links",
+		confidence: result.confidence,
+		sections: deduped.map((chunk) => `${chunk.file}#${chunk.anchor}`),
+	};
+
 	body += `
 
 ---
 
 _This answer was generated automatically based on the documentation. AI can make mistakes, always check important info._
-${DOCS_ANSWER_COMMENT_TAG}`;
+_Was this helpful? React with 👍 or 👎 to let us know._
+${DOCS_ANSWER_COMMENT_TAG}
+<!-- ${DOCS_ANSWER_METADATA_TAG} ${JSON.stringify(metadata)} -->`;
 
 	if (dryRun) {
 		console.log("DRY RUN - would post the following comment:");
@@ -388,3 +465,9 @@ ${DOCS_ANSWER_COMMENT_TAG}`;
 
 module.exports = main;
 module.exports.judgeAnswer = judgeAnswer;
+module.exports.cleanQuestion = cleanQuestion;
+module.exports.checkSuppression = checkSuppression;
+module.exports.DOCS_ANSWER_COMMENT_TAG = DOCS_ANSWER_COMMENT_TAG;
+module.exports.DOCS_ANSWER_METADATA_TAG = DOCS_ANSWER_METADATA_TAG;
+module.exports.DOCS_ANSWER_METADATA_VERSION = DOCS_ANSWER_METADATA_VERSION;
+module.exports.DOCS_BASE_URL = DOCS_BASE_URL;

@@ -50,3 +50,4 @@ test/*_logrotate.json
 test/zwavejs_*.log
 .DS_Store
 .docs-index/
+.docs-feedback/
