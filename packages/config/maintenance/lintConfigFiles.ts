@@ -439,7 +439,7 @@ Consider adding ${c.white(`"unsigned": true`)} to the template!`,
 						from,
 						to,
 						...(def.step != undefined
-							? { step: def.step as number }
+							? { step: def.step }
 							: {}),
 					});
 				} else {
