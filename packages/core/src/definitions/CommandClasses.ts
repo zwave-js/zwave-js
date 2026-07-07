@@ -6,6 +6,7 @@ import { getEnumMemberName } from "@zwave-js/shared";
  */
 export enum CommandClasses {
 	// "Alarm" = 0x71, // superseded by Notification
+	"Active Schedule" = 0xa4,
 	"Alarm Sensor" = 0x9c,
 	"Alarm Silence" = 0x9d,
 	"All Switch" = 0x27,
@@ -210,6 +211,7 @@ export function isSensorCC(cc: CommandClasses): boolean {
  */
 // Is defined in SDS13781
 export const applicationCCs: readonly CommandClasses[] = [
+	CommandClasses["Active Schedule"],
 	CommandClasses["Alarm Sensor"],
 	CommandClasses["Alarm Silence"],
 	CommandClasses["All Switch"],

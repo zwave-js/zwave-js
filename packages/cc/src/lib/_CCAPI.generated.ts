@@ -6,6 +6,7 @@ import type { CCAPI } from "./API.js";
 
 // Maps CC names to their CommandClasses enum values
 export type CCNameMap = {
+	"Active Schedule": typeof CommandClasses["Active Schedule"];
 	"Alarm Sensor": typeof CommandClasses["Alarm Sensor"];
 	"Application Status": typeof CommandClasses["Application Status"];
 	"Association Group Information":
@@ -88,6 +89,7 @@ export type CCNameMap = {
 export interface CCAPIs {
 	[Symbol.iterator](): Iterator<CCAPI>;
 
+	"Active Schedule": import("../cc/ActiveScheduleCC.js").ActiveScheduleCCAPI;
 	"Alarm Sensor": import("../cc/AlarmSensorCC.js").AlarmSensorCCAPI;
 	"Application Status":
 		import("../cc/ApplicationStatusCC.js").ApplicationStatusCCAPI;
