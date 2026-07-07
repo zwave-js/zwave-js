@@ -2,6 +2,48 @@
 // Do not edit it by hand or your changes will be lost!
 
 export type {
+	ActiveScheduleCCCapabilitiesReportOptions,
+	ActiveScheduleCCDailyRepeatingScheduleGetOptions,
+	ActiveScheduleCCDailyRepeatingScheduleReportOptions,
+	ActiveScheduleCCDailyRepeatingScheduleSetOptions,
+	ActiveScheduleCCEnableGetOptions,
+	ActiveScheduleCCEnableReportOptions,
+	ActiveScheduleCCEnableSetOptions,
+	ActiveScheduleCCYearDayScheduleGetOptions,
+	ActiveScheduleCCYearDayScheduleReportOptions,
+	ActiveScheduleCCYearDayScheduleSetOptions,
+} from "./ActiveScheduleCC.js";
+import {
+	ActiveScheduleCC,
+	ActiveScheduleCCCapabilitiesGet,
+	ActiveScheduleCCCapabilitiesReport,
+	ActiveScheduleCCDailyRepeatingScheduleGet,
+	ActiveScheduleCCDailyRepeatingScheduleReport,
+	ActiveScheduleCCDailyRepeatingScheduleSet,
+	ActiveScheduleCCEnableGet,
+	ActiveScheduleCCEnableReport,
+	ActiveScheduleCCEnableSet,
+	ActiveScheduleCCValues,
+	ActiveScheduleCCYearDayScheduleGet,
+	ActiveScheduleCCYearDayScheduleReport,
+	ActiveScheduleCCYearDayScheduleSet,
+} from "./ActiveScheduleCC.js";
+export {
+	ActiveScheduleCC,
+	ActiveScheduleCCCapabilitiesGet,
+	ActiveScheduleCCCapabilitiesReport,
+	ActiveScheduleCCDailyRepeatingScheduleGet,
+	ActiveScheduleCCDailyRepeatingScheduleReport,
+	ActiveScheduleCCDailyRepeatingScheduleSet,
+	ActiveScheduleCCEnableGet,
+	ActiveScheduleCCEnableReport,
+	ActiveScheduleCCEnableSet,
+	ActiveScheduleCCValues,
+	ActiveScheduleCCYearDayScheduleGet,
+	ActiveScheduleCCYearDayScheduleReport,
+	ActiveScheduleCCYearDayScheduleSet,
+};
+export type {
 	AlarmSensorCCGetOptions,
 	AlarmSensorCCReportOptions,
 	AlarmSensorCCSupportedReportOptions,
@@ -1844,6 +1886,19 @@ export {
 };
 
 export function registerCCs(): void {
+	void ActiveScheduleCCValues;
+	void ActiveScheduleCC;
+	void ActiveScheduleCCCapabilitiesReport;
+	void ActiveScheduleCCCapabilitiesGet;
+	void ActiveScheduleCCEnableSet;
+	void ActiveScheduleCCEnableReport;
+	void ActiveScheduleCCEnableGet;
+	void ActiveScheduleCCYearDayScheduleSet;
+	void ActiveScheduleCCYearDayScheduleReport;
+	void ActiveScheduleCCYearDayScheduleGet;
+	void ActiveScheduleCCDailyRepeatingScheduleSet;
+	void ActiveScheduleCCDailyRepeatingScheduleReport;
+	void ActiveScheduleCCDailyRepeatingScheduleGet;
 	void AlarmSensorCCValues;
 	void AlarmSensorCC;
 	void AlarmSensorCCReport;

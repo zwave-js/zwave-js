@@ -50,8 +50,8 @@ import {
 	ScheduleEntryLockSetAction,
 	type ScheduleEntryLockSlotId,
 	type ScheduleEntryLockWeekDaySchedule,
-	ScheduleEntryLockWeekday,
 	type ScheduleEntryLockYearDaySchedule,
+	ScheduleWeekday,
 	type Timezone,
 } from "../lib/_Types.js";
 import { encodeTimezone, parseTimezone } from "../lib/serializers.js";
@@ -1139,7 +1139,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 		}
 
 		validatePayload(raw.payload.length >= 8);
-		const weekday: ScheduleEntryLockWeekday = raw.payload[3];
+		const weekday: ScheduleWeekday = raw.payload[3];
 		const startHour = raw.payload[4];
 		const startMinute = raw.payload[5];
 		const stopHour = raw.payload[6];
@@ -1163,7 +1163,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 
 	public action: ScheduleEntryLockSetAction;
 
-	public weekday?: ScheduleEntryLockWeekday;
+	public weekday?: ScheduleWeekday;
 	public startHour?: number;
 	public startMinute?: number;
 	public stopHour?: number;
@@ -1200,7 +1200,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 				"slot #": this.slotId,
 				action: "set",
 				weekday: getEnumMemberName(
-					ScheduleEntryLockWeekday,
+					ScheduleWeekday,
 					this.weekday!,
 				),
 				"start time": formatTime(
@@ -1255,7 +1255,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 			slotId,
 		};
 
-		let weekday: ScheduleEntryLockWeekday | undefined;
+		let weekday: ScheduleWeekday | undefined;
 		let startHour: number | undefined;
 		let startMinute: number | undefined;
 		let stopHour: number | undefined;
@@ -1281,7 +1281,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 
 		validatePayload(
 			weekday == undefined
-				|| weekday <= ScheduleEntryLockWeekday.Saturday,
+				|| weekday <= ScheduleWeekday.Saturday,
 			startHour == undefined || startHour <= 23,
 			startMinute == undefined || startMinute <= 59,
 			stopHour == undefined || stopHour <= 23,
@@ -1313,7 +1313,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 
 	public userId: number;
 	public slotId: number;
-	public weekday?: ScheduleEntryLockWeekday;
+	public weekday?: ScheduleWeekday;
 	public startHour?: number;
 	public startMinute?: number;
 	public stopHour?: number;
@@ -1368,7 +1368,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 				"user ID": this.userId,
 				"slot #": this.slotId,
 				weekday: getEnumMemberName(
-					ScheduleEntryLockWeekday,
+					ScheduleWeekday,
 					this.weekday,
 				),
 				"start time": formatTime(
@@ -2039,9 +2039,9 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 		}
 
 		validatePayload(raw.payload.length >= 8);
-		const weekdays: ScheduleEntryLockWeekday[] = parseBitMask(
+		const weekdays: ScheduleWeekday[] = parseBitMask(
 			raw.payload.subarray(3, 4),
-			ScheduleEntryLockWeekday.Sunday,
+			ScheduleWeekday.Sunday,
 		);
 		const startHour = raw.payload[4];
 		const startMinute = raw.payload[5];
@@ -2066,7 +2066,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 
 	public action: ScheduleEntryLockSetAction;
 
-	public weekdays?: ScheduleEntryLockWeekday[];
+	public weekdays?: ScheduleWeekday[];
 	public startHour?: number;
 	public startMinute?: number;
 	public durationHour?: number;
@@ -2079,8 +2079,8 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 				this.payload,
 				encodeBitMask(
 					this.weekdays!,
-					ScheduleEntryLockWeekday.Saturday,
-					ScheduleEntryLockWeekday.Sunday,
+					ScheduleWeekday.Saturday,
+					ScheduleWeekday.Sunday,
 				),
 				[
 					this.startHour!,
@@ -2111,7 +2111,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 				"slot #": this.slotId,
 				action: "set",
 				weekdays: this.weekdays!.map((w) =>
-					getEnumMemberName(ScheduleEntryLockWeekday, w)
+					getEnumMemberName(ScheduleWeekday, w)
 				).join(", "),
 				"start time": formatTime(
 					this.startHour ?? 0,
@@ -2164,9 +2164,9 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 
 		if (raw.payload.length >= 7 && raw.payload[2] !== 0) {
 			// Only parse the schedule if it is present and some weekday is selected
-			const weekdays: ScheduleEntryLockWeekday[] = parseBitMask(
+			const weekdays: ScheduleWeekday[] = parseBitMask(
 				raw.payload.subarray(2, 3),
-				ScheduleEntryLockWeekday.Sunday,
+				ScheduleWeekday.Sunday,
 			);
 			const startHour = raw.payload[3];
 			const startMinute = raw.payload[4];
@@ -2202,7 +2202,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 	public userId: number;
 	public slotId: number;
 
-	public weekdays?: ScheduleEntryLockWeekday[];
+	public weekdays?: ScheduleWeekday[];
 	public startHour?: number;
 	public startMinute?: number;
 	public durationHour?: number;
@@ -2238,8 +2238,8 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 				this.payload,
 				encodeBitMask(
 					this.weekdays,
-					ScheduleEntryLockWeekday.Saturday,
-					ScheduleEntryLockWeekday.Sunday,
+					ScheduleWeekday.Saturday,
+					ScheduleWeekday.Sunday,
 				),
 				[
 					this.startHour!,
@@ -2270,7 +2270,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 				"slot #": this.slotId,
 				action: "set",
 				weekdays: this.weekdays
-					.map((w) => getEnumMemberName(ScheduleEntryLockWeekday, w))
+					.map((w) => getEnumMemberName(ScheduleWeekday, w))
 					.join(", "),
 				"start time": formatTime(
 					this.startHour ?? 0,
