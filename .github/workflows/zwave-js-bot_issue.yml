@@ -215,6 +215,16 @@ jobs:
         restore-keys: |
           posts-embeddings-v1-
 
+    # Downvoted answers collected by the docs-embeddings workflow.
+    # A missing cache just means no suppression is applied.
+    - name: Restore answer feedback
+      uses: actions/cache/restore@v6
+      with:
+        path: .docs-feedback/feedback.json
+        key: docs-feedback-v1-
+        restore-keys: |
+          docs-feedback-v1-
+
     - name: Answer from documentation
       if: steps.restore-index.outputs.cache-matched-key != '' || steps.restore-posts-index.outputs.cache-matched-key != ''
       uses: actions/github-script@v9
@@ -222,6 +232,7 @@ jobs:
         MODELS_TOKEN: ${{ github.token }}
         DOCS_INDEX_PATH: .docs-index/index.json
         POSTS_INDEX_PATH: .posts-index/index.json
+        DOCS_FEEDBACK_PATH: .docs-feedback/feedback.json
       with:
         github-token: ${{ secrets.BOT_TOKEN }}
         script: |

@@ -3,7 +3,7 @@
 /// <reference path="types.d.ts" />
 
 const fs = require("node:fs/promises");
-const { retrieve } = require("./docsSearch.cjs");
+const { cosineSimilarity, retrieve } = require("./docsSearch.cjs");
 const { CHAT_MODEL, embed, modelsRequest } = require("./modelsApi.cjs");
 const {
 	QUESTION_CATEGORY_SLUGS,
@@ -14,6 +14,8 @@ const {
 
 const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
+const DOCS_ANSWER_METADATA_TAG = "DOCS_ANSWER_METADATA";
+const DOCS_ANSWER_METADATA_VERSION = 1;
 
 // Users whose posts should never be answered automatically
 const EXCLUDED_USERS = ["AlCalzone", "zwave-js-bot"];
@@ -31,6 +33,10 @@ const LINKS_CONFIDENCE = 40;
 // A wrong suggestion is worse than a missed one, so keep this high.
 const POSTS_MIN_SIMILARITY = 0.55;
 const MAX_RELATED_POSTS = 3;
+
+// Questions at least this similar to a previously downvoted answer
+// get a demoted response: full answer -> links only, links only -> silence
+const SUPPRESS_SIMILARITY = 0.9;
 
 /** @param {{file: string, anchor: string}} chunk */
 function chunkUrl(chunk) {
@@ -127,19 +133,61 @@ ${excerpts}`;
 }
 
 /**
+ * Determines how the answer to a question must be demoted based on
+ * its similarity to previously downvoted answers: a downvoted full
+ * answer allows links only, downvoted links mean staying silent
+ * @param {number[]} questionEmbedding
+ * @param {{model: string, suppressed: {embedding: number[], style: string, url: string}[]} | undefined} feedback
+ * @param {string} embeddingModel
+ * @returns {"allow" | "linksOnly" | "silent"}
+ */
+function checkSuppression(questionEmbedding, feedback, embeddingModel) {
+	// Embeddings from different models are not comparable
+	if (!feedback || feedback.model !== embeddingModel) return "allow";
+
+	/** @type {"allow" | "linksOnly" | "silent"} */
+	let result = "allow";
+	for (const entry of feedback.suppressed ?? []) {
+		// The cache could be stale or corrupted. Skip malformed entries,
+		// a mismatched vector length would yield NaN below
+		if (
+			!Array.isArray(entry.embedding)
+			|| entry.embedding.length !== questionEmbedding.length
+		) {
+			continue;
+		}
+		const similarity = cosineSimilarity(
+			questionEmbedding,
+			entry.embedding,
+		);
+		if (!(similarity >= SUPPRESS_SIMILARITY)) continue;
+		console.log(
+			`Question is similar (${
+				similarity.toFixed(3)
+			}) to a downvoted answer: ${entry.url}`,
+		);
+		if (entry.style === "links") return "silent";
+		result = "linksOnly";
+	}
+	return result;
+}
+
+/**
  * Retrieves documentation for the question, judges whether it answers it,
  * and renders the docs part of the comment
  * @param {string} question
  * @param {number[]} questionEmbedding
  * @param {any} index The docs embeddings index
  * @param {string} token
- * @returns {Promise<string | undefined>}
+ * @param {boolean} allowAnswer Render doc links only when false
+ * @returns {Promise<{text: string, style: "answer" | "links", confidence: number, sections: string[]} | undefined>}
  */
 async function buildDocsAnswerSection(
 	question,
 	questionEmbedding,
 	index,
 	token,
+	allowAnswer,
 ) {
 	const { results: ranked, bestSimilarity } = retrieve(
 		index,
@@ -218,24 +266,37 @@ async function buildDocsAnswerSection(
 		})
 		.join("\n");
 
+	const sections = deduped.map((chunk) => `${chunk.file}#${chunk.anchor}`);
 	const single = deduped.length === 1;
-	if (result.confidence >= ANSWER_CONFIDENCE && result.answer) {
-		return `${result.answer}
+	if (
+		allowAnswer && result.confidence >= ANSWER_CONFIDENCE && result.answer
+	) {
+		return {
+			text: `${result.answer}
 
 ${
-			single
-				? "This section of the documentation has more details:"
-				: "These sections of the documentation have more details:"
-		}
-${links}`;
+				single
+					? "This section of the documentation has more details:"
+					: "These sections of the documentation have more details:"
+			}
+${links}`,
+			style: "answer",
+			confidence: result.confidence,
+			sections,
+		};
 	} else {
-		return `${
-			single
-				? "This section of the documentation might answer your question:"
-				: "These sections of the documentation might answer your question:"
-		}
+		return {
+			text: `${
+				single
+					? "This section of the documentation might answer your question:"
+					: "These sections of the documentation might answer your question:"
+			}
 
-${links}`;
+${links}`,
+			style: "links",
+			confidence: result.confidence,
+			sections,
+		};
 	}
 }
 
@@ -404,12 +465,32 @@ async function main(param) {
 		embeddingModel,
 	);
 
-	const docsSection = docsIndex
+	// Feedback guardrail: check the question against previously
+	// downvoted answers collected by collectDocsAnswerFeedback.cjs
+	let suppression = "allow";
+	const feedbackPath = process.env.DOCS_FEEDBACK_PATH;
+	if (feedbackPath) {
+		/** @type {any} */
+		let feedback;
+		try {
+			feedback = JSON.parse(await fs.readFile(feedbackPath, "utf8"));
+		} catch {
+			console.log(`No feedback data found at ${feedbackPath}`);
+		}
+		suppression = checkSuppression(
+			questionEmbedding,
+			feedback,
+			embeddingModel,
+		);
+	}
+
+	const docsSection = docsIndex && suppression !== "silent"
 		? await buildDocsAnswerSection(
 			question,
 			questionEmbedding,
 			docsIndex,
 			modelsToken,
+			suppression === "allow",
 		)
 		: undefined;
 
@@ -433,7 +514,7 @@ async function main(param) {
 		body +=
 			`_I've tried to answer your question based on the documentation. If this doesn't help, please wait for a human to show up._
 
-${docsSection}`;
+${docsSection.text}`;
 		if (postsSection) {
 			body += `
 
@@ -447,6 +528,16 @@ ${postsSection}`;
 
 ${postsSection}`;
 	}
+
+	// Metadata for collectDocsAnswerFeedback.cjs to attribute
+	// reactions to doc sections without re-parsing the comment
+	const metadata = {
+		v: DOCS_ANSWER_METADATA_VERSION,
+		style: docsSection?.style ?? "posts",
+		confidence: docsSection?.confidence ?? null,
+		sections: docsSection?.sections ?? [],
+	};
+
 	body += `
 
 ---
@@ -458,7 +549,9 @@ _${
 	} generated automatically${
 		docsSection ? " based on the documentation" : ""
 	}. AI can make mistakes, always check important info._
-${DOCS_ANSWER_COMMENT_TAG}`;
+_Was this helpful? React with 👍 or 👎 to let us know._
+${DOCS_ANSWER_COMMENT_TAG}
+<!-- ${DOCS_ANSWER_METADATA_TAG} ${JSON.stringify(metadata)} -->`;
 
 	if (isDiscussion) {
 		await github.graphql(
@@ -483,3 +576,8 @@ ${DOCS_ANSWER_COMMENT_TAG}`;
 
 module.exports = main;
 module.exports.judgeAnswer = judgeAnswer;
+module.exports.checkSuppression = checkSuppression;
+module.exports.DOCS_ANSWER_COMMENT_TAG = DOCS_ANSWER_COMMENT_TAG;
+module.exports.DOCS_ANSWER_METADATA_TAG = DOCS_ANSWER_METADATA_TAG;
+module.exports.DOCS_ANSWER_METADATA_VERSION = DOCS_ANSWER_METADATA_VERSION;
+module.exports.DOCS_BASE_URL = DOCS_BASE_URL;
