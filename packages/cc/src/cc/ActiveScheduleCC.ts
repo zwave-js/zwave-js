@@ -1856,7 +1856,7 @@ export class ActiveScheduleCCDailyRepeatingScheduleSet
 		);
 		offset += timespanBytes;
 		validatePayload(raw.payload.length >= offset + 1);
-		// CC:00A4.01.06.11.009: These bits MUST be set to 0 by a sending node
+		// CC:00A4.01.09.11.009: These bits MUST be set to 0 by a sending node
 		// and MUST be ignored by a receiving node.
 		const metadataLength = raw.payload[offset++] & 0b111;
 

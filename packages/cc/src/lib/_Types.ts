@@ -1368,9 +1368,6 @@ export interface ScheduleEntryLockSlotId {
 	slotId: number;
 }
 
-/** @deprecated Use {@link ScheduleWeekday} instead */
-export import ScheduleEntryLockWeekday = ScheduleWeekday;
-
 export interface ScheduleEntryLockDailyRepeatingSchedule {
 	weekdays: ScheduleWeekday[];
 	startHour: number;
