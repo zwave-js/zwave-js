@@ -280,8 +280,8 @@ function buildRelatedPostsSection(index, questionEmbedding, self) {
 
 	const links = shown
 		.map(({ post }) => {
-			// Square brackets in titles would break the markdown link
-			const title = post.title.replace(/([[\]])/g, "\\$1");
+			// Backslashes and square brackets in titles would break the markdown link
+			const title = post.title.replace(/[\\[\]]/g, "\\$&");
 			return `- [${title}](${post.url}) (${describePostState(post)})`;
 		})
 		.join("\n");
