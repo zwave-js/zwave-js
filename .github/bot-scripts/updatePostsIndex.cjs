@@ -7,12 +7,12 @@
 // for questions arriving before the next nightly rebuild.
 
 const fs = require("node:fs/promises");
-const { embed } = require("./modelsApi.cjs");
+const { embedBatched } = require("./modelsApi.cjs");
 const {
 	QUESTION_CATEGORY_SLUGS,
+	cleanQuestion,
 	hashPost,
 	loadPostsIndex,
-	postEmbeddingText,
 } = require("./postsIndex.cjs");
 
 /**
@@ -60,7 +60,7 @@ async function main(param) {
 		return false;
 	}
 
-	const embeddedText = postEmbeddingText(post.title, post.body ?? "");
+	const embeddedText = cleanQuestion(post.title, post.body ?? "");
 	const hash = hashPost(embeddedText);
 
 	const type = isDiscussion ? "discussion" : "issue";
@@ -72,7 +72,11 @@ async function main(param) {
 		return false;
 	}
 
-	const [embedding] = await embed([embeddedText], modelsToken, index.model);
+	const [embedding] = await embedBatched(
+		[embeddedText],
+		modelsToken,
+		index.model,
+	);
 	/** @type {import("./postsIndex.cjs").IndexedPost} */
 	const entry = {
 		type,
@@ -86,8 +90,7 @@ async function main(param) {
 			? []
 			: (post.labels ?? []).map((/** @type {any} */ l) => l.name),
 		hash,
-		// Round to reduce index size, this has no measurable impact on similarity
-		embedding: embedding.map((x) => Math.round(x * 1e5) / 1e5),
+		embedding,
 	};
 
 	if (existing) {

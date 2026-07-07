@@ -29,16 +29,13 @@ function tokenize(text) {
 		.filter((t) => t.length >= 2);
 }
 
-/**
- * Computes BM25 scores for all chunks against the query
- * @param {{text: string, breadcrumbs: string[]}[]} chunks
- * @param {string[]} queryTokens
- * @returns {number[]}
- */
-function bm25Scores(chunks, queryTokens) {
-	const k1 = 1.2;
-	const b = 0.75;
+// Corpus statistics are query-independent, so they are computed once
+// per index and reused across queries (the evals query in a loop)
+/** @type {WeakMap<object, ReturnType<typeof computeBm25Stats>>} */
+const bm25StatsCache = new WeakMap();
 
+/** @param {{text: string, breadcrumbs: string[]}[]} chunks */
+function computeBm25Stats(chunks) {
 	const docs = chunks.map((chunk) =>
 		tokenize(chunk.breadcrumbs.join(" ") + " " + chunk.text)
 	);
@@ -56,6 +53,26 @@ function bm25Scores(chunks, queryTokens) {
 		}
 		return tf;
 	});
+
+	return { docs, avgLength, docFrequency, termFrequencies };
+}
+
+/**
+ * Computes BM25 scores for all chunks against the query
+ * @param {{text: string, breadcrumbs: string[]}[]} chunks
+ * @param {string[]} queryTokens
+ * @returns {number[]}
+ */
+function bm25Scores(chunks, queryTokens) {
+	const k1 = 1.2;
+	const b = 0.75;
+
+	let stats = bm25StatsCache.get(chunks);
+	if (!stats) {
+		stats = computeBm25Stats(chunks);
+		bm25StatsCache.set(chunks, stats);
+	}
+	const { docs, avgLength, docFrequency, termFrequencies } = stats;
 
 	const uniqueQueryTokens = [...new Set(queryTokens)];
 	return docs.map((tokens, i) => {

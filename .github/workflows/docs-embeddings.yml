@@ -23,11 +23,11 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Restore previous index
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: .docs-index
         key: docs-embeddings-v1-${{ hashFiles('docs/**/*.md') }}
@@ -52,11 +52,11 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Restore docs index
       id: restore-index
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: .docs-index
         key: docs-embeddings-v1-${{ hashFiles('docs/**/*.md') }}
@@ -71,68 +71,16 @@ jobs:
 
     - name: Update tracking issue
       if: steps.restore-index.outputs.cache-hit == 'true'
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       env:
+        TRACKING_ISSUE_TITLE: "🚨 Docs answer bot retrieval quality regression"
+        EVAL_NAME: docs answer bot
         EVAL_OUTCOME: ${{ steps.eval.outcome }}
         EVAL_SUMMARY: ${{ steps.eval.outputs.summary }}
       with:
         script: |
-          const TITLE = "🚨 Docs answer bot retrieval quality regression";
-          const failed = process.env.EVAL_OUTCOME === "failure";
-
-          // Find an existing tracking issue, open or closed
-          const { data: issues } = await github.rest.issues.listForRepo({
-            ...context.repo,
-            creator: "github-actions[bot]",
-            state: "all",
-            per_page: 100,
-          });
-          const tracking = issues.find((i) => i.title === TITLE);
-
-          const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-          const body = `The daily evaluation of the docs answer bot did not meet the required hit rate.
-
-          ${process.env.EVAL_SUMMARY || "(no summary available)"}
-
-          See the [workflow run](${runUrl}) for details.`;
-
-          if (failed) {
-            if (!tracking) {
-              await github.rest.issues.create({
-                ...context.repo,
-                title: TITLE,
-                body,
-              });
-            } else if (tracking.state === "closed") {
-              await github.rest.issues.update({
-                ...context.repo,
-                issue_number: tracking.number,
-                state: "open",
-              });
-              await github.rest.issues.createComment({
-                ...context.repo,
-                issue_number: tracking.number,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                ...context.repo,
-                issue_number: tracking.number,
-                body,
-              });
-            }
-          } else if (tracking && tracking.state === "open") {
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: tracking.number,
-              body: `The evaluation passed again in the latest [workflow run](${runUrl}). Closing.`,
-            });
-            await github.rest.issues.update({
-              ...context.repo,
-              issue_number: tracking.number,
-              state: "closed",
-            });
-          }
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          await bot.updateEvalTrackingIssue({github, context});
 
   # Learn from reactions to the bot's answers: update the feedback
   # digest issue and build the suppression list for the answer bot
@@ -147,35 +95,22 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v6
-
-    - name: Restore docs index
-      id: restore-index
-      uses: actions/cache/restore@v4
-      with:
-        path: .docs-index
-        key: docs-embeddings-v1-${{ hashFiles('docs/**/*.md') }}
-        restore-keys: |
-          docs-embeddings-v1-
+      uses: actions/checkout@v7
 
     - name: Collect feedback on bot answers
-      if: steps.restore-index.outputs.cache-matched-key != ''
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: node .github/bot-scripts/collectDocsAnswerFeedback.cjs .docs-index/index.json .docs-feedback/feedback.json .docs-feedback/records.json
+      run: node .github/bot-scripts/collectDocsFeedback.cjs .docs-feedback/feedback.json .docs-feedback/records.json
 
     - name: Update feedback digest issue
-      if: steps.restore-index.outputs.cache-matched-key != ''
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        DRY_RUN: ${{ vars.DOCS_ANSWER_DRY_RUN }}
       run: node .github/bot-scripts/updateDocsFeedbackIssue.cjs .docs-feedback/records.json
 
     # A per-run key means every nightly run saves a fresh entry,
     # the answer bot restores the latest one by prefix
     - name: Save suppression list for the answer bot
-      if: steps.restore-index.outputs.cache-matched-key != ''
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: .docs-feedback/feedback.json
         key: docs-feedback-v1-${{ github.run_id }}

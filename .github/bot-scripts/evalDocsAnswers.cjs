@@ -15,7 +15,8 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { judgeAnswer } = require("./answerFromDocs.cjs");
-const { retrieve } = require("./docsSearch.cjs");
+const { retrieve } = require("./docsIndex.cjs");
+const { logCase, reportResults } = require("./evalUtils.cjs");
 const { embed } = require("./modelsApi.cjs");
 
 const NUM_RESULTS = 5;
@@ -54,7 +55,7 @@ async function main() {
 		index.model,
 	);
 
-	let hits = 0;
+	/** @type {import("./evalUtils.cjs").EvalResult[]} */
 	const failures = [];
 	for (let i = 0; i < cases.length; i++) {
 		const { question, expectedFiles } = cases[i];
@@ -66,16 +67,13 @@ async function main() {
 		);
 		const retrievedFiles = results.map((r) => r.chunk.file);
 		const hit = expectedFiles.some((f) => retrievedFiles.includes(f));
-		const title = question.split("\n")[0];
-		if (hit) {
-			hits++;
-			console.log(`✅ ${title}`);
-		} else {
-			failures.push({ title, expectedFiles, retrievedFiles });
-			console.log(`❌ ${title}`);
-			console.log(`   expected one of: ${expectedFiles.join(", ")}`);
-			console.log(`   retrieved: ${retrievedFiles.join(", ")}`);
-		}
+		const result = {
+			title: question.split("\n")[0],
+			expected: expectedFiles,
+			retrieved: retrievedFiles,
+		};
+		logCase(hit, result);
+		if (!hit) failures.push(result);
 
 		if (showAnswers) {
 			const result = await judgeAnswer(question, results, token);
@@ -88,34 +86,7 @@ async function main() {
 		}
 	}
 
-	const hitRate = hits / cases.length;
-	console.log(
-		`\nhit@${NUM_RESULTS}: ${hits}/${cases.length} (${
-			(hitRate * 100).toFixed(1)
-		}%), required: ${(MIN_HIT_RATE * 100).toFixed(1)}%`,
-	);
-
-	// Write a summary for the workflow to include in the tracking issue
-	if (process.env.GITHUB_OUTPUT) {
-		const summary = [
-			`hit@${NUM_RESULTS}: ${hits}/${cases.length} (${
-				(hitRate * 100).toFixed(1)
-			}%)`,
-			...failures.map((f) =>
-				`- ❌ ${f.title}\n  - expected one of: ${
-					f.expectedFiles.join(", ")
-				}\n  - retrieved: ${f.retrievedFiles.join(", ")}`
-			),
-		].join("\n");
-		await fs.appendFile(
-			process.env.GITHUB_OUTPUT,
-			`summary<<EOF\n${summary}\nEOF\n`,
-		);
-	}
-
-	if (hitRate < MIN_HIT_RATE) {
-		process.exit(1);
-	}
+	await reportResults(NUM_RESULTS, cases.length, failures, MIN_HIT_RATE);
 }
 
 if (require.main === module) {

@@ -9,6 +9,17 @@ const CHAT_MODEL = process.env.CHAT_MODEL || "openai/gpt-4o";
 
 const MAX_RETRIES = 5;
 
+// Stay well below the 64K tokens/request limit for embedding requests
+const MAX_BATCH_TOKENS = 40_000;
+const MAX_BATCH_INPUTS = 128;
+// The free tier allows 15 requests/minute
+const THROTTLE_MS = 4500;
+
+/** @param {string} str */
+function estimateTokens(str) {
+	return Math.ceil(str.length / 4);
+}
+
 /**
  * Performs a request against the Models API, retrying with backoff
  * on rate limits and transient server errors
@@ -68,9 +79,55 @@ async function embed(inputs, token, model = EMBEDDING_MODEL) {
 		.map((/** @type {any} */ d) => d.embedding);
 }
 
+/**
+ * Embeds texts destined for an index, batching them within the
+ * per-request limits and throttling between requests.
+ * @param {string[]} texts
+ * @param {string} token
+ * @param {string} [model]
+ * @returns {Promise<number[][]>} Embeddings in input order
+ */
+async function embedBatched(texts, token, model = EMBEDDING_MODEL) {
+	/** @type {number[][]} */
+	const results = [];
+	let cursor = 0;
+	let requestCount = 0;
+	while (cursor < texts.length) {
+		const batch = [];
+		let batchTokens = 0;
+		while (cursor < texts.length && batch.length < MAX_BATCH_INPUTS) {
+			const tokens = estimateTokens(texts[cursor]);
+			if (batch.length > 0 && batchTokens + tokens > MAX_BATCH_TOKENS) {
+				break;
+			}
+			batch.push(texts[cursor]);
+			batchTokens += tokens;
+			cursor++;
+		}
+
+		if (requestCount > 0) {
+			await new Promise((resolve) => setTimeout(resolve, THROTTLE_MS));
+		}
+		console.log(
+			`Embedding batch of ${batch.length} texts (~${batchTokens} tokens)...`,
+		);
+		const embeddings = await embed(batch, token, model);
+		requestCount++;
+		results.push(
+			// Round to reduce index size, this has no measurable impact on similarity
+			...embeddings.map((embedding) =>
+				embedding.map((x) => Math.round(x * 1e5) / 1e5)
+			),
+		);
+	}
+	console.log(`Done, used ${requestCount} embedding requests`);
+	return results;
+}
+
 module.exports = {
 	modelsRequest,
 	embed,
+	embedBatched,
 	EMBEDDING_MODEL,
 	CHAT_MODEL,
 };

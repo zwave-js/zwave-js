@@ -7,13 +7,13 @@
 //
 // Usage: node updateDocsFeedbackIssue.cjs <records-file>
 // Requires GITHUB_TOKEN and GITHUB_REPOSITORY in the environment.
-// With DRY_RUN=true, the rendered body is logged instead of posted.
 
 const fs = require("node:fs/promises");
 const {
 	SCAN_WINDOW_DAYS,
 	SUPPRESS_SCORE,
-} = require("./collectDocsAnswerFeedback.cjs");
+} = require("./collectDocsFeedback.cjs");
+const { ghPaginated, ghRequest } = require("./githubApi.cjs");
 
 const ISSUE_TITLE = "📊 Docs answer bot feedback";
 const ISSUE_MARKER = "<!-- DOCS_FEEDBACK_ISSUE -->";
@@ -23,35 +23,6 @@ const ISSUE_LABEL = "docs-feedback";
 
 // Keep suggested eval cases (and the issue body) readable
 const MAX_EVAL_QUESTION_LENGTH = 300;
-
-const API_BASE = "https://api.github.com";
-
-/**
- * @param {string} method
- * @param {string} pathAndQuery
- * @param {object | undefined} body
- * @param {string} token
- * @returns {Promise<any>}
- */
-async function ghRequest(method, pathAndQuery, body, token) {
-	const response = await fetch(`${API_BASE}${pathAndQuery}`, {
-		method,
-		headers: {
-			Accept: "application/vnd.github+json",
-			Authorization: `Bearer ${token}`,
-			"X-GitHub-Api-Version": "2022-11-28",
-		},
-		body: body && JSON.stringify(body),
-	});
-	if (!response.ok) {
-		throw new Error(
-			`GitHub API request ${method} ${pathAndQuery} failed with status ${response.status}: ${await response
-				.text()
-				.catch(() => "")}`,
-		);
-	}
-	return response.json();
-}
 
 /**
  * Keeps user-controlled text from pinging people via @mentions
@@ -64,7 +35,7 @@ function neutralizeMentions(text) {
 
 /**
  * Summarizes the votes as anonymous weighted counts
- * @param {import("./collectDocsAnswerFeedback.cjs").FeedbackRecord} record
+ * @param {import("./collectDocsFeedback.cjs").FeedbackRecord} record
  */
 function renderVotes(record) {
 	const up = record.votes.filter((v) => v.weight > 0);
@@ -86,7 +57,7 @@ function renderVotes(record) {
 }
 
 /**
- * @param {import("./collectDocsAnswerFeedback.cjs").FeedbackRecord} record
+ * @param {import("./collectDocsFeedback.cjs").FeedbackRecord} record
  */
 function renderRecord(record) {
 	const lines = [
@@ -123,7 +94,7 @@ function renderRecord(record) {
 
 /**
  * Renders a ready-to-paste eval case for docsAnswersEvalCases.json
- * @param {import("./collectDocsAnswerFeedback.cjs").FeedbackRecord} record
+ * @param {import("./collectDocsFeedback.cjs").FeedbackRecord} record
  */
 function renderEvalCase(record) {
 	const evalCase = {
@@ -142,7 +113,7 @@ ${JSON.stringify(evalCase, undefined, "\t")}
 }
 
 /**
- * @param {import("./collectDocsAnswerFeedback.cjs").FeedbackRecord[]} records
+ * @param {import("./collectDocsFeedback.cjs").FeedbackRecord[]} records
  */
 function renderDigest(records) {
 	const withFeedback = records.filter((r) => r.votes.length > 0);
@@ -189,7 +160,7 @@ ${good.map((r) => `${renderRecord(r)}\n${renderEvalCase(r)}`).join("\n\n")}`,
 
 /**
  * Creates the digest issue or rewrites its body in place
- * @param {import("./collectDocsAnswerFeedback.cjs").FeedbackRecord[]} records
+ * @param {import("./collectDocsFeedback.cjs").FeedbackRecord[]} records
  * @param {string} owner
  * @param {string} repo
  * @param {string} token
@@ -197,26 +168,11 @@ ${good.map((r) => `${renderRecord(r)}\n${renderEvalCase(r)}`).join("\n\n")}`,
 async function updateFeedbackIssue(records, owner, repo, token) {
 	const body = renderDigest(records);
 
-	if (process.env.DRY_RUN === "true") {
-		console.log("DRY RUN - would set the following issue body:");
-		console.log(body);
-		return;
-	}
-
 	// The marker identifies the digest issue regardless of its title
-	/** @type {any[]} */
-	const candidates = [];
-	for (let page = 1;; page++) {
-		/** @type {any[]} */
-		const batch = await ghRequest(
-			"GET",
-			`/repos/${owner}/${repo}/issues?labels=${ISSUE_LABEL}&state=all&per_page=100&page=${page}`,
-			undefined,
-			token,
-		);
-		candidates.push(...batch);
-		if (batch.length < 100) break;
-	}
+	const candidates = await ghPaginated(
+		`/repos/${owner}/${repo}/issues?labels=${ISSUE_LABEL}&state=all&per_page=100`,
+		token,
+	);
 	const existing = candidates.find((i) => i.body?.includes(ISSUE_MARKER));
 
 	if (existing) {
@@ -264,5 +220,3 @@ if (require.main === module) {
 		process.exit(1);
 	});
 }
-
-module.exports = { renderDigest, updateFeedbackIssue };

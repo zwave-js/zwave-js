@@ -19,8 +19,7 @@ async function main(param) {
 
 	const title = process.env.TRACKING_ISSUE_TITLE;
 	if (!title) {
-		console.log("No TRACKING_ISSUE_TITLE provided, skipping");
-		return;
+		throw new Error("TRACKING_ISSUE_TITLE is not set");
 	}
 	const failed = process.env.EVAL_OUTCOME === "failure";
 
