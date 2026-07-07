@@ -54,12 +54,15 @@ jobs:
           await bot.answerFromDocs({github, context});
 
   # Add the new post to the posts index, so it can be suggested as a
-  # related post before the next nightly rebuild
+  # related post before the next nightly rebuild.
+  # Edits are reconciled by the nightly rebuild instead, so repeated
+  # edits cannot burn Models API requests and cache storage.
   update-posts-index:
     runs-on: [ubuntu-latest]
     permissions:
       contents: read
       models: read
+    if: github.event.action == 'created'
 
     steps:
     - name: Checkout master branch
