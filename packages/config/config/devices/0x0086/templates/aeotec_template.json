@@ -228,7 +228,7 @@
 	"sensor_report_type": {
 		"label": "Report Type to Send",
 		"valueSize": 4,
-		"defaultValue": 1,
+		"defaultValue": 256,
 		"unsigned": true,
 		"allowManualEntry": false,
 		"options": [

@@ -385,7 +385,8 @@
 		"$purpose": "reporting_interval.temperature",
 		"label": "Temperature reportng interval when on line power",
 		"unit": "seconds",
-		"minValue": 30
+		"minValue": 30,
+		"defaultValue": 60
 	},
 	"led_blink_status": {
 		"label": "LED Blink Status",

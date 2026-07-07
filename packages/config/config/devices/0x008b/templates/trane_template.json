@@ -19,7 +19,7 @@
 		"unit": "°F",
 		"minValue": 55,
 		"maxValue": 90,
-		"defaultValue": 0,
+		"defaultValue": 70,
 		"unsigned": true
 	},
 	"schedule_cool_setpoint": {
@@ -27,7 +27,7 @@
 		"unit": "°F",
 		"minValue": 60,
 		"maxValue": 99,
-		"defaultValue": 0,
+		"defaultValue": 78,
 		"unsigned": true
 	}
 }
