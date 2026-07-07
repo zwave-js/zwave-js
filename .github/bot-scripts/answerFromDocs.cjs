@@ -5,15 +5,16 @@
 const fs = require("node:fs/promises");
 const { retrieve } = require("./docsSearch.cjs");
 const { CHAT_MODEL, embed, modelsRequest } = require("./modelsApi.cjs");
+const {
+	QUESTION_CATEGORY_SLUGS,
+	cleanQuestion,
+	loadPostsIndex,
+	rankRelatedPosts,
+} = require("./postsIndex.cjs");
 
 const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
 
-// Discussion categories where questions are expected
-const QUESTION_CATEGORY_SLUGS = [
-	"request-support-investigate-issue",
-	"q-a",
-];
 // Users whose posts should never be answered automatically
 const EXCLUDED_USERS = ["AlCalzone", "zwave-js-bot"];
 
@@ -26,46 +27,10 @@ const MIN_SIMILARITY = 0.2;
 const ANSWER_CONFIDENCE = 75;
 const LINKS_CONFIDENCE = 40;
 
-// Limit the question size to keep the prompt within the token budget
-const MAX_QUESTION_LENGTH = 6000;
-
-/**
- * Reduces template boilerplate and log/code dumps in the post body,
- * which would otherwise dilute the query used for retrieval
- * @param {string} title
- * @param {string} body
- */
-function cleanQuestion(title, body) {
-	// Template instructions are hidden in HTML comments.
-	// Replacements can create new comment sequences, repeat until stable.
-	let text = body;
-	let previous;
-	do {
-		previous = text;
-		text = text.replace(/<!--[\s\S]*?-->/g, "");
-	} while (text !== previous);
-
-	text = text
-		// Checked/unchecked checklist items carry no information
-		.replace(/^\s*-\s*\[[ xX]\].*$/gm, "")
-		// Retrieval matches on prose, not logs. Long code blocks would
-		// dilute the embedding and blow the question length budget, so
-		// they are shortened to head + tail. This is NOT log analysis -
-		// that is the log analyzer's job, this bot only matches the
-		// question against the documentation.
-		.replace(/(```|~~~)[\s\S]*?\1/g, (block) => {
-			const lines = block.split("\n");
-			if (lines.length <= 15) return block;
-			return [
-				...lines.slice(0, 8),
-				"...",
-				...lines.slice(-4),
-			].join("\n");
-		})
-		.replace(/\n{3,}/g, "\n\n")
-		.trim();
-	return `${title}\n\n${text}`.slice(0, MAX_QUESTION_LENGTH);
-}
+// A related post is only suggested above this cosine similarity.
+// A wrong suggestion is worse than a missed one, so keep this high.
+const POSTS_MIN_SIMILARITY = 0.55;
+const MAX_RELATED_POSTS = 3;
 
 /** @param {{file: string, anchor: string}} chunk */
 function chunkUrl(chunk) {
@@ -162,12 +127,182 @@ ${excerpts}`;
 }
 
 /**
- * Answers a user's question in an issue or discussion based on the documentation.
+ * Retrieves documentation for the question, judges whether it answers it,
+ * and renders the docs part of the comment
+ * @param {string} question
+ * @param {number[]} questionEmbedding
+ * @param {any} index The docs embeddings index
+ * @param {string} token
+ * @returns {Promise<string | undefined>}
+ */
+async function buildDocsAnswerSection(
+	question,
+	questionEmbedding,
+	index,
+	token,
+) {
+	const { results: ranked, bestSimilarity } = retrieve(
+		index,
+		questionEmbedding,
+		question,
+		MAX_RETRIEVED_CHUNKS,
+	);
+
+	if (bestSimilarity < MIN_SIMILARITY) {
+		console.log(
+			`Best similarity ${
+				bestSimilarity.toFixed(3)
+			} below floor, post is likely off-topic`,
+		);
+		return;
+	}
+
+	console.log(
+		"Top matches:",
+		ranked.map((r) =>
+			`cos=${r.similarity.toFixed(3)} bm25=${
+				r.lexical.toFixed(1)
+			} ${r.chunk.file}#${r.chunk.anchor}`
+		),
+	);
+	if (ranked.length === 0) {
+		console.log("No relevant documentation found");
+		return;
+	}
+
+	// Ask the model whether the docs answer the question
+	/** @type {{confidence: number, answer: string | null, relatedExcerpts: number[]}} */
+	let result;
+	try {
+		result = await judgeAnswer(question, ranked, token);
+	} catch (e) {
+		console.log("Failed to parse model response:", e);
+		return;
+	}
+	console.log("Model response:", JSON.stringify(result));
+
+	const related = (result.relatedExcerpts ?? [])
+		.map((i) => ranked[i]?.chunk)
+		.filter(Boolean);
+
+	if (result.confidence < LINKS_CONFIDENCE || related.length === 0) {
+		console.log("Confidence too low, not answering");
+		return;
+	}
+
+	// When linking to a section, don't also link to its subsections
+	const isAncestor = (
+		/** @type {any} */ a,
+		/** @type {any} */ b,
+	) => a.file === b.file
+		&& a.breadcrumbs.length < b.breadcrumbs.length
+		&& a.breadcrumbs.every(
+			(/** @type {string} */ crumb, /** @type {number} */ i) =>
+				crumb === b.breadcrumbs[i],
+		);
+	// Sub-splits of the same section share a URL, only link it once
+	/** @type {Set<string>} */
+	const seenUrls = new Set();
+	const deduped = related.filter((chunk) => {
+		if (related.some((other) => isAncestor(other, chunk))) return false;
+		const url = chunkUrl(chunk);
+		if (seenUrls.has(url)) return false;
+		seenUrls.add(url);
+		return true;
+	});
+
+	const links = deduped
+		.map((chunk) => {
+			const label = chunk.breadcrumbs.join(" → ");
+			return `- [${label}](${chunkUrl(chunk)})`;
+		})
+		.join("\n");
+
+	const single = deduped.length === 1;
+	if (result.confidence >= ANSWER_CONFIDENCE && result.answer) {
+		return `${result.answer}
+
+${
+			single
+				? "This section of the documentation has more details:"
+				: "These sections of the documentation have more details:"
+		}
+${links}`;
+	} else {
+		return `${
+			single
+				? "This section of the documentation might answer your question:"
+				: "These sections of the documentation might answer your question:"
+		}
+
+${links}`;
+	}
+}
+
+/** @param {import("./postsIndex.cjs").IndexedPost} post */
+function describePostState(post) {
+	if (post.type === "issue") {
+		return post.state === "open" ? "open issue" : "closed issue";
+	}
+	if (post.state === "answered") return "answered discussion";
+	if (post.state === "closed") return "closed discussion";
+	return "discussion";
+}
+
+/**
+ * Ranks existing posts by similarity and renders the related-posts part
+ * of the comment
+ * @param {NonNullable<Awaited<ReturnType<typeof loadPostsIndex>>>} index
+ * @param {number[]} questionEmbedding
+ * @param {{type: "issue" | "discussion", number: number}} self
+ * @returns {string | undefined}
+ */
+function buildRelatedPostsSection(index, questionEmbedding, self) {
+	// Log more candidates than are shown, as tuning signal for the floor
+	const candidates = rankRelatedPosts(index, questionEmbedding, self, {
+		minSimilarity: 0,
+		maxResults: 10,
+	});
+	console.log(
+		"Top related posts:",
+		candidates.map((c) =>
+			`cos=${c.similarity.toFixed(3)} ${c.post.type} #${c.post.number}`
+		),
+	);
+
+	const shown = candidates
+		.filter((c) => c.similarity >= POSTS_MIN_SIMILARITY)
+		.slice(0, MAX_RELATED_POSTS);
+	if (shown.length === 0) {
+		console.log("No sufficiently similar posts found");
+		return;
+	}
+
+	const links = shown
+		.map(({ post }) => {
+			// Square brackets in titles would break the markdown link
+			const title = post.title.replace(/([[\]])/g, "\\$1");
+			return `- [${title}](${post.url}) (${describePostState(post)})`;
+		})
+		.join("\n");
+
+	return `${
+		shown.length === 1
+			? "This existing post looks similar to yours and might be related — a maintainer will confirm:"
+			: "These existing posts look similar to yours and might be related — a maintainer will confirm:"
+	}
+
+${links}`;
+}
+
+/**
+ * Answers a user's question in an issue or discussion based on the
+ * documentation, and/or suggests similar existing posts, in a single comment.
  *
  * Expects the following environment variables:
  * - MODELS_TOKEN: token with models:read permission
  * - DOCS_INDEX_PATH: path to the embeddings index created by buildDocsIndex.cjs
- * - DRY_RUN: if set to "true", log the would-be comment instead of posting it
+ * - POSTS_INDEX_PATH: path to the embeddings index created by buildPostsIndex.cjs
  *
  * @param {{github: Github, context: Context, core?: any}} param
  */
@@ -179,8 +314,6 @@ async function main(param) {
 		console.log("No MODELS_TOKEN provided, skipping");
 		return;
 	}
-	const dryRun = process.env.DRY_RUN === "true";
-
 	// Figure out where the question comes from
 	const isDiscussion = !!context.payload.discussion;
 	const post = context.payload.discussion ?? context.payload.issue;
@@ -220,150 +353,112 @@ async function main(param) {
 
 	// Check for an existing answer before spending any Models API requests.
 	// This also makes re-runs on edited posts cheap no-ops.
-	if (
-		!dryRun
-		&& await alreadyAnswered({ github, context }, post, isDiscussion)
-	) {
+	if (await alreadyAnswered({ github, context }, post, isDiscussion)) {
 		console.log("Already answered, skipping");
 		return;
 	}
 
-	// Load the pre-built embeddings index
-	const indexPath = process.env.DOCS_INDEX_PATH;
+	// Load the pre-built embeddings indices. Either may be missing,
+	// each one enables its part of the comment.
+	const docsIndexPath = process.env.DOCS_INDEX_PATH;
 	/** @type {any} */
-	let index;
+	let docsIndex;
 	try {
-		index = JSON.parse(await fs.readFile(indexPath, "utf8"));
+		docsIndex = JSON.parse(await fs.readFile(docsIndexPath, "utf8"));
+		console.log(
+			`Loaded docs index with ${docsIndex.chunks.length} chunks (created ${docsIndex.createdAt})`,
+		);
 	} catch {
-		console.log(`No docs index found at ${indexPath}, skipping`);
-		return;
+		console.log(`No docs index found at ${docsIndexPath}`);
 	}
-	console.log(
-		`Loaded docs index with ${index.chunks.length} chunks (created ${index.createdAt})`,
-	);
+
+	let postsIndex = await loadPostsIndex(process.env.POSTS_INDEX_PATH);
+	if (postsIndex) {
+		console.log(
+			`Loaded posts index with ${postsIndex.posts.length} posts (created ${postsIndex.createdAt})`,
+		);
+	} else {
+		console.log(
+			`No posts index found at ${process.env.POSTS_INDEX_PATH}`,
+		);
+	}
+
+	if (!docsIndex && !postsIndex) return;
 
 	const question = cleanQuestion(post.title, post.body ?? "");
 
-	// Hybrid retrieval: 1 embedding request, then in-process search
+	// A single embedding request serves both docs retrieval and
+	// related-post ranking. Similarities are only comparable within
+	// one model, so an index embedded with a different model is skipped.
+	const embeddingModel = docsIndex?.model ?? postsIndex?.model;
+	if (postsIndex && postsIndex.model !== embeddingModel) {
+		console.log(
+			`Posts index model ${postsIndex.model} does not match ${embeddingModel}, ignoring it`,
+		);
+		postsIndex = undefined;
+		if (!docsIndex) return;
+	}
 	const [questionEmbedding] = await embed(
 		[question],
 		modelsToken,
-		index.model,
-	);
-	const { results: ranked, bestSimilarity } = retrieve(
-		index,
-		questionEmbedding,
-		question,
-		MAX_RETRIEVED_CHUNKS,
+		embeddingModel,
 	);
 
-	if (bestSimilarity < MIN_SIMILARITY) {
-		console.log(
-			`Best similarity ${
-				bestSimilarity.toFixed(3)
-			} below floor, post is likely off-topic`,
-		);
+	const docsSection = docsIndex
+		? await buildDocsAnswerSection(
+			question,
+			questionEmbedding,
+			docsIndex,
+			modelsToken,
+		)
+		: undefined;
+
+	const postsSection = postsIndex
+		? buildRelatedPostsSection(postsIndex, questionEmbedding, {
+			type: isDiscussion ? "discussion" : "issue",
+			number: post.number,
+		})
+		: undefined;
+
+	if (!docsSection && !postsSection) {
+		console.log("Nothing to answer or suggest, skipping");
 		return;
 	}
-
-	console.log(
-		"Top matches:",
-		ranked.map((r) =>
-			`cos=${r.similarity.toFixed(3)} bm25=${
-				r.lexical.toFixed(1)
-			} ${r.chunk.file}#${r.chunk.anchor}`
-		),
-	);
-	if (ranked.length === 0) {
-		console.log("No relevant documentation found, skipping");
-		return;
-	}
-
-	// Ask the model whether the docs answer the question
-	/** @type {{confidence: number, answer: string | null, relatedExcerpts: number[]}} */
-	let result;
-	try {
-		result = await judgeAnswer(question, ranked, modelsToken);
-	} catch (e) {
-		console.log("Failed to parse model response:", e);
-		return;
-	}
-	console.log("Model response:", JSON.stringify(result));
-
-	const related = (result.relatedExcerpts ?? [])
-		.map((i) => ranked[i]?.chunk)
-		.filter(Boolean);
-
-	if (result.confidence < LINKS_CONFIDENCE || related.length === 0) {
-		console.log("Confidence too low, not answering");
-		return;
-	}
-
-	// When linking to a section, don't also link to its subsections
-	const isAncestor = (
-		/** @type {any} */ a,
-		/** @type {any} */ b,
-	) => a.file === b.file
-		&& a.breadcrumbs.length < b.breadcrumbs.length
-		&& a.breadcrumbs.every(
-			(/** @type {string} */ crumb, /** @type {number} */ i) =>
-				crumb === b.breadcrumbs[i],
-		);
-	// Sub-splits of the same section share a URL, only link it once
-	/** @type {Set<string>} */
-	const seenUrls = new Set();
-	const deduped = related.filter((chunk) => {
-		if (related.some((other) => isAncestor(other, chunk))) return false;
-		const url = chunkUrl(chunk);
-		if (seenUrls.has(url)) return false;
-		seenUrls.add(url);
-		return true;
-	});
 
 	// Compose the comment
-	const links = deduped
-		.map((chunk) => {
-			const label = chunk.breadcrumbs.join(" → ");
-			return `- [${label}](${chunkUrl(chunk)})`;
-		})
-		.join("\n");
-
 	let body = `**Beep, boop! 🤖**
 
-_I've tried to answer your question based on the documentation. If this doesn't help, please wait for a human to show up._
-
 `;
-	const single = deduped.length === 1;
-	if (result.confidence >= ANSWER_CONFIDENCE && result.answer) {
-		body += `${result.answer}
+	if (docsSection) {
+		body +=
+			`_I've tried to answer your question based on the documentation. If this doesn't help, please wait for a human to show up._
 
-${
-			single
-				? "This section of the documentation has more details:"
-				: "These sections of the documentation have more details:"
+${docsSection}`;
+		if (postsSection) {
+			body += `
+
+---
+
+${postsSection}`;
 		}
-${links}`;
 	} else {
-		body += `${
-			single
-				? "This section of the documentation might answer your question:"
-				: "These sections of the documentation might answer your question:"
-		}
+		body +=
+			`_I've found existing posts that look similar to yours. If they don't help, please wait for a human to show up._
 
-${links}`;
+${postsSection}`;
 	}
 	body += `
 
 ---
 
-_This answer was generated automatically based on the documentation. AI can make mistakes, always check important info._
+_${
+		docsSection
+			? "This answer was"
+			: "These suggestions were"
+	} generated automatically${
+		docsSection ? " based on the documentation" : ""
+	}. AI can make mistakes, always check important info._
 ${DOCS_ANSWER_COMMENT_TAG}`;
-
-	if (dryRun) {
-		console.log("DRY RUN - would post the following comment:");
-		console.log(body);
-		return;
-	}
 
 	if (isDiscussion) {
 		await github.graphql(
