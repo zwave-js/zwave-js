@@ -134,20 +134,19 @@ function parseAnswerMetadata(body) {
 
 	/** @type {string[]} */
 	const sections = [];
-	const escapedBaseUrl = DOCS_BASE_URL.replace(
-		/[.*+?^${}()|[\]\\]/g,
-		"\\$&",
-	);
-	const linkRegex = new RegExp(
-		`\\]\\(${escapedBaseUrl}/([^)?]*)(?:\\?id=([^)]*))?\\)`,
-		"g",
-	);
-	for (const link of body.matchAll(linkRegex)) {
+	// Match any markdown link target and filter by string prefix
+	// so the URL never needs to be escaped into a regex
+	for (const [, target] of body.matchAll(/\]\(([^)\s]+)\)/g)) {
+		if (!target.startsWith(`${DOCS_BASE_URL}/`)) continue;
+		const [docPath, query] = target
+			.slice(DOCS_BASE_URL.length + 1)
+			.split("?");
+		const anchor = query?.match(/(?:^|&)id=([^&]*)/)?.[1] ?? "";
 		// chunkUrl() strips (README|index).md, assume README.md for bare paths
-		const file = link[1].endsWith("/") || link[1] === ""
-			? `${link[1]}README.md`
-			: `${link[1]}.md`;
-		sections.push(`${file}#${link[2] ?? ""}`);
+		const file = docPath.endsWith("/") || docPath === ""
+			? `${docPath}README.md`
+			: `${docPath}.md`;
+		sections.push(`${file}#${anchor}`);
 	}
 	return { style: "answer", confidence: null, sections };
 }
