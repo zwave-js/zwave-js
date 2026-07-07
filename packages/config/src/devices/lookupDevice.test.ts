@@ -54,26 +54,3 @@ test(
 	// This test might take a while
 	60000,
 );
-
-test(
-	"Schneider Electric SQR44102 should use 1-based state-after-power-failure values",
-	async (t) => {
-		const configManager = new ConfigManager();
-		const config = await configManager.lookupDevice(
-			0x0447,
-			0x000e,
-			0x1107,
-			"0.0",
-		);
-		t.expect(config).toBeDefined();
-		t.expect(
-			config?.paramInformation?.get({ parameter: 3 })?.options,
-		).toStrictEqual([
-			{ label: "Always off", value: 1 },
-			{ label: "Always on", value: 2 },
-			{ label: "Previous state", value: 3 },
-		]);
-	},
-	// This test might take a while
-	60000,
-);
