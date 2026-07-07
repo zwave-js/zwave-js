@@ -7,7 +7,7 @@
 
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
-const { cosineSimilarity } = require("./docsSearch.cjs");
+const { cosineSimilarity } = require("./docsIndex.cjs");
 
 const POSTS_INDEX_VERSION = 1;
 
@@ -22,7 +22,10 @@ const MAX_QUESTION_LENGTH = 6000;
 
 /**
  * Reduces template boilerplate and log/code dumps in the post body,
- * which would otherwise dilute the query used for retrieval
+ * which would otherwise dilute the query used for retrieval.
+ * This produces the exact text that gets embedded for a post, so queries
+ * against the index MUST be cleaned the same way for similarities to be
+ * comparable.
  * @param {string} title
  * @param {string} body
  */
@@ -56,16 +59,6 @@ function cleanQuestion(title, body) {
 		.replace(/\n{3,}/g, "\n\n")
 		.trim();
 	return `${title}\n\n${text}`.slice(0, MAX_QUESTION_LENGTH);
-}
-
-/**
- * The exact text that gets embedded for a post. Queries against the
- * index MUST be cleaned the same way for similarities to be comparable.
- * @param {string} title
- * @param {string} body
- */
-function postEmbeddingText(title, body) {
-	return cleanQuestion(title, body);
 }
 
 /** @param {string} embeddedText */
@@ -135,9 +128,7 @@ function rankRelatedPosts(index, questionEmbedding, self, options) {
 module.exports = {
 	POSTS_INDEX_VERSION,
 	QUESTION_CATEGORY_SLUGS,
-	MAX_QUESTION_LENGTH,
 	cleanQuestion,
-	postEmbeddingText,
 	hashPost,
 	loadPostsIndex,
 	rankRelatedPosts,

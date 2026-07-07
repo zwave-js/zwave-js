@@ -1,13 +1,16 @@
-name: 'Z-Wave Bot: Issue created/edited'
+name: 'Z-Wave Bot: react to Issues/Discussions'
 
 on:
   issues:
     types: [opened, edited]
+  discussion:
+    types: [created, edited]
 
 jobs:
   # Notify issue author when they post the wrong log
   ensure-logfile:
     runs-on: [ubuntu-latest]
+    if: github.event_name == 'issues'
 
     steps:
     - name: Checkout master branch
@@ -131,7 +134,7 @@ jobs:
             - Unrelated
           3. If you are not sure about the classification (less than 75% certainty), return "Unknown".
           4. Do not return anything else.
-        
+
         prompt: |
           Analyze the following log file and classify it according to the rules above:
 
@@ -187,9 +190,8 @@ jobs:
       contents: read
       models: read
     if: |
-      (github.event.action == 'opened' || github.event.action == 'edited') &&
-      github.event.issue.user.login != 'AlCalzone' &&
-      github.event.issue.user.login != 'zwave-js-bot'
+      (github.event.issue.user.login || github.event.discussion.user.login) != 'AlCalzone' &&
+      (github.event.issue.user.login || github.event.discussion.user.login) != 'zwave-js-bot'
 
     steps:
     - name: Checkout master branch
@@ -248,7 +250,7 @@ jobs:
     permissions:
       contents: read
       models: read
-    if: github.event.action == 'opened'
+    if: github.event.action == 'opened' || github.event.action == 'created'
 
     steps:
     - name: Checkout master branch

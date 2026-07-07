@@ -5,7 +5,7 @@
 // Reactions are the source of truth, so each run rescans the last
 // FEEDBACK_WINDOW_DAYS and recomputes everything from scratch.
 //
-// Usage: node collectDocsAnswerFeedback.cjs <index-file> <feedback-out> <records-out>
+// Usage: node collectDocsFeedback.cjs <feedback-out> <records-out>
 // Requires GITHUB_TOKEN and GITHUB_REPOSITORY in the environment.
 //
 // <feedback-out> receives the suppression list (downvoted questions with
@@ -20,7 +20,8 @@ const {
 	DOCS_ANSWER_METADATA_VERSION,
 	DOCS_BASE_URL,
 } = require("./answerFromDocs.cjs");
-const { embed } = require("./modelsApi.cjs");
+const { ghGraphql, ghPaginated, ghRequest } = require("./githubApi.cjs");
+const { embed, EMBEDDING_MODEL } = require("./modelsApi.cjs");
 const { cleanQuestion } = require("./postsIndex.cjs");
 const { authorizedUsers } = require("./users.cjs");
 
@@ -53,57 +54,6 @@ const REACTION_SIGNS = {
 	THUMBS_DOWN: -1,
 	CONFUSED: -1,
 };
-
-const API_BASE = "https://api.github.com";
-
-/**
- * @param {string} pathAndQuery
- * @param {string} token
- * @returns {Promise<any>}
- */
-async function ghGet(pathAndQuery, token) {
-	const response = await fetch(`${API_BASE}${pathAndQuery}`, {
-		headers: {
-			Accept: "application/vnd.github+json",
-			Authorization: `Bearer ${token}`,
-			"X-GitHub-Api-Version": "2022-11-28",
-		},
-	});
-	if (!response.ok) {
-		throw new Error(
-			`GitHub API request ${pathAndQuery} failed with status ${response.status}: ${await response
-				.text()
-				.catch(() => "")}`,
-		);
-	}
-	return response.json();
-}
-
-/**
- * @param {string} query
- * @param {object} variables
- * @param {string} token
- * @returns {Promise<any>}
- */
-async function ghGraphql(query, variables, token) {
-	const response = await fetch(`${API_BASE}/graphql`, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${token}`,
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ query, variables }),
-	});
-	const result = await response.json();
-	if (!response.ok || result.errors) {
-		throw new Error(
-			`GitHub GraphQL request failed: ${
-				JSON.stringify(result.errors ?? result)
-			}`,
-		);
-	}
-	return result.data;
-}
 
 /**
  * Extracts the metadata the bot embeds in its answer comments.
@@ -222,8 +172,10 @@ async function collectFromIssues(owner, repo, since, token) {
 	/** @type {any[]} */
 	const issues = [];
 	for (let page = 1;; page++) {
-		const result = await ghGet(
+		const result = await ghRequest(
+			"GET",
 			`/search/issues?q=${query}&per_page=100&page=${page}`,
+			undefined,
 			token,
 		);
 		issues.push(...result.items);
@@ -233,17 +185,10 @@ async function collectFromIssues(owner, repo, since, token) {
 	}
 
 	for (const issue of issues) {
-		/** @type {any[]} */
-		const comments = [];
-		for (let page = 1;; page++) {
-			/** @type {any[]} */
-			const batch = await ghGet(
-				`/repos/${owner}/${repo}/issues/${issue.number}/comments?per_page=100&page=${page}`,
-				token,
-			);
-			comments.push(...batch);
-			if (batch.length < 100) break;
-		}
+		const comments = await ghPaginated(
+			`/repos/${owner}/${repo}/issues/${issue.number}/comments?per_page=100`,
+			token,
+		);
 		const answers = comments.filter((c) =>
 			c.user?.login === BOT_USER
 			&& c.body?.includes(DOCS_ANSWER_COMMENT_TAG)
@@ -253,8 +198,10 @@ async function collectFromIssues(owner, repo, since, token) {
 			let reactions = [];
 			if (answer.reactions?.total_count > 0) {
 				/** @type {any[]} */
-				const raw = await ghGet(
+				const raw = await ghRequest(
+					"GET",
 					`/repos/${owner}/${repo}/issues/comments/${answer.id}/reactions?per_page=100`,
+					undefined,
 					token,
 				);
 				reactions = raw.map((r) => ({
@@ -292,6 +239,20 @@ async function collectFromDiscussions(owner, repo, since, token) {
 	/** @type {FeedbackRecord[]} */
 	const records = [];
 
+	// Shared between the search query and the more-comments query
+	const commentFields = `
+		nodes {
+			body
+			url
+			author { login }
+			reactions(first: 100) {
+				nodes {
+					content
+					user { login }
+				}
+			}
+		}`;
+
 	const searchQuery =
 		`repo:${owner}/${repo} commenter:${BOT_USER} updated:>=${since}`;
 	let cursor = null;
@@ -310,17 +271,7 @@ async function collectFromDiscussions(owner, repo, since, token) {
 							author { login }
 							comments(first: 100) {
 								pageInfo { hasNextPage endCursor }
-								nodes {
-									body
-									url
-									author { login }
-									reactions(first: 100) {
-										nodes {
-											content
-											user { login }
-										}
-									}
-								}
+								${commentFields}
 							}
 						}
 					}
@@ -343,17 +294,7 @@ async function collectFromDiscussions(owner, repo, since, token) {
 							... on Discussion {
 								comments(first: 100, after: $cursor) {
 									pageInfo { hasNextPage endCursor }
-									nodes {
-										body
-										url
-										author { login }
-										reactions(first: 100) {
-											nodes {
-												content
-												user { login }
-											}
-										}
-									}
+									${commentFields}
 								}
 							}
 						}
@@ -430,10 +371,10 @@ async function collectFeedback(owner, repo, token) {
 }
 
 async function main() {
-	const [indexFile, feedbackOut, recordsOut] = process.argv.slice(2);
-	if (!indexFile || !feedbackOut || !recordsOut) {
+	const [feedbackOut, recordsOut] = process.argv.slice(2);
+	if (!feedbackOut || !recordsOut) {
 		console.error(
-			"Usage: node collectDocsAnswerFeedback.cjs <index-file> <feedback-out> <records-out>",
+			"Usage: node collectDocsFeedback.cjs <feedback-out> <records-out>",
 		);
 		process.exit(1);
 	}
@@ -447,22 +388,21 @@ async function main() {
 	}
 	const [owner, repo] = repository.split("/");
 
-	const index = JSON.parse(await fs.readFile(indexFile, "utf8"));
 	const records = await collectFeedback(owner, repo, token);
 
 	await fs.mkdir(path.dirname(recordsOut), { recursive: true });
 	await fs.writeFile(recordsOut, JSON.stringify(records, undefined, "\t"));
 
 	// The suppression list makes answerFromDocs.cjs demote responses
-	// to questions similar to these. Embed with the same model as the
-	// docs index so the runtime similarity comparison is valid.
+	// to questions similar to these. The indices are built with the same
+	// EMBEDDING_MODEL, so the runtime similarity comparison is valid.
 	// Related-posts-only comments say nothing about the docs answer
 	// quality, so they don't suppress anything.
 	const downvoted = records.filter(
 		(r) => r.score <= SUPPRESS_SCORE && r.style !== "posts",
 	);
 	const embeddings = downvoted.length > 0
-		? await embed(downvoted.map((r) => r.question), token, index.model)
+		? await embed(downvoted.map((r) => r.question), token)
 		: [];
 	const suppressed = downvoted
 		.map((r, i) => ({
@@ -483,7 +423,7 @@ async function main() {
 	}
 	const feedback = {
 		createdAt: new Date().toISOString(),
-		model: index.model,
+		model: EMBEDDING_MODEL,
 		suppressed,
 	};
 	await fs.mkdir(path.dirname(feedbackOut), { recursive: true });
@@ -501,9 +441,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-	collectFeedback,
-	parseAnswerMetadata,
-	scoreReactions,
 	SUPPRESS_SCORE,
 	SCAN_WINDOW_DAYS,
 };

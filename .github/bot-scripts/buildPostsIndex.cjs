@@ -10,94 +10,17 @@
 
 const fs = require("node:fs/promises");
 const path = require("node:path");
-const { embed, EMBEDDING_MODEL } = require("./modelsApi.cjs");
+const { ghGraphql, ghPaginated } = require("./githubApi.cjs");
+const { embedBatched, EMBEDDING_MODEL } = require("./modelsApi.cjs");
 const {
 	POSTS_INDEX_VERSION,
 	QUESTION_CATEGORY_SLUGS,
+	cleanQuestion,
 	hashPost,
-	postEmbeddingText,
 } = require("./postsIndex.cjs");
-
-const GITHUB_API_BASE = "https://api.github.com";
 
 // Closed issues older than this are no longer useful duplicate targets
 const CLOSED_ISSUE_MAX_AGE_MS = 365 * 24 * 3600 * 1000;
-
-// Stay well below the 64K tokens/request limit for embedding requests
-const MAX_BATCH_TOKENS = 40_000;
-const MAX_BATCH_INPUTS = 128;
-// The free tier allows 15 requests/minute
-const THROTTLE_MS = 4500;
-
-/** @param {string} str */
-function estimateTokens(str) {
-	return Math.ceil(str.length / 4);
-}
-
-/**
- * Fetches all pages of a REST collection endpoint
- * @param {string} url Initial URL including query parameters
- * @param {string} token
- * @returns {Promise<any[]>}
- */
-async function ghRestPaginated(url, token) {
-	/** @type {any[]} */
-	const results = [];
-	/** @type {string | undefined} */
-	let next = url;
-	while (next) {
-		const response = await fetch(next, {
-			headers: {
-				Accept: "application/vnd.github+json",
-				Authorization: `Bearer ${token}`,
-				"X-GitHub-Api-Version": "2022-11-28",
-			},
-		});
-		if (!response.ok) {
-			throw new Error(
-				`GitHub API request failed with status ${response.status}: ${await response
-					.text()
-					.catch(() => "")}`,
-			);
-		}
-		results.push(...await response.json());
-		next = response.headers
-			.get("link")
-			?.match(/<([^>]+)>;\s*rel="next"/)?.[1];
-	}
-	return results;
-}
-
-/**
- * @param {string} query
- * @param {object} variables
- * @param {string} token
- * @returns {Promise<any>}
- */
-async function ghGraphql(query, variables, token) {
-	const response = await fetch(`${GITHUB_API_BASE}/graphql`, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${token}`,
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ query, variables }),
-	});
-	if (!response.ok) {
-		throw new Error(
-			`GitHub GraphQL request failed with status ${response.status}: ${await response
-				.text()
-				.catch(() => "")}`,
-		);
-	}
-	const result = await response.json();
-	if (result.errors?.length) {
-		throw new Error(
-			`GitHub GraphQL request failed: ${JSON.stringify(result.errors)}`,
-		);
-	}
-	return result.data;
-}
 
 /**
  * Fetches open issues and issues closed within the last year
@@ -108,15 +31,15 @@ async function ghGraphql(query, variables, token) {
 async function fetchIssues(owner, repo, token) {
 	const closedCutoff = new Date(Date.now() - CLOSED_ISSUE_MAX_AGE_MS);
 
-	const open = await ghRestPaginated(
-		`${GITHUB_API_BASE}/repos/${owner}/${repo}/issues?state=open&per_page=100`,
+	const open = await ghPaginated(
+		`/repos/${owner}/${repo}/issues?state=open&per_page=100`,
 		token,
 	);
 	// "since" filters on updated_at; closing an issue updates it, so all
 	// issues closed within the window are included. Filter on closed_at
 	// to drop issues that were merely commented on since the cutoff.
-	const closed = await ghRestPaginated(
-		`${GITHUB_API_BASE}/repos/${owner}/${repo}/issues?state=closed&since=${closedCutoff.toISOString()}&per_page=100`,
+	const closed = await ghPaginated(
+		`/repos/${owner}/${repo}/issues?state=closed&since=${closedCutoff.toISOString()}&per_page=100`,
 		token,
 	);
 
@@ -266,7 +189,7 @@ async function main() {
 	console.log(`Fetched ${discussions.length} discussions`);
 
 	const allPosts = [...issues, ...discussions].map(({ body, ...post }) => {
-		const embeddedText = postEmbeddingText(post.title, body);
+		const embeddedText = cleanQuestion(post.title, body);
 		const hash = hashPost(embeddedText);
 		return {
 			...post,
@@ -279,44 +202,11 @@ async function main() {
 	const pending = allPosts.filter((p) => !p.embedding);
 	console.log(`${pending.length} posts need new embeddings`);
 
-	// Batch the pending posts, respecting per-request limits
-	let cursor = 0;
-	let requestCount = 0;
-	while (cursor < pending.length) {
-		const batch = [];
-		let batchTokens = 0;
-		while (
-			cursor < pending.length
-			&& batch.length < MAX_BATCH_INPUTS
-		) {
-			const tokens = estimateTokens(pending[cursor].embeddedText);
-			if (batch.length > 0 && batchTokens + tokens > MAX_BATCH_TOKENS) {
-				break;
-			}
-			batch.push(pending[cursor]);
-			batchTokens += tokens;
-			cursor++;
-		}
-
-		if (requestCount > 0) {
-			await new Promise((resolve) => setTimeout(resolve, THROTTLE_MS));
-		}
-		console.log(
-			`Embedding batch of ${batch.length} posts (~${batchTokens} tokens)...`,
-		);
-		const embeddings = await embed(
-			batch.map((p) => p.embeddedText),
-			token,
-		);
-		requestCount++;
-		for (let i = 0; i < batch.length; i++) {
-			// Round to reduce index size, this has no measurable impact on similarity
-			batch[i].embedding = embeddings[i].map(
-				(x) => Math.round(x * 1e5) / 1e5,
-			);
-		}
-	}
-	console.log(`Done, used ${requestCount} embedding requests`);
+	const embeddings = await embedBatched(
+		pending.map((p) => p.embeddedText),
+		token,
+	);
+	pending.forEach((post, i) => post.embedding = embeddings[i]);
 
 	const index = {
 		version: POSTS_INDEX_VERSION,

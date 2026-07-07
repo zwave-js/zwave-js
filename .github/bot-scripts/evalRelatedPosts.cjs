@@ -10,6 +10,7 @@
 
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { logCase, reportResults } = require("./evalUtils.cjs");
 const { embed } = require("./modelsApi.cjs");
 const { rankRelatedPosts } = require("./postsIndex.cjs");
 
@@ -62,7 +63,7 @@ async function main() {
 		index.model,
 	);
 
-	let hits = 0;
+	/** @type {import("./evalUtils.cjs").EvalResult[]} */
 	const failures = [];
 	for (let i = 0; i < cases.length; i++) {
 		const { question, expectedPosts } = cases[i];
@@ -73,56 +74,26 @@ async function main() {
 			{ type: "", number: 0 },
 			{ minSimilarity: 0, maxResults: NUM_RESULTS },
 		);
-		const retrieved = results.map(
-			({ post, similarity }) =>
-				`${post.type} #${post.number} (cos=${similarity.toFixed(3)})`,
-		);
 		const hit = expectedPosts.some((e) =>
 			results.some(
 				({ post }) => post.type === e.type && post.number === e.number,
 			)
 		);
-		const title = question.split("\n")[0];
-		const expected = expectedPosts.map((e) => `${e.type} #${e.number}`);
-		if (hit) {
-			hits++;
-			console.log(`✅ ${title}`);
-		} else {
-			failures.push({ title, expected, retrieved });
-			console.log(`❌ ${title}`);
-			console.log(`   expected one of: ${expected.join(", ")}`);
-			console.log(`   retrieved: ${retrieved.join(", ")}`);
-		}
-	}
-
-	const hitRate = hits / cases.length;
-	console.log(
-		`\nhit@${NUM_RESULTS}: ${hits}/${cases.length} (${
-			(hitRate * 100).toFixed(1)
-		}%), required: ${(MIN_HIT_RATE * 100).toFixed(1)}%`,
-	);
-
-	// Write a summary for the workflow to include in the tracking issue
-	if (process.env.GITHUB_OUTPUT) {
-		const summary = [
-			`hit@${NUM_RESULTS}: ${hits}/${cases.length} (${
-				(hitRate * 100).toFixed(1)
-			}%)`,
-			...failures.map((f) =>
-				`- ❌ ${f.title}\n  - expected one of: ${
-					f.expected.join(", ")
-				}\n  - retrieved: ${f.retrieved.join(", ")}`
+		const result = {
+			title: question.split("\n")[0],
+			expected: expectedPosts.map((e) => `${e.type} #${e.number}`),
+			retrieved: results.map(
+				({ post, similarity }) =>
+					`${post.type} #${post.number} (cos=${
+						similarity.toFixed(3)
+					})`,
 			),
-		].join("\n");
-		await fs.appendFile(
-			process.env.GITHUB_OUTPUT,
-			`summary<<EOF\n${summary}\nEOF\n`,
-		);
+		};
+		logCase(hit, result);
+		if (!hit) failures.push(result);
 	}
 
-	if (hitRate < MIN_HIT_RATE) {
-		process.exit(1);
-	}
+	await reportResults(NUM_RESULTS, cases.length, failures, MIN_HIT_RATE);
 }
 
 if (require.main === module) {

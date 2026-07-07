@@ -8,15 +8,9 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
-const { embed, EMBEDDING_MODEL } = require("./modelsApi.cjs");
+const { embedBatched, EMBEDDING_MODEL } = require("./modelsApi.cjs");
 
 const INDEX_VERSION = 1;
-
-// Stay well below the 64K tokens/request limit for embedding requests
-const MAX_BATCH_TOKENS = 40_000;
-const MAX_BATCH_INPUTS = 128;
-// The free tier allows 15 requests/minute
-const THROTTLE_MS = 4500;
 
 // Chunks shorter than this are unlikely to contain useful information
 const MIN_CHUNK_LENGTH = 50;
@@ -24,11 +18,6 @@ const MIN_CHUNK_LENGTH = 50;
 const MAX_CHUNK_LENGTH = 4000;
 // Overlap between sub-splits so answers spanning a split boundary aren't lost
 const CHUNK_OVERLAP = 400;
-
-/** @param {string} str */
-function estimateTokens(str) {
-	return Math.ceil(str.length / 4);
-}
 
 /**
  * Removes HTML tags, repeating to avoid leaving partial tags behind
@@ -245,44 +234,11 @@ async function main() {
 	const pending = allChunks.filter((c) => !c.embedding);
 	console.log(`${pending.length} chunks need new embeddings`);
 
-	// Batch the pending chunks, respecting per-request limits
-	let cursor = 0;
-	let requestCount = 0;
-	while (cursor < pending.length) {
-		const batch = [];
-		let batchTokens = 0;
-		while (
-			cursor < pending.length
-			&& batch.length < MAX_BATCH_INPUTS
-		) {
-			const tokens = estimateTokens(pending[cursor].embeddedText);
-			if (batch.length > 0 && batchTokens + tokens > MAX_BATCH_TOKENS) {
-				break;
-			}
-			batch.push(pending[cursor]);
-			batchTokens += tokens;
-			cursor++;
-		}
-
-		if (requestCount > 0) {
-			await new Promise((resolve) => setTimeout(resolve, THROTTLE_MS));
-		}
-		console.log(
-			`Embedding batch of ${batch.length} chunks (~${batchTokens} tokens)...`,
-		);
-		const embeddings = await embed(
-			batch.map((c) => c.embeddedText),
-			token,
-		);
-		requestCount++;
-		for (let i = 0; i < batch.length; i++) {
-			// Round to reduce index size, this has no measurable impact on similarity
-			batch[i].embedding = embeddings[i].map(
-				(x) => Math.round(x * 1e5) / 1e5,
-			);
-		}
-	}
-	console.log(`Done, used ${requestCount} embedding requests`);
+	const embeddings = await embedBatched(
+		pending.map((c) => c.embeddedText),
+		token,
+	);
+	pending.forEach((chunk, i) => chunk.embedding = embeddings[i]);
 
 	const index = {
 		version: INDEX_VERSION,
@@ -301,5 +257,3 @@ if (require.main === module) {
 		process.exit(1);
 	});
 }
-
-module.exports = { chunkMarkdown, slugify };

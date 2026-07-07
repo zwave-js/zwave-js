@@ -3,7 +3,7 @@
 /// <reference path="types.d.ts" />
 
 const fs = require("node:fs/promises");
-const { cosineSimilarity, retrieve } = require("./docsSearch.cjs");
+const { cosineSimilarity, retrieve } = require("./docsIndex.cjs");
 const { CHAT_MODEL, embed, modelsRequest } = require("./modelsApi.cjs");
 const {
 	QUESTION_CATEGORY_SLUGS,
@@ -365,7 +365,7 @@ ${links}`;
  * - DOCS_INDEX_PATH: path to the embeddings index created by buildDocsIndex.cjs
  * - POSTS_INDEX_PATH: path to the embeddings index created by buildPostsIndex.cjs
  *
- * @param {{github: Github, context: Context, core?: any}} param
+ * @param {{github: Github, context: Context}} param
  */
 async function main(param) {
 	const { github, context } = param;
@@ -466,7 +466,7 @@ async function main(param) {
 	);
 
 	// Feedback guardrail: check the question against previously
-	// downvoted answers collected by collectDocsAnswerFeedback.cjs
+	// downvoted answers collected by collectDocsFeedback.cjs
 	let suppression = "allow";
 	const feedbackPath = process.env.DOCS_FEEDBACK_PATH;
 	if (feedbackPath) {
@@ -529,7 +529,7 @@ ${postsSection}`;
 ${postsSection}`;
 	}
 
-	// Metadata for collectDocsAnswerFeedback.cjs to attribute
+	// Metadata for collectDocsFeedback.cjs to attribute
 	// reactions to doc sections without re-parsing the comment
 	const metadata = {
 		v: DOCS_ANSWER_METADATA_VERSION,
@@ -576,7 +576,6 @@ ${DOCS_ANSWER_COMMENT_TAG}
 
 module.exports = main;
 module.exports.judgeAnswer = judgeAnswer;
-module.exports.checkSuppression = checkSuppression;
 module.exports.DOCS_ANSWER_COMMENT_TAG = DOCS_ANSWER_COMMENT_TAG;
 module.exports.DOCS_ANSWER_METADATA_TAG = DOCS_ANSWER_METADATA_TAG;
 module.exports.DOCS_ANSWER_METADATA_VERSION = DOCS_ANSWER_METADATA_VERSION;
