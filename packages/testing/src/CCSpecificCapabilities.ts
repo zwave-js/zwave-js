@@ -1,4 +1,5 @@
 import type {
+	ActiveScheduleTargetCapabilities,
 	ColorComponent,
 	DoorHandleStatus,
 	DoorLockMode,
@@ -23,6 +24,10 @@ import type {
 	ConfigValueFormat,
 	MaybeUnknown,
 } from "@zwave-js/core";
+
+export interface ActiveScheduleCCCapabilities {
+	targets: Map<CommandClasses, ActiveScheduleTargetCapabilities>;
+}
 
 export interface BinarySensorCCCapabilities {
 	supportedSensorTypes: number[];
@@ -242,6 +247,7 @@ export interface UserCredentialCCCapabilities {
 }
 
 export type CCSpecificCapabilities = {
+	[0xa4 /* Active Schedule */]: ActiveScheduleCCCapabilities;
 	[CommandClasses.Configuration]: ConfigurationCCCapabilities;
 	[CommandClasses.Notification]: NotificationCCCapabilities;
 	[0x77 /* Node Naming and Location */]: NodeNamingAndLocationCCCapabilities;

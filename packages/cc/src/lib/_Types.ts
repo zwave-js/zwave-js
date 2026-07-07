@@ -11,6 +11,90 @@ import {
 } from "@zwave-js/core";
 import type { BytesView } from "@zwave-js/shared";
 
+export enum ActiveScheduleCommand {
+	CapabilitiesGet = 0x01,
+	CapabilitiesReport = 0x02,
+	EnableSet = 0x03,
+	EnableGet = 0x04,
+	EnableReport = 0x05,
+	YearDayScheduleSet = 0x06,
+	YearDayScheduleGet = 0x07,
+	YearDayScheduleReport = 0x08,
+	DailyRepeatingScheduleSet = 0x09,
+	DailyRepeatingScheduleGet = 0x0a,
+	DailyRepeatingScheduleReport = 0x0b,
+}
+
+export enum ActiveScheduleSetAction {
+	Erase = 0x00,
+	Modify = 0x01,
+}
+
+export enum ActiveScheduleReportReason {
+	ResponseToGet = 0x00,
+	ModifiedExternal = 0x01,
+	ModifiedZWave = 0x02,
+}
+
+export enum ActiveScheduleScheduleKind {
+	YearDay = 0x00,
+	DailyRepeating = 0x01,
+}
+
+export interface ActiveScheduleTarget {
+	targetCC: CommandClasses;
+	targetId: number;
+}
+
+export interface ActiveScheduleSlotId extends ActiveScheduleTarget {
+	slotId: number;
+}
+
+export interface ActiveScheduleYearDaySchedule {
+	startDate: ScheduleDate;
+	stopDate: ScheduleDate;
+	metadata?: BytesView;
+}
+
+export interface ActiveScheduleDailyRepeatingSchedule {
+	weekdays: ScheduleWeekday[];
+	timespan: ScheduleTimespan;
+	metadata?: BytesView;
+}
+
+export interface ActiveScheduleTargetCapabilities {
+	numSupportedTargets: number;
+	numYearDaySlotsPerTarget: number;
+	numDailyRepeatingSlotsPerTarget: number;
+}
+
+// Hopefully the last time we need to define enums and interfaces for schedules
+// so we'll give them a generic name
+export enum ScheduleWeekday {
+	Sunday = 0x00,
+	Monday = 0x01,
+	Tuesday = 0x02,
+	Wednesday = 0x03,
+	Thursday = 0x04,
+	Friday = 0x05,
+	Saturday = 0x06,
+}
+
+export interface ScheduleDate {
+	year: number;
+	month: number;
+	day: number;
+	hour: number;
+	minute: number;
+}
+
+export interface ScheduleTimespan {
+	startHour: number;
+	startMinute: number;
+	durationHour: number;
+	durationMinute: number;
+}
+
 export enum AlarmSensorCommand {
 	Get = 0x01,
 	Report = 0x02,
@@ -1284,19 +1368,8 @@ export interface ScheduleEntryLockSlotId {
 	slotId: number;
 }
 
-export enum ScheduleEntryLockWeekday {
-	// Yay, consistency!
-	Sunday = 0x00,
-	Monday = 0x01,
-	Tuesday = 0x02,
-	Wednesday = 0x03,
-	Thursday = 0x04,
-	Friday = 0x05,
-	Saturday = 0x06,
-}
-
 export interface ScheduleEntryLockDailyRepeatingSchedule {
-	weekdays: ScheduleEntryLockWeekday[];
+	weekdays: ScheduleWeekday[];
 	startHour: number;
 	startMinute: number;
 	durationHour: number;
@@ -1317,7 +1390,7 @@ export interface ScheduleEntryLockYearDaySchedule {
 }
 
 export interface ScheduleEntryLockWeekDaySchedule {
-	weekday: ScheduleEntryLockWeekday;
+	weekday: ScheduleWeekday;
 	startHour: number;
 	startMinute: number;
 	stopHour: number;
