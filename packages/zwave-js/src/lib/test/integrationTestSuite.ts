@@ -199,14 +199,15 @@ function suite(
 			// Give everything a chance to settle before destroying the driver.
 			await wait(100);
 
-			await driver.destroy();
-			// Stop the mock too, so late frames or pending host-ACK waits don't
-			// throw after the driver is gone.
-			mockController?.destroy();
-			tcpServer?.close(noop);
-			if (!debug) {
-				await fsp.rm(cacheDir, { recursive: true, force: true })
-					.catch(noop);
+			try {
+				await driver.destroy();
+			} finally {
+				mockController?.destroy();
+				tcpServer?.close(noop);
+				if (!debug) {
+					await fsp.rm(cacheDir, { recursive: true, force: true })
+						.catch(noop);
+				}
 			}
 		});
 
