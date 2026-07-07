@@ -3669,6 +3669,45 @@ export const IndicatorCCValues = Object.freeze({
 			} as const satisfies CCValueOptions,
 		},
 	),
+	indicatorState: Object.assign(
+		(indicatorId: number) => {
+			const property = "indicatorState";
+			const propertyKey = indicatorId;
+
+			return {
+				id: {
+					commandClass: CommandClasses.Indicator,
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) => ({
+					commandClass: CommandClasses.Indicator,
+					endpoint,
+					property: property,
+					propertyKey: propertyKey,
+				} as const),
+				get meta() {
+					return ValueMetadata.Any;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return valueId.commandClass === CommandClasses.Indicator
+					&& (({ property, propertyKey }) =>
+						property === "indicatorState"
+						&& typeof propertyKey === "number")(valueId);
+			},
+			options: {
+				internal: true,
+				minVersion: 2,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
 	valueV2: Object.assign(
 		(indicatorId: number, propertyId: number) => {
 			const property = indicatorId;

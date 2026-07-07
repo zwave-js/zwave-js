@@ -603,6 +603,9 @@ import {
 	IndicatorCCSupportedGet,
 	IndicatorCCSupportedReport,
 	IndicatorCCValues,
+	indicatorObjectsToPropertyMap,
+	indicatorPropertyMapToState,
+	indicatorStateToObjects,
 } from "./IndicatorCC.js";
 export {
 	IndicatorCC,
@@ -614,6 +617,9 @@ export {
 	IndicatorCCSupportedGet,
 	IndicatorCCSupportedReport,
 	IndicatorCCValues,
+	indicatorObjectsToPropertyMap,
+	indicatorPropertyMapToState,
+	indicatorStateToObjects,
 };
 export type {
 	IrrigationCCSystemConfigReportOptions,
@@ -2026,6 +2032,9 @@ export function registerCCs(): void {
 	void InclusionControllerCC;
 	void InclusionControllerCCComplete;
 	void InclusionControllerCCInitiate;
+	void indicatorObjectsToPropertyMap;
+	void indicatorPropertyMapToState;
+	void indicatorStateToObjects;
 	void IndicatorCCValues;
 	void IndicatorCC;
 	void IndicatorCCSet;

@@ -6,7 +6,12 @@ import {
 	IndicatorCCSet,
 	IndicatorCommand,
 } from "@zwave-js/cc";
-import { IndicatorCCValues } from "@zwave-js/cc/IndicatorCC";
+import {
+	IndicatorCCValues,
+	indicatorObjectsToPropertyMap,
+	indicatorPropertyMapToState,
+	indicatorStateToObjects,
+} from "@zwave-js/cc/IndicatorCC";
 import { CommandClasses } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
 import { Bytes } from "@zwave-js/shared";
@@ -165,6 +170,129 @@ test("deserializing an unsupported command should return an unspecified version 
 		{ sourceNodeId: 1 } as any,
 	) as IndicatorCC;
 	t.expect(cc.constructor).toBe(IndicatorCC);
+});
+
+test("indicatorObjectsToPropertyMap assumes missing supported properties to be 0", (t) => {
+	const map = indicatorObjectsToPropertyMap(
+		[
+			{ indicatorId: 0x30, propertyId: 0x01, value: 50 },
+			// Reported, but not actually supported
+			{ indicatorId: 0x30, propertyId: 0x09, value: 10 },
+		],
+		[0x01, 0x03, 0x04],
+	);
+	t.expect(map).toStrictEqual({
+		[0x01]: 50,
+		[0x03]: 0,
+		[0x04]: 0,
+	});
+});
+
+test("indicatorObjectsToPropertyMap preserves the report as-is when the supported properties are unknown", (t) => {
+	const map = indicatorObjectsToPropertyMap(
+		[
+			{ indicatorId: 0x30, propertyId: 0x02, value: true },
+			{ indicatorId: 0x30, propertyId: 0x07, value: 30 },
+		],
+		undefined,
+	);
+	t.expect(map).toStrictEqual({
+		[0x02]: 0xff,
+		[0x07]: 30,
+	});
+});
+
+test("indicatorPropertyMapToState normalizes all functionality", (t) => {
+	const state = indicatorPropertyMapToState(
+		{
+			[0x01]: 50,
+			[0x03]: 15,
+			[0x04]: 0xff,
+			[0x05]: 5,
+			[0x0a]: 1,
+			[0x06]: 30,
+			[0x07]: 12,
+			[0x08]: 50,
+			[0x09]: 80,
+		},
+		[0x01, 0x03, 0x04, 0x05, 0x0a, 0x06, 0x07, 0x08, 0x09],
+	);
+	t.expect(state).toStrictEqual({
+		on: true,
+		level: 50,
+		blink: {
+			// 0xff cycles means infinite, so the property is omitted
+			period: 1.5,
+			onTime: 0.5,
+		},
+		timeout: {
+			hours: 1,
+			minutes: 30,
+			seconds: 12.5,
+		},
+		soundLevel: 80,
+	});
+});
+
+test("indicatorPropertyMapToState prefers the Binary property for the on state", (t) => {
+	const state = indicatorPropertyMapToState(
+		{
+			[0x02]: 0,
+		},
+		[0x02],
+	);
+	t.expect(state).toStrictEqual({ on: false });
+});
+
+test("indicatorStateToObjects converts a state into a single group of indicator objects", (t) => {
+	const objects = indicatorStateToObjects(
+		0x30,
+		{
+			level: 100,
+			blink: { period: 1.5, cycles: 3 },
+			timeout: "30s",
+		},
+		[0x01, 0x03, 0x04, 0x05, 0x06, 0x07],
+	);
+	t.expect(objects).toStrictEqual([
+		// 100 is clamped to the maximum multilevel value
+		{ indicatorId: 0x30, propertyId: 0x01, value: 99 },
+		{ indicatorId: 0x30, propertyId: 0x03, value: 15 },
+		{ indicatorId: 0x30, propertyId: 0x04, value: 3 },
+		{ indicatorId: 0x30, propertyId: 0x07, value: 30 },
+	]);
+});
+
+test("indicatorStateToObjects falls back to the supported property of the Binary/Multilevel group", (t) => {
+	t.expect(
+		indicatorStateToObjects(0x43, { level: 50 }, [0x02]),
+	).toStrictEqual([
+		{ indicatorId: 0x43, propertyId: 0x02, value: 0xff },
+	]);
+	t.expect(
+		indicatorStateToObjects(0x30, { on: true }, [0x01]),
+	).toStrictEqual([
+		{ indicatorId: 0x30, propertyId: 0x01, value: 0xff },
+	]);
+	// on: false overrides a level
+	t.expect(
+		indicatorStateToObjects(0x30, { on: false, level: 50 }, [0x01]),
+	).toStrictEqual([
+		{ indicatorId: 0x30, propertyId: 0x01, value: 0x00 },
+	]);
+});
+
+test("indicatorStateToObjects rejects unsupported functionality and empty states", (t) => {
+	t.expect(() =>
+		indicatorStateToObjects(0x43, { blink: { period: 1 } }, [0x02])
+	).toThrow("does not support blinking");
+	t.expect(() => indicatorStateToObjects(0x43, { soundLevel: 50 }, [0x02]))
+		.toThrow("does not support setting a sound level");
+	t.expect(() => indicatorStateToObjects(0x43, { timeout: "1x" }, [0x02]))
+		.toThrow("is not valid");
+	t.expect(() => indicatorStateToObjects(0x43, {}, [0x02])).toThrow(
+		"is empty",
+	);
 });
 
 test("the value IDs should be translated properly", (t) => {

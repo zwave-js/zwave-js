@@ -940,3 +940,164 @@ enum UserCredentialLearnStatus {
 	InvalidModifyOperationType = 0xff,
 }
 ```
+
+## Indicators
+
+Z-Wave JS provides a high-level API for controlling the indicators of a device, e.g. LEDs, an LCD backlight or a buzzer. It abstracts away the complexity of the **Indicator CC**, where the functionality of each indicator is split into multiple properties that need to be set in groups.
+
+The indicators API is accessed via the `indicators` property on endpoints and nodes. The property is `undefined` when the endpoint does not support the **Indicator CC**, so use it as the support check:
+
+```ts
+if (endpoint.indicators) {
+	await endpoint.indicators.set(Indicator["Button 1 indication"], {
+		on: true,
+	});
+}
+```
+
+The state of an indicator is represented as a whole:
+
+<!-- #import IndicatorState from "@zwave-js/cc" -->
+
+```ts
+interface IndicatorState {
+	/** Whether the indicator is on or off */
+	on?: boolean;
+	/** The level of a multilevel indicator (0-99) */
+	level?: number;
+	blink?: IndicatorBlink;
+	/** Timeout after which the indicator will be turned off. When setting, a string in the form `12h18m17.59s` is also accepted. */
+	timeout?: IndicatorTimeout | string;
+	/** The volume of an audible indicator (0-100). 0 means off/mute. */
+	soundLevel?: number;
+}
+```
+
+<!-- #import IndicatorBlink from "@zwave-js/cc" -->
+
+```ts
+interface IndicatorBlink {
+	/** Duration of one on/off period in seconds (0.1-25.5) */
+	period: number;
+	/** Number of on/off periods (1-254). `undefined` means the indicator blinks until turned off. */
+	cycles?: number;
+	/** On time within an on/off period in seconds. `undefined` means symmetric (on time equals off time). */
+	onTime?: number;
+}
+```
+
+<!-- #import IndicatorTimeout from "@zwave-js/cc" -->
+
+```ts
+interface IndicatorTimeout {
+	/** Whole hours (0-255) */
+	hours?: number;
+	/** Whole minutes (0-255) */
+	minutes?: number;
+	/** Whole and 1/100th seconds (0-59.99) */
+	seconds?: number;
+}
+```
+
+> [!NOTE] Nodes that only support V1 of the **Indicator CC** expose a single unspecified indicator with the ID `0`, which can only be turned on and off.
+
+### Querying indicator capabilities
+
+#### `getSupportedCached`
+
+```ts
+getSupportedCached(): IndicatorCapabilities[]
+```
+
+Returns the capabilities of all indicators the endpoint supports. This method uses cached information from the most recent interview.
+
+<!-- #import IndicatorCapabilities from "zwave-js" -->
+
+```ts
+interface IndicatorCapabilities {
+	/** The ID of the indicator. 0 is the unspecified indicator of a V1 node. */
+	indicatorId: number;
+	/** A user-friendly label describing the indicator */
+	label: string;
+	/** Whether the indicator can be turned on and off */
+	supportsOnOff: boolean;
+	/** Whether the indicator can be set to a level between 0 and 99 */
+	supportsLevel: boolean;
+	/** Whether the indicator can blink */
+	supportsBlinking: boolean;
+	/** Whether the indicator can be turned off automatically after a timeout */
+	supportsTimeout: boolean;
+	/** Whether the volume of the indicator can be changed */
+	supportsSoundLevel: boolean;
+}
+```
+
+The `Node Identify` indicator is not included; it is controlled exclusively through the [`identify`](#identify) method.
+
+#### `getCapabilitiesCached`
+
+```ts
+getCapabilitiesCached(indicatorId: number): IndicatorCapabilities | undefined
+```
+
+Returns the capabilities of the given indicator, or `undefined` if it is not supported. This method uses cached information from the most recent interview.
+
+### Reading and changing the indicator state
+
+#### `get`
+
+```ts
+get(indicatorId: number): Promise<IndicatorState | undefined>
+```
+
+Queries the current state of the given indicator.
+
+> [!NOTE] This communicates with the node to retrieve fresh information.
+
+#### `getCached`
+
+```ts
+getCached(indicatorId: number): IndicatorState | undefined
+```
+
+Returns the last known state of the given indicator, or `undefined` if it is not known. This method uses cached information.
+
+#### `set`
+
+```ts
+set(indicatorId: number, state: IndicatorState): Promise<SupervisionResult | undefined>
+```
+
+Changes the state of the given indicator. All necessary properties are sent to the device in a single command.
+
+> [!WARNING] The state is applied as a whole: all aspects not included in the state are turned off. For example, setting only `level` stops an ongoing blinking pattern and clears a previously set timeout. This matches the required behavior of supporting devices.
+
+Aspects of the state that the indicator does not support at all are rejected with a `ZWaveError`, with one exception: `on` and `level` are converted automatically between binary and multilevel indicators.
+
+#### `identify`
+
+```ts
+identify(): Promise<SupervisionResult | undefined>
+```
+
+Instructs the node to identify itself, e.g. by blinking an LED. Supported by nodes implementing version 3 or higher of the **Indicator CC**.
+
+### Indicator events
+
+#### `"indicator updated"`
+
+```ts
+(endpoint: Endpoint, args: IndicatorUpdatedArgs) => void
+```
+
+Emitted on the `ZWaveNode` instance when a device reports a changed indicator state, e.g. after it was changed locally. The `args` object contains the updated state along with the indicator ID:
+
+<!-- #import IndicatorUpdatedArgs from "zwave-js" -->
+
+```ts
+interface IndicatorUpdatedArgs extends Omit<IndicatorState, "timeout"> {
+	/** The ID of the updated indicator. 0 is the unspecified indicator of a V1 node. */
+	indicatorId: number;
+	timeout?: IndicatorTimeout;
+}
+```
