@@ -208,7 +208,7 @@ interface LintDevicesContext extends LintDevicesContextConditional {
 	variant: DeviceID | undefined;
 }
 
-function lintPartialParamDefinition(
+function lintTemplateParamDefinition(
 	file: string,
 	name: string,
 	definition: Record<string, unknown>,
@@ -363,16 +363,31 @@ Consider adding ${c.white(`"unsigned": true`)} to the template!`,
 		}
 	}
 
+	if (definition.readOnly != undefined && definition.readOnly !== true) {
+		addError(
+			file,
+			`${prefix} is invalid: readOnly must be true or omitted!`,
+		);
+	}
+	if (definition.writeOnly != undefined && definition.writeOnly !== true) {
+		addError(
+			file,
+			`${prefix} is invalid: writeOnly must be true or omitted!`,
+		);
+	}
+	if (
+		definition.allowManualEntry != undefined
+		&& definition.allowManualEntry !== false
+	) {
+		addError(
+			file,
+			`${prefix} is invalid: allowManualEntry must be false or omitted!`,
+		);
+	}
 	if (readOnly && writeOnly) {
 		addError(
 			file,
 			`${prefix} is invalid: readOnly and writeOnly are mutually exclusive!`,
-		);
-	}
-	if (readOnly && allowManualEntry) {
-		addError(
-			file,
-			`${prefix} is invalid: allowManualEntry must be omitted for readOnly parameters!`,
 		);
 	}
 
@@ -497,7 +512,7 @@ async function lintTemplates(
 				addError(file, `Template "${name}" must be an object!`);
 				continue;
 			}
-			lintPartialParamDefinition(
+			lintTemplateParamDefinition(
 				file,
 				name,
 				definition,
