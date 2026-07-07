@@ -22,6 +22,7 @@ import levenshtein from "js-levenshtein";
 import type { RulesLogic } from "json-logic-js";
 import * as path from "node:path";
 import { ConfigManager } from "../src/ConfigManager.js";
+import { readJsonWithTemplate } from "../src/JsonTemplate.js";
 import { parseLogic } from "../src/Logic.js";
 import {
 	ConditionalDeviceConfig,
@@ -207,6 +208,321 @@ interface LintDevicesContext extends LintDevicesContextConditional {
 	variant: DeviceID | undefined;
 }
 
+function lintTemplateParamDefinition(
+	file: string,
+	name: string,
+	definition: Record<string, unknown>,
+	addError: (filename: string, error: string) => void,
+	addWarning: (filename: string, warning: string) => void,
+): void {
+	const prefix = `Template "${name}"`;
+
+	// Since template entries are partial definitions, only check
+	// fields that are actually present and have the expected type.
+	// Conditionals cannot be evaluated without a device context, so
+	// conditional fields are not checked either.
+	const minValue = typeof definition.minValue === "number"
+		? definition.minValue
+		: undefined;
+	const maxValue = typeof definition.maxValue === "number"
+		? definition.maxValue
+		: undefined;
+	const defaultValue = typeof definition.defaultValue === "number"
+		? definition.defaultValue
+		: undefined;
+	const valueSize = typeof definition.valueSize === "number"
+		? definition.valueSize
+		: undefined;
+	const unsigned = typeof definition.unsigned === "boolean"
+		? definition.unsigned
+		: undefined;
+	const readOnly = typeof definition.readOnly === "boolean"
+		? definition.readOnly
+		: undefined;
+	const writeOnly = typeof definition.writeOnly === "boolean"
+		? definition.writeOnly
+		: undefined;
+	const allowManualEntry = typeof definition.allowManualEntry === "boolean"
+		? definition.allowManualEntry
+		: undefined;
+	const options = isArray(definition.options)
+		? definition.options.filter(
+			(o): o is { value: number; label?: unknown } =>
+				isObject(o) && typeof o.value === "number",
+		)
+		: undefined;
+
+	if (minValue != undefined && maxValue != undefined && minValue > maxValue) {
+		addError(
+			file,
+			`${prefix} is invalid: minValue must not be greater than maxValue!`,
+		);
+	}
+
+	if (defaultValue != undefined) {
+		if (minValue != undefined && defaultValue < minValue) {
+			addError(
+				file,
+				`${prefix} is invalid: The default value ${defaultValue} must be greater than or equal to minValue ${minValue}!`,
+			);
+		}
+		if (maxValue != undefined && defaultValue > maxValue) {
+			addError(
+				file,
+				`${prefix} is invalid: The default value ${defaultValue} must be less than or equal to maxValue ${maxValue}!`,
+			);
+		}
+	}
+
+	if (valueSize != undefined && (valueSize < 1 || valueSize > 4)) {
+		addError(
+			file,
+			`${prefix} is invalid: valueSize must be in the range 1...4!`,
+		);
+	} else if (valueSize != undefined) {
+		// All values are signed by the specs
+		const signedLimits = getIntegerLimits(valueSize as any, true);
+		const unsignedLimits = getIntegerLimits(valueSize as any, false);
+
+		const values: [fieldName: string, value: number][] = [];
+		if (minValue != undefined) values.push(["minValue", minValue]);
+		if (maxValue != undefined) values.push(["maxValue", maxValue]);
+		if (defaultValue != undefined) {
+			values.push(["defaultValue", defaultValue]);
+		}
+
+		for (const [fieldName, value] of values) {
+			const fitsSigned = value >= signedLimits.min
+				&& value <= signedLimits.max;
+			const fitsUnsigned = value >= unsignedLimits.min
+				&& value <= unsignedLimits.max;
+
+			if (unsigned) {
+				if (!fitsUnsigned) {
+					addError(
+						file,
+						`${prefix} is invalid: ${fieldName} ${value} is incompatible with valueSize ${valueSize} (min = ${unsignedLimits.min}, max = ${unsignedLimits.max})!`,
+					);
+				}
+			} else if (!fitsSigned) {
+				if (fitsUnsigned && unsigned == undefined) {
+					addWarning(
+						file,
+						`${prefix}: ${fieldName} ${value} requires the parameter to be unsigned (valueSize ${valueSize}, min = ${signedLimits.min}, max = ${signedLimits.max}).
+Consider adding ${c.white(`"unsigned": true`)} to the template!`,
+					);
+				} else {
+					addError(
+						file,
+						`${prefix} is invalid: ${fieldName} ${value} is incompatible with valueSize ${valueSize} (min = ${signedLimits.min}, max = ${signedLimits.max})!`,
+					);
+				}
+			}
+		}
+	}
+
+	if (options?.length) {
+		for (const option of options) {
+			if (
+				(minValue != undefined && option.value < minValue)
+				|| (maxValue != undefined && option.value > maxValue)
+			) {
+				addError(
+					file,
+					`${prefix} is invalid: The option value ${option.value} must be in the range ${
+						minValue ?? "..."
+					}...${maxValue ?? "..."}!`,
+				);
+			}
+		}
+
+		const duplicates = distinct(
+			options
+				.map((o) => o.value)
+				.filter((value, index, all) => all.indexOf(value) !== index),
+		);
+		if (duplicates.length) {
+			addError(
+				file,
+				`${prefix} is invalid: duplicate option value${
+					duplicates.length !== 1 ? "s" : ""
+				} ${duplicates.join(", ")}!`,
+			);
+		}
+
+		if (
+			allowManualEntry === false
+			&& !readOnly
+			&& defaultValue != undefined
+			&& !options.some((o) => o.value === defaultValue)
+		) {
+			addError(
+				file,
+				`${prefix} is invalid: The default value ${defaultValue} is not among the defined options!`,
+			);
+		}
+	}
+
+	if (definition.readOnly != undefined && definition.readOnly !== true) {
+		addError(
+			file,
+			`${prefix} is invalid: readOnly must be true or omitted!`,
+		);
+	}
+	if (definition.writeOnly != undefined && definition.writeOnly !== true) {
+		addError(
+			file,
+			`${prefix} is invalid: writeOnly must be true or omitted!`,
+		);
+	}
+	if (
+		definition.allowManualEntry != undefined
+		&& definition.allowManualEntry !== false
+	) {
+		addError(
+			file,
+			`${prefix} is invalid: allowManualEntry must be false or omitted!`,
+		);
+	}
+	if (readOnly && writeOnly) {
+		addError(
+			file,
+			`${prefix} is invalid: readOnly and writeOnly are mutually exclusive!`,
+		);
+	}
+
+	if (definition.allowed != undefined) {
+		if (minValue != undefined || maxValue != undefined) {
+			addError(
+				file,
+				`${prefix} is invalid: "allowed" cannot be used together with "minValue" or "maxValue"!`,
+			);
+		}
+		if (allowManualEntry === false) {
+			addError(
+				file,
+				`${prefix} is invalid: "allowed" cannot be used with "allowManualEntry: false"!`,
+			);
+		}
+
+		if (!isArray(definition.allowed) || definition.allowed.length === 0) {
+			addError(
+				file,
+				`${prefix} is invalid: "allowed" must be a non-empty array!`,
+			);
+		} else {
+			// Bring the raw definitions into the same shape the device config
+			// parser produces, so the range validation can be shared
+			const allowedDefs: ({ value: number } | {
+				from: number;
+				to: number;
+				step?: number;
+			})[] = [];
+			for (let i = 0; i < definition.allowed.length; i++) {
+				const def = definition.allowed[i];
+				if (
+					isObject(def)
+					&& "value" in def
+					&& typeof def.value === "number"
+				) {
+					allowedDefs.push({ value: def.value });
+				} else if (
+					isObject(def)
+					&& "range" in def
+					&& isArray(def.range)
+					&& def.range.length === 2
+					&& def.range.every((v) => typeof v === "number")
+					&& (def.step == undefined || typeof def.step === "number")
+				) {
+					const [from, to] = def.range as [number, number];
+					allowedDefs.push({
+						from,
+						to,
+						...(def.step != undefined
+							? { step: def.step }
+							: {}),
+					});
+				} else {
+					addError(
+						file,
+						`${prefix} is invalid: allowed[${i}] must have either a numeric "value" or a numeric "range" [from, to] with an optional numeric "step"!`,
+					);
+				}
+			}
+			validateAllowedValuesDefinition(
+				allowedDefs,
+				prefix,
+				file,
+				addError,
+			);
+		}
+	}
+
+	if (typeof definition.description === "string") {
+		if (/default:?\s+\d+/i.test(definition.description)) {
+			addWarning(
+				file,
+				`${prefix}: The description mentions a default value which should be handled by the "defaultValue" property instead!`,
+			);
+		}
+
+		if (typeof definition.label === "string") {
+			const { label, description } = definition;
+			const normalizedDistance = levenshtein(label, description)
+				/ Math.max(label.length, description.length);
+			if (normalizedDistance < 0.5) {
+				addWarning(
+					file,
+					`${prefix} has a very similar label and description (normalized distance ${
+						normalizedDistance.toFixed(2)
+					}). Consider removing the description if it does not add any information:
+label:       ${label}
+description: ${description}`,
+				);
+			}
+		}
+	}
+}
+
+async function lintTemplates(
+	addError: (filename: string, error: string) => void,
+	addWarning: (filename: string, warning: string) => void,
+): Promise<void> {
+	const rootDir = path.join(configDir, "devices");
+
+	const templateFiles = await enumFilesRecursive(
+		fs,
+		rootDir,
+		(filename) => /[\\/]templates[\\/][^\\/]+\.json$/i.test(filename),
+	);
+
+	for (const filePath of templateFiles.toSorted()) {
+		const file = path.relative(rootDir, filePath).replaceAll("\\", "/");
+
+		let templates: Record<string, unknown>;
+		try {
+			templates = await readJsonWithTemplate(fs, filePath, rootDir);
+		} catch (e) {
+			addError(file, getErrorMessage(e));
+			continue;
+		}
+
+		for (const [name, definition] of Object.entries(templates)) {
+			if (!isObject(definition)) {
+				addError(file, `Template "${name}" must be an object!`);
+				continue;
+			}
+			lintTemplateParamDefinition(
+				file,
+				name,
+				definition,
+				addError,
+				addWarning,
+			);
+		}
+	}
+}
+
 async function lintDevices(): Promise<void> {
 	process.env.NODE_ENV = "test";
 
@@ -289,6 +605,8 @@ async function lintDevices(): Promise<void> {
 			`Invalid filename: Must not contain whitespace.`,
 		);
 	}
+
+	await lintTemplates(addError, addWarning);
 
 	await configManager.loadDeviceIndex();
 	const index = configManager.getIndex()!;
@@ -663,8 +981,7 @@ If this is intended, consider marking one of the config files as preferred or sp
 
 function validateAllowedValuesDefinition(
 	allowedDefs: ParamInformation["allowed"],
-	parameter: number,
-	valueBitMask: number | undefined,
+	paramName: string,
 	file: string,
 	addError: (file: string, error: string, variant?: DeviceID) => void,
 	variant?: DeviceID,
@@ -678,9 +995,7 @@ function validateAllowedValuesDefinition(
 		if (step <= 0) {
 			addError(
 				file,
-				`${
-					paramNoToString(parameter, valueBitMask)
-				}: step must be positive (got ${step})`,
+				`${paramName}: step must be positive (got ${step})`,
 				variant,
 			);
 			continue;
@@ -689,9 +1004,7 @@ function validateAllowedValuesDefinition(
 		if (from > to) {
 			addError(
 				file,
-				`${
-					paramNoToString(parameter, valueBitMask)
-				}: range 'from' (${from}) must be <= 'to' (${to})`,
+				`${paramName}: range 'from' (${from}) must be <= 'to' (${to})`,
 				variant,
 			);
 			continue;
@@ -700,9 +1013,7 @@ function validateAllowedValuesDefinition(
 		if ((to - from) % step !== 0) {
 			addError(
 				file,
-				`${
-					paramNoToString(parameter, valueBitMask)
-				}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
+				`${paramName}: (to - from) must be evenly divisible by step. Range: ${from}-${to}, step: ${step}`,
 				variant,
 			);
 		}
@@ -1027,8 +1338,7 @@ Consider converting this parameter to unsigned using ${
 		if (value.allowed) {
 			validateAllowedValuesDefinition(
 				value.allowed,
-				parameter,
-				valueBitMask,
+				paramNoToString(parameter, valueBitMask),
 				file,
 				addError,
 				variant,

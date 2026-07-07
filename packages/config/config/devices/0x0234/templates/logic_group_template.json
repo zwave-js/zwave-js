@@ -10,10 +10,18 @@
 		"defaultValue": 1
 	},
 	"multilevel_upper_function": {
-		"$import": "~/templates/master_template.json#base_0-99_nounit",
 		"label": "Upper Switch Value",
 		"valueSize": 4,
-		"defaultValue": 255
+		"unsigned": true,
+		"defaultValue": 255,
+		"allowed": [
+			{
+				"range": [0, 99]
+			},
+			{
+				"value": 255
+			}
+		]
 	},
 	"multilevel_lower_function": {
 		"$import": "~/templates/master_template.json#base_0-99_nounit",
