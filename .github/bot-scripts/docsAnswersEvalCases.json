@@ -1,0 +1,118 @@
+[
+	{
+		"question": "Nodes are randomly marked dead\n\nSome of my devices keep getting marked as dead and come back after a while. Why does this happen?",
+		"expectedFiles": ["troubleshooting/common-issues.md"]
+	},
+	{
+		"question": "Multisensor 6 suddenly reports radiation\n\nMy Aeotec Multisensor 6 suddenly reports a radiation value. It doesn't even have a radiation sensor. Why?",
+		"expectedFiles": [
+			"troubleshooting/nonsensical-values.md",
+			"troubleshooting/common-issues.md"
+		]
+	},
+	{
+		"question": "How can I ping a device?\n\nIs there a way to check via the API whether a node is reachable?",
+		"expectedFiles": ["api/node.md"]
+	},
+	{
+		"question": "Network suddenly died\n\nMy network has always worked fine and suddenly nothing responds anymore. The controller is plugged into a Raspberry Pi.",
+		"expectedFiles": ["troubleshooting/common-issues.md"]
+	},
+	{
+		"question": "How do I set up S2 security keys?\n\nI want to include devices with Security S2. Where do I configure the network keys?",
+		"expectedFiles": ["getting-started/security-s2.md"]
+	},
+	{
+		"question": "Updating device firmware\n\nHow can I perform an OTA firmware update of a Z-Wave device through zwave-js?",
+		"expectedFiles": [
+			"examples/ota-update.md",
+			"api/node.md",
+			"api/driver.md"
+		]
+	},
+	{
+		"question": "Z-Wave Long Range support\n\nHow do I enable and use Z-Wave Long Range with my 800 series controller?",
+		"expectedFiles": ["getting-started/long-range.md"]
+	},
+	{
+		"question": "Remote serial port over TCP\n\nCan I connect to a controller that is exposed over the network with ser2net?",
+		"expectedFiles": ["usage/tcp-connection.md"]
+	},
+	{
+		"question": "Using ESPHome device as adapter\n\nIs it possible to use an ESPHome-based Z-Wave adapter with zwave-js?",
+		"expectedFiles": ["usage/esphome-connection.md"]
+	},
+	{
+		"question": "Custom logging\n\nHow can I send zwave-js logs to my own logging system instead of the console?",
+		"expectedFiles": ["usage/log-transports.md"]
+	},
+	{
+		"question": "Inclusion finds no new devices\n\nI put the controller into inclusion mode but my new device is never found.",
+		"expectedFiles": ["troubleshooting/common-issues.md"]
+	},
+	{
+		"question": "Configuration parameters are wrong\n\nThe config parameters shown for my device don't match its manual. Some are missing entirely.",
+		"expectedFiles": ["troubleshooting/common-issues.md"]
+	},
+	{
+		"question": "Device does not send updates\n\nMy sensor works when I query it manually, but it never sends unsolicited reports.",
+		"expectedFiles": [
+			"troubleshooting/no-updates.md",
+			"troubleshooting/common-issues.md"
+		]
+	},
+	{
+		"question": "How to create associations\n\nHow do I associate two devices with each other so one directly controls the other?",
+		"expectedFiles": [
+			"api/controller.md",
+			"api/CCs/Association.md"
+		]
+	},
+	{
+		"question": "Heal network\n\nHow can I rebuild the routes of my devices after moving the controller?",
+		"expectedFiles": ["api/controller.md"]
+	},
+	{
+		"question": "Sniffing Z-Wave traffic\n\nHow can I capture and inspect the raw Z-Wave radio traffic in my network?",
+		"expectedFiles": [
+			"api/zniffer.md",
+			"troubleshooting/zniffer.md"
+		]
+	},
+	{
+		"question": "Minimal example\n\nWhat is the minimal code needed to start the driver and control a device?",
+		"expectedFiles": [
+			"getting-started/quickstart.md",
+			"api/driver.md"
+		]
+	},
+	{
+		"question": "Custom device config files\n\nHow can I load my own device configuration files that are not part of zwave-js?",
+		"expectedFiles": [
+			"usage/external-config.md",
+			"config-files/overview.md"
+		]
+	},
+	{
+		"question": "Where do I start debugging?\n\nSomething is wrong with my network. What information do I need to collect before opening an issue?",
+		"expectedFiles": [
+			"troubleshooting/first-steps.md",
+			"troubleshooting/index.md"
+		]
+	},
+	{
+		"question": "Controlling multiple devices at once\n\nCan I send a command to several nodes at the same time using multicast?",
+		"expectedFiles": [
+			"api/virtual-node-endpoint.md",
+			"api/controller.md"
+		]
+	},
+	{
+		"question": "What is a value ID?\n\nThe docs keep mentioning ValueID. What does it consist of and how do I use it?",
+		"expectedFiles": ["api/valueid.md"]
+	},
+	{
+		"question": "Testing an unreleased fix\n\nHow do I install zwave-js directly from a GitHub branch to test a fix before it is released?",
+		"expectedFiles": ["development/installing-from-github.md"]
+	}
+]
