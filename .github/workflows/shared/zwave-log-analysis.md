@@ -2,7 +2,7 @@
 mcp-servers:
   zwave-log-analyzer:
     command: npx
-    args: ["-y", "--package=@zwave-js/log-analyzer", "zwave-log-analyzer-mcp"]
+    args: ["-y", "--package=@zwave-js/log-analyzer@0.1.1", "zwave-log-analyzer-mcp"]
     allowed: ["*"]
 ---
 
