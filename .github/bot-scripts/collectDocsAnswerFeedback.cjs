@@ -134,8 +134,12 @@ function parseAnswerMetadata(body) {
 
 	/** @type {string[]} */
 	const sections = [];
+	const escapedBaseUrl = DOCS_BASE_URL.replace(
+		/[.*+?^${}()|[\]\\]/g,
+		"\\$&",
+	);
 	const linkRegex = new RegExp(
-		`\\]\\(${DOCS_BASE_URL}/([^)?]*)(?:\\?id=([^)]*))?\\)`,
+		`\\]\\(${escapedBaseUrl}/([^)?]*)(?:\\?id=([^)]*))?\\)`,
 		"g",
 	);
 	for (const link of body.matchAll(linkRegex)) {
@@ -226,10 +230,16 @@ async function collectFromIssues(owner, repo, since, token) {
 
 	for (const issue of issues) {
 		/** @type {any[]} */
-		const comments = await ghGet(
-			`/repos/${owner}/${repo}/issues/${issue.number}/comments?per_page=100`,
-			token,
-		);
+		const comments = [];
+		for (let page = 1;; page++) {
+			/** @type {any[]} */
+			const batch = await ghGet(
+				`/repos/${owner}/${repo}/issues/${issue.number}/comments?per_page=100&page=${page}`,
+				token,
+			);
+			comments.push(...batch);
+			if (batch.length < 100) break;
+		}
 		const answers = comments.filter((c) =>
 			c.user?.login === BOT_USER
 			&& c.body?.includes(DOCS_ANSWER_COMMENT_TAG)
@@ -289,11 +299,13 @@ async function collectFromDiscussions(owner, repo, since, token) {
 					pageInfo { hasNextPage endCursor }
 					nodes {
 						... on Discussion {
+							id
 							title
 							body
 							url
 							author { login }
-							comments(first: 50) {
+							comments(first: 100) {
+								pageInfo { hasNextPage endCursor }
 								nodes {
 									body
 									url
@@ -316,7 +328,41 @@ async function collectFromDiscussions(owner, repo, since, token) {
 		);
 
 		for (const discussion of data.search.nodes) {
-			const answers = (discussion.comments?.nodes ?? []).filter(
+			const comments = [...(discussion.comments?.nodes ?? [])];
+			// Fetch remaining comment pages of busy discussions
+			let commentsPage = discussion.comments?.pageInfo;
+			while (commentsPage?.hasNextPage) {
+				const more = await ghGraphql(
+					`
+					query moreComments($id: ID!, $cursor: String) {
+						node(id: $id) {
+							... on Discussion {
+								comments(first: 100, after: $cursor) {
+									pageInfo { hasNextPage endCursor }
+									nodes {
+										body
+										url
+										author { login }
+										reactions(first: 100) {
+											nodes {
+												content
+												user { login }
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					`,
+					{ id: discussion.id, cursor: commentsPage.endCursor },
+					token,
+				);
+				comments.push(...(more.node?.comments?.nodes ?? []));
+				commentsPage = more.node?.comments?.pageInfo;
+			}
+
+			const answers = comments.filter(
 				(/** @type {any} */ c) =>
 					c.author?.login === BOT_USER
 					&& c.body?.includes(DOCS_ANSWER_COMMENT_TAG),
@@ -410,21 +456,32 @@ async function main() {
 	const embeddings = downvoted.length > 0
 		? await embed(downvoted.map((r) => r.question), token, index.model)
 		: [];
-	const feedback = {
-		createdAt: new Date().toISOString(),
-		model: index.model,
-		suppressed: downvoted.map((r, i) => ({
+	const suppressed = downvoted
+		.map((r, i) => ({
 			question: r.question,
 			embedding: embeddings[i],
 			style: r.style,
 			score: r.score,
 			url: r.commentUrl,
-		})),
+		}))
+		// Guard against the embeddings response missing entries
+		.filter((e) => Array.isArray(e.embedding));
+	if (suppressed.length < downvoted.length) {
+		console.log(
+			`Dropped ${
+				downvoted.length - suppressed.length
+			} entries without embedding`,
+		);
+	}
+	const feedback = {
+		createdAt: new Date().toISOString(),
+		model: index.model,
+		suppressed,
 	};
 	await fs.mkdir(path.dirname(feedbackOut), { recursive: true });
 	await fs.writeFile(feedbackOut, JSON.stringify(feedback));
 	console.log(
-		`Wrote ${downvoted.length} suppression entries to ${feedbackOut}`,
+		`Wrote ${suppressed.length} suppression entries to ${feedbackOut}`,
 	);
 }
 

@@ -54,6 +54,15 @@ async function ghRequest(method, pathAndQuery, body, token) {
 }
 
 /**
+ * Keeps user-controlled text from pinging people via @mentions
+ * by inserting a zero-width space after each @
+ * @param {string} text
+ */
+function neutralizeMentions(text) {
+	return text.replace(/@/g, "@\u200b");
+}
+
+/**
  * Summarizes the votes as anonymous weighted counts
  * @param {import("./collectDocsAnswerFeedback.cjs").FeedbackRecord} record
  */
@@ -81,7 +90,7 @@ function renderVotes(record) {
  */
 function renderRecord(record) {
 	const lines = [
-		`### [${record.title}](${record.postUrl}) — score ${
+		`### [${neutralizeMentions(record.title)}](${record.postUrl}) — score ${
 			record.score > 0 ? "+" : ""
 		}${record.score}`,
 		`[Bot answer](${record.commentUrl})${
@@ -192,12 +201,18 @@ async function updateFeedbackIssue(records, owner, repo, token) {
 
 	// The marker identifies the digest issue regardless of its title
 	/** @type {any[]} */
-	const candidates = await ghRequest(
-		"GET",
-		`/repos/${owner}/${repo}/issues?labels=${ISSUE_LABEL}&state=all&per_page=100`,
-		undefined,
-		token,
-	);
+	const candidates = [];
+	for (let page = 1;; page++) {
+		/** @type {any[]} */
+		const batch = await ghRequest(
+			"GET",
+			`/repos/${owner}/${repo}/issues?labels=${ISSUE_LABEL}&state=all&per_page=100&page=${page}`,
+			undefined,
+			token,
+		);
+		candidates.push(...batch);
+		if (batch.length < 100) break;
+	}
 	const existing = candidates.find((i) => i.body?.includes(ISSUE_MARKER));
 
 	if (existing) {

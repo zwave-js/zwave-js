@@ -183,11 +183,19 @@ function checkSuppression(questionEmbedding, feedback, indexModel) {
 	/** @type {"allow" | "linksOnly" | "silent"} */
 	let result = "allow";
 	for (const entry of feedback.suppressed ?? []) {
+		// The cache could be stale or corrupted. Skip malformed entries,
+		// a mismatched vector length would yield NaN below
+		if (
+			!Array.isArray(entry.embedding)
+			|| entry.embedding.length !== questionEmbedding.length
+		) {
+			continue;
+		}
 		const similarity = cosineSimilarity(
 			questionEmbedding,
 			entry.embedding,
 		);
-		if (similarity < SUPPRESS_SIMILARITY) continue;
+		if (!(similarity >= SUPPRESS_SIMILARITY)) continue;
 		console.log(
 			`Question is similar (${
 				similarity.toFixed(3)
