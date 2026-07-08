@@ -161,7 +161,7 @@ function convertRawRSSI_LR(rssi: number): RSSI {
 
 function convertRawRSSI_Classic(rssi: number): RSSI {
 	if (rssi < -100) return rssi - 10;
-	if (rssi >= +15) return rssi - 20;
+	if (rssi >= 15) return rssi - 20;
 	return rssiConversionTable_Classic[rssi + 100];
 }
 

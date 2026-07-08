@@ -1,3 +1,5 @@
+// oxlint-disable typescript/no-misused-spread
+
 import { Bytes, buffer2hex } from "@zwave-js/shared";
 import { BeamingInfo, MPDUHeaderType } from "../definitions/Frame.js";
 import {

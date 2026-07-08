@@ -47,6 +47,7 @@ import {
 import {
 	AsyncQueue,
 	Bytes,
+	type BytesView,
 	type DeepPartial,
 	type Expand,
 	type Timer,
@@ -576,7 +577,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	/** Sends a raw datagram to the serialport (if that is open) */
-	private async writeSerial(data: Uint8Array): Promise<void> {
+	private async writeSerial(data: BytesView): Promise<void> {
 		return this.serial?.writeAsync(data);
 	}
 
@@ -695,15 +696,13 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				}
 
 				case "waitingForResponse": {
-					const response = await Promise.race([
-						this.waitForMessage(
-							(resp) => msg.isExpectedResponse(resp),
-							msg.getResponseTimeout()
-								?? this._options.timeouts.response,
-							undefined,
-							abortController.signal,
-						).catch(() => "timeout" as const),
-					]);
+					const response = await this.waitForMessage(
+						(resp) => msg.isExpectedResponse(resp),
+						msg.getResponseTimeout()
+							?? this._options.timeouts.response,
+						undefined,
+						abortController.signal,
+					).catch(() => "timeout" as const);
 
 					if (response instanceof Error) {
 						// The command was aborted from the outside
@@ -726,15 +725,13 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				}
 
 				case "waitingForCallback": {
-					const callback = await Promise.race([
-						this.waitForMessage(
-							(resp) => msg.isExpectedCallback(resp),
-							msg.getCallbackTimeout()
-								?? this._options.timeouts.callback,
-							undefined,
-							abortController.signal,
-						).catch(() => "timeout" as const),
-					]);
+					const callback = await this.waitForMessage(
+						(resp) => msg.isExpectedCallback(resp),
+						msg.getCallbackTimeout()
+							?? this._options.timeouts.callback,
+						undefined,
+						abortController.signal,
+					).catch(() => "timeout" as const);
 
 					if (callback instanceof Error) {
 						// The command was aborted from the outside
