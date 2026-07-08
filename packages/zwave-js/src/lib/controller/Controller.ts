@@ -356,6 +356,7 @@ import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
 import { determineNIF } from "./NodeInformationFrame.js";
 import {
 	type ControllerProprietary,
+	type ControllerProprietaryCommon,
 	getControllerProprietary,
 } from "./Proprietary.js";
 import {
@@ -711,6 +712,11 @@ export class ZWaveController
 	/** Which RF region the controller is currently set to, or `undefined` if it could not be determined (yet). This value is cached and can be changed through {@link setRFRegion}. */
 	public get rfRegion(): MaybeNotKnown<RFRegion> {
 		return this._rfRegion;
+	}
+
+	/** @internal Updates the cached RF region, e.g. from a proprietary implementation */
+	public setCachedRFRegion(region: MaybeNotKnown<RFRegion>): void {
+		this._rfRegion = region;
 	}
 
 	private _txPower: MaybeNotKnown<number>;
@@ -7153,6 +7159,23 @@ export class ZWaveController
 		this.emit("node added", newNode, inclusionResult);
 	}
 
+	/**
+	 * Returns the proprietary implementation that configures the RF region
+	 * through proprietary commands, but only when the given standard Serial API
+	 * Setup command is known to be unsupported. Prefer the standard command
+	 * whenever it is supported or its support is not known yet.
+	 */
+	private getProprietaryRFRegionProvider(
+		cmd: SerialAPISetupCommand,
+	): ControllerProprietaryCommon | undefined {
+		if (this.isSerialAPISetupCommandSupported(cmd) !== false) {
+			return undefined;
+		}
+		return Object.values(this.proprietary).find(
+			(impl) => typeof impl.getRFRegion === "function",
+		);
+	}
+
 	/** Configure the RF region at the Z-Wave API Module */
 	public async setRFRegion(region: RFRegion): Promise<boolean> {
 		// Setting the "default" region is not possible. Controllers are supposed to
@@ -7165,6 +7188,16 @@ export class ZWaveController
 		}
 		const prevRegion = this.rfRegion ?? RFRegion.Unknown;
 		const result = await this.setRFRegionInternal(region, true);
+
+		// Controllers using the proprietary region path have no Serial API Setup
+		// powerlevel commands, so skip the automatic powerlevel adjustments.
+		if (
+			this.getProprietaryRFRegionProvider(
+				SerialAPISetupCommand.SetRFRegion,
+			)
+		) {
+			return result;
+		}
 
 		// If automatic powerlevel adjustments are configured, do them now.
 		const isRegionActuallyDifferent = this.tryGetLRCapableRegion(prevRegion)
@@ -7185,6 +7218,18 @@ export class ZWaveController
 		region: RFRegion,
 		softReset: boolean = true,
 	): Promise<boolean> {
+		// Some controllers configure the region through proprietary commands
+		// instead of the standard Serial API Setup command.
+		const proprietary = this.getProprietaryRFRegionProvider(
+			SerialAPISetupCommand.SetRFRegion,
+		);
+		if (proprietary) {
+			// The controller restarts itself after changing the region
+			await proprietary.setRFRegion!(region);
+			this._rfRegion = region;
+			return true;
+		}
+
 		const result = await this.driver.sendMessage<
 			| SerialAPISetup_SetRFRegionResponse
 			| SerialAPISetup_CommandUnsupportedResponse
@@ -7203,6 +7248,15 @@ export class ZWaveController
 
 	/** Request the current RF region configured at the Z-Wave API Module */
 	public async getRFRegion(): Promise<RFRegion> {
+		const proprietary = this.getProprietaryRFRegionProvider(
+			SerialAPISetupCommand.GetRFRegion,
+		);
+		if (proprietary) {
+			const region = await proprietary.getRFRegion!();
+			this._rfRegion = region;
+			return region;
+		}
+
 		const result = await this.driver.sendMessage<
 			| SerialAPISetup_GetRFRegionResponse
 			| SerialAPISetup_CommandUnsupportedResponse

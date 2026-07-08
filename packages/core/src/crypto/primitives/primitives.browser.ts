@@ -79,8 +79,16 @@ async function decryptAES256CBC(
 	return new Uint8Array(plaintext);
 }
 
-/** Encrypts a payload using AES-128-OFB */
-async function encryptAES128OFB(
+function assertKeyLength(key: BytesView, expected: number): void {
+	if (key.length !== expected) {
+		throw new Error(
+			`Invalid key length ${key.length}, expected ${expected} bytes`,
+		);
+	}
+}
+
+// Encrypts a payload using AES-OFB, independent of key length
+async function encryptAESOFB(
 	plaintext: BytesView,
 	key: BytesView,
 	iv: BytesView,
@@ -128,8 +136,8 @@ async function encryptAES128OFB(
 	return ret;
 }
 
-/** Decrypts a payload using AES-128-OFB */
-async function decryptAES128OFB(
+// Decrypts a payload using AES-OFB, independent of key length
+async function decryptAESOFB(
 	ciphertext: BytesView,
 	key: BytesView,
 	iv: BytesView,
@@ -175,6 +183,46 @@ async function decryptAES128OFB(
 	}
 
 	return ret;
+}
+
+/** Encrypts a payload using AES-128-OFB */
+function encryptAES128OFB(
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
+	assertKeyLength(key, 16);
+	return encryptAESOFB(plaintext, key, iv);
+}
+
+/** Decrypts a payload using AES-128-OFB */
+function decryptAES128OFB(
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
+	assertKeyLength(key, 16);
+	return decryptAESOFB(ciphertext, key, iv);
+}
+
+/** Encrypts a payload using AES-256-OFB */
+function encryptAES256OFB(
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
+	assertKeyLength(key, 32);
+	return encryptAESOFB(plaintext, key, iv);
+}
+
+/** Decrypts a payload using AES-256-OFB */
+function decryptAES256OFB(
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
+	assertKeyLength(key, 32);
+	return decryptAESOFB(ciphertext, key, iv);
 }
 
 async function encryptAES128CCM(
@@ -526,6 +574,8 @@ export const primitives = {
 	encryptAES128CCM,
 	decryptAES128CCM,
 	decryptAES256CBC,
+	encryptAES256OFB,
+	decryptAES256OFB,
 	digest,
 	hmacSHA256,
 	encryptChaCha20Poly1305,
