@@ -2,11 +2,11 @@ import {
 	CommandClasses,
 	Duration,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	NOT_KNOWN,
 	type SupervisionResult,
 	SupervisionStatus,
@@ -677,7 +677,7 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"target value": this.targetValue,
 		};
 		if (this.duration) {
@@ -821,7 +821,7 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"current value": maybeUnknownToString(this.currentValue),
 		};
 		if (this.targetValue !== NOT_KNOWN && this.duration) {
@@ -924,7 +924,7 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			startLevel: `${this.startLevel}${
 				this.ignoreStartLevel ? " (ignored)" : ""
 			}`,

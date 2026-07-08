@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	ValueMetadata,
 	type WithAddress,
 	enumValuesToMetadataStates,
@@ -191,7 +191,7 @@ export class ThermostatFanStateCCReport extends ThermostatFanStateCC {
 	public readonly state: ThermostatFanState;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			state: getEnumMemberName(ThermostatFanState, this.state),
 		};
 		return {

@@ -8,7 +8,6 @@ import {
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type MulticastDestination,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
@@ -2155,7 +2154,7 @@ export class Security2CCNonceReport extends Security2CC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"sequence number": this.sequenceNumber ?? "(not set)",
 			SOS: this.SOS,
 			MOS: this.MOS,

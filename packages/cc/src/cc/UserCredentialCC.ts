@@ -2,10 +2,10 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	type WithAddress,
 	ZWaveError,
@@ -1780,7 +1780,7 @@ export class UserCredentialCCCredentialCapabilitiesReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"credential checksum support": this.supportsCredentialChecksum,
 			"admin code support": this.supportsAdminCode,
 			"admin code deactivation support":
@@ -1931,7 +1931,7 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		for (const [entryType, capability] of this.keyLockerCapabilities) {
 			message[
 				`entry type ${
@@ -2182,7 +2182,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"operation type": getEnumMemberName(
 				UserCredentialOperationType,
 				this.operationType,
@@ -2479,7 +2479,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"report type": getEnumMemberName(
 				UserCredentialUserReportType,
 				this.reportType,
@@ -2721,7 +2721,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"user ID": this.userId,
 			"credential type": getEnumMemberName(
 				UserCredentialType,
@@ -3067,7 +3067,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"report type": getEnumMemberName(
 				UserCredentialCredentialReportType,
 				this.reportType,
@@ -4080,7 +4080,7 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"entry type": getEnumMemberName(
 				UserCredentialKeyLockerEntryType,
 				this.entryType,

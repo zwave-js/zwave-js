@@ -1,7 +1,7 @@
 import {
+	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	ZWaveError,
 	ZWaveErrorCodes,
 	validatePayload,
@@ -59,7 +59,7 @@ export class ExtendedNVMOperationsRequest extends Message {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			command: getEnumMemberName(
 				ExtendedNVMOperationsCommand,
 				this.command,
@@ -303,7 +303,7 @@ export class ExtendedNVMOperationsResponse extends Message
 	public readonly bufferOrBitmask: BytesView;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			status: getEnumMemberName(ExtendedNVMOperationStatus, this.status),
 			"address offset / NVM size": num2hex(this.offsetOrSize),
 		};

@@ -2,10 +2,10 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupportsCC,
 	type WithAddress,
 	encodeCCId,
@@ -784,7 +784,7 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.groupId != undefined) {
 			message["group id"] = this.groupId;
 		}

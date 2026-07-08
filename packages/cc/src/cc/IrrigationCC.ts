@@ -6,7 +6,6 @@ import {
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	type ValueID,
 	ValueMetadata,
@@ -1665,7 +1664,7 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"master valve delay": `${this.masterValveDelay} s`,
 			"high pressure threshold": `${this.highPressureThreshold} kPa`,
 			"low pressure threshold": `${this.lowPressureThreshold} kPa`,
@@ -1785,7 +1784,7 @@ export class IrrigationCCSystemConfigReport extends IrrigationCC {
 	public readonly moistureSensorPolarity?: IrrigationSensorPolarity;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"master valve delay": `${this.masterValveDelay} s`,
 			"high pressure threshold": `${this.highPressureThreshold} kPa`,
 			"low pressure threshold": `${this.lowPressureThreshold} kPa`,
@@ -2423,7 +2422,7 @@ export class IrrigationCCValveRun extends IrrigationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"valve ID": this.valveId,
 		};
 		if (this.duration) {
@@ -2486,7 +2485,7 @@ export class IrrigationCCValveTableSet extends IrrigationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"table ID": this.tableId,
 		};
 		for (let i = 0; i < this.entries.length; i++) {
@@ -2548,7 +2547,7 @@ export class IrrigationCCValveTableReport extends IrrigationCC {
 	public readonly entries: ValveTableEntry[];
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"table ID": this.tableId,
 		};
 		for (let i = 0; i < this.entries.length; i++) {

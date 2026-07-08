@@ -5,7 +5,6 @@ import {
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -381,7 +380,7 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 	public readonly slowRefresh: boolean | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"sequence number": this.sequenceNumber,
 			"key attribute": getEnumMemberName(
 				CentralSceneKeys,

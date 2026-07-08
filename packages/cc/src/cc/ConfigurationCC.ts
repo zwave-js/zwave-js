@@ -18,7 +18,6 @@ import {
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type NodeId,
 	type SupervisionResult,
 	SupervisionStatus,
@@ -2254,7 +2253,7 @@ export class ConfigurationCCSet extends ConfigurationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"parameter #": this.parameter,
 			"reset to default": this.resetToDefault,
 		};
@@ -2582,7 +2581,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"handshake response": this.isHandshakeResponse,
 			"default values": this.defaultValues,
 			"value size": this.valueSize,
@@ -3284,7 +3283,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"parameter #": this.parameter,
 			"next param #": this.nextParameter,
 			"value size": this.valueSize,

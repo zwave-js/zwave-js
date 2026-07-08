@@ -1,8 +1,8 @@
 import {
 	CommandClasses,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
-	type MessageRecord,
 	type SinglecastCC,
 	type WithAddress,
 	validatePayload,
@@ -88,7 +88,7 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			status: getEnumMemberName(ApplicationStatus, this.status),
 		};
 		if (

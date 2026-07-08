@@ -13,7 +13,6 @@ import {
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type NodeId,
 	type SinglecastCC,
 	type SupervisionResult,
@@ -1086,7 +1085,7 @@ export class MeterCCReport extends MeterCC {
 		const scale = getMeterScale(this.type, this.scale)
 			?? getUnknownMeterScale(this.scale);
 
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"meter type": getMeterName(this.type),
 			scale: scale.label,
 			"rate type": getEnumMemberName(RateType, this.rateType),
@@ -1190,7 +1189,7 @@ export class MeterCCGet extends MeterCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.rateType != undefined) {
 			message["rate type"] = getEnumMemberName(RateType, this.rateType);
 		}
@@ -1467,7 +1466,7 @@ export class MeterCCReset extends MeterCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.type != undefined) {
 			message.type = getMeterName(this.type);
 		}

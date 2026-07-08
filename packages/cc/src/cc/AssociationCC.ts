@@ -3,11 +3,11 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	type WithAddress,
 	ZWaveError,
@@ -544,7 +544,7 @@ export class AssociationCCSet extends AssociationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"group id": this.groupId || "all groups",
 			"node ids": this.nodeIds.length
 				? this.nodeIds.join(", ")
@@ -606,7 +606,7 @@ export class AssociationCCRemove extends AssociationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"group id": this.groupId || "all groups",
 			"node ids": this.nodeIds && this.nodeIds.length
 				? this.nodeIds.join(", ")

@@ -1,11 +1,11 @@
 import {
 	CommandClasses,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	Timeout,
 	type ValueID,
@@ -583,7 +583,7 @@ export class ProtectionCCSet extends ProtectionCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			local: getEnumMemberName(LocalProtectionState, this.local),
 		};
 		if (this.rf != undefined) {
@@ -641,7 +641,7 @@ export class ProtectionCCReport extends ProtectionCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			local: getEnumMemberName(LocalProtectionState, this.local),
 		};
 		if (this.rf != undefined) {

@@ -18,10 +18,10 @@ import {
 	type ListenBehavior,
 	type LogNode,
 	type LogPayload,
+	type LogPayloadDictInput,
 	type LogPayloadText,
 	type MessageOrCCLogEntry,
 	type MessagePriority,
-	type MessageRecord,
 	type ModifyCCs,
 	type MulticastCC,
 	type MulticastDestination,
@@ -417,7 +417,7 @@ export class CommandClass implements CCId {
 	/** Generates a representation of this CC for the log */
 	public toLogEntry(_ctx?: GetValueDB): MessageOrCCLogEntry {
 		let tag = this.constructor.name;
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.constructor === CommandClass) {
 			tag = `${
 				getEnumMemberName(

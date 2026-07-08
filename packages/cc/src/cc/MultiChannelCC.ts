@@ -4,10 +4,10 @@ import {
 	type GenericDeviceClass,
 	type GetNode,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type NodeId,
 	type SpecificDeviceClass,
 	type SupportsCC,
@@ -922,7 +922,7 @@ export class MultiChannelCCEndPointReport extends MultiChannelCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"endpoint count (individual)": this.individualCount,
 			"count is dynamic": this.countIsDynamic,
 			"identical capabilities": this.identicalCapabilities,

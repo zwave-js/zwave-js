@@ -73,12 +73,12 @@ import {
 	type LogContainer,
 	type LogNodeOptions,
 	type LogPayloadDict,
+	type LogPayloadDictInput,
 	MAX_SUPERVISION_SESSION_ID,
 	MAX_TRANSPORT_SERVICE_SESSION_ID,
 	MPANState,
 	type MaybeNotKnown,
 	MessagePriority,
-	type MessageRecord,
 	type MulticastDestination,
 	NUM_NODEMASK_BYTES,
 	NodeIDType,
@@ -3214,7 +3214,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		let prefix: string;
 		let details: LogPayloadDict;
 		if (ccId === CommandClasses.Notification) {
-			const msg: MessageRecord = {
+			const msg: LogPayloadDictInput = {
 				type: ccArgs.label,
 				event: ccArgs.eventLabel,
 			};

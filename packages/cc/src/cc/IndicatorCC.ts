@@ -3,10 +3,10 @@ import {
 	type EndpointId,
 	type GetValueDB,
 	Indicator,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	type ValueID,
 	ValueMetadata,
@@ -1093,7 +1093,7 @@ export class IndicatorCCSet extends IndicatorCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.indicator0Value != undefined) {
 			message["indicator 0 value"] = this.indicator0Value;
 		}
@@ -1350,7 +1350,7 @@ export class IndicatorCCReport extends IndicatorCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.indicator0Value != undefined) {
 			message["indicator 0 value"] = this.indicator0Value;
 		}

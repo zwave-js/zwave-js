@@ -2,9 +2,9 @@ import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
-	type MessageRecord,
 	type ValueID,
 	ValueMetadata,
 	type WithAddress,
@@ -416,7 +416,7 @@ export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.position != undefined) {
 			message.position = this.position;
 		}
@@ -505,7 +505,7 @@ export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
 	public tilt: MaybeUnknown<number> | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.position != undefined) {
 			message.position = this.position;
 		}

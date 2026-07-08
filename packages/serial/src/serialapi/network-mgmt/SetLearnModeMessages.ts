@@ -1,7 +1,7 @@
 import {
+	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
@@ -204,7 +204,7 @@ export class SetLearnModeCallback extends SetLearnModeRequestBase
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"callback id": this.callbackId ?? "(not set)",
 			status: getEnumMemberName(LearnModeStatus, this.status),
 		};

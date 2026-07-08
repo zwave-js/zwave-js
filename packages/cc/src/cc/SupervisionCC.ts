@@ -6,10 +6,10 @@ import {
 	type GetEndpoint,
 	type GetNode,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type NodeId,
 	type SinglecastCC,
 	type SupervisionResult,
@@ -358,7 +358,7 @@ export class SupervisionCCReport extends SupervisionCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"session id": this.sessionId,
 			"more updates follow": this.moreUpdatesFollow,
 			status: getEnumMemberName(SupervisionStatus, this.status),

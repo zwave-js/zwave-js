@@ -1,5 +1,5 @@
 import {
-	type MessageRecord,
+	type LogPayloadDictInput,
 	ProtocolDataRate,
 	type RSSI,
 	RssiError,
@@ -224,8 +224,8 @@ export function encodeTXReport(report: SerializableTXReport): BytesView {
 	return ret;
 }
 
-export function txReportToMessageRecord(report: TXReport): MessageRecord {
-	const ret: MessageRecord = stripUndefined({
+export function txReportToLogDict(report: TXReport): LogPayloadDictInput {
+	const ret: LogPayloadDictInput = stripUndefined({
 		// This is included in the parent command's transmit status line
 		// "TX duration": `${report.txTicks * 10} ms`,
 		// Number of repeaters isn't interesting if it is duplicated by the node IDs

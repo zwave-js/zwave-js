@@ -1,9 +1,9 @@
 import type { CommandClass } from "@zwave-js/cc";
 import {
 	type BeamingInfo,
+	type LogPayloadDictInput,
 	MPDUHeaderType,
 	type MessageOrCCLogEntry,
-	type MessageRecord,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	Protocols,
@@ -237,7 +237,7 @@ export class LongRangeMPDU implements MPDU {
 			tags.unshift("ACK");
 		}
 
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"sequence no.": this.sequenceNumber,
 			channel: this.frameInfo.channel,
 			"protocol/data rate": znifferProtocolDataRateToString(
@@ -421,7 +421,7 @@ export class ZWaveMPDU implements MPDU {
 	public toLogEntry(): MessageOrCCLogEntry {
 		const tags = [formatNodeId(this.sourceNodeId)];
 
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"sequence no.": this.sequenceNumber,
 			channel: this.frameInfo.channel,
 			"protocol/data rate":
@@ -860,7 +860,7 @@ export class ZWaveBeamStart {
 			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
 		];
 
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			channel: this.frameInfo.channel,
 			"protocol/data rate": znifferProtocolDataRateToString(
 				this.frameInfo.protocolDataRate,
@@ -919,7 +919,7 @@ export class LongRangeBeamStart {
 			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
 		];
 
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			channel: this.frameInfo.channel,
 			"protocol/data rate": znifferProtocolDataRateToString(
 				this.frameInfo.protocolDataRate,
@@ -948,7 +948,7 @@ export class BeamStop {
 			"BEAM STOP",
 		];
 
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			channel: this.frameInfo.channel,
 		};
 		return {

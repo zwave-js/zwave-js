@@ -2,10 +2,10 @@ import {
 	CommandClasses,
 	Duration,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -963,7 +963,7 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		for (const { parameter, value } of this.targetValues) {
 			message[getEnumMemberName(WindowCoveringParameter, parameter)] =
 				value;
@@ -1034,7 +1034,7 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			parameter: getEnumMemberName(
 				WindowCoveringParameter,
 				this.parameter,

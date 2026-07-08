@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -230,7 +230,7 @@ export class LanguageCCSet extends LanguageCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = { language: this.language };
+		const message: LogPayloadDictInput = { language: this.language };
 		if (this._country != undefined) {
 			message.country = this._country;
 		}
@@ -289,7 +289,7 @@ export class LanguageCCReport extends LanguageCC {
 	public readonly country: MaybeNotKnown<string>;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = { language: this.language };
+		const message: LogPayloadDictInput = { language: this.language };
 		if (this.country != undefined) {
 			message.country = this.country;
 		}

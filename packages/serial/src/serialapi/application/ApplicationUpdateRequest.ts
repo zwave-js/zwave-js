@@ -3,7 +3,6 @@ import {
 	type CommandClasses,
 	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
-	type MessageRecord,
 	type NodeUpdatePayload,
 	encodeNodeUpdatePayload,
 	getCCName,
@@ -343,7 +342,7 @@ export class ApplicationUpdateRequestSUCIdChanged
 	public sucNodeID: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			type: getEnumMemberName(ApplicationUpdateTypes, this.updateType),
 			"SUC node ID": this.sucNodeID,
 		};

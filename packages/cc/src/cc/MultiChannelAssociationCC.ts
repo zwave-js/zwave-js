@@ -2,11 +2,11 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	type WithAddress,
 	ZWaveError,
@@ -748,7 +748,7 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"group id": this.groupId || "(all groups)",
 		};
 		if (this.nodeIds) {

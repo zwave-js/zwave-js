@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -382,7 +382,7 @@ export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			mode: getEnumMemberName(ThermostatFanMode, this.mode),
 		};
 		return {
@@ -433,7 +433,7 @@ export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 	public readonly off: boolean | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			mode: getEnumMemberName(ThermostatFanMode, this.mode),
 		};
 		if (this.off != undefined) {

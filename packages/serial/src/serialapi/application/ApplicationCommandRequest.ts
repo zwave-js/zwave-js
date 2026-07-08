@@ -1,9 +1,9 @@
 import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type FrameType,
+	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	ZWaveError,
 	ZWaveErrorCodes,
 	encodeNodeID,
@@ -191,7 +191,7 @@ export class ApplicationCommandRequest extends Message
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {};
+		const message: LogPayloadDictInput = {};
 		if (this.frameType !== "singlecast") {
 			message.type = this.frameType;
 		}
