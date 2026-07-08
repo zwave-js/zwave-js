@@ -133,10 +133,6 @@ export class RCPParser extends TransformStream {
 	constructor(
 		logger?: SerialLogger,
 	) {
-		const transformer = new RCPParserTransformer(logger);
-		super(transformer);
-		this.#transformer = transformer;
+		super(new RCPParserTransformer(logger));
 	}
-
-	#transformer: RCPParserTransformer;
 }

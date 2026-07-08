@@ -366,7 +366,7 @@ export class ProtocolController
 				throw new Error(`Unsupported header format ${headerFormat}`);
 		}
 
-		attempts: for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		for (let attempt = 0; attempt < maxAttempts; attempt++) {
 			// Serializing an MPDU changes its payload property, so we set it here
 			// to the original data
 			mpdu.payload = Bytes.view(data);
@@ -683,11 +683,7 @@ export class ProtocolController
 		}
 
 		// Remove all timeouts
-		for (
-			const timeout of [
-				...this.awaitedMPDUs.map((m) => m.timeout),
-			]
-		) {
+		for (const timeout of this.awaitedMPDUs.map((m) => m.timeout)) {
 			timeout?.clear();
 		}
 
