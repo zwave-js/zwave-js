@@ -26,7 +26,12 @@ import {
 	TransmitCallbackStatus,
 	TransmitResponseStatus,
 } from "@zwave-js/serial";
-import { Bytes, TypedEventTarget, setTimer } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	TypedEventTarget,
+	setTimer,
+} from "@zwave-js/shared";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
@@ -194,7 +199,7 @@ export class ProtocolController
 	}
 
 	public async transmitData(
-		data: Uint8Array,
+		data: BytesView,
 		options: MACTransmitOptions,
 	): Promise<MACTransmitResult> {
 		if (this.phyLayer == undefined) {
@@ -362,7 +367,7 @@ export class ProtocolController
 				maxAttempts = 3;
 				break;
 			default:
-				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+				// oxlint-disable-next-line typescript/restrict-template-expressions
 				throw new Error(`Unsupported header format ${headerFormat}`);
 		}
 

@@ -7,7 +7,11 @@ import type {
 	RSSI,
 } from "@zwave-js/core";
 import type { ChannelInfo } from "@zwave-js/serial";
-import type { EventListener, TypedEventTarget } from "@zwave-js/shared";
+import type {
+	BytesView,
+	EventListener,
+	TypedEventTarget,
+} from "@zwave-js/shared";
 
 export interface RegionConfig {
 	region: RFRegion;
@@ -45,7 +49,7 @@ export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
 	): Promise<ChannelInfo[]>;
 
 	/** Transmit an MPDU on the given channel and return the result of this transmit attempt */
-	transmit(mpdu: Uint8Array, channel: number): Promise<TransmitResult>;
+	transmit(mpdu: BytesView, channel: number): Promise<TransmitResult>;
 
 	/** Destroys this PHY layer instance */
 	destroy(): Promise<void>;

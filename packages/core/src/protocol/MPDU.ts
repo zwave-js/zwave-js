@@ -1,6 +1,6 @@
 // oxlint-disable typescript/no-misused-spread
 
-import { Bytes, buffer2hex } from "@zwave-js/shared";
+import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
 import { BeamingInfo, MPDUHeaderType } from "../definitions/Frame.js";
 import {
 	ProtocolDataRate,
@@ -24,7 +24,7 @@ export interface MPDUOptions {
 	ackRequested: boolean;
 	headerType: MPDUHeaderType;
 	sequenceNumber: number;
-	payload?: Uint8Array;
+	payload?: BytesView;
 }
 
 /** Common information shared by all MPDUs */
@@ -80,7 +80,7 @@ export abstract class MPDU {
 							);
 						default:
 							validatePayload.fail(
-								// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+								// oxlint-disable-next-line typescript/restrict-template-expressions
 								`Unsupported explorer frame command ${explorerRaw.command}.`,
 							);
 					}
@@ -89,7 +89,7 @@ export abstract class MPDU {
 					return RoutedZWaveMPDU.from(raw, ctx);
 			}
 			validatePayload.fail(
-				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+				// oxlint-disable-next-line typescript/restrict-template-expressions
 				`Unsupported MPDU header type ${raw.headerType}.`,
 			);
 		}
@@ -1270,7 +1270,7 @@ export class LongRangeMPDU extends MPDU {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line typescript/no-empty-object-type
 export interface SinglecastLongRangeMPDUOptions
 	extends Omit<LongRangeMPDUOptions, "headerType">
 {

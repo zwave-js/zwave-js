@@ -185,7 +185,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	public constructor(
 		private port:
 			| string
-			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			| ZWaveSerialPortImplementation
 			| ZWaveSerialBindingFactory,
 		options: PartialRCPHostOptions = {},
@@ -434,7 +433,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	 */
 	private async serialport_onData(
 		data:
-			| Uint8Array
+			| BytesView
 			| MessageHeaders.ACK
 			| MessageHeaders.NAK,
 	): Promise<void> {
@@ -492,7 +491,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	/** Handles a decoding error and returns the desired reply to the stick */
 	private handleDecodeError(
 		e: Error,
-		_data: Uint8Array,
+		_data: BytesView,
 		_msg: RCPMessage | undefined,
 	): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
@@ -927,7 +926,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	 * Does not wait for an ACK or anything else.
 	 */
 	public async transmit(
-		data: Uint8Array,
+		data: BytesView,
 		channel: number,
 	): Promise<TransmitResponseStatus | TransmitCallbackStatus> {
 		const msg = new TransmitRequest({
