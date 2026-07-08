@@ -15,6 +15,7 @@ import {
 	ZWaveErrorCodes,
 	encodeBitMask,
 	enumValuesToMetadataStates,
+	logList,
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
@@ -1943,15 +1944,16 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 					this.supportsMultipleUserCodeReport,
 				"supports multiple codes in set":
 					this.supportsMultipleUserCodeSet,
-				"supported user id statuses": this.supportedUserIDStatuses
-					.map(
-						(status) =>
-							`\n· ${getEnumMemberName(UserIDStatus, status)}`,
-					)
-					.join(""),
-				"supported keypad modes": this.supportedKeypadModes
-					.map((mode) => `\n· ${getEnumMemberName(KeypadMode, mode)}`)
-					.join(""),
+				"supported user id statuses": logList(
+					this.supportedUserIDStatuses.map((status) =>
+						getEnumMemberName(UserIDStatus, status)
+					),
+				),
+				"supported keypad modes": logList(
+					this.supportedKeypadModes.map((mode) =>
+						getEnumMemberName(KeypadMode, mode)
+					),
+				),
 				"supported ASCII chars": this.supportedASCIIChars,
 			},
 		};

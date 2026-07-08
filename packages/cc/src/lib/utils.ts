@@ -21,6 +21,8 @@ import {
 	isActuatorCC,
 	isLongRangeNodeId,
 	isSensorCC,
+	logDict,
+	logText,
 } from "@zwave-js/core";
 import {
 	ObjectKeyMap,
@@ -786,13 +788,19 @@ export async function configureLifelineAssociations(
 
 	ctx.logNode(node.id, {
 		endpoint: endpoint.index,
-		message: `Checking/assigning lifeline groups: ${
-			lifelineGroups.join(
-				", ",
-			)
-		}
-supports classic associations:       ${!!assocInstance}
-supports multi channel associations: ${!!mcInstance}`,
+		message: logText(
+			`Checking/assigning lifeline groups: ${
+				lifelineGroups.join(
+					", ",
+				)
+			}`,
+			{
+				nested: logDict({
+					"supports classic associations": !!assocInstance,
+					"supports multi channel associations": !!mcInstance,
+				}),
+			},
+		),
 	});
 
 	for (const group of lifelineGroups) {
@@ -833,11 +841,16 @@ supports multi channel associations: ${!!mcInstance}`,
 
 		ctx.logNode(node.id, {
 			endpoint: endpoint.index,
-			message: `Configuring lifeline group #${group}:
-group supports multi channel:  ${groupSupportsMultiChannelAssociation}
-configured strategy:           ${assocConfig?.multiChannel ?? "auto"}
-must use node association:     ${mustUseNodeAssociation}
-must use endpoint association: ${mustUseMultiChannelAssociation}`,
+			message: logText(`Configuring lifeline group #${group}:`, {
+				nested: logDict({
+					"group supports multi channel":
+						groupSupportsMultiChannelAssociation,
+					"configured strategy": assocConfig?.multiChannel ?? "auto",
+					"must use node association": mustUseNodeAssociation,
+					"must use endpoint association":
+						mustUseMultiChannelAssociation,
+				}),
+			}),
 		});
 
 		// Figure out which associations exist and may need to be removed

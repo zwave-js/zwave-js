@@ -10,6 +10,9 @@ import {
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
+	logDict,
+	logList,
+	logText,
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
@@ -214,15 +217,15 @@ export class AlarmSensorCC extends CommandClass {
 		});
 		const supportedSensorTypes = await api.getSupportedSensorTypes();
 		if (supportedSensorTypes) {
-			const logMessage = `received supported sensor types: ${
-				supportedSensorTypes
-					.map((type) => getEnumMemberName(AlarmSensorType, type))
-					.map((name) => `\n· ${name}`)
-					.join("")
-			}`;
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: logMessage,
+				message: logText("received supported sensor types:", {
+					nested: logList(
+						supportedSensorTypes.map((type) =>
+							getEnumMemberName(AlarmSensorType, type)
+						),
+					),
+				}),
 				direction: "inbound",
 			});
 		} else {
@@ -276,19 +279,18 @@ export class AlarmSensorCC extends CommandClass {
 			});
 			const currentValue = await api.get(type);
 			if (currentValue) {
-				let message = `received current value for ${sensorName}: 
-state:    ${currentValue.state}`;
-				if (currentValue.severity != undefined) {
-					message += `
-severity: ${currentValue.severity}`;
-				}
-				if (currentValue.duration != undefined) {
-					message += `
-duration: ${currentValue.duration}`;
-				}
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message,
+					message: logText(
+						`received current value for ${sensorName}:`,
+						{
+							nested: logDict({
+								state: currentValue.state,
+								severity: currentValue.severity,
+								duration: currentValue.duration,
+							}),
+						},
+					),
 					direction: "inbound",
 				});
 			}

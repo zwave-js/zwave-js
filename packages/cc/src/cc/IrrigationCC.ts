@@ -2,6 +2,7 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -14,6 +15,9 @@ import {
 	ZWaveErrorCodes,
 	encodeFloatWithScale,
 	enumValuesToMetadataStates,
+	logDict,
+	logList,
+	logText,
 	parseFloatWithScale,
 	validatePayload,
 } from "@zwave-js/core";
@@ -1149,14 +1153,16 @@ export class IrrigationCC extends CommandClass {
 			});
 			return;
 		}
-		const logMessage = `received irrigation system info:
-supports master valve: ${systemInfo.supportsMasterValve}
-no. of valves:         ${systemInfo.numValves}
-no. of valve tables:   ${systemInfo.numValveTables}
-max. valve table size: ${systemInfo.maxValveTableSize}`;
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
-			message: logMessage,
+			message: logText("received irrigation system info:", {
+				nested: logDict({
+					"supports master valve": systemInfo.supportsMasterValve,
+					"no. of valves": systemInfo.numValves,
+					"no. of valve tables": systemInfo.numValveTables,
+					"max. valve table size": systemInfo.maxValveTableSize,
+				}),
+			}),
 			direction: "inbound",
 		});
 
@@ -1208,31 +1214,35 @@ max. valve table size: ${systemInfo.maxValveTableSize}`;
 		});
 		const systemConfig = await api.getSystemConfig();
 		if (systemConfig) {
-			let logMessage = `received irrigation system configuration:
-master valve delay:       ${systemConfig.masterValveDelay} seconds
-high pressure threshold:  ${systemConfig.highPressureThreshold} kPa
-low pressure threshold:   ${systemConfig.lowPressureThreshold} kPa`;
-			if (systemConfig.rainSensorPolarity != undefined) {
-				logMessage += `
-rain sensor polarity:     ${
-					getEnumMemberName(
-						IrrigationSensorPolarity,
-						systemConfig.rainSensorPolarity,
-					)
-				}`;
-			}
-			if (systemConfig.moistureSensorPolarity != undefined) {
-				logMessage += `
-moisture sensor polarity: ${
-					getEnumMemberName(
-						IrrigationSensorPolarity,
-						systemConfig.moistureSensorPolarity,
-					)
-				}`;
-			}
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: logMessage,
+				message: logText(
+					"received irrigation system configuration:",
+					{
+						nested: logDict({
+							"master valve delay":
+								`${systemConfig.masterValveDelay} seconds`,
+							"high pressure threshold":
+								`${systemConfig.highPressureThreshold} kPa`,
+							"low pressure threshold":
+								`${systemConfig.lowPressureThreshold} kPa`,
+							"rain sensor polarity":
+								systemConfig.rainSensorPolarity != undefined
+									? getEnumMemberName(
+										IrrigationSensorPolarity,
+										systemConfig.rainSensorPolarity,
+									)
+									: undefined,
+							"moisture sensor polarity":
+								systemConfig.moistureSensorPolarity != undefined
+									? getEnumMemberName(
+										IrrigationSensorPolarity,
+										systemConfig.moistureSensorPolarity,
+									)
+									: undefined,
+						}),
+					},
+				),
 				direction: "inbound",
 			});
 		}
@@ -1540,7 +1550,7 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
 	public firstOpenZoneId?: number;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"system voltage": `${this.systemVoltage} V`,
 			"active sensors": [
 				this.flowSensorActive ? "flow" : undefined,
@@ -1574,9 +1584,9 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
 			this.errorValve
 				? "a valve or the master valve has an error"
 				: undefined,
-		].filter(Boolean);
+		].filter((e) => e != undefined);
 		if (errors.length > 0) {
-			message.errors = errors.map((e) => `\n· ${e}`).join("");
+			message.errors = logList(errors);
 		}
 
 		return {
@@ -1956,7 +1966,7 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"valve ID": this.valveId,
 			connected: this.connected,
 			"nominal current": `${this.nominalCurrent} mA`,
@@ -1968,9 +1978,9 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
 			this.errorMaximumFlow ? "maximum flow" : undefined,
 			this.errorHighFlow ? "flow above high threshold" : undefined,
 			this.errorLowFlow ? "flow below low threshold" : undefined,
-		].filter(Boolean);
+		].filter((e) => e != undefined);
 		if (errors.length > 0) {
-			message.errors = errors.map((e) => `\n· ${e}`).join("");
+			message.errors = logList(errors);
 		}
 		return {
 			...super.toLogEntry(ctx),

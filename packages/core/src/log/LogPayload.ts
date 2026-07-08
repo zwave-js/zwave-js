@@ -76,7 +76,7 @@ export function logDict(
 			.filter(([, value]) => value !== undefined)
 			.map(([key, value]) => [
 				key,
-				typeof value === "object" ? value! : String(value),
+				typeof value === "object" ? value : String(value),
 			]),
 		nested,
 	};

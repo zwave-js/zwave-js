@@ -93,6 +93,7 @@ import {
 	Duration,
 	type DurationLike,
 	EncapsulationFlags,
+	type LogNodeOptions,
 	type MaybeNotKnown,
 	MessagePriority,
 	NOT_KNOWN,
@@ -128,6 +129,9 @@ import {
 	isTransmissionError,
 	isUnsupervisedOrSucceeded,
 	isZWaveError,
+	logDict,
+	logList,
+	logText,
 	nonApplicationCCs,
 	normalizeValueID,
 	securityClassIsLongRange,
@@ -537,11 +541,18 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			if (loglevel === "silly") {
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: valueId.endpoint,
-					message:
-						`[setValue] calling SET_VALUE API ${api.constructor.name}:
-  property:     ${valueId.property}
-  property key: ${valueId.propertyKey}
-  optimistic:   ${api.isSetValueOptimistic(valueId)}`,
+					message: logText(
+						`[setValue] calling SET_VALUE API ${api.constructor.name}:`,
+						{
+							nested: logDict({
+								property: valueId.property,
+								"property key": `${valueId.propertyKey}`,
+								optimistic: api.isSetValueOptimistic(
+									valueId,
+								),
+							}),
+						},
+					),
 					level: "silly",
 				});
 			}
@@ -593,22 +604,27 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			);
 
 			if (loglevel === "silly") {
-				let message =
+				const header =
 					`[setValue] result of SET_VALUE API call for ${api.constructor.name}:`;
+				let message: LogNodeOptions["message"];
 				if (result) {
 					if (isSupervisionResult(result)) {
-						message += ` (SupervisionResult)
-  status:   ${getEnumMemberName(SupervisionStatus, result.status)}`;
-						if (result.remainingDuration) {
-							message += `
-  duration: ${result.remainingDuration.toString()}`;
-						}
+						message = logText(`${header} (SupervisionResult)`, {
+							nested: logDict({
+								status: getEnumMemberName(
+									SupervisionStatus,
+									result.status,
+								),
+								duration: result.remainingDuration?.toString(),
+							}),
+						});
 					} else {
-						message += " (other) "
+						message = header
+							+ " (other) "
 							+ JSON.stringify(result, null, 2);
 					}
 				} else {
-					message += " undefined";
+					message = header + " undefined";
 				}
 				this.driver.controllerLog.logNode(this.id, {
 					endpoint: valueId.endpoint,
@@ -1432,15 +1448,15 @@ protocol version:      ${this.protocolVersion}`;
 			});
 			try {
 				const nodeInfo = await this.requestNodeInfo();
-				const logLines: string[] = [
-					"node info received",
-					"supported CCs:",
-				];
-				for (const cc of nodeInfo.supportedCCs) {
-					logLines.push(`· ${getCCName(cc)}`);
-				}
 				this.driver.controllerLog.logNode(this.id, {
-					message: logLines.join("\n"),
+					message: logText(
+						["node info received", "supported CCs:"],
+						{
+							nested: logList(
+								nodeInfo.supportedCCs.map(getCCName),
+							),
+						},
+					),
 					direction: "inbound",
 				});
 				this.updateNodeInfo(nodeInfo);
@@ -1505,12 +1521,15 @@ protocol version:      ${this.protocolVersion}`;
 				ZWaveErrorCodes.Controller_CallbackNOK,
 			);
 		} else if (resp instanceof ApplicationUpdateRequestNodeInfoReceived) {
-			const logLines: string[] = ["node info received", "supported CCs:"];
-			for (const cc of resp.nodeInformation.supportedCCs) {
-				logLines.push(`· ${getCCName(cc)}`);
-			}
 			this.driver.controllerLog.logNode(this.id, {
-				message: logLines.join("\n"),
+				message: logText(
+					["node info received", "supported CCs:"],
+					{
+						nested: logList(
+							resp.nodeInformation.supportedCCs.map(getCCName),
+						),
+					},
+				),
 				direction: "inbound",
 			});
 			return resp.nodeInformation;
@@ -1893,25 +1912,23 @@ protocol version:      ${this.protocolVersion}`;
 			);
 		}
 
-		this.driver.controllerLog.logNode(
-			this.id,
-			`Root device interviews before endpoints: ${
-				rootInterviewOrderBeforeEndpoints
-					.map((cc) => `\n· ${getCCName(cc)}`)
-					.join("")
-			}`,
-			"silly",
-		);
+		this.driver.controllerLog.logNode(this.id, {
+			message: logText("Root device interviews before endpoints:", {
+				nested: logList(
+					rootInterviewOrderBeforeEndpoints.map(getCCName),
+				),
+			}),
+			level: "silly",
+		});
 
-		this.driver.controllerLog.logNode(
-			this.id,
-			`Root device interviews after endpoints: ${
-				rootInterviewOrderAfterEndpoints
-					.map((cc) => `\n· ${getCCName(cc)}`)
-					.join("")
-			}`,
-			"silly",
-		);
+		this.driver.controllerLog.logNode(this.id, {
+			message: logText("Root device interviews after endpoints:", {
+				nested: logList(
+					rootInterviewOrderAfterEndpoints.map(getCCName),
+				),
+			}),
+			level: "silly",
+		});
 
 		// =====================================================================
 		// Discovery phase: endpoints
@@ -2158,11 +2175,12 @@ protocol version:      ${this.protocolVersion}`;
 
 			this.driver.controllerLog.logNode(this.id, {
 				endpoint: endpoint.index,
-				message: `Endpoint ${endpoint.index} interview order: ${
-					endpointInterviewOrder
-						.map((cc) => `\n· ${getCCName(cc)}`)
-						.join("")
-				}`,
+				message: logText(
+					`Endpoint ${endpoint.index} interview order:`,
+					{
+						nested: logList(endpointInterviewOrder.map(getCCName)),
+					},
+				),
 				level: "silly",
 			});
 

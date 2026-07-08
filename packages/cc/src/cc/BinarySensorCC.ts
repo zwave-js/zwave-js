@@ -9,6 +9,8 @@ import {
 	ValueMetadata,
 	type WithAddress,
 	encodeBitMask,
+	logList,
+	logText,
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
@@ -217,17 +219,15 @@ export class BinarySensorCC extends CommandClass {
 			});
 			const supportedSensorTypes = await api.getSupportedSensorTypes();
 			if (supportedSensorTypes) {
-				const logMessage = `received supported sensor types: ${
-					supportedSensorTypes
-						.map((type) =>
-							getEnumMemberName(BinarySensorType, type)
-						)
-						.map((name) => `\n· ${name}`)
-						.join("")
-				}`;
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message: logMessage,
+					message: logText("received supported sensor types:", {
+						nested: logList(
+							supportedSensorTypes.map((type) =>
+								getEnumMemberName(BinarySensorType, type)
+							),
+						),
+					}),
 					direction: "inbound",
 				});
 			} else {

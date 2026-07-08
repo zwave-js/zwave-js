@@ -1,6 +1,7 @@
 import {
 	CommandClasses,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -12,6 +13,9 @@ import {
 	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
 	getCCName,
+	logDict,
+	logList,
+	logText,
 	maybeUnknownToString,
 	parseBitMask,
 	validatePayload,
@@ -260,12 +264,15 @@ export class CentralSceneCC extends CommandClass {
 		});
 		const ccSupported = await api.getSupported();
 		if (ccSupported) {
-			const logMessage = `received supported scenes:
-# of scenes:           ${ccSupported.sceneCount}
-supports slow refresh: ${ccSupported.supportsSlowRefresh}`;
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: logMessage,
+				message: logText("received supported scenes:", {
+					nested: logDict({
+						"# of scenes": ccSupported.sceneCount,
+						"supports slow refresh":
+							ccSupported.supportsSlowRefresh,
+					}),
+				}),
 				direction: "inbound",
 			});
 		} else {
@@ -525,16 +532,16 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"scene count": this.sceneCount,
 			"supports slow refresh": maybeUnknownToString(
 				this.supportsSlowRefresh,
 			),
 		};
 		for (const [scene, keys] of this.supportedKeyAttributes) {
-			message[`supported attributes (scene #${scene})`] = keys
-				.map((k) => `\n· ${getEnumMemberName(CentralSceneKeys, k)}`)
-				.join("");
+			message[`supported attributes (scene #${scene})`] = logList(
+				keys.map((k) => getEnumMemberName(CentralSceneKeys, k)),
+			);
 		}
 		return {
 			...super.toLogEntry(ctx),

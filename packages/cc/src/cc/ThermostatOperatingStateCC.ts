@@ -9,6 +9,7 @@ import {
 	type WithAddress,
 	encodeBitMask,
 	enumValuesToMetadataStates,
+	logList,
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
@@ -332,11 +333,11 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"supported logging types": this.supportedLoggingTypes
-					.map((t) =>
-						`\n· ${getEnumMemberName(ThermostatOperatingState, t)}`
-					)
-					.join(""),
+				"supported logging types": logList(
+					this.supportedLoggingTypes.map((t) =>
+						getEnumMemberName(ThermostatOperatingState, t)
+					),
+				),
 			},
 		};
 	}

@@ -8,6 +8,7 @@ import {
 	ZWaveLoggerBase,
 	formatLogPayload,
 	getDirectionPrefix,
+	logList,
 	logText,
 	tagify,
 	toLogPayload,
@@ -194,8 +195,9 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 	public sendQueue(...queues: TransactionQueue[]): void {
 		if (!this.isSendQueueLogVisible()) return;
 
-		let message = "Send queue:";
+		let firstLine = "Send queue:";
 		let length = 0;
+		const items: string[] = [];
 		for (const queue of queues) {
 			length += queue.length;
 			if (queue.length > 0) {
@@ -216,19 +218,23 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 					const command = containsCC(trns.message)
 						? `: ${trns.message.command.constructor.name}`
 						: "";
-					message += `\n· ${prefix} ${
-						FunctionType[trns.message.functionType]
-					}${command}${postfix} (P: ${
-						getEnumMemberName(MessagePriority, trns.priority)
-					})`;
+					items.push(
+						`${prefix} ${
+							FunctionType[trns.message.functionType]
+						}${command}${postfix} (P: ${
+							getEnumMemberName(MessagePriority, trns.priority)
+						})`,
+					);
 				}
 			} else {
-				message += " (empty)";
+				firstLine += " (empty)";
 			}
 		}
 		this.logger.log({
 			level: SENDQUEUE_LOGLEVEL,
-			message,
+			message: formatLogPayload(
+				logText(firstLine, { nested: logList(items) }),
+			),
 			secondaryTags: `(${length} message${length === 1 ? "" : "s"})`,
 			direction: getDirectionPrefix("none"),
 			context: { source: "driver", direction: "none" },

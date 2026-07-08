@@ -13,6 +13,8 @@ import {
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
+	type LogPayload,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -31,6 +33,9 @@ import {
 	getIntegerLimits,
 	getMinIntegerSize,
 	isConsecutiveArray,
+	logDict,
+	logList,
+	logText,
 	mergeSupervisionResults,
 	parsePartial,
 	stripUndefined,
@@ -1330,7 +1335,7 @@ export class ConfigurationCC extends CommandClass {
 					expectedQueryCount,
 				);
 
-				let logMessage: string;
+				let logMessage: string | LogPayload;
 				if (properties.valueSize === 0) {
 					logMessage =
 						`Parameter #${param} is unsupported. Next parameter: ${nextParameter}`;
@@ -1363,27 +1368,31 @@ export class ConfigurationCC extends CommandClass {
 						}
 					}
 
-					logMessage =
-						`received information for parameter #${param}:`;
-					if (name) {
-						logMessage += `
-parameter name:      ${name}`;
-					}
-					logMessage += `
-value format:        ${
-						getEnumMemberName(
-							ConfigValueFormat,
-							properties.valueFormat,
-						)
-					}
-value size:          ${properties.valueSize} bytes
-min value:           ${properties.minValue?.toString() ?? "undefined"}
-max value:           ${properties.maxValue?.toString() ?? "undefined"}
-default value:       ${properties.defaultValue?.toString() ?? "undefined"}
-is read-only:        ${!!properties.isReadonly}
-is advanced (UI):    ${!!properties.isAdvanced}
-has bulk support:    ${!properties.noBulkSupport}
-alters capabilities: ${!!properties.altersCapabilities}`;
+					logMessage = logText(
+						`received information for parameter #${param}:`,
+						{
+							nested: logDict({
+								"parameter name": name,
+								"value format": getEnumMemberName(
+									ConfigValueFormat,
+									properties.valueFormat,
+								),
+								"value size": `${properties.valueSize} bytes`,
+								"min value": properties.minValue?.toString()
+									?? "undefined",
+								"max value": properties.maxValue?.toString()
+									?? "undefined",
+								"default value":
+									properties.defaultValue?.toString()
+										?? "undefined",
+								"is read-only": !!properties.isReadonly,
+								"is advanced (UI)": !!properties.isAdvanced,
+								"has bulk support": !properties.noBulkSupport,
+								"alters capabilities": !!properties
+									.altersCapabilities,
+							}),
+						},
+					);
 				}
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
@@ -1489,19 +1498,23 @@ alters capabilities: ${!!properties.altersCapabilities}`;
 		if (parametersNeededUpdate.length === 0) return;
 
 		// Log what we're about to do
-		let message =
-			`Applying recommended config parameter values during interview:`;
-		for (const param of parametersNeededUpdate) {
-			const formatterBitMask = param.bitMask
-				? `[0x${num2hex(param.bitMask)}]`
-				: "";
-			const fullParamKey = `${param.parameter}${formatterBitMask}`;
-			message += `\n· #${fullParamKey} => ${param.value}`;
-		}
-
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
-			message,
+			message: logText(
+				"Applying recommended config parameter values during interview:",
+				{
+					nested: logList(
+						parametersNeededUpdate.map((param) => {
+							const formatterBitMask = param.bitMask
+								? `[0x${num2hex(param.bitMask)}]`
+								: "";
+							const fullParamKey =
+								`${param.parameter}${formatterBitMask}`;
+							return `#${fullParamKey} => ${param.value}`;
+						}),
+					),
+				},
+			),
 			direction: "none",
 		});
 
@@ -2411,22 +2424,22 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			handshake: this.handshake,
 			"reset to default": this.resetToDefault,
 			"value size": this.valueSize,
 		};
 		if (this._values.length > 0) {
-			message.values = this._values
-				.map(
+			message.values = logList(
+				this._values.map(
 					(value, i) =>
-						`\n· #${this._parameters[i]}: ${
+						`#${this._parameters[i]}: ${
 							configValueToString(
 								value,
 							)
 						}`,
-				)
-				.join("");
+				),
+			);
 		}
 		return {
 			...super.toLogEntry(ctx),

@@ -1,11 +1,13 @@
 import {
 	BasicDeviceClass,
 	type CommandClasses,
+	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type NodeUpdatePayload,
 	encodeNodeUpdatePayload,
 	getCCName,
+	logList,
 	parseCCList,
 	parseNodeID,
 	parseNodeUpdatePayload,
@@ -271,7 +273,7 @@ class ApplicationUpdateRequestSmartStartHomeIDReceivedBase
 	public readonly supportedCCs: readonly CommandClasses[];
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			type: getEnumMemberName(ApplicationUpdateTypes, this.updateType),
 			"remote node ID": this.remoteNodeId,
 			"NWI home ID": buffer2hex(this.nwiHomeId),
@@ -281,9 +283,9 @@ class ApplicationUpdateRequestSmartStartHomeIDReceivedBase
 			),
 			"generic device class": this.genericDeviceClass,
 			"specific device class": this.specificDeviceClass,
-			"supported CCs": this.supportedCCs
-				.map((cc) => `\n· ${getCCName(cc)}`)
-				.join(""),
+			"supported CCs": logList(
+				this.supportedCCs.map((cc) => getCCName(cc)),
+			),
 		};
 		return {
 			...super.toLogEntry(),

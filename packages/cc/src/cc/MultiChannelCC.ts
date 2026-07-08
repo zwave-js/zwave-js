@@ -19,6 +19,9 @@ import {
 	getCCName,
 	getGenericDeviceClass,
 	getSpecificDeviceClass,
+	logDict,
+	logList,
+	logText,
 	parseApplicationNodeInformation,
 	parseBitMask,
 	validatePayload,
@@ -489,17 +492,19 @@ export class MultiChannelCC extends CommandClass {
 			return this.throwMissingCriticalInterviewResponse();
 		}
 
-		let logMessage = `received response for device endpoints:
-endpoint count (individual): ${multiResponse.individualEndpointCount}
-count is dynamic:            ${multiResponse.isDynamicEndpointCount}
-identical capabilities:      ${multiResponse.identicalCapabilities}`;
-		if (multiResponse.aggregatedEndpointCount != undefined) {
-			logMessage +=
-				`\nendpoint count (aggregated): ${multiResponse.aggregatedEndpointCount}`;
-		}
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
-			message: logMessage,
+			message: logText("received response for device endpoints:", {
+				nested: logDict({
+					"endpoint count (individual)":
+						multiResponse.individualEndpointCount,
+					"count is dynamic": multiResponse.isDynamicEndpointCount,
+					"identical capabilities":
+						multiResponse.identicalCapabilities,
+					"endpoint count (aggregated)":
+						multiResponse.aggregatedEndpointCount,
+				}),
+			}),
 			direction: "inbound",
 		});
 
@@ -644,18 +649,23 @@ identical capabilities:      ${multiResponse.identicalCapabilities}`;
 			const caps = await api.getEndpointCapabilities(endpoint);
 			if (caps) {
 				hasQueriedCapabilities = true;
-				logMessage =
-					`received response for endpoint capabilities (#${endpoint}):
-generic device class:  ${caps.generic.label}
-specific device class: ${caps.specific.label}
-is dynamic end point:  ${caps.isDynamic}
-supported CCs:`;
-				for (const cc of caps.supportedCCs) {
-					logMessage += `\n  · ${getCCName(cc)}`;
-				}
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message: logMessage,
+					message: logText(
+						`received response for endpoint capabilities (#${endpoint}):`,
+						{
+							nested: logDict({
+								"generic device class": caps.generic.label,
+								"specific device class": caps.specific.label,
+								"is dynamic end point": caps.isDynamic,
+								"supported CCs": logList(
+									caps.supportedCCs.map((cc) =>
+										getCCName(cc)
+									),
+								),
+							}),
+						},
+					),
 					direction: "inbound",
 				});
 			} else {
@@ -1041,9 +1051,9 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC
 					this.specificDeviceClass,
 				).label,
 				"is dynamic end point": this.isDynamic,
-				"supported CCs": this.supportedCCs
-					.map((cc) => `\n· ${getCCName(cc)}`)
-					.join(""),
+				"supported CCs": logList(
+					this.supportedCCs.map((cc) => getCCName(cc)),
+				),
 			},
 		};
 	}

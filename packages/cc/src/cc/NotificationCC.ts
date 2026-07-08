@@ -9,6 +9,7 @@ import {
 	type GetSupportedCCVersion,
 	type GetValueDB,
 	type LogNode,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
@@ -35,6 +36,8 @@ import {
 	getNotificationValue,
 	getNotificationValueName,
 	isZWaveError,
+	logList,
+	logText,
 	parseBitMask,
 	timespan,
 	validatePayload,
@@ -664,11 +667,10 @@ export class NotificationCC extends CommandClass {
 				readonly number[]
 			>();
 
-			const logMessage = `received supported notification types:${
-				supportedNotificationNames
-					.map((name) => `\n· ${name}`)
-					.join("")
-			}`;
+			const logMessage = logText(
+				"received supported notification types:",
+				{ nested: logList(supportedNotificationNames) },
+			);
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
@@ -1390,7 +1392,7 @@ export class NotificationCCReport extends NotificationCC {
 	public sequenceNumber: number | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: MessageRecord = {};
+		let message: LogPayloadDictInput = {};
 		if (this.alarmType) {
 			message = {
 				"V1 alarm type": this.alarmType,
@@ -1458,11 +1460,10 @@ export class NotificationCCReport extends NotificationCC {
 			} else if (this.eventParameters instanceof Duration) {
 				message["event parameters"] = this.eventParameters.toString();
 			} else {
-				message["event parameters"] = Object.entries(
-					this.eventParameters,
-				)
-					.map(([param, val]) => `\n  ${param}: ${num2hex(val)}`)
-					.join("");
+				message["event parameters"] = logList(
+					Object.entries(this.eventParameters)
+						.map(([param, val]) => `${param}: ${num2hex(val)}`),
+				);
 			}
 		} else if (
 			valueConfig?.parameter?.type === "enum"
@@ -1879,11 +1880,11 @@ export class NotificationCCSupportedReport extends NotificationCC {
 			...super.toLogEntry(ctx),
 			message: {
 				"supports V1 alarm": this.supportsV1Alarm,
-				"supported notification types": this.supportedNotificationTypes
-					.map(
-						(t) => `\n· ${getNotificationName(t)}`,
-					)
-					.join(""),
+				"supported notification types": logList(
+					this.supportedNotificationTypes.map(
+						(t) => getNotificationName(t),
+					),
+				),
 			},
 		};
 	}
@@ -2020,17 +2021,15 @@ export class NotificationCCEventSupportedReport extends NotificationCC {
 			...super.toLogEntry(ctx),
 			message: {
 				"notification type": getNotificationName(this.notificationType),
-				"supported events": this.supportedEvents
-					.map(
+				"supported events": logList(
+					this.supportedEvents.map(
 						(e) =>
-							`\n· ${
-								getNotificationValueName(
-									this.notificationType,
-									e,
-								)
-							}`,
-					)
-					.join(""),
+							getNotificationValueName(
+								this.notificationType,
+								e,
+							),
+					),
+				),
 			},
 		};
 	}

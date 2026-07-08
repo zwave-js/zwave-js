@@ -8,6 +8,7 @@ import {
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
+	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
@@ -27,6 +28,9 @@ import {
 	getMeterName,
 	getMeterScale,
 	getUnknownMeterScale,
+	logDict,
+	logList,
+	logText,
 	parseBitMask,
 	parseFloatWithScale,
 	timespan,
@@ -655,28 +659,26 @@ export class MeterCC extends CommandClass {
 
 			const suppResp = await api.getSupported();
 			if (suppResp) {
-				const logMessage = `received meter support:
-type:                 ${getMeterName(suppResp.type)}
-supported scales:     ${
-					suppResp.supportedScales
-						.map(
-							(s) =>
-								(getMeterScale(suppResp.type, s)
-									?? getUnknownMeterScale(s)).label,
-						)
-						.map((label) => `\n· ${label}`)
-						.join("")
-				}
-supported rate types: ${
-					suppResp.supportedRateTypes
-						.map((rt) => getEnumMemberName(RateType, rt))
-						.map((label) => `\n· ${label}`)
-						.join("")
-				}
-supports reset:       ${suppResp.supportsReset}`;
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message: logMessage,
+					message: logText("received meter support:", {
+						nested: logDict({
+							type: getMeterName(suppResp.type),
+							"supported scales": logList(
+								suppResp.supportedScales.map(
+									(s) =>
+										(getMeterScale(suppResp.type, s)
+											?? getUnknownMeterScale(s)).label,
+								),
+							),
+							"supported rate types": logList(
+								suppResp.supportedRateTypes.map((rt) =>
+									getEnumMemberName(RateType, rt)
+								),
+							),
+							"supports reset": suppResp.supportsReset,
+						}),
+					}),
 					direction: "inbound",
 				});
 			} else {
@@ -1362,15 +1364,16 @@ export class MeterCCSupportedReport extends MeterCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: MessageRecord = {
+		const message: LogPayloadDictInput = {
 			"meter type": getMeterName(this.type),
 			"supports reset": this.supportsReset,
-			"supported scales": this.supportedScales
-				.map(
-					(scale) => `
-· ${(getMeterScale(this.type, scale) ?? getUnknownMeterScale(scale)).label}`,
-				)
-				.join(""),
+			"supported scales": logList(
+				this.supportedScales.map(
+					(scale) =>
+						(getMeterScale(this.type, scale)
+							?? getUnknownMeterScale(scale)).label,
+				),
+			),
 			"supported rate types": this.supportedRateTypes
 				.map((rt) => getEnumMemberName(RateType, rt))
 				.join(", "),

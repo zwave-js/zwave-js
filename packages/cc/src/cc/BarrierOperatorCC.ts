@@ -15,6 +15,8 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
+	logList,
+	logText,
 	maybeUnknownToString,
 	parseBitMask,
 	validatePayload,
@@ -455,13 +457,11 @@ export class BarrierOperatorCC extends CommandClass {
 		const resp = await api.getSignalingCapabilities();
 		if (resp) {
 			ctx.logNode(node.id, {
-				message: `Received supported subsystem types: ${
-					resp
-						.map((t) =>
-							`\n· ${getEnumMemberName(SubsystemType, t)}`
-						)
-						.join("")
-				}`,
+				message: logText("Received supported subsystem types:", {
+					nested: logList(
+						resp.map((t) => getEnumMemberName(SubsystemType, t)),
+					),
+				}),
 				direction: "inbound",
 			});
 
@@ -737,9 +737,11 @@ export class BarrierOperatorCCSignalingCapabilitiesReport
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"supported types": this.supportedSubsystemTypes
-					.map((t) => `\n· ${getEnumMemberName(SubsystemType, t)}`)
-					.join(""),
+				"supported types": logList(
+					this.supportedSubsystemTypes.map((t) =>
+						getEnumMemberName(SubsystemType, t)
+					),
+				),
 			},
 		};
 	}
