@@ -244,7 +244,6 @@ export class ZWaveMPDU implements MPDU {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
-		// eslint-disable-next-line prefer-const
 		let destinationOffset = 8;
 		const frameControl = data.subarray(5, 7);
 		switch (options.frameInfo.channel) {

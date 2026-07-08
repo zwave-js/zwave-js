@@ -1,5 +1,5 @@
 import type { MessageOrCCLogEntry } from "@zwave-js/core";
-import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -40,7 +40,7 @@ export enum TransmitCallbackStatus {
 
 export interface TransmitRequestOptions {
 	channel: number;
-	data: Uint8Array;
+	data: BytesView;
 }
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.Transmit)
@@ -58,7 +58,7 @@ export class TransmitRequest extends RCPMessage {
 	}
 
 	public channel: number;
-	public data: Uint8Array;
+	public data: BytesView;
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([

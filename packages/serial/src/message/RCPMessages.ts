@@ -7,6 +7,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	type BytesView,
 	type TypedClassDecorator,
 	staticExtends,
 } from "@zwave-js/shared";
@@ -39,18 +40,18 @@ export interface RCPMessageOptions extends RCPMessageBaseOptions {
 	payload?: Bytes;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line typescript/no-empty-object-type
 export interface RCPMessageParsingContext {
 	// Intentionally empty
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line typescript/no-empty-object-type
 export interface RCPMessageEncodingContext {
 	// Intentionally empty
 }
 
 /** Returns the number of bytes the first message in the buffer occupies */
-function getMessageLength(data: Uint8Array): number {
+function getMessageLength(data: BytesView): number {
 	const remainingLength = data[1];
 	return remainingLength + 2;
 }
@@ -62,7 +63,7 @@ export class RCPMessageRaw {
 		public readonly payload: Bytes,
 	) {}
 
-	public static parse(data: Uint8Array): RCPMessageRaw {
+	public static parse(data: BytesView): RCPMessageRaw {
 		// SOF, length, type, commandId and checksum must be present
 		if (!data.length || data.length < 5) {
 			throw new ZWaveError(
@@ -148,7 +149,7 @@ export class RCPMessage {
 	}
 
 	public static parse(
-		data: Uint8Array,
+		data: BytesView,
 		ctx: RCPMessageParsingContext,
 	): RCPMessage {
 		const raw = RCPMessageRaw.parse(data);
@@ -162,7 +163,7 @@ export class RCPMessage {
 	/** Creates an instance of the message that is serialized in the given buffer */
 	public static from(
 		raw: RCPMessageRaw,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// oxlint-disable-next-line no-unused-vars
 		ctx: RCPMessageParsingContext,
 	): RCPMessage {
 		return new this({
@@ -228,7 +229,7 @@ export class RCPMessage {
 	/**
 	 * Serializes this message into a Buffer
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
+	// oxlint-disable-next-line no-unused-vars, @typescript-eslint/require-await
 	public async serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
 		const ret = new Bytes(this.payload.length + 5);
 		ret[0] = MessageHeaders.SOF;
@@ -351,7 +352,7 @@ export class RCPMessage {
 }
 
 /** Computes the checksum for a serialized message as defined in the Z-Wave specs */
-function computeChecksum(message: Uint8Array): number {
+function computeChecksum(message: BytesView): number {
 	let ret = 0xff;
 	// exclude SOF and checksum byte from the computation
 	for (let i = 1; i < message.length - 1; i++) {

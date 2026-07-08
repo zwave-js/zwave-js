@@ -1,4 +1,5 @@
 import type { MessageOrCCLogEntry, RSSI } from "@zwave-js/core";
+import type { BytesView } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -9,7 +10,7 @@ import {
 } from "../../message/RCPMessages.js";
 
 export interface ReceiveCallbackOptions {
-	data: Uint8Array;
+	data: BytesView;
 	rssi: RSSI;
 	lqi: number;
 	channel: number;
@@ -47,7 +48,7 @@ export class ReceiveCallback extends RCPMessage {
 		});
 	}
 
-	public data: Uint8Array;
+	public data: BytesView;
 	public rssi: RSSI;
 	public lqi: number;
 	public channel: number;
