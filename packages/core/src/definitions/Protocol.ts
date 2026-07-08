@@ -200,16 +200,19 @@ export function getProtocolHeaderFormat(
 	mode: RadioProtocolMode,
 	channel: number,
 ): ProtocolHeaderFormat {
-	switch (mode) {
-		case RadioProtocolMode.Classic2Channel:
-			return ProtocolHeaderFormat.Classic2Channel;
-		case RadioProtocolMode.Classic3Channel:
-			return ProtocolHeaderFormat.Classic3Channel;
-		case RadioProtocolMode.Classic2ChannelPlusLongRange:
-			return channel >= 3
-				? ProtocolHeaderFormat.LongRange
-				: ProtocolHeaderFormat.Classic2Channel;
-		case RadioProtocolMode.LongRange2Channel:
-			return ProtocolHeaderFormat.LongRange;
+	if (mode === RadioProtocolMode.LongRange2Channel) {
+		return ProtocolHeaderFormat.LongRange;
 	}
+	if (
+		mode === RadioProtocolMode.Classic2ChannelPlusLongRange
+		&& channel >= 3
+	) {
+		return ProtocolHeaderFormat.LongRange;
+	}
+	// The header format follows the channel, not the region: channels 0/1
+	// carry 100k/40k frames with the 2-channel header format, channel 2
+	// carries 9.6k frames with the 3-channel header format
+	return channel === 2
+		? ProtocolHeaderFormat.Classic3Channel
+		: ProtocolHeaderFormat.Classic2Channel;
 }

@@ -248,8 +248,7 @@ export class ZWaveMPDU implements MPDU {
 		const frameControl = data.subarray(5, 7);
 		switch (options.frameInfo.channel) {
 			case 0:
-			case 1:
-			case 2: {
+			case 1: {
 				this.routed = !!(frameControl[0] & 0b1000_0000);
 				this.ackRequested = !!(frameControl[0] & 0b0100_0000);
 				this.lowPower = !!(frameControl[0] & 0b0010_0000);
@@ -259,19 +258,17 @@ export class ZWaveMPDU implements MPDU {
 				this.sequenceNumber = frameControl[1] & 0b0000_1111;
 				break;
 			}
-			// FIXME: The following is for channel CONFIGURATION 3,
-			// not CHANNEL 2
-			// case 2: {
-			// 	this.routed = false;
-			// 	this.ackRequested = !!(frameControl[0] & 0b1000_0000);
-			// 	this.lowPower = !!(frameControl[0] & 0b0100_0000);
-			// 	this.speedModified = false;
-			// 	this.headerType = frameControl[0] & 0b0000_1111;
-			// 	this.beamingInfo = frameControl[1] & 0b0111_0000;
-			// 	this.sequenceNumber = data[destinationOffset];
-			// 	destinationOffset++;
-			// 	break;
-			// }
+			case 2: {
+				this.routed = false;
+				this.ackRequested = !!(frameControl[0] & 0b1000_0000);
+				this.lowPower = !!(frameControl[0] & 0b0100_0000);
+				this.speedModified = false;
+				this.headerType = frameControl[0] & 0b0000_1111;
+				this.beamingInfo = frameControl[1] & 0b0111_0000;
+				this.sequenceNumber = data[destinationOffset];
+				destinationOffset++;
+				break;
+			}
 			case 3:
 			case 4: {
 				validatePayload.fail(
