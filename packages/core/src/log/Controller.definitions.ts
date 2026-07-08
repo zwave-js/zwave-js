@@ -1,4 +1,5 @@
 import type { InterviewStage, ValueID } from "../index_browser.js";
+import type { LogPayload, LogPayloadDictInput } from "./LogPayload.js";
 import type { DataDirection, LogContext } from "./shared.js";
 
 export const CONTROLLER_LABEL = "CNTRLR";
@@ -6,7 +7,7 @@ export const CONTROLLER_LOGLEVEL = "info";
 export const VALUE_LOGLEVEL = "debug";
 
 export interface LogNodeOptions {
-	message: string;
+	message: string | LogPayload | LogPayloadDictInput;
 	level?: "silly" | "debug" | "verbose" | "warn" | "error";
 	direction?: DataDirection;
 	endpoint?: number;

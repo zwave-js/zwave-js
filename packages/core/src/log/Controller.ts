@@ -21,6 +21,7 @@ import {
 	VALUE_LOGLEVEL,
 } from "./Controller.definitions.js";
 import { ZWaveLoggerBase } from "./ZWaveLoggerBase.js";
+import { formatLogPayload } from "./formatPayload.js";
 import { getDirectionPrefix, getNodeTag, tagify } from "./shared.js";
 import type { LogContainer } from "./traits.js";
 
@@ -100,7 +101,9 @@ export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext>
 		this.logger.log({
 			level: actualLevel,
 			primaryTags: tagify([getNodeTag(nodeId)]),
-			message,
+			message: typeof message === "string"
+				? message
+				: formatLogPayload(message),
 			secondaryTags: endpoint
 				? tagify([`Endpoint ${endpoint}`])
 				: undefined,

@@ -1,7 +1,7 @@
 import {
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
+	mergeLogDict,
 	validatePayload,
 } from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
@@ -118,15 +118,17 @@ export class FirmwareUpdateNVMRequest extends Message {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			command: getEnumMemberName(FirmwareUpdateNVMCommand, this.command),
-		};
-		if (this.payload.length > 0) {
-			message.payload = `0x${this.payload.toString("hex")}`;
-		}
 		return {
 			...super.toLogEntry(),
-			message,
+			message: {
+				command: getEnumMemberName(
+					FirmwareUpdateNVMCommand,
+					this.command,
+				),
+				payload: this.payload.length > 0
+					? `0x${this.payload.toString("hex")}`
+					: undefined,
+			},
 		};
 	}
 }
@@ -171,15 +173,17 @@ export class FirmwareUpdateNVMResponse extends Message {
 	public command: FirmwareUpdateNVMCommand;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			command: getEnumMemberName(FirmwareUpdateNVMCommand, this.command),
-		};
-		if (this.payload.length > 0) {
-			message.payload = `0x${this.payload.toString("hex")}`;
-		}
 		return {
 			...super.toLogEntry(),
-			message,
+			message: {
+				command: getEnumMemberName(
+					FirmwareUpdateNVMCommand,
+					this.command,
+				),
+				payload: this.payload.length > 0
+					? `0x${this.payload.toString("hex")}`
+					: undefined,
+			},
 		};
 	}
 }
@@ -217,11 +221,14 @@ export class FirmwareUpdateNVM_InitResponse extends FirmwareUpdateNVMResponse {
 	public readonly supported: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["FW update supported"] = this.supported;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"FW update supported": this.supported,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -265,11 +272,14 @@ export class FirmwareUpdateNVM_SetNewImageRequest
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["new image"] = this.newImage;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"new image": this.newImage,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -305,11 +315,14 @@ export class FirmwareUpdateNVM_SetNewImageResponse
 	public readonly changed: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.changed = this.changed;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				changed: this.changed,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -352,11 +365,14 @@ export class FirmwareUpdateNVM_GetNewImageResponse
 	public readonly newImage: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["new image"] = this.newImage;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"new image": this.newImage,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -419,13 +435,16 @@ export class FirmwareUpdateNVM_UpdateCRC16Request
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.offset = num2hex(this.offset);
-		message["block length"] = this.blockLength;
-		message["CRC seed"] = num2hex(this.crcSeed);
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				offset: num2hex(this.offset),
+				"block length": this.blockLength,
+				"CRC seed": num2hex(this.crcSeed),
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -462,11 +481,14 @@ export class FirmwareUpdateNVM_UpdateCRC16Response
 	public readonly crc16: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["CRC-16"] = num2hex(this.crc16);
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"CRC-16": num2hex(this.crc16),
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -515,11 +537,14 @@ export class FirmwareUpdateNVM_IsValidCRC16Response
 	public readonly isValid: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["CRC-16 valid"] = this.isValid;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"CRC-16 valid": this.isValid,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -568,16 +593,19 @@ export class FirmwareUpdateNVM_WriteRequest extends FirmwareUpdateNVMRequest {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.offset = num2hex(this.offset);
-		if (this.buffer.length > 0) {
-			message.buffer = `(${this.buffer.length} byte${
-				this.buffer.length === 1 ? "" : "s"
-			})`;
-		}
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				offset: num2hex(this.offset),
+				buffer: this.buffer.length > 0
+					? `(${this.buffer.length} byte${
+						this.buffer.length === 1 ? "" : "s"
+					})`
+					: undefined,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -609,10 +637,13 @@ export class FirmwareUpdateNVM_WriteResponse extends FirmwareUpdateNVMResponse {
 	public readonly overwritten: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.overwritten = this.overwritten;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				overwritten: this.overwritten,
+				payload: undefined,
+			}),
+		};
 	}
 }

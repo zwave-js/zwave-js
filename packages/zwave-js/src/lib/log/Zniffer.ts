@@ -1,19 +1,18 @@
-import {
-	type CommandClass,
-	isEncapsulatingCommandClass,
-	isMultiEncapsulatingCommandClass,
-} from "@zwave-js/cc";
+import { type CommandClass, ccToLogPayload } from "@zwave-js/cc";
 import {
 	type DataDirection,
 	type LogContainer,
 	type LogContext,
+	type LogPayload,
 	type MessageOrCCLogEntry,
 	type RSSI,
 	ZWaveLoggerBase,
+	formatLogPayload,
 	getDirectionPrefix,
-	messageRecordToLines,
+	logText,
 	rssiToString,
 	tagify,
+	toLogPayload,
 	znifferProtocolDataRateToString,
 } from "@zwave-js/core";
 import type { ZnifferDataMessage } from "@zwave-js/serial";
@@ -85,12 +84,10 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 			},
 		};
 
-		const msg: string[] = [tagify(logEntry.tags)];
-		msg.push(
-			...messageRecordToLines(logEntry.message!).map(
-				(line) => "  " + line,
-			),
-		);
+		const msg = formatLogPayload(logText([], {
+			tags: logEntry.tags,
+			nested: toLogPayload(logEntry.message!),
+		}));
 
 		try {
 			// If possible, include information about the CCs
@@ -109,55 +106,32 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 	): void {
 		if (!this.isLogVisible()) return;
 
-		const hasPayload = !!payloadCC || mpdu.payload.length > 0;
 		const logEntry = mpdu.toLogEntry();
 
-		let msg: string[] = [tagify(logEntry.tags)];
+		const nested: LogPayload[] = [];
 		if (logEntry.message) {
-			msg.push(
-				...messageRecordToLines(logEntry.message).map(
-					(line) => (hasPayload ? "│ " : "  ") + line,
-				),
-			);
+			let messagePayload = toLogPayload(logEntry.message);
+			// The raw payload is superseded by the rendered CC tree
+			if (payloadCC && messagePayload.type === "dict") {
+				messagePayload = {
+					...messagePayload,
+					entries: messagePayload.entries.filter(
+						([key]) => key !== "payload",
+					),
+				};
+			}
+			nested.push(messagePayload);
 		}
 
 		try {
 			// If possible, include information about the CCs
-			if (!!payloadCC) {
-				// Remove the default payload message and draw a bracket
-				msg = msg.filter((line) => !line.startsWith("│ payload:"));
-
-				const logCC = (cc: CommandClass, indent: number = 0) => {
-					const isEncapCC = isEncapsulatingCommandClass(cc)
-						|| isMultiEncapsulatingCommandClass(cc);
-					const loggedCC = cc.toLogEntry(this.zniffer as any);
-					msg.push(
-						" ".repeat(indent * 2) + "└─" + tagify(loggedCC.tags),
-					);
-
-					indent++;
-					if (loggedCC.message) {
-						msg.push(
-							...messageRecordToLines(loggedCC.message).map(
-								(line) =>
-									`${" ".repeat(indent * 2)}${
-										isEncapCC ? "│ " : "  "
-									}${line}`,
-							),
-						);
-					}
-					// If this is an encap CC, continue
-					if (isEncapsulatingCommandClass(cc)) {
-						logCC(cc.encapsulated, indent);
-					} else if (isMultiEncapsulatingCommandClass(cc)) {
-						for (const encap of cc.encapsulated) {
-							logCC(encap, indent);
-						}
-					}
-				};
-
-				logCC(payloadCC);
+			if (payloadCC) {
+				nested.push(ccToLogPayload(payloadCC, this.zniffer as any));
 			}
+
+			const msg = formatLogPayload(
+				logText([], { tags: logEntry.tags, nested }),
+			);
 
 			const homeId = mpdu.homeId.toString(16).padStart(8, "0")
 				.toLowerCase();
@@ -179,14 +153,10 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 
 		const logEntry = beam.toLogEntry();
 
-		const msg: string[] = [tagify(logEntry.tags)];
-		if (logEntry.message) {
-			msg.push(
-				...messageRecordToLines(logEntry.message).map(
-					(line) => ("  ") + line,
-				),
-			);
-		}
+		const msg = formatLogPayload(logText([], {
+			tags: logEntry.tags,
+			nested: logEntry.message && toLogPayload(logEntry.message),
+		}));
 
 		try {
 			// If possible, include information about the CCs

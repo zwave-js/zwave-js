@@ -17,6 +17,8 @@ import {
 	type HostIDs,
 	type ListenBehavior,
 	type LogNode,
+	type LogPayload,
+	type LogPayloadText,
 	type MessageOrCCLogEntry,
 	type MessagePriority,
 	type MessageRecord,
@@ -38,7 +40,9 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	isZWaveError,
+	logText,
 	parseCCId,
+	toLogPayload,
 	valueIdToString,
 } from "@zwave-js/core";
 import {
@@ -1199,6 +1203,26 @@ export class InvalidCC extends CommandClass {
 				: undefined,
 		};
 	}
+}
+
+/** Renders a CC and its encapsulated CC(s) into a tree-shaped log payload */
+export function ccToLogPayload(
+	cc: CommandClass,
+	ctx?: GetValueDB,
+): LogPayloadText {
+	const entry = cc.toLogEntry(ctx);
+	const nested: LogPayload[] = [];
+	if (entry.message) {
+		nested.push(toLogPayload(entry.message));
+	}
+	if (isEncapsulatingCommandClass(cc)) {
+		nested.push(ccToLogPayload(cc.encapsulated, ctx));
+	} else if (isMultiEncapsulatingCommandClass(cc)) {
+		for (const encap of cc.encapsulated) {
+			nested.push(ccToLogPayload(encap, ctx));
+		}
+	}
+	return logText([], { tags: entry.tags, nested });
 }
 
 export type CCConstructor<T extends CommandClass> = typeof CommandClass & {

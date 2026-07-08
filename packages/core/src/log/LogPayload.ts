@@ -97,3 +97,38 @@ export function toLogPayload(
 ): LogPayload {
 	return isLogPayload(message) ? message : logDict(message);
 }
+
+/**
+ * Merges additional entries into a dict payload, e.g. one inherited from a base class.
+ * Entries with `undefined` values are removed from the result.
+ */
+export function mergeLogDict(
+	base: LogPayload | LogPayloadDictInput | undefined,
+	extra: LogPayloadDictInput,
+): LogPayloadDict {
+	const dict = base == undefined
+		? logDict({})
+		: toLogPayload(base);
+	if (dict.type !== "dict") {
+		throw new Error("mergeLogDict requires a dict payload as the base");
+	}
+
+	const entries = [...dict.entries];
+	for (const [key, value] of Object.entries(extra)) {
+		const index = entries.findIndex(([k]) => k === key);
+		if (value === undefined) {
+			if (index >= 0) entries.splice(index, 1);
+			continue;
+		}
+		const entry: (typeof entries)[number] = [
+			key,
+			typeof value === "object" ? value : String(value),
+		];
+		if (index >= 0) {
+			entries[index] = entry;
+		} else {
+			entries.push(entry);
+		}
+	}
+	return { ...dict, entries };
+}
