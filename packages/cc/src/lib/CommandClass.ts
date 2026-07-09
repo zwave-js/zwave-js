@@ -18,10 +18,10 @@ import {
 	type ListenBehavior,
 	type LogNode,
 	type LogPayload,
-	type LogPayloadDictInput,
 	type LogPayloadText,
 	type MessageOrCCLogEntry,
 	type MessagePriority,
+	type MessageRecord,
 	type ModifyCCs,
 	type MulticastCC,
 	type MulticastDestination,
@@ -40,6 +40,7 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	isZWaveError,
+	logBuffer,
 	logText,
 	parseCCId,
 	toLogPayload,
@@ -417,7 +418,7 @@ export class CommandClass implements CCId {
 	/** Generates a representation of this CC for the log */
 	public toLogEntry(_ctx?: GetValueDB): MessageOrCCLogEntry {
 		let tag = this.constructor.name;
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		if (this.constructor === CommandClass) {
 			tag = `${
 				getEnumMemberName(
@@ -429,9 +430,7 @@ export class CommandClass implements CCId {
 				message.command = num2hex(this.ccCommand);
 			}
 		}
-		if (this.payload.length > 0) {
-			message.payload = buffer2hex(this.payload);
-		}
+		message.payload = logBuffer(this.payload);
 		return {
 			tags: [tag],
 			message,

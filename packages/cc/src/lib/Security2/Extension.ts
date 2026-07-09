@@ -1,8 +1,9 @@
 import {
-	type LogPayloadDictInput,
 	type LogPayloadText,
+	type MessageRecord,
 	ZWaveError,
 	ZWaveErrorCodes,
+	logBuffer,
 	logDict,
 	logText,
 	validatePayload,
@@ -233,11 +234,9 @@ export class Security2Extension {
 		});
 	}
 
-	protected toLogEntryDict(): LogPayloadDictInput {
+	protected toLogEntryDict(): MessageRecord {
 		return {
-			payload: this.payload.length > 0
-				? buffer2hex(this.payload)
-				: undefined,
+			payload: logBuffer(this.payload),
 		};
 	}
 }
@@ -283,7 +282,7 @@ export class SPANExtension extends Security2Extension {
 		return super.serialize(moreToFollow);
 	}
 
-	protected toLogEntryDict(): LogPayloadDictInput {
+	protected toLogEntryDict(): MessageRecord {
 		return {
 			"sender EI": buffer2hex(this.senderEI),
 		};
@@ -341,7 +340,7 @@ export class MPANExtension extends Security2Extension {
 		return super.serialize(moreToFollow);
 	}
 
-	protected toLogEntryDict(): LogPayloadDictInput {
+	protected toLogEntryDict(): MessageRecord {
 		const mpanState = process.env.NODE_ENV === "test"
 				|| process.env.NODE_ENV === "development"
 			? buffer2hex(this.innerMPANState)
@@ -386,7 +385,7 @@ export class MGRPExtension extends Security2Extension {
 		return super.serialize(moreToFollow);
 	}
 
-	protected toLogEntryDict(): LogPayloadDictInput {
+	protected toLogEntryDict(): MessageRecord {
 		return {
 			"group ID": this.groupId,
 		};

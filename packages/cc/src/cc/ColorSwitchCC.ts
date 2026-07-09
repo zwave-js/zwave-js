@@ -2,10 +2,10 @@ import {
 	CommandClasses,
 	Duration,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type SupervisionResult,
 	type ValueDB,
 	type ValueID,
@@ -891,7 +891,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"color component": getEnumMemberName(
 				ColorComponent,
 				this.colorComponent,
@@ -1071,7 +1071,7 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		for (const [key, value] of Object.entries(this.colorTable)) {
 			const realKey: string = key in ColorComponentMap
 				? (ColorComponent as any)[(ColorComponentMap as any)[key]]
@@ -1179,7 +1179,7 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"color component": getEnumMemberName(
 				ColorComponent,
 				this.colorComponent,

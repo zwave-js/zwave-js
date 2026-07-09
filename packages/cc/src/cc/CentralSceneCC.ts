@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -380,7 +380,7 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 	public readonly slowRefresh: boolean | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"sequence number": this.sequenceNumber,
 			"key attribute": getEnumMemberName(
 				CentralSceneKeys,
@@ -531,7 +531,7 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"scene count": this.sceneCount,
 			"supports slow refresh": maybeUnknownToString(
 				this.supportsSlowRefresh,

@@ -2,9 +2,9 @@ import {
 	CommandClasses,
 	Duration,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
+	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -397,7 +397,7 @@ export class SceneActuatorConfigurationCCSet
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			sceneId: this.sceneId,
 			dimmingDuration: this.dimmingDuration.toString(),
 		};
@@ -489,7 +489,7 @@ export class SceneActuatorConfigurationCCReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			sceneId: this.sceneId,
 		};
 		if (this.dimmingDuration != undefined) {

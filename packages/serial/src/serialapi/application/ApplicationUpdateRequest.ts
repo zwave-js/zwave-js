@@ -1,8 +1,8 @@
 import {
 	BasicDeviceClass,
 	type CommandClasses,
-	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
+	type MessageRecord,
 	type NodeUpdatePayload,
 	encodeNodeUpdatePayload,
 	getCCName,
@@ -272,7 +272,7 @@ class ApplicationUpdateRequestSmartStartHomeIDReceivedBase
 	public readonly supportedCCs: readonly CommandClasses[];
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			type: getEnumMemberName(ApplicationUpdateTypes, this.updateType),
 			"remote node ID": this.remoteNodeId,
 			"NWI home ID": buffer2hex(this.nwiHomeId),
@@ -342,7 +342,7 @@ export class ApplicationUpdateRequestSUCIdChanged
 	public sucNodeID: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			type: getEnumMemberName(ApplicationUpdateTypes, this.updateType),
 			"SUC node ID": this.sucNodeID,
 		};

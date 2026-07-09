@@ -1,8 +1,8 @@
 import {
 	type LogPayload,
 	type LogPayloadDict,
-	type LogPayloadDictInput,
 	type LogPayloadText,
+	type MessageRecord,
 	toLogPayload,
 } from "./LogPayload.js";
 import { tagify } from "./shared.js";
@@ -11,7 +11,7 @@ const INDENT = "  ";
 
 /** Renders a log payload into the individual lines of a log message */
 export function formatLogPayload(
-	payload: LogPayload | LogPayloadDictInput,
+	payload: LogPayload | MessageRecord,
 ): string[] {
 	const ret: string[] = [];
 	renderPayload(toLogPayload(payload), 0, false, ret);

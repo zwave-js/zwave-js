@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	ValueMetadata,
 	type WithAddress,
 	encodeBitMask,
@@ -452,7 +452,7 @@ export class ThermostatOperatingStateCCLoggingReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"reports to follow": this.reportsToFollow,
 		};
 		for (const [state, entry] of this.loggingData) {

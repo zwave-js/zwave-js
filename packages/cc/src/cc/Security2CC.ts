@@ -3,11 +3,11 @@ import {
 	EncapsulationFlags,
 	type GetNode,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	MPANState,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type MulticastDestination,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
@@ -1997,7 +1997,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"sequence number": this.sequenceNumber ?? "(not set)",
 		};
 		// Log the used keys in integration tests
@@ -2154,7 +2154,7 @@ export class Security2CCNonceReport extends Security2CC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"sequence number": this.sequenceNumber ?? "(not set)",
 			SOS: this.SOS,
 			MOS: this.MOS,

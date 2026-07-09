@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	SecurityClass,
 	ValueMetadata,
 	type WithAddress,
@@ -768,7 +768,7 @@ export class VersionCCReport extends VersionCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"library type": getEnumMemberName(
 				ZWaveLibraryTypes,
 				this.libraryType,
@@ -1082,7 +1082,7 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
 	public readonly applicationBuildNumber: number;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"SDK version": this.sdkVersion,
 		};
 		message["appl. framework API version"] =

@@ -86,7 +86,6 @@ import {
 	deriveTempKeys,
 	dskFromString,
 	dskToString,
-	formatLogPayload,
 	generateECDHKeyPair,
 	getChipTypeAndVersion,
 	getHighestSecurityClass,
@@ -1094,21 +1093,19 @@ export class ZWaveController
 		this._productId = apiCaps.productId;
 		this._supportedFunctionTypes = apiCaps.supportedFunctionTypes;
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText("received API capabilities:", {
-					nested: logDict({
-						"firmware version": this._firmwareVersion,
-						"manufacturer ID": num2hex(this._manufacturerId),
-						"product type": num2hex(this._productType),
-						"product ID": num2hex(this._productId),
-						"supported functions": logList(
-							this._supportedFunctionTypes.map(
-								(fn) => `${FunctionType[fn]} (${num2hex(fn)})`,
-							),
+			logText("received API capabilities:", {
+				nested: logDict({
+					"firmware version": this._firmwareVersion,
+					"manufacturer ID": num2hex(this._manufacturerId),
+					"product type": num2hex(this._productType),
+					"product ID": num2hex(this._productId),
+					"supported functions": logList(
+						this._supportedFunctionTypes.map(
+							(fn) => `${FunctionType[fn]} (${num2hex(fn)})`,
 						),
-					}),
+					),
 				}),
-			).join("\n"),
+			}),
 		);
 
 		// Request additional information about the controller/Z-Wave chip
@@ -1127,17 +1124,15 @@ export class ZWaveController
 		this._protocolVersion = version.libraryVersion;
 		this._type = version.controllerType;
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText("received version info:", {
-					nested: logDict({
-						"controller type": getEnumMemberName(
-							ZWaveLibraryTypes,
-							this._type,
-						),
-						"library version": this._protocolVersion,
-					}),
+			logText("received version info:", {
+				nested: logDict({
+					"controller type": getEnumMemberName(
+						ZWaveLibraryTypes,
+						this._type,
+					),
+					"library version": this._protocolVersion,
 				}),
-			).join("\n"),
+			}),
 		);
 
 		// If supported, get more fine-grained version info
@@ -1154,22 +1149,20 @@ export class ZWaveController
 			this._protocolVersion = protocol.protocolVersion;
 
 			this.driver.controllerLog.print(
-				formatLogPayload(
-					logText("received protocol version info:", {
-						nested: logDict({
-							"protocol type": getEnumMemberName(
-								ProtocolType,
-								protocol.protocolType,
-							),
-							"protocol version": protocol.protocolVersion,
-							"appl. framework build no.":
-								protocol.applicationFrameworkBuildNumber
-								|| undefined,
-							"git commit hash": protocol.gitCommitHash
-								|| undefined,
-						}),
+				logText("received protocol version info:", {
+					nested: logDict({
+						"protocol type": getEnumMemberName(
+							ProtocolType,
+							protocol.protocolType,
+						),
+						"protocol version": protocol.protocolVersion,
+						"appl. framework build no.":
+							protocol.applicationFrameworkBuildNumber
+							|| undefined,
+						"git commit hash": protocol.gitCommitHash
+							|| undefined,
 					}),
-				).join("\n"),
+				}),
 			);
 		}
 
@@ -1192,19 +1185,17 @@ export class ZWaveController
 			);
 			this._supportedSerialAPISetupCommands = setupCaps.supportedCommands;
 			this.driver.controllerLog.print(
-				formatLogPayload(
-					logText("supported serial API setup commands:", {
-						nested: logList(
-							this._supportedSerialAPISetupCommands.map(
-								(cmd) =>
-									getEnumMemberName(
-										SerialAPISetupCommand,
-										cmd,
-									),
-							),
+				logText("supported serial API setup commands:", {
+					nested: logList(
+						this._supportedSerialAPISetupCommands.map(
+							(cmd) =>
+								getEnumMemberName(
+									SerialAPISetupCommand,
+									cmd,
+								),
 						),
-					}),
-				).join("\n"),
+					),
+				}),
 			);
 		} else {
 			this._supportedSerialAPISetupCommands = [];
@@ -1231,19 +1222,15 @@ export class ZWaveController
 		}
 
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText("supported Z-Wave features:", {
-					nested: logList(
-						Object.keys(ZWaveFeature)
-							.filter((k) => /^\d+$/.test(k))
-							.map((k) => parseInt(k) as ZWaveFeature)
-							.filter((feat) => this.supportsFeature(feat))
-							.map((feat) =>
-								getEnumMemberName(ZWaveFeature, feat)
-							),
-					),
-				}),
-			).join("\n"),
+			logText("supported Z-Wave features:", {
+				nested: logList(
+					Object.keys(ZWaveFeature)
+						.filter((k) => /^\d+$/.test(k))
+						.map((k) => parseInt(k) as ZWaveFeature)
+						.filter((feat) => this.supportsFeature(feat))
+						.map((feat) => getEnumMemberName(ZWaveFeature, feat)),
+				),
+			}),
 		);
 
 		return {
@@ -1275,14 +1262,12 @@ export class ZWaveController
 		}
 
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText("received Z-Wave Long Range capabilities:", {
-					nested: logDict({
-						"max. payload size": `${this._maxPayloadSizeLR} bytes`,
-						nodes: lrNodeIds.join(", "),
-					}),
+			logText("received Z-Wave Long Range capabilities:", {
+				nested: logDict({
+					"max. payload size": `${this._maxPayloadSizeLR} bytes`,
+					nodes: lrNodeIds.join(", "),
 				}),
-			).join("\n"),
+			}),
 		);
 
 		return {
@@ -1376,34 +1361,32 @@ export class ZWaveController
 			}
 
 			this.driver.controllerLog.print(
-				formatLogPayload(
-					logText("supported regions:", {
-						nested: logList(
-							[...this._supportedRegions.values()]
-								.map((info) => {
-									let ret = getEnumMemberName(
-										RFRegion,
-										info.region,
-									);
-									if (info.includesRegion != undefined) {
-										ret += ` · superset of ${
-											getEnumMemberName(
-												RFRegion,
-												info.includesRegion,
-											)
-										}`;
+				logText("supported regions:", {
+					nested: logList(
+						[...this._supportedRegions.values()]
+							.map((info) => {
+								let ret = getEnumMemberName(
+									RFRegion,
+									info.region,
+								);
+								if (info.includesRegion != undefined) {
+									ret += ` · superset of ${
+										getEnumMemberName(
+											RFRegion,
+											info.includesRegion,
+										)
+									}`;
+								}
+								if (info.supportsLongRange) {
+									ret += " · ZWLR";
+									if (!info.supportsZWave) {
+										ret += " only";
 									}
-									if (info.supportsLongRange) {
-										ret += " · ZWLR";
-										if (!info.supportsZWave) {
-											ret += " only";
-										}
-									}
-									return ret;
-								}),
-						),
-					}),
-				).join("\n"),
+								}
+								return ret;
+							}),
+					),
+				}),
 			);
 		}
 
@@ -1617,23 +1600,21 @@ export class ZWaveController
 			);
 			if (resp != undefined) {
 				this.driver.controllerLog.print(
-					formatLogPayload(
-						logText(
-							"received Z-Wave Long Range channel information:",
-							{
-								nested: logDict({
-									channel: resp.channel != undefined
-										? getEnumMemberName(
-											LongRangeChannel,
-											resp.channel,
-										)
-										: "(unknown)",
-									"supports auto channel selection":
-										resp.supportsAutoChannelSelection,
-								}),
-							},
-						),
-					).join("\n"),
+					logText(
+						"received Z-Wave Long Range channel information:",
+						{
+							nested: logDict({
+								channel: resp.channel != undefined
+									? getEnumMemberName(
+										LongRangeChannel,
+										resp.channel,
+									)
+									: "(unknown)",
+								"supports auto channel selection":
+									resp.supportsAutoChannelSelection,
+							}),
+						},
+					),
 				);
 			} else {
 				this.driver.controllerLog.print(
@@ -1707,14 +1688,12 @@ export class ZWaveController
 		this._homeId = ids.homeId;
 		this._ownNodeId = ids.ownNodeId;
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText("received controller IDs:", {
-					nested: logDict({
-						"home ID": num2hex(this._homeId),
-						"own node ID": this._ownNodeId,
-					}),
+			logText("received controller IDs:", {
+				nested: logDict({
+					"home ID": num2hex(this._homeId),
+					"own node ID": this._ownNodeId,
 				}),
-			).join("\n"),
+			}),
 		);
 	}
 
@@ -2601,34 +2580,30 @@ export class ZWaveController
 		});
 
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText(`finished adding node ${newNode.id}:`, {
-					nested: logDict({
-						"basic device class": newNode.deviceClass
-							? getEnumMemberName(
-								BasicDeviceClass,
-								newNode.deviceClass.basic,
-							)
-							: undefined,
-						"generic device class": newNode.deviceClass
-							?.generic.label,
-						"specific device class": newNode.deviceClass
-							?.specific.label,
-						"supported CCs": logList(
-							supportedCCs.map(
-								(cc) =>
-									`${CommandClasses[cc]} (${num2hex(cc)})`,
-							),
+			logText(`finished adding node ${newNode.id}:`, {
+				nested: logDict({
+					"basic device class": newNode.deviceClass
+						? getEnumMemberName(
+							BasicDeviceClass,
+							newNode.deviceClass.basic,
+						)
+						: undefined,
+					"generic device class": newNode.deviceClass
+						?.generic.label,
+					"specific device class": newNode.deviceClass
+						?.specific.label,
+					"supported CCs": logList(
+						supportedCCs.map(
+							(cc) => `${CommandClasses[cc]} (${num2hex(cc)})`,
 						),
-						"controlled CCs": logList(
-							controlledCCs.map(
-								(cc) =>
-									`${CommandClasses[cc]} (${num2hex(cc)})`,
-							),
+					),
+					"controlled CCs": logList(
+						controlledCCs.map(
+							(cc) => `${CommandClasses[cc]} (${num2hex(cc)})`,
 						),
-					}),
+					),
 				}),
-			).join("\n"),
+			}),
 		);
 		// remember the node
 		this._nodes.set(newNode.id, newNode);
@@ -3802,23 +3777,21 @@ export class ZWaveController
 			);
 			if (missingKeys.length > 0) {
 				this.driver.controllerLog.print(
-					formatLogPayload(
-						logText(
-							"Ignoring inclusion request because the following security classes were granted but have no key configured:",
-							{
-								nested: logList(
-									missingKeys.map((sc) =>
-										`${
-											getEnumMemberName(
-												SecurityClass,
-												sc,
-											)
-										}${isLongRange ? " (Long Range)" : ""}`
-									),
+					logText(
+						"Ignoring inclusion request because the following security classes were granted but have no key configured:",
+						{
+							nested: logList(
+								missingKeys.map((sc) =>
+									`${
+										getEnumMemberName(
+											SecurityClass,
+											sc,
+										)
+									}${isLongRange ? " (Long Range)" : ""}`
 								),
-							},
-						),
-					).join("\n"),
+							),
+						},
+					),
 					"error",
 				);
 				return;
@@ -3906,33 +3879,31 @@ export class ZWaveController
 			});
 
 			this.driver.controllerLog.print(
-				formatLogPayload(
-					logText(
-						`Node ${newNode.id} was included by another controller:`,
-						{
-							nested: logDict({
-								"basic device class": newNode.deviceClass
-									? getEnumMemberName(
-										BasicDeviceClass,
-										newNode.deviceClass.basic,
-									)
-									: undefined,
-								"generic device class": newNode.deviceClass
-									?.generic.label,
-								"specific device class": newNode.deviceClass
-									?.specific.label,
-								"supported CCs": logList(
-									nodeInfo.supportedCCs.map(
-										(cc) =>
-											`${CommandClasses[cc]} (${
-												num2hex(cc)
-											})`,
-									),
+				logText(
+					`Node ${newNode.id} was included by another controller:`,
+					{
+						nested: logDict({
+							"basic device class": newNode.deviceClass
+								? getEnumMemberName(
+									BasicDeviceClass,
+									newNode.deviceClass.basic,
+								)
+								: undefined,
+							"generic device class": newNode.deviceClass
+								?.generic.label,
+							"specific device class": newNode.deviceClass
+								?.specific.label,
+							"supported CCs": logList(
+								nodeInfo.supportedCCs.map(
+									(cc) =>
+										`${CommandClasses[cc]} (${
+											num2hex(cc)
+										})`,
 								),
-							}),
-						},
-					),
-				).join("\n"),
+							),
+						}),
+					},
+				),
 			);
 
 			await this.updateProxyInclusionMachine({
@@ -7910,33 +7881,31 @@ export class ZWaveController
 		);
 
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText("received additional controller information:", {
-					nested: logDict({
-						"Z-Wave API version":
-							`${initData.zwaveApiVersion.version} (${initData.zwaveApiVersion.kind})`,
-						"Z-Wave chip type": initData.zwaveChipType
-							? typeof initData.zwaveChipType === "string"
-								? initData.zwaveChipType
-								: `unknown (type: ${
-									num2hex(initData.zwaveChipType.type)
-								}, version: ${
-									num2hex(initData.zwaveChipType.version)
-								})`
-							: undefined,
-						"node type": getEnumMemberName(
-							NodeType,
-							initData.nodeType,
-						),
-						"controller role": initData.isPrimary
-							? "primary"
-							: "secondary",
-						"controller is the SIS": initData.isSIS,
-						"controller supports timers": initData.supportsTimers,
-						"Z-Wave Classic nodes": initData.nodeIds.join(", "),
-					}),
+			logText("received additional controller information:", {
+				nested: logDict({
+					"Z-Wave API version":
+						`${initData.zwaveApiVersion.version} (${initData.zwaveApiVersion.kind})`,
+					"Z-Wave chip type": initData.zwaveChipType
+						? typeof initData.zwaveChipType === "string"
+							? initData.zwaveChipType
+							: `unknown (type: ${
+								num2hex(initData.zwaveChipType.type)
+							}, version: ${
+								num2hex(initData.zwaveChipType.version)
+							})`
+						: undefined,
+					"node type": getEnumMemberName(
+						NodeType,
+						initData.nodeType,
+					),
+					"controller role": initData.isPrimary
+						? "primary"
+						: "secondary",
+					"controller is the SIS": initData.isSIS,
+					"controller supports timers": initData.supportsTimers,
+					"Z-Wave Classic nodes": initData.nodeIds.join(", "),
 				}),
-			).join("\n"),
+			}),
 		);
 
 		const ret: SerialApiInitData = {
@@ -7990,21 +7959,19 @@ export class ZWaveController
 		this._noNodesIncluded = ret.noNodesIncluded;
 
 		this.driver.controllerLog.print(
-			formatLogPayload(
-				logText("received controller capabilities:", {
-					nested: logDict({
-						"controller role": getEnumMemberName(
-							ControllerRole,
-							this.role!,
-						),
-						"is the SUC": ret.isSUC,
-						"started this network": !ret
-							.isUsingHomeIdFromOtherNetwork,
-						"SIS is present": ret.isSISPresent,
-						"was real primary": ret.wasRealPrimary,
-					}),
+			logText("received controller capabilities:", {
+				nested: logDict({
+					"controller role": getEnumMemberName(
+						ControllerRole,
+						this.role!,
+					),
+					"is the SUC": ret.isSUC,
+					"started this network": !ret
+						.isUsingHomeIdFromOtherNetwork,
+					"SIS is present": ret.isSISPresent,
+					"was real primary": ret.wasRealPrimary,
 				}),
-			).join("\n"),
+			}),
 		);
 
 		return ret;
@@ -10375,20 +10342,18 @@ export class ZWaveController
 			}
 
 			this.driver.driverLog.print(
-				formatLogPayload(
-					logText(
-						"Security S2 bootstrapping successful with these security classes:",
-						{
-							nested: logList(
-								[...bootstrappingNode.securityClasses.entries()]
-									.filter(([, v]) => v)
-									.map(([k]) =>
-										getEnumMemberName(SecurityClass, k)
-									),
-							),
-						},
-					),
-				).join("\n"),
+				logText(
+					"Security S2 bootstrapping successful with these security classes:",
+					{
+						nested: logList(
+							[...bootstrappingNode.securityClasses.entries()]
+								.filter(([, v]) => v)
+								.map(([k]) =>
+									getEnumMemberName(SecurityClass, k)
+								),
+						),
+					},
+				),
 			);
 
 			// success 🎉

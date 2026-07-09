@@ -2,10 +2,10 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	ValueMetadata,
 	type WithAddress,
 	ZWaveError,
@@ -384,7 +384,7 @@ export class AlarmSensorCCReport extends AlarmSensorCC {
 	public readonly duration: number | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"sensor type": getEnumMemberName(AlarmSensorType, this.sensorType),
 			"alarm state": this.state,
 		};

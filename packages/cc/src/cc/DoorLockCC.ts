@@ -3,10 +3,10 @@ import {
 	Duration,
 	type EndpointId,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type SupervisionResult,
 	SupervisionStatus,
 	ValueMetadata,
@@ -1206,7 +1206,7 @@ export class DoorLockCCOperationReport extends DoorLockCC {
 	public readonly lockTimeout?: number; // in seconds
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"current mode": getEnumMemberName(DoorLockMode, this.currentMode),
 			"active outside handles": this.outsideHandlesCanOpenDoor.join(", "),
 			"active inside handles": this.insideHandlesCanOpenDoor.join(", "),
@@ -1463,7 +1463,7 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"operation type": getEnumMemberName(
 				DoorLockOperationType,
 				this.operationType,
@@ -1671,7 +1671,7 @@ export class DoorLockCCConfigurationSet extends DoorLockCC {
 			)
 			? this.outsideHandlesCanOpenDoorConfiguration
 			: [];
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"operation type": getEnumMemberName(
 				DoorLockOperationType,
 				this.operationType,

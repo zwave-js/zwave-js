@@ -1,9 +1,9 @@
 import type { CCEncodingContext, CommandClass } from "@zwave-js/cc";
 import {
 	type FrameType,
-	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	type RSSI,
@@ -247,7 +247,7 @@ export class BridgeApplicationCommandRequest extends Message
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		if (this.frameType !== "singlecast") {
 			message.type = this.frameType;
 		}

@@ -3,10 +3,10 @@ import {
 	type EndpointId,
 	type GetSupportedCCVersion,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type SupervisionResult,
 	type ValueID,
 	ValueMetadata,
@@ -2326,7 +2326,7 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		for (const { userId, userIdStatus, userCode } of this.userCodes) {
 			message[`code #${userId}`] = `${
 				userCodeToLogString(
@@ -2404,7 +2404,7 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 	public readonly nextUserId: number;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		for (const { userId, userIdStatus, userCode } of this.userCodes) {
 			message[`code #${userId}`] = `${
 				userCodeToLogString(

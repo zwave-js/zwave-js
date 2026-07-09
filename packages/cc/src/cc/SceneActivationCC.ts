@@ -2,9 +2,9 @@ import {
 	CommandClasses,
 	Duration,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
+	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -174,7 +174,7 @@ export class SceneActivationCCSet extends SceneActivationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = { "scene id": this.sceneId };
+		const message: MessageRecord = { "scene id": this.sceneId };
 		if (this.dimmingDuration != undefined) {
 			message["dimming duration"] = this.dimmingDuration.toString();
 		}

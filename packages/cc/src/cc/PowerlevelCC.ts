@@ -1,9 +1,9 @@
 import {
 	CommandClasses,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
+	type MessageRecord,
 	NodeStatus,
 	type SupervisionResult,
 	type WithAddress,
@@ -262,7 +262,7 @@ export class PowerlevelCCSet extends PowerlevelCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"power level": getEnumMemberName(Powerlevel, this.powerlevel),
 		};
 		if (this.timeout != undefined) {
@@ -324,7 +324,7 @@ export class PowerlevelCCReport extends PowerlevelCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"power level": getEnumMemberName(Powerlevel, this.powerlevel),
 		};
 		if (this.timeout != undefined) {

@@ -7,10 +7,10 @@ import {
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type NodeId,
 	type SinglecastCC,
 	type SupportsCC,
@@ -629,7 +629,7 @@ export class BatteryCCReport extends BatteryCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 
 		if (this.disconnected) {
 			message.disconnected = true;

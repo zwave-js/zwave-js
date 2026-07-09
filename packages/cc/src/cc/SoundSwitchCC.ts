@@ -2,10 +2,10 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -726,7 +726,7 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		if (this.defaultVolume !== 0xff) {
 			message["default volume"] = `${this.defaultVolume} %`;
 		}
@@ -842,7 +842,7 @@ export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"tone id": this.toneId,
 		};
 		if (this.volume != undefined) {
@@ -903,7 +903,7 @@ export class SoundSwitchCCTonePlayReport extends SoundSwitchCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"tone id": this.toneId,
 		};
 		if (this.volume != undefined) {

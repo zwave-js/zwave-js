@@ -1,7 +1,7 @@
 import {
-	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type RSSI,
 	rssiToString,
 } from "@zwave-js/core";
@@ -67,7 +67,7 @@ export class GetBackgroundRSSIResponse extends Message {
 	public readonly rssiChannel3?: RSSI;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"channel 0": rssiToString(this.rssiChannel0),
 			"channel 1": rssiToString(this.rssiChannel1),
 		};

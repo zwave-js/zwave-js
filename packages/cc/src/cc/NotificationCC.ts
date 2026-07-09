@@ -9,10 +9,10 @@ import {
 	type GetSupportedCCVersion,
 	type GetValueDB,
 	type LogNode,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type NodeId,
 	type Notification,
 	type NotificationState,
@@ -1391,7 +1391,7 @@ export class NotificationCCReport extends NotificationCC {
 	public sequenceNumber: number | undefined;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput = {};
+		let message: MessageRecord = {};
 		if (this.alarmType) {
 			message = {
 				"V1 alarm type": this.alarmType,
@@ -1783,7 +1783,7 @@ export class NotificationCCGet extends NotificationCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		if (this.alarmType != undefined) {
 			message["V1 alarm type"] = this.alarmType;
 		}

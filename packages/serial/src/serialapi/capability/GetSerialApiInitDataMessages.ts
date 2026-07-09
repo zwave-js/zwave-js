@@ -168,7 +168,7 @@ export class GetSerialApiInitDataResponse extends Message {
 	}
 
 	// public toLogEntry(): MessageOrCCLogEntry {
-	// 	const message: LogPayloadDictInput = {
+	// 	const message: MessageRecord = {
 	// 		"Z-Wave API Version": `${this.zwaveApiVersion.version} (${this.zwaveApiVersion.kind})`,
 	// 		"node type": getEnumMemberName(NodeType, this.nodeType),
 	// 		role: this.isPrimary ? "primary" : "secondary",

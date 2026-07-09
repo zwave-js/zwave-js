@@ -5,6 +5,7 @@ import {
 	type LogContext,
 	type LogPayload,
 	MessagePriority,
+	type MessageRecord,
 	ZWaveLoggerBase,
 	formatLogPayload,
 	getDirectionPrefix,
@@ -55,7 +56,7 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 	 * @param msg The message to output
 	 */
 	public print(
-		message: string,
+		message: string | LogPayload | MessageRecord,
 		level?: "debug" | "verbose" | "warn" | "error" | "info",
 	): void {
 		const actualLevel = level || DRIVER_LOGLEVEL;
@@ -63,7 +64,9 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 
 		this.logger.log({
 			level: actualLevel,
-			message,
+			message: typeof message === "string"
+				? message
+				: formatLogPayload(message),
 			direction: getDirectionPrefix("none"),
 			context: { source: "driver", direction: "none" },
 		});

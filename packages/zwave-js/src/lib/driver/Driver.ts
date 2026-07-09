@@ -73,12 +73,12 @@ import {
 	type LogContainer,
 	type LogNodeOptions,
 	type LogPayloadDict,
-	type LogPayloadDictInput,
 	MAX_SUPERVISION_SESSION_ID,
 	MAX_TRANSPORT_SERVICE_SESSION_ID,
 	MPANState,
 	type MaybeNotKnown,
 	MessagePriority,
+	type MessageRecord,
 	type MulticastDestination,
 	NUM_NODEMASK_BYTES,
 	NodeIDType,
@@ -105,7 +105,6 @@ import {
 	allCCs,
 	deserializeCacheValue,
 	encapsulationCCs,
-	formatLogPayload,
 	generateECDHKeyPair,
 	getCCName,
 	isEncapsulationCC,
@@ -3214,7 +3213,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		let prefix: string;
 		let details: LogPayloadDict;
 		if (ccId === CommandClasses.Notification) {
-			const msg: LogPayloadDictInput = {
+			const msg: MessageRecord = {
 				type: ccArgs.label,
 				event: ccArgs.eventLabel,
 			};
@@ -8903,16 +8902,17 @@ ${handlers.length} left`,
 
 		const loglevel = this.getLogConfig().level;
 
-		let logMessage = `Downloading OTW firmware update...`;
-		if (loglevel === "silly") {
-			logMessage += "\n" + formatLogPayload(
-				logDict({
-					URL: update.url,
-					integrity: update.integrity,
-				}),
-			).join("\n");
-		}
-		this.controllerLog.print(logMessage);
+		const logMessage = "Downloading OTW firmware update...";
+		this.controllerLog.print(
+			loglevel === "silly"
+				? logText(logMessage, {
+					nested: logDict({
+						URL: update.url,
+						integrity: update.integrity,
+					}),
+				})
+				: logMessage,
+		);
 
 		let firmware: Firmware;
 		try {

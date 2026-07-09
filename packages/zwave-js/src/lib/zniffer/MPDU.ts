@@ -1,9 +1,9 @@
 import type { CommandClass } from "@zwave-js/cc";
 import {
 	type BeamingInfo,
-	type LogPayloadDictInput,
 	MPDUHeaderType,
 	type MessageOrCCLogEntry,
+	type MessageRecord,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	Protocols,
@@ -12,6 +12,7 @@ import {
 	ZWaveErrorCodes,
 	type ZnifferProtocolDataRate,
 	ZnifferRegion,
+	logBuffer,
 	mergeLogDict,
 	parseNodeBitMask,
 	rssiToString,
@@ -237,7 +238,7 @@ export class LongRangeMPDU implements MPDU {
 			tags.unshift("ACK");
 		}
 
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"sequence no.": this.sequenceNumber,
 			channel: this.frameInfo.channel,
 			"protocol/data rate": znifferProtocolDataRateToString(
@@ -291,9 +292,7 @@ export class AckLongRangeMPDU extends LongRangeMPDU {
 
 		const message = mergeLogDict(original, {
 			"incoming RSSI": rssiToString(this.incomingRSSI),
-			payload: this.payload.length > 0
-				? buffer2hex(this.payload)
-				: undefined,
+			payload: logBuffer(this.payload),
 		});
 
 		return {
@@ -421,7 +420,7 @@ export class ZWaveMPDU implements MPDU {
 	public toLogEntry(): MessageOrCCLogEntry {
 		const tags = [formatNodeId(this.sourceNodeId)];
 
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"sequence no.": this.sequenceNumber,
 			channel: this.frameInfo.channel,
 			"protocol/data rate":
@@ -613,13 +612,11 @@ export class MulticastZWaveMPDU extends ZWaveMPDU {
 		const { tags, message: original } = super.toLogEntry();
 		tags.push("MULTICAST");
 
-		const message = mergeLogDict(original, {
-			payload: buffer2hex(this.payload),
-		});
-		message.entries.unshift([
-			"destinations",
-			this.destinationNodeIds.join(", "),
-		]);
+		const message = mergeLogDict(
+			{ destinations: this.destinationNodeIds.join(", ") },
+			original,
+			{ payload: buffer2hex(this.payload) },
+		);
 		return {
 			tags,
 			message,
@@ -860,7 +857,7 @@ export class ZWaveBeamStart {
 			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
 		];
 
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			channel: this.frameInfo.channel,
 			"protocol/data rate": znifferProtocolDataRateToString(
 				this.frameInfo.protocolDataRate,
@@ -919,7 +916,7 @@ export class LongRangeBeamStart {
 			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
 		];
 
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			channel: this.frameInfo.channel,
 			"protocol/data rate": znifferProtocolDataRateToString(
 				this.frameInfo.protocolDataRate,
@@ -948,7 +945,7 @@ export class BeamStop {
 			"BEAM STOP",
 		];
 
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			channel: this.frameInfo.channel,
 		};
 		return {

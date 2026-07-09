@@ -5,6 +5,7 @@ import {
 	type LogContext,
 	type LogPayload,
 	type MessageOrCCLogEntry,
+	type MessageRecord,
 	type RSSI,
 	ZWaveLoggerBase,
 	formatLogPayload,
@@ -50,7 +51,7 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 	 * @param msg The message to output
 	 */
 	public print(
-		message: string,
+		message: string | LogPayload | MessageRecord,
 		level?: "debug" | "verbose" | "warn" | "error" | "info",
 	): void {
 		const actualLevel = level || ZNIFFER_LOGLEVEL;
@@ -58,7 +59,9 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 
 		this.logger.log({
 			level: actualLevel,
-			message,
+			message: typeof message === "string"
+				? message
+				: formatLogPayload(message),
 			direction: getDirectionPrefix("none"),
 			context: { source: "zniffer", direction: "none" },
 		});

@@ -1,6 +1,6 @@
 import type { TransformableInfo } from "logform";
 import type Transport from "winston-transport";
-import type { LogPayload, LogPayloadDictInput } from "./LogPayload.js";
+import type { LogPayload, MessageRecord } from "./LogPayload.js";
 import type { LogContainer } from "./traits.js";
 
 export const timestampFormatShort = "HH:mm:ss.SSS";
@@ -60,7 +60,7 @@ export interface LogContext<T extends string = string> {
 
 export interface MessageOrCCLogEntry {
 	tags: string[];
-	message?: LogPayload | LogPayloadDictInput;
+	message?: LogPayload | MessageRecord;
 }
 
 /** Returns the tag used to log node related messages */

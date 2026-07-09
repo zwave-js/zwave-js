@@ -3,10 +3,10 @@ import {
 	EncapsulationFlags,
 	type GetNode,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type NodeId,
 	SecurityClass,
 	type SecurityManager,
@@ -852,7 +852,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		if (this.nonceId != undefined) {
 			message["nonce id"] = this.nonceId;
 		}

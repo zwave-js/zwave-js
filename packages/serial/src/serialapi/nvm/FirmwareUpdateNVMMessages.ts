@@ -1,6 +1,7 @@
 import {
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	logBuffer,
 	mergeLogDict,
 	validatePayload,
 } from "@zwave-js/core";
@@ -125,9 +126,7 @@ export class FirmwareUpdateNVMRequest extends Message {
 					FirmwareUpdateNVMCommand,
 					this.command,
 				),
-				payload: this.payload.length > 0
-					? `0x${this.payload.toString("hex")}`
-					: undefined,
+				payload: logBuffer(this.payload),
 			},
 		};
 	}
@@ -180,9 +179,7 @@ export class FirmwareUpdateNVMResponse extends Message {
 					FirmwareUpdateNVMCommand,
 					this.command,
 				),
-				payload: this.payload.length > 0
-					? `0x${this.payload.toString("hex")}`
-					: undefined,
+				payload: logBuffer(this.payload),
 			},
 		};
 	}

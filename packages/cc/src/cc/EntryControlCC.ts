@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
@@ -496,7 +496,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 	public readonly eventData?: BytesView | string;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"sequence number": this.sequenceNumber,
 			"data type": this.dataType,
 			"event type": this.eventType,

@@ -1,3 +1,5 @@
+import { type BytesView, buffer2hex } from "@zwave-js/shared";
+
 /**
  * Structured log payloads that can be composed at call sites and rendered
  * into consistently formatted, indented log lines by {@link formatLogPayload}.
@@ -33,7 +35,7 @@ export type LogPayloadDictValue =
 	| LogPayloadList;
 
 /** Entries with `undefined` values are skipped, so optional entries can be included inline */
-export type LogPayloadDictInput = Record<
+export type MessageRecord = Record<
 	string,
 	LogPayloadDictValue | undefined
 >;
@@ -67,7 +69,7 @@ export function logText(
 }
 
 export function logDict(
-	entries: LogPayloadDictInput,
+	entries: MessageRecord,
 	nested?: LogPayload | LogPayload[],
 ): LogPayloadDict {
 	return {
@@ -91,44 +93,57 @@ export function logList(
 	};
 }
 
+/** Formats a buffer as a 0x-prefixed hex dict value, skipping the entry when the buffer is empty */
+export function logBuffer(buffer: BytesView): string | undefined {
+	if (buffer.length === 0) return undefined;
+	return buffer2hex(buffer);
+}
+
 /** Normalizes the message of a log entry, which may be given as a bare object literal */
 export function toLogPayload(
-	message: LogPayload | LogPayloadDictInput,
+	message: LogPayload | MessageRecord,
 ): LogPayload {
 	return isLogPayload(message) ? message : logDict(message);
 }
 
 /**
- * Merges additional entries into a dict payload, e.g. one inherited from a base class.
- * Entries with `undefined` values are removed from the result.
+ * Merges dict payloads in sequence, e.g. entries inherited from a base class with additional ones.
+ * Later entries override earlier ones in place; entries with `undefined` values are removed from the result.
  */
 export function mergeLogDict(
-	base: LogPayload | LogPayloadDictInput | undefined,
-	extra: LogPayloadDictInput,
+	...sources: (LogPayload | MessageRecord | undefined)[]
 ): LogPayloadDict {
-	const dict = base == undefined
-		? logDict({})
-		: toLogPayload(base);
-	if (dict.type !== "dict") {
-		throw new Error("mergeLogDict requires a dict payload as the base");
-	}
+	const entries: LogPayloadDict["entries"] = [];
+	let nested: LogPayloadDict["nested"];
 
-	const entries = [...dict.entries];
-	for (const [key, value] of Object.entries(extra)) {
-		const index = entries.findIndex(([k]) => k === key);
-		if (value === undefined) {
-			if (index >= 0) entries.splice(index, 1);
-			continue;
+	for (const source of sources) {
+		if (source == undefined) continue;
+		const dict = toLogPayload(source);
+		if (dict.type !== "dict") {
+			throw new Error("mergeLogDict can only merge dict payloads");
 		}
-		const entry: (typeof entries)[number] = [
-			key,
-			typeof value === "object" ? value : String(value),
-		];
-		if (index >= 0) {
-			entries[index] = entry;
-		} else {
-			entries.push(entry);
+		if (dict.nested) nested = dict.nested;
+
+		// Re-apply the raw entries so undefined markers can remove earlier ones
+		const raw = isLogPayload(source)
+			? dict.entries
+			: Object.entries(source);
+		for (const [key, value] of raw) {
+			const index = entries.findIndex(([k]) => k === key);
+			if (value === undefined) {
+				if (index >= 0) entries.splice(index, 1);
+				continue;
+			}
+			const entry: (typeof entries)[number] = [
+				key,
+				typeof value === "object" ? value : String(value),
+			];
+			if (index >= 0) {
+				entries[index] = entry;
+			} else {
+				entries.push(entry);
+			}
 		}
 	}
-	return { ...dict, entries };
+	return { type: "dict", entries, nested };
 }

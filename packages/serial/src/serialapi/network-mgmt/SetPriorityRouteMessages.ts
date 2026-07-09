@@ -1,9 +1,9 @@
 import {
-	type LogPayloadDictInput,
 	MAX_NODES,
 	MAX_REPEATERS,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	ZWaveDataRate,
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -107,7 +107,7 @@ export class SetPriorityRouteRequest extends Message {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput = {
+		let message: MessageRecord = {
 			"node ID": this.destinationNodeId,
 		};
 		if (this.repeaters != undefined && this.routeSpeed != undefined) {

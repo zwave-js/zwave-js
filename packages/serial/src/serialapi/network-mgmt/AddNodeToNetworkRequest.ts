@@ -3,9 +3,9 @@ import {
 	type CommandClasses,
 	type GetAllNodes,
 	type ListenBehavior,
-	type LogPayloadDictInput,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type NodeId,
 	NodeType,
 	type NodeUpdatePayload,
@@ -188,7 +188,7 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 		if (this.addNodeType === AddNodeType.Stop) {
 			message = { action: "Stop" };
 		} else {
@@ -289,7 +289,7 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			action: "Add Smart Start node",
 			"NWI Home ID": buffer2hex(this.nwiHomeId),
 			"high power": this.highPower,

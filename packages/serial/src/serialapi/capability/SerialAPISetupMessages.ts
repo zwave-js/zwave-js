@@ -5,6 +5,7 @@ import {
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
+	logBuffer,
 	mergeLogDict,
 	parseBitMask,
 	sdkVersionLt,
@@ -135,9 +136,7 @@ export class SerialAPISetupRequest extends Message {
 			...super.toLogEntry(),
 			message: {
 				command: getEnumMemberName(SerialAPISetupCommand, this.command),
-				payload: this.payload.length > 0
-					? `0x${this.payload.toString("hex")}`
-					: undefined,
+				payload: logBuffer(this.payload),
 			},
 		};
 	}
@@ -187,9 +186,7 @@ export class SerialAPISetupResponse extends Message {
 			...super.toLogEntry(),
 			message: {
 				command: getEnumMemberName(SerialAPISetupCommand, this.command),
-				payload: this.payload.length > 0
-					? `0x${this.payload.toString("hex")}`
-					: undefined,
+				payload: logBuffer(this.payload),
 			},
 		};
 	}

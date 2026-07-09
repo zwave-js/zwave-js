@@ -8,11 +8,11 @@ import {
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type NodeId,
 	type SupervisionResult,
 	type SupportsCC,
@@ -527,7 +527,7 @@ export class BasicCCReport extends BasicCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"current value": maybeUnknownToString(this.currentValue),
 		};
 		if (this.targetValue !== undefined) {

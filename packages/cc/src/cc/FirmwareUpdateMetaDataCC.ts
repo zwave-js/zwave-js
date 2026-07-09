@@ -2,10 +2,10 @@ import {
 	CRC16_CCITT,
 	CommandClasses,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -535,7 +535,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"manufacturer id": this.manufacturerId,
 			"firmware id": this.firmwareId,
 			checksum: this.checksum,
@@ -635,7 +635,7 @@ export class FirmwareUpdateMetaDataCCRequestReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			status: getEnumMemberName(
 				FirmwareUpdateRequestStatus,
 				this.status,
@@ -783,7 +783,7 @@ export class FirmwareUpdateMetaDataCCRequestGet
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"manufacturer id": num2hex(this.manufacturerId),
 			"firmware id": num2hex(this.firmwareId),
 			checksum: num2hex(this.checksum),
@@ -997,7 +997,7 @@ export class FirmwareUpdateMetaDataCCStatusReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			status: getEnumMemberName(FirmwareUpdateStatus, this.status),
 		};
 		if (this.waitTime != undefined) {
@@ -1089,7 +1089,7 @@ export class FirmwareUpdateMetaDataCCActivationReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"manufacturer id": num2hex(this.manufacturerId),
 			"firmware id": num2hex(this.firmwareId),
 			checksum: num2hex(this.checksum),
@@ -1182,7 +1182,7 @@ export class FirmwareUpdateMetaDataCCActivationSet
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"manufacturer id": num2hex(this.manufacturerId),
 			"firmware id": num2hex(this.firmwareId),
 			checksum: num2hex(this.checksum),

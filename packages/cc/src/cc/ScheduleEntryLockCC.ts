@@ -2,10 +2,10 @@ import {
 	CommandClasses,
 	type EndpointId,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type SupervisionResult,
 	type WithAddress,
 	ZWaveError,
@@ -1065,7 +1065,7 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"no. of weekday schedule slots": this.numWeekDaySlots,
 			"no. of day-of-year schedule slots": this.numYearDaySlots,
 		};
@@ -1187,7 +1187,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 		if (this.action === ScheduleEntryLockSetAction.Erase) {
 			message = {
 				"user ID": this.userId,
@@ -1356,7 +1356,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 		if (this.weekday == undefined) {
 			message = {
 				"user ID": this.userId,
@@ -1565,7 +1565,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 		if (this.action === ScheduleEntryLockSetAction.Erase) {
 			message = {
 				"user ID": this.userId,
@@ -1789,7 +1789,7 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 		if (this.startYear !== undefined) {
 			message = {
 				"user ID": this.userId,
@@ -2098,7 +2098,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 		if (this.action === ScheduleEntryLockSetAction.Erase) {
 			message = {
 				"user ID": this.userId,
@@ -2257,7 +2257,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 		if (!this.weekdays) {
 			message = {
 				"user ID": this.userId,

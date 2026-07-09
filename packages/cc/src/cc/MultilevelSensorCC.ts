@@ -8,10 +8,10 @@ import {
 	type GetSupportedCCVersion,
 	type GetValueDB,
 	type LogNode,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type NodeId,
 	type Scale,
 	type SinglecastCC,
@@ -844,7 +844,7 @@ export class MultilevelSensorCCGet extends MultilevelSensorCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput = {};
+		let message: MessageRecord = {};
 		if (
 			this.sensorType != undefined
 			&& this.scale != undefined

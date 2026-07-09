@@ -8,11 +8,11 @@ import {
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type NodeId,
 	type SinglecastCC,
 	type SupervisionResult,
@@ -1085,7 +1085,7 @@ export class MeterCCReport extends MeterCC {
 		const scale = getMeterScale(this.type, this.scale)
 			?? getUnknownMeterScale(this.scale);
 
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"meter type": getMeterName(this.type),
 			scale: scale.label,
 			"rate type": getEnumMemberName(RateType, this.rateType),
@@ -1189,7 +1189,7 @@ export class MeterCCGet extends MeterCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		if (this.rateType != undefined) {
 			message["rate type"] = getEnumMemberName(RateType, this.rateType);
 		}
@@ -1363,7 +1363,7 @@ export class MeterCCSupportedReport extends MeterCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {
+		const message: MessageRecord = {
 			"meter type": getMeterName(this.type),
 			"supports reset": this.supportsReset,
 			"supported scales": logList(
@@ -1466,7 +1466,7 @@ export class MeterCCReset extends MeterCC {
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const message: LogPayloadDictInput = {};
+		const message: MessageRecord = {};
 		if (this.type != undefined) {
 			message.type = getMeterName(this.type);
 		}

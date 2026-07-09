@@ -1,10 +1,10 @@
 import {
 	CommandClasses,
 	type GetValueDB,
-	type LogPayloadDictInput,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
 	MessagePriority,
+	type MessageRecord,
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -358,7 +358,7 @@ export class DoorLockLoggingCCRecordReport extends DoorLockLoggingCC {
 	public readonly record?: DoorLockLoggingRecord;
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		let message: LogPayloadDictInput;
+		let message: MessageRecord;
 
 		if (!this.record) {
 			message = {
