@@ -46,7 +46,7 @@ function renderPayload(
 			break;
 		case "list": {
 			const pad = INDENT.repeat(indent);
-			out.push(...payload.items.map((item) => `${pad}· ${item}`));
+			out.push(...payload.items.map((item) => `${pad} · ${item}`));
 			break;
 		}
 	}
@@ -129,7 +129,7 @@ function renderDict(
 			out.push(...rest.map((line) => (valuePad + line).trimEnd()));
 		} else {
 			out.push(pad + key + ":");
-			out.push(...value.items.map((item) => `${pad}${INDENT}· ${item}`));
+			out.push(...value.items.map((item) => `${pad} · ${item}`));
 		}
 	}
 }

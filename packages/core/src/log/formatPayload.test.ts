@@ -35,16 +35,16 @@ test("renders list values as indented bullets under their key", (t) => {
 		),
 	).toStrictEqual([
 		"supported types:",
-		"  · Heating",
-		"  · Cooling",
+		" · Heating",
+		" · Cooling",
 		"mode:            auto",
 	]);
 });
 
 test("renders a standalone list with bullets", (t) => {
 	t.expect(formatLogPayload(logList(["one", "two"]))).toStrictEqual([
-		"· one",
-		"· two",
+		" · one",
+		" · two",
 	]);
 });
 
@@ -63,8 +63,8 @@ test("renders text with a nested dict", (t) => {
 		),
 	).toStrictEqual([
 		"received secure commands",
-		"· Basic",
-		"· Binary Switch",
+		" · Basic",
+		" · Binary Switch",
 	]);
 });
 
