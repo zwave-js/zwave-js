@@ -133,7 +133,13 @@ function renderDict(
 	if (!entries.length) return;
 
 	const pad = INDENT.repeat(indent);
-	const maxKeyLength = Math.max(...entries.map(([key]) => key.length));
+	// List values render on their own lines, so their keys don't widen the value column
+	const stringKeyLengths = entries
+		.filter(([, value]) => typeof value === "string")
+		.map(([key]) => key.length);
+	const maxKeyLength = stringKeyLengths.length > 0
+		? Math.max(...stringKeyLengths)
+		: 0;
 	// All values start in the same column, one space after the longest key
 	const valuePad = pad + " ".repeat(maxKeyLength + 2);
 	const valueWidth = Math.max(width - valuePad.length, 16);

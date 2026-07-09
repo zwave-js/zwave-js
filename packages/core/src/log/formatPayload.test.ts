@@ -37,7 +37,7 @@ test("renders list values as indented bullets under their key", (t) => {
 		"supported types:",
 		" · Heating",
 		" · Cooling",
-		"mode:            auto",
+		"mode: auto",
 	]);
 });
 
