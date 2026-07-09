@@ -13,6 +13,7 @@ import {
 	createMockZWaveRequestFrame,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
+import path from "node:path";
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
@@ -26,17 +27,28 @@ integrationTest(
 	{
 		// debug: true,
 
+		// Use a neutral test device so the controller doesn't match a proprietary
+		// implementation. The callback function type bug is emulated via the
+		// disableCallbackFunctionTypeCheck compat flag in the fixture below.
 		controllerCapabilities: {
-			// Aeotec Z-Stick Gen5+, FW 1.2
-			manufacturerId: 0x0086,
-			productType: 0x0001,
-			productId: 0x005a,
+			manufacturerId: 0xdead,
+			productType: 0xbeef,
+			productId: 0xcafe,
 			firmwareVersion: "1.2",
 			supportedFunctionTypes: [
 				...getDefaultSupportedFunctionTypes(),
 				FunctionType.AssignSUCReturnRoute,
 				FunctionType.DeleteSUCReturnRoute,
 			],
+		},
+
+		additionalDriverOptions: {
+			storage: {
+				deviceConfigPriorityDir: path.join(
+					__dirname,
+					"fixtures/disableCallbackFunctionTypeCheck",
+				),
+			},
 		},
 
 		customSetup: async (driver, controller, mockNode) => {

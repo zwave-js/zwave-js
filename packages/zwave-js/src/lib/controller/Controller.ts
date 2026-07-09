@@ -1799,9 +1799,18 @@ export class ZWaveController
 
 	/** @internal */
 	public async interviewProprietary(): Promise<void> {
-		for (const impl of Object.values(this.proprietary)) {
-			if (typeof impl.interview === "function") {
+		for (const [name, impl] of Object.entries(this.proprietary)) {
+			if (typeof impl.interview !== "function") continue;
+			// A misbehaving proprietary controller must not abort the interview
+			try {
 				await impl.interview();
+			} catch (e) {
+				this.driver.controllerLog.print(
+					`Interviewing the ${name} proprietary implementation failed: ${
+						getErrorMessage(e)
+					}`,
+					"warn",
+				);
 			}
 		}
 	}
