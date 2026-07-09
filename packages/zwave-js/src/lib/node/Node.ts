@@ -106,6 +106,7 @@ import {
 	RssiError,
 	SecurityClass,
 	type SendCommandOptions,
+	type SendMessageOptions,
 	type SetValueOptions,
 	type SinglecastCC,
 	SupervisionStatus,
@@ -1447,7 +1448,11 @@ protocol version:      ${this.protocolVersion}`;
 				direction: "outbound",
 			});
 			try {
-				const nodeInfo = await this.requestNodeInfo();
+				// Tag as part of the interview, so the transaction gets
+				// rejected when the interview is aborted
+				const nodeInfo = await this.requestNodeInfo({
+					tag: "interview",
+				});
 				this.driver.controllerLog.logNode(this.id, {
 					message: logText(
 						["node info received", "supported CCs:"],
@@ -1498,14 +1503,12 @@ protocol version:      ${this.protocolVersion}`;
 		this.setInterviewStage(InterviewStage.NodeInfo);
 	}
 
-	public async requestNodeInfo(): Promise<NodeUpdatePayload> {
+	public async requestNodeInfo(
+		options?: SendMessageOptions,
+	): Promise<NodeUpdatePayload> {
 		const resp = await this.driver.sendMessage<
 			RequestNodeInfoResponse | ApplicationUpdateRequest
-		>(new RequestNodeInfoRequest({ nodeId: this.id }), {
-			// Tag as part of the interview, so the transaction gets rejected
-			// when the interview is aborted
-			tag: "interview",
-		});
+		>(new RequestNodeInfoRequest({ nodeId: this.id }), options);
 		if (resp instanceof RequestNodeInfoResponse && !resp.wasSent) {
 			// TODO: handle this in SendThreadMachine
 			throw new ZWaveError(

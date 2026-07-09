@@ -190,6 +190,11 @@ export class Transaction implements Comparable<Transaction> {
 
 	/** Compares two transactions in order to plan their transmission sequence */
 	public compareTo(other: Transaction): CompareResult {
+		// Sort held-back transactions last, so they do not block others
+		const thisIsHeld = this.driver.mustHoldTransaction(this);
+		const otherIsHeld = this.driver.mustHoldTransaction(other);
+		if (thisIsHeld && !otherIsHeld) return 1;
+		if (otherIsHeld && !thisIsHeld) return -1;
 		const compareWakeUpPriority = (
 			_this: Transaction,
 			_other: Transaction,
