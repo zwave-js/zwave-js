@@ -44,7 +44,7 @@ import { MAX_SEND_ATTEMPTS } from "./SendDataMessages.js";
 import {
 	encodeTXReport,
 	parseTXReport,
-	txReportToMessageRecord,
+	txReportToLogDict,
 } from "./SendDataShared.js";
 
 @messageTypes(MessageType.Request, FunctionType.SendDataBridge)
@@ -326,7 +326,7 @@ export class SendDataBridgeRequestTransmitReport
 				// Show TX report fields for OK and NoAck (NoAck still provides useful routing info)
 				...(this.txReport && (this.transmitStatus === TransmitStatus.OK
 						|| this.transmitStatus === TransmitStatus.NoAck)
-					? txReportToMessageRecord(this.txReport)
+					? txReportToLogDict(this.txReport)
 					: {}),
 			},
 		};

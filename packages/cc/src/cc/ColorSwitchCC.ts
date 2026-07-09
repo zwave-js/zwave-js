@@ -15,6 +15,8 @@ import {
 	ZWaveErrorCodes,
 	encodeBitMask,
 	isUnsupervisedOrSucceeded,
+	logList,
+	logText,
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
@@ -576,11 +578,13 @@ export class ColorSwitchCC extends CommandClass {
 
 		ctx.logNode(node.id, {
 			endpoint: this.endpointIndex,
-			message: `received supported colors:${
-				supportedColors
-					.map((c) => `\n· ${getEnumMemberName(ColorComponent, c)}`)
-					.join("")
-			}`,
+			message: logText("received supported colors:", {
+				nested: logList(
+					supportedColors.map((c) =>
+						getEnumMemberName(ColorComponent, c)
+					),
+				),
+			}),
 			direction: "outbound",
 		});
 
@@ -731,9 +735,11 @@ export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"supported color components": this.supportedColorComponents
-					.map((c) => `\n· ${getEnumMemberName(ColorComponent, c)}`)
-					.join(""),
+				"supported color components": logList(
+					this.supportedColorComponents.map((c) =>
+						getEnumMemberName(ColorComponent, c)
+					),
+				),
 			},
 		};
 	}

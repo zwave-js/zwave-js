@@ -1,5 +1,6 @@
 import type { TransformableInfo } from "logform";
 import type Transport from "winston-transport";
+import type { LogPayload, MessageRecord } from "./LogPayload.js";
 import type { LogContainer } from "./traits.js";
 
 export const timestampFormatShort = "HH:mm:ss.SSS";
@@ -57,11 +58,9 @@ export interface LogContext<T extends string = string> {
 	type?: string;
 }
 
-export type MessageRecord = Record<string, string | number | boolean>;
-
 export interface MessageOrCCLogEntry {
 	tags: string[];
-	message?: MessageRecord;
+	message?: LogPayload | MessageRecord;
 }
 
 /** Returns the tag used to log node related messages */
@@ -128,23 +127,6 @@ export function messageToLines(message: string | string[]): string[] {
 	} else {
 		return [""];
 	}
-}
-
-/** Splits a message record into multiple lines and auto-aligns key-value pairs */
-export function messageRecordToLines(message: MessageRecord): string[] {
-	const entries = Object.entries(message);
-	if (!entries.length) return [];
-
-	const maxKeyLength = Math.max(...entries.map(([key]) => key.length));
-	return entries.flatMap(([key, value]) =>
-		`${key}:${
-			" ".repeat(
-				Math.max(maxKeyLength - key.length + 1, 1),
-			)
-		}${value}`
-			.split("\n")
-			.map((line) => line.trimEnd())
-	);
 }
 export interface LogConfig {
 	enabled: boolean;

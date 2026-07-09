@@ -13,6 +13,10 @@ import {
 	type WithAddress,
 	encodeBitMask,
 	enumValuesToMetadataStates,
+	getNodeTag,
+	logDict,
+	logList,
+	logText,
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
@@ -411,25 +415,28 @@ export class ProtectionCC extends CommandClass {
 			});
 			const resp = await api.getSupported();
 			if (resp) {
-				const logMessage = `received protection capabilities:
-exclusive control:       ${resp.supportsExclusiveControl}
-timeout:                 ${resp.supportsTimeout}
-local protection states: ${
-					resp.supportedLocalStates
-						.map((local) =>
-							getEnumMemberName(LocalProtectionState, local)
-						)
-						.map((str) => `\n· ${str}`)
-						.join("")
-				}
-RF protection states:    ${
-					resp.supportedRFStates
-						.map((local) =>
-							getEnumMemberName(RFProtectionState, local)
-						)
-						.map((str) => `\n· ${str}`)
-						.join("")
-				}`;
+				const logMessage = logText(
+					"received protection capabilities:",
+					{
+						nested: logDict({
+							"exclusive control": resp.supportsExclusiveControl,
+							timeout: resp.supportsTimeout,
+							"local protection states": logList(
+								resp.supportedLocalStates.map((local) =>
+									getEnumMemberName(
+										LocalProtectionState,
+										local,
+									)
+								),
+							),
+							"RF protection states": logList(
+								resp.supportedRFStates.map((local) =>
+									getEnumMemberName(RFProtectionState, local)
+								),
+							),
+						}),
+					},
+				);
 				ctx.logNode(node.id, {
 					message: logMessage,
 					direction: "inbound",
@@ -513,7 +520,7 @@ rf     ${getEnumMemberName(RFProtectionState, protectionResp.rf)}`;
 			if (nodeId != undefined) {
 				ctx.logNode(node.id, {
 					message: (nodeId !== 0
-						? `Node ${nodeId.toString().padStart(3, "0")}`
+						? getNodeTag(nodeId)
 						: `no node`) + ` has exclusive control`,
 					direction: "inbound",
 				});
@@ -765,16 +772,16 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 			message: {
 				"supports exclusive control": this.supportsExclusiveControl,
 				"supports timeout": this.supportsTimeout,
-				"local protection states": this.supportedLocalStates
-					.map((local) =>
+				"local protection states": logList(
+					this.supportedLocalStates.map((local) =>
 						getEnumMemberName(LocalProtectionState, local)
-					)
-					.map((str) => `\n· ${str}`)
-					.join(""),
-				"RF protection states": this.supportedRFStates
-					.map((rf) => getEnumMemberName(RFProtectionState, rf))
-					.map((str) => `\n· ${str}`)
-					.join(""),
+					),
+				),
+				"RF protection states": logList(
+					this.supportedRFStates.map((rf) =>
+						getEnumMemberName(RFProtectionState, rf)
+					),
+				),
 			},
 		};
 	}

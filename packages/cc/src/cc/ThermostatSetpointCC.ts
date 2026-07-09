@@ -15,6 +15,8 @@ import {
 	encodeFloatWithScale,
 	getNamedScale,
 	getUnknownScale,
+	logList,
+	logText,
 	parseBitMask,
 	parseFloatWithScale,
 	supervisedCommandSucceeded,
@@ -438,13 +440,16 @@ export class ThermostatSetpointCC extends CommandClass {
 			const resp = await api.getSupportedSetpointTypes();
 			if (resp) {
 				setpointTypes = [...resp];
-				const logMessage = "received supported setpoint types:\n"
-					+ setpointTypes
-						.map((type) =>
-							getEnumMemberName(ThermostatSetpointType, type)
-						)
-						.map((name) => `· ${name}`)
-						.join("\n");
+				const logMessage = logText(
+					"received supported setpoint types:",
+					{
+						nested: logList(
+							setpointTypes.map((type) =>
+								getEnumMemberName(ThermostatSetpointType, type)
+							),
+						),
+					},
+				);
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: logMessage,
@@ -1000,17 +1005,14 @@ export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"supported setpoint types": this.supportedSetpointTypes
-					.map(
-						(t) =>
-							`\n· ${
-								getEnumMemberName(
-									ThermostatSetpointType,
-									t,
-								)
-							}`,
-					)
-					.join(""),
+				"supported setpoint types": logList(
+					this.supportedSetpointTypes.map((t) =>
+						getEnumMemberName(
+							ThermostatSetpointType,
+							t,
+						)
+					),
+				),
 			},
 		};
 	}

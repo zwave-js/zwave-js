@@ -20,7 +20,9 @@ import {
 	type LogValueArgs,
 	VALUE_LOGLEVEL,
 } from "./Controller.definitions.js";
+import type { LogPayload, MessageRecord } from "./LogPayload.js";
 import { ZWaveLoggerBase } from "./ZWaveLoggerBase.js";
+import { formatLogPayload } from "./formatPayload.js";
 import { getDirectionPrefix, getNodeTag, tagify } from "./shared.js";
 import type { LogContainer } from "./traits.js";
 
@@ -43,13 +45,18 @@ export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext>
 	 * Logs a message
 	 * @param message The message to output
 	 */
-	public print(message: string, level?: "verbose" | "warn" | "error"): void {
+	public print(
+		message: string | LogPayload | MessageRecord,
+		level?: "verbose" | "warn" | "error",
+	): void {
 		const actualLevel = level || CONTROLLER_LOGLEVEL;
 		if (!this.container.isLoglevelVisible(actualLevel)) return;
 
 		this.logger.log({
 			level: actualLevel,
-			message,
+			message: typeof message === "string"
+				? message
+				: formatLogPayload(message),
 			direction: getDirectionPrefix("none"),
 			context: { source: "controller", type: "controller" },
 		});
@@ -100,7 +107,9 @@ export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext>
 		this.logger.log({
 			level: actualLevel,
 			primaryTags: tagify([getNodeTag(nodeId)]),
-			message,
+			message: typeof message === "string"
+				? message
+				: formatLogPayload(message),
 			secondaryTags: endpoint
 				? tagify([`Endpoint ${endpoint}`])
 				: undefined,

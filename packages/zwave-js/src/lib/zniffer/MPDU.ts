@@ -12,6 +12,8 @@ import {
 	ZWaveErrorCodes,
 	type ZnifferProtocolDataRate,
 	ZnifferRegion,
+	logBuffer,
+	mergeLogDict,
 	parseNodeBitMask,
 	rssiToString,
 	validatePayload,
@@ -265,10 +267,9 @@ export class SinglecastLongRangeMPDU extends LongRangeMPDU {
 	public toLogEntry(): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry();
 
-		const message: MessageRecord = {
-			...original,
+		const message = mergeLogDict(original, {
 			payload: buffer2hex(this.payload),
-		};
+		});
 		return {
 			tags,
 			message,
@@ -289,13 +290,10 @@ export class AckLongRangeMPDU extends LongRangeMPDU {
 	public toLogEntry(): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry();
 
-		const message: MessageRecord = {
-			...original,
+		const message = mergeLogDict(original, {
 			"incoming RSSI": rssiToString(this.incomingRSSI),
-		};
-		if (this.payload.length > 0) {
-			message.payload = buffer2hex(this.payload);
-		}
+			payload: logBuffer(this.payload),
+		});
 
 		return {
 			tags,
@@ -459,11 +457,10 @@ export class SinglecastZWaveMPDU extends ZWaveMPDU {
 			0,
 		);
 
-		const message: MessageRecord = {
-			...original,
+		const message = mergeLogDict(original, {
 			"ack requested": this.ackRequested,
 			payload: buffer2hex(this.payload),
-		};
+		});
 		return {
 			tags,
 			message,
@@ -584,11 +581,10 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			this.failedHop,
 		);
 
-		const message: MessageRecord = {
-			...original,
+		const message = mergeLogDict(original, {
 			"ack requested": this.ackRequested,
 			payload: buffer2hex(this.payload),
-		};
+		});
 
 		return {
 			tags,
@@ -616,11 +612,11 @@ export class MulticastZWaveMPDU extends ZWaveMPDU {
 		const { tags, message: original } = super.toLogEntry();
 		tags.push("MULTICAST");
 
-		const message: MessageRecord = {
-			destinations: this.destinationNodeIds.join(", "),
-			...original,
-			payload: buffer2hex(this.payload),
-		};
+		const message = mergeLogDict(
+			{ destinations: this.destinationNodeIds.join(", ") },
+			original,
+			{ payload: buffer2hex(this.payload) },
+		);
 		return {
 			tags,
 			message,
@@ -690,11 +686,10 @@ export class NormalExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		);
 		tags.unshift("EXPLORER");
 
-		const message: MessageRecord = {
-			...original,
+		const message = mergeLogDict(original, {
 			"ack requested": this.ackRequested,
 			payload: buffer2hex(this.payload),
-		};
+		});
 		return {
 			tags,
 			message,
@@ -725,14 +720,13 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		);
 		tags.unshift("INCL REQUEST");
 
-		const message: MessageRecord = {
-			...original,
+		const message = mergeLogDict(original, {
 			"network home ID": this.networkHomeId.toString(16).padStart(
 				8,
 				"0",
 			),
 			payload: buffer2hex(this.payload),
-		};
+		});
 		return {
 			tags,
 			message,
@@ -775,12 +769,11 @@ export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		);
 		tags.unshift("EXPLORER RESULT");
 
-		const message: MessageRecord = {
-			...original,
+		const message = mergeLogDict(original, {
 			"frame handle": this.frameHandle,
 			"result TTL": this.resultTTL,
 			"result repeaters": this.resultRepeaters.join(", "),
-		};
+		});
 		return {
 			tags,
 			message,

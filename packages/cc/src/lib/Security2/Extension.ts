@@ -1,4 +1,13 @@
-import { ZWaveError, ZWaveErrorCodes, validatePayload } from "@zwave-js/core";
+import {
+	type LogPayloadText,
+	type MessageRecord,
+	ZWaveError,
+	ZWaveErrorCodes,
+	logBuffer,
+	logDict,
+	logText,
+	validatePayload,
+} from "@zwave-js/core";
 import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	Bytes,
@@ -218,14 +227,17 @@ export class Security2Extension {
 		return 2 + this.payload.length;
 	}
 
-	public toLogEntry(): string {
-		let ret = `
-· type: ${getEnumMemberName(S2ExtensionType, this.type)}`;
-		if (this.payload.length > 0) {
-			ret += `
-  payload: ${buffer2hex(this.payload)}`;
-		}
-		return ret;
+	public toLogEntry(): LogPayloadText {
+		return logText([], {
+			tags: [getEnumMemberName(S2ExtensionType, this.type)],
+			nested: logDict(this.toLogEntryDict()),
+		});
+	}
+
+	protected toLogEntryDict(): MessageRecord {
+		return {
+			payload: logBuffer(this.payload),
+		};
 	}
 }
 
@@ -270,10 +282,10 @@ export class SPANExtension extends Security2Extension {
 		return super.serialize(moreToFollow);
 	}
 
-	public toLogEntry(): string {
-		let ret = super.toLogEntry().replace(/^  payload:.+$/m, "");
-		ret += `  sender EI: ${buffer2hex(this.senderEI)}`;
-		return ret;
+	protected toLogEntryDict(): MessageRecord {
+		return {
+			"sender EI": buffer2hex(this.senderEI),
+		};
 	}
 }
 
@@ -328,15 +340,15 @@ export class MPANExtension extends Security2Extension {
 		return super.serialize(moreToFollow);
 	}
 
-	public toLogEntry(): string {
+	protected toLogEntryDict(): MessageRecord {
 		const mpanState = process.env.NODE_ENV === "test"
 				|| process.env.NODE_ENV === "development"
 			? buffer2hex(this.innerMPANState)
 			: "(hidden)";
-		let ret = super.toLogEntry().replace(/^  payload:.+$/m, "");
-		ret += `  group ID: ${this.groupId}
-  MPAN state: ${mpanState}`;
-		return ret;
+		return {
+			"group ID": this.groupId,
+			"MPAN state": mpanState,
+		};
 	}
 }
 
@@ -373,10 +385,10 @@ export class MGRPExtension extends Security2Extension {
 		return super.serialize(moreToFollow);
 	}
 
-	public toLogEntry(): string {
-		let ret = super.toLogEntry().replace(/^  payload:.+$/m, "");
-		ret += `  group ID: ${this.groupId}`;
-		return ret;
+	protected toLogEntryDict(): MessageRecord {
+		return {
+			"group ID": this.groupId,
+		};
 	}
 }
 

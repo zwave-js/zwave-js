@@ -17,6 +17,8 @@ import {
 	type HostIDs,
 	type ListenBehavior,
 	type LogNode,
+	type LogPayload,
+	type LogPayloadText,
 	type MessageOrCCLogEntry,
 	type MessagePriority,
 	type MessageRecord,
@@ -38,7 +40,10 @@ import {
 	ZWaveErrorCodes,
 	getCCName,
 	isZWaveError,
+	logBuffer,
+	logText,
 	parseCCId,
+	toLogPayload,
 	valueIdToString,
 } from "@zwave-js/core";
 import {
@@ -425,9 +430,7 @@ export class CommandClass implements CCId {
 				message.command = num2hex(this.ccCommand);
 			}
 		}
-		if (this.payload.length > 0) {
-			message.payload = buffer2hex(this.payload);
-		}
+		message.payload = logBuffer(this.payload);
 		return {
 			tags: [tag],
 			message,
@@ -1199,6 +1202,38 @@ export class InvalidCC extends CommandClass {
 				: undefined,
 		};
 	}
+}
+
+/** Renders a CC and its encapsulated CC(s) into a tree-shaped log payload */
+export function ccToLogPayload(
+	cc: CommandClass,
+	ctx?: GetValueDB,
+): LogPayloadText {
+	const entry = cc.toLogEntry(ctx);
+	const nested: LogPayload[] = [];
+	if (entry.message) {
+		const message = toLogPayload(entry.message);
+		// Hoist tagged payloads nested inside the message dict (e.g. S2 extensions)
+		// into the CC's children, so they render as tree siblings
+		if (message.type === "dict" && message.nested) {
+			nested.push({ ...message, nested: undefined });
+			nested.push(
+				...(isArray(message.nested)
+					? message.nested
+					: [message.nested]),
+			);
+		} else {
+			nested.push(message);
+		}
+	}
+	if (isEncapsulatingCommandClass(cc)) {
+		nested.push(ccToLogPayload(cc.encapsulated, ctx));
+	} else if (isMultiEncapsulatingCommandClass(cc)) {
+		for (const encap of cc.encapsulated) {
+			nested.push(ccToLogPayload(encap, ctx));
+		}
+	}
+	return logText([], { tags: entry.tags, nested });
 }
 
 export type CCConstructor<T extends CommandClass> = typeof CommandClass & {

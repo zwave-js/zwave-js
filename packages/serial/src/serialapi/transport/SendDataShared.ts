@@ -224,7 +224,7 @@ export function encodeTXReport(report: SerializableTXReport): BytesView {
 	return ret;
 }
 
-export function txReportToMessageRecord(report: TXReport): MessageRecord {
+export function txReportToLogDict(report: TXReport): MessageRecord {
 	const ret: MessageRecord = stripUndefined({
 		// This is included in the parent command's transmit status line
 		// "TX duration": `${report.txTicks * 10} ms`,

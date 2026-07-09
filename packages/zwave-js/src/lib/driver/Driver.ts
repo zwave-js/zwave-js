@@ -72,6 +72,7 @@ import {
 	type LogConfig,
 	type LogContainer,
 	type LogNodeOptions,
+	type LogPayloadDict,
 	MAX_SUPERVISION_SESSION_ID,
 	MAX_TRANSPORT_SERVICE_SESSION_ID,
 	MPANState,
@@ -113,12 +114,12 @@ import {
 	isMissingControllerResponse,
 	isZWaveError,
 	keyPairFromRawECDHPrivateKey,
-	messageRecordToLines,
+	logDict,
+	logText,
 	randomBytes,
 	securityClassIsS2,
 	securityClassOrder,
 	serializeCacheValue,
-	stripUndefined,
 	timespan,
 	wasControllerReset,
 } from "@zwave-js/core";
@@ -3210,7 +3211,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		ccArgs,
 	) => {
 		let prefix: string;
-		let details: string[];
+		let details: LogPayloadDict;
 		if (ccId === CommandClasses.Notification) {
 			const msg: MessageRecord = {
 				type: ccArgs.label,
@@ -3241,21 +3242,19 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				}
 			}
 			prefix = "[Notification]";
-			details = messageRecordToLines(msg);
+			details = logDict(msg);
 		} else if (ccId === CommandClasses["Entry Control"]) {
 			prefix = "[Notification] Entry Control";
-			details = messageRecordToLines({
+			details = logDict({
 				"event type": ccArgs.eventTypeLabel,
 				"data type": ccArgs.dataTypeLabel,
 			});
 		} else if (ccId === CommandClasses["Multilevel Switch"]) {
 			prefix = "[Notification] Multilevel Switch";
-			details = messageRecordToLines(
-				stripUndefined({
-					"event type": ccArgs.eventTypeLabel,
-					direction: ccArgs.direction,
-				}),
-			);
+			details = logDict({
+				"event type": ccArgs.eventTypeLabel,
+				direction: ccArgs.direction,
+			});
 		} /*if (ccId === CommandClasses.Powerlevel)*/ else {
 			// Don't bother logging this
 			return;
@@ -3263,7 +3262,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 		this.controllerLog.logNode(endpoint.nodeId, {
 			endpoint: endpoint.index,
-			message: [prefix, ...details.map((d) => `  ${d}`)].join("\n"),
+			message: logText(prefix, { nested: details }),
 		});
 	};
 
@@ -8903,13 +8902,17 @@ ${handlers.length} left`,
 
 		const loglevel = this.getLogConfig().level;
 
-		let logMessage = `Downloading OTW firmware update...`;
-		if (loglevel === "silly") {
-			logMessage += `
-URL:       ${update.url}
-integrity: ${update.integrity}`;
-		}
-		this.controllerLog.print(logMessage);
+		const logMessage = "Downloading OTW firmware update...";
+		this.controllerLog.print(
+			loglevel === "silly"
+				? logText(logMessage, {
+					nested: logDict({
+						URL: update.url,
+						integrity: update.integrity,
+					}),
+				})
+				: logMessage,
+		);
 
 		let firmware: Firmware;
 		try {

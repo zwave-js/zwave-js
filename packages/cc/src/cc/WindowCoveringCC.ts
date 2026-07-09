@@ -10,6 +10,8 @@ import {
 	ValueMetadata,
 	type WithAddress,
 	encodeBitMask,
+	logList,
+	logText,
 	parseBitMask,
 	validatePayload,
 } from "@zwave-js/core";
@@ -555,14 +557,16 @@ export class WindowCoveringCC extends CommandClass {
 		});
 		const supported = await api.getSupported();
 		if (supported?.length) {
-			const logMessage = `supported window covering parameters:
-${
-				supported
-					.map((p) =>
-						`· ${getEnumMemberName(WindowCoveringParameter, p)}`
-					)
-					.join("\n")
-			}`;
+			const logMessage = logText(
+				"supported window covering parameters:",
+				{
+					nested: logList(
+						supported.map((p) =>
+							getEnumMemberName(WindowCoveringParameter, p)
+						),
+					),
+				},
+			);
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
@@ -722,17 +726,14 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"supported parameters": this.supportedParameters
-					.map(
-						(p) =>
-							`\n· ${
-								getEnumMemberName(
-									WindowCoveringParameter,
-									p,
-								)
-							}`,
-					)
-					.join(""),
+				"supported parameters": logList(
+					this.supportedParameters.map((p) =>
+						getEnumMemberName(
+							WindowCoveringParameter,
+							p,
+						)
+					),
+				),
 			},
 		};
 	}

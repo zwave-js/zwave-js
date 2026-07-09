@@ -23,6 +23,9 @@ import {
 	generateEncryptionKey,
 	getCCName,
 	isTransmissionError,
+	logDict,
+	logList,
+	logText,
 	parseCCList,
 	randomBytes,
 	validatePayload,
@@ -438,19 +441,17 @@ export class SecurityCC extends CommandClass {
 			return;
 		}
 
-		const logLines: string[] = [
-			"received secure commands (S0)",
-			"supported CCs:",
-		];
-		for (const cc of supportedCCs) {
-			logLines.push(`· ${getCCName(cc)}`);
-		}
-		logLines.push("controlled CCs:");
-		for (const cc of controlledCCs) {
-			logLines.push(`· ${getCCName(cc)}`);
-		}
 		ctx.logNode(node.id, {
-			message: logLines.join("\n"),
+			message: logText("received secure commands (S0)", {
+				nested: logDict({
+					"supported CCs": logList(
+						supportedCCs.map((cc) => getCCName(cc)),
+					),
+					"controlled CCs": logList(
+						controlledCCs.map((cc) => getCCName(cc)),
+					),
+				}),
+			}),
 			direction: "inbound",
 		});
 
@@ -1113,14 +1114,12 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 			...super.toLogEntry(ctx),
 			message: {
 				reportsToFollow: this.reportsToFollow,
-				supportedCCs: this.supportedCCs
-					.map((cc) => getCCName(cc))
-					.map((cc) => `\n· ${cc}`)
-					.join(""),
-				controlledCCs: this.controlledCCs
-					.map((cc) => getCCName(cc))
-					.map((cc) => `\n· ${cc}`)
-					.join(""),
+				supportedCCs: logList(
+					this.supportedCCs.map((cc) => getCCName(cc)),
+				),
+				controlledCCs: logList(
+					this.controlledCCs.map((cc) => getCCName(cc)),
+				),
 			},
 		};
 	}

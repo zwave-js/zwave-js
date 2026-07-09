@@ -45,7 +45,7 @@ import {
 	encodeTXReport,
 	parseTXReport,
 	serializableTXReportToTXReport,
-	txReportToMessageRecord,
+	txReportToLogDict,
 } from "./SendDataShared.js";
 
 export const MAX_SEND_ATTEMPTS = 5;
@@ -314,7 +314,7 @@ export class SendDataRequestTransmitReport extends SendDataRequestBase
 				// Show TX report fields for OK and NoAck (NoAck still provides useful routing info)
 				...(this.txReport && (this.transmitStatus === TransmitStatus.OK
 						|| this.transmitStatus === TransmitStatus.NoAck)
-					? txReportToMessageRecord(this.txReport)
+					? txReportToLogDict(this.txReport)
 					: {}),
 			},
 		};

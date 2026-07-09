@@ -4,6 +4,7 @@ import {
 	MessagePriority,
 	encodeCCList,
 	getCCName,
+	logList,
 } from "@zwave-js/core";
 import {
 	FunctionType,
@@ -67,12 +68,12 @@ export class SetApplicationNodeInformationRequest extends Message {
 				"is listening": this.isListening,
 				"generic device class": num2hex(this.genericDeviceClass),
 				"specific device class": num2hex(this.specificDeviceClass),
-				"supported CCs": this.supportedCCs
-					.map((cc) => `\n· ${getCCName(cc)}`)
-					.join(""),
-				"controlled CCs": this.controlledCCs
-					.map((cc) => `\n· ${getCCName(cc)}`)
-					.join(""),
+				"supported CCs": logList(
+					this.supportedCCs.map((cc) => getCCName(cc)),
+				),
+				"controlled CCs": logList(
+					this.controlledCCs.map((cc) => getCCName(cc)),
+				),
 			},
 		};
 	}

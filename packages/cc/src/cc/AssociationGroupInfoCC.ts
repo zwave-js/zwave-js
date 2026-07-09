@@ -10,6 +10,9 @@ import {
 	type WithAddress,
 	encodeCCId,
 	getCCName,
+	logDict,
+	logList,
+	logText,
 	parseCCId,
 	validatePayload,
 } from "@zwave-js/core";
@@ -455,18 +458,20 @@ export class AssociationGroupInfoCC extends CommandClass {
 			});
 			const info = await api.getGroupInfo(groupId, !!hasDynamicInfo);
 			if (info) {
-				const logMessage =
-					`Received info for association group #${groupId}:
-info is dynamic: ${info.hasDynamicInfo}
-profile:         ${
-						getEnumMemberName(
-							AssociationGroupInfoProfile,
-							info.profile,
-						)
-					}`;
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message: logMessage,
+					message: logText(
+						`Received info for association group #${groupId}:`,
+						{
+							nested: logDict({
+								"info is dynamic": info.hasDynamicInfo,
+								profile: getEnumMemberName(
+									AssociationGroupInfoProfile,
+									info.profile,
+								),
+							}),
+						},
+					),
 					direction: "inbound",
 				});
 			}
@@ -696,19 +701,21 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
-			message: {
-				"is list mode": this.isListMode,
-				"has dynamic info": this.hasDynamicInfo,
-				groups: this.groups
-					.map(
-						(g) => `
-· Group #${g.groupId}
-  mode:       ${g.mode}
-  profile:    ${g.profile}
-  event code: ${g.eventCode}`,
-					)
-					.join(""),
-			},
+			message: logDict(
+				{
+					"is list mode": this.isListMode,
+					"has dynamic info": this.hasDynamicInfo,
+				},
+				this.groups.map((g) =>
+					logText(`Group #${g.groupId}`, {
+						nested: logDict({
+							mode: g.mode,
+							profile: g.profile,
+							"event code": g.eventCode,
+						}),
+					})
+				),
+			),
 		};
 	}
 }
@@ -870,15 +877,15 @@ export class AssociationGroupInfoCCCommandListReport
 			...super.toLogEntry(ctx),
 			message: {
 				"group id": this.groupId,
-				commands: [...this.commands]
-					.map(([cc, cmds]) => {
-						return `\n· ${getCCName(cc)}: ${
+				commands: logList(
+					[...this.commands].map(([cc, cmds]) =>
+						`${getCCName(cc)}: ${
 							cmds
 								.map((cmd) => num2hex(cmd))
 								.join(", ")
-						}`;
-					})
-					.join(""),
+						}`
+					),
+				),
 			},
 		};
 	}

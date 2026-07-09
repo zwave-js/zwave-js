@@ -15,6 +15,7 @@ import {
 	ZWaveErrorCodes,
 	getNodeTag,
 	highResTimestamp,
+	logBuffer,
 } from "@zwave-js/core";
 import { createReflectionDecorator } from "@zwave-js/core/reflection";
 import {
@@ -297,9 +298,7 @@ export class Message {
 
 		return {
 			tags,
-			message: this.payload.length > 0
-				? { payload: `0x${this.payload.toString("hex")}` }
-				: undefined,
+			message: { payload: logBuffer(this.payload) },
 		};
 	}
 

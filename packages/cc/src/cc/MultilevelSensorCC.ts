@@ -26,6 +26,8 @@ import {
 	getSensorName,
 	getSensorScale,
 	getUnknownScale,
+	logList,
+	logText,
 	parseBitMask,
 	parseFloatWithScale,
 	timespan,
@@ -415,11 +417,11 @@ export class MultilevelSensorCC extends CommandClass {
 			});
 			const sensorTypes = await api.getSupportedSensorTypes();
 			if (sensorTypes) {
-				const logMessage = "received supported sensor types:\n"
-					+ sensorTypes
-						.map((t) => getSensorName(t))
-						.map((name) => `· ${name}`)
-						.join("\n");
+				const logMessage = logText("received supported sensor types:", {
+					nested: logList(
+						sensorTypes.map((t) => getSensorName(t)),
+					),
+				});
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: logMessage,
@@ -447,15 +449,15 @@ export class MultilevelSensorCC extends CommandClass {
 				});
 				const sensorScales = await api.getSupportedScales(type);
 				if (sensorScales) {
-					const logMessage = "received supported scales:\n"
-						+ sensorScales
-							.map(
+					const logMessage = logText("received supported scales:", {
+						nested: logList(
+							sensorScales.map(
 								(s) =>
 									(getSensorScale(type, s)
 										?? getUnknownScale(s)).label,
-							)
-							.map((name) => `· ${name}`)
-							.join("\n");
+							),
+						),
+					});
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
 						message: logMessage,
@@ -911,9 +913,9 @@ export class MultilevelSensorCCSupportedSensorReport
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"supported sensor types": this.supportedSensorTypes
-					.map((t) => `\n· ${getSensorName(t)}`)
-					.join(""),
+				"supported sensor types": logList(
+					this.supportedSensorTypes.map((t) => getSensorName(t)),
+				),
 			},
 		};
 	}
@@ -980,15 +982,13 @@ export class MultilevelSensorCCSupportedScaleReport extends MultilevelSensorCC {
 			...super.toLogEntry(ctx),
 			message: {
 				"sensor type": getSensorName(this.sensorType),
-				"supported scales": this.supportedScales
-					.map(
+				"supported scales": logList(
+					this.supportedScales.map(
 						(s) =>
-							`\n· ${
-								(getSensorScale(this.sensorType, s)
-									?? getUnknownScale(s)).label
-							}`,
-					)
-					.join(""),
+							(getSensorScale(this.sensorType, s)
+								?? getUnknownScale(s)).label,
+					),
+				),
 			},
 		};
 	}

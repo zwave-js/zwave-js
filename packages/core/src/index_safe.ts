@@ -3,6 +3,8 @@
 export * from "./definitions/index.js";
 export * from "./dsk/index.js";
 export * from "./error/ZWaveError.js";
+export * from "./log/LogPayload.js";
+export * from "./log/formatPayload.js";
 export * from "./log/shared.js";
 // eslint-disable-next-line @zwave-js/no-forbidden-imports -- FIXME: We know this import is safe, but the lint rule doesn't
 export * from "./qr/index.js";

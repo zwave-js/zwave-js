@@ -1,11 +1,12 @@
 import {
 	type MessageOrCCLogEntry,
 	MessagePriority,
-	type MessageRecord,
 	NodeIDType,
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
+	logBuffer,
+	mergeLogDict,
 	parseBitMask,
 	sdkVersionLt,
 	validatePayload,
@@ -131,15 +132,12 @@ export class SerialAPISetupRequest extends Message {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			command: getEnumMemberName(SerialAPISetupCommand, this.command),
-		};
-		if (this.payload.length > 0) {
-			message.payload = `0x${this.payload.toString("hex")}`;
-		}
 		return {
 			...super.toLogEntry(),
-			message,
+			message: {
+				command: getEnumMemberName(SerialAPISetupCommand, this.command),
+				payload: logBuffer(this.payload),
+			},
 		};
 	}
 }
@@ -184,15 +182,12 @@ export class SerialAPISetupResponse extends Message {
 	public command: SerialAPISetupCommand;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			command: getEnumMemberName(SerialAPISetupCommand, this.command),
-		};
-		if (this.payload.length > 0) {
-			message.payload = `0x${this.payload.toString("hex")}`;
-		}
 		return {
 			...super.toLogEntry(),
-			message,
+			message: {
+				command: getEnumMemberName(SerialAPISetupCommand, this.command),
+				payload: logBuffer(this.payload),
+			},
 		};
 	}
 }
@@ -227,15 +222,18 @@ export class SerialAPISetup_CommandUnsupportedResponse
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.error = "unsupported command";
-		message.command = getEnumMemberName(
-			SerialAPISetupCommand,
-			this.command,
-		);
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				error: "unsupported command",
+				command: getEnumMemberName(
+					SerialAPISetupCommand,
+					this.command,
+				),
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -357,11 +355,14 @@ export class SerialAPISetup_SetTXStatusReportRequest
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.enabled = this.enabled;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				enabled: this.enabled,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -401,11 +402,14 @@ export class SerialAPISetup_SetTXStatusReportResponse
 	public readonly success: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.success = this.success;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				success: this.success,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -445,13 +449,16 @@ export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["node ID type"] = this.nodeIdType === NodeIDType.Short
-			? "8 bit"
-			: "16 bit";
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"node ID type": this.nodeIdType === NodeIDType.Short
+					? "8 bit"
+					: "16 bit",
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -490,11 +497,14 @@ export class SerialAPISetup_SetNodeIDTypeResponse extends SerialAPISetupResponse
 	public readonly success: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.success = this.success;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				success: this.success,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -530,11 +540,14 @@ export class SerialAPISetup_GetRFRegionResponse extends SerialAPISetupResponse {
 	public readonly region: RFRegion;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.region = getEnumMemberName(RFRegion, this.region);
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				region: getEnumMemberName(RFRegion, this.region),
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -572,11 +585,14 @@ export class SerialAPISetup_SetRFRegionRequest extends SerialAPISetupRequest {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.region = getEnumMemberName(RFRegion, this.region);
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				region: getEnumMemberName(RFRegion, this.region),
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -613,11 +629,14 @@ export class SerialAPISetup_SetRFRegionResponse extends SerialAPISetupResponse
 	public readonly success: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.success = this.success;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				success: this.success,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -668,15 +687,15 @@ export class SerialAPISetup_GetPowerlevelResponse
 	public readonly measured0dBm: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
-			"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
+				"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+				payload: undefined,
+			}),
 		};
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }
 
@@ -735,15 +754,15 @@ export class SerialAPISetup_SetPowerlevelRequest extends SerialAPISetupRequest {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
-			"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
+				"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+				payload: undefined,
+			}),
 		};
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }
 
@@ -782,11 +801,14 @@ export class SerialAPISetup_SetPowerlevelResponse extends SerialAPISetupResponse
 	public readonly success: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.success = this.success;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				success: this.success,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -837,15 +859,15 @@ export class SerialAPISetup_GetPowerlevel16BitResponse
 	public readonly measured0dBm: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
-			"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
+				"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+				payload: undefined,
+			}),
 		};
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }
 
@@ -906,15 +928,15 @@ export class SerialAPISetup_SetPowerlevel16BitRequest
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
-			"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"normal powerlevel": `${this.powerlevel.toFixed(1)} dBm`,
+				"output power at 0 dBm": `${this.measured0dBm.toFixed(1)} dBm`,
+				payload: undefined,
+			}),
 		};
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }
 
@@ -954,11 +976,14 @@ export class SerialAPISetup_SetPowerlevel16BitResponse
 	public readonly success: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.success = this.success;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				success: this.success,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -1003,14 +1028,14 @@ export class SerialAPISetup_GetLongRangeMaximumTxPowerResponse
 	public readonly limit: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			"max. TX power (LR)": `${this.limit.toFixed(1)} dBm`,
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"max. TX power (LR)": `${this.limit.toFixed(1)} dBm`,
+				payload: undefined,
+			}),
 		};
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }
 
@@ -1065,14 +1090,14 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerRequest
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			"max. TX power (LR)": `${this.limit.toFixed(1)} dBm`,
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"max. TX power (LR)": `${this.limit.toFixed(1)} dBm`,
+				payload: undefined,
+			}),
 		};
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }
 
@@ -1112,11 +1137,14 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerResponse
 	public readonly success: boolean;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.success = this.success;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				success: this.success,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -1158,11 +1186,14 @@ export class SerialAPISetup_GetMaximumPayloadSizeResponse
 	public readonly maxPayloadSize: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["maximum payload size"] = `${this.maxPayloadSize} bytes`;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"maximum payload size": `${this.maxPayloadSize} bytes`,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -1204,11 +1235,14 @@ export class SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse
 	public readonly maxPayloadSize: number;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message["maximum payload size"] = `${this.maxPayloadSize} bytes`;
-		delete message.payload;
-		return ret;
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"maximum payload size": `${this.maxPayloadSize} bytes`,
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -1289,14 +1323,14 @@ export class SerialAPISetup_GetRegionInfoRequest extends SerialAPISetupRequest {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			region: getEnumMemberName(RFRegion, this.region),
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				region: getEnumMemberName(RFRegion, this.region),
+				payload: undefined,
+			}),
 		};
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }
 
@@ -1352,21 +1386,18 @@ export class SerialAPISetup_GetRegionInfoResponse
 	public readonly includesRegion?: RFRegion;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message: MessageRecord = {
-			...ret.message!,
-			region: getEnumMemberName(RFRegion, this.region),
-			"supports Z-Wave": this.supportsZWave,
-			"supports Long Range": this.supportsLongRange,
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				region: getEnumMemberName(RFRegion, this.region),
+				"supports Z-Wave": this.supportsZWave,
+				"supports Long Range": this.supportsLongRange,
+				"includes region": this.includesRegion != undefined
+					? getEnumMemberName(RFRegion, this.includesRegion)
+					: undefined,
+				payload: undefined,
+			}),
 		};
-		if (this.includesRegion != undefined) {
-			message["includes region"] = getEnumMemberName(
-				RFRegion,
-				this.includesRegion,
-			);
-		}
-		delete message.payload;
-		ret.message = message;
-		return ret;
 	}
 }

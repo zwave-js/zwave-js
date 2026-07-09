@@ -12,6 +12,8 @@ import {
 	ZWaveErrorCodes,
 	encodeBitMask,
 	enumValuesToMetadataStates,
+	logList,
+	logText,
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
@@ -252,13 +254,16 @@ export class ThermostatModeCC extends CommandClass {
 
 		const supportedModes = await api.getSupportedModes();
 		if (supportedModes) {
-			const logMessage = `received supported thermostat modes:${
-				supportedModes
-					.map((mode) =>
-						`\n· ${getEnumMemberName(ThermostatMode, mode)}`
-					)
-					.join("")
-			}`;
+			const logMessage = logText(
+				"received supported thermostat modes:",
+				{
+					nested: logList(
+						supportedModes.map((mode) =>
+							getEnumMemberName(ThermostatMode, mode)
+						),
+					),
+				},
+			);
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
@@ -589,12 +594,11 @@ export class ThermostatModeCCSupportedReport extends ThermostatModeCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				"supported modes": this.supportedModes
-					.map(
-						(mode) =>
-							`\n· ${getEnumMemberName(ThermostatMode, mode)}`,
-					)
-					.join(""),
+				"supported modes": logList(
+					this.supportedModes.map((mode) =>
+						getEnumMemberName(ThermostatMode, mode)
+					),
+				),
 			},
 		};
 	}
