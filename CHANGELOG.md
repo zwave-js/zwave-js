@@ -4,6 +4,20 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Added missing exports for `AssociationGroupInfo`, `UserCode` and `EndpointCapability` types (#8933)
+* Correct Irrigation CC `nominalCurrent` metadata and low flow error label (#8932)
+* Fixed an incorrect assertion in the Window Covering CC `setValue` API (#8931)
+
+### Config file changes
+* Correct Schneider Electric SQR44102 state-after-power-failure values (#8944)
+* Override supported thermostat modes for Fibaro FGT-001 (#8921)
+
+### Changes under the hood
+* Parallelize integration tests, avoid unnecessary timeouts (#8935)
+* Our documentation for CC-specific APIs now includes related types, and types are now turned into links to their definition and previewed on hover (#8936)
+
 ## 15.25.2 (2026-07-03)
 ### Bugfixes
 * When sending S2 encapsulated commands with delivery verification, receiving a command with the next expected sequence number is now treated as a delivery verification instead of continuing to wait for a potential `NonceReport` (#8906)
