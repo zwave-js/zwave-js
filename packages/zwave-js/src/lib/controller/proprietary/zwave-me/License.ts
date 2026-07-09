@@ -92,10 +92,8 @@ export function buildCommandBlock(
 	const block = new Bytes(LICENSE_BLOCK_SIZE).fill(0xff);
 	block[0] = subCommand;
 	block.set(data, 1);
-	block.writeUInt16LE(
-		CRC16_CCITT(block.subarray(0, LICENSE_BLOCK_SIZE - 2)),
-		LICENSE_BLOCK_SIZE - 2,
-	);
+	const crcOffset = block.length - 2;
+	block.writeUInt16LE(CRC16_CCITT(block.subarray(0, crcOffset)), crcOffset);
 	return block;
 }
 
@@ -107,15 +105,17 @@ export function parseCommandBlock(
 	block: BytesView,
 ): { subCommand: number; status: number; payload: Bytes } {
 	const view = Bytes.view(block);
-	const expectedCRC = view.readUInt16LE(LICENSE_BLOCK_SIZE - 2);
-	const actualCRC = CRC16_CCITT(view.subarray(0, LICENSE_BLOCK_SIZE - 2));
+	// CRC covers the whole block except the trailing 2-byte CRC itself
+	const crcOffset = view.length - 2;
+	const expectedCRC = view.readUInt16LE(crcOffset);
+	const actualCRC = CRC16_CCITT(view.subarray(0, crcOffset));
 	if (expectedCRC !== actualCRC) {
 		throw new Error("Z-Wave.me license response failed CRC check");
 	}
 	return {
 		subCommand: view[0],
 		status: view[1],
-		payload: view.subarray(2, LICENSE_BLOCK_SIZE - 2),
+		payload: view.subarray(2, crcOffset),
 	};
 }
 

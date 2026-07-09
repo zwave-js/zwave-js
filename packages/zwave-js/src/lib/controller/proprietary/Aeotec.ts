@@ -11,6 +11,8 @@ import {
 	type TranslatedValueID,
 	type ValueDB,
 	type ValueID,
+	ZWaveError,
+	ZWaveErrorCodes,
 	getCCName,
 } from "@zwave-js/core";
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
@@ -204,8 +206,16 @@ export class ControllerProprietary_Aeotec
 		// HOST->ZW (REQ): 0xF2 | param | (default << 7 | size) | value (MSB first)
 		// ZW->HOST (RES): 0xF2 | retVal
 
-		// The size field is 7 bits, the top bit requests a reset to factory default
-		const sizeField = (useDefault ? 0x80 : 0x00) | (value.length & 0x7f);
+		// The largest value we need to support is the 16-byte S0 security key
+		if (value.length > 16) {
+			throw new ZWaveError(
+				`Aeotec configuration values must not exceed 16 bytes`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		// The top bit of the size field requests a reset to factory default
+		const sizeField = (useDefault ? 0x80 : 0x00) | value.length;
 		const payload = Bytes.concat([
 			[param, sizeField],
 			value,
