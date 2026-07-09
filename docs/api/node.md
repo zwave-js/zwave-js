@@ -916,7 +916,7 @@ This property tracks the status a node in the network currently has (or is belie
 - `NodeStatus.Unknown (0)` - this is the default status of a node. A node is assigned this status before it is being interviewed (including manual re-interviews when calling `refreshInfo`).
 - `NodeStatus.Asleep (1)` - Nodes that support the `WakeUp` CC and failed to respond to a message are assumed asleep.
 - `NodeStatus.Awake (2)` - Sleeping nodes that recently sent a wake up notification are marked awake until they are sent back to sleep or fail to respond to a message.
-- `NodeStatus.Dead (3)` - Nodes that **don't** support the `WakeUp` CC are marked dead when they fail to respond. Examples are plugs that have been pulled out of their socket. Whenever a message is received from a presumably dead node, they are marked as unknown.
+- `NodeStatus.Dead (3)` - Nodes that **don't** support the `WakeUp` CC are marked dead when they fail to respond. Examples are plugs that have been pulled out of their socket. Whenever a message is received from a presumably dead node, they are marked as alive.
 - `NodeStatus.Alive (4)` - Nodes that **don't** support the `WakeUp` CC are considered alive while they do respond. Note that the status may switch from alive to awake/asleep once it is discovered that a node does support the `WakeUp` CC.
 
 Changes of a node's status are broadcasted using the corresponding events - see below.
