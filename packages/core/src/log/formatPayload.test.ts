@@ -131,13 +131,15 @@ test("renders multiple tree children for multi-encapsulation", (t) => {
 	]);
 });
 
-test("splits multi-line string values like separate lines", (t) => {
+test("aligns continuation lines of multi-line string values under the value column", (t) => {
 	t.expect(
 		formatLogPayload({
 			error: "something failed\nwith more detail",
+			ok: true,
 		}),
 	).toStrictEqual([
 		"error: something failed",
-		"with more detail",
+		"       with more detail",
+		"ok:    true",
 	]);
 });

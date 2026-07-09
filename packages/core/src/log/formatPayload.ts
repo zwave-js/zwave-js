@@ -87,8 +87,9 @@ function renderText(
 	// Draw a bracket alongside the content when tree children follow below
 	const gutter = nested.some(isTaggedText) ? "│ " : "  ";
 
+	// Trim the content only, so blank lines keep the gutter
 	const prefixContent = (lines: string[]) =>
-		out.push(...lines.map((l) => (contentPad + gutter + l).trimEnd()));
+		out.push(...lines.map((l) => contentPad + gutter + l.trimEnd()));
 
 	prefixContent(text.lines.flatMap((line) => line.split("\n")));
 
@@ -113,6 +114,8 @@ function renderDict(
 
 	const pad = INDENT.repeat(indent);
 	const maxKeyLength = Math.max(...entries.map(([key]) => key.length));
+	// All values start in the same column, one space after the longest key
+	const valuePad = pad + " ".repeat(maxKeyLength + 2);
 	for (const [key, value] of entries) {
 		if (typeof value === "string") {
 			const [first, ...rest] = value.split("\n");
@@ -123,7 +126,7 @@ function renderDict(
 					+ " ".repeat(maxKeyLength - key.length + 1)
 					+ first).trimEnd(),
 			);
-			out.push(...rest.map((line) => (pad + line).trimEnd()));
+			out.push(...rest.map((line) => (valuePad + line).trimEnd()));
 		} else {
 			out.push(pad + key + ":");
 			out.push(...value.items.map((item) => `${pad}${INDENT}· ${item}`));

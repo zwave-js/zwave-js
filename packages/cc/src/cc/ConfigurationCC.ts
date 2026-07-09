@@ -1371,7 +1371,7 @@ export class ConfigurationCC extends CommandClass {
 						`received information for parameter #${param}:`,
 						{
 							nested: logDict({
-								"parameter name": name,
+								"parameter name": name || undefined,
 								"value format": getEnumMemberName(
 									ConfigValueFormat,
 									properties.valueFormat,

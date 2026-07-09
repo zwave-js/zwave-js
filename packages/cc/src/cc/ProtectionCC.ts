@@ -13,6 +13,7 @@ import {
 	type WithAddress,
 	encodeBitMask,
 	enumValuesToMetadataStates,
+	getNodeTag,
 	logDict,
 	logList,
 	logText,
@@ -519,7 +520,7 @@ rf     ${getEnumMemberName(RFProtectionState, protectionResp.rf)}`;
 			if (nodeId != undefined) {
 				ctx.logNode(node.id, {
 					message: (nodeId !== 0
-						? `Node ${nodeId.toString().padStart(3, "0")}`
+						? getNodeTag(nodeId)
 						: `no node`) + ` has exclusive control`,
 					direction: "inbound",
 				});
