@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.25.3 (2026-07-09)
 ### Bugfixes
 * Added missing exports for `AssociationGroupInfo`, `UserCode` and `EndpointCapability` types (#8933)
 * Correct Irrigation CC `nominalCurrent` metadata and low flow error label (#8932)
