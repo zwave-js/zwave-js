@@ -282,6 +282,30 @@ test("indicatorStateToObjects falls back to the supported property of the Binary
 	]);
 });
 
+test("indicatorStateToObjects normalizes timeout seconds with more than 2 decimals", (t) => {
+	// 12.999 seconds must carry over to 13 whole seconds instead of
+	// producing an out-of-range 100 hundredths
+	t.expect(
+		indicatorStateToObjects(
+			0x30,
+			{ timeout: { seconds: 12.999 } },
+			[0x07, 0x08],
+		),
+	).toStrictEqual([
+		{ indicatorId: 0x30, propertyId: 0x07, value: 13 },
+	]);
+	t.expect(
+		indicatorStateToObjects(
+			0x30,
+			{ timeout: { seconds: 60 } },
+			[0x07, 0x08],
+		),
+	).toStrictEqual([
+		{ indicatorId: 0x30, propertyId: 0x07, value: 59 },
+		{ indicatorId: 0x30, propertyId: 0x08, value: 99 },
+	]);
+});
+
 test("indicatorStateToObjects rejects unsupported functionality and empty states", (t) => {
 	t.expect(() =>
 		indicatorStateToObjects(0x43, { blink: { period: 1 } }, [0x02])

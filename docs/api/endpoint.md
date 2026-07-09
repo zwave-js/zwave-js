@@ -948,6 +948,8 @@ Z-Wave JS provides a high-level API for controlling the indicators of a device, 
 The indicators API is accessed via the `indicators` property on endpoints and nodes. The property is `undefined` when the endpoint does not support the **Indicator CC**, so use it as the support check:
 
 ```ts
+import { Indicator } from "@zwave-js/core";
+
 if (endpoint.indicators) {
 	await endpoint.indicators.set(Indicator["Button 1 indication"], {
 		on: true,

@@ -148,10 +148,13 @@ function timeoutToIndicatorObjects(
 	supportedPropertyIDs: readonly number[] | undefined,
 ): IndicatorObject[] {
 	const objects: IndicatorObject[] = [];
-	const hours = timeout.hours ?? 0;
-	const minutes = timeout.minutes ?? 0;
-	const seconds = Math.floor(timeout.seconds ?? 0);
-	const hundredths = Math.round(((timeout.seconds ?? 0) % 1) * 100);
+	const hours = clamp(timeout.hours ?? 0, 0, 255);
+	const minutes = clamp(timeout.minutes ?? 0, 0, 255);
+	// Round to 2 decimals first, so seconds like 12.999 carry over into
+	// whole seconds instead of producing 100 hundredths
+	const totalSeconds = clamp(roundTo(timeout.seconds ?? 0, 2), 0, 59.99);
+	const seconds = Math.floor(totalSeconds);
+	const hundredths = Math.round((totalSeconds % 1) * 100);
 
 	if (hours) {
 		if (!supportedPropertyIDs?.includes(0x0a)) {
