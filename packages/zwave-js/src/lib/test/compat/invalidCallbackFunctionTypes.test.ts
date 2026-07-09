@@ -27,9 +27,10 @@ integrationTest(
 	{
 		// debug: true,
 
-		// Use a neutral test device so the controller doesn't match a proprietary
-		// implementation. The callback function type bug is emulated via the
-		// disableCallbackFunctionTypeCheck compat flag in the fixture below.
+		// This tests a bug that can be observed on the Aeotec Z-Stick Gen5+.
+		// However that also has a proprietary Serial API extension, which our mocks
+		// do not implement. Therefore test with a fixture that has the
+		// disableCallbackFunctionTypeCheck compat flag.
 		controllerCapabilities: {
 			manufacturerId: 0xdead,
 			productType: 0xbeef,
