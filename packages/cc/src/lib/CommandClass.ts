@@ -1212,7 +1212,19 @@ export function ccToLogPayload(
 	const entry = cc.toLogEntry(ctx);
 	const nested: LogPayload[] = [];
 	if (entry.message) {
-		nested.push(toLogPayload(entry.message));
+		const message = toLogPayload(entry.message);
+		// Hoist tagged payloads nested inside the message dict (e.g. S2 extensions)
+		// into the CC's children, so they render as tree siblings
+		if (message.type === "dict" && message.nested) {
+			nested.push({ ...message, nested: undefined });
+			nested.push(
+				...(isArray(message.nested)
+					? message.nested
+					: [message.nested]),
+			);
+		} else {
+			nested.push(message);
+		}
 	}
 	if (isEncapsulatingCommandClass(cc)) {
 		nested.push(ccToLogPayload(cc.encapsulated, ctx));

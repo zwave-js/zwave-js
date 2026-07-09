@@ -125,9 +125,27 @@ test("renders multiple tree children for multi-encapsulation", (t) => {
 	});
 	t.expect(formatLogPayload(payload)).toStrictEqual([
 		"[Multi Command]",
-		"└─[Basic] [Set]",
-		"    value: 0",
+		"├─[Basic] [Set]",
+		"│   value: 0",
 		"└─[Basic] [Get]",
+	]);
+});
+
+test("wraps long dict values within the value column", (t) => {
+	const payload = logText([], {
+		tags: ["Secure"],
+		nested: logDict({
+			"auth data": "0x" + "ab".repeat(40),
+			short: "ok",
+		}),
+	});
+	t.expect(formatLogPayload(payload, 40)).toStrictEqual([
+		"[Secure]",
+		"  auth data: 0xababababababababababababa",
+		"             bababababababababababababab",
+		"             abababababababababababababa",
+		"             b",
+		"  short:     ok",
 	]);
 });
 
