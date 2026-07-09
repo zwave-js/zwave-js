@@ -36,6 +36,7 @@
 		},
 		{
 			"#": "5",
+			"$purpose": "timer.auto_off",
 			"label": "Auto-Off Delay",
 			"description": "Delay time after the plug is switched off",
 			"valueSize": 2,
@@ -60,6 +61,7 @@
 		},
 		{
 			"#": "8",
+			"$purpose": "overload_protection.threshold",
 			"label": "Overcurrent Protection Threshold",
 			"description": "Threshold at which the plug enters overcurrent protection mode",
 			"valueSize": 1,
@@ -70,6 +72,7 @@
 		},
 		{
 			"#": "9",
+			"$purpose": "reporting_threshold.current",
 			"label": "Current Report Threshold",
 			"description": "Change in current consumption that triggers a report",
 			"valueSize": 2,
