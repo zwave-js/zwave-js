@@ -1,6 +1,7 @@
 import type { CommandClass } from "@zwave-js/cc";
 import {
 	type BeamingInfo,
+	ExplorerFrameCommand,
 	MPDUHeaderType,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
@@ -11,18 +12,22 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	type ZnifferProtocolDataRate,
-	ZnifferRegion,
+	type ZnifferRegion,
+	formatNodeId,
+	formatRoute,
+	longRangeBeamPowerToDBm,
 	parseNodeBitMask,
+	parseRSSI,
 	rssiToString,
 	validatePayload,
 	znifferProtocolDataRateToString,
+	znifferRegionToChannelConfiguration,
 } from "@zwave-js/core";
 import {
 	type ZnifferDataMessage,
 	type ZnifferFrameInfo,
 	ZnifferFrameType,
 } from "@zwave-js/serial";
-import { parseRSSI } from "@zwave-js/serial/serialapi";
 import {
 	type AllOrNone,
 	Bytes,
@@ -31,77 +36,7 @@ import {
 	pick,
 	staticExtends,
 } from "@zwave-js/shared";
-import {
-	ExplorerFrameCommand,
-	LongRangeFrameType,
-	ZWaveFrameType,
-} from "./_Types.js";
-
-function getChannelConfiguration(region: ZnifferRegion): "1/2" | "3" | "4" {
-	switch (region) {
-		case ZnifferRegion.Japan:
-		case ZnifferRegion.Korea:
-			return "3";
-		case ZnifferRegion["USA (Long Range)"]:
-		case ZnifferRegion["USA (Long Range, backup)"]:
-		case ZnifferRegion["USA (Long Range, end device)"]:
-			return "4";
-		default:
-			return "1/2";
-	}
-}
-
-function longRangeBeamPowerToDBm(power: number): number {
-	return [
-		-6,
-		-2,
-		2,
-		6,
-		10,
-		13,
-		16,
-		19,
-		21,
-		23,
-		25,
-		26,
-		27,
-		28,
-		29,
-		30,
-	][power];
-}
-
-function formatNodeId(nodeId: number): string {
-	return nodeId.toString().padStart(3, "0");
-}
-
-function formatRoute(
-	source: number,
-	repeaters: readonly number[],
-	destination: number,
-	direction: "outbound" | "inbound",
-	currentHop: number,
-	failedHop?: number,
-): string {
-	return [
-		direction === "outbound"
-			? formatNodeId(source)
-			: formatNodeId(destination),
-		...repeaters.map(formatNodeId),
-		direction === "outbound"
-			? formatNodeId(destination)
-			: formatNodeId(source),
-	].map((id, i) => {
-		if (i === 0) return id;
-		if (i - 1 === failedHop) return " × " + id;
-		if (i - 1 === currentHop) {
-			return (direction === "outbound" ? " » " : " « ") + id;
-		}
-		return (direction === "outbound" ? " › " : " ‹ ") + id;
-	})
-		.join("");
-}
+import { LongRangeFrameType, ZWaveFrameType } from "./_Types.js";
 
 export interface MPDUOptions {
 	data: Bytes;
@@ -503,7 +438,9 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 	public constructor(options: MPDUOptions) {
 		super(options);
 
-		const channelConfig = getChannelConfiguration(this.frameInfo.region);
+		const channelConfig = znifferRegionToChannelConfiguration(
+			this.frameInfo.region,
+		);
 
 		this.direction = (this.payload[0] & 0b1) ? "inbound" : "outbound";
 		this.routedAck = !!(this.payload[0] & 0b10);
@@ -587,8 +524,13 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		const message: MessageRecord = {
 			...original,
 			"ack requested": this.ackRequested,
-			payload: buffer2hex(this.payload),
 		};
+
+		if (this.routedAck) {
+			tags.unshift("R-ACK");
+		} else {
+			message.payload = buffer2hex(this.payload);
+		}
 
 		return {
 			tags,
@@ -798,7 +740,7 @@ export function parseBeamFrame(
 		});
 	}
 
-	const channelConfig = getChannelConfiguration(frame.region);
+	const channelConfig = znifferRegionToChannelConfiguration(frame.region);
 	switch (channelConfig) {
 		case "1/2":
 		case "3": {
