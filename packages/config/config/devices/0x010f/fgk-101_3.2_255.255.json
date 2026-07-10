@@ -252,7 +252,7 @@
 		{
 			"#": "31",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Tamper Cancellation Reports",
+			"label": "Send Alarm Report: Tamper Cancellation",
 			"defaultValue": 1
 		},
 		{

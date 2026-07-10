@@ -204,21 +204,10 @@
 		},
 		{
 			"#": "31",
-			"label": "Tamper: Reporting Alarm Cancellation",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Tamper Cancellation",
 			"description": "Reporting cancellation of tamper alarm to the controller and 3rd association group",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Do not send tamper cancellation report",
-					"value": 0
-				},
-				{
-					"label": "Send tamper cancellation report",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "50",

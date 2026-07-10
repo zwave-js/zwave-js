@@ -110,21 +110,10 @@
 		},
 		{
 			"#": "7",
+			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "S2: Check Device Status Before Sending Control Frame",
 			"description": "Not possible if roller blind switch is chosen in parameter 14. Requires parameter 19 set to 0.",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Device status is not checked",
-					"value": 0
-				},
-				{
-					"label": "Device status is checked",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "8",
@@ -257,40 +246,17 @@
 		{
 			"#": "15",
 			"$if": "firmwareVersion <= 2.0",
+			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Double Click Option",
-			"description": "Double click sets lighting at 100%",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Double click disabled",
-					"value": 0
-				},
-				{
-					"label": "Double click enabled",
-					"value": 1
-				}
-			]
+			"description": "Double click sets lighting at 100%"
 		},
 		{
 			"#": "15",
 			"$if": "firmwareVersion >= 2.1",
+			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Double Click Option",
 			"description": "Double click sets lighting at 100%",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Double click disabled",
-					"value": 0
-				},
-				{
-					"label": "Double click enabled",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "16",
@@ -387,21 +353,9 @@
 		{
 			"#": "41",
 			"$if": "firmwareVersion >= 1.9",
+			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Scene Activation Functionality",
-			"description": "Sends Scene Activation commands to association group 3",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Scene functionality deactivated",
-					"value": 0
-				},
-				{
-					"label": "Scene functionality activated",
-					"value": 1
-				}
-			]
+			"description": "Sends Scene Activation commands to association group 3"
 		}
 	],
 	"metadata": {

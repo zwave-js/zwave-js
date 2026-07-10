@@ -312,21 +312,9 @@
 		},
 		{
 			"#": "88",
+			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Temperature Measurement Compensation for Report",
-			"description": "Consider temperature measurement compensation (parameter 73) when sending temperature report",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Ignore temperature compensation",
-					"value": 0
-				},
-				{
-					"label": "Include temperature compensation",
-					"value": 1
-				}
-			]
+			"description": "Consider temperature measurement compensation (parameter 73) when sending temperature report"
 		},
 		{
 			"#": "89",

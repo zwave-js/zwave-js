@@ -144,21 +144,9 @@
 		},
 		{
 			"#": "9",
-			"label": "Device Off and Alarm Cancellations",
-			"description": "Enable/disable alarm cancellation updates to the 2nd and 3rd association groups",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Alarm (Flooding) cancellation inactive",
-					"value": 0
-				},
-				{
-					"label": "Alarm (Flooding) cancellation active",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Flooding Cancellation",
+			"defaultValue": 1
 		},
 		{
 			"#": "10",
@@ -313,21 +301,9 @@
 		},
 		{
 			"#": "77",
-			"label": "Flood Sensor Functionality Turned Off",
-			"description": "Allows the internal flood sensor to be turned off.",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Flood sensor on",
-					"value": 0
-				},
-				{
-					"label": "Built-In flood sensor turned off",
-					"value": 1
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Internal Flood Sensor",
+			"defaultValue": 0
 		},
 		{
 			"#": "78[0x01]",

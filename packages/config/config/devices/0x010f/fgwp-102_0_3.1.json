@@ -69,21 +69,9 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "'Always On' Mode",
-			"description": "When active, the Wall Plug keeps the connected device constantly on and stops reacting to alarm frames and B-button pushes.",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Active",
-					"value": 0
-				},
-				{
-					"label": "Inactive",
-					"value": 1
-				}
-			]
+			"description": "When active, the Wall Plug keeps the connected device constantly on and stops reacting to alarm frames and B-button pushes."
 		},
 		{
 			"#": "16",

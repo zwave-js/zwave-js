@@ -69,21 +69,9 @@
 	"paramInformation": [
 		{
 			"#": "1",
+			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "'Always On' Mode",
-			"description": "When active, the Wall Plug keeps the connected device permanently on and stops reacting to attempts to turn it off.",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Inactive",
-					"value": 0
-				},
-				{
-					"label": "Active",
-					"value": 1
-				}
-			]
+			"description": "When active, the Wall Plug keeps the connected device permanently on and stops reacting to attempts to turn it off."
 		},
 		{
 			"#": "2",

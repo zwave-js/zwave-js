@@ -107,7 +107,7 @@
 			"#": "2[0x100]",
 			"$if": "firmwareVersion >= 4.7",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Heating Medium Demand Reports",
+			"label": "Send Heating Medium Demand Reports",
 			"valueSize": 4
 		},
 		{

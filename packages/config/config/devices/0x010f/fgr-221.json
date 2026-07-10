@@ -75,20 +75,9 @@
 		},
 		{
 			"#": "10",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
 			"label": "Shutter Positioning Function",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Shutter positioning enabled",
-					"value": 0
-				},
-				{
-					"label": "Shutter positioning disabled",
-					"value": 1
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "14",

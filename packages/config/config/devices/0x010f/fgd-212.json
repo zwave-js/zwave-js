@@ -639,93 +639,38 @@
 		},
 		{
 			"#": "45",
-			"label": "Power Limit Alarm Report",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Power Limit",
 			"description": "Load power consumption too high",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "No reaction",
-					"value": 0
-				},
-				{
-					"label": "Send an alarm frame",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "46",
-			"label": "Load Error Alarm Report",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Load Error",
 			"description": "No load, load failure, burnt out bulb",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "No reaction",
-					"value": 0
-				},
-				{
-					"label": "Send an alarm frame",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "47",
-			"label": "Overcurrent Alarm Report",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Overcurrent",
 			"description": "Short circuit, burnt out bulb causing overcurrent",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "No reaction",
-					"value": 0
-				},
-				{
-					"label": "Send an alarm frame",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "48",
-			"label": "Surge Alarm Report",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Surge",
 			"description": "Dimmer output overvoltage",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "No reaction",
-					"value": 0
-				},
-				{
-					"label": "Send an alarm frame",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "49",
-			"label": "Overheat and Voltage Drop Alarm Report",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Overheat and Voltage Drop",
 			"description": "Critical temperature and low voltage",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "No reaction",
-					"value": 0
-				},
-				{
-					"label": "Send an alarm frame",
-					"value": 1
-				}
-			]
+			"defaultValue": 1
 		},
 		{
 			"#": "50",

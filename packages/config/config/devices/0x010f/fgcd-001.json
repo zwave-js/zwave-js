@@ -347,7 +347,7 @@
 		{
 			"#": "23",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "CO Concentration Reports",
+			"label": "Send CO Concentration Reports",
 			"description": "Activates reporting the value of CO concentration level to the main Z-Wave controller.",
 			"defaultValue": 1
 		},

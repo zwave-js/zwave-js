@@ -63,21 +63,9 @@
 		},
 		{
 			"#": "3",
+			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Auto Off: Manual Override",
-			"description": "When enabled, a button push turns the relay off before the auto off time expires",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Manual override disabled",
-					"value": 0
-				},
-				{
-					"label": "Manual override enabled",
-					"value": 1
-				}
-			]
+			"description": "When enabled, a button push turns the relay off before the auto off time expires"
 		},
 		{
 			"#": "4",

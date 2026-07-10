@@ -264,7 +264,7 @@
 		{
 			"#": "21",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Flashing Mode - Reports"
+			"label": "Send Reports During Flashing Mode"
 		},
 		{
 			"#": "27[0x01]",
