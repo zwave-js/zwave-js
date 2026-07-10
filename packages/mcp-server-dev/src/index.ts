@@ -7,8 +7,13 @@ import {
 	ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { McpToolRegistry } from "./registry.js";
+import type { ConsentPrompt, ElicitConsentFn } from "./semantic/embedding.js";
+import { SemanticSearchService } from "./semantic/service.js";
 import {
 	autofixConfigTool,
+	createFindSimilarParametersTool,
+	createSearchParameterDefinitionsTool,
+	createSuggestParameterPurposeTool,
 	findTemplateDefinitionTool,
 	findTemplateReferencesTool,
 	formatTool,
@@ -20,6 +25,7 @@ import {
 class DevMCPServer {
 	private server: Server;
 	private registry: McpToolRegistry;
+	private semanticSearch: SemanticSearchService;
 
 	constructor() {
 		this.server = new Server(
@@ -34,9 +40,58 @@ class DevMCPServer {
 			},
 		);
 
+		// Elicitation is a *client* capability the server merely requests via
+		// server.elicitInput(); it must not be declared in the server's own
+		// capabilities above. Whether it's actually supported is only known
+		// after the client connects and advertises its capabilities, so this
+		// getter is re-evaluated lazily, on the first local model download
+		// that actually needs a consent decision.
+		this.semanticSearch = new SemanticSearchService({
+			getElicit: () => this.getElicitConsentFn(),
+		});
+
 		this.registry = new McpToolRegistry();
 		this.registerTools();
 		this.setupToolHandlers();
+	}
+
+	private getElicitConsentFn(): ElicitConsentFn | undefined {
+		if (!this.server.getClientCapabilities()?.elicitation) return undefined;
+		return async (prompt: ConsentPrompt) => {
+			const result = await this.server.elicitInput({
+				message: `The local semantic search model "${prompt.modelId}" `
+					+ `(revision ${prompt.revision}) is not cached yet. Downloading `
+					+ `it from ${prompt.source} (license: ${prompt.license}) will `
+					+ `fetch approximately ${prompt.approxSizeMb} MB and store it `
+					+ `under ${prompt.cacheDir}. Approve the download?`,
+				requestedSchema: {
+					type: "object",
+					properties: {
+						decision: {
+							type: "string",
+							title: "Model download",
+							description:
+								`Download and cache ${prompt.modelId}@${prompt.revision} `
+								+ `(~${prompt.approxSizeMb} MB, ${prompt.license})`,
+							enum: ["decline", "approve"],
+							enumNames: [
+								"Do not download",
+								"Download and cache model",
+							],
+							default: "decline",
+						},
+					},
+					required: ["decision"],
+				},
+			});
+			if (result.action === "cancel") return { decision: "cancel" };
+			return {
+				decision: result.action === "accept"
+						&& result.content?.decision === "approve"
+					? "approve"
+					: "decline",
+			};
+		};
 	}
 
 	private registerTools() {
@@ -48,6 +103,15 @@ class DevMCPServer {
 		this.registry.register(resolveImportTool);
 		this.registry.register(findTemplateDefinitionTool);
 		this.registry.register(findTemplateReferencesTool);
+		this.registry.register(
+			createSearchParameterDefinitionsTool(this.semanticSearch),
+		);
+		this.registry.register(
+			createFindSimilarParametersTool(this.semanticSearch),
+		);
+		this.registry.register(
+			createSuggestParameterPurposeTool(this.semanticSearch),
+		);
 	}
 
 	private setupToolHandlers() {

@@ -1,6 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { clearTemplateCache, resolveImportPath } from "@zwave-js/config";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join, normalize, resolve } from "node:path";
 import PQueue from "p-queue";
 import {
@@ -9,6 +9,7 @@ import {
 } from "../configDoc/astUtils.js";
 import { parseSymbols } from "../configDoc/configDocument.js";
 import { DEVICES_DIR, fs } from "../configEnv.js";
+import { listConfigFiles } from "../semantic/corpus.js";
 import type { ToolHandler } from "../types.js";
 import { errorResult, textResult } from "./results.js";
 
@@ -17,14 +18,6 @@ export const TOOL_NAME = "find_template_references";
 interface FindTemplateReferencesArgs {
 	templateFile: string;
 	templateName: string;
-}
-
-/** Lists all `.json` files below the devices directory */
-async function listConfigFiles(): Promise<string[]> {
-	const relative = await readdir(DEVICES_DIR, { recursive: true });
-	return relative
-		.filter((f) => f.endsWith(".json"))
-		.map((f) => join(DEVICES_DIR, f));
 }
 
 async function handleFindTemplateReferences(
@@ -42,7 +35,8 @@ async function handleFindTemplateReferences(
 	clearTemplateCache();
 
 	try {
-		const files = await listConfigFiles();
+		const files = (await listConfigFiles())
+			.map((f) => join(DEVICES_DIR, f));
 		const refs: { file: string; line: number; column: number }[] = [];
 
 		// Reading and parsing the whole device corpus dominates the runtime,
