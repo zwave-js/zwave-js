@@ -300,6 +300,13 @@ The `zwave-dev` MCP server provides tools to inspect templates without manually 
 - `resolve_config_param` - resolve a parameter to its final JSON with all templates applied (optionally evaluating `$if` conditionals for a given firmware version). Use this to confirm overrides produce the intended result.
 - `find_template_definition` - jump to where a template (or a parameter's `$import`) is defined.
 - `find_template_references` - list every device file that imports a given template. Use this before changing a shared template to assess the impact.
+- `search_parameter_definitions` - search concrete parameters and reusable templates by meaning. Use this before adding a parameter to find established wording, equivalent definitions, and possible templates despite manufacturer-specific terminology.
+- `find_similar_parameters` - compare a parameter in a config with semantically and structurally similar parameters and templates. Use its structural differences and source links to evaluate deduplication or `$import` reuse; do not assume a high semantic score proves compatibility.
+- `suggest_parameter_purpose` - suggest existing `$purpose` values for free text or a concrete config parameter. Suggestions are derived from tagged parameter prototypes and include representative examples; review the evidence before applying a purpose.
+
+The semantic tools use a consent-gated local embedding model. See
+`packages/mcp-server-dev/README.md` for download consent, caching, and headless
+environment configuration.
 
 ### When Reviewing Templates
 

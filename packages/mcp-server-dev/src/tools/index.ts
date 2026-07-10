@@ -1,7 +1,10 @@
 export { autofixConfigTool } from "./autofixConfig.js";
+export { createFindSimilarParametersTool } from "./findSimilarParameters.js";
 export { findTemplateDefinitionTool } from "./findTemplateDefinition.js";
 export { findTemplateReferencesTool } from "./findTemplateReferences.js";
 export { formatTool } from "./format.js";
 export { lintConfigTool } from "./lintConfig.js";
 export { resolveImportTool } from "./resolveImport.js";
 export { resolveParamTool } from "./resolveParam.js";
+export { createSearchParameterDefinitionsTool } from "./searchParameterDefinitions.js";
+export { createSuggestParameterPurposeTool } from "./suggestParameterPurpose.js";

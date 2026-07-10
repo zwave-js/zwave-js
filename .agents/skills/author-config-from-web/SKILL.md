@@ -73,6 +73,7 @@ For each parameter found on the website:
 ### Template Usage
 
 - Use `$import` to reference existing templates when parameters match common patterns
+- Before creating a definition, use `search_parameter_definitions` with the documented behavior to find equivalent parameters and reusable templates. When editing an existing parameter, use `find_similar_parameters`.
 - For manufacturer templates: `"$import": "templates/manufacturer_template.json#parameter_name"`
 - For master templates: `"$import": "~/templates/master_template.json#template_name"`
 - Override imported properties when needed by placing them after the `$import`
