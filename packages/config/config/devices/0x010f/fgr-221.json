@@ -1,0 +1,220 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGR-221",
+	"description": "Roller Shutter Controller",
+	"devices": [
+		{
+			"productType": "0x0300",
+			"productId": "0x0104"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x0106"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x0107"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x0109"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x100a"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Single Click",
+			"description": "Triggered by single-clicking of any key.",
+			"maxNodes": 16
+		},
+		"2": {
+			"label": "Hold Down",
+			"description": "Triggered by holding down any key.",
+			"maxNodes": 16
+		},
+		"3": {
+			"label": "Controller Updates",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Enable/Disable ALL ON/OFF",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "All on active / All off active",
+					"value": 255
+				},
+				{
+					"label": "All on disabled / All off disabled",
+					"value": 0
+				},
+				{
+					"label": "All on disabled / All off active",
+					"value": 1
+				},
+				{
+					"label": "All on active / All off disabled",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Shutter Positioning Function",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Shutter positioning enabled",
+					"value": 0
+				},
+				{
+					"label": "Shutter positioning disabled",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "14",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch",
+					"value": 1
+				},
+				{
+					"label": "Single momentary switch",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "20",
+			"label": "Favorite Position",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 16
+		},
+		{
+			"#": "30",
+			"label": "General Alarm",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "31",
+			"label": "Water Flooding Alarm",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "32",
+			"label": "Smoke, CO, CO2 Alarm",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "33",
+			"label": "Temperature Alarm",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "41",
+			"$if": "firmwareVersion >= 1.9",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Scene Activation",
+			"description": "Send Scene Activation commands to association group 3"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Connect the device in accordance with the wiring diagram and switch on the mains voltage.\n2. Set the controller in add mode (see the controller's manual).\n3. Quickly, triple click the key no. 1 (S1) or the B-button located inside the housing.",
+		"exclusion": "1. Make sure the device is powered.\n2. Set the controller in remove mode (see the controller's manual).\n3. Quickly, triple click the key no. 1 (S1) or the B-button located inside the housing.",
+		"reset": "Within 5 seconds after connecting the mains voltage supply, press once the S1 key and then hold the S2 key.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGR-221/FGR-221-EN-A-v1.02.pdf"
+	}
+}

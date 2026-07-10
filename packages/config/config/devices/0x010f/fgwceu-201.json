@@ -13,6 +13,37 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off (1)",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Dimmer (1)",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "On/Off (2)",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Dimmer (2)",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Multidevice",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "Slats",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "13",
@@ -20,30 +51,22 @@
 			"valueSize": 1,
 			"unit": "%",
 			"minValue": 0,
-			"maxValue": 102,
+			"maxValue": 100,
 			"defaultValue": 100,
 			"options": [
 				{
-					"label": "Disable",
+					"label": "LED disabled",
 					"value": 0
-				},
-				{
-					"label": "Proportional to power",
-					"value": 101
-				},
-				{
-					"label": "Inversely proportional to power",
-					"value": 102
 				}
 			]
 		},
 		{
 			"#": "20",
-			"label": "Switch Configuration",
+			"label": "Operation Mode",
+			"description": "Choose the mode depending on the type of the device you want to control remotely",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 6,
-			"defaultValue": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Scene controller mode",
@@ -66,24 +89,25 @@
 					"value": 4
 				},
 				{
-					"label": "Roller shutter controller mode",
+					"label": "Roller shutter controller mode (Step-By-Step)",
 					"value": 5
 				},
 				{
-					"label": "Venetian blinds controller mode",
+					"label": "Venetian blinds controller mode (Step-By-Step)",
 					"value": 6
 				}
 			]
 		},
 		{
 			"#": "150",
-			"label": "LED Frame: First Channel Color",
+			"label": "LED Ring: First Button Color",
+			"description": "Color of the first button indicator (upper part of the LED ring) for indications using Indicator CC",
 			"valueSize": 2,
-			"defaultValue": 0,
+			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable",
+					"label": "LED disabled",
 					"value": 0
 				},
 				{
@@ -115,7 +139,7 @@
 					"value": 7
 				},
 				{
-					"label": "Blinking red, white, blue",
+					"label": "Blinking red-white-blue",
 					"value": 8
 				}
 			]
@@ -123,27 +147,30 @@
 		{
 			"#": "151",
 			"$import": "#paramInformation/150",
-			"label": "LED Frame: Second Channel Color"
+			"label": "LED Ring: Second Button Color",
+			"description": "Color of the second button indicator (lower part of the LED ring) for indications using Indicator CC"
 		},
 		{
 			"#": "152",
-			"label": "First Channel: Double Click Value",
-			"description": "Defines value of Basic Set or Multilevel Set frame sent to associated devices",
+			"label": "First Button: Double Click Value",
+			"description": "Value of Basic Set or Multilevel Set frame (depending on selected mode) sent to associated devices after double click. Not relevant for Scene Controller Mode.",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
-			"defaultValue": 99,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		},
 		{
 			"#": "153",
 			"$import": "#paramInformation/152",
-			"label": "Second Channel: Double Click Value"
+			"label": "Second Button: Double Click Value",
+			"description": "Value of Basic Set or Multilevel Set frame (depending on selected mode) sent to associated devices after double click. Used only in Double Button Mode."
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "1. Set the main controller in (Security/non-Security) add mode (see the controller manual)\n2. Quickly, three times click one of the buttons\n3. If you are adding in Security S2 Authenticated mode, input the underlined part of the device security key (DSK) labeled on the box\n4. LED starts blinking yellow, wait for the adding process to end",
+		"exclusion": "1. Set the main controller into remove mode (see the controller manual)\n2. Quickly, three times click, then press and hold one of the buttons for 12 seconds\n3. Release the button when the device glows green\n4. Quickly click the button to confirm\n5. LED starts blinking yellow, wait for the removing process to end",
+		"reset": "1. Quickly, three times click, then press and hold one of the buttons for 21 seconds\n2. Release the button when the device glows yellow\n3. Quickly click the button to confirm\n4. After a few seconds the device is restarted, which is signaled with the red LED color",
+		"wakeup": "1. Quickly, three times click, then press and hold one of the buttons\n2. Release the button when the device signals the first menu position with white color\n3. Quickly click the button to confirm",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWCEU-201/FGWCEU-201-T-EN-f1.2-15.07.24.pdf"
+	}
 }

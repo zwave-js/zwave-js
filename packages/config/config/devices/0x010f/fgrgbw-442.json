@@ -2,7 +2,7 @@
 	"manufacturer": "Fibargroup",
 	"manufacturerId": "0x010f",
 	"label": "FGRGBW-442",
-	"description": "RGBW CONTROLLER 2",
+	"description": "RGBW Controller 2",
 	"devices": [
 		{
 			"productType": "0x0902",
@@ -25,10 +25,56 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "RGBW Sync",
+			"description": "Allows to synchronize state of other FIBARO RGBW Controller devices - do not use with other devices.",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "On/Off (IN1)",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Dimmer (IN1)",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "On/Off (IN2)",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Dimmer (IN2)",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "On/Off (IN3)",
+			"maxNodes": 5
+		},
+		"8": {
+			"label": "Dimmer (IN3)",
+			"maxNodes": 5
+		},
+		"9": {
+			"label": "On/Off (IN4)",
+			"maxNodes": 5
+		},
+		"10": {
+			"label": "Dimmer (IN4)",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
-			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev"
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev",
+			"defaultValue": 0
 		},
 		{
 			"#": "20",
@@ -38,11 +84,11 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Analog input without internal pull-up",
+					"label": "Analog input without internal pull-up (Multilevel sensor)",
 					"value": 0
 				},
 				{
-					"label": "Analog input with internal pull-up",
+					"label": "Analog input with internal pull-up (Multilevel sensor)",
 					"value": 1
 				},
 				{
@@ -50,11 +96,11 @@
 					"value": 2
 				},
 				{
-					"label": "Toggle switch: Switch state on every input change",
+					"label": "Toggle switch: Switch state on every input change (Central Scene)",
 					"value": 3
 				},
 				{
-					"label": "Toggle switch: Closed – on, opened – off",
+					"label": "Toggle switch: On when closed, off when opened (Central Scene)",
 					"value": 4
 				}
 			]
@@ -67,11 +113,11 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Analog input without internal pull-up",
+					"label": "Analog input without internal pull-up (Multilevel sensor)",
 					"value": 0
 				},
 				{
-					"label": "Analog input with internal pull-up",
+					"label": "Analog input with internal pull-up (Multilevel sensor)",
 					"value": 1
 				},
 				{
@@ -79,11 +125,11 @@
 					"value": 2
 				},
 				{
-					"label": "Toggle switch: Switch state on every input change",
+					"label": "Toggle switch: Switch state on every input change (Central Scene)",
 					"value": 3
 				},
 				{
-					"label": "Toggle switch: Closed – on, opened – off",
+					"label": "Toggle switch: On when closed, off when opened (Central Scene)",
 					"value": 4
 				}
 			]
@@ -96,11 +142,11 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Analog input without internal pull-up",
+					"label": "Analog input without internal pull-up (Multilevel sensor)",
 					"value": 0
 				},
 				{
-					"label": "Analog input with internal pull-up",
+					"label": "Analog input with internal pull-up (Multilevel sensor)",
 					"value": 1
 				},
 				{
@@ -108,11 +154,11 @@
 					"value": 2
 				},
 				{
-					"label": "Toggle switch: Switch state on every input change",
+					"label": "Toggle switch: Switch state on every input change (Central Scene)",
 					"value": 3
 				},
 				{
-					"label": "Toggle switch: Closed – on, opened – off",
+					"label": "Toggle switch: On when closed, off when opened (Central Scene)",
 					"value": 4
 				}
 			]
@@ -125,11 +171,11 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Analog input without internal pull-up",
+					"label": "Analog input without internal pull-up (Multilevel sensor)",
 					"value": 0
 				},
 				{
-					"label": "Analog input with internal pull-up",
+					"label": "Analog input with internal pull-up (Multilevel sensor)",
 					"value": 1
 				},
 				{
@@ -137,63 +183,282 @@
 					"value": 2
 				},
 				{
-					"label": "Toggle switch: Switch state on every input change",
+					"label": "Toggle switch: Switch state on every input change (Central Scene)",
 					"value": 3
 				},
 				{
-					"label": "Toggle switch:Closed – on, opened – of",
+					"label": "Toggle switch: On when closed, off when opened (Central Scene)",
 					"value": 4
 				}
 			]
 		},
 		{
-			"#": "40",
-			"label": "Input 1 - Sent Scenes",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 15,
-			"defaultValue": 15
+			"#": "30[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration - 1st Slot Notification Type",
+			"defaultValue": 0
 		},
 		{
-			"#": "41",
-			"label": "Input 2 - Sent Scenes",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 15,
-			"defaultValue": 15
+			"#": "30[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration - 1st Slot Notification Status",
+			"defaultValue": 0
 		},
 		{
-			"#": "42",
-			"label": "Input 3 - Sent Scenes",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 15,
-			"defaultValue": 15
+			"#": "30[0xff00]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event_parameter",
+			"label": "Alarm Configuration - 1st Slot Notification Event/State Parameters"
 		},
 		{
-			"#": "43",
-			"label": "Input 4 - Sent Scenes",
-			"valueSize": 1,
+			"#": "30[0xff]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_action",
+			"label": "Alarm Configuration - 1st Slot Action",
+			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
+			"maxValue": 58,
+			"defaultValue": 0
+		},
+		{
+			"#": "31[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration - 2nd Slot Notification Type",
+			"defaultValue": 5
+		},
+		{
+			"#": "31[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration - 2nd Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "31[0xff00]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event_parameter",
+			"label": "Alarm Configuration - 2nd Slot Notification Event/State Parameters"
+		},
+		{
+			"#": "31[0xff]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_action",
+			"label": "Alarm Configuration - 2nd Slot Action",
+			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
+			"maxValue": 58,
+			"defaultValue": 0
+		},
+		{
+			"#": "32[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration - 3rd Slot Notification Type",
+			"defaultValue": 1
+		},
+		{
+			"#": "32[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration - 3rd Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "32[0xff00]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event_parameter",
+			"label": "Alarm Configuration - 3rd Slot Notification Event/State Parameters"
+		},
+		{
+			"#": "32[0xff]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_action",
+			"label": "Alarm Configuration - 3rd Slot Action",
+			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
+			"maxValue": 58,
+			"defaultValue": 0
+		},
+		{
+			"#": "33[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration - 4th Slot Notification Type",
+			"defaultValue": 2
+		},
+		{
+			"#": "33[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration - 4th Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "33[0xff00]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event_parameter",
+			"label": "Alarm Configuration - 4th Slot Notification Event/State Parameters"
+		},
+		{
+			"#": "33[0xff]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_action",
+			"label": "Alarm Configuration - 4th Slot Action",
+			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
+			"maxValue": 58,
+			"defaultValue": 0
+		},
+		{
+			"#": "34[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration - 5th Slot Notification Type",
+			"defaultValue": 4
+		},
+		{
+			"#": "34[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration - 5th Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "34[0xff00]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event_parameter",
+			"label": "Alarm Configuration - 5th Slot Notification Event/State Parameters"
+		},
+		{
+			"#": "34[0xff]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_action",
+			"label": "Alarm Configuration - 5th Slot Action",
+			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
+			"maxValue": 58,
+			"defaultValue": 0
+		},
+		{
+			"#": "35",
+			"label": "Duration of Alarm Signalization",
+			"valueSize": 2,
+			"unit": "seconds",
 			"minValue": 0,
-			"maxValue": 15,
-			"defaultValue": 15
+			"maxValue": 32400,
+			"defaultValue": 600,
+			"options": [
+				{
+					"label": "Infinite signalization",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "40[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 1 Scenes: Key Pressed 1 Time",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 1 Scenes: Key Pressed 2 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 1 Scenes: Key Pressed 3 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 1 Scenes: Key Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 2 Scenes: Key Pressed 1 Time",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 2 Scenes: Key Pressed 2 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 2 Scenes: Key Pressed 3 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 2 Scenes: Key Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "42[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 3 Scenes: Key Pressed 1 Time",
+			"defaultValue": 1
+		},
+		{
+			"#": "42[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 3 Scenes: Key Pressed 2 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "42[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 3 Scenes: Key Pressed 3 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "42[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 3 Scenes: Key Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "43[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 4 Scenes: Key Pressed 1 Time",
+			"defaultValue": 1
+		},
+		{
+			"#": "43[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 4 Scenes: Key Pressed 2 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "43[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 4 Scenes: Key Pressed 3 Times",
+			"defaultValue": 1
+		},
+		{
+			"#": "43[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Input 4 Scenes: Key Held Down and Released",
+			"defaultValue": 1
 		},
 		{
 			"#": "62",
+			"$purpose": "reporting_interval.power",
 			"label": "Power Reports - Periodic",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32400,
-			"defaultValue": 3600
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "63",
-			"label": "Analog Inputs Output Change On Input Change",
+			"label": "Analog Inputs Reports and Output Change on Input Change",
+			"description": "Defines minimal change (from the last reported) of analog input voltage that results in sending new report and change in the output value",
 			"valueSize": 2,
+			"unit": "0.1 V",
 			"minValue": 0,
 			"maxValue": 100,
-			"defaultValue": 5
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "64",
@@ -202,24 +467,45 @@
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32400,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "65",
+			"$purpose": "reporting_threshold.energy",
 			"label": "Energy Reports - On Change",
 			"valueSize": 2,
+			"unit": "0.01 kWh",
 			"minValue": 0,
 			"maxValue": 500,
-			"defaultValue": 10
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "66",
+			"$purpose": "reporting_interval.energy",
 			"label": "Energy Reports - Periodic",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32400,
-			"defaultValue": 3600
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "150",
@@ -241,20 +527,140 @@
 		{
 			"#": "151",
 			"label": "Local Control - Transition Time",
+			"description": "1-127: time in seconds, 128-254: time in minutes (value - 127)",
 			"valueSize": 2,
-			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 254,
-			"defaultValue": 3
+			"defaultValue": 3,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "152",
 			"label": "Remote Control - Transition Time",
+			"description": "1-127: time in seconds, 128-254: time in minutes (value - 127)",
 			"valueSize": 2,
-			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 254,
-			"defaultValue": 3
+			"defaultValue": 3,
+			"options": [
+				{
+					"label": "Instantly",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "154[0xff]",
+			"label": "ON Frame Value for Single Click IN1",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true
+		},
+		{
+			"#": "154[0xff00]",
+			"label": "ON Frame Value for Single Click IN2",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true
+		},
+		{
+			"#": "154[0xff0000]",
+			"label": "ON Frame Value for Single Click IN3",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true
+		},
+		{
+			"#": "154[0xff000000]",
+			"label": "ON Frame Value for Single Click IN4",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true
+		},
+		{
+			"#": "155[0xff]",
+			"label": "OFF Frame Value for Single Click IN1",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "155[0xff00]",
+			"label": "OFF Frame Value for Single Click IN2",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "155[0xff0000]",
+			"label": "OFF Frame Value for Single Click IN3",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "155[0xff000000]",
+			"label": "OFF Frame Value for Single Click IN4",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "156[0xff]",
+			"label": "ON Frame Value for Double Click IN1",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 99,
+			"unsigned": true
+		},
+		{
+			"#": "156[0xff00]",
+			"label": "ON Frame Value for Double Click IN2",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 99,
+			"unsigned": true
+		},
+		{
+			"#": "156[0xff0000]",
+			"label": "ON Frame Value for Double Click IN3",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 99,
+			"unsigned": true
+		},
+		{
+			"#": "156[0xff000000]",
+			"label": "ON Frame Value for Double Click IN4",
+			"valueSize": 4,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 99,
+			"unsigned": true
 		},
 		{
 			"#": "157",
@@ -308,169 +714,12 @@
 					"value": 10
 				}
 			]
-		},
-		{
-			"#": "30",
-			"label": "Alarm Configuration - 1st Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0
-		},
-		{
-			"#": "31",
-			"label": "Alarm Configuration - 2nd Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0
-		},
-		{
-			"#": "32",
-			"label": "Alarm Configuration - 3rd Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0
-		},
-		{
-			"#": "33",
-			"label": "Alarm Configuration - 4th Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0
-		},
-		{
-			"#": "34",
-			"label": "Alarm Configuration - 5th Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0
-		},
-		{
-			"#": "35",
-			"label": "Duration of Alarm Signalization",
-			"valueSize": 2,
-			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32400,
-			"defaultValue": 600,
-			"options": [
-				{
-					"label": "Infinite signalization",
-					"value": 0
-				}
-			]
-		},
-		{
-			"#": "154[0xff]",
-			"label": "ON Frame Value for Single Click IN1",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "154[0xff00]",
-			"label": "ON Frame Value for Single Click IN2",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "154[0xff0000]",
-			"label": "ON Frame Value for Single Click IN3",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "154[0xff000000]",
-			"label": "ON Frame Value for Single Click IN4",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "155[0xff]",
-			"label": "OFF Frame Value for Single Click IN1",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "155[0xff00]",
-			"label": "OFF Frame Value for Single Click IN2",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "155[0xff0000]",
-			"label": "OFF Frame Value for Single Click IN3",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "155[0xff000000]",
-			"label": "OFF Frame Value for Single Click IN4",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "156[0xff]",
-			"label": "ON Frame Value for Double Click IN1",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "156[0xff00]",
-			"label": "ON Frame Value for Double Click IN2",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "156[0xff0000]",
-			"label": "ON Frame Value for Double Click IN3",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
-		},
-		{
-			"#": "156[0xff000000]",
-			"label": "ON Frame Value for Double Click IN4",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "1. Power the device\n2. Set the main controller in (Security/non-Security Mode) add mode (see the controller's manual)\n3. Quickly, three times click the service button\n4. If you are adding in Security S2 Authenticated, input the underlined part of the DSK (label on the box)\n5. LED will start blinking yellow, wait for the adding process to end\n6. Adding result will be confirmed by the Z-Wave controller's message and the LED: Green - successful (non-secure, S0, S2 Unauthenticated), Magenta - successful (Security S2 Authenticated), Red - not successful",
+		"exclusion": "1. Power the device\n2. Set the main controller into remove mode (see the controller's manual)\n3. Quickly, three times click the service button\n4. LED will start blinking yellow, wait for the removing process to end\n5. Successful removing will be confirmed by the Z-Wave controller's message and red LED colour",
+		"reset": "1. Press and hold the service button to enter the menu\n2. Release service button when the device glows yellow\n3. Quickly click the service button to confirm\n4. After few seconds the device will be restarted, which is signalled with the red colour",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGRGBW-442/FGRGBW-442-T-EN-1.1.pdf"
+	}
 }

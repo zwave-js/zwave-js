@@ -14,6 +14,19 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"description": "Reports the device status and allows for assigning a single device only (main controller by default).",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Window Covering",
+			"description": "Intended for curtains or blinds allowing the user to control the amount of light going through windows.",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "20",
@@ -50,18 +63,18 @@
 		},
 		{
 			"#": "24",
-			"label": "Switch Orientation",
+			"label": "Buttons Orientation",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
 					"value": 0,
-					"label": "Switch 1 = up, switch 2 = down"
+					"label": "1st button = up, 2nd button = down"
 				},
 				{
 					"value": 1,
-					"label": "Switch 1 = down, switch 2 = up"
+					"label": "1st button = down, 2nd button = up"
 				}
 			]
 		},
@@ -184,13 +197,39 @@
 		},
 		{
 			"#": "152",
-			"label": "Venetion Blind: Slat Turning Duration",
+			"label": "Venetian Blind: Slat Turning Duration",
 			"valueSize": 2,
 			"unit": "0.1 seconds",
 			"minValue": 0,
 			"maxValue": 65535,
 			"defaultValue": 15,
 			"unsigned": true
+		},
+		{
+			"#": "154",
+			"label": "Delay for Power Detection After the Motor Start",
+			"description": "Should be used when the engine slowly increases power consumption at start-up. Only modify when using electric curtains or low-power motors.",
+			"valueSize": 2,
+			"unit": "0.1 seconds",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 10
+		},
+		{
+			"#": "155",
+			"label": "Motor Operation Detection",
+			"description": "Power threshold interpreted as reaching the limit switch. Only modify when using electric curtains or low-power motors.",
+			"valueSize": 2,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 2,
+			"options": [
+				{
+					"label": "Disable (Manual calibration required)",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "156",
@@ -262,6 +301,6 @@
 		"inclusion": "1. Power the device.\n2. Identify the PROG button or the S1/S2 switches.\n3. Quickly click PROG button three times. Optionally, click S1 or S2 three times.\n4. LED indicator will blink yellow.\n5. LED indicator will show: Green (non-secure, S0, S2 non-authenticated), Magenta (Security S2 Authenticated), Red (not successful).",
 		"exclusion": "1. Make sure the device is powered.\n2. Identify the PROG button or the S1/S2 switches.\n3. Quickly click PROG button three times. Optionally, click S1 or S2 three times within 10 minutes of powering up the device.\n4. LED indicator will turn red if unsuccessful.",
 		"reset": "1. Switch off the mains voltage (disable the fuse).\n2. Remove the device from the wall switch box.\n3. Switch on the mains voltage.\n4. Press and hold the PROG button to enter the menu.\n5. Wait for the LED indicator to glow yellow.\n6. Quickly release and click the PROG button again.\n7. During the factory reset, the LED indicator will blink yellow.\n8. After few seconds the device will be restarted, which is signalled with the red LED indicator colour.",
-		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=cert_portal/certs/948/FGR-224-T-EN-v1.22.pdf"
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGR-224/FGR-224-EN-v2.6_26.09.24.pdf"
 	}
 }

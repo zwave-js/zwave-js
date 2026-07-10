@@ -1,0 +1,449 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGS-214",
+	"description": "Smart Module",
+	"devices": [
+		{
+			"productType": "0x0404",
+			"productId": "0x1000"
+		},
+		{
+			"productType": "0x0404",
+			"productId": "0x3000"
+		},
+		{
+			"productType": "0x0404",
+			"productId": "0x4000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Relays State After Power Failure",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Always off",
+					"value": 0
+				},
+				{
+					"label": "Previous state",
+					"value": 1
+				},
+				{
+					"label": "Toggle switch (Synchronize output): Current switch state / Other switch types: Previous state",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "20",
+			"label": "S1 Input – Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch (Synchronize output)",
+					"value": 1
+				},
+				{
+					"label": "Toggle switch (Toggle output)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "21",
+			"label": "S2 Input – Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch (Synchronize output)",
+					"value": 1
+				},
+				{
+					"label": "Toggle switch (Toggle output)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "24",
+			"label": "Inputs Orientation",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Default",
+					"value": 0
+				},
+				{
+					"label": "Reversed",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "30[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration – 1st Slot Notification Type",
+			"defaultValue": 0
+		},
+		{
+			"#": "30[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration – 1st Slot Notification Status",
+			"defaultValue": 0
+		},
+		{
+			"#": "30[0xff00]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event_parameter",
+			"label": "Alarm Configuration – 1st Slot Notification Event/State Parameters"
+		},
+		{
+			"#": "30[0xff]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_action",
+			"label": "Alarm Configuration – 1st Slot Action",
+			"maxValue": 3,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Turn on",
+					"value": 1
+				},
+				{
+					"label": "Turn off",
+					"value": 2
+				},
+				{
+					"label": "Turn on/off continuously",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "31[0xff000000]",
+			"$import": "#paramInformation/30[0xff000000]",
+			"label": "Alarm Configuration – 2nd Slot Notification Type",
+			"defaultValue": 5
+		},
+		{
+			"#": "31[0xff0000]",
+			"$import": "#paramInformation/30[0xff0000]",
+			"label": "Alarm Configuration – 2nd Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "31[0xff00]",
+			"$import": "#paramInformation/30[0xff00]",
+			"label": "Alarm Configuration – 2nd Slot Notification Event/State Parameters",
+			"defaultValue": 0
+		},
+		{
+			"#": "31[0xff]",
+			"$import": "#paramInformation/30[0xff]",
+			"label": "Alarm Configuration – 2nd Slot Action",
+			"defaultValue": 0
+		},
+		{
+			"#": "32[0xff000000]",
+			"$import": "#paramInformation/30[0xff000000]",
+			"label": "Alarm Configuration – 3rd Slot Notification Type",
+			"defaultValue": 1
+		},
+		{
+			"#": "32[0xff0000]",
+			"$import": "#paramInformation/30[0xff0000]",
+			"label": "Alarm Configuration – 3rd Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "32[0xff00]",
+			"$import": "#paramInformation/30[0xff00]",
+			"label": "Alarm Configuration – 3rd Slot Notification Event/State Parameters",
+			"defaultValue": 0
+		},
+		{
+			"#": "32[0xff]",
+			"$import": "#paramInformation/30[0xff]",
+			"label": "Alarm Configuration – 3rd Slot Action",
+			"defaultValue": 0
+		},
+		{
+			"#": "33[0xff000000]",
+			"$import": "#paramInformation/30[0xff000000]",
+			"label": "Alarm Configuration – 4th Slot Notification Type",
+			"defaultValue": 2
+		},
+		{
+			"#": "33[0xff0000]",
+			"$import": "#paramInformation/30[0xff0000]",
+			"label": "Alarm Configuration – 4th Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "33[0xff00]",
+			"$import": "#paramInformation/30[0xff00]",
+			"label": "Alarm Configuration – 4th Slot Notification Event/State Parameters",
+			"defaultValue": 0
+		},
+		{
+			"#": "33[0xff]",
+			"$import": "#paramInformation/30[0xff]",
+			"label": "Alarm Configuration – 4th Slot Action",
+			"defaultValue": 0
+		},
+		{
+			"#": "34[0xff000000]",
+			"$import": "#paramInformation/30[0xff000000]",
+			"label": "Alarm Configuration – 5th Slot Notification Type",
+			"defaultValue": 4
+		},
+		{
+			"#": "34[0xff0000]",
+			"$import": "#paramInformation/30[0xff0000]",
+			"label": "Alarm Configuration – 5th Slot Notification Status",
+			"defaultValue": 255
+		},
+		{
+			"#": "34[0xff00]",
+			"$import": "#paramInformation/30[0xff00]",
+			"label": "Alarm Configuration – 5th Slot Notification Event/State Parameters",
+			"defaultValue": 0
+		},
+		{
+			"#": "34[0xff]",
+			"$import": "#paramInformation/30[0xff]",
+			"label": "Alarm Configuration – 5th Slot Action",
+			"defaultValue": 0
+		},
+		{
+			"#": "35",
+			"label": "Alarm Configuration – Duration",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 600,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "40[0x01]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_pressed_1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x02]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_pressed_2x",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x04]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_pressed_3x",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x08]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_hold_release",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x01]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_pressed_1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x02]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_pressed_2x",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x04]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_pressed_3x",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x08]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_hold_release",
+			"defaultValue": 1
+		},
+		{
+			"#": "150",
+			"label": "Q Output – Operating Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Standard operation",
+					"value": 0
+				},
+				{
+					"label": "Delay off",
+					"value": 1
+				},
+				{
+					"label": "Auto off",
+					"value": 2
+				},
+				{
+					"label": "Flashing",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "152",
+			"label": "Q Output – Reaction to Input Change in Timed Modes",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Cancel mode and set default state",
+					"value": 0
+				},
+				{
+					"label": "Ignore, mode runs until it ends",
+					"value": 1
+				},
+				{
+					"label": "Reset, start time from the beginning",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "154",
+			"label": "Q Output – Time Parameter for Timed Modes",
+			"valueSize": 2,
+			"unit": "0.1 seconds",
+			"minValue": 0,
+			"maxValue": 32000,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "0.1 seconds",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "156",
+			"label": "S1 Association: Switch On Value Sent",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"options": [
+				{
+					"label": "Turn off",
+					"value": 0
+				},
+				{
+					"label": "Turn on with last level",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "157",
+			"label": "S1 Association: Switch Off Value Sent",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Turn off",
+					"value": 0
+				},
+				{
+					"label": "Turn on with last level",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "158",
+			"label": "S1 Association: Double Click Value Sent",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 99,
+			"options": [
+				{
+					"label": "Turn off",
+					"value": 0
+				},
+				{
+					"label": "Turn on with last level",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "162",
+			"label": "Q Output Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normally open",
+					"value": 0
+				},
+				{
+					"label": "Normally closed",
+					"value": 1
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Power the device\n2. Set the main controller in (Security/non-Security Mode) add mode (see the controller manual)\n3. Quickly, three times click the button connected to S1 or the maintenance button\n4. If you are adding in the Security S2 Authenticated mode, input the underlined part of the device specific key (DSK), which is labeled on the bottom of the box\n5. LED starts blinking yellow, wait for the adding process to end",
+		"exclusion": "1. Power the device\n2. Set the main controller into the remove mode (see the controller manual)\n3. Quickly, three times click the maintenance button\n4. LED starts blinking yellow, wait for the removing process to end",
+		"reset": "1. Press and hold the maintenance button\n2. Release the button when the device glows yellow\n3. Quickly click the button to confirm\n4. After a few seconds the device is restarted, which is signaled with the red LED color",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGS-2x4/FGS-2x4-T-EN-web_17.07.24.pdf"
+	}
+}

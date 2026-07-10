@@ -13,6 +13,24 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Roller Shutter",
+			"description": "Assigned to shutter position control - up/down (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Slats",
+			"description": "Assigned to slats position control - up/down (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "11",
@@ -66,7 +84,13 @@
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
 			"label": "LED Indicator: Brightness",
 			"unit": "%",
-			"defaultValue": 100
+			"defaultValue": 100,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "24",
@@ -110,7 +134,7 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable",
+					"label": "No action",
 					"value": 0
 				},
 				{
@@ -388,7 +412,7 @@
 					"value": 1
 				},
 				{
-					"label": "Controlled, momentary or limit switch operation, or Multilevel Switch stop command",
+					"label": "Controller, momentary or limit switch operation, or Multilevel Switch stop command",
 					"value": 2
 				}
 			]
@@ -437,5 +461,11 @@
 			"maxValue": 65535,
 			"defaultValue": 6000
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "1. Power the device.\n2. Set the main controller in (Security/non-Security Mode) add mode (see the controller's manual).\n3. Quickly, three times click one of the buttons.\n4. If you are adding in Security S2 Authenticated, input the underlined part of the DSK (label on the bottom of the box).\n5. LED will start blinking yellow, wait for the adding process to end.",
+		"exclusion": "1. Power the device.\n2. Set the main controller into remove mode (see the controller's manual).\n3. Quickly, three times click one of the buttons.\n4. LED will start blinking yellow, wait for the removing process to end.",
+		"reset": "1. Quickly, three times click, then press and hold one of the buttons to enter the menu.\n2. Release button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After few seconds the device will be restarted, which is signalled with red LED colour.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWREU-111/FGWREU-111-T-EN-v1.1.pdf"
+	}
 }

@@ -13,6 +13,24 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off (Button)",
+			"description": "Devices in this group will be switched on or off when the relay status is changed using the button.",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "On/Off (Plug Power)",
+			"description": "Devices in this group will be switched on or off depending on the current load of the plugged device.",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "2",
@@ -21,8 +39,9 @@
 		{
 			"#": "3",
 			"label": "Overload",
-			"description": "Overload safety switch",
+			"description": "Turn off the controlled device in case of exceeding the defined power.",
 			"valueSize": 2,
+			"unit": "0.1 W",
 			"minValue": 0,
 			"maxValue": 18000,
 			"defaultValue": 0,
@@ -36,7 +55,7 @@
 		{
 			"#": "11",
 			"$purpose": "reporting_threshold.power",
-			"label": "Power Reporting",
+			"label": "Power Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
 			"minValue": 0,
@@ -70,6 +89,7 @@
 			"$purpose": "reporting_interval.power",
 			"label": "Power Reporting Interval",
 			"valueSize": 2,
+			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32400,
 			"defaultValue": 3600,
@@ -85,6 +105,7 @@
 			"$purpose": "reporting_interval.energy",
 			"label": "Energy Reporting Interval",
 			"valueSize": 2,
+			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32400,
 			"defaultValue": 3600,
@@ -114,49 +135,8 @@
 			]
 		},
 		{
-			"#": "21",
-			"label": "Up Value",
-			"description": "Upper power threshold",
-			"valueSize": 2,
-			"minValue": 100,
-			"maxValue": 18000,
-			"defaultValue": 500
-		},
-		{
-			"#": "22",
-			"label": "Down Value",
-			"description": "Lower power threshold",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 17900,
-			"defaultValue": 300
-		},
-		{
-			"#": "23",
-			"label": "Controlling",
-			"description": "Controlling 3rd association group devices",
-			"valueSize": 1,
-			"defaultValue": 3,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Power exceeded",
-					"value": 1
-				},
-				{
-					"label": "Power dropped",
-					"value": 2
-				},
-				{
-					"label": "Power dropped or exceeded",
-					"value": 3
-				}
-			]
-		},
-		{
 			"#": "24",
-			"label": "Switch On",
-			"description": "Command frame sent to devices in 2nd group",
+			"label": "Group 2: Switch On Value",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -174,8 +154,7 @@
 		},
 		{
 			"#": "25",
-			"label": "Switch Off",
-			"description": "Command frame sent to devices in 2nd group",
+			"label": "Group 2: Switch Off Value",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -192,9 +171,49 @@
 			]
 		},
 		{
+			"#": "23",
+			"label": "Group 3: Control Mode",
+			"description": "When to send a command to devices in the association group 3.",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Power usage above upper threshold",
+					"value": 1
+				},
+				{
+					"label": "Power usage below lower threshold",
+					"value": 2
+				},
+				{
+					"label": "Both",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "21",
+			"label": "Group 3: Upper Power Threshold",
+			"valueSize": 2,
+			"unit": "0.1 W",
+			"minValue": 100,
+			"maxValue": 18000,
+			"defaultValue": 500
+		},
+		{
+			"#": "22",
+			"label": "Group 3: Lower Power Threshold",
+			"valueSize": 2,
+			"unit": "0.1 W",
+			"minValue": 0,
+			"maxValue": 17900,
+			"defaultValue": 300
+		},
+		{
 			"#": "26",
-			"label": "Threshold Up",
-			"description": "Command frame sent to the devices in 3rd group",
+			"label": "Group 3: Upper Threshold Command Value",
+			"description": "Which value to send when the power usage is above the upper threshold.",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -212,8 +231,8 @@
 		},
 		{
 			"#": "27",
-			"label": "Threshold Down",
-			"description": "Command frame sent to the devices in 3rd group",
+			"label": "Group 3: Lower Threshold Command Value",
+			"description": "Which value to send when the power usage is below the lower threshold.",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -230,47 +249,45 @@
 			]
 		},
 		{
-			"#": "30",
-			"label": "Active Alarms",
-			"description": "Network alarms to which the Wall Plug will respond",
-			"valueSize": 1,
-			"defaultValue": 63,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "General",
-					"value": 1
-				},
-				{
-					"label": "Smoke",
-					"value": 2
-				},
-				{
-					"label": "Carbon monoxide",
-					"value": 4
-				},
-				{
-					"label": "Carbon dioxide",
-					"value": 8
-				},
-				{
-					"label": "High temperature",
-					"value": 16
-				},
-				{
-					"label": "Flood",
-					"value": 32
-				},
-				{
-					"label": "All alarms",
-					"value": 63
-				}
-			]
+			"#": "30[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: General",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Smoke",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Carbon Monoxide",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Carbon Dioxide",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: High Temperature",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x20]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Flood",
+			"defaultValue": 1
 		},
 		{
 			"#": "31",
 			"label": "Response to Alarm Frames",
-			"description": "Wall plug response to alarms",
+			"description": "Values 5-50 cyclically change the device state with the set period (0.5-5.0s, step 0.1s).",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 50,
@@ -292,32 +309,31 @@
 		},
 		{
 			"#": "32",
-			"label": "Alarm State Duration",
-			"description": "Specifies the duration of the alarm state",
+			"label": "Alarm Duration",
 			"valueSize": 2,
+			"unit": "seconds",
 			"minValue": 1,
 			"maxValue": 32400,
 			"defaultValue": 600
 		},
 		{
 			"#": "40",
-			"label": "Power Load for Violet Color",
-			"description": "Maximum active power to flash the LED frame Violet",
+			"label": "LED Indicator: Power Threshold for Violet Color",
 			"valueSize": 2,
+			"unit": "0.1 W",
 			"minValue": 1000,
 			"maxValue": 18000,
 			"defaultValue": 18000
 		},
 		{
 			"#": "41",
-			"label": "LED Frame Color On",
-			"description": "LED frame color when controlled device is on",
+			"label": "LED Indicator: Color When Load On",
 			"valueSize": 1,
 			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable illumination",
+					"label": "LED off",
 					"value": 0
 				},
 				{
@@ -360,14 +376,13 @@
 		},
 		{
 			"#": "42",
-			"label": "LED Frame Color Off",
-			"description": "LED frame color when controlled device is off",
+			"label": "LED Indicator: Color When Load Off",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable illumination",
+					"label": "LED off",
 					"value": 0
 				},
 				{
@@ -406,14 +421,13 @@
 		},
 		{
 			"#": "43",
-			"label": "LED Frame Color Z-Wave",
-			"description": "Z-Wave alarm illumination",
+			"label": "LED Indicator: Color During Alarm",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable illumination",
+					"label": "LED off",
 					"value": 0
 				},
 				{
@@ -454,5 +468,11 @@
 				}
 			]
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Quickly, triple click the button located on the casing.",
+		"exclusion": "Quickly, triple click the button located on the casing.",
+		"reset": "1. Press and hold the button\n2. Wait for the LED frame to glow yellow (3rd menu position)\n3. Release the button\n4. Click the button once to confirm selection",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWPB-121/FGWPB-121-EN-T-v1.0.pdf"
+	}
 }
