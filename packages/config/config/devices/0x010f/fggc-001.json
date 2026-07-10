@@ -57,22 +57,27 @@
 		},
 		"2": {
 			"label": "Flick Up",
+			"description": "Devices in this group will be controlled with the flick up gesture (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Flick Down",
+			"description": "Devices in this group will be controlled with the flick down gesture (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"4": {
 			"label": "Flick Left",
+			"description": "Devices in this group will be controlled with the flick left gesture (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"5": {
 			"label": "Flick Right",
+			"description": "Devices in this group will be controlled with the flick right gesture (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"6": {
 			"label": "Circular AirWheel",
+			"description": "Devices in this group will change their level according to the circular AirWheel gesture (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		}
 	},

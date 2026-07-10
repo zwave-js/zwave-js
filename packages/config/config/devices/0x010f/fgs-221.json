@@ -56,11 +56,13 @@
 	},
 	"associations": {
 		"1": {
-			"label": "S1",
+			"label": "On/Off (S1)",
+			"description": "Devices in this group will be switched on or off with the S1 switch (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"2": {
-			"label": "S2",
+			"label": "On/Off (S2)",
+			"description": "Devices in this group will be switched on or off with the S2 switch (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"3": {

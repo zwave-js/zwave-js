@@ -24,12 +24,12 @@
 	"associations": {
 		"1": {
 			"label": "Momentary Click",
-			"description": "Triggered through a momentary switch click, or a toggle switch position change.",
+			"description": "Devices in this group will be switched on or off with a momentary switch click or a toggle switch position change.",
 			"maxNodes": 16
 		},
 		"2": {
 			"label": "Momentary Hold",
-			"description": "Triggered through a momentary switch hold. Inactive when toggle switches are used or in gate mode.",
+			"description": "Devices in this group will change their level while holding a momentary switch. Inactive when toggle switches are used or in gate mode.",
 			"maxNodes": 16
 		},
 		"3": {

@@ -44,11 +44,13 @@
 	},
 	"associations": {
 		"1": {
-			"label": "S1",
+			"label": "Dimmer (S1)",
+			"description": "Devices in this group will be switched on or off and dimmed with the S1 switch.",
 			"maxNodes": 5
 		},
 		"2": {
-			"label": "S2",
+			"label": "Dimmer (S2)",
+			"description": "Devices in this group will be switched on or off and dimmed with the S2 switch.",
 			"maxNodes": 5
 		},
 		"3": {

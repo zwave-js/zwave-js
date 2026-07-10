@@ -17,13 +17,12 @@
 	"associations": {
 		"1": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning a single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		},
 		"2": {
 			"label": "Window Covering",
-			"description": "Intended for curtains or blinds allowing the user to control the amount of light going through windows.",
+			"description": "Devices in this group, e.g. other curtains or blinds, will be controlled together with the connected motor.",
 			"maxNodes": 5
 		}
 	},

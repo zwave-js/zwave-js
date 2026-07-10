@@ -32,12 +32,12 @@
 	"associations": {
 		"1": {
 			"label": "Single Click",
-			"description": "Triggered by single-clicking of any key.",
+			"description": "Devices in this group will be switched on or off with a single click of the switches.",
 			"maxNodes": 16
 		},
 		"2": {
 			"label": "Hold Down",
-			"description": "Triggered by holding down any key.",
+			"description": "Devices in this group will change their level while holding down the switches.",
 			"maxNodes": 16
 		},
 		"3": {

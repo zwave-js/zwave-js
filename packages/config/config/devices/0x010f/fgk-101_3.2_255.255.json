@@ -45,28 +45,27 @@
 	"associations": {
 		"1": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		},
 		"2": {
 			"label": "Control",
-			"description": "Sends BASIC SET frames triggered by the reed sensor or the IN input.",
+			"description": "Devices in this group will be switched on or off when the reed sensor or the IN input is triggered (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Alarm",
-			"description": "Sends alarm frames triggered by the reed sensor or the IN input.",
+			"description": "Devices in this group will receive notifications when the reed sensor or the IN input is triggered.",
 			"maxNodes": 5
 		},
 		"4": {
 			"label": "Sensor ZW3",
-			"description": "Sends BASIC SET frames. Provides backward compatibility with controllers not supporting Z-Wave+ protocol.",
+			"description": "Devices in this group will be switched on or off when the reed sensor or the IN input is triggered. Provides backward compatibility with controllers not supporting Z-Wave+.",
 			"maxNodes": 5
 		},
 		"5": {
 			"label": "Tamper ZW3",
-			"description": "Sends alarm frames. Provides backward compatibility with controllers not supporting Z-Wave+ protocol.",
+			"description": "Devices in this group will receive alarm frames when the reed sensor or the IN input is triggered. Provides backward compatibility with controllers not supporting Z-Wave+.",
 			"maxNodes": 5
 		}
 	},

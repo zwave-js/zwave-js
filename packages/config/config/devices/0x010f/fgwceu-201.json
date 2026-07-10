@@ -21,26 +21,32 @@
 		},
 		"2": {
 			"label": "On/Off (1)",
+			"description": "Devices in this group will be switched on or off with the first button (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Dimmer (1)",
+			"description": "Devices in this group will change their level according to the operation of the first button (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		},
 		"4": {
 			"label": "On/Off (2)",
+			"description": "Devices in this group will be switched on or off with the second button (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"5": {
 			"label": "Dimmer (2)",
+			"description": "Devices in this group will change their level according to the operation of the second button (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		},
 		"6": {
 			"label": "Multidevice",
+			"description": "Devices in this group will be controlled with the buttons. Intended for controlling different types of devices.",
 			"maxNodes": 5
 		},
 		"7": {
 			"label": "Slats",
+			"description": "Devices in this group will have their slats moved with the buttons. Intended for Venetian blinds.",
 			"maxNodes": 5
 		}
 	},

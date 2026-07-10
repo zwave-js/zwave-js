@@ -21,17 +21,16 @@
 	"associations": {
 		"1": {
 			"label": "On/Off (Button)",
-			"description": "Sends control commands to the associated devices whenever the Wall Plug is turned on or off using the B-button.",
+			"description": "Devices in this group will be switched on or off whenever the Wall Plug is turned on or off with the B-button.",
 			"maxNodes": 5
 		},
 		"2": {
 			"label": "On/Off (Power)",
-			"description": "Sends control commands to the associated devices depending on the current load (parameters 50-52).",
+			"description": "Devices in this group will be switched on or off depending on the current load of the plugged device (configured with parameters 50-52).",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Lifeline",
-			"description": "Reports the relay status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		}

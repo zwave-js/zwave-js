@@ -71,14 +71,17 @@
 		},
 		"2": {
 			"label": "On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Dimmer",
+			"description": "Devices in this group will change their level by holding the button (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		},
 		"4": {
 			"label": "Alarm",
+			"description": "Devices in this group will receive alarm frames on configured button actions.",
 			"maxNodes": 5
 		}
 	},

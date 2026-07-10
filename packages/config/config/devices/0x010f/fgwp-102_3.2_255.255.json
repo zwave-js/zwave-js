@@ -52,7 +52,6 @@
 	"associations": {
 		"1": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		},

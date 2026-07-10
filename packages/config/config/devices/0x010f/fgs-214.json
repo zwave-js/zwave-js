@@ -29,6 +29,7 @@
 		},
 		"2": {
 			"label": "On/Off",
+			"description": "Devices in this group will be switched on or off with the S1 switch (uses Basic command class).",
 			"maxNodes": 5
 		}
 	},

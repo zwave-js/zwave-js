@@ -28,7 +28,6 @@
 	"associations": {
 		"1": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		},
@@ -39,34 +38,42 @@
 		},
 		"3": {
 			"label": "On/Off (IN1)",
+			"description": "Devices in this group will be switched on or off when the IN1 input is triggered (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"4": {
 			"label": "Dimmer (IN1)",
+			"description": "Devices in this group will change their level when the IN1 input is triggered (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		},
 		"5": {
 			"label": "On/Off (IN2)",
+			"description": "Devices in this group will be switched on or off when the IN2 input is triggered (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"6": {
 			"label": "Dimmer (IN2)",
+			"description": "Devices in this group will change their level when the IN2 input is triggered (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		},
 		"7": {
 			"label": "On/Off (IN3)",
+			"description": "Devices in this group will be switched on or off when the IN3 input is triggered (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"8": {
 			"label": "Dimmer (IN3)",
+			"description": "Devices in this group will change their level when the IN3 input is triggered (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		},
 		"9": {
 			"label": "On/Off (IN4)",
+			"description": "Devices in this group will be switched on or off when the IN4 input is triggered (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"10": {
 			"label": "Dimmer (IN4)",
+			"description": "Devices in this group will change their level when the IN4 input is triggered (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		}
 	},
@@ -78,7 +85,7 @@
 		},
 		{
 			"#": "20",
-			"label": "Input 1 - Operating Mode",
+			"label": "IN1: Operating Mode",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,
@@ -107,7 +114,7 @@
 		},
 		{
 			"#": "21",
-			"label": "Input 2 - Operating Mode",
+			"label": "IN2: Operating Mode",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,
@@ -136,7 +143,7 @@
 		},
 		{
 			"#": "22",
-			"label": "Input 3 - Operating Mode",
+			"label": "IN3: Operating Mode",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,
@@ -165,7 +172,7 @@
 		},
 		{
 			"#": "23",
-			"label": "Input 4 - Operating Mode",
+			"label": "IN4: Operating Mode",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,
@@ -335,97 +342,97 @@
 		{
 			"#": "40[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Pressed 1x",
+			"label": "IN1: Send Scenes (Pressed 1x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "40[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Pressed 2x",
+			"label": "IN1: Send Scenes (Pressed 2x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "40[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Pressed 3x",
+			"label": "IN1: Send Scenes (Pressed 3x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "40[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Held Down and Released",
+			"label": "IN1: Send Scenes (Held Down and Released)",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Pressed 1x",
+			"label": "IN2: Send Scenes (Pressed 1x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Pressed 2x",
+			"label": "IN2: Send Scenes (Pressed 2x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Pressed 3x",
+			"label": "IN2: Send Scenes (Pressed 3x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Held Down and Released",
+			"label": "IN2: Send Scenes (Held Down and Released)",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Pressed 1x",
+			"label": "IN3: Send Scenes (Pressed 1x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Pressed 2x",
+			"label": "IN3: Send Scenes (Pressed 2x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Pressed 3x",
+			"label": "IN3: Send Scenes (Pressed 3x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Held Down and Released",
+			"label": "IN3: Send Scenes (Held Down and Released)",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Pressed 1x",
+			"label": "IN4: Send Scenes (Pressed 1x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Pressed 2x",
+			"label": "IN4: Send Scenes (Pressed 2x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Pressed 3x",
+			"label": "IN4: Send Scenes (Pressed 3x)",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Held Down and Released",
+			"label": "IN4: Send Scenes (Held Down and Released)",
 			"defaultValue": 1
 		},
 		{

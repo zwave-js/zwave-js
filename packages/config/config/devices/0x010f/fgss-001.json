@@ -25,17 +25,16 @@
 	"associations": {
 		"1": {
 			"label": "Smoke Alarm",
-			"description": "Sends Basic Set or Alarm frame to the associated devices once fire is detected. The frame type can be changed with parameter 5.",
+			"description": "Devices in this group will receive a Basic Set or alarm frame when fire is detected. The frame type can be changed with parameter 5.",
 			"maxNodes": 5
 		},
 		"2": {
 			"label": "Tamper & Malfunction Alarm",
-			"description": "Sends an alarm frame to the associated devices once tampering or a malfunction is detected.",
+			"description": "Devices in this group will receive an alarm frame when tampering or a malfunction is detected.",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		}

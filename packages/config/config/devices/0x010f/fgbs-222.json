@@ -59,26 +59,25 @@
 	"associations": {
 		"1": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		},
 		"2": {
 			"label": "On/Off (IN1)",
-			"description": "Assigned to IN1 input terminal (uses Basic command class).",
+			"description": "Devices in this group will be switched on or off when the IN1 input is triggered (uses Basic command class).",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "On/Off (IN2)",
-			"description": "Assigned to IN2 input terminal (uses Basic command class).",
+			"description": "Devices in this group will be switched on or off when the IN2 input is triggered (uses Basic command class).",
 			"maxNodes": 5
 		}
 	},
 	"paramInformation": [
 		{
 			"#": "20",
-			"label": "Input 1 - Operating Mode",
-			"description": "This parameter allows to choose mode of 1st input (IN1). Change it depending on connected device.",
+			"label": "IN1: Operating Mode",
+			"description": "Choose the mode of the IN1 input depending on the connected device.",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,
@@ -111,8 +110,8 @@
 		},
 		{
 			"#": "47",
-			"label": "Input 1 (Activated): Value Sent to Group 2",
-			"description": "Value sent to devices in 2nd association group when IN1 input is triggered. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
+			"label": "IN1 (Activated): Value Sent to Group 2",
+			"description": "Value sent to devices in 2nd association group when the IN1 input is triggered. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -120,8 +119,8 @@
 		},
 		{
 			"#": "49",
-			"label": "Input 1 (Deactivated): Value Sent to Group 2",
-			"description": "Value sent to devices in 2nd association group when IN1 input is deactivated. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
+			"label": "IN1 (Deactivated): Value Sent to Group 2",
+			"description": "Value sent to devices in 2nd association group when the IN1 input is deactivated. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -129,7 +128,7 @@
 		},
 		{
 			"#": "150",
-			"label": "Input 1: Sensitivity",
+			"label": "IN1: Sensitivity",
 			"valueSize": 1,
 			"unit": "10 ms",
 			"minValue": 1,
@@ -138,7 +137,7 @@
 		},
 		{
 			"#": "152",
-			"label": "Input 1: Alarm Cancellation Delay",
+			"label": "IN1: Alarm Cancellation Delay",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
@@ -154,27 +153,27 @@
 		{
 			"#": "40[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1: Send Scenes (Pressed 1x)"
+			"label": "IN1: Send Scenes (Pressed 1x)"
 		},
 		{
 			"#": "40[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1: Send Scenes (Pressed 2x)"
+			"label": "IN1: Send Scenes (Pressed 2x)"
 		},
 		{
 			"#": "40[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1: Send Scenes (Pressed 3x)"
+			"label": "IN1: Send Scenes (Pressed 3x)"
 		},
 		{
 			"#": "40[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1: Send Scenes (Held Down and Released)"
+			"label": "IN1: Send Scenes (Held Down and Released)"
 		},
 		{
 			"#": "21",
-			"label": "Input 2 - Operating Mode",
-			"description": "This parameter allows to choose mode of 2nd input (IN2). Change it depending on connected device.",
+			"label": "IN2: Operating Mode",
+			"description": "Choose the mode of the IN2 input depending on the connected device.",
 			"valueSize": 1,
 			"defaultValue": 2,
 			"allowManualEntry": false,
@@ -207,8 +206,8 @@
 		},
 		{
 			"#": "52",
-			"label": "Input 2 (Activated): Value Sent to Group 3",
-			"description": "Value sent to devices in 3rd association group when IN2 input is triggered. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
+			"label": "IN2 (Activated): Value Sent to Group 3",
+			"description": "Value sent to devices in 3rd association group when the IN2 input is triggered. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -216,8 +215,8 @@
 		},
 		{
 			"#": "54",
-			"label": "Input 2 (Deactivated): Value Sent to Group 3",
-			"description": "Value sent to devices in 3rd association group when IN2 input is deactivated. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
+			"label": "IN2 (Deactivated): Value Sent to Group 3",
+			"description": "Value sent to devices in 3rd association group when the IN2 input is deactivated. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -225,7 +224,7 @@
 		},
 		{
 			"#": "151",
-			"label": "Input 2: Sensitivity",
+			"label": "IN2: Sensitivity",
 			"valueSize": 1,
 			"unit": "10 ms",
 			"minValue": 1,
@@ -234,7 +233,7 @@
 		},
 		{
 			"#": "153",
-			"label": "Input 2: Alarm Cancellation Delay",
+			"label": "IN2: Alarm Cancellation Delay",
 			"valueSize": 2,
 			"unit": "seconds",
 			"minValue": 0,
@@ -250,22 +249,22 @@
 		{
 			"#": "41[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2: Send Scenes (Pressed 1x)"
+			"label": "IN2: Send Scenes (Pressed 1x)"
 		},
 		{
 			"#": "41[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2: Send Scenes (Pressed 2x)"
+			"label": "IN2: Send Scenes (Pressed 2x)"
 		},
 		{
 			"#": "41[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2: Send Scenes (Pressed 3x)"
+			"label": "IN2: Send Scenes (Pressed 3x)"
 		},
 		{
 			"#": "41[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2: Send Scenes (Held Down and Released)"
+			"label": "IN2: Send Scenes (Held Down and Released)"
 		},
 		{
 			"#": "24",

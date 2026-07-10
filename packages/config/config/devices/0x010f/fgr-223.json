@@ -31,18 +31,17 @@
 	"associations": {
 		"1": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		},
 		"2": {
 			"label": "Roller Shutter",
-			"description": "Shutter position control - UP/DOWN (uses Multilevel Switch command class).",
+			"description": "Devices in this group will be controlled together with the shutter position (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Slats",
-			"description": "Slats position control - UP/DOWN (uses Multilevel Switch command class).",
+			"description": "Devices in this group will be controlled together with the slats position (uses Multilevel Switch command class).",
 			"maxNodes": 5
 		}
 	},

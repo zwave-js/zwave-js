@@ -33,17 +33,16 @@
 	"associations": {
 		"1": {
 			"label": "Flood Alarm",
-			"description": "Sends BASIC SET or alarm frames to the associated devices once flooding is detected.",
+			"description": "Devices in this group will receive Basic Set or alarm frames when flooding is detected. The frame type can be changed with parameter 5.",
 			"maxNodes": 5
 		},
 		"2": {
 			"label": "Tilt & Tamper Sensors",
-			"description": "Sends alarm frames to the associated devices once tampering or movement is detected.",
+			"description": "Devices in this group will receive alarm frames when tampering or movement is detected.",
 			"maxNodes": 5
 		},
 		"3": {
 			"label": "Lifeline",
-			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
 		}
