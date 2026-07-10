@@ -1,0 +1,21 @@
+{
+	"manufacturer": "Test",
+	"manufacturerId": "0xdead",
+	"label": "Test Controller",
+	"description": "500-series controller with the callback function type bug",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		// Emulate the 500-series firmware bug where a failing AssignSUCReturnRoute (81)
+		// or DeleteSUCReturnRoute (85) is answered with a wrong callback function type
+		"disableCallbackFunctionTypeCheck": [81, 85]
+	}
+}

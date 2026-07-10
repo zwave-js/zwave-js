@@ -29,6 +29,12 @@ export type {
 	RebuildRoutesStatus,
 	SDKVersion,
 } from "./lib/controller/_Types.js";
+export {
+	AeotecConfigParam,
+	ControllerProprietary_Aeotec,
+	FUNC_ID_AEOTEC_CONFIG_GET,
+	FUNC_ID_AEOTEC_CONFIG_SET,
+} from "./lib/controller/proprietary/Aeotec.js";
 export type { RGB, Vector } from "./lib/controller/proprietary/NabuCasa.js";
 export {
 	ControllerProprietary_NabuCasa,
@@ -37,3 +43,16 @@ export {
 	NabuCasaConfigKey,
 	NabuCasaIndicationSeverity,
 } from "./lib/controller/proprietary/NabuCasa.js";
+export type {
+	ZWaveMeBoardInfo,
+	ZWaveMeLicense,
+} from "./lib/controller/proprietary/ZWaveMe.js";
+export {
+	ControllerProprietary_ZWaveMe,
+	ControllerProprietary_ZWaveMe700,
+	ZWaveMeLicenseFlag,
+	ZWaveMeRegion,
+	ZWaveMeSerialAPIMode,
+	rfRegionToZWaveMeRegion,
+	zwaveMeRegionToRFRegion,
+} from "./lib/controller/proprietary/ZWaveMe.js";

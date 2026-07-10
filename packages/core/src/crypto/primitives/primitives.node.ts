@@ -112,6 +112,42 @@ function decryptAES128OFB(
 	);
 }
 
+/** Encrypts a payload using AES-256-OFB */
+function encryptAES256OFB(
+	plaintext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
+	return Promise.resolve(
+		encrypt(
+			"aes-256-ofb",
+			BLOCK_SIZE,
+			true,
+			plaintext,
+			key,
+			iv,
+		),
+	);
+}
+
+/** Decrypts a payload using AES-256-OFB */
+function decryptAES256OFB(
+	ciphertext: BytesView,
+	key: BytesView,
+	iv: BytesView,
+): Promise<BytesView> {
+	return Promise.resolve(
+		decrypt(
+			"aes-256-ofb",
+			BLOCK_SIZE,
+			true,
+			ciphertext,
+			key,
+			iv,
+		),
+	);
+}
+
 function encryptAES128CBC(
 	plaintext: BytesView,
 	key: BytesView,
@@ -355,6 +391,8 @@ export const primitives = {
 	encryptAES128CCM,
 	decryptAES128CCM,
 	decryptAES256CBC,
+	encryptAES256OFB,
+	decryptAES256OFB,
 	digest,
 	hmacSHA256,
 	encryptChaCha20Poly1305,
