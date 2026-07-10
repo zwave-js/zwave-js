@@ -1,11 +1,9 @@
 ---
-mode: 'agent'
-model: Claude Sonnet 4.5 (copilot)
-tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'runTasks', 'usages', 'think', 'problems', 'changes', 'fetch', 'todos', 'zwave-dev/*']
-description: 'Author Z-Wave JS configuration files based on scraped manufacturer website information'
+name: author-config-from-web
+description: Author a Z-Wave JS device configuration file based on information scraped from a manufacturer website. Use when asked to create a device config file from a URL or scraped web data.
 ---
 
-You are an expert assistant for authoring Z-Wave JS device configuration files based on information scraped from manufacturer websites. Your task is to create complete, standards-compliant configuration files that follow the established guidelines and standards for device configuration. You must strictly adhere to the rules and requirements defined in the config-files.instructions.md file.
+You are an expert assistant for authoring Z-Wave JS device configuration files based on information scraped from manufacturer websites. Your task is to create complete, standards-compliant configuration files that follow the established guidelines and standards for device configuration. You must strictly adhere to the rules and requirements defined in `.agents/instructions/config-files.md` (relative to the repository root). Read that file before starting.
 
 # Required User Information
 
@@ -59,22 +57,7 @@ Examine existing configuration files in the same manufacturer folder to:
 
 # Configuration File Creation
 
-**IMPORTANT**: All configuration file creation must strictly follow the rules and standards defined in the config-files.instructions.md file. This includes property ordering, formatting, naming conventions, parameter processing rules, and quality standards.
-
-## File Structure
-
-Create the configuration file following this exact property order:
-
-1. `manufacturer` - Brand name under which device is sold
-2. `manufacturerId` - 4-digit hexadecimal manufacturer ID
-3. `label` - Device model number/SKU (without manufacturer name)
-4. `description` - Marketed product name in Title Case (without manufacturer name)
-5. `devices` - Array of product type/ID combinations
-6. `firmwareVersion` - Version range (use provided range or default "0.0" to "255.255")
-7. `associations` - Association groups (if needed)
-8. `paramInformation` - Configuration parameters array
-9. `scenes` - Central scene labels (if device supports central scenes)
-10. `metadata` - User-facing metadata (if available from website)
+**IMPORTANT**: All configuration file creation must strictly follow the rules and standards defined in `.agents/instructions/config-files.md`. This includes property ordering, formatting, naming conventions, parameter processing rules, and quality standards.
 
 ## Parameter Processing
 
@@ -85,7 +68,7 @@ For each parameter found on the website:
 - Extract parameter number, label, description, value size, default value
 - Convert size information (e.g., "1 byte dec" → `"valueSize": 1`)
 - Convert value ranges and options
-- Apply proper formatting (Title Case for labels, Sentence case for descriptions)
+- Apply the label, description, option, and unit formatting rules from the instructions file
 
 ### Template Usage
 
@@ -179,20 +162,7 @@ Additional validation steps:
 
 # Guidelines and Best Practices
 
-**CRITICAL**: All guidelines and best practices must align with the detailed requirements specified in config-files.instructions.md. When in doubt, refer to that file for authoritative guidance.
-
-## Parameter Naming
-
-- Use consistent naming patterns within the manufacturer's device family
-- Keep labels concise but descriptive
-- Remove redundant information that's encoded elsewhere
-- Follow Title Case for parameter labels
-
-## Options and Values
-
-- Only include options for values with special meaning beyond numeric value
-- Use "Enable"/"Disable" for boolean parameters
-- Provide hints for special values (0 = disable, 255 = default) while allowing manual entry
+**CRITICAL**: All guidelines and best practices must align with the detailed requirements specified in `.agents/instructions/config-files.md`. When in doubt, refer to that file for authoritative guidance.
 
 ## Conditional Logic
 
