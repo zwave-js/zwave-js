@@ -43,7 +43,7 @@
 			"maxNodes": 5
 		},
 		"3": {
-			"label": "Controller Updates",
+			"label": "Lifeline",
 			"description": "Reports on the condition of the device",
 			"maxNodes": 1,
 			"isLifeline": true
@@ -88,11 +88,11 @@
 					"value": 1
 				},
 				{
-					"label": "Monostable",
+					"label": "Momentary switch",
 					"value": 2
 				},
 				{
-					"label": "Bistable",
+					"label": "Toggle switch",
 					"value": 3
 				}
 			]
@@ -113,11 +113,11 @@
 					"value": 1
 				},
 				{
-					"label": "Monostable",
+					"label": "Momentary switch",
 					"value": 2
 				},
 				{
-					"label": "Bistable",
+					"label": "Toggle switch",
 					"value": 3
 				}
 			]
@@ -382,9 +382,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Set the Z-Wave network controller to the inclusion mode (see: controller instructions)\n2. Quickly press the B button three times (the button is located in the center of the device)",
-		"exclusion": "1. Set the Z-Wave network controller to the exclusion mode (see: controller instructions)\n2. Quickly press the B button three times (the button is located in the center of the device)",
-		"reset": "1. Cut off the power supply\n2. Re-connect the power supply while holding down the B button\n3. Hold the B button for 10 seconds\n4. After another cut-off and re-connection of power supply the settings of the device will be reset",
+		"inclusion": "Quickly press the B-button three times. The button is located in the center of the device.",
+		"exclusion": "Quickly press the B-button three times. The button is located in the center of the device.",
+		"reset": "1. Cut off the power supply.\n2. Re-connect the power supply while holding down the B-button.\n3. Hold the B-button for 10 seconds.\n4. Cut off and re-connect the power supply once more.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGBS-001/FGBS-001-EN-A-v1.1.pdf"
 	}
 }

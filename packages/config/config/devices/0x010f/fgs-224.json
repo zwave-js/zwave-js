@@ -611,9 +611,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power the device\n2. Set the main controller in (Security/non-Security Mode) add mode (see the controller manual)\n3. Quickly, three times click the button connected to S1 or the maintenance button\n4. If you are adding in the Security S2 Authenticated mode, input the underlined part of the device specific key (DSK), which is labeled on the bottom of the box\n5. LED starts blinking yellow, wait for the adding process to end",
-		"exclusion": "1. Power the device\n2. Set the main controller into the remove mode (see the controller manual)\n3. Quickly, three times click the maintenance button\n4. LED starts blinking yellow, wait for the removing process to end",
-		"reset": "1. Press and hold the maintenance button\n2. Release the button when the device glows yellow\n3. Quickly click the button to confirm\n4. After a few seconds the device is restarted, which is signaled with the red LED color",
+		"inclusion": "Power the device, then quickly press the switch connected to S1 or the B-button three times. The LED starts blinking yellow.",
+		"exclusion": "Make sure the device is powered, then quickly press the B-button three times. The LED starts blinking yellow.",
+		"reset": "1. Press and hold the B-button.\n2. Release the button when the LED glows yellow.\n3. Quickly click the button to confirm.\n4. After a few seconds the device restarts, which is signaled by the red LED.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGS-2x4/FGS-2x4-T-EN-web_17.07.24.pdf"
 	}
 }

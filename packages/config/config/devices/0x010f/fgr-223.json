@@ -472,9 +472,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power the device.\n2. Set the main controller in (Security/non-Security Mode) add mode (see the controller's manual).\n3. Quickly, triple click the S1 switch or the B-button.\n4. If you are adding in Security S2 Authenticated, scan the DSK QR code or input the 5-digit PIN code (label on the bottom of the box).\n5. Wait for the adding process to end.",
-		"exclusion": "1. Make sure the device is powered.\n2. Set the main controller in remove mode (see the controller's manual).\n3. Quickly, triple click the S1 switch or the B-button.\n4. Wait for the removing process to end.",
-		"reset": "1. Switch off the mains voltage (disable the fuse).\n2. Remove the device from the wall switch box.\n3. Switch on the mains voltage.\n4. Press and hold the B-button to enter the menu.\n5. Wait for the LED indicator to glow yellow.\n6. Quickly release and click the B-button again.\n7. After few seconds the device will be restarted, which is signalled with the red LED indicator colour.",
+		"inclusion": "Power the device, then quickly press the S1 switch or the B-button three times.",
+		"exclusion": "Make sure the device is powered, then quickly press the S1 switch or the B-button three times.",
+		"reset": "1. Switch off the mains voltage.\n2. Remove the device from the wall switch box.\n3. Switch on the mains voltage.\n4. Press and hold the B-button to enter the menu.\n5. Wait for the LED indicator to glow yellow.\n6. Quickly release and click the B-button again.\n7. After a few seconds the device restarts, which is signaled by the red LED indicator.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGR-223/FGR-223-EN-T-v1.2.pdf"
 	}
 }

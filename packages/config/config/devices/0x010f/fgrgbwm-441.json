@@ -45,7 +45,7 @@
 			"maxNodes": 5
 		},
 		"5": {
-			"label": "Reports device status",
+			"label": "Lifeline",
 			"maxNodes": 1,
 			"isLifeline": true
 		}
@@ -351,9 +351,9 @@
 		"preserveRootApplicationCCValueIDs": true
 	},
 	"metadata": {
-		"inclusion": "1. Connect the RGBW Controller to voltage supply\n2. Set the Z-Wave network main controller into learning mode\n3. Triple click the B-button or any switch connected to I1-I4 inputs",
-		"exclusion": "1. Connect the RGBW Controller to voltage supply\n2. Set the Z-Wave network main controller into learning mode\n3. Triple click the B-button or any switch connected to I1-I4 inputs",
-		"reset": "1. Disconnect voltage supply\n2. Press and hold the B-button located inside the RGBW Controller's casing\n3. Connect voltage supply still holding the B-button\n4. Release the B-button\n5. B channel will turn on (blue channel)\n6. Disconnect power supply",
+		"inclusion": "Connect the device to the power supply, then quickly press the B-button or any switch connected to the I1-I4 inputs three times.",
+		"exclusion": "Connect the device to the power supply, then quickly press the B-button or any switch connected to the I1-I4 inputs three times.",
+		"reset": "1. Disconnect the power supply.\n2. Press and hold the B-button located inside the device's casing.\n3. Reconnect the power supply while still holding the B-button.\n4. Release the B-button.\n5. The blue channel turns on.\n6. Disconnect the power supply.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGRGBWM-441/FGRGBWM-441-EN-A-v1.1.pdf"
 	}
 }

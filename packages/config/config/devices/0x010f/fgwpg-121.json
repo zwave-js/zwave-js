@@ -468,9 +468,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Quickly, triple click the button located on the casing.",
-		"exclusion": "Quickly, triple click the button located on the casing.",
-		"reset": "1. Press and hold the button\n2. Wait for the LED frame to glow yellow (3rd menu position)\n3. Release the button\n4. Click the button once to confirm selection",
+		"inclusion": "Quickly triple click the button located on the casing.",
+		"exclusion": "Quickly triple click the button located on the casing.",
+		"reset": "1. Press and hold the button until the LED frame glows yellow.\n2. Release the button.\n3. Click the button once to confirm the selection.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWPG-121/FGWPG-121-EN-T-v1.0.pdf"
 	}
 }

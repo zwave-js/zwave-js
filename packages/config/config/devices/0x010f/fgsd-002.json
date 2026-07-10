@@ -312,9 +312,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "Quickly, triple click the B-button located on the device's casing.",
-		"exclusion": "Quickly, triple click the B-button located on the device's casing.",
-		"reset": "1. Press and hold the B-button for 3 seconds until the visual indicator glows white\n2. Release the B-button\n3. Wait until the visual indicator glows yellow, signaling entering the 4th menu option\n4. Press the B-button briefly to confirm your choice",
+		"inclusion": "Quickly press the B-button located on the device's casing three times.",
+		"exclusion": "Quickly press the B-button located on the device's casing three times.",
+		"reset": "1. Press and hold the B-button for 3 seconds until the visual indicator glows white.\n2. Release the B-button.\n3. Wait until the visual indicator glows yellow, signaling the 4th menu position.\n4. Briefly press the B-button to confirm.",
 		"manual": "https://manuals.fibaro.com/wp-content/uploads/2025/07/FGSD-002-EN-A-v1.3_11.07.25.pdf"
 	}
 }

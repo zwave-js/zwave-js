@@ -56,15 +56,15 @@
 	},
 	"associations": {
 		"1": {
-			"label": "Key 1",
+			"label": "S1",
 			"maxNodes": 5
 		},
 		"2": {
-			"label": "Key 2",
+			"label": "S2",
 			"maxNodes": 5
 		},
 		"3": {
-			"label": "Device Status",
+			"label": "Lifeline",
 			"maxNodes": 1,
 			"isLifeline": true
 		}
@@ -200,7 +200,7 @@
 		},
 		{
 			"#": "6",
-			"label": "Sending Commands to Group 1 Devices (Key 1)",
+			"label": "Sending Commands to Group 1 Devices (S1)",
 			"description": "Double click functionality requires parameter 15 set to 1",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -222,7 +222,7 @@
 		},
 		{
 			"#": "7",
-			"label": "Sending Commands to Group 2 Devices (Key 2)",
+			"label": "Sending Commands to Group 2 Devices (S2)",
 			"description": "Double click functionality requires parameter 15 set to 1",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -244,18 +244,18 @@
 		},
 		{
 			"#": "13",
-			"label": "Bistable Key Status",
-			"description": "Assigns bistable key status to the device status",
+			"label": "Toggle Switch Behavior",
+			"description": "Determines how the device state follows a toggle switch",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Device changes status on key status change",
+					"label": "Device changes status on switch status change",
 					"value": 0
 				},
 				{
-					"label": "Device status depends on key status",
+					"label": "Device status depends on switch status",
 					"value": 1
 				}
 			]
@@ -343,8 +343,8 @@
 		"mapRootReportsToEndpoint": 1
 	},
 	"metadata": {
-		"inclusion": "1. Set the main controller in add mode\n2. Quickly press key no. 1 or push-button B three times (for a toggle switch perform 3 position changes)",
-		"exclusion": "1. Set the main controller in remove mode\n2. Quickly press key no. 1 or push-button B three times (for a toggle switch perform 3 position changes)",
+		"inclusion": "Quickly press the S1 switch or the B-button three times. For a toggle switch, change its position three times.",
+		"exclusion": "Quickly press the S1 switch or the B-button three times. For a toggle switch, change its position three times.",
 		"reset": "Press and hold the B-button for 3 seconds after connecting mains voltage to the device.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGS-221/FGS-221-EN-A-v1.02.pdf"
 	}

@@ -193,9 +193,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Make sure the device is within the direct range of your Z-Wave controller.\n2. Set the main controller in (security/non-security) add mode (see the controller's manual).\n3. Quickly triple click the button on the thermostatic head or use the included key.\n4. The LED ring will start blinking white.\n5. If you are adding in S2 authenticated mode, type in the device pin code (underlined part of the public key on the label).\n6. Wait for the adding process to end.\n7. Successful adding will be confirmed by the Z-Wave controller and green LED colour.",
-		"exclusion": "1. Make sure the device is within the direct range of your Z-Wave controller.\n2. Set the main controller into remove mode (see the controller's manual).\n3. Quickly triple click the button on the thermostatic head or use the included key.\n4. The LED ring will start blinking white.\n5. Wait for the removing process to end.\n6. Successful removing will be confirmed by the Z-Wave controller and red LED colour.",
-		"reset": "1. Press and hold the button or use the included key. Release the button when you see yellow LED colour.\n2. Click the button to confirm the selection.\n3. After finishing resetting the device will be put in Standby Mode. Click the button to activate it again.",
+		"inclusion": "Quickly triple click the button on the thermostatic head or use the included key. The LED ring starts blinking white, then glows green on success.",
+		"exclusion": "Quickly triple click the button on the thermostatic head or use the included key. The LED ring starts blinking white, then glows red on success.",
+		"reset": "1. Press and hold the button or use the included key.\n2. Release the button when the LED ring glows yellow.\n3. Click the button to confirm the selection.\n4. The device enters standby mode. Click the button to activate it again.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGT-001/FGT-001-EN-T-v1.6.pdf"
 	}
 }

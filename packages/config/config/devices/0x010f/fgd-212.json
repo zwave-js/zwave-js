@@ -294,11 +294,11 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Momentary",
+					"label": "Momentary switch",
 					"value": 0
 				},
 				{
-					"label": "Toggle",
+					"label": "Toggle switch",
 					"value": 1
 				},
 				{
@@ -393,7 +393,7 @@
 			"#": "26",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "3-Way Switch Function",
-			"description": "Key S2 also controls the dimmer"
+			"description": "S2 also controls the dimmer"
 		},
 		{
 			"#": "27[0x01]",
@@ -424,7 +424,7 @@
 		{
 			"#": "29",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Swap Functionality of Key S1 and Key S2",
+			"label": "Swap Functionality of S1 and S2",
 			"description": "Causes S1 to operate as S2 and S2 to operate as S1"
 		},
 		{

@@ -335,97 +335,97 @@
 		{
 			"#": "40[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Key Pressed 1 Time",
+			"label": "Input 1 Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "40[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Key Pressed 2 Times",
+			"label": "Input 1 Scenes: Pressed 2x",
 			"defaultValue": 1
 		},
 		{
 			"#": "40[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Key Pressed 3 Times",
+			"label": "Input 1 Scenes: Pressed 3x",
 			"defaultValue": 1
 		},
 		{
 			"#": "40[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 1 Scenes: Key Held Down and Released",
+			"label": "Input 1 Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Key Pressed 1 Time",
+			"label": "Input 2 Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Key Pressed 2 Times",
+			"label": "Input 2 Scenes: Pressed 2x",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Key Pressed 3 Times",
+			"label": "Input 2 Scenes: Pressed 3x",
 			"defaultValue": 1
 		},
 		{
 			"#": "41[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 2 Scenes: Key Held Down and Released",
+			"label": "Input 2 Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Key Pressed 1 Time",
+			"label": "Input 3 Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Key Pressed 2 Times",
+			"label": "Input 3 Scenes: Pressed 2x",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Key Pressed 3 Times",
+			"label": "Input 3 Scenes: Pressed 3x",
 			"defaultValue": 1
 		},
 		{
 			"#": "42[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 3 Scenes: Key Held Down and Released",
+			"label": "Input 3 Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Key Pressed 1 Time",
+			"label": "Input 4 Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Key Pressed 2 Times",
+			"label": "Input 4 Scenes: Pressed 2x",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Key Pressed 3 Times",
+			"label": "Input 4 Scenes: Pressed 3x",
 			"defaultValue": 1
 		},
 		{
 			"#": "43[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Input 4 Scenes: Key Held Down and Released",
+			"label": "Input 4 Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
@@ -717,9 +717,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power the device\n2. Set the main controller in (Security/non-Security Mode) add mode (see the controller's manual)\n3. Quickly, three times click the service button\n4. If you are adding in Security S2 Authenticated, input the underlined part of the DSK (label on the box)\n5. LED will start blinking yellow, wait for the adding process to end\n6. Adding result will be confirmed by the Z-Wave controller's message and the LED: Green - successful (non-secure, S0, S2 Unauthenticated), Magenta - successful (Security S2 Authenticated), Red - not successful",
-		"exclusion": "1. Power the device\n2. Set the main controller into remove mode (see the controller's manual)\n3. Quickly, three times click the service button\n4. LED will start blinking yellow, wait for the removing process to end\n5. Successful removing will be confirmed by the Z-Wave controller's message and red LED colour",
-		"reset": "1. Press and hold the service button to enter the menu\n2. Release service button when the device glows yellow\n3. Quickly click the service button to confirm\n4. After few seconds the device will be restarted, which is signalled with the red colour",
+		"inclusion": "1. Power the device.\n2. Quickly press the service button three times.\n3. The LED starts blinking yellow while the process is in progress, then turns green or magenta if successful, or red if not.",
+		"exclusion": "1. Make sure the device is powered.\n2. Quickly press the service button three times.\n3. The LED starts blinking yellow while the process is in progress, then turns red if successful.",
+		"reset": "1. Press and hold the service button to enter the menu.\n2. Release the service button when the LED glows yellow.\n3. Quickly click the service button to confirm.\n4. After a few seconds the device restarts, which is signaled by the red LED.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGRGBW-442/FGRGBW-442-T-EN-1.1.pdf"
 	}
 }

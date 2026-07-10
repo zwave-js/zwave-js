@@ -142,16 +142,13 @@
 		},
 		{
 			"#": "7[0x10]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Send Secure Commands to 6th Association Group",
-			"description": "Only active when the node is included securely",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"defaultValue": 1
 		},
 		{
 			"#": "7[0x20]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 7th Association Group",
-			"description": "Only active when the node is included securely",
 			"defaultValue": 1
 		},
 		{
@@ -377,9 +374,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Place the device within direct range of the Z-Wave controller.\n2. Set the main Z-Wave controller in (security/non-security) adding mode (see the controller's manual).\n3. Quickly, triple click the button located on the casing.\n4. Wait for the device to be added into the system.\n5. Successful adding will be confirmed by the Z-Wave controller's message.",
-		"exclusion": "1. Place the device within direct range of the Z-Wave controller.\n2. Set the main Z-Wave controller in remove mode (see the controller's manual).\n3. Quickly, triple click the button located on the casing.\n4. Wait for the removing process to end.\n5. Successful removing will be confirmed by the Z-Wave controller's message.",
-		"reset": "1. Press and hold the button.\n2. Release the button when LED indicator glows white and short beep sounds.\n3. Click the button when LED indicator glows yellow.\n4. After few seconds the device will be reset (confirmed by red LED indicator and long beep).",
+		"inclusion": "Quickly, triple click the button located on the casing.",
+		"exclusion": "Quickly, triple click the button located on the casing.",
+		"reset": "1. Press and hold the button.\n2. Release the button when the LED indicator glows white and a short beep sounds.\n3. Click the button when the LED indicator glows yellow.\n4. After a few seconds, a red LED indicator and a long beep confirm the reset.",
 		"manual": "https://manuals.fibaro.com/wp-content/uploads/2024/12/FGCD-001_en_full_03.12.24.pdf"
 	}
 }

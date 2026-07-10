@@ -329,16 +329,16 @@
 		{
 			"#": "30[0x04]",
 			"$import": "templates/fibaro_template.json#send_s1_associations_hold_release",
-			"description": "Requires Key S1 to be configured as momentary"
+			"description": "Requires S1 to be configured as momentary"
 		},
 		{
 			"#": "30[0x08]",
 			"$import": "templates/fibaro_template.json#send_s1_associations_double_click",
-			"description": "Requires Key S1 to be configured as momentary or to change each time input changes"
+			"description": "Requires S1 to be configured as momentary or to change each time input changes"
 		},
 		{
 			"#": "31",
-			"label": "Key S1 Associations: Switch ON Value Sent",
+			"label": "S1 Association: Switch On Value Sent",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -356,7 +356,7 @@
 		},
 		{
 			"#": "32",
-			"label": "Key S1 Associations: Switch OFF Value Sent",
+			"label": "S1 Association: Switch Off Value Sent",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -374,7 +374,7 @@
 		},
 		{
 			"#": "33",
-			"label": "Key S1 Associations: Double Click Value Sent",
+			"label": "S1 Association: Double Click Value Sent",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -401,16 +401,16 @@
 		{
 			"#": "35[0x04]",
 			"$import": "templates/fibaro_template.json#send_s2_associations_hold_release",
-			"description": "Requires Key S2 to be configured as momentary"
+			"description": "Requires S2 to be configured as momentary"
 		},
 		{
 			"#": "35[0x08]",
 			"$import": "templates/fibaro_template.json#send_s2_associations_double_click",
-			"description": "Requires Key S2 to be configured as momentary or to change each time input changes"
+			"description": "Requires S2 to be configured as momentary or to change each time input changes"
 		},
 		{
 			"#": "36",
-			"label": "Key S2 Associations: Switch ON Value Sent",
+			"label": "S2 Association: Switch On Value Sent",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -428,7 +428,7 @@
 		},
 		{
 			"#": "37",
-			"label": "Key S2 Associations: Switch OFF Value Sent",
+			"label": "S2 Association: Switch Off Value Sent",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,
@@ -446,7 +446,7 @@
 		},
 		{
 			"#": "38",
-			"label": "Key S2 Associations: Double Click Value Sent",
+			"label": "S2 Association: Double Click Value Sent",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 255,

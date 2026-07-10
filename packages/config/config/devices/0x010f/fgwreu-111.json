@@ -463,9 +463,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Power the device.\n2. Set the main controller in (Security/non-Security Mode) add mode (see the controller's manual).\n3. Quickly, three times click one of the buttons.\n4. If you are adding in Security S2 Authenticated, input the underlined part of the DSK (label on the bottom of the box).\n5. LED will start blinking yellow, wait for the adding process to end.",
-		"exclusion": "1. Power the device.\n2. Set the main controller into remove mode (see the controller's manual).\n3. Quickly, three times click one of the buttons.\n4. LED will start blinking yellow, wait for the removing process to end.",
-		"reset": "1. Quickly, three times click, then press and hold one of the buttons to enter the menu.\n2. Release button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After few seconds the device will be restarted, which is signalled with red LED colour.",
+		"inclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",
+		"exclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",
+		"reset": "1. Quickly click one of the buttons three times, then press and hold it to enter the menu.\n2. Release the button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After a few seconds the device restarts, which is signaled with the red LED color.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWREU-111/FGWREU-111-T-EN-v1.1.pdf"
 	}
 }

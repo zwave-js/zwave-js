@@ -34,7 +34,7 @@
 			"maxNodes": 5
 		},
 		"3": {
-			"label": "Device Status",
+			"label": "Lifeline",
 			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
@@ -353,9 +353,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Connect the power source and/or install the battery. Make sure the device is located within direct range of the Z-Wave controller.\n2. Set the main controller into the learn mode (see main controller's operating manual).\n3. Quickly, triple click the B-button located on the device's enclosure.",
-		"exclusion": "1. Make sure the sensor is connected to a power source (battery and/or hard wired).\n2. Set the main controller into the learn mode (see main controller's operating manual).\n3. Quickly, triple click the B-button located on the device's enclosure.",
-		"reset": "1. Make sure the device has the power connected.\n2. Press and hold the B-button for 3 seconds until the LED glows white.\n3. Release the B-button.\n4. Wait until the LED glows yellow, signaling entering the 4th menu level.\n5. Press the B-button briefly to confirm your choice.",
+		"inclusion": "Connect the power source or install the battery, then quickly press the B-button located on the device's enclosure three times.",
+		"exclusion": "Make sure the device is powered, then quickly press the B-button located on the device's enclosure three times.",
+		"reset": "1. Make sure the device is powered.\n2. Press and hold the B-button for 3 seconds until the LED glows white.\n3. Release the B-button.\n4. Wait until the LED glows yellow, signaling the 4th menu level.\n5. Briefly press the B-button to confirm.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGSS-001/FGSS-001-EN-A-v1.01.pdf"
 	}
 }

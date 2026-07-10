@@ -33,7 +33,7 @@
 			"maxNodes": 16
 		},
 		"3": {
-			"label": "Controller Updates",
+			"label": "Lifeline",
 			"maxNodes": 1,
 			"isLifeline": true
 		}
@@ -401,9 +401,9 @@
 		}
 	},
 	"metadata": {
-		"inclusion": "1. Connect the power supply.\n2. Set the main controller into the learn mode (see the controller's manual).\n3. Triple click the B-button or a push button connected to the S1 terminal.",
-		"exclusion": "1. Make sure the module is connected to the power supply.\n2. Set the main controller into the learn mode (see the controller's manual).\n3. Triple click the B-button or a push button connected to the S1 terminal.",
-		"reset": "1. Make sure the module is connected to the power supply.\n2. Press and hold the B-button for ca. 14 seconds.\n3. LED indicator will glow yellow.\n4. Release the B-button and press it again, briefly.\n5. The Roller Shutter memory is now empty and the module goes into the auto inclusion mode.",
+		"inclusion": "Connect the power supply, then quickly press the B-button or a push button connected to the S1 terminal three times.",
+		"exclusion": "Make sure the device is powered, then quickly press the B-button or a push button connected to the S1 terminal three times.",
+		"reset": "1. Make sure the device is powered.\n2. Press and hold the B-button for about 14 seconds until the LED indicator glows yellow.\n3. Release the B-button and briefly press it again.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGRM-222/FGRM-222-EN-A-v1.00.pdf"
 	}
 }

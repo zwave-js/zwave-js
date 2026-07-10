@@ -438,7 +438,7 @@
 	"metadata": {
 		"inclusion": "Quickly, three times press the TMP button.",
 		"exclusion": "Quickly, three times press the TMP button.",
-		"reset": "1. Open the cover\n2. Remove the battery\n3. Install the battery while holding the TMP button\n4. Release the TMP button within 5 seconds\n5. Reset will be confirmed by LED blinking",
+		"reset": "1. Open the cover.\n2. Remove the battery.\n3. Install the battery while holding the TMP button.\n4. Release the TMP button within 5 seconds.\n5. The reset is confirmed by the LED blinking.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGK-10x/FGK-10x-EN-T-v2.0.pdf"
 	}
 }

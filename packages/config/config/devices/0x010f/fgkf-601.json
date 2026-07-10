@@ -377,133 +377,133 @@
 		{
 			"#": "21[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Square Button Scenes: Key Pressed 1 Time",
+			"label": "Square Button Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "21[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Square Button Scenes: Key Pressed 2 Times"
+			"label": "Square Button Scenes: Pressed 2x"
 		},
 		{
 			"#": "21[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Square Button Scenes: Key Pressed 3 Times"
+			"label": "Square Button Scenes: Pressed 3x"
 		},
 		{
 			"#": "21[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Square Button Scenes: Key Held Down and Released",
+			"label": "Square Button Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "22[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Circle Button Scenes: Key Pressed 1 Time",
+			"label": "Circle Button Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "22[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Circle Button Scenes: Key Pressed 2 Times"
+			"label": "Circle Button Scenes: Pressed 2x"
 		},
 		{
 			"#": "22[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Circle Button Scenes: Key Pressed 3 Times"
+			"label": "Circle Button Scenes: Pressed 3x"
 		},
 		{
 			"#": "22[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Circle Button Scenes: Key Held Down and Released",
+			"label": "Circle Button Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "23[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Cross Button Scenes: Key Pressed 1 Time",
+			"label": "Cross Button Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "23[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Cross Button Scenes: Key Pressed 2 Times"
+			"label": "Cross Button Scenes: Pressed 2x"
 		},
 		{
 			"#": "23[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Cross Button Scenes: Key Pressed 3 Times"
+			"label": "Cross Button Scenes: Pressed 3x"
 		},
 		{
 			"#": "23[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Cross Button Scenes: Key Held Down and Released",
+			"label": "Cross Button Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "24[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Triangle Button Scenes: Key Pressed 1 Time",
+			"label": "Triangle Button Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "24[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Triangle Button Scenes: Key Pressed 2 Times"
+			"label": "Triangle Button Scenes: Pressed 2x"
 		},
 		{
 			"#": "24[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Triangle Button Scenes: Key Pressed 3 Times"
+			"label": "Triangle Button Scenes: Pressed 3x"
 		},
 		{
 			"#": "24[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Triangle Button Scenes: Key Held Down and Released",
+			"label": "Triangle Button Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "25[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Minus Button Scenes: Key Pressed 1 Time",
+			"label": "Minus Button Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "25[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Minus Button Scenes: Key Pressed 2 Times"
+			"label": "Minus Button Scenes: Pressed 2x"
 		},
 		{
 			"#": "25[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Minus Button Scenes: Key Pressed 3 Times"
+			"label": "Minus Button Scenes: Pressed 3x"
 		},
 		{
 			"#": "25[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Minus Button Scenes: Key Held Down and Released",
+			"label": "Minus Button Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
 			"#": "26[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Plus Button Scenes: Key Pressed 1 Time",
+			"label": "Plus Button Scenes: Pressed 1x",
 			"defaultValue": 1
 		},
 		{
 			"#": "26[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Plus Button Scenes: Key Pressed 2 Times"
+			"label": "Plus Button Scenes: Pressed 2x"
 		},
 		{
 			"#": "26[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Plus Button Scenes: Key Pressed 3 Times"
+			"label": "Plus Button Scenes: Pressed 3x"
 		},
 		{
 			"#": "26[0x08]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Plus Button Scenes: Key Held Down and Released",
+			"label": "Plus Button Scenes: Held Down and Released",
 			"defaultValue": 1
 		},
 		{
@@ -532,73 +532,64 @@
 		},
 		{
 			"#": "29[0x10]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Send Secure Commands to 6th Association Group",
-			"description": "Only active when the node is included securely",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"valueSize": 2,
 			"defaultValue": 1
 		},
 		{
 			"#": "29[0x20]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 7th Association Group",
-			"description": "Only active when the node is included securely",
 			"valueSize": 2,
 			"defaultValue": 1
 		},
 		{
 			"#": "29[0x40]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 8th Association Group",
-			"description": "Only active when the node is included securely",
 			"valueSize": 2,
 			"defaultValue": 1
 		},
 		{
 			"#": "29[0x80]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 9th Association Group",
-			"description": "Only active when the node is included securely",
 			"valueSize": 2,
 			"defaultValue": 1
 		},
 		{
 			"#": "29[0x100]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 10th Association Group",
-			"description": "Only active when the node is included securely",
 			"valueSize": 2,
 			"defaultValue": 1
 		},
 		{
 			"#": "29[0x200]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 11th Association Group",
-			"description": "Only active when the node is included securely",
 			"valueSize": 2,
 			"defaultValue": 1
 		},
 		{
 			"#": "29[0x400]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 12th Association Group",
-			"description": "Only active when the node is included securely",
 			"valueSize": 2,
 			"defaultValue": 1
 		},
 		{
 			"#": "29[0x800]",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
 			"label": "Send Secure Commands to 13th Association Group",
-			"description": "Only active when the node is included securely",
 			"valueSize": 2,
 			"defaultValue": 1
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Set the main Z-Wave controller in (Security/non-Security Mode) add mode (see the controller's manual)\n2. Power the device (insert the battery)\n3. Click any button three times\n4. LED will pulse white during the adding process\n5. Wait for the adding process to end\n6. Successful adding will be confirmed by the Z-Wave controller's message and green LED color",
-		"exclusion": "1. Set the main Z-Wave controller in remove mode (see the controller's manual)\n2. Click the Circle and Minus buttons simultaneously\n3. Click Triangle or Cross until LED glows green\n4. Click Plus\n5. Wait for the removing process to end\n6. Successful removing will be confirmed by the Z-Wave controller's message",
-		"reset": "Resetting the device using the menu:\n1. Click the Circle and Minus buttons simultaneously\n2. Click Triangle or Cross until LED glows yellow\n3. Click Plus\nEmergency resetting the device on start-up:\n1. Remove the battery\n2. Hold Square and Plus while inserting the battery",
+		"inclusion": "1. Insert the battery to power the device.\n2. Click any button three times.\n3. The LED pulses white while adding is in progress.\n4. Successful adding is confirmed by a green LED.",
+		"exclusion": "1. Click the Circle and Minus buttons simultaneously.\n2. Click Triangle or Cross until the LED glows green.\n3. Click Plus.",
+		"reset": "1. Click the Circle and Minus buttons simultaneously.\n2. Click Triangle or Cross until the LED glows yellow.\n3. Click Plus.\nAlternatively, for an emergency reset on start-up, remove the battery, then hold Square and Plus while inserting the battery.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGKF-601/FGKF-601-EN-T-v1.1.pdf"
 	}
 }

@@ -44,15 +44,15 @@
 	},
 	"associations": {
 		"1": {
-			"label": "Key 1",
+			"label": "S1",
 			"maxNodes": 5
 		},
 		"2": {
-			"label": "Key 2",
+			"label": "S2",
 			"maxNodes": 5
 		},
 		"3": {
-			"label": "Device Status",
+			"label": "Lifeline",
 			"maxNodes": 1,
 			"isLifeline": true
 		}
@@ -86,7 +86,7 @@
 		},
 		{
 			"#": "6",
-			"label": "Sending Commands to Group 1 Devices (Key 1)",
+			"label": "Sending Commands to Group 1 Devices (S1)",
 			"description": "Double click functionality requires parameter 15 set to 1",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -108,7 +108,7 @@
 		},
 		{
 			"#": "7",
-			"label": "Key 2: Check Device Status Before Sending Control Frame",
+			"label": "S2: Check Device Status Before Sending Control Frame",
 			"description": "Not possible if roller blind switch is chosen in parameter 14. Requires parameter 19 set to 0.",
 			"valueSize": 1,
 			"defaultValue": 1,
@@ -247,7 +247,7 @@
 					"value": 1
 				},
 				{
-					"label": "Roller blind switch (Two switch keys operate the dimmer)",
+					"label": "Roller blind switch (Two switches operate the dimmer)",
 					"value": 2
 				}
 			]
@@ -298,7 +298,7 @@
 			"#": "17",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "3-Way Switch Function",
-			"description": "Provides the option to double key no. 1"
+			"description": "A second switch connected to S2 also controls the dimmer"
 		},
 		{
 			"#": "18",
@@ -307,18 +307,18 @@
 		},
 		{
 			"#": "19",
-			"label": "Bistable Key Status",
-			"description": "Assigns bistable key status to the device status",
+			"label": "Toggle Switch Behavior",
+			"description": "Determines how the device state follows a toggle switch",
 			"valueSize": 1,
 			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Device changes status on key status change",
+					"label": "Device changes status on switch status change",
 					"value": 0
 				},
 				{
-					"label": "Device status depends on key status",
+					"label": "Device status depends on switch status",
 					"value": 1
 				}
 			]
@@ -403,8 +403,8 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Set the main controller in add mode\n2. Quickly press the push-button connected to the S1 terminal or push-button B three times (for a toggle switch perform 3 position changes)",
-		"exclusion": "1. Set the main controller in remove mode\n2. Quickly press the push-button connected to the S1 terminal or push-button B three times (for a toggle switch perform 3 position changes)",
+		"inclusion": "Quickly press the push-button connected to the S1 terminal or the B-button three times. For a toggle switch, perform 3 position changes.",
+		"exclusion": "Quickly press the push-button connected to the S1 terminal or the B-button three times. For a toggle switch, perform 3 position changes.",
 		"reset": "Press and hold the B-button for 3 seconds after connecting mains voltage to the device.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGD-211/FGD-211-EN-A-v1.03.pdf"
 	}

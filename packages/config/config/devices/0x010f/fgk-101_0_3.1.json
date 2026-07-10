@@ -50,7 +50,7 @@
 			"maxNodes": 5
 		},
 		"3": {
-			"label": "Condition",
+			"label": "Lifeline",
 			"description": "Reports the device status and allows for assigning single device only (main controller by default).",
 			"maxNodes": 1,
 			"isLifeline": true
@@ -100,11 +100,11 @@
 					"value": 1
 				},
 				{
-					"label": "Monostable",
+					"label": "Momentary switch",
 					"value": 2
 				},
 				{
-					"label": "Bistable",
+					"label": "Toggle switch",
 					"value": 3
 				}
 			]
@@ -251,7 +251,7 @@
 	"metadata": {
 		"inclusion": "Quickly, three times press the TMP button.",
 		"exclusion": "Quickly, three times press the TMP button.",
-		"reset": "1. Take off the sensor's cover and remove the battery\n2. Touch the sensor's body with a magnet\n3. Insert the battery\n4. Within 2 seconds remove the magnet from the sensor's body - the LED will turn off\n5. Wait 3 seconds until the LED starts blinking, then remove the battery",
+		"reset": "1. Take off the sensor's cover and remove the battery.\n2. Touch the sensor's body with a magnet.\n3. Insert the battery.\n4. Within 2 seconds, remove the magnet from the sensor's body. The LED will turn off.\n5. Wait 3 seconds until the LED starts blinking, then remove the battery.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGK-10x/FGK-10x-EN-A-v1.01.pdf"
 	}
 }

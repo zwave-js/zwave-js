@@ -693,7 +693,7 @@
 	"metadata": {
 		"inclusion": "Quickly, three times press the B-button located inside the casing.",
 		"exclusion": "Quickly, three times press the B-button located inside the casing.",
-		"reset": "1. Open the cover\n2. Press and hold the B-button\n3. Wait for the visual indicator to glow yellow (2nd menu position)\n4. Release the B-button\n5. Click the B-button to confirm selection",
+		"reset": "1. Open the cover.\n2. Press and hold the B-button.\n3. Wait for the visual indicator to glow yellow, indicating the 2nd menu position.\n4. Release the B-button.\n5. Click the B-button to confirm the selection.",
 		"manual": "https://manuals.fibaro.com/wp-content/uploads/2024/10/FGMS-001-EN-T-v2.3_02.10.24-1.pdf"
 	}
 }

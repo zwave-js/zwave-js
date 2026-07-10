@@ -443,9 +443,9 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Insert the Plug into a socket - auto-inclusion will be activated\n2. Alternatively, triple click the B-button located on the Plug's casing",
+		"inclusion": "Triple click the B-button located on the Plug's casing.",
 		"exclusion": "Triple click the B-button located on the Plug's casing.",
-		"reset": "1. Insert the Plug into a socket\n2. Press and hold the B-button for 15-20 seconds until the LED ring glows yellow\n3. Release the B-button\n4. Press the B-button briefly",
+		"reset": "1. Insert the Plug into a socket.\n2. Press and hold the B-button for 15-20 seconds until the LED ring glows yellow.\n3. Release the B-button.\n4. Press the B-button briefly.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWPx-102/FGWPx-102-EN-A-v1.00.pdf"
 	}
 }

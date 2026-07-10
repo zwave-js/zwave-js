@@ -167,10 +167,10 @@
 		}
 	],
 	"metadata": {
-		"inclusion": "1. Set the main controller in (Security/non-Security) add mode (see the controller manual)\n2. Quickly, three times click one of the buttons\n3. If you are adding in Security S2 Authenticated mode, input the underlined part of the device security key (DSK) labeled on the box\n4. LED starts blinking yellow, wait for the adding process to end",
-		"exclusion": "1. Set the main controller into remove mode (see the controller manual)\n2. Quickly, three times click, then press and hold one of the buttons for 12 seconds\n3. Release the button when the device glows green\n4. Quickly click the button to confirm\n5. LED starts blinking yellow, wait for the removing process to end",
-		"reset": "1. Quickly, three times click, then press and hold one of the buttons for 21 seconds\n2. Release the button when the device glows yellow\n3. Quickly click the button to confirm\n4. After a few seconds the device is restarted, which is signaled with the red LED color",
-		"wakeup": "1. Quickly, three times click, then press and hold one of the buttons\n2. Release the button when the device signals the first menu position with white color\n3. Quickly click the button to confirm",
+		"inclusion": "Quickly click one of the buttons three times. The LED starts blinking yellow.",
+		"exclusion": "1. Quickly click one of the buttons three times, then press and hold it for 12 seconds.\n2. Release the button when the device glows green.\n3. Quickly click the button to confirm. The LED starts blinking yellow.",
+		"reset": "1. Quickly click one of the buttons three times, then press and hold it for 21 seconds.\n2. Release the button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After a few seconds the device restarts, which is signaled with the red LED color.",
+		"wakeup": "1. Quickly click one of the buttons three times, then press and hold it.\n2. Release the button when the device signals the first menu position with white color.\n3. Quickly click the button to confirm.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWCEU-201/FGWCEU-201-T-EN-f1.2-15.07.24.pdf"
 	}
 }

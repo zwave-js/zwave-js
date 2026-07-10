@@ -500,36 +500,20 @@
 			]
 		},
 		{
-			"#": "50",
-			"label": "Associations in Z-Wave Network Security Mode",
-			"description": "Active only in Z-Wave network security mode. Does not apply to the Lifeline group.",
-			"valueSize": 1,
-			"defaultValue": 3,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "None of the groups sent as secure",
-					"value": 0
-				},
-				{
-					"label": "2nd group sent as secure",
-					"value": 1
-				},
-				{
-					"label": "3rd group sent as secure",
-					"value": 2
-				},
-				{
-					"label": "2nd and 3rd group sent as secure",
-					"value": 3
-				}
-			]
+			"#": "50[0x01]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group2",
+			"defaultValue": 1
+		},
+		{
+			"#": "50[0x02]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group3",
+			"defaultValue": 1
 		}
 	],
 	"metadata": {
-		"inclusion": "Quickly, triple click the B-button located on the Plug's casing.",
-		"exclusion": "Quickly, triple click the B-button located on the Plug's casing.",
-		"reset": "1. Insert the Plug into a socket\n2. Press and hold the B-button\n3. Wait for the LED ring to glow yellow\n4. Release the B-button\n5. Click the B-button once to confirm selection",
+		"inclusion": "Quickly triple click the B-button located on the Plug's casing.",
+		"exclusion": "Quickly triple click the B-button located on the Plug's casing.",
+		"reset": "1. Insert the Plug into a socket.\n2. Press and hold the B-button until the LED ring glows yellow.\n3. Release the B-button.\n4. Click the B-button once to confirm the selection.",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWPEF-102/FGWPEF-102-EN-A-v2.1.pdf"
 	}
 }
