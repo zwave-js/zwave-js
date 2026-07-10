@@ -74,29 +74,7 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "All On / All Off Function",
-			"valueSize": 1,
-			"defaultValue": 255,
-			"unsigned": true,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "All on inactive, all off inactive",
-					"value": 0
-				},
-				{
-					"label": "All on inactive, all off active",
-					"value": 1
-				},
-				{
-					"label": "All on active, all off inactive",
-					"value": 2
-				},
-				{
-					"label": "All on active, all off active",
-					"value": 255
-				}
-			]
+			"$import": "templates/fibaro_template.json#all_on_off_function"
 		},
 		{
 			"#": "3",
@@ -190,25 +168,8 @@
 		},
 		{
 			"#": "6",
-			"label": "Sending Commands to Group 1 Devices (S1)",
-			"description": "Double click functionality requires parameter 15 set to 1",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Commands sent when device is turned on and off",
-					"value": 0
-				},
-				{
-					"label": "Commands sent when turned off, double click turns on to last state",
-					"value": 1
-				},
-				{
-					"label": "Commands sent when turned off, double click turns on to 100%",
-					"value": 2
-				}
-			]
+			"$import": "templates/fibaro_template.json#send_association_commands",
+			"label": "Sending Commands to Group 1 Devices (S1)"
 		},
 		{
 			"#": "7",
@@ -234,38 +195,11 @@
 		},
 		{
 			"#": "13",
-			"label": "Toggle Switch Behavior",
-			"description": "Determines how the device state follows a toggle switch",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Device changes status on switch status change",
-					"value": 0
-				},
-				{
-					"label": "Device status depends on switch status",
-					"value": 1
-				}
-			]
+			"$import": "templates/fibaro_template.json#toggle_switch_behavior"
 		},
 		{
 			"#": "14",
-			"label": "Switch Type",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Momentary switch",
-					"value": 0
-				},
-				{
-					"label": "Toggle switch",
-					"value": 1
-				}
-			]
+			"$import": "templates/fibaro_template.json#switch_type_momentary_toggle"
 		},
 		{
 			"#": "15",
@@ -299,13 +233,7 @@
 		},
 		{
 			"#": "39",
-			"label": "Flashing Alarm Duration",
-			"valueSize": 2,
-			"unit": "ms",
-			"minValue": 1,
-			"maxValue": 65535,
-			"defaultValue": 600,
-			"unsigned": true
+			"$import": "templates/fibaro_template.json#flashing_alarm_duration"
 		},
 		{
 			"#": "40",

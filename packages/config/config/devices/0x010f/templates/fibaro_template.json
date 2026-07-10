@@ -260,6 +260,842 @@
 		"$import": "~/templates/master_template.json#base_enable_disable",
 		"label": "Include Consumption By Device Itself in Reports"
 	},
+	"all_on_off_function": {
+		"label": "All On / All Off Function",
+		"valueSize": 1,
+		"defaultValue": 255,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "All on inactive, all off inactive",
+				"value": 0
+			},
+			{
+				"label": "All on inactive, all off active",
+				"value": 1
+			},
+			{
+				"label": "All on active, all off inactive",
+				"value": 2
+			},
+			{
+				"label": "All on active, all off active",
+				"value": 255
+			}
+		]
+	},
+	"send_association_commands": {
+		"label": "Sending Commands to Associated Devices",
+		"description": "Double click functionality must be enabled",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Commands sent when device is turned on and off",
+				"value": 0
+			},
+			{
+				"label": "Commands sent when turned off, double click turns on to last state",
+				"value": 1
+			},
+			{
+				"label": "Commands sent when turned off, double click turns on to 100%",
+				"value": 2
+			}
+		]
+	},
+	"toggle_switch_behavior": {
+		"label": "Toggle Switch Behavior",
+		"description": "Determines how the device state follows a toggle switch",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Device changes status on switch status change",
+				"value": 0
+			},
+			{
+				"label": "Device status depends on switch status",
+				"value": 1
+			}
+		]
+	},
+	"switch_type_momentary_toggle": {
+		"label": "Switch Type",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Momentary switch",
+				"value": 0
+			},
+			{
+				"label": "Toggle switch",
+				"value": 1
+			}
+		]
+	},
+	"flashing_alarm_duration": {
+		"label": "Flashing Alarm Duration",
+		"valueSize": 2,
+		"unit": "ms",
+		"minValue": 1,
+		"maxValue": 65535,
+		"defaultValue": 600,
+		"unsigned": true
+	},
+	"overload_safety_switch": {
+		"label": "Overload Safety Switch",
+		"description": "Turn off the controlled device in case of exceeding the defined power.",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 0,
+		"maxValue": 18000,
+		"defaultValue": 0,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
+	},
+	"power_reporting_interval": {
+		"$purpose": "reporting_interval.power",
+		"label": "Power Reporting Interval",
+		"valueSize": 2,
+		"unit": "seconds",
+		"minValue": 0,
+		"maxValue": 32400,
+		"defaultValue": 3600,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
+	},
+	"energy_reporting_interval": {
+		"$purpose": "reporting_interval.energy",
+		"label": "Energy Reporting Interval",
+		"valueSize": 2,
+		"unit": "seconds",
+		"minValue": 0,
+		"maxValue": 32400,
+		"defaultValue": 3600,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
+	},
+	"association_switch_on_value": {
+		"label": "Switch On Value",
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 255,
+		"defaultValue": 255,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "Last state/on",
+				"value": 255
+			}
+		]
+	},
+	"association_switch_off_value": {
+		"label": "Switch Off Value",
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 255,
+		"defaultValue": 0,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "Last state/on",
+				"value": 255
+			}
+		]
+	},
+	"association_control_mode": {
+		"label": "Association Control Mode",
+		"description": "Selects when to send a command to associated devices.",
+		"valueSize": 1,
+		"defaultValue": 3,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Power usage above upper threshold",
+				"value": 1
+			},
+			{
+				"label": "Power usage below lower threshold",
+				"value": 2
+			},
+			{
+				"label": "Both",
+				"value": 3
+			}
+		]
+	},
+	"upper_power_threshold": {
+		"label": "Upper Power Threshold",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 100,
+		"maxValue": 18000,
+		"defaultValue": 500
+	},
+	"lower_power_threshold": {
+		"label": "Lower Power Threshold",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 0,
+		"maxValue": 17900,
+		"defaultValue": 300
+	},
+	"association_upper_threshold_command_value": {
+		"label": "Upper Threshold Command Value",
+		"description": "Which value to send when the power usage is above the upper threshold.",
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 255,
+		"defaultValue": 255,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "Last state/on",
+				"value": 255
+			}
+		]
+	},
+	"association_lower_threshold_command_value": {
+		"label": "Lower Threshold Command Value",
+		"description": "Which value to send when the power usage is below the lower threshold.",
+		"valueSize": 2,
+		"minValue": 0,
+		"maxValue": 255,
+		"defaultValue": 0,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "Last state/on",
+				"value": 255
+			}
+		]
+	},
+	"response_to_alarm_frames": {
+		"label": "Response to Alarm Frames",
+		"description": "Values 5-50 cyclically change the device state with the set period (0.5-5.0s, step 0.1s).",
+		"valueSize": 1,
+		"minValue": 0,
+		"maxValue": 50,
+		"defaultValue": 0,
+		"options": [
+			{
+				"label": "No reaction",
+				"value": 0
+			},
+			{
+				"label": "On",
+				"value": 1
+			},
+			{
+				"label": "Off",
+				"value": 2
+			}
+		]
+	},
+	"response_to_alarm_frames_legacy": {
+		"label": "Response to Alarm Frames",
+		"description": "Ignored when the 'Always On' mode is active.",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "No reaction",
+				"value": 0
+			},
+			{
+				"label": "Turn on connected device",
+				"value": 1
+			},
+			{
+				"label": "Turn off connected device",
+				"value": 2
+			},
+			{
+				"label": "Cyclically change device state every second",
+				"value": 3
+			}
+		]
+	},
+	"alarm_duration": {
+		"label": "Alarm Duration",
+		"valueSize": 2,
+		"unit": "seconds",
+		"minValue": 1,
+		"maxValue": 32400,
+		"defaultValue": 600
+	},
+	"alarm_duration_infinite": {
+		"$import": "#alarm_duration",
+		"minValue": 0,
+		"options": [
+			{
+				"label": "Infinite",
+				"value": 0
+			}
+		]
+	},
+	"alarm_duration_65535": {
+		"$import": "#alarm_duration",
+		"maxValue": 65535,
+		"unsigned": true
+	},
+	"led_indicator_color_load_on": {
+		"label": "LED Indicator: Color When Load On",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "LED off",
+				"value": 0
+			},
+			{
+				"label": "Active power (Smooth)",
+				"value": 1
+			},
+			{
+				"label": "Active power (Steps)",
+				"value": 2
+			},
+			{
+				"label": "White",
+				"value": 3
+			},
+			{
+				"label": "Red",
+				"value": 4
+			},
+			{
+				"label": "Green",
+				"value": 5
+			},
+			{
+				"label": "Blue",
+				"value": 6
+			},
+			{
+				"label": "Yellow",
+				"value": 7
+			},
+			{
+				"label": "Cyan",
+				"value": 8
+			},
+			{
+				"label": "Magenta",
+				"value": 9
+			}
+		]
+	},
+	"led_indicator_color_load_off": {
+		"label": "LED Indicator: Color When Load Off",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "LED off",
+				"value": 0
+			},
+			{
+				"label": "Last measured load",
+				"value": 1
+			},
+			{
+				"label": "White",
+				"value": 3
+			},
+			{
+				"label": "Red",
+				"value": 4
+			},
+			{
+				"label": "Green",
+				"value": 5
+			},
+			{
+				"label": "Blue",
+				"value": 6
+			},
+			{
+				"label": "Yellow",
+				"value": 7
+			},
+			{
+				"label": "Cyan",
+				"value": 8
+			},
+			{
+				"label": "Magenta",
+				"value": 9
+			}
+		]
+	},
+	"led_indicator_color_alarm": {
+		"label": "LED Indicator: Color During Alarm",
+		"valueSize": 1,
+		"defaultValue": 2,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "LED off",
+				"value": 0
+			},
+			{
+				"label": "No change in color",
+				"value": 1
+			},
+			{
+				"label": "Red/White/Blue",
+				"value": 2
+			},
+			{
+				"label": "White",
+				"value": 3
+			},
+			{
+				"label": "Red",
+				"value": 4
+			},
+			{
+				"label": "Green",
+				"value": 5
+			},
+			{
+				"label": "Blue",
+				"value": 6
+			},
+			{
+				"label": "Yellow",
+				"value": 7
+			},
+			{
+				"label": "Cyan",
+				"value": 8
+			},
+			{
+				"label": "Magenta",
+				"value": 9
+			}
+		]
+	},
+	"immediate_power_report": {
+		"label": "Immediate Power Report",
+		"description": "Power load change in percent that results in sending a power report with the highest priority",
+		"valueSize": 1,
+		"unit": "%",
+		"minValue": 1,
+		"maxValue": 100,
+		"defaultValue": 80,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 100
+			}
+		]
+	},
+	"power_report_threshold_relative_legacy": {
+		"$purpose": "reporting_threshold.power",
+		"label": "Power Reports: Relative Change Threshold",
+		"description": "Power load change in percent that results in sending a power report",
+		"valueSize": 1,
+		"unit": "%",
+		"minValue": 0,
+		"maxValue": 99,
+		"defaultValue": 15,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
+	},
+	"power_reporting_interval_legacy": {
+		"label": "Power Reporting Interval",
+		"description": "How frequently standard power reports will be sent",
+		"valueSize": 1,
+		"unit": "seconds",
+		"minValue": 1,
+		"maxValue": 255,
+		"defaultValue": 30,
+		"unsigned": true,
+		"options": [
+			{
+				"label": "Report only when polled or sent periodically",
+				"value": 255
+			}
+		]
+	},
+	"energy_report_threshold_legacy": {
+		"$purpose": "reporting_threshold.energy",
+		"label": "Energy Reporting Threshold",
+		"valueSize": 1,
+		"unit": "0.01 kWh",
+		"minValue": 1,
+		"maxValue": 255,
+		"defaultValue": 10,
+		"unsigned": true,
+		"options": [
+			{
+				"label": "Report only when polled",
+				"value": 255
+			}
+		]
+	},
+	"power_energy_reporting_interval_legacy": {
+		"label": "Power and Energy Reporting Interval",
+		"description": "Time period between reports sent when changes in power load have not been recorded",
+		"valueSize": 2,
+		"unit": "seconds",
+		"minValue": 1,
+		"maxValue": 65535,
+		"defaultValue": 3600,
+		"unsigned": true,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 65535
+			}
+		]
+	},
+	"lower_power_threshold_legacy": {
+		"label": "Lower Power Threshold",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 0,
+		"maxValue": 25000,
+		"defaultValue": 300
+	},
+	"upper_power_threshold_legacy": {
+		"label": "Upper Power Threshold",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 1,
+		"maxValue": 25000,
+		"defaultValue": 500
+	},
+	"power_threshold_action": {
+		"label": "Action in Case of Exceeding Defined Power Values",
+		"description": "Defines how associated devices are controlled",
+		"valueSize": 1,
+		"defaultValue": 6,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Function inactive",
+				"value": 0
+			},
+			{
+				"label": "Turn associated devices on when power drops below the lower threshold",
+				"value": 1
+			},
+			{
+				"label": "Turn associated devices off when power drops below the lower threshold",
+				"value": 2
+			},
+			{
+				"label": "Turn associated devices on when power rises above the upper threshold",
+				"value": 3
+			},
+			{
+				"label": "Turn associated devices off when power rises above the upper threshold",
+				"value": 4
+			},
+			{
+				"label": "Combination of 1 and 4",
+				"value": 5
+			},
+			{
+				"label": "Combination of 2 and 3",
+				"value": 6
+			}
+		]
+	},
+	"violet_color_power_threshold_legacy": {
+		"label": "Power Threshold for Violet Color",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 1000,
+		"maxValue": 32000,
+		"defaultValue": 25000
+	},
+	"violet_color_power_threshold": {
+		"label": "Power Threshold for Violet Color",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 1000,
+		"maxValue": 18000,
+		"defaultValue": 18000
+	},
+	"led_ring_color_on": {
+		"label": "LED Ring Color When Device Is On",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Color changes in steps depending on power",
+				"value": 0
+			},
+			{
+				"label": "Color changes continuously depending on power",
+				"value": 1
+			},
+			{
+				"label": "White",
+				"value": 2
+			},
+			{
+				"label": "Red",
+				"value": 3
+			},
+			{
+				"label": "Green",
+				"value": 4
+			},
+			{
+				"label": "Blue",
+				"value": 5
+			},
+			{
+				"label": "Yellow",
+				"value": 6
+			},
+			{
+				"label": "Cyan",
+				"value": 7
+			},
+			{
+				"label": "Magenta",
+				"value": 8
+			},
+			{
+				"label": "Illumination turned off",
+				"value": 9
+			}
+		]
+	},
+	"led_ring_color_off": {
+		"label": "LED Ring Color When Device Is Off",
+		"valueSize": 1,
+		"defaultValue": 8,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Color of last measured power",
+				"value": 0
+			},
+			{
+				"label": "White",
+				"value": 1
+			},
+			{
+				"label": "Red",
+				"value": 2
+			},
+			{
+				"label": "Green",
+				"value": 3
+			},
+			{
+				"label": "Blue",
+				"value": 4
+			},
+			{
+				"label": "Yellow",
+				"value": 5
+			},
+			{
+				"label": "Cyan",
+				"value": 6
+			},
+			{
+				"label": "Magenta",
+				"value": 7
+			},
+			{
+				"label": "Illumination turned off",
+				"value": 8
+			}
+		]
+	},
+	"led_ring_color_alarm": {
+		"label": "LED Ring Color At Z-Wave Alarm Detection",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "No change in color",
+				"value": 0
+			},
+			{
+				"label": "Flash red/blue/white",
+				"value": 1
+			},
+			{
+				"label": "White",
+				"value": 2
+			},
+			{
+				"label": "Red",
+				"value": 3
+			},
+			{
+				"label": "Green",
+				"value": 4
+			},
+			{
+				"label": "Blue",
+				"value": 5
+			},
+			{
+				"label": "Yellow",
+				"value": 6
+			},
+			{
+				"label": "Cyan",
+				"value": 7
+			},
+			{
+				"label": "Magenta",
+				"value": 8
+			},
+			{
+				"label": "Illumination turned off",
+				"value": 9
+			}
+		]
+	},
+	"overload_safety_switch_legacy": {
+		"label": "Overload Safety Switch",
+		"description": "Values above 32000 (3200 W) disable the function.",
+		"valueSize": 2,
+		"unit": "0.1 W",
+		"minValue": 10,
+		"maxValue": 65535,
+		"defaultValue": 65535,
+		"unsigned": true
+	},
+	"led_indicator_color_load_on_walli": {
+		"label": "LED Indicator: Color When Load On",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			},
+			{
+				"label": "White",
+				"value": 1
+			},
+			{
+				"label": "Red",
+				"value": 2
+			},
+			{
+				"label": "Green",
+				"value": 3
+			},
+			{
+				"label": "Blue",
+				"value": 4
+			},
+			{
+				"label": "Yellow",
+				"value": 5
+			},
+			{
+				"label": "Cyan",
+				"value": 6
+			},
+			{
+				"label": "Magenta",
+				"value": 7
+			},
+			{
+				"label": "Smooth gradient based on measured power",
+				"value": 8
+			},
+			{
+				"label": "Stepped gradient based on measured power",
+				"value": 9
+			}
+		]
+	},
+	"led_indicator_color_load_off_walli": {
+		"label": "LED Indicator: Color When Load Off",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			},
+			{
+				"label": "White",
+				"value": 1
+			},
+			{
+				"label": "Red",
+				"value": 2
+			},
+			{
+				"label": "Green",
+				"value": 3
+			},
+			{
+				"label": "Blue",
+				"value": 4
+			},
+			{
+				"label": "Yellow",
+				"value": 5
+			},
+			{
+				"label": "Cyan",
+				"value": 6
+			},
+			{
+				"label": "Magenta",
+				"value": 7
+			}
+		]
+	},
 	"alarm_configuration_notification_type": {
 		// This generally uses a bitmask of 0xff000000
 		// The label depends on the slot this is for, should be something like

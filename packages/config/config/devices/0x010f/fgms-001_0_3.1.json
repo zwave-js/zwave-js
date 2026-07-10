@@ -334,8 +334,7 @@
 		{
 			"#": "26",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Send Tamper Alarm in Broadcast Mode",
-			"defaultValue": 0
+			"label": "Send Tamper Alarm in Broadcast Mode"
 		},
 		{
 			"#": "40",

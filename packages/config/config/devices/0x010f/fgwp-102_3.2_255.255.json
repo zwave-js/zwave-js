@@ -79,19 +79,8 @@
 		},
 		{
 			"#": "3",
-			"label": "Overload Safety Switch",
-			"description": "Turn off the controlled device in case of exceeding the defined power.",
-			"valueSize": 2,
-			"unit": "0.1 W",
-			"minValue": 0,
-			"maxValue": 30000,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"$import": "templates/fibaro_template.json#overload_safety_switch",
+			"maxValue": 30000
 		},
 		{
 			"#": "10",
@@ -303,12 +292,8 @@
 		},
 		{
 			"#": "31",
-			"label": "Response to Alarm Frames",
+			"$import": "templates/fibaro_template.json#response_to_alarm_frames",
 			"description": "Values 5-50 cyclically change the device state with the set period (0.5-5.0s, step 0.1s). Ignored when the 'Always On' mode is active.",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 50,
-			"defaultValue": 0,
 			"options": [
 				{
 					"label": "No reaction",
@@ -326,12 +311,8 @@
 		},
 		{
 			"#": "32",
-			"label": "Alarm State Duration",
-			"valueSize": 2,
-			"unit": "seconds",
-			"minValue": 1,
-			"maxValue": 32400,
-			"defaultValue": 600
+			"$import": "templates/fibaro_template.json#alarm_duration",
+			"label": "Alarm State Duration"
 		},
 		{
 			"#": "40",
