@@ -288,171 +288,67 @@
 		},
 		{
 			"#": "20",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Up Gesture: Switch On Frame Value",
 			"description": "Value sent in the Switch On command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "21",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Up Gesture: Switch Off Frame Value",
 			"description": "Value sent in the Switch Off command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "22",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Down Gesture: Switch On Frame Value",
 			"description": "Value sent in the Switch On command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "23",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Down Gesture: Switch Off Frame Value",
 			"description": "Value sent in the Switch Off command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "24",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Left Gesture: Switch On Frame Value",
 			"description": "Value sent in the Switch On command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "25",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Left Gesture: Switch Off Frame Value",
 			"description": "Value sent in the Switch Off command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "26",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Right Gesture: Switch On Frame Value",
 			"description": "Value sent in the Switch On command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "27",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Flick Right Gesture: Switch Off Frame Value",
 			"description": "Value sent in the Switch Off command frame to the association group",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "30",

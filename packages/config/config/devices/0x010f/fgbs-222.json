@@ -110,20 +110,18 @@
 		},
 		{
 			"#": "47",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "IN1 (Activated): Value Sent to Group 2",
 			"description": "Value sent to devices in 2nd association group when the IN1 input is triggered. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{
 			"#": "49",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "IN1 (Deactivated): Value Sent to Group 2",
 			"description": "Value sent to devices in 2nd association group when the IN1 input is deactivated. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0
 		},
 		{
@@ -206,20 +204,18 @@
 		},
 		{
 			"#": "52",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "IN2 (Activated): Value Sent to Group 3",
 			"description": "Value sent to devices in 3rd association group when the IN2 input is triggered. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{
 			"#": "54",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "IN2 (Deactivated): Value Sent to Group 3",
 			"description": "Value sent to devices in 3rd association group when the IN2 input is deactivated. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0
 		},
 		{

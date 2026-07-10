@@ -174,41 +174,19 @@
 		},
 		{
 			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Group 2: BASIC ON Command Value",
 			"description": "Value of BASIC ON command sent to devices in 2nd association group after the CO Alarm activation.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Set associated devices to last state or turn on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Group 2: BASIC OFF Command Value",
 			"description": "Value of BASIC OFF command sent to devices in 2nd association group after the CO Alarm cancellation.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Set associated devices to last state or turn on",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "13",
@@ -260,22 +238,11 @@
 		},
 		{
 			"#": "16",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Group 4: BASIC ON Command Value",
 			"description": "Value of BASIC ON command sent to devices in 4th association group after exceeding the CO level set in parameter 14 through the time set in parameter 15.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Set associated devices to last state or turn on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "17",
@@ -289,22 +256,11 @@
 		},
 		{
 			"#": "19",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Group 4: BASIC OFF Command Value",
 			"description": "Value of BASIC OFF command sent to devices in 4th association group after falling below the CO level set in parameter 17.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Set associated devices to last state or turn on",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "20",

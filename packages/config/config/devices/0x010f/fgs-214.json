@@ -362,57 +362,24 @@
 		},
 		{
 			"#": "156",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S1 Association: Switch On Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off",
-					"value": 0
-				},
-				{
-					"label": "Turn on with last level",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "157",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S1 Association: Switch Off Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off",
-					"value": 0
-				},
-				{
-					"label": "Turn on with last level",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "158",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S1 Association: Double Click Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"options": [
-				{
-					"label": "Turn off",
-					"value": 0
-				},
-				{
-					"label": "Turn on with last level",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		},
 		{
 			"#": "162",

@@ -113,19 +113,10 @@
 		},
 		{
 			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Single Click - Association Group 2: Set Level",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [1, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Prior state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "20",
@@ -154,19 +145,10 @@
 		},
 		{
 			"#": "21",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Single Click - Association Group 3: Set Level",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [1, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Prior state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "1[0x01]",
@@ -201,19 +183,10 @@
 		},
 		{
 			"#": "13",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Double Click - Association Group 2: Set Level",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [1, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 99,
-			"options": [
-				{
-					"label": "Prior state",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		},
 		{
 			"#": "22",
@@ -242,19 +215,10 @@
 		},
 		{
 			"#": "23",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Double Click - Association Group 3: Set Level",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [1, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 99,
-			"options": [
-				{
-					"label": "Prior state",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		},
 		{
 			"#": "1[0x02]",
@@ -289,19 +253,10 @@
 		},
 		{
 			"#": "15",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Triple Click - Association Group 2: Set Level",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [1, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Prior state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "24",
@@ -330,19 +285,10 @@
 		},
 		{
 			"#": "25",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Triple Click - Association Group 3: Set Level",
 			"valueSize": 2,
-			"allowed": [
-				{ "range": [1, 99] },
-				{ "value": 255 }
-			],
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Prior state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "1[0x04]",

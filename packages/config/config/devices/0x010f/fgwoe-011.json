@@ -256,21 +256,10 @@
 		},
 		{
 			"#": "47",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "2nd Association Group: Upper Threshold Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off",
-					"value": 0
-				},
-				{
-					"label": "Turn on with previous level",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "48",
@@ -283,21 +272,10 @@
 		},
 		{
 			"#": "49",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "2nd Association Group: Lower Threshold Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off",
-					"value": 0
-				},
-				{
-					"label": "Turn on with previous level",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "60",

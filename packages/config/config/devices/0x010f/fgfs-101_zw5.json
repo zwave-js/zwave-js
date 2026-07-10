@@ -129,18 +129,11 @@
 		},
 		{
 			"#": "7",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Forced Level of Dimming Associated Devices",
 			"description": "Value of the BASIC SET command frame sent to the 2nd association group",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Last state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "9",

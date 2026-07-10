@@ -676,50 +676,44 @@
 		},
 		{
 			"#": "156",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "First Channel: Switch ON Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{
 			"#": "157",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "First Channel: Switch OFF Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0
 		},
 		{
 			"#": "158",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "First Channel: Double Click Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 99
 		},
 		{
 			"#": "159",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Second Channel: Switch ON Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{
 			"#": "160",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Second Channel: Switch OFF Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0
 		},
 		{
 			"#": "161",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Second Channel: Double Click Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 99
 		}
 	],

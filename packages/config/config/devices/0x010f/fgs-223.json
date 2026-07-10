@@ -338,57 +338,24 @@
 		},
 		{
 			"#": "31",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S1 Association: Switch On Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "32",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S1 Association: Switch Off Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "33",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S1 Association: Double Click Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		},
 		{
 			"#": "35[0x01]",
@@ -410,57 +377,24 @@
 		},
 		{
 			"#": "36",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S2 Association: Switch On Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "37",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S2 Association: Switch Off Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "38",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "S2 Association: Double Click Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 99
 		},
 		{
 			"#": "40",

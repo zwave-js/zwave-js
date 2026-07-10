@@ -237,22 +237,11 @@
 		},
 		{
 			"#": "24",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "SWITCH ON Value for On/Off Association Groups",
 			"description": "The value of the BASIC SET command frame sent to devices in the On/Off association groups (2, 3)",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off associated devices",
-					"value": 0
-				},
-				{
-					"label": "Last remembered state or on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "30[0x01]",

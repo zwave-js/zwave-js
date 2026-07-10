@@ -201,35 +201,17 @@
 		},
 		{
 			"#": "7",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Forced Level of Dimming Group 1",
 			"description": "Forced level of dimming / opening sun blinds when a \"switch on\" / \"open\" command is sent to devices from association group 1. In the case of alarm frames the alarm priority is specified.",
-			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Turn on (Dimmers use previous stored level)",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "8",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Forced Level of Dimming Group 2",
 			"description": "Forced level of dimming / opening sun blinds when a \"switch on\" / \"open\" command is sent to devices from association group 2. In the case of alarm frames the alarm priority is specified.",
-			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Turn on (Dimmers use previous stored level)",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "9",

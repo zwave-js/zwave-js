@@ -558,111 +558,87 @@
 		},
 		{
 			"#": "154[0xff]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Single Click IN1",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "154[0xff00]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Single Click IN2",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "154[0xff0000]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Single Click IN3",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "154[0xff000000]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Single Click IN4",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true
+			"defaultValue": 255
 		},
 		{
 			"#": "155[0xff]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "OFF Frame Value for Single Click IN1",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "155[0xff00]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "OFF Frame Value for Single Click IN2",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "155[0xff0000]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "OFF Frame Value for Single Click IN3",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "155[0xff000000]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "OFF Frame Value for Single Click IN4",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"unsigned": true
+			"defaultValue": 0
 		},
 		{
 			"#": "156[0xff]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Double Click IN1",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"unsigned": true
+			"defaultValue": 99
 		},
 		{
 			"#": "156[0xff00]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Double Click IN2",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"unsigned": true
+			"defaultValue": 99
 		},
 		{
 			"#": "156[0xff0000]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Double Click IN3",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"unsigned": true
+			"defaultValue": 99
 		},
 		{
 			"#": "156[0xff000000]",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "ON Frame Value for Double Click IN4",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 99,
-			"unsigned": true
+			"defaultValue": 99
 		},
 		{
 			"#": "157",

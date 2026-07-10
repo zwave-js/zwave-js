@@ -166,41 +166,19 @@
 		},
 		{
 			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "BASIC ON Frame Value",
 			"description": "BASIC ON frame is sent in case of smoke presence detection and fire alarm triggering.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off the device",
-					"value": 0
-				},
-				{
-					"label": "Set the last status",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "BASIC OFF Frame Value",
 			"description": "BASIC OFF frame is sent in case of fire alarm cancellation.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off the device",
-					"value": 0
-				},
-				{
-					"label": "Set the last status",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "13",

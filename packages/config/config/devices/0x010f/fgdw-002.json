@@ -136,41 +136,19 @@
 		},
 		{
 			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Association for Opening: Value Sent",
 			"description": "Value sent to devices in 2nd association group when opening is detected. Values 1-99 set an associated device to a specified level.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Turn off",
-					"value": 0
-				},
-				{
-					"label": "Turn on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "13",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Association for Closing: Value Sent",
 			"description": "Value sent to devices in 2nd association group when closing is detected. Values 1-99 set an associated device to a specified level.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Turn off",
-					"value": 0
-				},
-				{
-					"label": "Turn on",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
 			"#": "14",

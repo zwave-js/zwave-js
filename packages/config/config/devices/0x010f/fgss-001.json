@@ -108,19 +108,10 @@
 		},
 		{
 			"#": "7",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Forced Level of Dimming Group 1",
 			"description": "Forced level of dimming/opening when sending turn on/open commands to 1st association group devices",
-			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"unsigned": true,
-			"options": [
-				{
-					"label": "Turn on (Last state)",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "10",

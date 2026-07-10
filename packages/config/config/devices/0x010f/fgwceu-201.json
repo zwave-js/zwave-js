@@ -158,18 +158,19 @@
 		},
 		{
 			"#": "152",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "First Button: Double Click Value",
 			"description": "Value of Basic Set or Multilevel Set frame (depending on selected mode) sent to associated devices after double click. Not relevant for Scene Controller Mode.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 99
 		},
 		{
 			"#": "153",
-			"$import": "#paramInformation/152",
+			"$import": "~/templates/master_template.json#basic_set_value",
 			"label": "Second Button: Double Click Value",
-			"description": "Value of Basic Set or Multilevel Set frame (depending on selected mode) sent to associated devices after double click. Used only in Double Button Mode."
+			"description": "Value of Basic Set or Multilevel Set frame (depending on selected mode) sent to associated devices after double click. Used only in Double Button Mode.",
+			"valueSize": 2,
+			"defaultValue": 99
 		}
 	],
 	"metadata": {

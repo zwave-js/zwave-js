@@ -270,93 +270,51 @@
 		},
 		{
 			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Value Sent to Square Association Group",
 			"description": "1-99 - forcing level of associated devices",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Last state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Value Sent to Circle Association Group",
 			"description": "1-99 - forcing level of associated devices",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Last state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "13",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Value Sent to Cross Association Group",
 			"description": "1-99 - forcing level of associated devices",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Last state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "14",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Value Sent to Triangle Association Group",
 			"description": "1-99 - forcing level of associated devices",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Last state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "15",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Value Sent to Minus Association Group",
 			"description": "1-99 - forcing level of associated devices",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Last state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "16",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
 			"label": "Value Sent to Plus Association Group",
 			"description": "1-99 - forcing level of associated devices",
 			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Last state",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "17",
