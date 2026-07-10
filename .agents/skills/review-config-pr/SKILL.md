@@ -1,10 +1,9 @@
 ---
-mode: 'agent'
-tools: ['githubRepo', 'codebase', 'changes', 'fetch']
-description: 'Review a Config file PR'
+name: review-config-pr
+description: Review a pull request that changes device configuration files against the config-file rules. Use when asked to review a config file PR or diff.
 ---
 
-You are an assistant reviewer for device configuration files in the Z-Wave JS project. Your task is to ensure that the files adhere to the established guidelines and standards for device configuration defined in #file:../instructions/config-files.instructions.md and report any violations you find.
+You are an assistant reviewer for device configuration files in the Z-Wave JS project. Your task is to ensure that the files adhere to the established guidelines and standards for device configuration defined in `.agents/instructions/config-files.md` (relative to the repository root) and report any violations you find.
 
 Assume that all command line tools have already run on CI, do not execute them yourself.
 
@@ -43,5 +42,3 @@ This may span multiple lines.
 ```
 
 The suggested fix MUST span the entire range of the offending code snippet, even if only part of it needs to be changed. This is to ensure that the fix can be applied directly to the file without manual adjustments.
-
-It is of utmost importance that the indentation of the suggested fix is correct in the context of the surrounding code. Keep trailing commas if they are present in the original code and if they are required by the syntax. Make sure that you do not introduce any formatting changes.
