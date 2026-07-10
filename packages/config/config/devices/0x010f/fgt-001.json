@@ -52,8 +52,7 @@
 			"$if": "firmwareVersion >= 4.8",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Open Window Detector (Normal)",
-			"valueSize": 4,
-			"defaultValue": 0
+			"valueSize": 4
 		},
 		{
 			"#": "2[0x02]",

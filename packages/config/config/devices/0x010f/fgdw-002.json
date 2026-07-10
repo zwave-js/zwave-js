@@ -88,8 +88,7 @@
 		{
 			"#": "2[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Visual LED Indications: Opening/Closing Status Change",
-			"defaultValue": 0
+			"label": "Visual LED Indications: Opening/Closing Status Change"
 		},
 		{
 			"#": "2[0x02]",

@@ -237,8 +237,7 @@
 		{
 			"#": "31[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 2nd Slot: Load Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 2nd Slot: Load Action"
 		},
 		{
 			"#": "31[0xf0]",
@@ -260,8 +259,7 @@
 		{
 			"#": "32[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 3rd Slot: Load Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 3rd Slot: Load Action"
 		},
 		{
 			"#": "32[0xf0]",
@@ -283,8 +281,7 @@
 		{
 			"#": "33[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 4th Slot: Load Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 4th Slot: Load Action"
 		},
 		{
 			"#": "33[0xf0]",
@@ -306,8 +303,7 @@
 		{
 			"#": "34[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 5th Slot: Load Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 5th Slot: Load Action"
 		},
 		{
 			"#": "34[0xf0]",
@@ -412,8 +408,7 @@
 		{
 			"#": "150",
 			"$import": "~/templates/master_template.json#minimum_dim_level_1-99",
-			"maxValue": 98,
-			"defaultValue": 1
+			"maxValue": 98
 		},
 		{
 			"#": "151",

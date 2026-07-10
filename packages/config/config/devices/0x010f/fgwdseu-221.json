@@ -360,20 +360,17 @@
 		{
 			"#": "31[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 2nd Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 2nd Slot Notification Event Parameter"
 		},
 		{
 			"#": "31[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 2nd Slot Action (LED Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 2nd Slot Action (LED Frame)"
 		},
 		{
 			"#": "31[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 2nd Slot Action (Load)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 2nd Slot Action (Load)"
 		},
 		{
 			"#": "32[0xff000000]",
@@ -390,20 +387,17 @@
 		{
 			"#": "32[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 3rd Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 3rd Slot Notification Event Parameter"
 		},
 		{
 			"#": "32[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 3rd Slot Action (LED Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 3rd Slot Action (LED Frame)"
 		},
 		{
 			"#": "32[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 3rd Slot Action (Load)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 3rd Slot Action (Load)"
 		},
 		{
 			"#": "33[0xff000000]",
@@ -420,20 +414,17 @@
 		{
 			"#": "33[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 4th Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 4th Slot Notification Event Parameter"
 		},
 		{
 			"#": "33[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 4th Slot Action (LED Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 4th Slot Action (LED Frame)"
 		},
 		{
 			"#": "33[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 4th Slot Action (Load)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 4th Slot Action (Load)"
 		},
 		{
 			"#": "34[0xff000000]",
@@ -450,20 +441,17 @@
 		{
 			"#": "34[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 5th Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 5th Slot Notification Event Parameter"
 		},
 		{
 			"#": "34[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 5th Slot Action (LED Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 5th Slot Action (LED Frame)"
 		},
 		{
 			"#": "34[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 5th Slot Action (Load)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 5th Slot Action (Load)"
 		},
 		{
 			"#": "35",
@@ -684,11 +672,7 @@
 		{
 			"#": "155",
 			"$import": "#paramInformation/154",
-			"label": "Second Channel - Time Parameter for Timed Modes",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 32000,
-			"defaultValue": 50
+			"label": "Second Channel - Time Parameter for Timed Modes"
 		},
 		{
 			"#": "156",

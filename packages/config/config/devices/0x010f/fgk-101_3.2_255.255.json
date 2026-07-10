@@ -109,22 +109,18 @@
 		{
 			"#": "3[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "LED Indicator Purpose: Open/Close Status",
-			"valueSize": 1,
-			"defaultValue": 0
+			"label": "LED Indicator Purpose: Open/Close Status"
 		},
 		{
 			"#": "3[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "LED Indicator Purpose: Wake Up",
-			"valueSize": 1,
 			"defaultValue": 1
 		},
 		{
 			"#": "3[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "LED Indicator Purpose: Device Tampering",
-			"valueSize": 1,
 			"defaultValue": 1
 		},
 		{
@@ -300,14 +296,12 @@
 		{
 			"#": "54[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "High Temperature Alarm",
-			"valueSize": 1
+			"label": "High Temperature Alarm"
 		},
 		{
 			"#": "54[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Low Temperature Alarm",
-			"valueSize": 1
+			"label": "Low Temperature Alarm"
 		},
 		{
 			"#": "55",
@@ -394,20 +388,17 @@
 		{
 			"#": "71[0x01]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Broadcast On/Off Commands",
-			"valueSize": 1
+			"label": "Broadcast On/Off Commands"
 		},
 		{
 			"#": "71[0x02]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Broadcast Sensor Alarm",
-			"valueSize": 1
+			"label": "Broadcast Sensor Alarm"
 		},
 		{
 			"#": "71[0x04]",
 			"$import": "~/templates/master_template.json#base_enable_disable",
-			"label": "Broadcast Tamper Alarm",
-			"valueSize": 1
+			"label": "Broadcast Tamper Alarm"
 		},
 		{
 			"#": "72[0x01]",

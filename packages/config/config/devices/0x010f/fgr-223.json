@@ -146,7 +146,6 @@
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
 			"label": "Alarm Configuration – 1st Slot Action",
 			"maxValue": 2,
-			"defaultValue": 0,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -178,14 +177,12 @@
 		{
 			"#": "31[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration – 2nd Slot Notification Event/State Parameters",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 2nd Slot Notification Event/State Parameters"
 		},
 		{
 			"#": "31[0xff]",
 			"$import": "#paramInformation/30[0xff]",
-			"label": "Alarm Configuration – 2nd Slot Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 2nd Slot Action"
 		},
 		{
 			"#": "32[0xff000000]",
@@ -202,14 +199,12 @@
 		{
 			"#": "32[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration – 3rd Slot Notification Event/State Parameters",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 3rd Slot Notification Event/State Parameters"
 		},
 		{
 			"#": "32[0xff]",
 			"$import": "#paramInformation/30[0xff]",
-			"label": "Alarm Configuration – 3rd Slot Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 3rd Slot Action"
 		},
 		{
 			"#": "33[0xff000000]",
@@ -226,14 +221,12 @@
 		{
 			"#": "33[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration – 4th Slot Notification Event/State Parameters",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 4th Slot Notification Event/State Parameters"
 		},
 		{
 			"#": "33[0xff]",
 			"$import": "#paramInformation/30[0xff]",
-			"label": "Alarm Configuration – 4th Slot Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 4th Slot Action"
 		},
 		{
 			"#": "34[0xff000000]",
@@ -250,14 +243,12 @@
 		{
 			"#": "34[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration – 5th Slot Notification Event/State Parameters",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 5th Slot Notification Event/State Parameters"
 		},
 		{
 			"#": "34[0xff]",
 			"$import": "#paramInformation/30[0xff]",
-			"label": "Alarm Configuration – 5th Slot Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration – 5th Slot Action"
 		},
 		{
 			"#": "40[0x01]",

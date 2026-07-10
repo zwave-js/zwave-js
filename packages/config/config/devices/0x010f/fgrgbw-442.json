@@ -221,8 +221,7 @@
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
 			"label": "Alarm Configuration - 1st Slot Action",
 			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
-			"maxValue": 58,
-			"defaultValue": 0
+			"maxValue": 58
 		},
 		{
 			"#": "31[0xff000000]",
@@ -246,8 +245,7 @@
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
 			"label": "Alarm Configuration - 2nd Slot Action",
 			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
-			"maxValue": 58,
-			"defaultValue": 0
+			"maxValue": 58
 		},
 		{
 			"#": "32[0xff000000]",
@@ -271,8 +269,7 @@
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
 			"label": "Alarm Configuration - 3rd Slot Action",
 			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
-			"maxValue": 58,
-			"defaultValue": 0
+			"maxValue": 58
 		},
 		{
 			"#": "33[0xff000000]",
@@ -296,8 +293,7 @@
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
 			"label": "Alarm Configuration - 4th Slot Action",
 			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
-			"maxValue": 58,
-			"defaultValue": 0
+			"maxValue": 58
 		},
 		{
 			"#": "34[0xff000000]",
@@ -321,8 +317,7 @@
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
 			"label": "Alarm Configuration - 5th Slot Action",
 			"description": "0x00 - no reaction, 0x0X - turn off selected channels, 0x1X - turn on selected channels, 0x2X - blink selected channels, 0x3Y - activate alarm sequence Y. X - channels summed: channel 1/2/3/4 equal to 1/2/4/8, Y - sequence number: 1-10 (parameter 157).",
-			"maxValue": 58,
-			"defaultValue": 0
+			"maxValue": 58
 		},
 		{
 			"#": "35",

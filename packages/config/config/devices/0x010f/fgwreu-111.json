@@ -166,8 +166,7 @@
 		{
 			"#": "31[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 2nd Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 2nd Slot: Blinds Action"
 		},
 		{
 			"#": "31[0xf0]",
@@ -189,8 +188,7 @@
 		{
 			"#": "32[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 3rd Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 3rd Slot: Blinds Action"
 		},
 		{
 			"#": "32[0xf0]",
@@ -212,8 +210,7 @@
 		{
 			"#": "33[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 4th Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 4th Slot: Blinds Action"
 		},
 		{
 			"#": "33[0xf0]",
@@ -235,8 +232,7 @@
 		{
 			"#": "34[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 5th Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 5th Slot: Blinds Action"
 		},
 		{
 			"#": "34[0xf0]",
