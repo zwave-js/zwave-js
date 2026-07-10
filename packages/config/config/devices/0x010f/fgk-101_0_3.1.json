@@ -80,11 +80,11 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Normally open",
+					"label": "Normally closed",
 					"value": 0
 				},
 				{
-					"label": "Normally closed",
+					"label": "Normally open",
 					"value": 1
 				},
 				{

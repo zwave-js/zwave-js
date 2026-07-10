@@ -62,22 +62,22 @@
 		"2": {
 			"label": "On/Off (S1)",
 			"description": "Devices in this group will be switched on or off with the S1 switch (uses Basic command class).",
-			"maxNodes": 10
+			"maxNodes": 8
 		},
 		"3": {
 			"label": "Dimmer (S1)",
 			"description": "Devices in this group will change their level according to the operation of the S1 switch (uses Multilevel Switch command class).",
-			"maxNodes": 10
+			"maxNodes": 8
 		},
 		"4": {
 			"label": "On/Off (S2)",
 			"description": "Devices in this group will be switched on or off with the S2 switch (uses Basic command class).",
-			"maxNodes": 10
+			"maxNodes": 8
 		},
 		"5": {
 			"label": "Dimmer (S2)",
 			"description": "Devices in this group will change their level according to the operation of the S2 switch (uses Multilevel Switch command class).",
-			"maxNodes": 10
+			"maxNodes": 8
 		}
 	},
 	"paramInformation": [
