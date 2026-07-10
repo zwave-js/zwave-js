@@ -1,4 +1,4 @@
-import { mkdir, readdir, rm } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -78,7 +78,6 @@ describe("EmbeddingCache", () => {
 			namespaceDirs[0],
 			"hash-c.json",
 		);
-		const { writeFile } = await import("node:fs/promises");
 		await writeFile(filePath, "{not valid json", "utf8");
 
 		// A fresh cache instance (bypassing the in-memory map) must not throw.

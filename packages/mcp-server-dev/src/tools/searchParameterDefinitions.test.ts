@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { ConsentRequiredError } from "../semantic/consent.js";
 import type { SemanticSearchService } from "../semantic/service.js";
 import { createSearchParameterDefinitionsTool } from "./searchParameterDefinitions.js";
 
@@ -110,9 +111,6 @@ describe("createSearchParameterDefinitionsTool", () => {
 	});
 
 	it("translates a thrown consent-required error into a structured response, not a crash", async () => {
-		const { ConsentRequiredError } = await import(
-			"../semantic/consent.js"
-		);
 		const service = fakeService({
 			search: vi.fn().mockRejectedValue(
 				new ConsentRequiredError(

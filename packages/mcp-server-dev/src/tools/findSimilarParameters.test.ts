@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SemanticSearchService } from "../semantic/service.js";
+import {
+	SemanticSearchError,
+	type SemanticSearchService,
+} from "../semantic/service.js";
 import { createFindSimilarParametersTool } from "./findSimilarParameters.js";
 
 function fakeService(
@@ -110,9 +113,6 @@ describe("createFindSimilarParametersTool", () => {
 	});
 
 	it("translates a thrown SemanticSearchError into a structured response, not a crash", async () => {
-		const { SemanticSearchError } = await import(
-			"../semantic/service.js"
-		);
 		const service = fakeService({
 			findSimilar: vi.fn().mockRejectedValue(
 				new SemanticSearchError(
