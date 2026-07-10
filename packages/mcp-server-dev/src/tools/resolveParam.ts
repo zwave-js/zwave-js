@@ -47,7 +47,7 @@ async function handleResolveConfigParam(
 			// JSON instead of resolving templates a second time before DeviceConfig.from
 			const raw = parseJsonC(await readFile(filename, "utf8"));
 			const firstDevice = (raw?.devices as any[] | undefined)?.[0];
-			const deviceId = {
+			const context = {
 				manufacturerId: Number(raw?.manufacturerId),
 				productType: Number(firstDevice?.productType),
 				productId: Number(firstDevice?.productId),
@@ -55,7 +55,7 @@ async function handleResolveConfigParam(
 			};
 			const config = await DeviceConfig.from(fs, filename, true, {
 				rootDir: DEVICES_DIR,
-				deviceId,
+				context,
 			});
 			const matches = [...(config.paramInformation?.values() ?? [])]
 				.filter((p) =>

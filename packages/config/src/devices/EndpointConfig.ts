@@ -17,7 +17,7 @@ import {
 	type ParamInfoMap,
 	parseConditionalParamInformationMap,
 } from "./ParamInformation.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 export class ConditionalEndpointConfig
 	implements ConditionalItem<EndpointConfig>
@@ -106,16 +106,27 @@ Endpoint ${index}: found non-numeric group id "${key}" in associations`,
 	public readonly condition?: string;
 	public readonly label?: string;
 
-	public evaluateCondition(deviceId?: DeviceID): EndpointConfig | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+	public evaluateCondition(
+		context?: ConditionalConfigContext,
+	): EndpointConfig | undefined {
+		if (!conditionApplies(this, context)) return;
+
+		// Param references in conditions inside this endpoint's section
+		// resolve against this endpoint's own parameters
+		const scopedContext: ConditionalConfigContext | undefined = context
+			&& { ...context, endpoint: this.index };
+
 		const ret: EndpointConfig = {
 			index: this.index,
 			label: this.label,
 		};
-		const associations = evaluateDeep(this.associations, deviceId);
+		const associations = evaluateDeep(this.associations, scopedContext);
 		if (associations) ret.associations = associations;
 
-		const paramInformation = evaluateDeep(this.paramInformation, deviceId);
+		const paramInformation = evaluateDeep(
+			this.paramInformation,
+			scopedContext,
+		);
 		if (paramInformation) ret.paramInformation = paramInformation;
 
 		return ret;

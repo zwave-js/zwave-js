@@ -1,0 +1,70 @@
+{
+	"manufacturer": "Z-Wave JS",
+	"manufacturerId": "0xfffe",
+	"label": "Param Value Conditions Test V2",
+	"description": "Test device for chained conditions referencing config parameter values",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x0004"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Operating Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Mode A",
+					"value": 0
+				},
+				{
+					"label": "Mode B",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "11",
+			"$if": "#1 == 1",
+			"label": "Unlocked param",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 5
+		},
+		{
+			"#": "12",
+			"$if": "#11 == 3",
+			"label": "Chained variant",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "12",
+			"label": "Default variant",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0
+		},
+		{
+			"#": "13",
+			"$if": "#1 == 1",
+			"label": "Unreferenced guarded param",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 9
+		}
+	]
+}

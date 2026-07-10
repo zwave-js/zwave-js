@@ -1,5 +1,6 @@
 // A parser to convert logical JavaScript-like expressions into JSON Logic
 
+import { tryParseParamNumber } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
 import { assertNever } from "alcalzone-shared/helpers";
 import type { RulesLogic } from "json-logic-js";
@@ -12,6 +13,7 @@ export enum SyntaxKind {
 	Identifier,
 	NumberLiteral,
 	Version,
+	ParamReference,
 }
 
 export enum Operator {
@@ -40,7 +42,7 @@ type And = {
 
 type Comparison = {
 	kind: SyntaxKind.Comparison;
-	left: Identifier;
+	left: Identifier | ParamReference;
 	operator: Operator;
 	right:
 		| NumberLiteral
@@ -62,10 +64,19 @@ type Version = {
 	value: string;
 };
 
+/** References the current value of a config parameter, e.g. `#71` or `#9[0x0f]` */
+type ParamReference = {
+	kind: SyntaxKind.ParamReference;
+	parameter: number;
+	valueBitMask?: number;
+};
+
 export enum TokenKind {
 	Identifier,
 	NumberLiteral,
+	ParamReference, // "#71" or "#9[0x0f]"
 	Dot, // "."
+	Minus, // "-"
 	LeftParen, // "("
 	RightParen, // ")"
 	BarBar, // "||"
@@ -94,6 +105,34 @@ export function* tokenize(input: string): Generator<Token> {
 		switch (input[i]) {
 			case ".": {
 				yield { kind: TokenKind.Dot, start: i };
+				break;
+			}
+			case "-": {
+				yield { kind: TokenKind.Minus, start: i };
+				break;
+			}
+			case "#": {
+				// Param references use the same syntax as paramInformation keys: "#71" or "#9[0x0f]"
+				const start = i;
+				let ref = "";
+				i++;
+				while (i < input.length && /\d/.test(input[i])) {
+					ref += input[i];
+					i++;
+				}
+				if (!ref) {
+					throw new Error(
+						`Expected a parameter number after '#' at index ${start}`,
+					);
+				}
+				if (input[i] === "[") {
+					do {
+						ref += input[i];
+						i++;
+					} while (i < input.length && input[i - 1] !== "]");
+				}
+				yield { kind: TokenKind.ParamReference, value: ref, start };
+				i--; // Account for the outer loop increment
 				break;
 			}
 			case "(": {
@@ -368,9 +407,9 @@ function parseGroup(s: ParserState): Expression | undefined {
 }
 
 function parseComparison(s: ParserState): Comparison | undefined {
-	// <identifier> <operator> <identifier|version|number>
+	// <identifier|paramref> <operator> <identifier|version|number>
 	const startPos = s.pos;
-	const left = parseIdentifier(s);
+	const left = parseParamReference(s) ?? parseIdentifier(s);
 	if (!left) {
 		s.pos = startPos;
 		return;
@@ -381,7 +420,7 @@ function parseComparison(s: ParserState): Comparison | undefined {
 		return;
 	}
 	const right = parseVersion(s)
-		|| parseNumberLiteral(s)
+		|| parseSignedNumberLiteral(s)
 		|| parseIdentifier(s);
 	if (!right) {
 		s.pos = startPos;
@@ -391,12 +430,36 @@ function parseComparison(s: ParserState): Comparison | undefined {
 		throw new Error(
 			`Right-hand side of comparisons must be a version or number literal`,
 		);
+	} else if (
+		left.kind === SyntaxKind.ParamReference
+		&& right.kind === SyntaxKind.Version
+	) {
+		throw new Error(
+			`Parameter references can only be compared with number literals`,
+		);
 	}
 	return {
 		kind: SyntaxKind.Comparison,
 		left,
 		operator,
 		right,
+	};
+}
+
+function parseParamReference(s: ParserState): ParamReference | undefined {
+	const token = s.tokens[s.pos];
+	if (token?.kind !== TokenKind.ParamReference) return;
+	const parsed = tryParseParamNumber(token.value!);
+	if (!parsed) {
+		throw new Error(
+			`Invalid parameter reference "#${token.value}" at position ${token.start}`,
+		);
+	}
+	s.pos++;
+	return {
+		kind: SyntaxKind.ParamReference,
+		parameter: parsed.parameter,
+		valueBitMask: parsed.valueBitMask,
 	};
 }
 
@@ -483,6 +546,23 @@ function parseNumberLiteral(s: ParserState): NumberLiteral | undefined {
 	}
 }
 
+function parseSignedNumberLiteral(s: ParserState): NumberLiteral | undefined {
+	// ["-"] <number>
+	const startPos = s.pos;
+	let negative = false;
+	if (s.tokens[s.pos]?.kind === TokenKind.Minus) {
+		negative = true;
+		s.pos++;
+	}
+	const num = parseNumberLiteral(s);
+	if (!num) {
+		s.pos = startPos;
+		return;
+	}
+	if (negative) num.value = -num.value;
+	return num;
+}
+
 export function toRulesLogic(expr: Expression): RulesLogic {
 	if (expr.kind === SyntaxKind.Or) {
 		return {
@@ -493,7 +573,26 @@ export function toRulesLogic(expr: Expression): RulesLogic {
 			and: expr.operands.map(toRulesLogic),
 		};
 	} else if (expr.kind === SyntaxKind.Comparison) {
-		if (expr.right.kind === SyntaxKind.Version) {
+		if (expr.left.kind === SyntaxKind.ParamReference) {
+			const opMap = {
+				[Operator.Equal]: "param ===",
+				[Operator.NotEqual]: "param !==",
+				[Operator.LessThan]: "param <",
+				[Operator.LessThanOrEqual]: "param <=",
+				[Operator.GreaterThan]: "param >",
+				[Operator.GreaterThanOrEqual]: "param >=",
+			} as const;
+			// The parser forbids version comparands for parameter references
+			const comparand = (expr.right as NumberLiteral).value;
+			// @ts-expect-error The generated types for the param comparisons are not compatible with the RulesLogic type
+			return {
+				[opMap[expr.operator]]: [
+					expr.left.parameter,
+					expr.left.valueBitMask ?? null,
+					comparand,
+				],
+			};
+		} else if (expr.right.kind === SyntaxKind.Version) {
 			const opMap = {
 				[Operator.Equal]: "ver ===",
 				[Operator.NotEqual]: "ver !==",

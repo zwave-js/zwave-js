@@ -33,6 +33,7 @@ import path from "pathe";
 import semverGt from "semver/functions/gt.js";
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
+import { collectParamValueReferences, parseLogic } from "../Logic.js";
 import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
 import {
 	type AssociationConfig,
@@ -59,7 +60,10 @@ import {
 	parseConditionalParamInformationMap,
 } from "./ParamInformation.js";
 import { ConditionalSceneConfig, type SceneConfig } from "./SceneConfig.js";
-import type { DeviceID, FirmwareVersionRange } from "./shared.js";
+import type {
+	ConditionalConfigContext,
+	FirmwareVersionRange,
+} from "./shared.js";
 
 export interface DeviceConfigIndexEntry {
 	manufacturerId: string;
@@ -446,6 +450,52 @@ const deflateDict = Bytes.from(
 	"utf8",
 );
 
+/** Collects which config parameter values are referenced by `$if` conditions, grouped by the endpoint scope they resolve against */
+function collectReferencedParamValues(
+	definition: JSONObject,
+): ReadonlyMap<number, ReadonlySet<number>> {
+	const ret = new Map<number, Set<number>>();
+
+	const addRefs = (condition: string, endpoint: number): void => {
+		let refs;
+		try {
+			refs = collectParamValueReferences(parseLogic(condition));
+		} catch {
+			// Invalid conditions throw at evaluation time
+			return;
+		}
+		for (const ref of refs) {
+			if (!ret.has(endpoint)) ret.set(endpoint, new Set());
+			ret.get(endpoint)!.add(ref.parameter);
+		}
+	};
+
+	const scan = (obj: unknown, endpoint: number): void => {
+		if (isArray(obj)) {
+			for (const item of obj) scan(item, endpoint);
+		} else if (isObject(obj)) {
+			if (typeof obj.$if === "string") addRefs(obj.$if, endpoint);
+			for (const value of Object.values(obj)) scan(value, endpoint);
+		}
+	};
+
+	const { endpoints, proprietary, ...rest } = definition;
+	scan(rest, 0);
+	if (isObject(endpoints)) {
+		for (const [key, ep] of Object.entries(endpoints)) {
+			const index = parseInt(key, 10);
+			if (Number.isNaN(index) || !isObject(ep)) continue;
+			// The endpoint entry's own condition evaluates in root scope,
+			// references inside its section resolve against the endpoint itself
+			const { $if, ...epRest } = ep;
+			if (typeof $if === "string") addRefs($if, 0);
+			scan(epRest, index);
+		}
+	}
+
+	return ret;
+}
+
 /** This class represents a device config entry whose conditional settings have not been evaluated yet */
 export class ConditionalDeviceConfig {
 	public static async from(
@@ -729,6 +779,8 @@ scene number ${keyNum} must be between 1 and 255`,
 			}
 			this.scenes = scenes;
 		}
+
+		this.referencedParamValues = collectReferencedParamValues(definition);
 	}
 
 	public readonly filename: string;
@@ -766,29 +818,62 @@ scene number ${keyNum} must be between 1 and 255`,
 	/** Whether this is an embedded configuration or not */
 	public readonly isEmbedded: boolean;
 
-	public evaluate(deviceId?: DeviceID): DeviceConfig {
+	/**
+	 * Which config parameter values are referenced by `$if` conditions in this file,
+	 * grouped by the endpoint scope they resolve against. Empty for files without
+	 * parameter references.
+	 */
+	public readonly referencedParamValues: ReadonlyMap<
+		number,
+		ReadonlySet<number>
+	>;
+
+	public evaluate(context?: ConditionalConfigContext): DeviceConfig {
 		return new DeviceConfig(
 			this.filename,
 			this.isEmbedded,
-			evaluateDeep(this.manufacturer, deviceId),
+			evaluateDeep(this.manufacturer, context),
 			this.manufacturerId,
-			evaluateDeep(this.label, deviceId),
-			evaluateDeep(this.description, deviceId),
+			evaluateDeep(this.label, context),
+			evaluateDeep(this.description, context),
 			this.devices,
 			this.firmwareVersion,
 			this.preferred,
-			evaluateDeep(this.endpoints, deviceId),
-			evaluateDeep(this.associations, deviceId),
-			evaluateDeep(this.scenes, deviceId),
-			evaluateDeep(this.paramInformation, deviceId),
+			evaluateDeep(this.endpoints, context),
+			evaluateDeep(this.associations, context),
+			evaluateDeep(this.scenes, context),
+			evaluateDeep(this.paramInformation, context),
 			this.proprietary,
-			evaluateDeep(this.compat, deviceId),
-			evaluateDeep(this.metadata, deviceId),
+			evaluateDeep(this.compat, context),
+			evaluateDeep(this.metadata, context),
+			this.referencedParamValues,
 		);
 	}
 }
 
 export type DeviceConfigHashVersion = 0 | 1 | 2 | 3 | 4;
+
+const SIMPLE_HASHED_COMPAT_FLAGS = [
+	"forceSceneControllerGroupCount",
+	"mapRootReportsToEndpoint",
+	"mapBasicSet",
+	"preserveRootApplicationCCValueIDs",
+	"preserveEndpoints",
+	"removeEndpoints",
+	"treatMultilevelSwitchSetAsEvent",
+] as const;
+
+/**
+ * Compat flags that influence the interview and are therefore part of the device config hash.
+ * These must not be gated by conditions referencing config parameter values.
+ */
+export const HASHED_COMPAT_FLAGS = [
+	...SIMPLE_HASHED_COMPAT_FLAGS,
+	"overrideQueries",
+	"addCCs",
+	"removeCCs",
+	"treatSetAsReport",
+] as const;
 
 export class DeviceConfig {
 	public static async from(
@@ -799,7 +884,7 @@ export class DeviceConfig {
 			rootDir: string;
 			fallbackDirs?: string[];
 			relative?: boolean;
-			deviceId?: DeviceID;
+			context?: ConditionalConfigContext;
 		},
 	): Promise<DeviceConfig> {
 		const ret = await ConditionalDeviceConfig.from(
@@ -808,7 +893,7 @@ export class DeviceConfig {
 			isEmbedded,
 			options,
 		);
-		return ret.evaluate(options.deviceId);
+		return ret.evaluate(options.context);
 	}
 
 	public constructor(
@@ -831,6 +916,10 @@ export class DeviceConfig {
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
 		metadata?: DeviceMetadata,
+		referencedParamValues: ReadonlyMap<
+			number,
+			ReadonlySet<number>
+		> = new Map(),
 	) {
 		this.filename = filename;
 		this.isEmbedded = isEmbedded;
@@ -848,6 +937,7 @@ export class DeviceConfig {
 		this.proprietary = proprietary;
 		this.compat = compat;
 		this.metadata = metadata;
+		this.referencedParamValues = referencedParamValues;
 	}
 
 	public readonly filename: string;
@@ -877,6 +967,15 @@ export class DeviceConfig {
 	public readonly compat?: CompatConfig;
 	/** Contains instructions and other metadata for the device */
 	public readonly metadata?: DeviceMetadata;
+	/**
+	 * Which config parameter values are referenced by `$if` conditions in the config file,
+	 * grouped by the endpoint scope they resolve against. When any of these values change,
+	 * the device config needs to be re-evaluated.
+	 */
+	public readonly referencedParamValues: ReadonlyMap<
+		number,
+		ReadonlySet<number>
+	>;
 
 	/** Returns the association config for a given endpoint */
 	public getAssociationConfigForEndpoint(
@@ -990,17 +1089,7 @@ export class DeviceConfig {
 			let c: Record<string, any> = {};
 
 			// Copy some simple flags over
-			for (
-				const prop of [
-					"forceSceneControllerGroupCount",
-					"mapRootReportsToEndpoint",
-					"mapBasicSet",
-					"preserveRootApplicationCCValueIDs",
-					"preserveEndpoints",
-					"removeEndpoints",
-					"treatMultilevelSwitchSetAsEvent",
-				] as const
-			) {
+			for (const prop of SIMPLE_HASHED_COMPAT_FLAGS) {
 				if (this.compat[prop] != undefined) {
 					c[prop] = this.compat[prop];
 				}

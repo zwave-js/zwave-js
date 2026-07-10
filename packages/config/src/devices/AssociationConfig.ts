@@ -5,7 +5,7 @@ import {
 	conditionApplies,
 	validateCondition,
 } from "./ConditionalItem.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 export class ConditionalAssociationConfig
 	implements ConditionalItem<AssociationConfig>
@@ -101,9 +101,9 @@ multiChannel in association ${groupId} must be a boolean`,
 	public readonly multiChannel: boolean | "auto";
 
 	public evaluateCondition(
-		deviceId?: DeviceID,
+		context?: ConditionalConfigContext,
 	): AssociationConfig | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+		if (!conditionApplies(this, context)) return;
 
 		return pick(this, [
 			"groupId",

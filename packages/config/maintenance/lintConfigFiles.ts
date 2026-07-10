@@ -1,9 +1,11 @@
 import { configDir } from "#config_dir";
 import {
+	encodePartial,
 	getBitMaskWidth,
 	getIntegerLimits,
 	getLegalRangeForBitMask,
 	getMinimumShiftForBitMask,
+	parsePartial,
 } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
 import { reportProblem } from "@zwave-js/maintenance";
@@ -23,17 +25,27 @@ import type { RulesLogic } from "json-logic-js";
 import * as path from "node:path";
 import { ConfigManager } from "../src/ConfigManager.js";
 import { readJsonWithTemplate } from "../src/JsonTemplate.js";
-import { parseLogic } from "../src/Logic.js";
+import {
+	type ParamValueComparisonOperator,
+	type ParamValueReference,
+	collectParamValueReferences,
+	parseLogic,
+} from "../src/Logic.js";
 import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,
+	HASHED_COMPAT_FLAGS,
 } from "../src/devices/DeviceConfig.js";
 import type {
 	ConditionalParamInfoMap,
+	ConditionalParamInformation,
 	ParamInfoMap,
 	ParamInformation,
 } from "../src/devices/ParamInformation.js";
-import type { DeviceID } from "../src/devices/shared.js";
+import type {
+	ConditionalConfigContext,
+	DeviceID,
+} from "../src/devices/shared.js";
 import { getDeviceEntryPredicate, versionInRange } from "../src/utils.js";
 
 const configManager = new ConfigManager();
@@ -198,14 +210,340 @@ function unconditionalComesLast(
 	);
 }
 
+type LintVariant = DeviceID & {
+	/** Assumed full config parameter values, keyed by `endpoint:parameter` */
+	paramValues?: ReadonlyMap<string, number>;
+};
+
+/** Builds the evaluation context for a lint variant */
+function lintVariantToContext(
+	variant: LintVariant | undefined,
+): ConditionalConfigContext | undefined {
+	if (!variant?.paramValues) return variant;
+	const { paramValues, ...deviceId } = variant;
+	return {
+		...deviceId,
+		getCachedParamValue: (endpoint, parameter, bitMask) => {
+			const fullValue = paramValues.get(`${endpoint}:${parameter}`);
+			if (fullValue == undefined) return undefined;
+			if (bitMask == undefined) return fullValue;
+			return parsePartial(fullValue, bitMask, false);
+		},
+	};
+}
+
+/** Determines whether a comparison with a partial param value in the range [0...maxValue] has a constant outcome */
+function constantComparisonOutcome(
+	operator: ParamValueComparisonOperator,
+	comparand: number,
+	maxValue: number,
+): boolean | undefined {
+	switch (operator) {
+		case "===":
+			if (comparand < 0 || comparand > maxValue) return false;
+			break;
+		case "!==":
+			if (comparand < 0 || comparand > maxValue) return true;
+			break;
+		case "<":
+			if (comparand <= 0) return false;
+			if (comparand > maxValue) return true;
+			break;
+		case "<=":
+			if (comparand < 0) return false;
+			if (comparand >= maxValue) return true;
+			break;
+		case ">":
+			if (comparand >= maxValue) return false;
+			if (comparand < 0) return true;
+			break;
+		case ">=":
+			if (comparand > maxValue) return false;
+			if (comparand <= 0) return true;
+			break;
+	}
+}
+
+interface ScopedParamValueReference extends ParamValueReference {
+	/** The endpoint scope the reference resolves against */
+	scope: number;
+}
+
+/**
+ * Validates all conditions which reference config parameter values and returns
+ * the references found in locations where they are allowed.
+ */
+function lintParamValueReferences(
+	config: ConditionalDeviceConfig,
+	file: string,
+	addError: (filename: string, error: string) => void,
+	addWarning: (filename: string, warning: string) => void,
+): ScopedParamValueReference[] {
+	const collected: ScopedParamValueReference[] = [];
+
+	const refsIn = (
+		condition: string | undefined,
+	): ParamValueReference[] => {
+		if (!condition) return [];
+		try {
+			return collectParamValueReferences(parseLogic(condition));
+		} catch {
+			// Invalid conditions are reported when evaluating the config
+			return [];
+		}
+	};
+
+	// Conditions in places that identify the device, are needed without parameter
+	// values, or influence the interview must not reference parameter values
+	const forbid = (condition: string | undefined, where: string): void => {
+		if (refsIn(condition).length > 0) {
+			addError(
+				file,
+				`The condition for ${where} must not reference config parameter values`,
+			);
+		}
+	};
+
+	for (const prop of ["manufacturer", "label", "description"] as const) {
+		const value = config[prop];
+		if (isArray(value)) {
+			for (const item of value) forbid(item.condition, prop);
+		}
+	}
+
+	if (config.metadata) {
+		for (
+			const prop of [
+				"wakeup",
+				"inclusion",
+				"exclusion",
+				"reset",
+				"manual",
+				"comments",
+			] as const
+		) {
+			const value = config.metadata[prop];
+			if (!value || typeof value === "string") continue;
+			if (isArray(value)) {
+				for (const entry of value) {
+					forbid(entry.condition, `metadata property ${prop}`);
+				}
+			} else if (isObject(value)) {
+				forbid(value.condition, `metadata property ${prop}`);
+			}
+		}
+	}
+
+	if (config.associations) {
+		for (const assoc of config.associations.values()) {
+			forbid(assoc.condition, `association group ${assoc.groupId}`);
+		}
+	}
+
+	if (config.scenes) {
+		for (const scene of config.scenes.values()) {
+			forbid(scene.condition, `scene ${scene.sceneId}`);
+		}
+	}
+
+	if (config.endpoints) {
+		for (const [index, ep] of config.endpoints) {
+			forbid(ep.condition, `endpoint ${index}`);
+			if (ep.associations) {
+				for (const assoc of ep.associations.values()) {
+					forbid(
+						assoc.condition,
+						`endpoint ${index}, association group ${assoc.groupId}`,
+					);
+				}
+			}
+		}
+	}
+
+	// Compat flags which do not influence the interview may be gated by parameter values
+	const compatEntries = !config.compat
+		? []
+		: isArray(config.compat)
+		? config.compat
+		: [config.compat];
+	for (const compat of compatEntries) {
+		if (refsIn(compat.condition).length === 0) continue;
+		const hashedFlags = HASHED_COMPAT_FLAGS.filter(
+			(flag) => compat[flag] != undefined,
+		);
+		if (hashedFlags.length > 0) {
+			addError(
+				file,
+				`Compat flags which influence the interview must not be gated by conditions referencing config parameter values: ${
+					hashedFlags.join(", ")
+				}`,
+			);
+		}
+	}
+
+	// References in paramInformation are allowed, but must be valid
+	const paramsInScope = (scope: number): ConditionalParamInformation[] => {
+		const maps: ConditionalParamInfoMap[] = [];
+		if (scope === 0 && config.paramInformation) {
+			maps.push(config.paramInformation);
+		}
+		const epParams = config.endpoints?.get(scope)?.paramInformation;
+		if (epParams) maps.push(epParams);
+		return maps.flatMap((m) => [...m.values()].flat());
+	};
+
+	// Tracks which params' definitions depend on which other params' values
+	const dependencies = new Map<string, Set<string>>();
+
+	const handleParamCondition = (
+		scope: number,
+		guardedParam: number,
+		condition: string | undefined,
+		errorPrefix: string,
+	): void => {
+		for (const ref of refsIn(condition)) {
+			collected.push({ ...ref, scope });
+
+			const refString = paramNoToString(ref.parameter, ref.valueBitMask);
+			const referenced = paramsInScope(scope).filter(
+				(p) => p.parameterNumber === ref.parameter,
+			);
+			if (referenced.length === 0) {
+				addError(
+					file,
+					`${errorPrefix}: the condition references ${refString}, which is not defined${
+						scope > 0 ? ` on endpoint ${scope}` : ""
+					}`,
+				);
+			} else {
+				// Hidden params' values are not tracked, so conditions on them would never change
+				if (referenced.some((p) => p.hidden)) {
+					addError(
+						file,
+						`${errorPrefix}: the condition references ${refString}, which is hidden`,
+					);
+				}
+				if (ref.valueBitMask != undefined) {
+					const fits = referenced.filter(
+						(p) => ref.valueBitMask! < 256 ** p.valueSize,
+					);
+					if (fits.length === 0) {
+						addError(
+							file,
+							`${errorPrefix}: the bitmask of the referenced ${refString} does not fit the parameter's value size`,
+						);
+					} else if (fits.length < referenced.length) {
+						addWarning(
+							file,
+							`${errorPrefix}: the bitmask of the referenced ${refString} does not fit all definitions of the parameter`,
+						);
+					}
+				}
+			}
+
+			// Values of partial references span [0...2^width - 1]
+			if (ref.valueBitMask != undefined) {
+				const maxValue = 2 ** getBitMaskWidth(ref.valueBitMask) - 1;
+				const outcome = constantComparisonOutcome(
+					ref.operator,
+					ref.comparand,
+					maxValue,
+				);
+				if (outcome != undefined) {
+					addWarning(
+						file,
+						`${errorPrefix}: the comparison "${refString} ${
+							ref.operator === "==="
+								? "=="
+								: ref.operator === "!=="
+								? "!="
+								: ref.operator
+						} ${ref.comparand}" is always ${outcome}`,
+					);
+				}
+			}
+
+			const from = `${scope}:${guardedParam}`;
+			const to = `${scope}:${ref.parameter}`;
+			if (!dependencies.has(from)) dependencies.set(from, new Set());
+			dependencies.get(from)!.add(to);
+		}
+	};
+
+	const paramScopes = new Map<number, ConditionalParamInfoMap>();
+	if (config.paramInformation) paramScopes.set(0, config.paramInformation);
+	if (config.endpoints) {
+		for (const [index, ep] of config.endpoints) {
+			if (ep.paramInformation) {
+				paramScopes.set(index, ep.paramInformation);
+			}
+		}
+	}
+	for (const [scope, paramInformation] of paramScopes) {
+		const scopePrefix = scope > 0 ? `Endpoint ${scope}, ` : "";
+		for (const params of paramInformation.values()) {
+			for (const param of params) {
+				const errorPrefix = scopePrefix + paramNoToString(
+					param.parameterNumber,
+					param.valueBitMask,
+				);
+				handleParamCondition(
+					scope,
+					param.parameterNumber,
+					param.condition,
+					errorPrefix,
+				);
+				for (const option of param.options) {
+					handleParamCondition(
+						scope,
+						param.parameterNumber,
+						option.condition,
+						`${errorPrefix}, option "${option.label}"`,
+					);
+				}
+			}
+		}
+	}
+
+	// Cyclic dependencies between param definitions would make the evaluation order-dependent
+	const formatNode = (node: string): string => {
+		const [scope, parameter] = node.split(":");
+		return (scope !== "0" ? `Endpoint ${scope}, ` : "")
+			+ `#${parameter}`;
+	};
+	const done = new Set<string>();
+	const visit = (node: string, path: string[]): void => {
+		if (done.has(node)) return;
+		const cycleStart = path.indexOf(node);
+		if (cycleStart !== -1) {
+			const cycle = [...path.slice(cycleStart), node];
+			addError(
+				file,
+				`Conditions referencing config parameter values must not form cycles: ${
+					cycle.map(formatNode).join(" -> ")
+				}`,
+			);
+			done.add(node);
+			return;
+		}
+		for (const dep of dependencies.get(node) ?? []) {
+			visit(dep, [...path, node]);
+		}
+		done.add(node);
+	};
+	for (const node of dependencies.keys()) visit(node, []);
+
+	return collected;
+}
+
 interface LintDevicesContextConditional {
 	file: string;
-	addError(filename: string, error: string, variant?: DeviceID): void;
-	addWarning(filename: string, warning: string, variant?: DeviceID): void;
+	addError(filename: string, error: string, variant?: LintVariant): void;
+	addWarning(filename: string, warning: string, variant?: LintVariant): void;
 }
 
 interface LintDevicesContext extends LintDevicesContextConditional {
-	variant: DeviceID | undefined;
+	variant: LintVariant | undefined;
 }
 
 function lintTemplateParamDefinition(
@@ -526,23 +864,30 @@ async function lintTemplates(
 async function lintDevices(): Promise<void> {
 	process.env.NODE_ENV = "test";
 
+	function formatVariant(variant: LintVariant): string {
+		let ret = `${formatId(variant.manufacturerId)}:${
+			formatId(variant.productType)
+		}:${formatId(variant.productId)}:${variant.firmwareVersion}`;
+		if (variant.paramValues) {
+			for (const [key, value] of variant.paramValues) {
+				const [endpoint, parameter] = key.split(":");
+				ret += `, ${
+					endpoint !== "0" ? `EP${endpoint} ` : ""
+				}#${parameter} = ${value}`;
+			}
+		}
+		return ret;
+	}
+
 	const errors = new Map<string, string[]>();
 	function addError(
 		filename: string,
 		error: string,
-		variant?: DeviceID,
+		variant?: LintVariant,
 		endpoint?: number,
 	): void {
 		if (variant) {
-			filename += ` (Variant ${
-				formatId(
-					variant.manufacturerId,
-				)
-			}:${formatId(variant.productType)}:${
-				formatId(
-					variant.productId,
-				)
-			}:${variant.firmwareVersion})`;
+			filename += ` (Variant ${formatVariant(variant)})`;
 		}
 		if (!errors.has(filename)) errors.set(filename, []);
 
@@ -554,19 +899,11 @@ async function lintDevices(): Promise<void> {
 	function addWarning(
 		filename: string,
 		warning: string,
-		variant?: DeviceID,
+		variant?: LintVariant,
 		endpoint?: number,
 	): void {
 		if (variant) {
-			filename += ` (Variant ${
-				formatId(
-					variant.manufacturerId,
-				)
-			}:${formatId(variant.productType)}:${
-				formatId(
-					variant.productId,
-				)
-			}:${variant.firmwareVersion})`;
+			filename += ` (Variant ${formatVariant(variant)})`;
 		}
 		if (!warnings.has(filename)) warnings.set(filename, []);
 
@@ -632,8 +969,16 @@ async function lintDevices(): Promise<void> {
 			continue;
 		}
 
+		// Validate conditions referencing config parameter values
+		const paramValueRefs = lintParamValueReferences(
+			conditionalConfig,
+			file,
+			addError,
+			addWarning,
+		);
+
 		// Check which variants of the device config we need to lint
-		const variants: (DeviceID | undefined)[] = [];
+		const variants: (LintVariant | undefined)[] = [];
 		const conditions = getAllConditions(conditionalConfig);
 		if (conditions.size > 0) {
 			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
@@ -661,11 +1006,55 @@ async function lintDevices(): Promise<void> {
 			variants.push(undefined);
 		}
 
+		if (paramValueRefs.length > 0) {
+			// Additionally lint variants where each compared parameter value is satisfied,
+			// one parameter at a time to avoid a combinatorial explosion
+			let baseVariants = variants.filter((v) => v != undefined);
+			if (baseVariants.length === 0) {
+				baseVariants = conditionalConfig.devices.map((deviceId) => ({
+					manufacturerId: conditionalConfig.manufacturerId,
+					...deviceId,
+					firmwareVersion: conditionalConfig.firmwareVersion.min,
+				}));
+				variants.push(...baseVariants);
+			}
+
+			const seen = new Set<string>();
+			for (const ref of paramValueRefs) {
+				let fullValue: number;
+				if (ref.valueBitMask != undefined) {
+					const maxValue = 2 ** getBitMaskWidth(ref.valueBitMask) - 1;
+					if (ref.comparand < 0 || ref.comparand > maxValue) continue;
+					fullValue = encodePartial(
+						0,
+						ref.comparand,
+						ref.valueBitMask,
+					);
+				} else {
+					fullValue = ref.comparand;
+				}
+
+				const key = `${ref.scope}:${ref.parameter}`;
+				const seenKey = `${key}=${fullValue}`;
+				if (seen.has(seenKey)) continue;
+				seen.add(seenKey);
+
+				for (const base of baseVariants) {
+					variants.push({
+						...base,
+						paramValues: new Map([[key, fullValue]]),
+					});
+				}
+			}
+		}
+
 		for (const variant of variants) {
 			// Try evaluating the conditional config
 			let config: DeviceConfig;
 			try {
-				config = conditionalConfig.evaluate(variant);
+				config = conditionalConfig.evaluate(
+					lintVariantToContext(variant),
+				);
 			} catch (e) {
 				addError(file, getErrorMessage(e), variant);
 				continue;
@@ -983,8 +1372,8 @@ function validateAllowedValuesDefinition(
 	allowedDefs: ParamInformation["allowed"],
 	paramName: string,
 	file: string,
-	addError: (file: string, error: string, variant?: DeviceID) => void,
-	variant?: DeviceID,
+	addError: (file: string, error: string, variant?: LintVariant) => void,
+	variant?: LintVariant,
 ): void {
 	for (const def of allowedDefs) {
 		if ("value" in def) continue;

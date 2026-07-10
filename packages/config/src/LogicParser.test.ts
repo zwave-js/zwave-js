@@ -278,3 +278,120 @@ test("parse, weird, but valid expression", () => {
 	};
 	expect(actual).toEqual(expected);
 });
+
+test("tokenize, param references", () => {
+	const input = "#71 == 1 && #9[0x0f] > -1";
+	const actual: Omit<Token, "start">[] = Array.from(tokenize(input)).map(
+		(token) => {
+			const { start, ...rest } = token;
+			return rest;
+		},
+	);
+	const expected: Omit<Token, "start">[] = [
+		{ kind: TokenKind.ParamReference, value: "71" },
+		{ kind: TokenKind.EqualsEquals },
+		{ kind: TokenKind.NumberLiteral, value: "1" },
+		{ kind: TokenKind.AmpAmp },
+		{ kind: TokenKind.ParamReference, value: "9[0x0f]" },
+		{ kind: TokenKind.GreaterThan },
+		{ kind: TokenKind.Minus },
+		{ kind: TokenKind.NumberLiteral, value: "1" },
+	];
+	expect(actual).toEqual(expected);
+});
+
+test("tokenize, # without a parameter number", () => {
+	expect(() => Array.from(tokenize("# == 1"))).toThrowError(
+		/Expected a parameter number after '#' at index 0/,
+	);
+});
+
+test("parse, param reference comparison", () => {
+	const input = "#71 == 1";
+	const actual = parse(input);
+	const expected: Expression = {
+		kind: SyntaxKind.Comparison,
+		operator: Operator.Equal,
+		left: {
+			kind: SyntaxKind.ParamReference,
+			parameter: 71,
+			valueBitMask: undefined,
+		},
+		right: {
+			kind: SyntaxKind.NumberLiteral,
+			value: 1,
+		},
+	};
+	expect(actual).toEqual(expected);
+});
+
+test("parse, param reference with bitmask and negative comparand", () => {
+	const input = "#9[0x0f] >= -2";
+	const actual = parse(input);
+	const expected: Expression = {
+		kind: SyntaxKind.Comparison,
+		operator: Operator.GreaterThanOrEqual,
+		left: {
+			kind: SyntaxKind.ParamReference,
+			parameter: 9,
+			valueBitMask: 0x0f,
+		},
+		right: {
+			kind: SyntaxKind.NumberLiteral,
+			value: -2,
+		},
+	};
+	expect(actual).toEqual(expected);
+});
+
+test("parse, param reference combined with other conditions", () => {
+	const input = "#40 >= 2 && firmwareVersion >= 1.7";
+	const actual = parse(input);
+	const expected: Expression = {
+		kind: SyntaxKind.And,
+		operands: [
+			{
+				kind: SyntaxKind.Comparison,
+				operator: Operator.GreaterThanOrEqual,
+				left: {
+					kind: SyntaxKind.ParamReference,
+					parameter: 40,
+					valueBitMask: undefined,
+				},
+				right: {
+					kind: SyntaxKind.NumberLiteral,
+					value: 2,
+				},
+			},
+			{
+				kind: SyntaxKind.Comparison,
+				operator: Operator.GreaterThanOrEqual,
+				left: {
+					kind: SyntaxKind.Identifier,
+					name: "firmwareVersion",
+				},
+				right: {
+					kind: SyntaxKind.Version,
+					value: "1.7",
+				},
+			},
+		],
+	};
+	expect(actual).toEqual(expected);
+});
+
+test("parse, param reference compared with a version", () => {
+	expect(() => parse("#71 >= 1.2")).toThrowError(
+		/Parameter references can only be compared with number literals/,
+	);
+});
+
+test("parse, param reference on the right-hand side", () => {
+	expect(() => parse("1 == #71")).toThrowError();
+});
+
+test("parse, invalid param reference", () => {
+	expect(() => parse("#9[0xzz] == 1")).toThrowError(
+		/Expected a parameter number after '#'|Invalid parameter reference/,
+	);
+});

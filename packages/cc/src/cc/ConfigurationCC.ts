@@ -40,6 +40,7 @@ import {
 	stripUndefined,
 	supervisedCommandSucceeded,
 	validatePayload,
+	valueEquals,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
@@ -442,7 +443,9 @@ export function refreshConfigParamMetadataFromConfigFile(
 			if (!existing || existing.isFromConfig) {
 				// New param, or existing parameter that was previously populated
 				// from the configuration file. Replace it entirely
-				valueDB.setMetadata(valueId, newMeta);
+				if (!valueEquals(existing, newMeta)) {
+					valueDB.setMetadata(valueId, newMeta);
+				}
 			} else {
 				// Device-reported param - overwrite informational fields
 				// but preserve the device-reported valueSize and format
@@ -452,7 +455,9 @@ export function refreshConfigParamMetadataFromConfigFile(
 					valueSize: existing.valueSize,
 					format: existing.format,
 				};
-				valueDB.setMetadata(valueId, merged);
+				if (!valueEquals(existing, merged)) {
+					valueDB.setMetadata(valueId, merged);
+				}
 			}
 		}
 	}
@@ -477,6 +482,71 @@ export function refreshConfigParamMetadataFromConfigFile(
 			valueDB.removeValue(meta);
 		}
 	}
+}
+
+/**
+ * Reads the cached value of a config parameter from the value DB.
+ * With a bit mask, returns the value of that partial parameter,
+ * otherwise the full value, composed from cached partials if necessary.
+ * Returns `undefined` if the value is not known.
+ */
+export function getCachedConfigParamValue(
+	ctx: GetValueDB,
+	nodeId: number,
+	endpointIndex: number,
+	parameter: number,
+	bitMask?: number,
+): number | undefined {
+	const valueDB = ctx.getValueDB(nodeId);
+
+	if (bitMask != undefined) {
+		// Prefer the stored partial value, which is already interpreted with the correct signedness
+		const partialValueId = ConfigurationCCValues.paramInformation(
+			parameter,
+			bitMask,
+		).endpoint(endpointIndex);
+		const partial = valueDB.getValue(partialValueId);
+		if (typeof partial === "number") return partial;
+
+		// Fall back to extracting the partial from a stored full value
+		const fullValue = valueDB.getValue(
+			ConfigurationCCValues.paramInformation(parameter)
+				.endpoint(endpointIndex),
+		);
+		if (typeof fullValue !== "number") return undefined;
+		const format = (
+			valueDB.getMetadata(partialValueId) as
+				| ConfigurationMetadata
+				| undefined
+		)?.format;
+		return parsePartial(
+			fullValue,
+			bitMask,
+			isSignedPartial(bitMask, format),
+		);
+	}
+
+	const fullValue = valueDB.getValue(
+		ConfigurationCCValues.paramInformation(parameter)
+			.endpoint(endpointIndex),
+	);
+	if (typeof fullValue === "number") return fullValue;
+
+	// Compose the full value from stored partials. Missing partials default to 0.
+	const partials = valueDB.findValues(
+		(id) =>
+			id.commandClass === CommandClasses.Configuration
+			&& (id.endpoint ?? 0) === endpointIndex
+			&& id.property === parameter
+			&& typeof id.propertyKey === "number",
+	);
+	if (partials.length === 0) return undefined;
+	let ret = 0;
+	for (const { propertyKey: bitMask, value: partialValue } of partials) {
+		if (typeof partialValue !== "number") return undefined;
+		ret = encodePartial(ret, partialValue, bitMask as number);
+	}
+	return ret;
 }
 
 @API(CommandClasses.Configuration)
@@ -1246,7 +1316,7 @@ export class ConfigurationCC extends CommandClass {
 		});
 
 		const deviceConfig = ctx.getDeviceConfig?.(node.id);
-		const paramInfo = getParamInformationFromConfigFile(
+		let paramInfo = getParamInformationFromConfigFile(
 			ctx,
 			node.id,
 			this.endpointIndex,
@@ -1412,6 +1482,33 @@ export class ConfigurationCC extends CommandClass {
 			configScanProgress = Math.min(
 				1,
 				scannedQueries / expectedQueryCount,
+			);
+		}
+
+		// Query the values of parameters that conditions in the config file depend on,
+		// so the rest of the interview uses the correct parameter definitions
+		const referencedParams = deviceConfig?.referencedParamValues
+			?.get(this.endpointIndex);
+		if (referencedParams?.size) {
+			for (const parameter of referencedParams) {
+				ctx.logNode(node.id, {
+					endpoint: this.endpointIndex,
+					message:
+						`querying parameter #${parameter}, which other config settings depend on...`,
+					direction: "outbound",
+				});
+				await api.get(parameter).catch(
+					// A missing response means the value stays unknown
+					() => undefined,
+				);
+			}
+
+			// The received values may have changed which parameter definitions apply.
+			// The re-evaluated device config was already applied when the values were persisted.
+			paramInfo = getParamInformationFromConfigFile(
+				ctx,
+				node.id,
+				this.endpointIndex,
 			);
 		}
 
