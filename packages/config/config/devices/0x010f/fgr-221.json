@@ -1,0 +1,209 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGR-221",
+	"description": "Roller Shutter Controller",
+	"devices": [
+		{
+			"productType": "0x0300",
+			"productId": "0x0104"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x0106"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x0107"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x0109"
+		},
+		{
+			"productType": "0x0300",
+			"productId": "0x100a"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Single Click",
+			"description": "Devices in this group will be switched on or off with a single click of the switches.",
+			"maxNodes": 16
+		},
+		"2": {
+			"label": "Hold Down",
+			"description": "Devices in this group will change their level while holding down the switches.",
+			"maxNodes": 16
+		},
+		"3": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Enable/Disable ALL ON/OFF",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "All on active / All off active",
+					"value": 255
+				},
+				{
+					"label": "All on disabled / All off disabled",
+					"value": 0
+				},
+				{
+					"label": "All on disabled / All off active",
+					"value": 1
+				},
+				{
+					"label": "All on active / All off disabled",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "10",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Shutter Positioning Function",
+			"defaultValue": 0
+		},
+		{
+			"#": "14",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch",
+					"value": 1
+				},
+				{
+					"label": "Single momentary switch",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "20",
+			"label": "Favorite Position",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 16
+		},
+		{
+			"#": "30",
+			"label": "General Alarm",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "31",
+			"label": "Water Flooding Alarm",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "32",
+			"label": "Smoke, CO, CO2 Alarm",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "33",
+			"label": "Temperature Alarm",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivation",
+					"value": 0
+				},
+				{
+					"label": "Open shutter alarm",
+					"value": 1
+				},
+				{
+					"label": "Closed shutter alarm",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "41",
+			"$if": "firmwareVersion >= 1.9",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Scene Activation",
+			"description": "Send Scene Activation commands to association group 3"
+		}
+	],
+	"metadata": {
+		"inclusion": "Connect the device in accordance with the wiring diagram and switch on the mains voltage. Then quickly press the S1 switch or the B-button located inside the housing three times.",
+		"exclusion": "Make sure the device is powered, then quickly press the S1 switch or the B-button located inside the housing three times.",
+		"reset": "Within 5 seconds after connecting the mains voltage, press the S1 switch once and then press and hold the S2 switch.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGR-221/FGR-221-EN-A-v1.02.pdf"
+	}
+}

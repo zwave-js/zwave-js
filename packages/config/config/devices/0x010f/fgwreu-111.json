@@ -13,6 +13,23 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Roller Shutter",
+			"description": "Devices in this group will be controlled together with the shutter position (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Slats",
+			"description": "Devices in this group will be controlled together with the slats position (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "11",
@@ -66,7 +83,13 @@
 			"$import": "~/templates/master_template.json#base_0-100_nounit",
 			"label": "LED Indicator: Brightness",
 			"unit": "%",
-			"defaultValue": 100
+			"defaultValue": 100,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "24",
@@ -110,7 +133,7 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Disable",
+					"label": "No action",
 					"value": 0
 				},
 				{
@@ -143,8 +166,7 @@
 		{
 			"#": "31[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 2nd Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 2nd Slot: Blinds Action"
 		},
 		{
 			"#": "31[0xf0]",
@@ -166,8 +188,7 @@
 		{
 			"#": "32[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 3rd Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 3rd Slot: Blinds Action"
 		},
 		{
 			"#": "32[0xf0]",
@@ -189,8 +210,7 @@
 		{
 			"#": "33[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 4th Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 4th Slot: Blinds Action"
 		},
 		{
 			"#": "33[0xf0]",
@@ -212,8 +232,7 @@
 		{
 			"#": "34[0x03]",
 			"$import": "#paramInformation/30[0x03]",
-			"label": "Alarm Configuration: 5th Slot: Blinds Action",
-			"defaultValue": 0
+			"label": "Alarm Configuration: 5th Slot: Blinds Action"
 		},
 		{
 			"#": "34[0xf0]",
@@ -222,18 +241,7 @@
 		},
 		{
 			"#": "35",
-			"label": "Alarm Duration",
-			"valueSize": 2,
-			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32400,
-			"defaultValue": 600,
-			"options": [
-				{
-					"label": "Infinite",
-					"value": 0
-				}
-			]
+			"$import": "templates/fibaro_template.json#alarm_duration_infinite"
 		},
 		{
 			"#": "40[0x01]",
@@ -269,7 +277,7 @@
 		},
 		{
 			"#": "60",
-			"$import": "~/templates/master_template.json#base_enable_disable",
+			"$import": "templates/fibaro_template.json#reports_include_self",
 			"label": "Power Report: Include Self-Consumption"
 		},
 		{
@@ -388,7 +396,7 @@
 					"value": 1
 				},
 				{
-					"label": "Controlled, momentary or limit switch operation, or Multilevel Switch stop command",
+					"label": "Controller, momentary or limit switch operation, or Multilevel Switch stop command",
 					"value": 2
 				}
 			]
@@ -437,5 +445,11 @@
 			"maxValue": 65535,
 			"defaultValue": 6000
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",
+		"exclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",
+		"reset": "1. Quickly click one of the buttons three times, then press and hold it to enter the menu.\n2. Release the button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After a few seconds the device restarts, which is signaled with the red LED color.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWREU-111/FGWREU-111-T-EN-v1.1.pdf"
+	}
 }

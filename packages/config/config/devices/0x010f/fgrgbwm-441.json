@@ -1,0 +1,363 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGRGBWM-441",
+	"description": "RGBW Controller",
+	"devices": [
+		{
+			"productType": "0x0900",
+			"productId": "0x1000",
+			"zwaveAllianceId": 1054
+		},
+		{
+			"productType": "0x0900",
+			"productId": "0x2000",
+			"zwaveAllianceId": 1072
+		},
+		{
+			"productType": "0x0900",
+			"productId": "0x3000"
+		},
+		{
+			"productType": "0x0900",
+			"productId": "0x4000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "On/Off (IN1)",
+			"description": "Devices in this group will be switched on or off when the state of the IN1 input changes (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"2": {
+			"label": "On/Off (IN2)",
+			"description": "Devices in this group will be switched on or off when the state of the IN2 input changes (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "On/Off (IN3)",
+			"description": "Devices in this group will be switched on or off when the state of the IN3 input changes (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "On/Off (IN4)",
+			"description": "Devices in this group will be switched on or off when the state of the IN4 input changes (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "All On / All Off Function Activation",
+			"valueSize": 1,
+			"defaultValue": 255,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "All on inactive, all off inactive",
+					"value": 0
+				},
+				{
+					"label": "All on inactive, all off active",
+					"value": 1
+				},
+				{
+					"label": "All on active, all off inactive",
+					"value": 2
+				},
+				{
+					"label": "All on active, all off active",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "6",
+			"label": "Associations Command Class Choice",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normal (Dimmer): Basic Set / Multilevel Switch start/stop",
+					"value": 0
+				},
+				{
+					"label": "Normal (RGBW): Color control set / Start/Stop state change",
+					"value": 1
+				},
+				{
+					"label": "Normal (RGBW): Color control set",
+					"value": 2
+				},
+				{
+					"label": "Brightness: Basic Set / Multilevel Switch start/stop",
+					"value": 3
+				},
+				{
+					"label": "Rainbow (RGBW): Color control set",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "8",
+			"label": "Outputs State Change Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Mode 1: Constant speed (Parameters 9 and 10)",
+					"value": 0
+				},
+				{
+					"label": "Mode 2: Constant time (Parameter 11)",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "9",
+			"label": "Step Value (Mode 1)",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true
+		},
+		{
+			"#": "10",
+			"label": "Time Between Steps (Mode 1)",
+			"valueSize": 2,
+			"unit": "ms",
+			"minValue": 0,
+			"maxValue": 60000,
+			"defaultValue": 10,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Immediate change of state",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "11",
+			"label": "Time for Changing From Start to End Value (Mode 2)",
+			"description": "1-63: 20-1260 ms (value * 20 ms), 65-127: 1-63 s (value - 64), 129-191: 10-630 s ((value - 128) * 10 s), 193-255: 1-63 min (value - 192)",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 67,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Immediate change",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Maximum Brightening Level",
+			"valueSize": 1,
+			"minValue": 3,
+			"maxValue": 255,
+			"defaultValue": 255,
+			"unsigned": true
+		},
+		{
+			"#": "13",
+			"label": "Minimum Dim Level",
+			"valueSize": 1,
+			"minValue": 2,
+			"maxValue": 255,
+			"defaultValue": 2,
+			"unsigned": true
+		},
+		{
+			"#": "14",
+			"label": "Inputs/Outputs Configuration",
+			"description": "Relevant for main controllers other than Home Center 2 only. Each 4 bits configure one channel (input type and operating mode).",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 65535,
+			"defaultValue": 4369,
+			"unsigned": true
+		},
+		{
+			"#": "16",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev"
+		},
+		{
+			"#": "30",
+			"label": "Alarm Response",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Inactive",
+					"value": 0
+				},
+				{
+					"label": "Alarm on",
+					"value": 1
+				},
+				{
+					"label": "Alarm off",
+					"value": 2
+				},
+				{
+					"label": "Alarm program",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "38",
+			"label": "Alarm Sequence Program",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 10,
+			"defaultValue": 10
+		},
+		{
+			"#": "39",
+			"label": "Active Program Alarm Time",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 1,
+			"maxValue": 65534,
+			"defaultValue": 600,
+			"unsigned": true
+		},
+		{
+			"#": "42",
+			"label": "Command Class Reporting Outputs Status Change",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Inputs and controllers actions (Multilevel Switch)",
+					"value": 0
+				},
+				{
+					"label": "Inputs actions (Multilevel Switch)",
+					"value": 1
+				},
+				{
+					"label": "Inputs actions (Color control)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "43",
+			"label": "Reporting 0-10V Analog Inputs Change Threshold",
+			"description": "Defines a value by which input voltage must change in order to be reported",
+			"valueSize": 1,
+			"unit": "0.1 V",
+			"minValue": 1,
+			"maxValue": 100,
+			"defaultValue": 5
+		},
+		{
+			"#": "44",
+			"label": "Power Load Reporting Frequency",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 65534,
+			"defaultValue": 30,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Reports only sent when polled or when turning off",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "45",
+			"label": "Reporting Energy Consumption Changes",
+			"valueSize": 1,
+			"unit": "0.01 kWh",
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 10,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Reports only sent when polled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "71",
+			"label": "Response to Brightness Set to 0%",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Illumination colour set to white (All channels controlled together)",
+					"value": 0
+				},
+				{
+					"label": "Last set colour is memorized",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "72",
+			"label": "Starting Predefined Animation Program",
+			"description": "Starting predefined program when device set to work in RGB/RGBW mode (parameter 14). Relevant for main controllers other than Home Center 2 only.",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 10,
+			"defaultValue": 1
+		},
+		{
+			"#": "73",
+			"label": "Triple Click Action",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Node info control frame is sent",
+					"value": 0
+				},
+				{
+					"label": "Starting favourite program",
+					"value": 1
+				}
+			]
+		}
+	],
+	"compat": {
+		// This device exposes the RGBW control on the root endpoint
+		"preserveRootApplicationCCValueIDs": true
+	},
+	"metadata": {
+		"inclusion": "Connect the device to the power supply, then quickly press the B-button or any switch connected to the I1-I4 inputs three times.",
+		"exclusion": "Connect the device to the power supply, then quickly press the B-button or any switch connected to the I1-I4 inputs three times.",
+		"reset": "1. Disconnect the power supply.\n2. Press and hold the B-button located inside the device's casing.\n3. Reconnect the power supply while still holding the B-button.\n4. Release the B-button.\n5. The blue channel turns on.\n6. Disconnect the power supply.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGRGBWM-441/FGRGBWM-441-EN-A-v1.1.pdf"
+	}
+}

@@ -1,0 +1,297 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGSD-002",
+	"description": "Smoke Detector",
+	"devices": [
+		{
+			"productType": "0x0c02",
+			"productId": "0x1002"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x1003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x4002"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x2003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x3003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x4003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x6003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x7003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0x9003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0xa003"
+		},
+		{
+			"productType": "0x0c02",
+			"productId": "0xb003"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Smoke Alarm",
+			"description": "Devices in this group will be switched on or off when smoke is detected (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Tamper",
+			"description": "Devices in this group will receive notifications when the casing is opened.",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Smoke Alarm BC",
+			"description": "Devices in this group will receive Sensor Alarm reports when smoke is detected. Provides backward compatibility with controllers not supporting Z-Wave+.",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Tamper BC",
+			"description": "Devices in this group will receive Sensor Alarm reports when the casing is opened. Provides backward compatibility with controllers not supporting Z-Wave+.",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Smoke Sensor Sensitivity",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "High",
+					"value": 1
+				},
+				{
+					"label": "Medium",
+					"value": 2
+				},
+				{
+					"label": "Low",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "2[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Z-Wave Notifications: Casing Opening"
+		},
+		{
+			"#": "2[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Z-Wave Notifications: Exceeding Temperature Threshold"
+		},
+		{
+			"#": "3[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual Indicator Notifications: Casing Opening"
+		},
+		{
+			"#": "3[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual Indicator Notifications: Exceeding Temperature Threshold"
+		},
+		{
+			"#": "3[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual Indicator Notifications: Lack of Z-Wave Range"
+		},
+		{
+			"#": "4[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sound Notifications: Casing Opening"
+		},
+		{
+			"#": "4[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sound Notifications: Exceeding Temperature Threshold"
+		},
+		{
+			"#": "4[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sound Notifications: Lack of Z-Wave Range"
+		},
+		{
+			"#": "10",
+			"label": "Config of Control Frames in Basic Command Class",
+			"description": "This parameter defines which frames will be sent in the 2nd association group (Smoke Alarm).",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Basic on and basic off enabled",
+					"value": 0
+				},
+				{
+					"label": "Basic on enabled",
+					"value": 1
+				},
+				{
+					"label": "Basic off enabled",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "BASIC ON Frame Value",
+			"description": "BASIC ON frame is sent in case of smoke presence detection and fire alarm triggering.",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "BASIC OFF Frame Value",
+			"description": "BASIC OFF frame is sent in case of fire alarm cancellation.",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "13",
+			"label": "Alarm Broadcast",
+			"description": "A value other than 0 means that alarms are being sent in broadcast mode, i.e. to all devices within range. Broadcasts are disabled in Z-Wave network security mode.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Broadcast inactive",
+					"value": 0
+				},
+				{
+					"label": "Smoke alarm broadcast active, casing opening inactive",
+					"value": 1
+				},
+				{
+					"label": "Smoke alarm broadcast inactive, casing opening active",
+					"value": 2
+				},
+				{
+					"label": "Smoke alarm and casing opening broadcast active",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "14[0x01]",
+			"$if": "firmwareVersion >= 3.2",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group2",
+			"defaultValue": 1
+		},
+		{
+			"#": "14[0x02]",
+			"$if": "firmwareVersion >= 3.2",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group3",
+			"defaultValue": 1
+		},
+		{
+			"#": "14[0x04]",
+			"$if": "firmwareVersion >= 3.2",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group4",
+			"defaultValue": 1
+		},
+		{
+			"#": "14[0x08]",
+			"$if": "firmwareVersion >= 3.2",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group5",
+			"defaultValue": 1
+		},
+		{
+			"#": "20",
+			"$purpose": "reporting_interval.temperature",
+			"label": "Temperature Report Interval",
+			"description": "Time interval between consecutive temperature reports. Report is sent when the new temperature value differs from the previously reported one by the hysteresis (parameter 21).",
+			"valueSize": 2,
+			"unit": "10 seconds",
+			"minValue": 0,
+			"maxValue": 8640,
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "21",
+			"label": "Temperature Report Hysteresis",
+			"description": "The temperature report will only be sent if there is a difference in temperature value from the previous value reported.",
+			"valueSize": 1,
+			"unit": "0.1 °C",
+			"minValue": 1,
+			"maxValue": 100,
+			"defaultValue": 10
+		},
+		{
+			"#": "30",
+			"label": "Temperature Threshold",
+			"description": "Temperature above which the excess temperature notification is sent (visual indication/sound/Z-Wave report)",
+			"valueSize": 1,
+			"unit": "°C",
+			"minValue": 1,
+			"maxValue": 100,
+			"defaultValue": 55
+		},
+		{
+			"#": "31",
+			"label": "Excess Temperature Signaling Interval",
+			"description": "Time interval of signaling (visual indication/sound) excess temperature level",
+			"valueSize": 2,
+			"unit": "10 seconds",
+			"minValue": 1,
+			"maxValue": 8640,
+			"defaultValue": 1
+		},
+		{
+			"#": "32",
+			"label": "Lack of Z-Wave Range Indication Interval",
+			"description": "Time interval of signaling (visual indication/sound) lack of Z-Wave range",
+			"valueSize": 2,
+			"unit": "10 seconds",
+			"minValue": 1,
+			"maxValue": 8640,
+			"defaultValue": 180
+		}
+	],
+	"metadata": {
+		"inclusion": "Quickly press the B-button located on the device's casing three times.",
+		"exclusion": "Quickly press the B-button located on the device's casing three times.",
+		"reset": "1. Press and hold the B-button for 3 seconds until the visual indicator glows white.\n2. Release the B-button.\n3. Wait until the visual indicator glows yellow, signaling the 4th menu position.\n4. Briefly press the B-button to confirm.",
+		"manual": "https://manuals.fibaro.com/wp-content/uploads/2025/07/FGSD-002-EN-A-v1.3_11.07.25.pdf"
+	}
+}
