@@ -128,12 +128,19 @@ export function extractStructure(
  * purpose instead of making records similar merely because they share its identifier. */
 export function buildSemanticText(semantics: CorpusSemantics): string {
 	const parts: string[] = [];
-	if (semantics.label) parts.push(semantics.label);
+	const concept = semantics.label
+		? `Parameter concept: ${semantics.label}`
+		: undefined;
+	// Repeat the label so discriminating words (for example, "minimum" versus
+	// "maximum") retain enough influence after mean pooling; long descriptions
+	// and option lists otherwise make near-opposite concepts embed too similarly.
+	if (concept) parts.push(concept, concept);
 	if (semantics.description) parts.push(semantics.description);
 	if (semantics.unit) parts.push(`Unit: ${semantics.unit}`);
 	if (semantics.optionLabels.length > 0) {
 		parts.push(`Options: ${semantics.optionLabels.join(", ")}`);
 	}
+	if (concept) parts.push(concept);
 	return parts.join(". ");
 }
 

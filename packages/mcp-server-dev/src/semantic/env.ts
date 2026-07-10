@@ -17,7 +17,7 @@ export const LOCAL_MODEL_APPROX_SIZE_MB = 24;
 export const LOCAL_MODEL_DIMENSIONS = 384;
 
 /** Bump when the embedding cache entry shape or the corpus normalization changes */
-export const EMBEDDING_SCHEMA_VERSION = 2;
+export const EMBEDDING_SCHEMA_VERSION = 3;
 
 export type LocalDownloadPolicy = "ask" | "allow" | "deny";
 

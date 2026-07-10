@@ -94,8 +94,10 @@ describe("buildSemanticText", () => {
 			optionLabels: ["Instant", "Slow"],
 		});
 		expect(text).toBe(
-			"Ramp rate. Controls the dimming ramp rate. "
-				+ "Unit: seconds. Options: Instant, Slow",
+			"Parameter concept: Ramp rate. Parameter concept: Ramp rate. "
+				+ "Controls the dimming ramp rate. "
+				+ "Unit: seconds. Options: Instant, Slow. "
+				+ "Parameter concept: Ramp rate",
 		);
 	});
 
