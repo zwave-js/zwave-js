@@ -114,11 +114,6 @@ describe("createSearchParameterDefinitionsTool", () => {
 		const service = fakeService({
 			search: vi.fn().mockRejectedValue(
 				new ConsentRequiredError(
-					"Xenova/all-MiniLM-L6-v2",
-					"rev",
-					"Apache-2.0",
-					"https://huggingface.co/Xenova/all-MiniLM-L6-v2",
-					24,
 					"/cache/models",
 					"/cache/consent.json",
 				),
