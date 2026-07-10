@@ -39,7 +39,7 @@ integrationTest(
 
 		async testBody(t, driver, node, mockController, mockNode) {
 			// The correct device config must be loaded
-			t.expect(node.deviceConfig?.label).toBe("FGMS001");
+			t.expect(node.deviceConfig?.label).toBe("FGMS-001");
 
 			// No Basic CC values should be exposed after the interview
 			const valueIDs = node.getDefinedValueIDs();
