@@ -367,7 +367,7 @@ Ensure the instructions follow these guidelines:
 - These properties should be short instructions on how to perform the respective actions.
 - Use Markdown formatting where appropriate
 - Ensure proper escaping of characters for embedding in JSON strings.
-- Use proper english grammar and punctuation.
+- Use proper English grammar and punctuation.
 - Write instructions in the second person, addressing the user directly.
 - Ensure a consistent style and formatting across all instructions.
 - Do not refer to the controller, Z-Wave controller, network, hub, or any external system in these instructions. If an App must be used to perform the steps, do mention it.
