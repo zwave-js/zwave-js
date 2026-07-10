@@ -69,11 +69,17 @@
 		},
 		{
 			"#": "24",
-			"$import": "templates/fibaro_template.json#association_switch_on_value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Switch On Value",
+			"valueSize": 2,
+			"defaultValue": 255
 		},
 		{
 			"#": "25",
-			"$import": "templates/fibaro_template.json#association_switch_off_value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Switch Off Value",
+			"valueSize": 2,
+			"defaultValue": 0
 		},
 		{
 			"#": "23",
@@ -89,11 +95,19 @@
 		},
 		{
 			"#": "26",
-			"$import": "templates/fibaro_template.json#association_upper_threshold_command_value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Upper Threshold Command Value",
+			"description": "Which value to send when the power usage is above the upper threshold.",
+			"valueSize": 2,
+			"defaultValue": 255
 		},
 		{
 			"#": "27",
-			"$import": "templates/fibaro_template.json#association_lower_threshold_command_value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Lower Threshold Command Value",
+			"description": "Which value to send when the power usage is below the lower threshold.",
+			"valueSize": 2,
+			"defaultValue": 0
 		},
 		{
 			"#": "30[0x01]",
