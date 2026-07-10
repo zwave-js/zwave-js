@@ -1,0 +1,440 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGBS-222",
+	"description": "Smart Implant",
+	"devices": [
+		{
+			"productType": "0x0502",
+			"productId": "0x1000",
+			"zwaveAllianceId": 4153
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0x2000",
+			"zwaveAllianceId": 4166
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0x3000",
+			"zwaveAllianceId": 4174
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0x4000",
+			"zwaveAllianceId": 4175
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0x6000",
+			"zwaveAllianceId": 4172
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0x7000",
+			"zwaveAllianceId": 4173
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0xb000",
+			"zwaveAllianceId": 4165
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0x8000"
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0x9000"
+		},
+		{
+			"productType": "0x0502",
+			"productId": "0xa000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off (IN1)",
+			"description": "Devices in this group will be switched on or off when the IN1 input is triggered (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "On/Off (IN2)",
+			"description": "Devices in this group will be switched on or off when the IN2 input is triggered (uses Basic command class).",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "20",
+			"label": "IN1: Operating Mode",
+			"description": "Choose the mode of the IN1 input depending on the connected device.",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normally closed alarm input (Notification)",
+					"value": 0
+				},
+				{
+					"label": "Normally open alarm input (Notification)",
+					"value": 1
+				},
+				{
+					"label": "Momentary switch (Central Scene)",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch (Central Scene)",
+					"value": 3
+				},
+				{
+					"label": "Analog input without internal pull-up (Multilevel sensor)",
+					"value": 4
+				},
+				{
+					"label": "Analog input with internal pull-up (Multilevel sensor)",
+					"value": 5
+				}
+			]
+		},
+		{
+			"#": "47",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "IN1 (Activated): Value Sent to Group 2",
+			"description": "Value sent to devices in 2nd association group when the IN1 input is triggered. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "49",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "IN1 (Deactivated): Value Sent to Group 2",
+			"description": "Value sent to devices in 2nd association group when the IN1 input is deactivated. Relevant only if parameter 20 is set to 0 or 1 (alarm mode).",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "150",
+			"label": "IN1: Sensitivity",
+			"valueSize": 1,
+			"unit": "10 ms",
+			"minValue": 1,
+			"maxValue": 100,
+			"defaultValue": 10
+		},
+		{
+			"#": "152",
+			"label": "IN1: Alarm Cancellation Delay",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 3600,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "No delay",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "40[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN1: Send Scenes (Pressed 1x)"
+		},
+		{
+			"#": "40[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN1: Send Scenes (Pressed 2x)"
+		},
+		{
+			"#": "40[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN1: Send Scenes (Pressed 3x)"
+		},
+		{
+			"#": "40[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN1: Send Scenes (Held Down and Released)"
+		},
+		{
+			"#": "21",
+			"label": "IN2: Operating Mode",
+			"description": "Choose the mode of the IN2 input depending on the connected device.",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normally closed alarm input (Notification)",
+					"value": 0
+				},
+				{
+					"label": "Normally open alarm input (Notification)",
+					"value": 1
+				},
+				{
+					"label": "Momentary switch (Central Scene)",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch (Central Scene)",
+					"value": 3
+				},
+				{
+					"label": "Analog input without internal pull-up (Multilevel sensor)",
+					"value": 4
+				},
+				{
+					"label": "Analog input with internal pull-up (Multilevel sensor)",
+					"value": 5
+				}
+			]
+		},
+		{
+			"#": "52",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "IN2 (Activated): Value Sent to Group 3",
+			"description": "Value sent to devices in 3rd association group when the IN2 input is triggered. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "54",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "IN2 (Deactivated): Value Sent to Group 3",
+			"description": "Value sent to devices in 3rd association group when the IN2 input is deactivated. Relevant only if parameter 21 is set to 0 or 1 (alarm mode).",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "151",
+			"label": "IN2: Sensitivity",
+			"valueSize": 1,
+			"unit": "10 ms",
+			"minValue": 1,
+			"maxValue": 100,
+			"defaultValue": 10
+		},
+		{
+			"#": "153",
+			"label": "IN2: Alarm Cancellation Delay",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 3600,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "No delay",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "41[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN2: Send Scenes (Pressed 1x)"
+		},
+		{
+			"#": "41[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN2: Send Scenes (Pressed 2x)"
+		},
+		{
+			"#": "41[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN2: Send Scenes (Pressed 3x)"
+		},
+		{
+			"#": "41[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "IN2: Send Scenes (Held Down and Released)"
+		},
+		{
+			"#": "24",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Reverse Inputs"
+		},
+		{
+			"#": "63",
+			"label": "Analog Inputs: Reporting Threshold",
+			"valueSize": 1,
+			"unit": "0.1 V",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "64",
+			"label": "Analog Inputs: Reporting Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "65",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Internal Temperature Sensor: Reporting Threshold",
+			"valueSize": 2,
+			"unit": "0.1 °C",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "66",
+			"$purpose": "reporting_interval.temperature",
+			"label": "Internal Temperature Sensor: Reporting Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "67",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "External Sensors: Reporting Threshold",
+			"description": "Minimal change of external sensor values (DS18B20 or DHT22) that results in sending new report. 1 unit corresponds to 0.1 °C or 0.1% humidity.",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "68",
+			"$purpose": "reporting_interval.temperature",
+			"label": "External Sensors: Reporting Interval",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "154",
+			"label": "Output 1: Logic of Operation",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Contacts normally open, closed when active",
+					"value": 0
+				},
+				{
+					"label": "Contacts normally closed, open when active",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "156",
+			"label": "Output 1: Auto Off",
+			"valueSize": 2,
+			"unit": "0.1 seconds",
+			"minValue": 0,
+			"maxValue": 27000,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "155",
+			"label": "Output 2: Logic of Operation",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Contacts normally open, closed when active",
+					"value": 0
+				},
+				{
+					"label": "Contacts normally closed, open when active",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "157",
+			"label": "Output 2: Auto Off",
+			"valueSize": 2,
+			"unit": "0.1 seconds",
+			"minValue": 0,
+			"maxValue": 27000,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "25",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Reverse Outputs"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Power the device.\n2. Quickly, triple click the button on the device housing or a switch connected to IN1 or IN2.\n3. The LED will start blinking yellow.",
+		"exclusion": "1. Power the device.\n2. Quickly, triple click the button on the device housing or a switch connected to IN1 or IN2.\n3. The LED will start blinking yellow.",
+		"reset": "1. Press and hold the button to enter the menu.\n2. Release the button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After a few seconds the device restarts, which is signaled by the LED glowing red.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGBS-222/FGBS-222-T-EN-rev.1.2.6.pdf"
+	}
+}

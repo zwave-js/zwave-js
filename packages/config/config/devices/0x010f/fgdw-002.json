@@ -1,0 +1,300 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGDW-002",
+	"description": "Fibaro Door Window Sensor 2",
+	"devices": [
+		{
+			"productType": "0x0702",
+			"productId": "0x1000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0x2000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0x3000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0x4000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0x7000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0x6000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0x8000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0x9000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0xa000"
+		},
+		{
+			"productType": "0x0702",
+			"productId": "0xb000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"description": "Devices in this group will be switched on or off when the sensor is opened or closed (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Tamper",
+			"description": "Devices in this group will receive notifications when tampering is detected.",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Door/Window State",
+			"description": "State of the door/window when the magnet is close to the sensor",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Closed when magnet near",
+					"value": 0
+				},
+				{
+					"label": "Opened when magnet near",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "2[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual LED Indications: Opening/Closing Status Change"
+		},
+		{
+			"#": "2[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual LED Indications: Wake Up",
+			"defaultValue": 1
+		},
+		{
+			"#": "2[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual LED Indications: Device Tampering",
+			"defaultValue": 1
+		},
+		{
+			"#": "3[0x01]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group2",
+			"defaultValue": 1
+		},
+		{
+			"#": "3[0x02]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group3",
+			"defaultValue": 1
+		},
+		{
+			"#": "11",
+			"label": "2nd Association Group Triggers",
+			"description": "Events which result in sending on/off commands to devices added to the 2nd association group",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Switch after opening and closing",
+					"value": 0
+				},
+				{
+					"label": "Switch after opening (Parameter 12)",
+					"value": 1
+				},
+				{
+					"label": "Switch after closing (Parameter 13)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association for Opening: Value Sent",
+			"description": "Value sent to devices in 2nd association group when opening is detected. Values 1-99 set an associated device to a specified level.",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "13",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association for Closing: Value Sent",
+			"description": "Value sent to devices in 2nd association group when closing is detected. Values 1-99 set an associated device to a specified level.",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "14",
+			"label": "Association for Opening: Time Delay",
+			"description": "Time that must elapse from opening to send the command frame to devices in 2nd association group",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 0
+		},
+		{
+			"#": "15",
+			"label": "Association for Closing: Time Delay",
+			"description": "Time that must elapse from closing to send the command frame to devices in 2nd association group",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 0
+		},
+		{
+			"#": "30",
+			"label": "Tamper: Alarm Cancellation Delay",
+			"description": "Time period after which a tamper alarm will be cancelled",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 5
+		},
+		{
+			"#": "31",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send Alarm Report: Tamper Cancellation",
+			"description": "Reporting cancellation of tamper alarm to the controller and 3rd association group",
+			"defaultValue": 1
+		},
+		{
+			"#": "50",
+			"label": "Interval of Temperature Measurements",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 300,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "51",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Reports Threshold",
+			"description": "Change of temperature in comparison with last reported, resulting in temperature report being sent",
+			"valueSize": 2,
+			"unit": "0.1 °C",
+			"minValue": 0,
+			"maxValue": 300,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "52",
+			"$purpose": "reporting_interval.temperature",
+			"label": "Interval of Temperature Reports",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32400,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "53",
+			"$purpose": "calibration.temperature",
+			"label": "Temperature Offset",
+			"description": "The value to be added to the actual temperature, measured by the sensor",
+			"valueSize": 2,
+			"unit": "0.1 °C",
+			"minValue": -1000,
+			"maxValue": 1000,
+			"defaultValue": 0
+		},
+		{
+			"#": "54",
+			"label": "Temperature Alarm Reports",
+			"description": "Temperature alarms reported to the Z-Wave controller. Thresholds are set in parameters 55 and 56.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Temperature alarms disabled",
+					"value": 0
+				},
+				{
+					"label": "High temperature alarm",
+					"value": 1
+				},
+				{
+					"label": "Low temperature alarm",
+					"value": 2
+				},
+				{
+					"label": "High and low temperature alarms enabled",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "55",
+			"label": "High Temperature Alarm Threshold",
+			"valueSize": 2,
+			"unit": "0.1 °C",
+			"minValue": 1,
+			"maxValue": 600,
+			"defaultValue": 350
+		},
+		{
+			"#": "56",
+			"label": "Low Temperature Alarm Threshold",
+			"valueSize": 2,
+			"unit": "0.1 °C",
+			"minValue": 0,
+			"maxValue": 599,
+			"defaultValue": 100
+		}
+	],
+	"metadata": {
+		"inclusion": "Quickly, three times press one of the TMP buttons while holding the other button.",
+		"exclusion": "Quickly, three times press one of the TMP buttons while holding the other button.",
+		"reset": "1. Open the cover.\n2. Remove the battery.\n3. Install the battery while holding both TMP buttons.\n4. The LED indicator flashes slowly for 5 seconds. Keep holding the buttons.\n5. Release one button when the LED indicator starts flashing quickly.\n6. Click the released button once to confirm.\n7. Do not remove the battery until the LED indicator gives a long blink.\n8. The LED indicator blinks 5 times quickly to confirm the reset.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGDW-002/FGDW-002-EN-T-v1.3.pdf"
+	}
+}

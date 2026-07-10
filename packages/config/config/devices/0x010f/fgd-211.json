@@ -1,0 +1,308 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGD-211",
+	"description": "Universal Dimmer 500W",
+	"devices": [
+		{
+			"productType": "0x0100",
+			"productId": "0x0100",
+			"zwaveAllianceId": 88
+		},
+		{
+			"productType": "0x0100",
+			"productId": "0x0104"
+		},
+		{
+			"productType": "0x0100",
+			"productId": "0x0106"
+		},
+		{
+			"productType": "0x0100",
+			"productId": "0x0107"
+		},
+		{
+			"productType": "0x0100",
+			"productId": "0x0109"
+		},
+		{
+			"productType": "0x0100",
+			"productId": "0x100a"
+		},
+		{
+			"productType": "0x0100",
+			"productId": "0x300a"
+		},
+		{
+			"productType": "0x0100",
+			"productId": "0x400a"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Dimmer (S1)",
+			"description": "Devices in this group will be switched on or off and dimmed with the S1 switch.",
+			"maxNodes": 5
+		},
+		"2": {
+			"label": "Dimmer (S2)",
+			"description": "Devices in this group will be switched on or off and dimmed with the S2 switch.",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "templates/fibaro_template.json#all_on_off_function"
+		},
+		{
+			"#": "6",
+			"$import": "templates/fibaro_template.json#send_association_commands",
+			"label": "Sending Commands to Group 1 Devices (S1)"
+		},
+		{
+			"#": "7",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "S2: Check Device Status Before Sending Control Frame",
+			"description": "Not possible if roller blind switch is chosen in parameter 14. Requires parameter 19 set to 0.",
+			"defaultValue": 1
+		},
+		{
+			"#": "8",
+			"label": "Dimming Step At Automatic Control",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 1
+		},
+		{
+			"#": "9",
+			"label": "Time of Manual Dimming Between Extreme Values",
+			"valueSize": 1,
+			"unit": "10 ms",
+			"minValue": 1,
+			"maxValue": 255,
+			"defaultValue": 5,
+			"unsigned": true
+		},
+		{
+			"#": "10",
+			"label": "Time of Automatic Dimming Between Extreme Values",
+			"description": "Value 0 is required for inductive and capacitive devices unsuitable for dimming, e.g. fluorescent lamps and motors",
+			"valueSize": 1,
+			"unit": "10 ms",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 1,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Smooth level change disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "11",
+			"label": "Dimming Step At Manual Control",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 1
+		},
+		{
+			"#": "12",
+			"$if": "firmwareVersion <= 2.0",
+			"label": "Maximum Dimming Level",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 2,
+			"maxValue": 99,
+			"defaultValue": 2
+		},
+		{
+			"#": "12",
+			"$if": "firmwareVersion >= 2.1",
+			"label": "Maximum Dimming Level",
+			"description": "May not be lower than the minimum level set in parameter 13",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 2,
+			"maxValue": 99,
+			"defaultValue": 99
+		},
+		{
+			"#": "13",
+			"$if": "firmwareVersion <= 2.0",
+			"label": "Minimum Dimming Level",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 0,
+			"unsigned": true
+		},
+		{
+			"#": "13",
+			"$if": "firmwareVersion >= 2.1",
+			"label": "Minimum Dimming Level",
+			"description": "May not be higher than the maximum level set in parameter 12",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 1,
+			"maxValue": 98,
+			"defaultValue": 2
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion <= 2.1",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "14",
+			"$if": "firmwareVersion >= 2.2",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch",
+					"value": 1
+				},
+				{
+					"label": "Roller blind switch (Two switches operate the dimmer)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion <= 2.0",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Double Click Option",
+			"description": "Double click sets lighting at 100%"
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion >= 2.1",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Double Click Option",
+			"description": "Double click sets lighting at 100%",
+			"defaultValue": 1
+		},
+		{
+			"#": "16",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev"
+		},
+		{
+			"#": "17",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "3-Way Switch Function",
+			"description": "A second switch connected to S2 also controls the dimmer"
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Synchronizing Light Level for Associated Devices"
+		},
+		{
+			"#": "19",
+			"$import": "templates/fibaro_template.json#toggle_switch_behavior"
+		},
+		{
+			"#": "20",
+			"$if": "firmwareVersion <= 2.1",
+			"label": "Control Impulse Length",
+			"description": "Default is 110 for 50 Hz and 101 for 60 Hz. Extending the control impulse decreases the minimum dimmer level, e.g. to completely dim LED bulbs.",
+			"valueSize": 1,
+			"minValue": 100,
+			"maxValue": 170,
+			"defaultValue": 110,
+			"unsigned": true
+		},
+		{
+			"#": "20",
+			"$if": "firmwareVersion >= 2.2",
+			"label": "Control Impulse Length",
+			"description": "Default is 110 for 50 Hz and 101 for 60 Hz. Extending the control impulse decreases the minimum dimmer level, e.g. to completely dim LED bulbs.",
+			"valueSize": 1,
+			"minValue": 101,
+			"maxValue": 170,
+			"defaultValue": 110,
+			"unsigned": true
+		},
+		{
+			"#": "30",
+			"$import": "templates/fibaro_template.json#general_purpose_alarm_response",
+			"label": "Response to Alarm (Any Type)",
+			"description": "General alarm, water flooding, smoke, CO, CO2 or temperature alarm"
+		},
+		{
+			"#": "39",
+			"$import": "templates/fibaro_template.json#flashing_alarm_duration"
+		},
+		{
+			"#": "40",
+			"$if": "firmwareVersion >= 1.9 && firmwareVersion <= 2.0",
+			"label": "Updating the Dimming Level without the Switch",
+			"description": "The parameter's value changes depending on the dimming level",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 99,
+			"unsigned": true
+		},
+		{
+			"#": "40",
+			"$if": "firmwareVersion >= 2.1",
+			"label": "Updating the Dimming Level without the Switch",
+			"description": "The parameter's value changes depending on the dimming level",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 99,
+			"defaultValue": 99
+		},
+		{
+			"#": "41",
+			"$if": "firmwareVersion >= 1.9",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Scene Activation Functionality",
+			"description": "Sends Scene Activation commands to association group 3"
+		}
+	],
+	"metadata": {
+		"inclusion": "Quickly press the push-button connected to the S1 terminal or the B-button three times. For a toggle switch, perform 3 position changes.",
+		"exclusion": "Quickly press the push-button connected to the S1 terminal or the B-button three times. For a toggle switch, perform 3 position changes.",
+		"reset": "Press and hold the B-button for 3 seconds after connecting mains voltage to the device.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGD-211/FGD-211-EN-A-v1.03.pdf"
+	}
+}

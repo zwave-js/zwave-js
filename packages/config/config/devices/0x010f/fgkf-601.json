@@ -1,0 +1,552 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGKF-601",
+	"description": "Keyfob",
+	"devices": [
+		{
+			"productType": "0x1001",
+			"productId": "0x1000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0x2000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0x3000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0x4000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0x6000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0x7000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0x8000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0x9000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0xa000"
+		},
+		{
+			"productType": "0x1001",
+			"productId": "0xb000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Square - On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Square - Multilevel",
+			"description": "Devices in this group will be switched on or off and change their level by clicking or holding the button (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Circle - On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Circle - Multilevel",
+			"description": "Devices in this group will be switched on or off and change their level by clicking or holding the button (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Cross - On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "Cross - Multilevel",
+			"description": "Devices in this group will be switched on or off and change their level by clicking or holding the button (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"8": {
+			"label": "Triangle - On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"9": {
+			"label": "Triangle - Multilevel",
+			"description": "Devices in this group will be switched on or off and change their level by clicking or holding the button (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"10": {
+			"label": "Minus - On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"11": {
+			"label": "Minus - Multilevel",
+			"description": "Devices in this group will be switched on or off and change their level by clicking or holding the button (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"12": {
+			"label": "Plus - On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"13": {
+			"label": "Plus - Multilevel",
+			"description": "Devices in this group will be switched on or off and change their level by clicking or holding the button (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Lock Mode - Unlocking Sequence",
+			"description": "9-28086 - unlocking sequence calculated from button values",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 28086,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Lock mode disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "2",
+			"label": "Lock Mode - Time to Lock and Locking Button",
+			"description": "5-1791 - calculated value: time to lock in seconds (5-255) + 256 * value of locking button",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1791,
+			"defaultValue": 60,
+			"options": [
+				{
+					"label": "Lock mode disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "3",
+			"label": "First Scene Sequence",
+			"description": "9-28086 - value of sequence, activates scene with ID 7",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 28086,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Sequence disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4",
+			"label": "Second Scene Sequence",
+			"description": "9-28086 - value of sequence, activates scene with ID 8",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 28086,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Sequence disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Third Scene Sequence",
+			"description": "9-28086 - value of sequence, activates scene with ID 9",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 28086,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Sequence disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "6",
+			"label": "Fourth Scene Sequence",
+			"description": "9-28086 - value of sequence, activates scene with ID 10",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 28086,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Sequence disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "7",
+			"label": "Fifth Scene Sequence",
+			"description": "9-28086 - value of sequence, activates scene with ID 11",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 28086,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Sequence disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "8",
+			"label": "Sixth Scene Sequence",
+			"description": "9-28086 - value of sequence, activates scene with ID 12",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 28086,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Sequence disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "9",
+			"label": "Sequences - Timeout",
+			"description": "Time that must elapse from the last click of the button to check if the sequence is valid",
+			"valueSize": 1,
+			"unit": "0.1 seconds",
+			"minValue": 5,
+			"maxValue": 30,
+			"defaultValue": 10
+		},
+		{
+			"#": "10",
+			"label": "Single Button Associations - Operating Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click switches state to opposite",
+					"value": 0
+				},
+				{
+					"label": "Single click switches state to opposite, double click sets to maximum level",
+					"value": 1
+				},
+				{
+					"label": "Single click turns on, double click turns off",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Value Sent to Square Association Group",
+			"description": "1-99 - forcing level of associated devices",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Value Sent to Circle Association Group",
+			"description": "1-99 - forcing level of associated devices",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "13",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Value Sent to Cross Association Group",
+			"description": "1-99 - forcing level of associated devices",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "14",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Value Sent to Triangle Association Group",
+			"description": "1-99 - forcing level of associated devices",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "15",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Value Sent to Minus Association Group",
+			"description": "1-99 - forcing level of associated devices",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "16",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Value Sent to Plus Association Group",
+			"description": "1-99 - forcing level of associated devices",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "17",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Paired Buttons Association for Square and Circle"
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Paired Buttons Association for Cross and Triangle"
+		},
+		{
+			"#": "19",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Paired Buttons Association for Minus and Plus"
+		},
+		{
+			"#": "21[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Square Button Scenes: Pressed 1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "21[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Square Button Scenes: Pressed 2x"
+		},
+		{
+			"#": "21[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Square Button Scenes: Pressed 3x"
+		},
+		{
+			"#": "21[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Square Button Scenes: Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "22[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Circle Button Scenes: Pressed 1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "22[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Circle Button Scenes: Pressed 2x"
+		},
+		{
+			"#": "22[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Circle Button Scenes: Pressed 3x"
+		},
+		{
+			"#": "22[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Circle Button Scenes: Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "23[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Cross Button Scenes: Pressed 1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "23[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Cross Button Scenes: Pressed 2x"
+		},
+		{
+			"#": "23[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Cross Button Scenes: Pressed 3x"
+		},
+		{
+			"#": "23[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Cross Button Scenes: Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "24[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Triangle Button Scenes: Pressed 1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "24[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Triangle Button Scenes: Pressed 2x"
+		},
+		{
+			"#": "24[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Triangle Button Scenes: Pressed 3x"
+		},
+		{
+			"#": "24[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Triangle Button Scenes: Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "25[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Minus Button Scenes: Pressed 1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "25[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Minus Button Scenes: Pressed 2x"
+		},
+		{
+			"#": "25[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Minus Button Scenes: Pressed 3x"
+		},
+		{
+			"#": "25[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Minus Button Scenes: Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "26[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Plus Button Scenes: Pressed 1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "26[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Plus Button Scenes: Pressed 2x"
+		},
+		{
+			"#": "26[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Plus Button Scenes: Pressed 3x"
+		},
+		{
+			"#": "26[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Plus Button Scenes: Held Down and Released",
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x01]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group2",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x02]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group3",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x04]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group4",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x08]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group5",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x10]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x20]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 7th Association Group",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x40]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 8th Association Group",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x80]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 9th Association Group",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x100]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 10th Association Group",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x200]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 11th Association Group",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x400]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 12th Association Group",
+			"valueSize": 2,
+			"defaultValue": 1
+		},
+		{
+			"#": "29[0x800]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 13th Association Group",
+			"valueSize": 2,
+			"defaultValue": 1
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Insert the battery to power the device.\n2. Click any button three times.\n3. The LED pulses white while adding is in progress.\n4. Successful adding is confirmed by a green LED.",
+		"exclusion": "1. Click the Circle and Minus buttons simultaneously.\n2. Click Triangle or Cross until the LED glows green.\n3. Click Plus.",
+		"reset": "1. Click the Circle and Minus buttons simultaneously.\n2. Click Triangle or Cross until the LED glows yellow.\n3. Click Plus.\nAlternatively, for an emergency reset on start-up, remove the battery, then hold Square and Plus while inserting the battery.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGKF-601/FGKF-601-EN-T-v1.1.pdf"
+	}
+}

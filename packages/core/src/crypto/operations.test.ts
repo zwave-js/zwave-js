@@ -1,6 +1,11 @@
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
-import { computeCMAC, computeMAC } from "./operations.js";
+import {
+	computeCMAC,
+	computeMAC,
+	decryptAES256OFB,
+	encryptAES256OFB,
+} from "./operations.js";
 
 function assertBufferEquals(
 	expect: ExpectStatic,
@@ -73,4 +78,32 @@ test(`computeCMAC() -> should work correctly (part 4)`, async (t) => {
 	const expected = Bytes.from("51F0BEBF7E3B9D92FC49741779363CFE", "hex");
 	const actual = await computeCMAC(plaintext, key);
 	assertBufferEquals(t.expect, actual, expected);
+});
+
+test(`encryptAES256OFB() -> should match the NIST SP 800-38A vector`, async (t) => {
+	// Test vector taken from NIST SP 800-38A, F.4.5 (OFB-AES256.Encrypt)
+	const key = Bytes.from(
+		"603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+		"hex",
+	);
+	const iv = Bytes.from("000102030405060708090a0b0c0d0e0f", "hex");
+	const plaintext = Bytes.from("6bc1bee22e409f96e93d7e117393172a", "hex");
+	const expected = Bytes.from("dc7e84bfda79164b7ecd8486985d3860", "hex");
+	const actual = await encryptAES256OFB(plaintext, key, iv);
+	assertBufferEquals(t.expect, actual, expected);
+});
+
+test(`decryptAES256OFB() -> should invert encryptAES256OFB()`, async (t) => {
+	const key = Bytes.from(
+		"603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+		"hex",
+	);
+	const iv = Bytes.from("000102030405060708090a0b0c0d0e0f", "hex");
+	const plaintext = Bytes.from(
+		"00112233445566778899aabbccddeeff102030405060708090a0b0c0d0e0f0ff",
+		"hex",
+	);
+	const ciphertext = await encryptAES256OFB(plaintext, key, iv);
+	const roundtrip = await decryptAES256OFB(ciphertext, key, iv);
+	assertBufferEquals(t.expect, roundtrip, plaintext);
 });
