@@ -17,7 +17,10 @@ import {
 	type ParamInfoMap,
 	parseConditionalParamInformationMap,
 } from "./ParamInformation.js";
-import type { ConditionalConfigContext } from "./shared.js";
+import {
+	type ConditionalConfigContext,
+	scopeContextToEndpoint,
+} from "./shared.js";
 
 export class ConditionalEndpointConfig
 	implements ConditionalItem<EndpointConfig>
@@ -113,8 +116,7 @@ Endpoint ${index}: found non-numeric group id "${key}" in associations`,
 
 		// Param references in conditions inside this endpoint's section
 		// resolve against this endpoint's own parameters
-		const scopedContext: ConditionalConfigContext | undefined = context
-			&& { ...context, endpoint: this.index };
+		const scopedContext = scopeContextToEndpoint(context, this.index);
 
 		const ret: EndpointConfig = {
 			index: this.index,

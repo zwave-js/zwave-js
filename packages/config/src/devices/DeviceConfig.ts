@@ -62,6 +62,7 @@ import {
 import { ConditionalSceneConfig, type SceneConfig } from "./SceneConfig.js";
 import type {
 	ConditionalConfigContext,
+	DeviceID,
 	FirmwareVersionRange,
 } from "./shared.js";
 
@@ -781,6 +782,79 @@ scene number ${keyNum} must be between 1 and 255`,
 		}
 
 		this.referencedParamValues = collectReferencedParamValues(definition);
+
+		// Cyclic references between parameter conditions would cause endless
+		// re-evaluation loops at runtime, so they make the whole config invalid.
+		// This also guards user-provided configs, which bypass the lint.
+		this.validateNoParamReferenceCycles(filename);
+	}
+
+	private validateNoParamReferenceCycles(filename: string): void {
+		const refsIn = (condition: string | undefined): number[] => {
+			if (!condition) return [];
+			try {
+				return collectParamValueReferences(parseLogic(condition))
+					.map((ref) => ref.parameter);
+			} catch {
+				// Invalid conditions throw at evaluation time
+				return [];
+			}
+		};
+
+		const scopes = new Map<number, ConditionalParamInfoMap>();
+		if (this.paramInformation) scopes.set(0, this.paramInformation);
+		if (this.endpoints) {
+			for (const [index, ep] of this.endpoints) {
+				if (ep.paramInformation) {
+					scopes.set(index, ep.paramInformation);
+				}
+			}
+		}
+
+		for (const [scope, paramInformation] of scopes) {
+			// References only resolve within their own scope, so each scope has its own graph
+			const dependencies = new Map<number, Set<number>>();
+			for (const [key, variants] of paramInformation) {
+				for (const variant of variants) {
+					const refs = [
+						...refsIn(variant.condition),
+						...variant.options.flatMap((option) =>
+							refsIn(option.condition)
+						),
+					];
+					if (refs.length === 0) continue;
+					if (!dependencies.has(key.parameter)) {
+						dependencies.set(key.parameter, new Set());
+					}
+					for (const ref of refs) {
+						dependencies.get(key.parameter)!.add(ref);
+					}
+				}
+			}
+
+			const done = new Set<number>();
+			const visit = (node: number, path: number[]): void => {
+				if (done.has(node)) return;
+				const cycleStart = path.indexOf(node);
+				if (cycleStart !== -1) {
+					const cycle = [...path.slice(cycleStart), node]
+						.map((parameter) => `#${parameter}`)
+						.join(" -> ");
+					throwInvalidConfig(
+						`device`,
+						`packages/config/config/devices/${filename}:
+conditions referencing config parameter values must not form cycles${
+							scope > 0 ? ` (endpoint ${scope})` : ""
+						}: ${cycle}`,
+					);
+				}
+				for (const dep of dependencies.get(node) ?? []) {
+					visit(dep, [...path, node]);
+				}
+				done.add(node);
+			};
+			for (const node of dependencies.keys()) visit(node, []);
+		}
 	}
 
 	public readonly filename: string;
@@ -885,6 +959,8 @@ export class DeviceConfig {
 			fallbackDirs?: string[];
 			relative?: boolean;
 			context?: ConditionalConfigContext;
+			/** @deprecated Use {@link context} instead */
+			deviceId?: DeviceID;
 		},
 	): Promise<DeviceConfig> {
 		const ret = await ConditionalDeviceConfig.from(
@@ -893,7 +969,7 @@ export class DeviceConfig {
 			isEmbedded,
 			options,
 		);
-		return ret.evaluate(options.context);
+		return ret.evaluate(options.context ?? options.deviceId);
 	}
 
 	public constructor(

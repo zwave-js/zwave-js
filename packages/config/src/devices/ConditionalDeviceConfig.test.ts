@@ -884,3 +884,78 @@ test("param value references in endpoint sections resolve against that endpoint"
 		}),
 	).toBeDefined();
 });
+
+test("throws when param value references form a cycle", (t) => {
+	const json = {
+		manufacturer: "Test",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with cyclic param value references",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				$if: "#2 == 1",
+				label: "Param 1",
+				valueSize: 1,
+				defaultValue: 0,
+				minValue: 0,
+				maxValue: 1,
+			},
+			{
+				"#": "2",
+				$if: "#1 == 1",
+				label: "Param 2",
+				valueSize: 1,
+				defaultValue: 0,
+				minValue: 0,
+				maxValue: 1,
+			},
+		],
+	};
+
+	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
+		.toThrow("must not form cycles: #1 -> #2 -> #1");
+});
+
+test("throws when a param value reference references the guarded param itself", (t) => {
+	const json = {
+		manufacturer: "Test",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with a self-referencing param condition",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				$if: "#1 != 5",
+				label: "Param 1",
+				valueSize: 1,
+				defaultValue: 0,
+				minValue: 0,
+				maxValue: 10,
+			},
+		],
+	};
+
+	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
+		.toThrow("must not form cycles: #1 -> #1");
+});

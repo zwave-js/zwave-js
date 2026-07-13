@@ -23,6 +23,23 @@ export interface ConditionalConfigContext extends DeviceID {
 		bitMask?: number,
 	) => number | undefined;
 
-	/** @internal The endpoint scope param references are resolved against during evaluation */
-	endpoint?: number;
+	/** @internal Derived from getCachedParamValue with the current endpoint scope baked in */
+	getScopedParamValue?: (
+		parameter: number,
+		bitMask?: number,
+	) => number | undefined;
+}
+
+/** Returns a copy of the context where param references resolve against the given endpoint */
+export function scopeContextToEndpoint(
+	context: ConditionalConfigContext | undefined,
+	endpoint: number,
+): ConditionalConfigContext | undefined {
+	if (!context?.getCachedParamValue) return context;
+	const { getCachedParamValue } = context;
+	return {
+		...context,
+		getScopedParamValue: (parameter, bitMask) =>
+			getCachedParamValue(endpoint, parameter, bitMask),
+	};
 }

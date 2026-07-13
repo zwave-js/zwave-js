@@ -1,6 +1,7 @@
 import {
 	CommandClasses,
 	type ConfigurationMetadata,
+	InterviewStage,
 	type ValueID,
 } from "@zwave-js/core";
 import { wait } from "alcalzone-shared/async";
@@ -74,6 +75,10 @@ integrationTest(
 		async testBody(t, driver, node, mockController, mockNode) {
 			const CC = CommandClasses.Configuration;
 
+			// Regression test: all changes must be applied without a re-interview
+			let reInterviews = 0;
+			node.on("interview started", () => reInterviews++);
+
 			// The value of param 1 (0) was queried during the interview before
 			// interpreting the other definitions, so the fallback variant applies
 			const meta2Before = node.getValueMetadata({
@@ -134,6 +139,10 @@ integrationTest(
 			}) as ConfigurationMetadata;
 			t.expect(meta2Restored.label).toBe("Basic option");
 			t.expect(node.deviceConfig?.compat).toBeUndefined();
+
+			// Regression test: no re-interview was triggered at any point
+			t.expect(reInterviews).toBe(0);
+			t.expect(node.interviewStage).toBe(InterviewStage.Complete);
 		},
 	},
 );
@@ -191,6 +200,10 @@ integrationTest(
 
 		async testBody(t, driver, node, mockController, mockNode) {
 			const CC = CommandClasses.Configuration;
+
+			// Regression test: all changes must be applied without a re-interview
+			let reInterviews = 0;
+			node.on("interview started", () => reInterviews++);
 
 			// Param 11 is referenced by conditions, so its value was queried
 			// during the interview, even though its definition does not apply in Mode A
@@ -255,6 +268,10 @@ integrationTest(
 				property: 12,
 			}) as ConfigurationMetadata;
 			t.expect(meta12Fallback.label).toBe("Default variant");
+
+			// Regression test: no re-interview was triggered at any point
+			t.expect(reInterviews).toBe(0);
+			t.expect(node.interviewStage).toBe(InterviewStage.Complete);
 		},
 	},
 );
@@ -319,6 +336,10 @@ integrationTest(
 		async testBody(t, driver, node, mockController, mockNode) {
 			const CC = CommandClasses.Configuration;
 
+			// Regression test: all changes must be applied without a re-interview
+			let reInterviews = 0;
+			node.on("interview started", () => reInterviews++);
+
 			// The root device's param 1 has value 1, but the condition on the
 			// endpoint resolves against the endpoint's own param 1 (value 0)
 			t.expect(node.getValue({ commandClass: CC, property: 1 })).toBe(1);
@@ -347,6 +368,10 @@ integrationTest(
 				property: 2,
 			}) as ConfigurationMetadata;
 			t.expect(meta2After.label).toBe("Endpoint extra");
+
+			// Regression test: no re-interview was triggered at any point
+			t.expect(reInterviews).toBe(0);
+			t.expect(node.interviewStage).toBe(InterviewStage.Complete);
 		},
 	},
 );

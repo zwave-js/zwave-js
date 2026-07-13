@@ -19,7 +19,12 @@ import {
 	type ValueDB,
 	type ValueID,
 } from "@zwave-js/core";
-import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
+import {
+	Bytes,
+	type BytesView,
+	formatId,
+	getErrorMessage,
+} from "@zwave-js/shared";
 import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
@@ -410,6 +415,15 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 				this._reevaluateDeviceConfigAgain = false;
 				this.doReevaluateDeviceConfig();
 			} while (this._reevaluateDeviceConfigAgain);
+		} catch (e) {
+			// This runs inside a value DB event listener, so errors must not propagate
+			this.driver.controllerLog.logNode(
+				this.id,
+				`Failed to re-evaluate the device config: ${
+					getErrorMessage(e)
+				}`,
+				"error",
+			);
 		} finally {
 			this._reevaluatingDeviceConfig = false;
 		}
@@ -424,21 +438,39 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 		const snapshot = this.snapshotReferencedParamValues();
 		if (!snapshot) return;
 		// The value DB also emits events when a value did not actually change
-		if (
-			this._lastReferencedParamValues
-			&& [...snapshot].every(([key, value]) =>
-				this._lastReferencedParamValues!.get(key) === value
-			)
-		) {
-			return;
+		const changedEndpoints = new Set<number>();
+		const changes: string[] = [];
+		for (const [key, value] of snapshot) {
+			const oldValue = this._lastReferencedParamValues?.get(key);
+			if (this._lastReferencedParamValues && oldValue === value) continue;
+			const [endpoint, parameter] = key.split(":").map(Number);
+			changedEndpoints.add(endpoint);
+			changes.push(
+				`${
+					endpoint !== 0
+						? `endpoint ${endpoint}, `
+						: ""
+				}#${parameter}: ${oldValue} => ${value}`,
+			);
 		}
+		if (this._lastReferencedParamValues && changes.length === 0) return;
 		this._lastReferencedParamValues = snapshot;
+
+		this.driver.controllerLog.logNode(
+			this.id,
+			`Re-evaluating device config, because referenced config parameter values changed: ${
+				changes.join(", ")
+			}`,
+			"debug",
+		);
 
 		this.deviceConfig = conditionalConfig.evaluate(context);
 
-		// Apply changed param metadata. Compat flags are read on access and
-		// need no further action.
+		// Apply changed param metadata. References only resolve within their own
+		// endpoint scope, so only the endpoints with changed values are affected.
+		// Compat flags are read on access and need no further action.
 		for (const ep of this.getAllEndpoints()) {
+			if (!changedEndpoints.has(ep.index)) continue;
 			refreshConfigParamMetadataFromConfigFile(
 				this.driver,
 				this.id,
@@ -452,7 +484,15 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 			this.queryUnknownConfigParamValues();
 		}
 
-		void this.updateCurrentDeviceConfigHash();
+		void this.updateCurrentDeviceConfigHash(changes).catch((e) =>
+			this.driver.controllerLog.logNode(
+				this.id,
+				`Failed to update the device config hash: ${
+					getErrorMessage(e)
+				}`,
+				"error",
+			)
+		);
 	}
 
 	/** Queries the values of readable config params that have no cached value yet */
@@ -513,20 +553,39 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 				if (!endpoint?.supportsCC(CommandClasses.Configuration)) {
 					continue;
 				}
+				this.driver.logNode(this.id, {
+					endpoint: endpointIndex,
+					message:
+						`querying parameter #${parameter}, which appeared after re-evaluating the device config...`,
+					direction: "outbound",
+				});
 				// Poll priority would enforce the spec-mandated polling delays,
 				// but these are one-shot catch-up queries like during the interview
-				await endpoint.commandClasses.Configuration
+				const value = await endpoint.commandClasses.Configuration
 					.withOptions({ priority: MessagePriority.NodeQuery })
 					.get(parameter)
 					.catch(
 						// A missing response means the value stays unknown
 						() => undefined,
 					);
+				if (value == undefined) {
+					this.driver.logNode(this.id, {
+						endpoint: endpointIndex,
+						message:
+							`received no value for parameter #${parameter}`,
+						direction: "inbound",
+						level: "warn",
+					});
+				}
 			}
-		})();
+		})().catch(() => {
+			// The individual queries handle their own errors
+		});
 	}
 
-	private async updateCurrentDeviceConfigHash(): Promise<void> {
+	private async updateCurrentDeviceConfigHash(
+		changes: readonly string[],
+	): Promise<void> {
 		const config = this._deviceConfig;
 		if (!config) return;
 		const oldHash = this._currentDeviceConfigHash;
@@ -539,7 +598,9 @@ export abstract class DeviceConfigMixin extends FirmwareUpdateMixin
 			// values, but user-provided configs may do it anyway
 			this.driver.controllerLog.logNode(
 				this.id,
-				"A config parameter change altered device config settings that only take effect after a re-interview",
+				`A config parameter change (${
+					changes.join(", ")
+				}) altered device config settings that only take effect after a re-interview. Re-interview the node to apply them.`,
 				"warn",
 			);
 		}

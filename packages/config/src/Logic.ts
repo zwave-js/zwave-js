@@ -59,11 +59,14 @@ function paramComparison(compare: (a: number, b: number) => boolean) {
 		comparand: number,
 	): boolean {
 		const context = this as ConditionalConfigContext | undefined;
-		const value = context?.getCachedParamValue?.(
-			context.endpoint ?? 0,
-			parameter,
-			bitMask ?? undefined,
-		);
+		// Contexts evaluated outside an endpoint scope resolve against the root device
+		const value = context?.getScopedParamValue
+			? context.getScopedParamValue(parameter, bitMask ?? undefined)
+			: context?.getCachedParamValue?.(
+				0,
+				parameter,
+				bitMask ?? undefined,
+			);
 		// Comparisons involving unknown parameter values evaluate as if they didn't exist
 		if (value == undefined) return true;
 		return compare(value, comparand);

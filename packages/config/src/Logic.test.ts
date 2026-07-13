@@ -1,24 +1,40 @@
-import { parsePartial } from "@zwave-js/core";
 import { test } from "vitest";
-import { evaluate } from "./Logic.js";
+import { collectParamValueReferences, evaluate, parseLogic } from "./Logic.js";
 
-/** Builds an evaluation context with parameter values keyed by `endpoint:parameter` */
+/**
+ * Builds an evaluation context with parameter values keyed by
+ * `endpoint:parameter` or `endpoint:parameter[bitMask]`, exactly as they
+ * would be stored in the value DB. Pass `endpointScope` to evaluate like
+ * inside that endpoint's config section.
+ */
 function withParamValues(
 	context: Record<string, unknown>,
 	paramValues: Record<string, number>,
+	endpointScope?: number,
 ): Record<string, unknown> {
+	const lookup = (
+		endpoint: number,
+		parameter: number,
+		bitMask?: number,
+	): number | undefined =>
+		paramValues[
+			`${endpoint}:${parameter}${
+				bitMask != undefined
+					? `[0x${bitMask.toString(16).padStart(2, "0")}]`
+					: ""
+			}`
+		];
 	return {
 		...context,
-		getCachedParamValue: (
-			endpoint: number,
-			parameter: number,
-			bitMask?: number,
-		) => {
-			const fullValue = paramValues[`${endpoint}:${parameter}`];
-			if (fullValue == undefined) return undefined;
-			if (bitMask == undefined) return fullValue;
-			return parsePartial(fullValue, bitMask, false);
-		},
+		getCachedParamValue: lookup,
+		...(endpointScope != undefined
+			? {
+				getScopedParamValue: (
+					parameter: number,
+					bitMask?: number,
+				) => lookup(endpointScope, parameter, bitMask),
+			}
+			: {}),
 	};
 }
 
@@ -139,15 +155,26 @@ const tests = [
 		context: withParamValues({ firmwareVersion: "1.7" }, { "0:40": 1 }),
 		expected: false,
 	},
+	// An unknown comparison makes an entire || condition true
+	{
+		logic: "#1 == 0 || #2 == 1",
+		context: withParamValues({}, { "0:2": 5 }),
+		expected: true,
+	},
+	{
+		logic: "(#1 == 0 || #2 == 1) && firmwareVersion >= 1.7",
+		context: withParamValues({ firmwareVersion: "1.6" }, { "0:2": 5 }),
+		expected: false,
+	},
 	// Partial parameters
 	{
 		logic: "#71[0x0f] == 1",
-		context: withParamValues({}, { "0:71": 0x21 }),
+		context: withParamValues({}, { "0:71[0x0f]": 1 }),
 		expected: true,
 	},
 	{
 		logic: "#71[0xf0] == 2",
-		context: withParamValues({}, { "0:71": 0x21 }),
+		context: withParamValues({}, { "0:71[0xf0]": 2 }),
 		expected: true,
 	},
 	// Negative values
@@ -161,26 +188,37 @@ const tests = [
 		context: withParamValues({}, { "0:9": -1 }),
 		expected: true,
 	},
+	// Multi-bit partials are signed by default and stored with their sign
 	{
-		logic: "#9[0x0f] == 15",
-		context: withParamValues({}, { "0:9": -1 }),
+		logic: "#9[0x0f] == -1",
+		context: withParamValues({}, { "0:9[0x0f]": -1 }),
+		expected: true,
+	},
+	{
+		logic: "#9[0x0f] > -1",
+		context: withParamValues({}, { "0:9[0x0f]": -1 }),
+		expected: false,
+	},
+	{
+		logic: "#9[0x0f] > -1",
+		context: withParamValues({}, { "0:9[0x0f]": 0 }),
 		expected: true,
 	},
 	// References resolve against the endpoint scope in the context
 	{
 		logic: "#71 == 2",
-		context: withParamValues({ endpoint: 2 }, {
+		context: withParamValues({}, {
 			"0:71": 1,
 			"2:71": 2,
-		}),
+		}, 2),
 		expected: true,
 	},
 	{
 		logic: "#71 == 1",
-		context: withParamValues({ endpoint: 2 }, {
+		context: withParamValues({}, {
 			"0:71": 1,
 			"2:71": 2,
-		}),
+		}, 2),
 		expected: false,
 	},
 	{
@@ -206,3 +244,13 @@ for (let i = 1; i <= tests.length; i++) {
 		},
 	);
 }
+
+test("collectParamValueReferences finds references in all branches", (t) => {
+	const refs = collectParamValueReferences(
+		parseLogic("#1 == 0 || (#2[0x03] == 1 && firmwareVersion >= 1.0)"),
+	);
+	t.expect(refs).toMatchObject([
+		{ parameter: 1, valueBitMask: undefined },
+		{ parameter: 2, valueBitMask: 0x03 },
+	]);
+});

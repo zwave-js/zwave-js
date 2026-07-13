@@ -13,6 +13,7 @@ import {
 	type GetNode,
 	type GetSupportedCCVersion,
 	type GetValueDB,
+	type LogNode,
 	type LogPayload,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
@@ -400,7 +401,7 @@ function configParamInfoToMetadata(
  * and removal/hiding of old params.
  */
 export function refreshConfigParamMetadataFromConfigFile(
-	ctx: GetValueDB & GetDeviceConfig,
+	ctx: GetValueDB & GetDeviceConfig & LogNode,
 	nodeId: number,
 	endpointIndex: number,
 ): void {
@@ -411,6 +412,20 @@ export function refreshConfigParamMetadataFromConfigFile(
 	);
 
 	const valueDB = ctx.getValueDB(nodeId);
+
+	const logParamChange = (
+		parameter: number,
+		bitMask: number | undefined,
+		change: string,
+	): void => {
+		ctx.logNode(nodeId, {
+			endpoint: endpointIndex,
+			message: `parameter #${parameter}${
+				bitMask != undefined ? `[${num2hex(bitMask)}]` : ""
+			} ${change}`,
+			level: "debug",
+		});
+	};
 
 	// Track which param keys exist in the current config
 	const configParamKeys = new Set<string>();
@@ -434,6 +449,11 @@ export function refreshConfigParamMetadataFromConfigFile(
 				if (existing) {
 					valueDB.setMetadata(valueId, undefined);
 					valueDB.removeValue(valueId);
+					logParamChange(
+						param.parameter,
+						param.valueBitMask,
+						"is now hidden",
+					);
 				}
 				continue;
 			}
@@ -445,6 +465,13 @@ export function refreshConfigParamMetadataFromConfigFile(
 				// from the configuration file. Replace it entirely
 				if (!valueEquals(existing, newMeta)) {
 					valueDB.setMetadata(valueId, newMeta);
+					logParamChange(
+						param.parameter,
+						param.valueBitMask,
+						existing
+							? "metadata was updated from the device config"
+							: "was added from the device config",
+					);
 				}
 			} else {
 				// Device-reported param - overwrite informational fields
@@ -457,6 +484,11 @@ export function refreshConfigParamMetadataFromConfigFile(
 				};
 				if (!valueEquals(existing, merged)) {
 					valueDB.setMetadata(valueId, merged);
+					logParamChange(
+						param.parameter,
+						param.valueBitMask,
+						"metadata was updated from the device config",
+					);
 				}
 			}
 		}
@@ -480,6 +512,13 @@ export function refreshConfigParamMetadataFromConfigFile(
 		if (!configParamKeys.has(paramKey)) {
 			valueDB.setMetadata(meta, undefined);
 			valueDB.removeValue(meta);
+			logParamChange(
+				meta.property,
+				typeof meta.propertyKey === "number"
+					? meta.propertyKey
+					: undefined,
+				"was removed, because it is no longer defined in the device config",
+			);
 		}
 	}
 }
@@ -1473,6 +1512,8 @@ export class ConfigurationCC extends CommandClass {
 		}
 
 		await this.refreshValues(ctx, {
+			// The referenced params were just queried above
+			skipParameters: referencedParams,
 			tag: "interview",
 			onProgress: (completed, total) => {
 				// To support reporting granular progress for devices where we don't
@@ -1583,7 +1624,10 @@ export class ConfigurationCC extends CommandClass {
 
 	public async refreshValues(
 		ctx: RefreshValuesContext,
-		options?: RefreshValuesOptions,
+		options?: RefreshValuesOptions & {
+			/** Parameters whose values were already queried and can be skipped */
+			skipParameters?: ReadonlySet<number>;
+		},
 	): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
@@ -1606,7 +1650,7 @@ export class ConfigurationCC extends CommandClass {
 			if (paramInfo?.size) {
 				const parametersToQuery = getReadableConfigParameters(
 					paramInfo,
-				);
+				).filter((p) => !options?.skipParameters?.has(p));
 				for (const [i, parameter] of parametersToQuery.entries()) {
 					// Query the current value
 					ctx.logNode(node.id, {
@@ -1648,7 +1692,7 @@ export class ConfigurationCC extends CommandClass {
 				this.getDefinedValueIDs(ctx)
 					.map((v) => v.property)
 					.filter((p) => typeof p === "number"),
-			);
+			).filter((p) => !options?.skipParameters?.has(p));
 			for (const [i, param] of parameters.entries()) {
 				if (
 					this.getParamInformation(ctx, param).readable !== false

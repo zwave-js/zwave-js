@@ -22,14 +22,35 @@ Version comparisons support versions with and without a patch number. If the pat
 Some devices change the definition of config parameters depending on the value of other parameters. To support this, conditions can reference the current value of a config parameter using the same syntax as the `"#"` property of parameter definitions, prefixed with `#`:
 
 ```json
-// Applies when parameter 71 is currently set to 1
-{ "$if": "#71 == 1" }
-
-// Applies when the partial parameter 9, bitmask 0x0f is greater than -1
-{ "$if": "#9[0x0f] > -1" }
-
-// Can be combined with other conditions
-{ "$if": "#40 >= 2 && firmwareVersion >= 1.7" }
+"paramInformation": [
+	// ...
+	{
+		// This parameter only exists when parameter 71 is currently set to 1
+		"#": "72",
+		"$if": "#71 == 1",
+		"label": "Slat Turn Time"
+		// ...
+	},
+	{
+		"#": "73",
+		"label": "Motor Direction",
+		// Definitions can also reference partial parameters,
+		// and combine references with other conditions
+		"options": [
+			{
+				"$if": "#9[0x0f] > -1",
+				"label": "Reversed",
+				"value": 1
+			},
+			{
+				"$if": "#40 >= 2 && firmwareVersion >= 1.7",
+				"label": "Inverted",
+				"value": 2
+			}
+			// ...
+		]
+	}
+]
 ```
 
 Parameter references may only be compared with number literals (no versions). A parameter must be referenced the same way it is defined: reference a full parameter with `#<param>` and a partial parameter with `#<param>[<bitmask>]` using a bitmask that matches a defined partial. Partial parameter values are interpreted with the signedness of the parameter definition, like elsewhere in Z-Wave JS.
@@ -43,7 +64,7 @@ Z-Wave JS re-evaluates the device config whenever the value of a referenced para
 - config parameter definitions and their options
 - `compat` flags which do not influence the interview
 
-They must not be used anywhere else, in particular not in the top-level `manufacturer`/`label`/`description` properties, `metadata`, associations, endpoint definitions, or `compat` flags which influence the interview (e.g. `addCCs`, `removeCCs`, `removeEndpoints`). In addition, referenced parameters must be defined in the same file (in the same endpoint scope), must be referenced the same way they are defined (full vs. partial), must not be `hidden`, and conditions must not form reference cycles between parameters. All of this is checked by `yarn lint:zwave`.
+They must not be used anywhere else, in particular not in the top-level `manufacturer`/`label`/`description` properties, `metadata`, associations, endpoint definitions, or `compat` flags which influence the interview (e.g. `addCCs`, `removeCCs`, `removeEndpoints`). In addition, referenced parameters must be defined in the same file (in the same endpoint scope), must be referenced the same way they are defined (full vs. partial), and must not be `hidden`. All of this is checked by `yarn lint:zwave`. Conditions must not form reference cycles between parameters (including self-references) — this makes the entire config file invalid.
 
 You can use `"$if"` in the following locations:
 

@@ -1,11 +1,9 @@
 import { configDir } from "#config_dir";
 import {
-	encodePartial,
 	getBitMaskWidth,
 	getIntegerLimits,
 	getLegalRangeForBitMask,
 	getMinimumShiftForBitMask,
-	parsePartial,
 } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
 import { reportProblem } from "@zwave-js/maintenance";
@@ -211,9 +209,20 @@ function unconditionalComesLast(
 }
 
 type LintVariant = DeviceID & {
-	/** Assumed full config parameter values, keyed by `endpoint:parameter` */
+	/** Assumed config parameter values, keyed by {@link paramValueKey} */
 	paramValues?: ReadonlyMap<string, number>;
 };
+
+/** Key for assumed parameter values, matching the shape of the reference */
+function paramValueKey(
+	endpoint: number,
+	parameter: number,
+	bitMask?: number,
+): string {
+	return `${endpoint}:${parameter}${
+		bitMask != undefined ? `[${bitMask}]` : ""
+	}`;
+}
 
 /** Builds the evaluation context for a lint variant */
 function lintVariantToContext(
@@ -223,43 +232,40 @@ function lintVariantToContext(
 	const { paramValues, ...deviceId } = variant;
 	return {
 		...deviceId,
-		getCachedParamValue: (endpoint, parameter, bitMask) => {
-			const fullValue = paramValues.get(`${endpoint}:${parameter}`);
-			if (fullValue == undefined) return undefined;
-			if (bitMask == undefined) return fullValue;
-			return parsePartial(fullValue, bitMask, false);
-		},
+		getCachedParamValue: (endpoint, parameter, bitMask) =>
+			paramValues.get(paramValueKey(endpoint, parameter, bitMask)),
 	};
 }
 
-/** Determines whether a comparison with a partial param value in the range [0...maxValue] has a constant outcome */
+/** Determines whether a comparison with a partial param value in the range [minValue...maxValue] has a constant outcome */
 function constantComparisonOutcome(
 	operator: ParamValueComparisonOperator,
 	comparand: number,
+	minValue: number,
 	maxValue: number,
 ): boolean | undefined {
 	switch (operator) {
 		case "===":
-			if (comparand < 0 || comparand > maxValue) return false;
+			if (comparand < minValue || comparand > maxValue) return false;
 			break;
 		case "!==":
-			if (comparand < 0 || comparand > maxValue) return true;
+			if (comparand < minValue || comparand > maxValue) return true;
 			break;
 		case "<":
-			if (comparand <= 0) return false;
+			if (comparand <= minValue) return false;
 			if (comparand > maxValue) return true;
 			break;
 		case "<=":
-			if (comparand < 0) return false;
+			if (comparand < minValue) return false;
 			if (comparand >= maxValue) return true;
 			break;
 		case ">":
 			if (comparand >= maxValue) return false;
-			if (comparand < 0) return true;
+			if (comparand < minValue) return true;
 			break;
 		case ">=":
 			if (comparand > maxValue) return false;
-			if (comparand <= 0) return true;
+			if (comparand <= minValue) return true;
 			break;
 	}
 }
@@ -267,6 +273,8 @@ function constantComparisonOutcome(
 interface ScopedParamValueReference extends ParamValueReference {
 	/** The endpoint scope the reference resolves against */
 	scope: number;
+	/** The value range of the referenced partial, spanning all matching definitions */
+	valueRange?: { min: number; max: number };
 }
 
 /**
@@ -293,8 +301,9 @@ function lintParamValueReferences(
 		}
 	};
 
-	// Conditions in places that identify the device, are needed without parameter
-	// values, or influence the interview must not reference parameter values
+	// $if conditions may not refer to parameter values in places that identify
+	// the device, are needed before parameter values are known, or cannot be
+	// applied outside of an interview
 	const forbid = (condition: string | undefined, where: string): void => {
 		if (refsIn(condition).length > 0) {
 			addError(
@@ -360,7 +369,8 @@ function lintParamValueReferences(
 		}
 	}
 
-	// Compat flags which do not influence the interview may be gated by parameter values
+	// $if conditions in compat flags may only refer to parameter values
+	// if those flags can be applied outside of an interview
 	const compatEntries = !config.compat
 		? []
 		: isArray(config.compat)
@@ -374,7 +384,7 @@ function lintParamValueReferences(
 		if (hashedFlags.length > 0) {
 			addError(
 				file,
-				`Compat flags which influence the interview must not be gated by conditions referencing config parameter values: ${
+				`The conditions for the following compat flags must not reference config parameter values, because the flags cannot be applied outside of an interview: ${
 					hashedFlags.join(", ")
 				}`,
 			);
@@ -392,17 +402,14 @@ function lintParamValueReferences(
 		return maps.flatMap((m) => [...m.values()].flat());
 	};
 
-	// Tracks which params' definitions depend on which other params' values
-	const dependencies = new Map<string, Set<string>>();
-
 	const handleParamCondition = (
 		scope: number,
-		guardedParam: number,
 		condition: string | undefined,
 		errorPrefix: string,
 	): void => {
 		for (const ref of refsIn(condition)) {
-			collected.push({ ...ref, scope });
+			const scopedRef: ScopedParamValueReference = { ...ref, scope };
+			collected.push(scopedRef);
 
 			const refString = paramNoToString(ref.parameter, ref.valueBitMask);
 			const referenced = paramsInScope(scope).filter(
@@ -442,34 +449,46 @@ function lintParamValueReferences(
 						`${errorPrefix}: the condition references ${refString} differently from some of the parameter's definitions`,
 					);
 				}
-			}
 
-			// Values of partial references span [0...2^width - 1]
-			if (ref.valueBitMask != undefined) {
-				const maxValue = 2 ** getBitMaskWidth(ref.valueBitMask) - 1;
-				const outcome = constantComparisonOutcome(
-					ref.operator,
-					ref.comparand,
-					maxValue,
-				);
-				if (outcome != undefined) {
-					addWarning(
-						file,
-						`${errorPrefix}: the comparison "${refString} ${
-							ref.operator === "==="
-								? "=="
-								: ref.operator === "!=="
-								? "!="
-								: ref.operator
-						} ${ref.comparand}" is always ${outcome}`,
+				// Warn when a comparison with a partial has the same constant
+				// outcome for every matching definition. The value range depends
+				// on each definition's signedness (the unsigned flag).
+				if (ref.valueBitMask != undefined && matchesShape.length > 0) {
+					const ranges = matchesShape.map((p) =>
+						getLegalRangeForBitMask(
+							ref.valueBitMask!,
+							p.unsigned === true,
+						)
 					);
+					scopedRef.valueRange = {
+						min: Math.min(...ranges.map(([min]) => min)),
+						max: Math.max(...ranges.map(([, max]) => max)),
+					};
+					const outcomes = ranges.map(([min, max]) =>
+						constantComparisonOutcome(
+							ref.operator,
+							ref.comparand,
+							min,
+							max,
+						)
+					);
+					if (
+						outcomes[0] != undefined
+						&& outcomes.every((o) => o === outcomes[0])
+					) {
+						addWarning(
+							file,
+							`${errorPrefix}: the comparison "${refString} ${
+								ref.operator === "==="
+									? "=="
+									: ref.operator === "!=="
+									? "!="
+									: ref.operator
+							} ${ref.comparand}" is always ${outcomes[0]}`,
+						);
+					}
 				}
 			}
-
-			const from = `${scope}:${guardedParam}`;
-			const to = `${scope}:${ref.parameter}`;
-			if (!dependencies.has(from)) dependencies.set(from, new Set());
-			dependencies.get(from)!.add(to);
 		}
 	};
 
@@ -492,14 +511,12 @@ function lintParamValueReferences(
 				);
 				handleParamCondition(
 					scope,
-					param.parameterNumber,
 					param.condition,
 					errorPrefix,
 				);
 				for (const option of param.options) {
 					handleParamCondition(
 						scope,
-						param.parameterNumber,
 						option.condition,
 						`${errorPrefix}, option "${option.label}"`,
 					);
@@ -508,33 +525,8 @@ function lintParamValueReferences(
 		}
 	}
 
-	// Cyclic dependencies between param definitions would make the evaluation order-dependent
-	const formatNode = (node: string): string => {
-		const [scope, parameter] = node.split(":");
-		return (scope !== "0" ? `Endpoint ${scope}, ` : "")
-			+ `#${parameter}`;
-	};
-	const done = new Set<string>();
-	const visit = (node: string, path: string[]): void => {
-		if (done.has(node)) return;
-		const cycleStart = path.indexOf(node);
-		if (cycleStart !== -1) {
-			const cycle = [...path.slice(cycleStart), node];
-			addError(
-				file,
-				`Conditions referencing config parameter values must not form cycles: ${
-					cycle.map(formatNode).join(" -> ")
-				}`,
-			);
-			done.add(node);
-			return;
-		}
-		for (const dep of dependencies.get(node) ?? []) {
-			visit(dep, [...path, node]);
-		}
-		done.add(node);
-	};
-	for (const node of dependencies.keys()) visit(node, []);
+	// Cyclic references make the config invalid at load time
+	// (checked by the ConditionalDeviceConfig constructor)
 
 	return collected;
 }
@@ -1024,28 +1016,30 @@ async function lintDevices(): Promise<void> {
 
 			const seen = new Set<string>();
 			for (const ref of paramValueRefs) {
-				let fullValue: number;
+				// Skip comparands no definition of the referenced partial can hold
 				if (ref.valueBitMask != undefined) {
-					const maxValue = 2 ** getBitMaskWidth(ref.valueBitMask) - 1;
-					if (ref.comparand < 0 || ref.comparand > maxValue) continue;
-					fullValue = encodePartial(
-						0,
-						ref.comparand,
-						ref.valueBitMask,
-					);
-				} else {
-					fullValue = ref.comparand;
+					if (
+						!ref.valueRange
+						|| ref.comparand < ref.valueRange.min
+						|| ref.comparand > ref.valueRange.max
+					) {
+						continue;
+					}
 				}
 
-				const key = `${ref.scope}:${ref.parameter}`;
-				const seenKey = `${key}=${fullValue}`;
+				const key = paramValueKey(
+					ref.scope,
+					ref.parameter,
+					ref.valueBitMask,
+				);
+				const seenKey = `${key}=${ref.comparand}`;
 				if (seen.has(seenKey)) continue;
 				seen.add(seenKey);
 
 				for (const base of baseVariants) {
 					variants.push({
 						...base,
-						paramValues: new Map([[key, fullValue]]),
+						paramValues: new Map([[key, ref.comparand]]),
 					});
 				}
 			}
