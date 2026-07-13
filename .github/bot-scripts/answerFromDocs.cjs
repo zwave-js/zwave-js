@@ -109,7 +109,9 @@ Rules:
 1. Base your answer solely on the given excerpts. Do not use outside knowledge.
 2. Do not mention the excerpts in the answer text.
 3. Do not refer to the user's question with phrases like "here's the answer to your question". Just answer directly.
-4. Respond with the JSON object only.`.trim();
+4. You are replying directly on the issue or discussion the user opened, which maintainers use for triage. Never tell the user to open an issue, discussion or support request — they are already in the right place.
+5. Never ask the user to provide or attach a logfile. This is handled separately.
+6. Respond with the JSON object only.`.trim();
 
 	const userPrompt = `## User's post
 

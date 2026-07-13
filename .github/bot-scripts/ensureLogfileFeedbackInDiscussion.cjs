@@ -38,6 +38,13 @@ _Note: You can just drag & drop files into the textbox. Just make sure to use a 
 `;
 			break;
 
+		case "MISSING_LOGFILE":
+			message = `👋 Hey @${user}!
+
+It looks like you did not upload a logfile in the "Upload Logfile" section. To help us investigate, please edit your post and attach a [driver log](https://zwave-js.github.io/zwave-js-ui/#/troubleshooting/generating-logs?id=driver-logs) on loglevel "Debug" there.
+`;
+			break;
+
 		case "WRONG_LOG_LEVEL":
 			message = `👋 Hey @${user}!
 
@@ -76,6 +83,9 @@ As a reminder, here's how to create one:
 - [ioBroker.zwave2 Adapter](https://github.com/AlCalzone/ioBroker.zwave2/blob/master/docs/en/troubleshooting.md#providing-the-necessary-information-for-an-issue)
 `;
 	}
+
+	// Tag the message so it's easier to find the comments later
+	if (message) message += LOGFILE_COMMENT_TAG;
 
 	// Check if there is a comment from the bot already
 	const queryComments = /* GraphQL */ `
@@ -155,8 +165,7 @@ As a reminder, here's how to create one:
 		// Ok make a new one maybe
 	}
 
-	// Tag the message so it's easier to find the comments later
-	message += LOGFILE_COMMENT_TAG;
+	if (!message) return;
 
 	const addCommentQuery = /* GraphQL */ `
 		mutation reply($discussionId: ID!, $body: String!) {

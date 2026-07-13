@@ -30,7 +30,9 @@ async function main(param) {
 
 	try {
 		const logfileSection = extractLogfileSection(body);
-		return await extractLogfileContent(logfileSection);
+		const content = await extractLogfileContent(logfileSection);
+		// This category requires a logfile, so an empty section is an error
+		return content ?? "MISSING_LOGFILE";
 	} catch (error) {
 		console.error("Error extracting logfile:", error);
 		return null;
