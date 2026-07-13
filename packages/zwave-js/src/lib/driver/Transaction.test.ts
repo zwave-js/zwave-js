@@ -57,6 +57,7 @@ test("should compare priority, then the timestamp", (t) => {
 		getNode(nodeId: number) {
 			return driverMock.controller.nodes.get(nodeId);
 		},
+		mustHoldTransaction: () => false,
 		getSafeCCVersion() {},
 		getSupportedCCVersion() {},
 		isCCSecure: () => false,
@@ -155,6 +156,7 @@ test("NodeQuery comparisons should prioritize listening nodes", (t) => {
 		getNode(nodeId: number) {
 			return driverMock.controller.nodes.get(nodeId);
 		},
+		mustHoldTransaction: () => false,
 		getSafeCCVersion() {},
 		getSupportedCCVersion() {},
 		isCCSecure: () => false,
@@ -268,6 +270,7 @@ test("Messages in the wakeup queue should be preferred over lesser priorities on
 		getNode(nodeId: number) {
 			return driverMock.controller.nodes.get(nodeId);
 		},
+		mustHoldTransaction: () => false,
 		getSafeCCVersion() {},
 		getSupportedCCVersion() {},
 		isCCSecure: () => false,
@@ -364,6 +367,7 @@ test("Controller message should be preferred over messages for sleeping nodes", 
 		getNode(nodeId: number) {
 			return driverMock.controller.nodes.get(nodeId);
 		},
+		mustHoldTransaction: () => false,
 		getSafeCCVersion() {},
 		getSupportedCCVersion() {},
 		isCCSecure: () => false,
@@ -409,6 +413,7 @@ test("should capture a stack trace where it was created", (t) => {
 		getNode(nodeId: number) {
 			return driverMock.controller.nodes.get(nodeId);
 		},
+		mustHoldTransaction: () => false,
 		getSafeCCVersion() {},
 		getSupportedCCVersion() {},
 		isCCSecure: () => false,

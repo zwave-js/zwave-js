@@ -2070,7 +2070,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			)
 			.on("network found", this.onNetworkFound.bind(this))
 			.on("network joined", this.onNetworkJoined.bind(this))
-			.on("network left", this.onNetworkLeft.bind(this));
+			.on("network left", this.onNetworkLeft.bind(this))
+			// Re-evaluate the send queues, which hold back interview traffic
+			// while an inclusion, exclusion or security bootstrap is active.
+			// TODO: Remove along with mustHoldTransaction
+			.on("inclusion state changed", () => this.triggerQueues());
 
 		// Create and start all queues after creating the controller instance
 		this.initTransactionQueues();
@@ -6721,6 +6725,20 @@ ${handlers.length} left`,
 		return true;
 	}
 
+	/**
+	 * @internal
+	 * Hold back interview traffic while an inclusion, exclusion or security
+	 * bootstrap is active, so it does not interfere with the process.
+	 * TODO: Remove this once CC interviews are coroutines that yield around
+	 * each command - the task scheduler will then pause them automatically.
+	 */
+	public mustHoldTransaction(transaction: Transaction): boolean {
+		return transaction.tag === "interview"
+			&& this._controller != undefined
+			&& this._controller.inclusionState !== InclusionState.Idle
+			&& this._controller.inclusionState !== InclusionState.SmartStart;
+	}
+
 	private mayStartTransaction(transaction: Transaction): boolean {
 		// We may not send anything on the normal queue if the send thread is paused
 		// or the controller is unresponsive
@@ -6730,6 +6748,8 @@ ${handlers.length} left`,
 		) {
 			return false;
 		}
+
+		if (this.mustHoldTransaction(transaction)) return false;
 
 		const message = transaction.message;
 		const targetNode = message.tryGetNode(this);
