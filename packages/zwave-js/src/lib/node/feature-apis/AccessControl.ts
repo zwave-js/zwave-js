@@ -1683,6 +1683,50 @@ export class AccessControlAPI extends FeatureAPI {
 		}
 	}
 
+	/**
+	 * Removes cached credentials orphaned within the exclusive composite-key
+	 * range `(from, to)` of a U3C enumeration walk. Credentials enumerate in
+	 * ascending (type, slot) order, encoded as `(type << 16) | slot`, and the
+	 * node's next-credential pointer only advances to credentials that still
+	 * exist, so any cached entry the walk skipped over was deleted on the
+	 * device. For a user-scoped walk only that user's cached entries are
+	 * reconciled; a walk across all users (userId 0) reconciles every entry.
+	 */
+	#reconcileCredentialGap_U3C(
+		userId: number,
+		from: number,
+		to: number,
+	): void {
+		const valueDB = this.endpoint.tryGetNode()?.valueDB;
+		if (!valueDB) return;
+
+		const credentialOwners = valueDB.findValues(
+			(vid) =>
+				UserCredentialCCValues.credentialOwner.is(vid)
+				&& vid.endpoint === this.endpoint.index,
+		);
+		for (const { endpoint, propertyKey, value } of credentialOwners) {
+			const key = propertyKey as number;
+			if (key <= from || key >= to) continue;
+			// A user-scoped walk skips other users' credentials, so their
+			// presence in the gap is not evidence of deletion.
+			if (userId !== 0 && value !== userId) continue;
+
+			const type = key >>> 16;
+			const slot = key & 0xffff;
+			for (
+				const valueId of [
+					UserCredentialCCValues.credential(type, slot),
+					UserCredentialCCValues.credentialOwner(type, slot),
+					UserCredentialCCValues.credentialModifierType(type, slot),
+					UserCredentialCCValues.credentialModifierNodeId(type, slot),
+				]
+			) {
+				valueDB.removeValue(valueId.endpoint(endpoint));
+			}
+		}
+	}
+
 	/** Removes all cached user and credential values from the value DB */
 	#purgeAllCachedUsersAndCredentials(): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
@@ -1803,6 +1847,15 @@ export class AccessControlAPI extends FeatureAPI {
 		let queryType = startType;
 		let querySlot = startSlot;
 
+		const composite = (type: UserCredentialType, slot: number) =>
+			(type << 16) | slot;
+		// The scope's upper bound: the end of the filtered type, or past every
+		// possible credential for an unfiltered walk (type is a byte, slot a
+		// 16-bit value).
+		const scopeEnd = filterType != undefined
+			? composite(filterType + 1, 0)
+			: 0x100_0000;
+
 		// U3C credential enumeration behaves like a cursor walk.
 		// The initial (userId, type, slot) triple may be exact or wildcarded,
 		// and each report returns both the matching credential and a pointer to
@@ -1815,6 +1868,17 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
 			const credential = this.#mapCredentialData(result);
+			// An empty report (present, but no credential) on the first request
+			// means the node holds nothing in the walked scope, so drop every
+			// cached credential there. A missing response proves nothing and must
+			// leave the cache untouched.
+			if (result && !credential && credentials.length === 0) {
+				this.#reconcileCredentialGap_U3C(
+					userId,
+					composite(startType, startSlot),
+					scopeEnd,
+				);
+			}
 			// No credential means the walk is exhausted or the current selector did
 			// not resolve to a valid entry on this node.
 			if (!result || !credential) break;
@@ -1824,16 +1888,32 @@ export class AccessControlAPI extends FeatureAPI {
 				break;
 			}
 
+			// The first in-scope result proves nothing exists between the walk's
+			// start and here, so drop any cached credential in that gap.
+			if (credentials.length === 0) {
+				this.#reconcileCredentialGap_U3C(
+					userId,
+					composite(startType, startSlot),
+					composite(credential.type, credential.slot),
+				);
+			}
+
 			credentials.push(credential);
 
 			const nextType = result.nextCredentialType
 				?? UserCredentialType.None;
 			const nextSlot = result.nextCredentialSlot ?? 0;
-			// A zero next pointer marks the end of the node's credential sequence.
+			// A zero next pointer marks the end of the node's credential sequence,
+			// so every cached credential above this result is orphaned.
 			if (
 				nextType === UserCredentialType.None
 				&& nextSlot === 0
 			) {
+				this.#reconcileCredentialGap_U3C(
+					userId,
+					composite(credential.type, credential.slot),
+					scopeEnd,
+				);
 				break;
 			}
 			// Per CC:0083.01.0C.11.024/.025, the next pointer advances to the next
@@ -1841,12 +1921,29 @@ export class AccessControlAPI extends FeatureAPI {
 			// type-filtered walks, stop before following that pointer into a
 			// different type.
 			if (filterType != undefined && nextType !== filterType) {
+				// A pointer into a later type proves no more credentials of the
+				// filtered type exist after this result, so its tail is orphaned.
+				if (nextType > filterType) {
+					this.#reconcileCredentialGap_U3C(
+						userId,
+						composite(credential.type, credential.slot),
+						scopeEnd,
+					);
+				}
 				break;
 			}
 			// Guard against buggy nodes that repeat the same cursor forever.
 			if (nextType === queryType && nextSlot === querySlot) {
 				break;
 			}
+
+			// Any cached credential the node skipped between this result and the
+			// next pointer no longer exists, so drop it from the cache.
+			this.#reconcileCredentialGap_U3C(
+				userId,
+				composite(credential.type, credential.slot),
+				composite(nextType, nextSlot),
+			);
 
 			queryType = nextType;
 			querySlot = nextSlot;

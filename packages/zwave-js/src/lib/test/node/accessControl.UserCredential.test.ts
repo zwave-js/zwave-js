@@ -1892,3 +1892,464 @@ integrationTest(
 		},
 	},
 );
+
+// =============================================================================
+// getAllCredentials / getCredentialsByType / getCredentialsForUser reconcile
+// the cache against the node's enumeration walk
+// =============================================================================
+
+integrationTest(
+	"getAllCredentials purges leading, interior, and trailing orphaned credentials",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userCreated = createDeferredPromise<void>();
+			node.once("user added", () => userCreated.resolve());
+			await node.accessControl!.setUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			await userCreated;
+
+			for (const slot of [1, 2, 3, 4, 5]) {
+				const added = createDeferredPromise<void>();
+				node.once("credential added", () => added.resolve());
+				await node.accessControl!.setCredential(
+					1,
+					UserCredentialType.PINCode,
+					slot,
+					`000${slot}`,
+				);
+				await added;
+			}
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
+				5,
+			);
+
+			// Delete slots 1 (leading), 3 (interior) and 5 (trailing) directly on
+			// the device so the driver's cache is stale.
+			for (const slot of [1, 3, 5]) {
+				mockNode.state.delete(
+					`UserCredential_cred_${UserCredentialType.PINCode}_${slot}`,
+				);
+			}
+
+			const fresh = await node.accessControl!.getAllCredentials();
+			t.expect(fresh.map((c) => c.slot).sort()).toStrictEqual([2, 4]);
+
+			t.expect(
+				node.accessControl!.getAllCredentialsCached().map((c) => c.slot)
+					.sort(),
+			).toStrictEqual([2, 4]);
+			for (const slot of [1, 3, 5]) {
+				t.expect(
+					node.accessControl!.getCredentialCached(
+						UserCredentialType.PINCode,
+						slot,
+					),
+				).toBeUndefined();
+			}
+		},
+	},
+);
+
+integrationTest(
+	"getAllCredentials purges orphans across a credential type boundary",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+						[UserCredentialType.Password, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userCreated = createDeferredPromise<void>();
+			node.once("user added", () => userCreated.resolve());
+			await node.accessControl!.setUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			await userCreated;
+
+			for (
+				const [type, slot] of [
+					[UserCredentialType.PINCode, 1],
+					[UserCredentialType.PINCode, 2],
+					[UserCredentialType.Password, 1],
+					[UserCredentialType.Password, 2],
+				] as const
+			) {
+				const added = createDeferredPromise<void>();
+				node.once("credential added", () => added.resolve());
+				await node.accessControl!.setCredential(
+					1,
+					type,
+					slot,
+					`000${slot}`,
+				);
+				await added;
+			}
+
+			// Delete the tail of the PIN type and the lead-in of the Password type.
+			mockNode.state.delete(
+				`UserCredential_cred_${UserCredentialType.PINCode}_2`,
+			);
+			mockNode.state.delete(
+				`UserCredential_cred_${UserCredentialType.Password}_1`,
+			);
+
+			const fresh = await node.accessControl!.getAllCredentials();
+			t.expect(fresh.map((c) => `${c.type}:${c.slot}`)).toStrictEqual([
+				`${UserCredentialType.PINCode}:1`,
+				`${UserCredentialType.Password}:2`,
+			]);
+
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					2,
+				),
+			).toBeUndefined();
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.Password,
+					1,
+				),
+			).toBeUndefined();
+		},
+	},
+);
+
+integrationTest(
+	"getCredentialsForUser purges only the queried user's orphaned credentials",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			for (const userId of [1, 2]) {
+				const uc = createDeferredPromise<void>();
+				node.once("user added", () => uc.resolve());
+				await node.accessControl!.setUser(userId, {
+					active: true,
+					userType: UserCredentialUserType.General,
+					userName: `U${userId}`,
+				});
+				await uc;
+			}
+
+			// user 1 owns slots 1 and 3; user 2 owns slot 2, sitting in user 1's gap.
+			for (
+				const [userId, slot] of [[1, 1], [2, 2], [1, 3]] as const
+			) {
+				const added = createDeferredPromise<void>();
+				node.once("credential added", () => added.resolve());
+				await node.accessControl!.setCredential(
+					userId,
+					UserCredentialType.PINCode,
+					slot,
+					`000${slot}`,
+				);
+				await added;
+			}
+
+			// Delete user 1's slot 3 on the device only.
+			mockNode.state.delete(
+				`UserCredential_cred_${UserCredentialType.PINCode}_3`,
+			);
+
+			const fresh = await node.accessControl!.getCredentialsForUser(1);
+			t.expect(fresh.map((c) => c.slot)).toStrictEqual([1]);
+
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					3,
+				),
+			).toBeUndefined();
+			// User 2's credential in the gap must survive.
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					2,
+				),
+			).toMatchObject({ userId: 2, slot: 2 });
+		},
+	},
+);
+
+integrationTest(
+	"getCredentialsByType purges the filtered type's tail past a type boundary",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+						[UserCredentialType.Password, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userCreated = createDeferredPromise<void>();
+			node.once("user added", () => userCreated.resolve());
+			await node.accessControl!.setUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			await userCreated;
+
+			for (
+				const [type, slot] of [
+					[UserCredentialType.PINCode, 1],
+					[UserCredentialType.PINCode, 2],
+					[UserCredentialType.PINCode, 3],
+					[UserCredentialType.Password, 1],
+				] as const
+			) {
+				const added = createDeferredPromise<void>();
+				node.once("credential added", () => added.resolve());
+				await node.accessControl!.setCredential(
+					1,
+					type,
+					slot,
+					`000${slot}`,
+				);
+				await added;
+			}
+
+			// Delete the last PIN credential; the walk then crosses into Password.
+			mockNode.state.delete(
+				`UserCredential_cred_${UserCredentialType.PINCode}_3`,
+			);
+
+			const fresh = await node.accessControl!.getCredentialsByType(
+				UserCredentialType.PINCode,
+			);
+			t.expect(fresh.map((c) => c.slot)).toStrictEqual([1, 2]);
+
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					3,
+				),
+			).toBeUndefined();
+			// The later type is out of scope and must be left untouched.
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.Password,
+					1,
+				),
+			).toMatchObject({ slot: 1 });
+		},
+	},
+);
+
+integrationTest(
+	"getCredentialsForUser with a type purges that type's tail past a type boundary",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+						[UserCredentialType.Password, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userCreated = createDeferredPromise<void>();
+			node.once("user added", () => userCreated.resolve());
+			await node.accessControl!.setUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			await userCreated;
+
+			for (
+				const [type, slot] of [
+					[UserCredentialType.PINCode, 1],
+					[UserCredentialType.PINCode, 2],
+					[UserCredentialType.Password, 1],
+				] as const
+			) {
+				const added = createDeferredPromise<void>();
+				node.once("credential added", () => added.resolve());
+				await node.accessControl!.setCredential(
+					1,
+					type,
+					slot,
+					`000${slot}`,
+				);
+				await added;
+			}
+
+			mockNode.state.delete(
+				`UserCredential_cred_${UserCredentialType.PINCode}_2`,
+			);
+
+			const fresh = await node.accessControl!.getCredentialsForUser(
+				1,
+				UserCredentialType.PINCode,
+			);
+			t.expect(fresh.map((c) => c.slot)).toStrictEqual([1]);
+
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.PINCode,
+					2,
+				),
+			).toBeUndefined();
+			t.expect(
+				node.accessControl!.getCredentialCached(
+					UserCredentialType.Password,
+					1,
+				),
+			).toMatchObject({ slot: 1 });
+		},
+	},
+);
+
+integrationTest(
+	"getAllCredentials clears the cache when the node reports no credentials",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: false,
+					supportsUserChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const userCreated = createDeferredPromise<void>();
+			node.once("user added", () => userCreated.resolve());
+			await node.accessControl!.setUser(1, {
+				active: true,
+				userType: UserCredentialUserType.General,
+				userName: "Alice",
+			});
+			await userCreated;
+
+			for (const slot of [1, 2]) {
+				const added = createDeferredPromise<void>();
+				node.once("credential added", () => added.resolve());
+				await node.accessControl!.setCredential(
+					1,
+					UserCredentialType.PINCode,
+					slot,
+					`000${slot}`,
+				);
+				await added;
+			}
+			t.expect(node.accessControl!.getAllCredentialsCached().length).toBe(
+				2,
+			);
+
+			// All credentials removed on the device; the node now reports empty.
+			for (const slot of [1, 2]) {
+				mockNode.state.delete(
+					`UserCredential_cred_${UserCredentialType.PINCode}_${slot}`,
+				);
+			}
+
+			const fresh = await node.accessControl!.getAllCredentials();
+			t.expect(fresh).toStrictEqual([]);
+			t.expect(node.accessControl!.getAllCredentialsCached())
+				.toStrictEqual(
+					[],
+				);
+		},
+	},
+);
