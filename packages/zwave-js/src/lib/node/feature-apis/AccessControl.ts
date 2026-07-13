@@ -1887,7 +1887,8 @@ export class AccessControlAPI extends FeatureAPI {
 			const nextType = result.nextCredentialType
 				?? UserCredentialType.None;
 			const nextSlot = result.nextCredentialSlot ?? 0;
-			// Reconcile the trailing gap past the last result
+			// A zero next pointer marks the end of the node's credential sequence,
+			// so reconcile the trailing gap past the last result
 			if (
 				nextType === UserCredentialType.None
 				&& nextSlot === 0
