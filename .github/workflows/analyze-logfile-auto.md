@@ -28,7 +28,7 @@ on:
             return;
           }
 
-          if (extractResult === "ERROR_FETCH" || extractResult === "ERROR_CODE_BLOCK_TOO_LONG") {
+          if (extractResult === "ERROR_FETCH" || extractResult === "ERROR_CODE_BLOCK_TOO_LONG" || extractResult === "MISSING_LOGFILE") {
             core.setOutput("shouldContinue", "false");
             await bot.ensureLogfileFeedbackInDiscussion({github, context}, extractResult);
             return;
