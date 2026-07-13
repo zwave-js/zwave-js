@@ -1683,6 +1683,7 @@ export class AccessControlAPI extends FeatureAPI {
 		}
 	}
 
+	// Drop cached credentials with composite keys in the exclusive range (from, to)
 	#reconcileCredentialGap_U3C(
 		userId: number,
 		from: number,
