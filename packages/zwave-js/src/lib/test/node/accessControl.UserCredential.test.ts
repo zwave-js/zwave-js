@@ -1955,11 +1955,12 @@ integrationTest(
 			}
 
 			const fresh = await node.accessControl!.getAllCredentials();
-			t.expect(fresh.map((c) => c.slot).sort()).toStrictEqual([2, 4]);
+			t.expect(fresh.map((c) => c.slot).toSorted((a, b) => a - b))
+				.toStrictEqual([2, 4]);
 
 			t.expect(
 				node.accessControl!.getAllCredentialsCached().map((c) => c.slot)
-					.sort(),
+					.toSorted((a, b) => a - b),
 			).toStrictEqual([2, 4]);
 			for (const slot of [1, 3, 5]) {
 				t.expect(
