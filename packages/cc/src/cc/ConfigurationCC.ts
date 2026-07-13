@@ -499,54 +499,14 @@ export function getCachedConfigParamValue(
 ): number | undefined {
 	const valueDB = ctx.getValueDB(nodeId);
 
-	if (bitMask != undefined) {
-		// Prefer the stored partial value, which is already interpreted with the correct signedness
-		const partialValueId = ConfigurationCCValues.paramInformation(
-			parameter,
-			bitMask,
-		).endpoint(endpointIndex);
-		const partial = valueDB.getValue(partialValueId);
-		if (typeof partial === "number") return partial;
-
-		// Fall back to extracting the partial from a stored full value
-		const fullValue = valueDB.getValue(
-			ConfigurationCCValues.paramInformation(parameter)
-				.endpoint(endpointIndex),
-		);
-		if (typeof fullValue !== "number") return undefined;
-		const format = (
-			valueDB.getMetadata(partialValueId) as
-				| ConfigurationMetadata
-				| undefined
-		)?.format;
-		return parsePartial(
-			fullValue,
-			bitMask,
-			isSignedPartial(bitMask, format),
-		);
-	}
-
-	const fullValue = valueDB.getValue(
-		ConfigurationCCValues.paramInformation(parameter)
+	// References must match the parameter's definition (enforced by lint), so a
+	// bitmask reads the stored partial and a bare reference reads the full value.
+	// Both are already stored with the correct signedness.
+	const value = valueDB.getValue(
+		ConfigurationCCValues.paramInformation(parameter, bitMask)
 			.endpoint(endpointIndex),
 	);
-	if (typeof fullValue === "number") return fullValue;
-
-	// Compose the full value from stored partials. Missing partials default to 0.
-	const partials = valueDB.findValues(
-		(id) =>
-			id.commandClass === CommandClasses.Configuration
-			&& (id.endpoint ?? 0) === endpointIndex
-			&& id.property === parameter
-			&& typeof id.propertyKey === "number",
-	);
-	if (partials.length === 0) return undefined;
-	let ret = 0;
-	for (const { propertyKey: bitMask, value: partialValue } of partials) {
-		if (typeof partialValue !== "number") return undefined;
-		ret = encodePartial(ret, partialValue, bitMask as number);
-	}
-	return ret;
+	return typeof value === "number" ? value : undefined;
 }
 
 @API(CommandClasses.Configuration)

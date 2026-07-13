@@ -423,21 +423,24 @@ function lintParamValueReferences(
 						`${errorPrefix}: the condition references ${refString}, which is hidden`,
 					);
 				}
-				if (ref.valueBitMask != undefined) {
-					const fits = referenced.filter(
-						(p) => ref.valueBitMask! < 256 ** p.valueSize,
+				// A condition must reference a parameter the same way it is defined:
+				// a partial reference must match a defined partial, a full reference
+				// a full definition. Otherwise the cached value can't be read reliably.
+				const matchesShape = referenced.filter(
+					(p) => p.valueBitMask === ref.valueBitMask,
+				);
+				if (matchesShape.length === 0) {
+					addError(
+						file,
+						ref.valueBitMask != undefined
+							? `${errorPrefix}: the condition references partial ${refString}, but the parameter is not defined with that partial`
+							: `${errorPrefix}: the condition references ${refString} as a full parameter, but it is defined using partials`,
 					);
-					if (fits.length === 0) {
-						addError(
-							file,
-							`${errorPrefix}: the bitmask of the referenced ${refString} does not fit the parameter's value size`,
-						);
-					} else if (fits.length < referenced.length) {
-						addWarning(
-							file,
-							`${errorPrefix}: the bitmask of the referenced ${refString} does not fit all definitions of the parameter`,
-						);
-					}
+				} else if (matchesShape.length < referenced.length) {
+					addWarning(
+						file,
+						`${errorPrefix}: the condition references ${refString} differently from some of the parameter's definitions`,
+					);
 				}
 			}
 
