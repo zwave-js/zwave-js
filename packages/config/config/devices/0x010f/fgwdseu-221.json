@@ -17,6 +17,33 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off (1)",
+			"description": "Devices in this group will be switched on or off reflecting the button operation for the 1st channel (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Dimmer (1)",
+			"description": "Devices in this group will change their level reflecting the button operation for the 1st channel (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "On/Off (2)",
+			"description": "Devices in this group will be switched on or off reflecting the button operation for the 2nd channel (uses Basic command class). Only in double switch mode.",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Dimmer (2)",
+			"description": "Devices in this group will change their level reflecting the button operation for the 2nd channel (uses Multilevel Switch command class). Only in double switch mode.",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
@@ -72,7 +99,7 @@
 			"#": "11",
 			"label": "LED Frame – Color When On",
 			"valueSize": 1,
-			"defaultValue": 0,
+			"defaultValue": 1,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -198,7 +225,7 @@
 					"value": 2
 				},
 				{
-					"label": "S1 toggles channel 1, S2 toggles channel 2 (Double switch mode only)",
+					"label": "S1 toggles channel 1, S2 toggles channel 2 (Double switch mode) / 2-way/3-way switch system (Single switch mode)",
 					"value": 3
 				},
 				{
@@ -263,7 +290,7 @@
 		{
 			"#": "30[0xf0]",
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
-			"label": "Alarm Configuration - 1st Slot Action (Frame)",
+			"label": "Alarm Configuration - 1st Slot Action (LED Frame)",
 			"maxValue": 15,
 			"allowManualEntry": false,
 			"options": [
@@ -296,7 +323,7 @@
 		{
 			"#": "30[0x0f]",
 			"$import": "templates/fibaro_template.json#alarm_configuration_action",
-			"label": "Alarm Configuration - 1st Slot Action (LED)",
+			"label": "Alarm Configuration - 1st Slot Action (Load)",
 			"maxValue": 3,
 			"allowManualEntry": false,
 			"options": [
@@ -333,20 +360,17 @@
 		{
 			"#": "31[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 2nd Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 2nd Slot Notification Event Parameter"
 		},
 		{
 			"#": "31[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 2nd Slot Action (Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 2nd Slot Action (LED Frame)"
 		},
 		{
 			"#": "31[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 2nd Slot Action (LED)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 2nd Slot Action (Load)"
 		},
 		{
 			"#": "32[0xff000000]",
@@ -363,20 +387,17 @@
 		{
 			"#": "32[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 3rd Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 3rd Slot Notification Event Parameter"
 		},
 		{
 			"#": "32[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 3rd Slot Action (Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 3rd Slot Action (LED Frame)"
 		},
 		{
 			"#": "32[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 3rd Slot Action (LED)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 3rd Slot Action (Load)"
 		},
 		{
 			"#": "33[0xff000000]",
@@ -393,20 +414,17 @@
 		{
 			"#": "33[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 4th Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 4th Slot Notification Event Parameter"
 		},
 		{
 			"#": "33[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 4th Slot Action (Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 4th Slot Action (LED Frame)"
 		},
 		{
 			"#": "33[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 4th Slot Action (LED)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 4th Slot Action (Load)"
 		},
 		{
 			"#": "34[0xff000000]",
@@ -423,20 +441,17 @@
 		{
 			"#": "34[0xff00]",
 			"$import": "#paramInformation/30[0xff00]",
-			"label": "Alarm Configuration - 5th Slot Notification Event Parameter",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 5th Slot Notification Event Parameter"
 		},
 		{
 			"#": "34[0xf0]",
 			"$import": "#paramInformation/30[0xf0]",
-			"label": "Alarm Configuration - 5th Slot Action (Frame)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 5th Slot Action (LED Frame)"
 		},
 		{
 			"#": "34[0x0f]",
 			"$import": "#paramInformation/30[0x0f]",
-			"label": "Alarm Configuration - 5th Slot Action (LED)",
-			"defaultValue": 0
+			"label": "Alarm Configuration - 5th Slot Action (Load)"
 		},
 		{
 			"#": "35",
@@ -657,59 +672,55 @@
 		{
 			"#": "155",
 			"$import": "#paramInformation/154",
-			"label": "Second Channel - Time Parameter for Timed Modes",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 32000,
-			"defaultValue": 50
+			"label": "Second Channel - Time Parameter for Timed Modes"
 		},
 		{
 			"#": "156",
-			"label": "Key S1 Associations: Switch ON Value Sent",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "First Channel: Switch ON Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{
 			"#": "157",
-			"label": "Key S1 Associations: Switch OFF Value Sent",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "First Channel: Switch OFF Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0
 		},
 		{
 			"#": "158",
-			"label": "Key S1 Associations: Double Click Value Sent",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "First Channel: Double Click Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 99
 		},
 		{
 			"#": "159",
-			"label": "Key S2 Associations: Switch ON Value Sent",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Second Channel: Switch ON Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{
 			"#": "160",
-			"label": "Key S2 Associations: Switch OFF Value Sent",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Second Channel: Switch OFF Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 0
 		},
 		{
 			"#": "161",
-			"label": "Key S2 Associations: Double Click Value Sent",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Second Channel: Double Click Value Sent to Association Groups",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 99
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",
+		"exclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",
+		"reset": "1. Quickly click one of the buttons three times, then press and hold it to enter the menu.\n2. Release the button when the device glows yellow.\n3. Quickly click the button to confirm.\n4. After a few seconds the device restarts, which is signaled with the red LED color.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWDSEU-221/FGWDSEU-221-T-EN-v1.2-1.pdf"
+	}
 }

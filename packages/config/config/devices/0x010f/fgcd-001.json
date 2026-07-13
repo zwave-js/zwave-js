@@ -1,0 +1,337 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGCD-001",
+	"description": "Carbon Monoxide Sensor",
+	"devices": [
+		{
+			"productType": "0x1201",
+			"productId": "0x1000"
+		},
+		{
+			"productType": "0x1201",
+			"productId": "0x1001"
+		},
+		{
+			"productType": "0x1201",
+			"productId": "0x1002"
+		},
+		{
+			"productType": "0x1201",
+			"productId": "0x4001"
+		},
+		{
+			"productType": "0x1201",
+			"productId": "0x6001"
+		},
+		{
+			"productType": "0x1201",
+			"productId": "0x7001"
+		},
+		{
+			"productType": "0x1201",
+			"productId": "0x8001"
+		},
+		{
+			"productType": "0x1201",
+			"productId": "0x9001"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "CO Alarm",
+			"description": "Devices in this group will be switched on or off when the CO alarm status changes (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "CO Alarm (Notifications)",
+			"description": "Devices in this group will receive notifications when the CO alarm status changes. Useful for devices that can trigger alarms.",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "CO Level",
+			"description": "Devices in this group will be switched on or off after exceeding the CO concentration level specified in parameter 14.",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Tamper Alarm",
+			"description": "Devices in this group will receive notifications when tampering is detected or cancelled.",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "CO Alarm BC",
+			"description": "Devices in this group will receive Sensor Alarm reports when the CO alarm status changes. Provides backward compatibility with controllers not supporting Z-Wave+.",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "Tamper Alarm BC",
+			"description": "Devices in this group will receive Sensor Alarm reports when tampering is detected or cancelled. Provides backward compatibility with controllers not supporting Z-Wave+.",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "2[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Z-Wave Notifications: Casing Opening"
+		},
+		{
+			"#": "2[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Z-Wave Notifications: Exceeding Temperature Threshold"
+		},
+		{
+			"#": "3[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual Indicator Notifications: Casing Opening"
+		},
+		{
+			"#": "3[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual Indicator Notifications: Exceeding Temperature Threshold"
+		},
+		{
+			"#": "3[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Visual Indicator Notifications: Lack of Z-Wave Range"
+		},
+		{
+			"#": "4[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sound Notifications: Casing Opening"
+		},
+		{
+			"#": "4[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sound Notifications: Exceeding Temperature Threshold"
+		},
+		{
+			"#": "4[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sound Notifications: Lack of Z-Wave Range"
+		},
+		{
+			"#": "7[0x01]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group2",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x02]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group3",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x04]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group4",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x08]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group5",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x10]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x20]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"label": "Send Secure Commands to 7th Association Group",
+			"defaultValue": 1
+		},
+		{
+			"#": "10",
+			"label": "Commands Sent to 2nd Association Group (CO Alarm)",
+			"description": "Values of specified commands may be set in parameters 11 and 12.",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Basic on",
+					"value": 1
+				},
+				{
+					"label": "Basic off",
+					"value": 2
+				},
+				{
+					"label": "Basic on and basic off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 2: BASIC ON Command Value",
+			"description": "Value of BASIC ON command sent to devices in 2nd association group after the CO Alarm activation.",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 2: BASIC OFF Command Value",
+			"description": "Value of BASIC OFF command sent to devices in 2nd association group after the CO Alarm cancellation.",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "13",
+			"label": "Commands Sent to 4th Association Group (CO Level)",
+			"description": "Values of specified commands may be set in parameters 16 and 19.",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Basic on",
+					"value": 1
+				},
+				{
+					"label": "Basic off",
+					"value": 2
+				},
+				{
+					"label": "Basic on and basic off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "14",
+			"label": "Group 4: CO Level for Sending BASIC ON",
+			"description": "Minimum level of CO concentration which exceeding will result in starting the timer set in parameter 15. Must be at least 4 ppm higher than parameter 17.",
+			"valueSize": 2,
+			"unit": "ppm",
+			"minValue": 25,
+			"maxValue": 400,
+			"defaultValue": 40
+		},
+		{
+			"#": "15",
+			"label": "Group 4: Time Required for Sending BASIC ON",
+			"description": "Time during which the level of CO concentration should remain above the value set in parameter 14 to send the BASIC ON command.",
+			"valueSize": 2,
+			"unit": "30 seconds",
+			"minValue": 0,
+			"maxValue": 2880,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Send immediately",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "16",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 4: BASIC ON Command Value",
+			"description": "Value of BASIC ON command sent to devices in 4th association group after exceeding the CO level set in parameter 14 through the time set in parameter 15.",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "17",
+			"label": "Group 4: CO Level for Sending BASIC OFF",
+			"description": "Level of CO concentration below which falling will result in sending the BASIC OFF command. Must be at least 4 ppm lower than parameter 14.",
+			"valueSize": 2,
+			"unit": "ppm",
+			"minValue": 10,
+			"maxValue": 400,
+			"defaultValue": 25
+		},
+		{
+			"#": "19",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 4: BASIC OFF Command Value",
+			"description": "Value of BASIC OFF command sent to devices in 4th association group after falling below the CO level set in parameter 17.",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "20",
+			"$purpose": "reporting_interval.temperature",
+			"label": "Temperature Report Interval",
+			"description": "Time interval between consecutive reports of temperature. Short time interval means more frequent communication, which results in shortened battery life.",
+			"valueSize": 2,
+			"unit": "30 seconds",
+			"minValue": 0,
+			"maxValue": 1440,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "21",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Report Hysteresis",
+			"description": "Minimum change in temperature resulting in a report being sent to the main Z-Wave controller.",
+			"valueSize": 1,
+			"unit": "0.5 °C",
+			"minValue": 1,
+			"maxValue": 20,
+			"defaultValue": 2
+		},
+		{
+			"#": "22",
+			"label": "Temperature Threshold",
+			"description": "Temperature level which exceeding will result in sending actions set in parameters 2, 3 and 4.",
+			"valueSize": 1,
+			"unit": "°C",
+			"minValue": 1,
+			"maxValue": 85,
+			"defaultValue": 55
+		},
+		{
+			"#": "23",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Send CO Concentration Reports",
+			"description": "Activates reporting the value of CO concentration level to the main Z-Wave controller.",
+			"defaultValue": 1
+		},
+		{
+			"#": "25",
+			"label": "CO Level Report Hysteresis",
+			"description": "Minimum change in CO concentration level which results in sending a new value to the main Z-Wave controller.",
+			"valueSize": 1,
+			"unit": "5 ppm",
+			"minValue": 2,
+			"maxValue": 6,
+			"defaultValue": 2
+		},
+		{
+			"#": "26",
+			"label": "CO Level Reporting Threshold",
+			"description": "CO concentration level which exceeding will result in sending a new value to the main Z-Wave controller, according to parameter 25 settings.",
+			"valueSize": 2,
+			"unit": "ppm",
+			"minValue": 10,
+			"maxValue": 255,
+			"defaultValue": 30
+		}
+	],
+	"metadata": {
+		"inclusion": "Quickly, triple click the button located on the casing.",
+		"exclusion": "Quickly, triple click the button located on the casing.",
+		"reset": "1. Press and hold the button.\n2. Release the button when the LED indicator glows white and a short beep sounds.\n3. Click the button when the LED indicator glows yellow.\n4. After a few seconds, a red LED indicator and a long beep confirm the reset.",
+		"manual": "https://manuals.fibaro.com/wp-content/uploads/2024/12/FGCD-001_en_full_03.12.24.pdf"
+	}
+}

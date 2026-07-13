@@ -35,6 +35,18 @@ export interface CryptoPrimitives {
 		key: BytesView,
 		iv: BytesView,
 	): Promise<BytesView>;
+	/** Encrypts a payload using AES-256-OFB */
+	encryptAES256OFB(
+		plaintext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+	): Promise<BytesView>;
+	/** Decrypts a payload using AES-256-OFB */
+	decryptAES256OFB(
+		ciphertext: BytesView,
+		key: BytesView,
+		iv: BytesView,
+	): Promise<BytesView>;
 	/** Encrypts and authenticates a payload using AES-128-CCM */
 	encryptAES128CCM(
 		plaintext: BytesView,

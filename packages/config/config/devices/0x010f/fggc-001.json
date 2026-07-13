@@ -1,0 +1,429 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGGC-001",
+	"description": "Fibaro Swipe Scene Controller",
+	"devices": [
+		{
+			"productType": "0x0d01",
+			"productId": "0x1000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0x2000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0x3000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0x4000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0x6000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0x7000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0x8000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0x9000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0xa000"
+		},
+		{
+			"productType": "0x0d01",
+			"productId": "0xb000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Flick Up",
+			"description": "Devices in this group will be controlled with the flick up gesture (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Flick Down",
+			"description": "Devices in this group will be controlled with the flick down gesture (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Flick Left",
+			"description": "Devices in this group will be controlled with the flick left gesture (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Flick Right",
+			"description": "Devices in this group will be controlled with the flick right gesture (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Circular AirWheel",
+			"description": "Devices in this group will change their level according to the circular AirWheel gesture (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Device Orientation",
+			"description": "Orientation of the Swipe in relation to its default position",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Default orientation",
+					"value": 0
+				},
+				{
+					"label": "180° rotation",
+					"value": 1
+				},
+				{
+					"label": "90° clockwise rotation",
+					"value": 2
+				},
+				{
+					"label": "90° counter-clockwise rotation",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Gestures Detection: Acoustic Signaling",
+			"defaultValue": 1
+		},
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Gestures Detection: Visual Indicator"
+		},
+		{
+			"#": "4",
+			"label": "Buzzer - Signalling Result of Gesture Recognition",
+			"description": "Acoustic signalling of gesture recognition result (using the built-in buzzer). Relevant only if parameter 2 is set to 1.",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Only successful recognition is signalled",
+					"value": 1
+				},
+				{
+					"label": "Only failed recognition is signalled",
+					"value": 2
+				},
+				{
+					"label": "Successful and failed recognition is signalled",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Powering Mode Update Interval",
+			"description": "How often the device checks if the USB power supply is connected and updates powering mode if needed",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 1080,
+			"defaultValue": 4,
+			"options": [
+				{
+					"label": "Powering mode is not updated",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "6",
+			"label": "Power Saving Mode (Battery Mode)",
+			"description": "Operation of gesture detection when battery powered",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Standby mode",
+					"value": 0
+				},
+				{
+					"label": "Simple mode",
+					"value": 1
+				},
+				{
+					"label": "Swipe does not enter power saving mode",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "7",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Hold Gesture to Enter the Menu",
+			"defaultValue": 0
+		},
+		{
+			"#": "10[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Flick Up Gesture: Send Scenes",
+			"defaultValue": 1
+		},
+		{
+			"#": "10[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Flick Down Gesture: Send Scenes",
+			"defaultValue": 1
+		},
+		{
+			"#": "10[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Flick Left Gesture: Send Scenes",
+			"defaultValue": 1
+		},
+		{
+			"#": "10[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Flick Right Gesture: Send Scenes",
+			"defaultValue": 1
+		},
+		{
+			"#": "10[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Clockwise Circular Gesture: Send Scenes"
+		},
+		{
+			"#": "10[0x20]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Counter-Clockwise Circular Gesture: Send Scenes"
+		},
+		{
+			"#": "11[0x01]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group2",
+			"defaultValue": 1
+		},
+		{
+			"#": "11[0x02]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group3",
+			"defaultValue": 1
+		},
+		{
+			"#": "11[0x04]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group4",
+			"defaultValue": 1
+		},
+		{
+			"#": "11[0x08]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group5",
+			"defaultValue": 1
+		},
+		{
+			"#": "11[0x10]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group6",
+			"defaultValue": 1
+		},
+		{
+			"#": "12[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Toggle Mode for 2nd Association Group (Flick Up)",
+			"defaultValue": 1
+		},
+		{
+			"#": "12[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Toggle Mode for 3rd Association Group (Flick Down)",
+			"defaultValue": 1
+		},
+		{
+			"#": "12[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Toggle Mode for 4th Association Group (Flick Left)",
+			"defaultValue": 1
+		},
+		{
+			"#": "12[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Toggle Mode for 5th Association Group (Flick Right)",
+			"defaultValue": 1
+		},
+		{
+			"#": "13",
+			"label": "Rate of Smooth Level Control",
+			"description": "How long the hand has to be held near the center of the pad after the AirWheel gesture for the associated devices to reach their maximum/minimum level",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [
+				{ "range": [0, 10] },
+				{ "value": 255 }
+			],
+			"defaultValue": 255,
+			"options": [
+				{
+					"label": "Default settings of controlled devices",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "20",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Up Gesture: Switch On Frame Value",
+			"description": "Value sent in the Switch On command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "21",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Up Gesture: Switch Off Frame Value",
+			"description": "Value sent in the Switch Off command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "22",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Down Gesture: Switch On Frame Value",
+			"description": "Value sent in the Switch On command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "23",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Down Gesture: Switch Off Frame Value",
+			"description": "Value sent in the Switch Off command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "24",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Left Gesture: Switch On Frame Value",
+			"description": "Value sent in the Switch On command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "25",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Left Gesture: Switch Off Frame Value",
+			"description": "Value sent in the Switch Off command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "26",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Right Gesture: Switch On Frame Value",
+			"description": "Value sent in the Switch On command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "27",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Flick Right Gesture: Switch Off Frame Value",
+			"description": "Value sent in the Switch Off command frame to the association group",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "30",
+			"label": "Sequence Learning Mode",
+			"description": "Change the value to launch sequence learning for the desired slot",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 6,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Learning mode disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "31",
+			"label": "1st Gestures Sequence (Slot 1)",
+			"description": "Value containing sequence of gestures",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1076,
+			"defaultValue": 0
+		},
+		{
+			"#": "32",
+			"label": "2nd Gestures Sequence (Slot 2)",
+			"description": "Value containing sequence of gestures",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1076,
+			"defaultValue": 0
+		},
+		{
+			"#": "33",
+			"label": "3rd Gestures Sequence (Slot 3)",
+			"description": "Value containing sequence of gestures",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1076,
+			"defaultValue": 0
+		},
+		{
+			"#": "34",
+			"label": "4th Gestures Sequence (Slot 4)",
+			"description": "Value containing sequence of gestures",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1076,
+			"defaultValue": 0
+		},
+		{
+			"#": "35",
+			"label": "5th Gestures Sequence (Slot 5)",
+			"description": "Value containing sequence of gestures",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1076,
+			"defaultValue": 0
+		},
+		{
+			"#": "36",
+			"label": "6th Gestures Sequence (Slot 6)",
+			"description": "Value containing sequence of gestures",
+			"valueSize": 2,
+			"minValue": 0,
+			"maxValue": 1076,
+			"defaultValue": 0
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Move and hold your hand close to the center of the pad.\n2. If the device is battery powered, a high pitched beep signals exiting standby mode.\n3. A loud sound sequence confirms entering the menu. Keep holding your hand.\n4. After hearing two short beeps and seeing the green indicator, withdraw your hand and perform a swipe up gesture to confirm the selection. Two beeps confirm validity.\n5. Successful adding is confirmed by 3 short beeps and a green visual indicator.",
+		"exclusion": "1. Move and hold your hand close to the center of the pad.\n2. If the device is battery powered, a high pitched beep signals exiting standby mode.\n3. A loud sound sequence confirms entering the menu. Keep holding your hand.\n4. After hearing two short beeps and seeing the green indicator, withdraw your hand and perform a swipe up gesture to confirm the selection. Two beeps confirm validity.\n5. Successful removal is confirmed by a sequence of 2 short beeps, a pause, and 1 short beep with a red visual indicator.",
+		"reset": "1. Make sure the device is powered.\n2. Choose the 3rd menu position, indicated by 3 short beeps.\n3. After a few seconds the device restarts, signaled by a sequence of 2 short beeps, a pause, and 1 short beep with a red indicator.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGGC-001/FGGC-001-EN-T-v1.2.pdf"
+	}
+}

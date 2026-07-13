@@ -1,0 +1,412 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGPB-101",
+	"description": "Push Button Central Scene Controller",
+	"devices": [
+		{
+			"productType": "0x0f01",
+			"productId": "0x1000",
+			"zwaveAllianceId": 1944
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0x2000",
+			"zwaveAllianceId": 2017
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0x3000",
+			"zwaveAllianceId": 2018
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0x4000",
+			"zwaveAllianceId": 2132
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0x6000",
+			"zwaveAllianceId": 2133
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0x7000",
+			"zwaveAllianceId": 3484
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0x8000",
+			"zwaveAllianceId": 3485
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0x9000",
+			"zwaveAllianceId": 3483
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0xa000",
+			"zwaveAllianceId": 3293
+		},
+		{
+			"productType": "0x0f01",
+			"productId": "0xb000",
+			"zwaveAllianceId": 3486
+		},
+		{
+			"productType": "0xfb10",
+			"productId": "0x1014"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off",
+			"description": "Devices in this group will be switched on or off by clicking the button (uses Basic command class).",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Dimmer",
+			"description": "Devices in this group will change their level by holding the button (uses Multilevel Switch command class).",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Alarm",
+			"description": "Devices in this group will receive alarm frames on configured button actions.",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "10",
+			"label": "Single Click - Association Group 2: Command Type",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Switch on",
+					"value": 1
+				},
+				{
+					"label": "Switch off",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch on/off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Single Click - Association Group 2: Set Level",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "20",
+			"label": "Single Click - Association Group 3: Command Type",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Switch on",
+					"value": 1
+				},
+				{
+					"label": "Switch off",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch on/off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "21",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Single Click - Association Group 3: Set Level",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "1[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Single Click: Send Scene Events",
+			"defaultValue": 1
+		},
+		{
+			"#": "12",
+			"label": "Double Click - Association Group 2: Command Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Switch on",
+					"value": 1
+				},
+				{
+					"label": "Switch off",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch on/off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "13",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Double Click - Association Group 2: Set Level",
+			"valueSize": 2,
+			"defaultValue": 99
+		},
+		{
+			"#": "22",
+			"label": "Double Click - Association Group 3: Command Type",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Switch on",
+					"value": 1
+				},
+				{
+					"label": "Switch off",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch on/off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "23",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Double Click - Association Group 3: Set Level",
+			"valueSize": 2,
+			"defaultValue": 99
+		},
+		{
+			"#": "1[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Double Click: Send Scene Events",
+			"defaultValue": 1
+		},
+		{
+			"#": "14",
+			"label": "Triple Click - Association Group 2: Command Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Switch on",
+					"value": 1
+				},
+				{
+					"label": "Switch off",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch on/off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "15",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Triple Click - Association Group 2: Set Level",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "24",
+			"label": "Triple Click - Association Group 3: Command Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Switch on",
+					"value": 1
+				},
+				{
+					"label": "Switch off",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch on/off",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "25",
+			"$import": "~/templates/master_template.json#basic_set_value_no_off",
+			"label": "Triple Click - Association Group 3: Set Level",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "1[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Triple Click: Send Scene Events",
+			"defaultValue": 1
+		},
+		{
+			"#": "1[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Four Clicks: Send Scene Events",
+			"defaultValue": 1
+		},
+		{
+			"#": "1[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Five Clicks: Send Scene Events",
+			"defaultValue": 1
+		},
+		{
+			"#": "1[0x20]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button Held: Send Scene Events",
+			"defaultValue": 1
+		},
+		{
+			"#": "1[0x40]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Button Released: Send Scene Events",
+			"defaultValue": 1
+		},
+		{
+			"#": "29",
+			"label": "Button Held - Association Group 3: Command Type",
+			"valueSize": 1,
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No action",
+					"value": 0
+				},
+				{
+					"label": "Dim up",
+					"value": 1
+				},
+				{
+					"label": "Dim down",
+					"value": 2
+				},
+				{
+					"label": "Alternate dim up/down",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "3[0x01]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group2",
+			"defaultValue": 1
+		},
+		{
+			"#": "3[0x02]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group3",
+			"defaultValue": 1
+		},
+		{
+			"#": "3[0x04]",
+			"$import": "templates/fibaro_template.json#send_secure_commands_group4",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Association Group 4 (Single Click): Send Alarm Frame",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Association Group 4 (Double Click): Send Alarm Frame",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Association Group 4 (Triple Click): Send Alarm Frame",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Association Group 4 (Four Clicks): Send Alarm Frame",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Association Group 4 (Five Clicks): Send Alarm Frame",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x20]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Association Group 4 (Button Held): Send Alarm Frame",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x40]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Association Group 4 (Button Released): Send Alarm Frame",
+			"defaultValue": 1
+		}
+	],
+	"metadata": {
+		"inclusion": "Click the Button at least six times.",
+		"exclusion": "Click the Button at least six times.",
+		"reset": "1. Click the Button exactly five times.\n2. Press and hold the Button for at least 5 seconds.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGPB-101/FGPB-101-EN-T-v1.2.pdf"
+	}
+}

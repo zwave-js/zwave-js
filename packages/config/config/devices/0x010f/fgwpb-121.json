@@ -13,6 +13,23 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off (Button)",
+			"description": "Devices in this group will be switched on or off when the relay status is changed using the button.",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "On/Off (Plug Power)",
+			"description": "Devices in this group will be switched on or off depending on the current load of the plugged device.",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "2",
@@ -20,439 +37,145 @@
 		},
 		{
 			"#": "3",
-			"label": "Overload",
-			"description": "Overload safety switch",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 18000,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"$import": "templates/fibaro_template.json#overload_safety_switch"
 		},
 		{
 			"#": "11",
-			"$purpose": "reporting_threshold.power",
-			"label": "Power Reporting",
-			"valueSize": 1,
-			"unit": "%",
-			"minValue": 0,
-			"maxValue": 100,
-			"defaultValue": 15,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"$import": "templates/fibaro_template.json#power_report_threshold_relative",
+			"label": "Power Reporting Threshold",
+			"defaultValue": 15
 		},
 		{
 			"#": "12",
-			"$purpose": "reporting_threshold.energy",
+			"$import": "templates/fibaro_template.json#energy_report_threshold",
 			"label": "Energy Reporting Threshold",
-			"valueSize": 2,
-			"unit": "0.01 kWh",
-			"minValue": 0,
 			"maxValue": 500,
-			"defaultValue": 10,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"defaultValue": 10
 		},
 		{
 			"#": "13",
-			"$purpose": "reporting_interval.power",
-			"label": "Power Reporting Interval",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 32400,
-			"defaultValue": 3600,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"$import": "templates/fibaro_template.json#power_reporting_interval"
 		},
 		{
 			"#": "14",
-			"$purpose": "reporting_interval.energy",
-			"label": "Energy Reporting Interval",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 32400,
-			"defaultValue": 3600,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				}
-			]
+			"$import": "templates/fibaro_template.json#energy_reporting_interval"
 		},
 		{
 			"#": "15",
-			"label": "Consumption",
-			"description": "Measure energy consumed by the Wall Plug itself",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disable",
-					"value": 0
-				},
-				{
-					"label": "Enable",
-					"value": 1
-				}
-			]
-		},
-		{
-			"#": "21",
-			"label": "Up Value",
-			"description": "Upper power threshold",
-			"valueSize": 2,
-			"minValue": 100,
-			"maxValue": 18000,
-			"defaultValue": 500
-		},
-		{
-			"#": "22",
-			"label": "Down Value",
-			"description": "Lower power threshold",
-			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 17900,
-			"defaultValue": 300
-		},
-		{
-			"#": "23",
-			"label": "Controlling",
-			"description": "Controlling 3rd association group devices",
-			"valueSize": 1,
-			"defaultValue": 3,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Power exceeded",
-					"value": 1
-				},
-				{
-					"label": "Power dropped",
-					"value": 2
-				},
-				{
-					"label": "Power dropped or exceeded",
-					"value": 3
-				}
-			]
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Measure Self-Consumption"
 		},
 		{
 			"#": "24",
-			"label": "Switch On",
-			"description": "Command frame sent to devices in 2nd group",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 2: Switch On Value",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "25",
-			"label": "Switch Off",
-			"description": "Command frame sent to devices in 2nd group",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 2: Switch Off Value",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
+		},
+		{
+			"#": "23",
+			"$import": "templates/fibaro_template.json#association_control_mode",
+			"label": "Group 3: Control Mode",
+			"description": "When to send a command to devices in the association group 3."
+		},
+		{
+			"#": "21",
+			"$import": "templates/fibaro_template.json#upper_power_threshold",
+			"label": "Group 3: Upper Power Threshold"
+		},
+		{
+			"#": "22",
+			"$import": "templates/fibaro_template.json#lower_power_threshold",
+			"label": "Group 3: Lower Power Threshold"
 		},
 		{
 			"#": "26",
-			"label": "Threshold Up",
-			"description": "Command frame sent to the devices in 3rd group",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 3: Upper Threshold Command Value",
+			"description": "Which value to send when the power usage is above the upper threshold.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 255,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 255
 		},
 		{
 			"#": "27",
-			"label": "Threshold Down",
-			"description": "Command frame sent to the devices in 3rd group",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Group 3: Lower Threshold Command Value",
+			"description": "Which value to send when the power usage is below the lower threshold.",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "Off",
-					"value": 0
-				},
-				{
-					"label": "Last state/on",
-					"value": 255
-				}
-			]
+			"defaultValue": 0
 		},
 		{
-			"#": "30",
-			"label": "Active Alarms",
-			"description": "Network alarms to which the Wall Plug will respond",
-			"valueSize": 1,
-			"defaultValue": 63,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "General",
-					"value": 1
-				},
-				{
-					"label": "Smoke",
-					"value": 2
-				},
-				{
-					"label": "Carbon monoxide",
-					"value": 4
-				},
-				{
-					"label": "Carbon dioxide",
-					"value": 8
-				},
-				{
-					"label": "High temperature",
-					"value": 16
-				},
-				{
-					"label": "Flood",
-					"value": 32
-				},
-				{
-					"label": "All alarms",
-					"value": 63
-				}
-			]
+			"#": "30[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: General",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Smoke",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Carbon Monoxide",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Carbon Dioxide",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: High Temperature",
+			"defaultValue": 1
+		},
+		{
+			"#": "30[0x20]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Alarms: Flood",
+			"defaultValue": 1
 		},
 		{
 			"#": "31",
-			"label": "Response to Alarm Frames",
-			"description": "Wall plug response to alarms",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 50,
-			"defaultValue": 0,
-			"options": [
-				{
-					"label": "No reaction",
-					"value": 0
-				},
-				{
-					"label": "On",
-					"value": 1
-				},
-				{
-					"label": "Off",
-					"value": 2
-				}
-			]
+			"$import": "templates/fibaro_template.json#response_to_alarm_frames"
 		},
 		{
 			"#": "32",
-			"label": "Alarm State Duration",
-			"description": "Specifies the duration of the alarm state",
-			"valueSize": 2,
-			"minValue": 1,
-			"maxValue": 32400,
-			"defaultValue": 600
+			"$import": "templates/fibaro_template.json#alarm_duration"
 		},
 		{
 			"#": "40",
-			"label": "Power Load for Violet Color",
-			"description": "Maximum active power to flash the LED frame Violet",
-			"valueSize": 2,
-			"minValue": 1000,
-			"maxValue": 18000,
-			"defaultValue": 18000
+			"$import": "templates/fibaro_template.json#violet_color_power_threshold"
 		},
 		{
 			"#": "41",
-			"label": "LED Frame Color On",
-			"description": "LED frame color when controlled device is on",
-			"valueSize": 1,
-			"defaultValue": 1,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disable illumination",
-					"value": 0
-				},
-				{
-					"label": "Active power (Smooth)",
-					"value": 1
-				},
-				{
-					"label": "Active power (Steps)",
-					"value": 2
-				},
-				{
-					"label": "White",
-					"value": 3
-				},
-				{
-					"label": "Red",
-					"value": 4
-				},
-				{
-					"label": "Green",
-					"value": 5
-				},
-				{
-					"label": "Blue",
-					"value": 6
-				},
-				{
-					"label": "Yellow",
-					"value": 7
-				},
-				{
-					"label": "Cyan",
-					"value": 8
-				},
-				{
-					"label": "Magenta",
-					"value": 9
-				}
-			]
+			"$import": "templates/fibaro_template.json#led_indicator_color_load_on"
 		},
 		{
 			"#": "42",
-			"label": "LED Frame Color Off",
-			"description": "LED frame color when controlled device is off",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disable illumination",
-					"value": 0
-				},
-				{
-					"label": "Last measured load",
-					"value": 1
-				},
-				{
-					"label": "White",
-					"value": 3
-				},
-				{
-					"label": "Red",
-					"value": 4
-				},
-				{
-					"label": "Green",
-					"value": 5
-				},
-				{
-					"label": "Blue",
-					"value": 6
-				},
-				{
-					"label": "Yellow",
-					"value": 7
-				},
-				{
-					"label": "Cyan",
-					"value": 8
-				},
-				{
-					"label": "Magenta",
-					"value": 9
-				}
-			]
+			"$import": "templates/fibaro_template.json#led_indicator_color_load_off"
 		},
 		{
 			"#": "43",
-			"label": "LED Frame Color Z-Wave",
-			"description": "Z-Wave alarm illumination",
-			"valueSize": 1,
-			"defaultValue": 2,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Disable illumination",
-					"value": 0
-				},
-				{
-					"label": "No change in color",
-					"value": 1
-				},
-				{
-					"label": "Red/White/Blue",
-					"value": 2
-				},
-				{
-					"label": "White",
-					"value": 3
-				},
-				{
-					"label": "Red",
-					"value": 4
-				},
-				{
-					"label": "Green",
-					"value": 5
-				},
-				{
-					"label": "Blue",
-					"value": 6
-				},
-				{
-					"label": "Yellow",
-					"value": 7
-				},
-				{
-					"label": "Cyan",
-					"value": 8
-				},
-				{
-					"label": "Magenta",
-					"value": 9
-				}
-			]
+			"$import": "templates/fibaro_template.json#led_indicator_color_alarm"
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Quickly triple click the button located on the casing.",
+		"exclusion": "Quickly triple click the button located on the casing.",
+		"reset": "1. Press and hold the button until the LED frame glows yellow.\n2. Release the button.\n3. Click the button once to confirm the selection.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWPB-121/FGWPB-121-EN-T-v1.0.pdf"
+	}
 }

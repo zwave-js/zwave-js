@@ -13,177 +13,323 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Power",
+			"description": "Devices in this group will be switched on or off depending on the current load of the plugged device (uses Basic command class). Power thresholds and behaviour are configured using parameters 45-49.",
+			"maxNodes": 5
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Remember Device State",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
-			"defaultValue": 1
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev"
 		},
 		{
 			"#": "2",
 			"label": "Overload Safety Switch",
+			"description": "Turn off the controlled device in case of exceeding threshold.",
 			"valueSize": 4,
+			"unit": "0.1 W",
 			"minValue": 0,
 			"maxValue": 36800,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "10",
-			"label": "LED Frame - Power Limit",
+			"label": "LED Indicator: Overload Threshold",
+			"description": "Indicator flashes violet in case of exceeding threshold. Only active if parameter 11 is set to 8 or 9.",
 			"valueSize": 4,
+			"unit": "0.1 W",
 			"minValue": 500,
 			"maxValue": 36800,
 			"defaultValue": 36800
 		},
 		{
 			"#": "11",
-			"label": "LED Frame - Colour When ON",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 9,
+			"$import": "templates/fibaro_template.json#led_indicator_color_load_on_walli",
 			"defaultValue": 8
 		},
 		{
 			"#": "12",
-			"label": "LED Frame - Colour When OFF",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 7,
-			"defaultValue": 0
+			"$import": "templates/fibaro_template.json#led_indicator_color_load_off_walli"
 		},
 		{
 			"#": "13",
-			"label": "LED Frame – Brightness",
+			"label": "LED Indicator: Brightness",
 			"valueSize": 1,
 			"unit": "%",
 			"minValue": 0,
 			"maxValue": 102,
-			"defaultValue": 100
+			"defaultValue": 100,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Proportional to measured power",
+					"value": 101
+				},
+				{
+					"label": "Inversely proportional to measured power",
+					"value": 102
+				}
+			]
 		},
 		{
-			"#": "30",
-			"label": "Alarm Configuration - 1st Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 0,
+			"#": "30[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration: 1st Slot: Notification Type",
 			"defaultValue": 0
 		},
 		{
-			"#": "31",
-			"label": "Alarm Configuration - 2nd Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 0,
+			"#": "30[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration: 1st Slot: Notification Event",
 			"defaultValue": 0
 		},
 		{
-			"#": "32",
-			"label": "Alarm Configuration - 3rd Slot",
+			"#": "30[0x03]",
+			"label": "Alarm Configuration: 1st Slot: Load Action",
 			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 0,
-			"defaultValue": 0
+			"defaultValue": 0,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No change",
+					"value": 0
+				},
+				{
+					"label": "On",
+					"value": 1
+				},
+				{
+					"label": "Off",
+					"value": 2
+				},
+				{
+					"label": "Turn on/off continuously",
+					"value": 3
+				}
+			]
 		},
 		{
-			"#": "33",
-			"label": "Alarm Configuration - 4th Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 0,
-			"defaultValue": 0
+			"#": "30[0xf0]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_indicator_blink_color",
+			"label": "Alarm Configuration: 1st Slot: LED Indicator"
 		},
 		{
-			"#": "34",
-			"label": "Alarm Configuration - 5th Slot",
-			"valueSize": 4,
-			"minValue": 0,
-			"maxValue": 0,
-			"defaultValue": 0
+			"#": "31[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration: 2nd Slot: Notification Type",
+			"defaultValue": 5
+		},
+		{
+			"#": "31[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration: 2nd Slot: Notification Event",
+			"defaultValue": 255
+		},
+		{
+			"#": "31[0x03]",
+			"$import": "#paramInformation/30[0x03]",
+			"label": "Alarm Configuration: 2nd Slot: Load Action"
+		},
+		{
+			"#": "31[0xf0]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_indicator_blink_color",
+			"label": "Alarm Configuration: 2nd Slot: LED Indicator"
+		},
+		{
+			"#": "32[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration: 3rd Slot: Notification Type",
+			"defaultValue": 1
+		},
+		{
+			"#": "32[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration: 3rd Slot: Notification Event",
+			"defaultValue": 255
+		},
+		{
+			"#": "32[0x03]",
+			"$import": "#paramInformation/30[0x03]",
+			"label": "Alarm Configuration: 3rd Slot: Load Action"
+		},
+		{
+			"#": "32[0xf0]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_indicator_blink_color",
+			"label": "Alarm Configuration: 3rd Slot: LED Indicator"
+		},
+		{
+			"#": "33[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration: 4th Slot: Notification Type",
+			"defaultValue": 2
+		},
+		{
+			"#": "33[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration: 4th Slot: Notification Event",
+			"defaultValue": 255
+		},
+		{
+			"#": "33[0x03]",
+			"$import": "#paramInformation/30[0x03]",
+			"label": "Alarm Configuration: 4th Slot: Load Action"
+		},
+		{
+			"#": "33[0xf0]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_indicator_blink_color",
+			"label": "Alarm Configuration: 4th Slot: LED Indicator"
+		},
+		{
+			"#": "34[0xff000000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_type",
+			"label": "Alarm Configuration: 5th Slot: Notification Type",
+			"defaultValue": 4
+		},
+		{
+			"#": "34[0xff0000]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_notification_event",
+			"label": "Alarm Configuration: 5th Slot: Notification Event",
+			"defaultValue": 255
+		},
+		{
+			"#": "34[0x03]",
+			"$import": "#paramInformation/30[0x03]",
+			"label": "Alarm Configuration: 5th Slot: Load Action"
+		},
+		{
+			"#": "34[0xf0]",
+			"$import": "templates/fibaro_template.json#alarm_configuration_indicator_blink_color",
+			"label": "Alarm Configuration: 5th Slot: LED Indicator"
 		},
 		{
 			"#": "35",
-			"label": "Alarm Configuration – Duration",
-			"valueSize": 2,
-			"unit": "seconds",
-			"minValue": 0,
-			"maxValue": 32400,
-			"defaultValue": 600
+			"$import": "templates/fibaro_template.json#alarm_duration_infinite"
 		},
 		{
 			"#": "45",
-			"label": "Associations – 2nd Group",
+			"label": "2nd Association Group: Trigger",
 			"valueSize": 1,
-			"minValue": 1,
-			"maxValue": 3,
-			"defaultValue": 3
+			"defaultValue": 3,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Power exceeds upper threshold",
+					"value": 1
+				},
+				{
+					"label": "Power drops below lower threshold",
+					"value": 2
+				},
+				{
+					"label": "Power exceeds upper threshold or drops below lower threshold",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "46",
-			"label": "Associations – UP Threshold",
+			"label": "2nd Association Group: Upper Power Threshold",
+			"description": "Cannot be lower than the lower threshold (parameter 48).",
 			"valueSize": 4,
+			"unit": "0.1 W",
 			"minValue": 100,
 			"maxValue": 36800,
 			"defaultValue": 500
 		},
 		{
 			"#": "47",
-			"label": "Associations – UP Threshold Frame Value",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "2nd Association Group: Upper Threshold Value Sent",
 			"valueSize": 2,
-			"minValue": 0,
-			"maxValue": 255,
 			"defaultValue": 255
 		},
 		{
 			"#": "48",
-			"label": "Associations – DOWN Threshold",
+			"label": "2nd Association Group: Lower Power Threshold",
 			"valueSize": 4,
+			"unit": "0.1 W",
 			"minValue": 0,
 			"maxValue": 36700,
 			"defaultValue": 300
 		},
 		{
-			"#": "60",
-			"label": "Power Reports – Include Self-Consumption",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 1,
+			"#": "49",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "2nd Association Group: Lower Threshold Value Sent",
+			"valueSize": 2,
 			"defaultValue": 0
+		},
+		{
+			"#": "60",
+			"$import": "templates/fibaro_template.json#reports_include_self",
+			"label": "Power Report: Include Self-Consumption"
 		},
 		{
 			"#": "61",
-			"label": "Power Reports – On Change",
-			"valueSize": 2,
-			"unit": "%",
-			"minValue": 0,
-			"maxValue": 500,
-			"defaultValue": 0
+			"$import": "templates/fibaro_template.json#power_report_threshold_relative_0-500",
+			"defaultValue": 15
 		},
 		{
 			"#": "62",
-			"label": "Power Reports – Periodic",
+			"$purpose": "reporting_interval.power",
+			"label": "Power Reports: Interval",
 			"valueSize": 2,
+			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32400,
-			"defaultValue": 3600
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "65",
-			"label": "Energy Reports – On Change",
-			"valueSize": 2,
-			"minValue": 0,
+			"$import": "templates/fibaro_template.json#energy_report_threshold",
 			"maxValue": 500,
 			"defaultValue": 10
 		},
 		{
 			"#": "66",
-			"label": "Energy Reports – Periodic",
+			"$purpose": "reporting_interval.energy",
+			"label": "Energy Reports: Interval",
 			"valueSize": 2,
+			"unit": "seconds",
 			"minValue": 0,
 			"maxValue": 32400,
-			"defaultValue": 3600
+			"defaultValue": 3600,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Power the device, then quickly click the button three times. The LED starts blinking yellow.",
+		"exclusion": "Power the device, then quickly click the button three times. The LED starts blinking yellow.",
+		"reset": "1. Press and hold the button to enter the menu.\n2. Release the button when the device glows yellow.\n3. Quickly click the button to confirm. The device blinks yellow and restarts after a few seconds.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGWOEF-011/FGWOEF-011-T-EN-v1.1.pdf"
+	}
 }

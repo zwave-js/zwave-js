@@ -27,6 +27,37 @@ function paramLabel(parameter: number, valueBitMask?: number): string {
 	}`;
 }
 
+/**
+ * Resolves templates AND evaluates $if conditionals for the given firmware,
+ * returning every matching parameter variant. The device IDs are plain
+ * top-level fields, so they are read from the raw JSON instead of resolving
+ * templates a second time before DeviceConfig.from.
+ */
+export async function resolveParamsForFirmware(
+	filename: string,
+	parameter: number,
+	valueBitMask: number | undefined,
+	firmwareVersion: string,
+) {
+	const raw = parseJsonC(await readFile(filename, "utf8"));
+	const firstDevice = (raw?.devices as any[] | undefined)?.[0];
+	const context = {
+		manufacturerId: Number(raw?.manufacturerId),
+		productType: Number(firstDevice?.productType),
+		productId: Number(firstDevice?.productId),
+		firmwareVersion,
+	};
+	const config = await DeviceConfig.from(fs, filename, true, {
+		rootDir: DEVICES_DIR,
+		context,
+	});
+	return [...(config.paramInformation?.values() ?? [])]
+		.filter((p) =>
+			p.parameterNumber === parameter
+			&& (valueBitMask == undefined || p.valueBitMask === valueBitMask)
+		);
+}
+
 async function handleResolveConfigParam(
 	args: ResolveConfigParamArgs,
 ): Promise<CallToolResult> {
@@ -42,27 +73,12 @@ async function handleResolveConfigParam(
 
 	try {
 		if (firmwareVersion != undefined) {
-			// Resolve templates AND evaluate $if conditionals for the given firmware.
-			// The device IDs are plain top-level fields, so read them from the raw
-			// JSON instead of resolving templates a second time before DeviceConfig.from
-			const raw = parseJsonC(await readFile(filename, "utf8"));
-			const firstDevice = (raw?.devices as any[] | undefined)?.[0];
-			const context = {
-				manufacturerId: Number(raw?.manufacturerId),
-				productType: Number(firstDevice?.productType),
-				productId: Number(firstDevice?.productId),
+			const matches = await resolveParamsForFirmware(
+				filename,
+				parameter,
+				valueBitMask,
 				firmwareVersion,
-			};
-			const config = await DeviceConfig.from(fs, filename, true, {
-				rootDir: DEVICES_DIR,
-				context,
-			});
-			const matches = [...(config.paramInformation?.values() ?? [])]
-				.filter((p) =>
-					p.parameterNumber === parameter
-					&& (valueBitMask == undefined
-						|| p.valueBitMask === valueBitMask)
-				);
+			);
 			if (matches.length === 0) {
 				return errorResult(
 					`No parameter ${

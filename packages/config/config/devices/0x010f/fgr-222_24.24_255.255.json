@@ -1,0 +1,401 @@
+{
+	"manufacturer": "Fibargroup",
+	"manufacturerId": "0x010f",
+	"label": "FGR-222",
+	"description": "Roller Shutter 2",
+	"devices": [
+		{
+			"productType": "0x0300",
+			"productId": "0x0102",
+			"zwaveAllianceId": 38
+		},
+		{
+			"productType": "0x0301",
+			"productId": "0x1001"
+		},
+		{
+			"productType": "0x0302",
+			"productId": "0x1000"
+		},
+		{
+			"productType": "0x0302",
+			"productId": "0x3000"
+		},
+		{
+			"productType": "0x0302",
+			"productId": "0x4000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "24.24",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Momentary Click",
+			"description": "Devices in this group will be switched on or off with a momentary switch click or a toggle switch position change.",
+			"maxNodes": 16
+		},
+		"2": {
+			"label": "Momentary Hold",
+			"description": "Devices in this group will change their level while holding a momentary switch. Inactive when toggle switches are used or in gate mode.",
+			"maxNodes": 16
+		},
+		"3": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		}
+	},
+	"proprietary": {
+		"fibaroCCs": [38 /* 0x26 (Venetian Blinds) */]
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"label": "Reports Type",
+			"description": "Should be set to 1 if the module operates in Venetian blind mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Blind position reports sent using Z-Wave commands",
+					"value": 0
+				},
+				{
+					"label": "Blind position reports sent using Fibaro commands",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "10",
+			"label": "Roller Shutter Operating Modes",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Roller blind mode, without positioning",
+					"value": 0
+				},
+				{
+					"label": "Roller blind mode, with positioning",
+					"value": 1
+				},
+				{
+					"label": "Venetian blind mode, with positioning",
+					"value": 2
+				},
+				{
+					"label": "Gate mode, without positioning",
+					"value": 3
+				},
+				{
+					"label": "Gate mode, with positioning",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Turning Time/Delay Time",
+			"description": "Time of full turn of the slats in Venetian blind mode, or countdown time after which an open gate starts closing in gate mode",
+			"valueSize": 2,
+			"unit": "0.01 seconds",
+			"minValue": 0,
+			"maxValue": 65535,
+			"defaultValue": 150,
+			"unsigned": true
+		},
+		{
+			"#": "13",
+			"label": "Slats Positioning Mode",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Main controller operation only",
+					"value": 0
+				},
+				{
+					"label": "Controller, momentary switch, or limit switch",
+					"value": 1
+				},
+				{
+					"label": "Controller, momentary switch, limit switch, or stop frame",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "14",
+			"label": "Switch Type",
+			"description": "Relevant for roller blind mode and Venetian blind mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switches",
+					"value": 0
+				},
+				{
+					"label": "Toggle switches",
+					"value": 1
+				},
+				{
+					"label": "Single momentary switch (S1)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "17",
+			"label": "Delay Time After S2",
+			"description": "Time to turn off relays after reaching a limit switch, or gate closing delay after the S2 contact has been disconnected",
+			"valueSize": 1,
+			"unit": "0.1 seconds",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 10,
+			"unsigned": true
+		},
+		{
+			"#": "18",
+			"label": "Motor Operation Detection",
+			"description": "Power threshold to be interpreted as reaching a limit switch",
+			"valueSize": 1,
+			"unit": "W",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 10,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "22",
+			"label": "Motor Operation Time",
+			"description": "Time period for the motor to continue operation",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 65535,
+			"defaultValue": 240,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "29",
+			"label": "Forced Roller Shutter Calibration",
+			"description": "Setting to 1 starts the calibration process. Relevant only in positioning modes.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Deactivated",
+					"value": 0
+				},
+				{
+					"label": "Start calibration process",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "30",
+			"label": "Response to General Alarm",
+			"valueSize": 1,
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No reaction",
+					"value": 0
+				},
+				{
+					"label": "Open blind",
+					"value": 1
+				},
+				{
+					"label": "Close blind",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "31",
+			"label": "Response to Water Flood Alarm",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No reaction",
+					"value": 0
+				},
+				{
+					"label": "Open blind",
+					"value": 1
+				},
+				{
+					"label": "Close blind",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "32",
+			"label": "Response to Smoke, CO, CO2 Alarm",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No reaction",
+					"value": 0
+				},
+				{
+					"label": "Open blind",
+					"value": 1
+				},
+				{
+					"label": "Close blind",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "33",
+			"label": "Response to Temperature Alarm",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No reaction",
+					"value": 0
+				},
+				{
+					"label": "Open blind",
+					"value": 1
+				},
+				{
+					"label": "Close blind",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "35",
+			"label": "Managing Slats in Response to Alarm",
+			"description": "Determines how the slats react upon alarm detection in Venetian blind mode",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Do not change slats position",
+					"value": 0
+				},
+				{
+					"label": "Set slats to their extreme position",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "40",
+			"label": "Power Reports",
+			"description": "Power level change that will result in a new power value report, as a percentage of the previous report",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 10,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "42",
+			"label": "Periodic Power or Energy Reports",
+			"description": "Time period between consecutive reports",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 65534,
+			"defaultValue": 3600,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "43",
+			"label": "Energy Reports",
+			"description": "Energy level change that will result in a new energy value report",
+			"valueSize": 1,
+			"unit": "0.01 kWh",
+			"minValue": 0,
+			"maxValue": 254,
+			"defaultValue": 10,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "44",
+			"$import": "templates/fibaro_template.json#reports_include_self",
+			"label": "Self-Measurement",
+			"description": "Include power and energy used by the device itself in reports sent to the main controller"
+		},
+		{
+			"#": "50",
+			"label": "Scenes/Associations Activation",
+			"description": "Determines whether scenes or associations are activated by the switch keys",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Associations active",
+					"value": 0
+				},
+				{
+					"label": "Scenes active",
+					"value": 1
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Connect the power supply, then quickly press the B-button or a push button connected to the S1 terminal three times.",
+		"exclusion": "Make sure the device is powered, then quickly press the B-button or a push button connected to the S1 terminal three times.",
+		"reset": "1. Make sure the device is powered.\n2. Press and hold the B-button for about 14 seconds until the LED indicator glows yellow.\n3. Release the B-button and briefly press it again.",
+		"manual": "https://manuals.fibaro.com/content/manuals/en/FGR-222/FGR-222-EN-A-v1.2.pdf"
+	}
+}
