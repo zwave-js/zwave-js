@@ -182,9 +182,11 @@ integrationTestMulti(
 			};
 
 			// Include an S2-capable node while the interview is running.
-			// The assertion runs synchronously in the event handler: "node added" is
-			// emitted in the same tick that ends the bootstrapping, before the send
-			// queue can release any held interview frames.
+			// Received frames accumulate, so this assertion covers the entire
+			// key exchange. It runs synchronously in the event handler:
+			// "node added" is emitted in the same tick that ends the
+			// bootstrapping, before the send queue can release any held
+			// interview frames.
 			const nodeAdded = new Promise<ZWaveNode>((resolve, reject) => {
 				driver.controller.once("node added", (node) => {
 					try {
