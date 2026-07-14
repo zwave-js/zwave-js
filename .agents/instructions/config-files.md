@@ -73,9 +73,11 @@ When authoring and reviewing configuration files, consistency is key for maintai
 ### Firmware Version
 
 - Should be as wide as possible, by default "0.0" to "255.255"
+- A single firmware version reported in an issue, interview, log, or the "Firmware Version" field of a device request is only the version of the reporter's unit. It is not a range boundary. Never copy it into `min` or `max`; keep the default "0.0" to "255.255".
 - Only specify a narrower range if
   - there are multiple revisions of a device that only differ in firmware version
   - changes in a firmware version are significant enough that using conditional parameters would introduce too much complexity
+- Narrowing requires evidence of such a split (e.g. a changelog or multiple existing configs). Absent that evidence, use the full default range even when a specific version is known.
 
 ## Configuration Parameters
 

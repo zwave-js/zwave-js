@@ -15,7 +15,9 @@ Before starting any work, ensure the user has provided all required information:
 4. **Website URL** containing configuration parameter details
 5. **Firmware Version Range** (optional)
 
-If any required information is missing, ask the user to provide it before proceeding. Unless explicitly specified otherwise use the default firmware version range of "0.0" to "255.255".
+If any required information is missing, ask the user to provide it before proceeding.
+
+Always use the default firmware version range of "0.0" to "255.255", unless the user provides an actual _range_ that marks a known split between device revisions. A single firmware version (e.g. the version of one reporter's unit) is not a range: do not put it in `min` or `max`, keep the default instead. See the Firmware Version rules in `.agents/instructions/config-files.md`.
 
 # Primary Tasks
 
