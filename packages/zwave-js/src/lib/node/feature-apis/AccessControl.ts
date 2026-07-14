@@ -13,7 +13,7 @@ import { type UserCodeCCAPI, UserCodeCCValues } from "@zwave-js/cc/UserCodeCC";
 import {
 	type UserCredentialCCAPI,
 	type UserCredentialCCAssociationReport,
-	UserCredentialCCCredentialReport,
+	type UserCredentialCCCredentialReport,
 	type UserCredentialCCUserReport,
 	UserCredentialCCValues,
 	normalizeCredentialData,
