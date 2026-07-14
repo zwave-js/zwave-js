@@ -198,6 +198,14 @@ function u3cAssociationStatusToAssignCredentialResult(
 	}
 }
 
+/** Packs a credential type and slot into the value DB property key */
+function credentialPropertyKey(
+	type: UserCredentialType,
+	slot: number,
+): number {
+	return UserCredentialCCValues.credential(type, slot).id.propertyKey;
+}
+
 const NON_PIN_CHARS = /[^0-9]/;
 
 /**
@@ -1361,7 +1369,16 @@ export class AccessControlAPI extends FeatureAPI {
 				raw?.reportType,
 			);
 			if (status === SetCredentialResult.OK) {
-				this.#purgeCachedCredentials(userId, credentialType);
+				// A specific type maps to its property-key range; None purges all types
+				if (credentialType === UserCredentialType.None) {
+					this.#purgeCachedCredentials(userId);
+				} else {
+					this.#purgeCachedCredentials(
+						userId,
+						credentialPropertyKey(credentialType, 0),
+						credentialPropertyKey(credentialType + 1, 0),
+					);
+				}
 			}
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			return status;
@@ -1637,59 +1654,16 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	/**
-	 * Removes cached credential values from the value DB for the given filters.
-	 * Use userId 0 to match all users, and UserCredentialType.None to match all
-	 * credential types.
-	 */
-	#purgeCachedCredentials(
-		userId: number,
-		credentialType: UserCredentialType = UserCredentialType.None,
-	): void {
-		const valueDB = this.endpoint.tryGetNode()?.valueDB;
-		if (!valueDB) return;
-		const credentialOwners = valueDB.findValues(
-			(vid) =>
-				UserCredentialCCValues.credentialOwner.is(vid)
-				&& vid.endpoint === this.endpoint.index,
-		);
-		for (const { endpoint, propertyKey, value } of credentialOwners) {
-			// Bulk delete reports use wildcard filters instead of enumerating each
-			// removed credential, so match against the requested owner/type here.
-			if (userId !== 0 && value !== userId) continue;
-
-			const key = propertyKey as number;
-			const type = key >>> 16;
-			const slot = key & 0xffff;
-			if (
-				credentialType !== UserCredentialType.None
-				&& type !== credentialType
-			) {
-				continue;
-			}
-
-			for (
-				const valueId of [
-					UserCredentialCCValues.credential(type, slot),
-					UserCredentialCCValues.credentialOwner(type, slot),
-					UserCredentialCCValues.credentialModifierType(type, slot),
-					UserCredentialCCValues.credentialModifierNodeId(type, slot),
-				]
-			) {
-				valueDB.removeValue(valueId.endpoint(endpoint));
-			}
-		}
-	}
-
-	/**
-	 * Drop all cached cached credentials that match the given filter
+	 * Removes cached credential values from the value DB that belong to the given
+	 * user and fall within the given property-key range.
 	 * @param userId The user ID to match, or 0 to match all users
 	 * @param fromKey The lower bound of the property key range to match (inclusive)
 	 * @param toKey The upper bound of the property key range to match (exclusive)
 	 */
-	#reconcileCredentialGap_U3C(
+	#purgeCachedCredentials(
 		userId: number,
-		fromKey: number,
-		toKey: number,
+		fromKey = 0,
+		toKey = Number.POSITIVE_INFINITY,
 	): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
@@ -1842,11 +1816,9 @@ export class AccessControlAPI extends FeatureAPI {
 		let queryType = startType;
 		let querySlot = startSlot;
 
-		const propertyKey = (type: UserCredentialType, slot: number) =>
-			(type << 16) | slot;
 		const scopeEnd = filterType != undefined
-			? propertyKey(filterType + 1, 0)
-			: propertyKey(0xff + 1, 0);
+			? credentialPropertyKey(filterType + 1, 0)
+			: credentialPropertyKey(0xff + 1, 0);
 
 		// U3C credential enumeration behaves like a cursor walk.
 		// The initial (userId, type, slot) triple may be exact or wildcarded,
@@ -1863,9 +1835,9 @@ export class AccessControlAPI extends FeatureAPI {
 			// Empty report on the first request - there are no credentials for this user and type.
 			// Purge them all.
 			if (result && !credential && credentials.length === 0) {
-				this.#reconcileCredentialGap_U3C(
+				this.#purgeCachedCredentials(
 					userId,
-					propertyKey(startType, startSlot),
+					credentialPropertyKey(startType, startSlot),
 					scopeEnd,
 				);
 			}
@@ -1880,10 +1852,10 @@ export class AccessControlAPI extends FeatureAPI {
 
 			// Purge all cached stale credentials before the first result
 			if (credentials.length === 0) {
-				this.#reconcileCredentialGap_U3C(
+				this.#purgeCachedCredentials(
 					userId,
-					propertyKey(startType, startSlot),
-					propertyKey(credential.type, credential.slot),
+					credentialPropertyKey(startType, startSlot),
+					credentialPropertyKey(credential.type, credential.slot),
 				);
 			}
 
@@ -1898,9 +1870,9 @@ export class AccessControlAPI extends FeatureAPI {
 				nextType === UserCredentialType.None
 				&& nextSlot === 0
 			) {
-				this.#reconcileCredentialGap_U3C(
+				this.#purgeCachedCredentials(
 					userId,
-					propertyKey(credential.type, credential.slot + 1),
+					credentialPropertyKey(credential.type, credential.slot + 1),
 					scopeEnd,
 				);
 				break;
@@ -1912,9 +1884,9 @@ export class AccessControlAPI extends FeatureAPI {
 			if (filterType != undefined && nextType !== filterType) {
 				// Purge the filtered type's tail when the pointer crosses into a later type
 				if (nextType > filterType) {
-					this.#reconcileCredentialGap_U3C(
+					this.#purgeCachedCredentials(
 						userId,
-						propertyKey(credential.type, credential.slot + 1),
+						credentialPropertyKey(credential.type, credential.slot + 1),
 						scopeEnd,
 					);
 				}
@@ -1925,10 +1897,10 @@ export class AccessControlAPI extends FeatureAPI {
 				break;
 			}
 
-			this.#reconcileCredentialGap_U3C(
+			this.#purgeCachedCredentials(
 				userId,
-				propertyKey(credential.type, credential.slot + 1),
-				propertyKey(nextType, nextSlot),
+				credentialPropertyKey(credential.type, credential.slot + 1),
+				credentialPropertyKey(nextType, nextSlot),
 			);
 
 			queryType = nextType;
