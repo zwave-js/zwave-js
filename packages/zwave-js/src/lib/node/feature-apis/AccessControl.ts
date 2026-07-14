@@ -1886,7 +1886,10 @@ export class AccessControlAPI extends FeatureAPI {
 				if (nextType > filterType) {
 					this.#purgeCachedCredentials(
 						userId,
-						credentialPropertyKey(credential.type, credential.slot + 1),
+						credentialPropertyKey(
+							credential.type,
+							credential.slot + 1,
+						),
 						scopeEnd,
 					);
 				}
