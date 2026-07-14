@@ -1893,11 +1893,6 @@ integrationTest(
 	},
 );
 
-// =============================================================================
-// getAllCredentials / getCredentialsByType / getCredentialsForUser reconcile
-// the cache against the node's enumeration walk
-// =============================================================================
-
 integrationTest(
 	"getAllCredentials purges leading, interior, and trailing orphaned credentials",
 	{

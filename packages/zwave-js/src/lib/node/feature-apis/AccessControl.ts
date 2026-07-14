@@ -13,6 +13,7 @@ import { type UserCodeCCAPI, UserCodeCCValues } from "@zwave-js/cc/UserCodeCC";
 import {
 	type UserCredentialCCAPI,
 	type UserCredentialCCAssociationReport,
+	UserCredentialCCCredentialReport,
 	type UserCredentialCCUserReport,
 	UserCredentialCCValues,
 	normalizeCredentialData,
@@ -87,10 +88,6 @@ export interface DeleteCredentialsOptions {
 	 */
 	credentialType?: UserCredentialType;
 }
-
-type UserCredentialGetResult = Awaited<
-	ReturnType<UserCredentialCCAPI["getCredential"]>
->;
 
 /** Result of an addUser call */
 export interface AddUserResult {
@@ -1683,23 +1680,30 @@ export class AccessControlAPI extends FeatureAPI {
 		}
 	}
 
-	// Drop cached credentials with composite keys in the exclusive range (from, to)
+	/**
+	 * Drop all cached cached credentials that match the given filter
+	 * @param userId The user ID to match, or 0 to match all users
+	 * @param fromKey The lower bound of the property key range to match (inclusive)
+	 * @param toKey The upper bound of the property key range to match (exclusive)
+	 */
 	#reconcileCredentialGap_U3C(
 		userId: number,
-		from: number,
-		to: number,
+		fromKey: number,
+		toKey: number,
 	): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
 
+		// Determine the ownership of all credentials
 		const credentialOwners = valueDB.findValues(
 			(vid) =>
 				UserCredentialCCValues.credentialOwner.is(vid)
 				&& vid.endpoint === this.endpoint.index,
 		);
+		// And delete them if they lie in the half-open range [fromKey, toKey) (and optionally belong to the given user)
 		for (const { endpoint, propertyKey, value } of credentialOwners) {
 			const key = propertyKey as number;
-			if (key <= from || key >= to) continue;
+			if (key < fromKey || key >= toKey) continue;
 			// Skip other users' entries because they aren't visited by this walk
 			if (userId !== 0 && value !== userId) continue;
 
@@ -1811,7 +1815,7 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#mapCredentialData(
-		result: UserCredentialGetResult,
+		result: UserCredentialCCCredentialReport | undefined,
 	): CredentialData | undefined {
 		if (!result?.credentialSlot) return undefined;
 		return {
@@ -1838,11 +1842,11 @@ export class AccessControlAPI extends FeatureAPI {
 		let queryType = startType;
 		let querySlot = startSlot;
 
-		const composite = (type: UserCredentialType, slot: number) =>
+		const propertyKey = (type: UserCredentialType, slot: number) =>
 			(type << 16) | slot;
 		const scopeEnd = filterType != undefined
-			? composite(filterType + 1, 0)
-			: 0x100_0000;
+			? propertyKey(filterType + 1, 0)
+			: propertyKey(0xff + 1, 0);
 
 		// U3C credential enumeration behaves like a cursor walk.
 		// The initial (userId, type, slot) triple may be exact or wildcarded,
@@ -1856,11 +1860,12 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
 			const credential = this.#mapCredentialData(result);
-			// Explicit empty report on the first request — reconcile the entire scope
+			// Empty report on the first request - there are no credentials for this user and type.
+			// Purge them all.
 			if (result && !credential && credentials.length === 0) {
 				this.#reconcileCredentialGap_U3C(
 					userId,
-					composite(startType, startSlot),
+					propertyKey(startType, startSlot),
 					scopeEnd,
 				);
 			}
@@ -1873,12 +1878,12 @@ export class AccessControlAPI extends FeatureAPI {
 				break;
 			}
 
-			// Reconcile the leading gap before the first result
+			// Purge all cached stale credentials before the first result
 			if (credentials.length === 0) {
 				this.#reconcileCredentialGap_U3C(
 					userId,
-					composite(startType, startSlot),
-					composite(credential.type, credential.slot),
+					propertyKey(startType, startSlot),
+					propertyKey(credential.type, credential.slot),
 				);
 			}
 
@@ -1888,14 +1893,14 @@ export class AccessControlAPI extends FeatureAPI {
 				?? UserCredentialType.None;
 			const nextSlot = result.nextCredentialSlot ?? 0;
 			// A zero next pointer marks the end of the node's credential sequence,
-			// so reconcile the trailing gap past the last result
+			// so purge all stale credentials after the last result
 			if (
 				nextType === UserCredentialType.None
 				&& nextSlot === 0
 			) {
 				this.#reconcileCredentialGap_U3C(
 					userId,
-					composite(credential.type, credential.slot),
+					propertyKey(credential.type, credential.slot + 1),
 					scopeEnd,
 				);
 				break;
@@ -1905,11 +1910,11 @@ export class AccessControlAPI extends FeatureAPI {
 			// type-filtered walks, stop before following that pointer into a
 			// different type.
 			if (filterType != undefined && nextType !== filterType) {
-				// Reconcile the filtered type's tail when the pointer crosses into a later type
+				// Purge the filtered type's tail when the pointer crosses into a later type
 				if (nextType > filterType) {
 					this.#reconcileCredentialGap_U3C(
 						userId,
-						composite(credential.type, credential.slot),
+						propertyKey(credential.type, credential.slot + 1),
 						scopeEnd,
 					);
 				}
@@ -1922,8 +1927,8 @@ export class AccessControlAPI extends FeatureAPI {
 
 			this.#reconcileCredentialGap_U3C(
 				userId,
-				composite(credential.type, credential.slot),
-				composite(nextType, nextSlot),
+				propertyKey(credential.type, credential.slot + 1),
+				propertyKey(nextType, nextSlot),
 			);
 
 			queryType = nextType;
