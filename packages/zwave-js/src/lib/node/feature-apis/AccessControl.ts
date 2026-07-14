@@ -13,6 +13,7 @@ import { type UserCodeCCAPI, UserCodeCCValues } from "@zwave-js/cc/UserCodeCC";
 import {
 	type UserCredentialCCAPI,
 	type UserCredentialCCAssociationReport,
+	type UserCredentialCCCredentialReport,
 	type UserCredentialCCUserReport,
 	UserCredentialCCValues,
 	normalizeCredentialData,
@@ -87,10 +88,6 @@ export interface DeleteCredentialsOptions {
 	 */
 	credentialType?: UserCredentialType;
 }
-
-type UserCredentialGetResult = Awaited<
-	ReturnType<UserCredentialCCAPI["getCredential"]>
->;
 
 /** Result of an addUser call */
 export interface AddUserResult {
@@ -199,6 +196,14 @@ function u3cAssociationStatusToAssignCredentialResult(
 		default:
 			return AssignCredentialResult.Error_Unknown;
 	}
+}
+
+/** Packs a credential type and slot into the value DB property key */
+function credentialPropertyKey(
+	type: UserCredentialType,
+	slot: number,
+): number {
+	return UserCredentialCCValues.credential(type, slot).id.propertyKey;
 }
 
 const NON_PIN_CHARS = /[^0-9]/;
@@ -1364,7 +1369,16 @@ export class AccessControlAPI extends FeatureAPI {
 				raw?.reportType,
 			);
 			if (status === SetCredentialResult.OK) {
-				this.#purgeCachedCredentials(userId, credentialType);
+				// A specific type maps to its property-key range; None purges all types
+				if (credentialType === UserCredentialType.None) {
+					this.#purgeCachedCredentials(userId);
+				} else {
+					this.#purgeCachedCredentials(
+						userId,
+						credentialPropertyKey(credentialType, 0),
+						credentialPropertyKey(credentialType + 1, 0),
+					);
+				}
 			}
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
 			return status;
@@ -1640,36 +1654,35 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	/**
-	 * Removes cached credential values from the value DB for the given filters.
-	 * Use userId 0 to match all users, and UserCredentialType.None to match all
-	 * credential types.
+	 * Removes cached credential values from the value DB that belong to the given
+	 * user and fall within the given property-key range.
+	 * @param userId The user ID to match, or 0 to match all users
+	 * @param fromKey The lower bound of the property key range to match (inclusive)
+	 * @param toKey The upper bound of the property key range to match (exclusive)
 	 */
 	#purgeCachedCredentials(
 		userId: number,
-		credentialType: UserCredentialType = UserCredentialType.None,
+		fromKey = 0,
+		toKey = Number.POSITIVE_INFINITY,
 	): void {
 		const valueDB = this.endpoint.tryGetNode()?.valueDB;
 		if (!valueDB) return;
+
+		// Determine the ownership of all credentials
 		const credentialOwners = valueDB.findValues(
 			(vid) =>
 				UserCredentialCCValues.credentialOwner.is(vid)
 				&& vid.endpoint === this.endpoint.index,
 		);
+		// And delete them if they lie in the half-open range [fromKey, toKey) (and optionally belong to the given user)
 		for (const { endpoint, propertyKey, value } of credentialOwners) {
-			// Bulk delete reports use wildcard filters instead of enumerating each
-			// removed credential, so match against the requested owner/type here.
+			const key = propertyKey as number;
+			if (key < fromKey || key >= toKey) continue;
+			// Skip other users' entries because they aren't visited by this walk
 			if (userId !== 0 && value !== userId) continue;
 
-			const key = propertyKey as number;
 			const type = key >>> 16;
 			const slot = key & 0xffff;
-			if (
-				credentialType !== UserCredentialType.None
-				&& type !== credentialType
-			) {
-				continue;
-			}
-
 			for (
 				const valueId of [
 					UserCredentialCCValues.credential(type, slot),
@@ -1776,7 +1789,7 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#mapCredentialData(
-		result: UserCredentialGetResult,
+		result: UserCredentialCCCredentialReport | undefined,
 	): CredentialData | undefined {
 		if (!result?.credentialSlot) return undefined;
 		return {
@@ -1803,6 +1816,10 @@ export class AccessControlAPI extends FeatureAPI {
 		let queryType = startType;
 		let querySlot = startSlot;
 
+		const scopeEnd = filterType != undefined
+			? credentialPropertyKey(filterType + 1, 0)
+			: credentialPropertyKey(0xff + 1, 0);
+
 		// U3C credential enumeration behaves like a cursor walk.
 		// The initial (userId, type, slot) triple may be exact or wildcarded,
 		// and each report returns both the matching credential and a pointer to
@@ -1815,6 +1832,15 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 			if (result) await this.endpoint.tryGetNode()?.handleCommand(result);
 			const credential = this.#mapCredentialData(result);
+			// Empty report on the first request - there are no credentials for this user and type.
+			// Purge them all.
+			if (result && !credential && credentials.length === 0) {
+				this.#purgeCachedCredentials(
+					userId,
+					credentialPropertyKey(startType, startSlot),
+					scopeEnd,
+				);
+			}
 			// No credential means the walk is exhausted or the current selector did
 			// not resolve to a valid entry on this node.
 			if (!result || !credential) break;
@@ -1824,16 +1850,31 @@ export class AccessControlAPI extends FeatureAPI {
 				break;
 			}
 
+			// Purge all cached stale credentials before the first result
+			if (credentials.length === 0) {
+				this.#purgeCachedCredentials(
+					userId,
+					credentialPropertyKey(startType, startSlot),
+					credentialPropertyKey(credential.type, credential.slot),
+				);
+			}
+
 			credentials.push(credential);
 
 			const nextType = result.nextCredentialType
 				?? UserCredentialType.None;
 			const nextSlot = result.nextCredentialSlot ?? 0;
-			// A zero next pointer marks the end of the node's credential sequence.
+			// A zero next pointer marks the end of the node's credential sequence,
+			// so purge all stale credentials after the last result
 			if (
 				nextType === UserCredentialType.None
 				&& nextSlot === 0
 			) {
+				this.#purgeCachedCredentials(
+					userId,
+					credentialPropertyKey(credential.type, credential.slot + 1),
+					scopeEnd,
+				);
 				break;
 			}
 			// Per CC:0083.01.0C.11.024/.025, the next pointer advances to the next
@@ -1841,12 +1882,29 @@ export class AccessControlAPI extends FeatureAPI {
 			// type-filtered walks, stop before following that pointer into a
 			// different type.
 			if (filterType != undefined && nextType !== filterType) {
+				// Purge the filtered type's tail when the pointer crosses into a later type
+				if (nextType > filterType) {
+					this.#purgeCachedCredentials(
+						userId,
+						credentialPropertyKey(
+							credential.type,
+							credential.slot + 1,
+						),
+						scopeEnd,
+					);
+				}
 				break;
 			}
 			// Guard against buggy nodes that repeat the same cursor forever.
 			if (nextType === queryType && nextSlot === querySlot) {
 				break;
 			}
+
+			this.#purgeCachedCredentials(
+				userId,
+				credentialPropertyKey(credential.type, credential.slot + 1),
+				credentialPropertyKey(nextType, nextSlot),
+			);
 
 			queryType = nextType;
 			querySlot = nextSlot;

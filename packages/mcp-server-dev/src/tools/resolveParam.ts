@@ -1,6 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
 	DeviceConfig,
+	type ParamInformation,
 	clearTemplateCache,
 	readJsonWithTemplate,
 } from "@zwave-js/config";
@@ -38,7 +39,7 @@ export async function resolveParamsForFirmware(
 	parameter: number,
 	valueBitMask: number | undefined,
 	firmwareVersion: string,
-) {
+): Promise<ParamInformation[]> {
 	const raw = parseJsonC(await readFile(filename, "utf8"));
 	const firstDevice = (raw?.devices as any[] | undefined)?.[0];
 	const deviceId = {
