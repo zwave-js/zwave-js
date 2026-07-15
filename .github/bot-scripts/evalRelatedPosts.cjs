@@ -55,6 +55,11 @@ async function main() {
 		);
 		return false;
 	});
+	if (cases.length === 0) {
+		throw new Error(
+			"No eval cases remain after filtering - cannot evaluate retrieval quality",
+		);
+	}
 
 	// A single batched request embeds all eval questions at once
 	const embeddings = await embed(

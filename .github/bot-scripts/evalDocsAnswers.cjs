@@ -15,7 +15,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { judgeAnswer } = require("./answerFromDocs.cjs");
-const { retrieve } = require("./docsIndex.cjs");
+const { loadDocsIndex, retrieve } = require("./docsIndex.cjs");
 const { logCase, reportResults } = require("./evalUtils.cjs");
 const { embed } = require("./modelsApi.cjs");
 
@@ -39,7 +39,13 @@ async function main() {
 		process.exit(1);
 	}
 
-	const index = JSON.parse(await fs.readFile(indexFile, "utf8"));
+	const index = await loadDocsIndex(indexFile);
+	if (!index) {
+		console.error(
+			`No valid docs index found at ${indexFile} (missing, wrong version, or malformed)`,
+		);
+		process.exit(1);
+	}
 	/** @type {{question: string, expectedFiles: string[]}[]} */
 	const cases = JSON.parse(
 		await fs.readFile(
@@ -47,6 +53,11 @@ async function main() {
 			"utf8",
 		),
 	);
+	if (cases.length === 0) {
+		throw new Error(
+			"No eval cases found in docsAnswersEvalCases.json - cannot evaluate retrieval quality",
+		);
+	}
 
 	// A single batched request embeds all eval questions at once
 	const embeddings = await embed(

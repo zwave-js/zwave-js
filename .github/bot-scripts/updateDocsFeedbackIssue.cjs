@@ -23,6 +23,7 @@ const ISSUE_LABEL = "docs-feedback";
 
 // Keep suggested eval cases (and the issue body) readable
 const MAX_EVAL_QUESTION_LENGTH = 300;
+const MAX_BODY_LENGTH = 60_000;
 
 /**
  * Keeps user-controlled text from pinging people via @mentions
@@ -46,6 +47,7 @@ function renderVotes(record) {
 			`${up.length}× 👍 (+${up.reduce((sum, v) => sum + v.weight, 0)})`,
 		);
 	}
+
 	if (down.length > 0) {
 		parts.push(
 			`${down.length}× 👎 (${
@@ -54,6 +56,15 @@ function renderVotes(record) {
 		);
 	}
 	return parts.join(", ");
+}
+
+/** @param {string} content */
+function codeFence(content) {
+	const longestRun = Math.max(
+		0,
+		...[...content.matchAll(/`+/g)].map((match) => match[0].length),
+	);
+	return "`".repeat(Math.max(3, longestRun + 1));
 }
 
 /**
@@ -103,13 +114,61 @@ function renderEvalCase(record) {
 			...new Set(record.sections.map((s) => s.split("#")[0])),
 		],
 	};
+	const json = JSON.stringify(evalCase, undefined, "\t");
+	const fence = codeFence(json);
 	return `<details><summary>Suggested eval case</summary>
 
-\`\`\`json
-${JSON.stringify(evalCase, undefined, "\t")}
-\`\`\`
+${fence}json
+${json}
+${fence}
 
 </details>`;
+}
+
+/**
+ * @param {string[]} rendered
+ * @param {number} budget
+ */
+function joinWithinBudget(rendered, budget) {
+	/** @type {string[]} */
+	const included = [];
+	for (let i = 0; i < rendered.length; i++) {
+		const entry = rendered[i];
+		const candidate = [...included, entry].join("\n\n");
+		const remaining = rendered.length - i - 1;
+		const omission = remaining > 0
+			? `\n\n_...and ${remaining} more, omitted to keep this issue within GitHub's body size limit._`
+			: "";
+		if (candidate.length + omission.length > budget) break;
+		included.push(entry);
+	}
+
+	const omitted = rendered.length - included.length;
+	let text = included.join("\n\n");
+	if (omitted > 0) {
+		const omission =
+			`_...and ${omitted} more, omitted to keep this issue within GitHub's body size limit._`;
+		const separator = text ? "\n\n" : "";
+		if (text.length + separator.length + omission.length <= budget) {
+			text += separator + omission;
+		}
+	}
+	return text;
+}
+
+/**
+ * @param {string} prefix
+ * @param {string[]} entries
+ * @param {number} budget
+ */
+function renderDigestSection(prefix, entries, budget) {
+	if (prefix.length > budget) return "";
+	const separator = entries.length > 0 ? "\n\n" : "";
+	const content = joinWithinBudget(
+		entries,
+		Math.max(0, budget - prefix.length - separator.length),
+	);
+	return content ? `${prefix}${separator}${content}` : prefix;
 }
 
 /**
@@ -124,7 +183,7 @@ function renderDigest(records) {
 		.filter((r) => r.score < 0)
 		.sort((a, b) => a.score - b.score);
 
-	const sections = [
+	const header = [
 		ISSUE_MARKER,
 		`_Automatically generated from reactions to the bot's answers in issues and discussions over the last ${SCAN_WINDOW_DAYS} days. Maintainer votes count ×5, the question author's ×2. Last updated: ${
 			new Date().toISOString().slice(0, 10)
@@ -133,25 +192,40 @@ function renderDigest(records) {
 
 - ${records.length} answers posted, ${withFeedback.length} with feedback
 - ${good.length} rated helpful, ${bad.length} rated unhelpful`,
-	];
+	].join("\n\n");
+	const sections = [header];
+	const sectionCount = Number(bad.length > 0) + Number(good.length > 0);
+	const joinerBudget = sectionCount * 2;
+	const remainingBudget = Math.max(
+		0,
+		MAX_BODY_LENGTH - header.length - joinerBudget,
+	);
+	const firstSectionBudget = bad.length > 0 && good.length > 0
+		? Math.floor(remainingBudget / 2)
+		: remainingBudget;
+	const secondSectionBudget = remainingBudget - firstSectionBudget;
 
 	if (bad.length > 0) {
 		sections.push(
-			`## Needs attention
+			renderDigestSection(
+				`## Needs attention
 
-Negative feedback usually means the linked documentation did not answer the question — these are candidates for docs improvements.
-
-${bad.map(renderRecord).join("\n\n")}`,
+Negative feedback usually means the linked documentation did not answer the question — these are candidates for docs improvements.`,
+				bad.map(renderRecord),
+				firstSectionBudget,
+			),
 		);
 	}
 
 	if (good.length > 0) {
 		sections.push(
-			`## Confirmed good
+			renderDigestSection(
+				`## Confirmed good
 
-These answers were rated helpful. Consider curating them into \`docsAnswersEvalCases.json\` to lock in the retrieval quality.
-
-${good.map((r) => `${renderRecord(r)}\n${renderEvalCase(r)}`).join("\n\n")}`,
+These answers were rated helpful. Consider curating them into \`docsAnswersEvalCases.json\` to lock in the retrieval quality.`,
+				good.map((r) => `${renderRecord(r)}\n${renderEvalCase(r)}`),
+				bad.length > 0 ? secondSectionBudget : firstSectionBudget,
+			),
 		);
 	}
 
@@ -220,3 +294,16 @@ if (require.main === module) {
 		process.exit(1);
 	});
 }
+
+module.exports = {
+	main,
+	codeFence,
+	renderEvalCase,
+	renderRecord,
+	renderDigest,
+	joinWithinBudget,
+	ISSUE_LABEL,
+	ISSUE_TITLE,
+	ISSUE_MARKER,
+	MAX_BODY_LENGTH,
+};
