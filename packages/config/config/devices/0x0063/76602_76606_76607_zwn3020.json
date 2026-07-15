@@ -1,0 +1,100 @@
+{
+	"manufacturer": "UltraPro",
+	"manufacturerId": "0x0063",
+	"label": "76602 / 76606 / 76607 / ZWN3020",
+	"description": "In-Wall Smart Dimmer, 800S",
+	"devices": [
+		{
+			"productType": "0x4944",
+			"productId": "0x3538"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Single Press",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Press",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "5",
+			"$import": "templates/jasco_template.json#three_way_setup"
+		},
+		{
+			"#": "16",
+			"$import": "templates/jasco_template.json#switch_mode"
+		},
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion"
+		},
+		{
+			"#": "30",
+			"$import": "templates/jasco_template.json#dim_threshold_min"
+		},
+		{
+			"#": "31",
+			"$import": "templates/jasco_template.json#dim_threshold_max"
+		},
+		{
+			"#": "32",
+			"$import": "templates/jasco_template.json#default_brightness_level"
+		},
+		{
+			"#": "34",
+			"$import": "templates/jasco_template.json#led_indicator_color"
+		},
+		{
+			"#": "35",
+			"$import": "templates/jasco_template.json#led_indicator_intensity_no_off"
+		},
+		{
+			"#": "36",
+			"$import": "templates/jasco_template.json#led_indicator_intensity_no_off",
+			"label": "Guidelight Mode Intensity"
+		},
+		{
+			"#": "84",
+			"$import": "templates/jasco_template.json#factory_default"
+		}
+	],
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		}
+	},
+	"compat": {
+		// Needed for double-tap support
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the smart dimmer.",
+		"exclusion": "Press and release the top or bottom of the smart dimmer.",
+		"reset": "1. Pull up the air gap switch.\n2. While pressing the bottom button, push in the air gap and continue pressing the bottom button.\n3. The LED flashes through the eight colors once.",
+		"manual": "https://github.com/user-attachments/files/30017076/76602_76606_76607_Manual.pdf"
+	}
+}
