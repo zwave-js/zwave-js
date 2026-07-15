@@ -36,6 +36,7 @@ This repository holds the Z-Wave JS driver library, a TypeScript implementation 
 - Check configuration files for semantic errors: `yarn lint:zwave`
 - Detect and fix linting issues in TypeScript code: `yarn lint:ts:fix`
 - Prefer built-in tools for finding files (e.g. `Grep`) over shell commands like `find`, `ls`, `grep`, `xargs`, to ensure cross-platform compatibility.
+- For any task that authors or reviews device configuration files, use the repository's `zwave-dev` MCP tools as the primary interface. Do not replace its template resolution and targeted diagnostics with manual `$import` tracing or repository-wide lint commands.
 
 ## Common Guidelines
 
