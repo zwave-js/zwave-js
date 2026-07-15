@@ -3558,13 +3558,9 @@ __metadata:
     "@zwave-js/shared": "workspace:*"
     jsonc-parser: "npm:^3.2.0"
     nano-spawn: "npm:^2.1.0"
-    onnxruntime-node: "npm:1.24.3"
     p-queue: "npm:^9.1.0"
     vscode-json-languageservice: "npm:^5.1.3"
     vscode-languageserver-textdocument: "npm:^1.0.13"
-  dependenciesMeta:
-    onnxruntime-node:
-      built: false
   bin:
     zwave-dev-mcp: ./build/index.js
   languageName: unknown
