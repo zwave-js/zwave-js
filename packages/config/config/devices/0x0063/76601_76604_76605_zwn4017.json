@@ -1,0 +1,82 @@
+{
+	"manufacturer": "UltraPro",
+	"manufacturerId": "0x0063",
+	"label": "76601 / 76604 / 76605 / ZWN4017",
+	"description": "800 Series Z-Wave On/Off Switch",
+	"devices": [
+		{
+			"productType": "0x4952",
+			"productId": "0x3534"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Single Press",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Double Press",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#orientation"
+		},
+		{
+			"#": "5",
+			"$import": "templates/jasco_template.json#three_way_setup"
+		},
+		{
+			"#": "19",
+			"$import": "templates/jasco_template.json#alternate_exclusion_menu"
+		},
+		{
+			"#": "34",
+			"$import": "templates/jasco_template.json#led_indicator_color"
+		},
+		{
+			"#": "35",
+			"$import": "templates/jasco_template.json#led_indicator_intensity_no_off"
+		},
+		{
+			"#": "36",
+			"$import": "templates/jasco_template.json#led_indicator_intensity_no_off",
+			"label": "Guidelight Mode Intensity"
+		},
+		{
+			"#": "39",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Relay Control",
+			"defaultValue": 0
+		},
+		{
+			"#": "84",
+			"$import": "templates/jasco_template.json#factory_default"
+		}
+	],
+	"compat": {
+		// Needed for double-press support
+		"mapBasicSet": "event"
+	},
+	"metadata": {
+		"inclusion": "Press and release the top or bottom of the smart switch.",
+		"exclusion": "Press and release the top or bottom of the smart switch.",
+		"reset": "1. Pull the airgap switch.\n2. Press and hold the bottom button, push the airgap switch in and continue holding the bottom button for 10 seconds.\n3. The LED will flash once each of the 8 colors then stop.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80626/ZWN4017-Z-WavePlusIn-WallPaddlesSwitch800SUserManual.pdf"
+	}
+}
