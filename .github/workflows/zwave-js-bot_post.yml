@@ -6,6 +6,10 @@ on:
   discussion:
     types: [created, edited]
 
+concurrency:
+  group: zwave-js-bot-post-${{ github.event_name }}-${{ github.event.issue.number || github.event.discussion.number }}
+  cancel-in-progress: false
+
 jobs:
   # Notify issue author when they post the wrong log
   ensure-logfile:
@@ -183,16 +187,14 @@ jobs:
           return bot.ensureLogfileFeedback({github, context}, feedback);
 
   # Answer questions that are covered by the documentation and/or
-  # suggest similar existing posts
+  # suggest similar existing posts. Maintainer and bot exclusions are
+  # derived from users.cjs inside answerFromDocs.cjs.
   answer-from-docs:
     runs-on: [ubuntu-latest]
+    timeout-minutes: 10
     permissions:
       contents: read
       models: read
-    if: |
-      (github.event.issue.user.login || github.event.discussion.user.login) != 'AlCalzone' &&
-      (github.event.issue.user.login || github.event.discussion.user.login) != 'zwave-js-bot'
-
     steps:
     - name: Checkout master branch
       uses: actions/checkout@v7
@@ -202,9 +204,9 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: .docs-index
-        key: docs-embeddings-v1-${{ hashFiles('docs/**/*.md') }}
+        key: docs-embeddings-v2-${{ hashFiles('docs/**/*.md', '.github/bot-scripts/buildDocsIndex.cjs', '.github/bot-scripts/docsIndex.cjs', '.github/bot-scripts/modelsApi.cjs') }}
         restore-keys: |
-          docs-embeddings-v1-
+          docs-embeddings-v2-
 
     - name: Restore posts index
       id: restore-posts-index
@@ -227,6 +229,13 @@ jobs:
         restore-keys: |
           docs-feedback-v1-
 
+    - name: Warn if neither index is available
+      if: steps.restore-index.outputs.cache-matched-key == '' && steps.restore-posts-index.outputs.cache-matched-key == ''
+      uses: actions/github-script@v9
+      with:
+        script: |
+          core.warning('Neither the docs index nor the posts index cache is available yet - skipping the docs answer bot for this post.');
+
     - name: Answer from documentation
       if: steps.restore-index.outputs.cache-matched-key != '' || steps.restore-posts-index.outputs.cache-matched-key != ''
       uses: actions/github-script@v9
@@ -247,6 +256,7 @@ jobs:
   # edits cannot burn Models API requests and cache storage.
   update-posts-index:
     runs-on: [ubuntu-latest]
+    timeout-minutes: 10
     permissions:
       contents: read
       models: read
@@ -278,6 +288,13 @@ jobs:
         script: |
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.updatePostsIndex({github, context});
+
+    - name: Warn if no posts index is available
+      if: steps.restore-posts-index.outputs.cache-matched-key == ''
+      uses: actions/github-script@v9
+      with:
+        script: |
+          core.warning('No posts index cache is available yet - skipping the incremental posts index update for this post.');
 
     - name: Save posts index
       if: steps.update.outputs.result == 'true'
