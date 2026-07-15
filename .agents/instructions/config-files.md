@@ -5,6 +5,17 @@
 - Follow the existing code style patterns and formatting standards.
 - Use American English for all text content.
 
+## Required Tooling
+
+The repository's `zwave-dev` MCP server is the primary tool for authoring and reviewing device configuration files. Use its tools during discovery, editing, and validation. Do not merely mention the server in a plan or substitute manual searches, `$import` tracing, and repository-wide lint commands for its targeted capabilities.
+
+- Before defining a parameter, use `search_parameter_definitions` to find established wording, equivalent definitions, and reusable templates. Use `find_similar_parameters` when editing an existing parameter.
+- Use `find_template_definition`, `find_template_references`, and `resolve_config_import` as applicable to inspect and verify templates.
+- After adding or changing an import, use `resolve_config_param` to inspect the final parameter with all templates and overrides applied.
+- Use `suggest_parameter_purpose` when adding or changing a parameter that may match an existing `$purpose`.
+- Before completion, run `autofix_config`, `lint_config`, and `format` in that order.
+- If the `zwave-dev` tools are unavailable, state that explicitly and use the repository commands under Quality Standards as a fallback. Never silently skip the MCP workflow.
+
 ## File Structure and Property Order
 
 Device configuration files must follow this property order for consistency:
@@ -417,6 +428,8 @@ After rewording instructions, double check them for the following requirements:
 
 - Configuration files must follow the mandatory style guide
 - Files that don't follow standards will not be accepted
+- The required `zwave-dev` MCP checks are `autofix_config`, `lint_config`, and `format`, in that order.
+- Repository command checks supplement the MCP tools; they do not replace them.
 - Check files using `yarn run lint:zwave` for semantic errors that need to be fixed (warnings may be tolerated). This command does not take the filename as an argument, use it verbatim.
 - Run `yarn run lint:configjson:fix` to ensure correct formatting - this command runs quickly, so you can use it frequently. This command does not take the filename as an argument, use it verbatim.
 - After doing edits, always run `yarn run lint:zwave` again to ensure no new issues were introduced
