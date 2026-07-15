@@ -5,6 +5,67 @@
 // tokens like API names and error codes. Both rankings are fused
 // via Reciprocal Rank Fusion.
 
+const fs = require("node:fs/promises");
+
+// Bump whenever the index shape or chunking logic changes incompatibly.
+const DOCS_INDEX_VERSION = 1;
+
+/** @param {any} chunk */
+function isValidChunk(chunk) {
+	return (
+		!!chunk
+		&& typeof chunk === "object"
+		&& typeof chunk.file === "string"
+		&& typeof chunk.anchor === "string"
+		&& typeof chunk.title === "string"
+		&& Array.isArray(chunk.breadcrumbs)
+		&& chunk.breadcrumbs.every(
+			(/** @type {any} */ breadcrumb) => typeof breadcrumb === "string",
+		)
+		&& typeof chunk.text === "string"
+		&& Array.isArray(chunk.embedding)
+		&& chunk.embedding.length > 0
+		&& chunk.embedding.every(
+			(/** @type {any} */ value) =>
+				typeof value === "number" && Number.isFinite(value),
+		)
+		&& chunk.embedding.some(
+			(/** @type {number} */ value) => value !== 0,
+		)
+	);
+}
+
+/**
+ * @param {string | undefined} path
+ * @returns {Promise<{version: number, model: string, createdAt: string, chunks: any[]} | undefined>}
+ */
+async function loadDocsIndex(path) {
+	if (!path) return undefined;
+	try {
+		const index = JSON.parse(await fs.readFile(path, "utf8"));
+		if (
+			!index
+			|| index.version !== DOCS_INDEX_VERSION
+			|| typeof index.model !== "string"
+			|| !Array.isArray(index.chunks)
+			|| !index.chunks.every(isValidChunk)
+			|| (
+				index.chunks.length > 0
+				&& !index.chunks.every(
+					(/** @type {any} */ chunk) =>
+						chunk.embedding.length
+							=== index.chunks[0].embedding.length,
+				)
+			)
+		) {
+			return undefined;
+		}
+		return index;
+	} catch {
+		return undefined;
+	}
+}
+
 /**
  * @param {number[]} a
  * @param {number[]} b
@@ -153,6 +214,9 @@ function retrieve(index, questionEmbedding, questionText, numResults) {
 }
 
 module.exports = {
+	DOCS_INDEX_VERSION,
+	isValidChunk,
+	loadDocsIndex,
 	cosineSimilarity,
 	retrieve,
 };
