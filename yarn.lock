@@ -3664,6 +3664,9 @@ __metadata:
     vitest: "npm:~4.0.18"
     xml2js: "npm:^0.6.2"
     zwave-js: "workspace:*"
+  dependenciesMeta:
+    onnxruntime-node:
+      built: false
   languageName: unknown
   linkType: soft
 

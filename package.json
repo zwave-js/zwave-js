@@ -28,6 +28,11 @@
   "workspaces": [
     "packages/*"
   ],
+  "dependenciesMeta": {
+    "onnxruntime-node": {
+      "built": false
+    }
+  },
   "devDependencies": {
     "@actions/core": "^3.0.0",
     "@actions/exec": "^3.0.0",
