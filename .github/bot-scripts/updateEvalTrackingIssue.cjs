@@ -22,9 +22,11 @@ async function main(param) {
 		throw new Error("TRACKING_ISSUE_TITLE is not set");
 	}
 	const failed = process.env.EVAL_OUTCOME === "failure";
+	const summary = process.env.EVAL_SUMMARY;
+	const isInfraFailure = failed && !summary;
 
 	// Find an existing tracking issue, open or closed
-	const { data: issues } = await github.rest.issues.listForRepo({
+	const issues = await github.paginate(github.rest.issues.listForRepo, {
 		...context.repo,
 		creator: "github-actions[bot]",
 		state: "all",
@@ -34,10 +36,13 @@ async function main(param) {
 
 	const runUrl =
 		`${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-	const body =
-		`The daily evaluation of the ${process.env.EVAL_NAME} did not meet the required hit rate.
+	const body = isInfraFailure
+		? `The daily evaluation of the ${process.env.EVAL_NAME} failed to run to completion (an infrastructure error, not a retrieval quality regression).
 
-${process.env.EVAL_SUMMARY || "(no summary available)"}
+See the [workflow run](${runUrl}) for details.`
+		: `The daily evaluation of the ${process.env.EVAL_NAME} did not meet the required hit rate.
+
+${summary || "(no summary available)"}
 
 See the [workflow run](${runUrl}) for details.`;
 

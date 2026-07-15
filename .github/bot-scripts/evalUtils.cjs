@@ -33,6 +33,12 @@ function logCase(hit, result) {
  * @param {number} minHitRate
  */
 async function reportResults(numResults, total, failures, minHitRate) {
+	if (total === 0) {
+		throw new Error(
+			"No eval cases were evaluated - refusing to report a hit rate for zero cases",
+		);
+	}
+
 	const hits = total - failures.length;
 	const hitRate = hits / total;
 	console.log(

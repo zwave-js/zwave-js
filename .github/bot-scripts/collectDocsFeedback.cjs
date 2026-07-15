@@ -21,7 +21,7 @@ const {
 	DOCS_BASE_URL,
 } = require("./answerFromDocs.cjs");
 const { ghGraphql, ghPaginated, ghRequest } = require("./githubApi.cjs");
-const { embed, EMBEDDING_MODEL } = require("./modelsApi.cjs");
+const { embedBatched, EMBEDDING_MODEL } = require("./modelsApi.cjs");
 const { cleanQuestion } = require("./postsIndex.cjs");
 const { authorizedUsers } = require("./users.cjs");
 
@@ -54,6 +54,34 @@ const REACTION_SIGNS = {
 	THUMBS_DOWN: -1,
 	CONFUSED: -1,
 };
+const VALID_METADATA_STYLES = ["answer", "links", "posts"];
+
+/** @param {any} metadata */
+function validateAnswerMetadata(metadata) {
+	if (!metadata || typeof metadata !== "object") return undefined;
+	if (metadata.v !== DOCS_ANSWER_METADATA_VERSION) return undefined;
+
+	const style = VALID_METADATA_STYLES.includes(metadata.style)
+		? metadata.style
+		: "answer";
+	let confidence = metadata.confidence;
+	if (
+		confidence !== null
+		&& (typeof confidence !== "number"
+			|| !Number.isFinite(confidence)
+			|| confidence < 0
+			|| confidence > 100)
+	) {
+		confidence = null;
+	}
+	const sections = Array.isArray(metadata.sections)
+			&& metadata.sections.every(
+				(/** @type {any} */ section) => typeof section === "string",
+			)
+		? metadata.sections
+		: [];
+	return { style, confidence, sections };
+}
 
 /**
  * Extracts the metadata the bot embeds in its answer comments.
@@ -63,20 +91,19 @@ const REACTION_SIGNS = {
  * @returns {{style: string, confidence: number | null, sections: string[]}}
  */
 function parseAnswerMetadata(body) {
-	const match = body.match(
-		new RegExp(`<!-- ${DOCS_ANSWER_METADATA_TAG} (\\{.*?\\}) -->`),
-	);
-	if (match) {
+	const matches = [
+		...body.matchAll(
+			new RegExp(
+				`<!-- ${DOCS_ANSWER_METADATA_TAG} (\\{.*?\\}) -->`,
+				"g",
+			),
+		),
+	];
+	const last = matches[matches.length - 1];
+	if (last) {
 		try {
-			const metadata = JSON.parse(match[1]);
-			// Fields of unknown metadata versions may not mean the same
-			if (metadata.v === DOCS_ANSWER_METADATA_VERSION) {
-				return {
-					style: metadata.style ?? "answer",
-					confidence: metadata.confidence ?? null,
-					sections: metadata.sections ?? [],
-				};
-			}
+			const validated = validateAnswerMetadata(JSON.parse(last[1]));
+			if (validated) return validated;
 		} catch {
 			// Fall through to link parsing
 		}
@@ -128,14 +155,23 @@ function reactionWeight(login, postAuthor) {
  * @param {string} postAuthor
  */
 function scoreReactions(reactions, postAuthor) {
-	const votes = [];
-	let score = 0;
+	/** @type {Map<string, number>} */
+	const netSignByUser = new Map();
 	for (const { user, content } of reactions) {
 		const sign = REACTION_SIGNS[content];
 		if (!sign || !user || user.endsWith("[bot]")) continue;
+		netSignByUser.set(user, (netSignByUser.get(user) ?? 0) + sign);
+	}
+
+	const votes = [];
+	let score = 0;
+	for (const [user, netSign] of netSignByUser) {
+		const sign = Math.sign(netSign);
+		if (sign === 0) continue;
 		const weight = reactionWeight(user, postAuthor);
-		votes.push({ user, content, weight: sign * weight });
-		score += sign * weight;
+		const weighted = sign * weight;
+		votes.push({ user, content: sign > 0 ? "+1" : "-1", weight: weighted });
+		score += weighted;
 	}
 	return { votes, score };
 }
@@ -402,7 +438,7 @@ async function main() {
 		(r) => r.score <= SUPPRESS_SCORE && r.style !== "posts",
 	);
 	const embeddings = downvoted.length > 0
-		? await embed(downvoted.map((r) => r.question), token)
+		? await embedBatched(downvoted.map((r) => r.question), token)
 		: [];
 	const suppressed = downvoted
 		.map((r, i) => ({
@@ -443,4 +479,8 @@ if (require.main === module) {
 module.exports = {
 	SUPPRESS_SCORE,
 	SCAN_WINDOW_DAYS,
+	parseAnswerMetadata,
+	validateAnswerMetadata,
+	scoreReactions,
+	reactionWeight,
 };
