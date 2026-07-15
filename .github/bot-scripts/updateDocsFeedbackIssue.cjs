@@ -132,24 +132,43 @@ ${fence}
 function joinWithinBudget(rendered, budget) {
 	/** @type {string[]} */
 	const included = [];
-	let length = 0;
-	let omitted = 0;
 	for (let i = 0; i < rendered.length; i++) {
 		const entry = rendered[i];
-		const joinerLength = included.length > 0 ? 2 : 0;
-		if (length + entry.length + joinerLength > budget) {
-			omitted = rendered.length - i;
-			break;
-		}
+		const candidate = [...included, entry].join("\n\n");
+		const remaining = rendered.length - i - 1;
+		const omission = remaining > 0
+			? `\n\n_...and ${remaining} more, omitted to keep this issue within GitHub's body size limit._`
+			: "";
+		if (candidate.length + omission.length > budget) break;
 		included.push(entry);
-		length += entry.length + joinerLength;
 	}
+
+	const omitted = rendered.length - included.length;
 	let text = included.join("\n\n");
 	if (omitted > 0) {
-		text +=
-			`\n\n_...and ${omitted} more, omitted to keep this issue within GitHub's body size limit._`;
+		const omission =
+			`_...and ${omitted} more, omitted to keep this issue within GitHub's body size limit._`;
+		const separator = text ? "\n\n" : "";
+		if (text.length + separator.length + omission.length <= budget) {
+			text += separator + omission;
+		}
 	}
 	return text;
+}
+
+/**
+ * @param {string} prefix
+ * @param {string[]} entries
+ * @param {number} budget
+ */
+function renderDigestSection(prefix, entries, budget) {
+	if (prefix.length > budget) return "";
+	const separator = entries.length > 0 ? "\n\n" : "";
+	const content = joinWithinBudget(
+		entries,
+		Math.max(0, budget - prefix.length - separator.length),
+	);
+	return content ? `${prefix}${separator}${content}` : prefix;
 }
 
 /**
@@ -174,34 +193,39 @@ function renderDigest(records) {
 - ${records.length} answers posted, ${withFeedback.length} with feedback
 - ${good.length} rated helpful, ${bad.length} rated unhelpful`,
 	].join("\n\n");
-	const remainingBudget = Math.max(0, MAX_BODY_LENGTH - header.length);
-	const sectionBudget = bad.length > 0 && good.length > 0
-		? remainingBudget / 2
-		: remainingBudget;
 	const sections = [header];
+	const sectionCount = Number(bad.length > 0) + Number(good.length > 0);
+	const joinerBudget = sectionCount * 2;
+	const remainingBudget = Math.max(
+		0,
+		MAX_BODY_LENGTH - header.length - joinerBudget,
+	);
+	const firstSectionBudget = bad.length > 0 && good.length > 0
+		? Math.floor(remainingBudget / 2)
+		: remainingBudget;
+	const secondSectionBudget = remainingBudget - firstSectionBudget;
 
 	if (bad.length > 0) {
 		sections.push(
-			`## Needs attention
+			renderDigestSection(
+				`## Needs attention
 
-Negative feedback usually means the linked documentation did not answer the question — these are candidates for docs improvements.
-
-${joinWithinBudget(bad.map(renderRecord), sectionBudget)}`,
+Negative feedback usually means the linked documentation did not answer the question — these are candidates for docs improvements.`,
+				bad.map(renderRecord),
+				firstSectionBudget,
+			),
 		);
 	}
 
 	if (good.length > 0) {
 		sections.push(
-			`## Confirmed good
+			renderDigestSection(
+				`## Confirmed good
 
-These answers were rated helpful. Consider curating them into \`docsAnswersEvalCases.json\` to lock in the retrieval quality.
-
-${
-				joinWithinBudget(
-					good.map((r) => `${renderRecord(r)}\n${renderEvalCase(r)}`),
-					sectionBudget,
-				)
-			}`,
+These answers were rated helpful. Consider curating them into \`docsAnswersEvalCases.json\` to lock in the retrieval quality.`,
+				good.map((r) => `${renderRecord(r)}\n${renderEvalCase(r)}`),
+				bad.length > 0 ? secondSectionBudget : firstSectionBudget,
+			),
 		);
 	}
 

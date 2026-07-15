@@ -58,9 +58,9 @@ function chunkUrl(chunk) {
  */
 async function alreadyAnswered({ github, context }, post, isDiscussion) {
 	if (isDiscussion) {
-		/** @type {string | null} */
+		/** @type {string | null | undefined} */
 		let cursor = null;
-		for (;;) {
+		while (cursor !== undefined) {
 			const existing = await github.graphql(
 				`
 				query getComments($discussionId: ID!, $cursor: String) {
@@ -84,9 +84,11 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 			) {
 				return true;
 			}
-			if (!comments?.pageInfo?.hasNextPage) return false;
-			cursor = comments.pageInfo.endCursor;
+			cursor = comments?.pageInfo?.hasNextPage
+				? comments.pageInfo.endCursor
+				: undefined;
 		}
+		return false;
 	} else {
 		const comments = await github.paginate(
 			github.rest.issues.listComments,
