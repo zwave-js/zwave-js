@@ -131,7 +131,14 @@ export function handleUserCredentialCredentialLearnReport(
 ): void {
 	const endpoint = node.getEndpoint(report.endpointIndex) ?? node;
 
-	if (report.stepsRemaining > 0) {
+	// Started and StepRetry are non-terminal statuses, but some devices
+	// incorrectly report 0 steps remaining alongside them. Trust the status
+	// over the steps count so we don't emit "completed" mid-process.
+	const inProgress = report.learnStatus === UserCredentialLearnStatus.Started
+		|| report.learnStatus === UserCredentialLearnStatus.StepRetry
+		|| report.stepsRemaining > 0;
+
+	if (inProgress) {
 		node.emit("credential learn progress", endpoint, {
 			userId: report.userId,
 			credentialType: report.credentialType,
