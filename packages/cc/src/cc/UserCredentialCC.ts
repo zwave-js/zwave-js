@@ -2360,7 +2360,44 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		if (this.userId === 0) return true;
+		if (this.userId === 0) {
+			if (
+				this.reportType === UserCredentialUserReportType.UserDeleted
+			) {
+				const valueDB = this.getValueDB(ctx);
+				const cachedUsersAndCredentials = valueDB.findValues(
+					(vid) =>
+						vid.endpoint === this.endpointIndex
+						&& (
+							UserCredentialCCValues.userType.is(vid)
+							|| UserCredentialCCValues.userActive.is(vid)
+							|| UserCredentialCCValues.credentialRule.is(vid)
+							|| UserCredentialCCValues.expiringTimeoutMinutes.is(
+								vid,
+							)
+							|| UserCredentialCCValues.userName.is(vid)
+							|| UserCredentialCCValues.userModifierType.is(vid)
+							|| UserCredentialCCValues.userModifierNodeId.is(vid)
+							|| UserCredentialCCValues.userChecksum.is(vid)
+							|| UserCredentialCCValues.credential.is(vid)
+							|| UserCredentialCCValues.credentialOwner.is(vid)
+							|| UserCredentialCCValues.credentialModifierType.is(
+								vid,
+							)
+							|| UserCredentialCCValues
+								.credentialModifierNodeId.is(vid)
+						),
+				);
+				for (const value of cachedUsersAndCredentials) {
+					valueDB.removeValue(value);
+				}
+				this.removeValue(
+					ctx,
+					UserCredentialCCValues.allUsersChecksum,
+				);
+			}
+			return true;
+		}
 
 		// A UserModifyRejectedLocationEmpty report means we have a stale cache
 		// entry for a user that no longer exists on the device.
@@ -2400,6 +2437,51 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 				ctx,
 				UserCredentialCCValues.userModifierNodeId(userId),
 			);
+			this.removeValue(
+				ctx,
+				UserCredentialCCValues.userChecksum(userId),
+			);
+			this.removeValue(
+				ctx,
+				UserCredentialCCValues.allUsersChecksum,
+			);
+
+			// Deleting a user also deletes all credentials assigned to them.
+			const valueDB = this.getValueDB(ctx);
+			const credentialOwners = valueDB.findValues(
+				(vid) =>
+					UserCredentialCCValues.credentialOwner.is(vid)
+					&& vid.endpoint === this.endpointIndex,
+			);
+			for (const { endpoint, propertyKey, value } of credentialOwners) {
+				if (value !== userId) continue;
+
+				const key = propertyKey as number;
+				const credentialType = key >>> 16;
+				const credentialSlot = key & 0xffff;
+				for (
+					const valueId of [
+						UserCredentialCCValues.credential(
+							credentialType,
+							credentialSlot,
+						),
+						UserCredentialCCValues.credentialOwner(
+							credentialType,
+							credentialSlot,
+						),
+						UserCredentialCCValues.credentialModifierType(
+							credentialType,
+							credentialSlot,
+						),
+						UserCredentialCCValues.credentialModifierNodeId(
+							credentialType,
+							credentialSlot,
+						),
+					]
+				) {
+					valueDB.removeValue(valueId.endpoint(endpoint));
+				}
+			}
 			return true;
 		}
 

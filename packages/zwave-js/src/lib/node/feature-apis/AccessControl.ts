@@ -870,11 +870,7 @@ export class AccessControlAPI extends FeatureAPI {
 				userId,
 			});
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			const status = u3cUserReportTypeToSetUserResult(raw?.reportType);
-			if (status === SetUserResult.OK) {
-				this.#purgeCachedCredentials(userId);
-			}
-			return status;
+			return u3cUserReportTypeToSetUserResult(raw?.reportType);
 		} else {
 			// User Code CC ties each user to their code, so clearing
 			// the code implicitly deletes the user and vice versa.
@@ -924,12 +920,8 @@ export class AccessControlAPI extends FeatureAPI {
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
 			});
-			const status = u3cUserReportTypeToSetUserResult(raw?.reportType);
-			if (status === SetUserResult.OK) {
-				this.#purgeAllCachedUsersAndCredentials();
-			}
 			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			return status;
+			return u3cUserReportTypeToSetUserResult(raw?.reportType);
 		} else {
 			const api = this.#ucAPI();
 			const result = await api.clear(0);
@@ -1365,23 +1357,10 @@ export class AccessControlAPI extends FeatureAPI {
 				credentialType,
 				credentialSlot: 0,
 			});
-			const status = u3cCredentialReportTypeToSetCredentialResult(
+			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
+			return u3cCredentialReportTypeToSetCredentialResult(
 				raw?.reportType,
 			);
-			if (status === SetCredentialResult.OK) {
-				// A specific type maps to its property-key range; None purges all types
-				if (credentialType === UserCredentialType.None) {
-					this.#purgeCachedCredentials(userId);
-				} else {
-					this.#purgeCachedCredentials(
-						userId,
-						credentialPropertyKey(credentialType, 0),
-						credentialPropertyKey(credentialType + 1, 0),
-					);
-				}
-			}
-			if (raw) await this.endpoint.tryGetNode()?.handleCommand(raw);
-			return status;
 		} else {
 			// User Code CC
 			if (
@@ -1693,46 +1672,6 @@ export class AccessControlAPI extends FeatureAPI {
 			) {
 				valueDB.removeValue(valueId.endpoint(endpoint));
 			}
-		}
-	}
-
-	/** Removes all cached user and credential values from the value DB */
-	#purgeAllCachedUsersAndCredentials(): void {
-		const valueDB = this.endpoint.tryGetNode()?.valueDB;
-		if (!valueDB) return;
-
-		const maxUsers = this.getValue<number>(
-			UserCredentialCCValues.supportedUsers.endpoint(
-				this.endpoint.index,
-			),
-		) ?? 0;
-		for (let userId = 1; userId <= maxUsers; userId++) {
-			for (
-				const value of [
-					UserCredentialCCValues.userType(userId),
-					UserCredentialCCValues.userActive(userId),
-					UserCredentialCCValues.credentialRule(userId),
-					UserCredentialCCValues.expiringTimeoutMinutes(userId),
-					UserCredentialCCValues.userName(userId),
-					UserCredentialCCValues.userModifierType(userId),
-					UserCredentialCCValues.userModifierNodeId(userId),
-					UserCredentialCCValues.userChecksum(userId),
-				]
-			) {
-				valueDB.removeValue(value.endpoint(this.endpoint.index));
-			}
-		}
-
-		// Remove all credential values
-		const credentialValues = valueDB.findValues(
-			(vid) =>
-				UserCredentialCCValues.credential.is(vid)
-				|| UserCredentialCCValues.credentialOwner.is(vid)
-				|| UserCredentialCCValues.credentialModifierType.is(vid)
-				|| UserCredentialCCValues.credentialModifierNodeId.is(vid),
-		);
-		for (const vid of credentialValues) {
-			valueDB.removeValue(vid);
 		}
 	}
 

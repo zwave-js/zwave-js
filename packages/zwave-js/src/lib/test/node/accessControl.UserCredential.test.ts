@@ -16,6 +16,7 @@ import {
 	UserCredentialCCCredentialSet,
 	UserCredentialCCUserReport,
 	UserCredentialCCUserSet,
+	UserCredentialCCValues,
 } from "@zwave-js/cc/UserCredentialCC";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
@@ -505,8 +506,34 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
-			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+			const userTypeValueId = UserCredentialCCValues.userType(3)
+				.endpoint(0);
+			const credentialValueId = UserCredentialCCValues.credential(
+				UserCredentialType.PINCode,
+				1,
+			).endpoint(0);
+			const credentialOwnerValueId = UserCredentialCCValues
+				.credentialOwner(UserCredentialType.PINCode, 1).endpoint(0);
+			node.valueDB.setValue(
+				userTypeValueId,
+				UserCredentialUserType.General,
+			);
+			node.valueDB.setValue(credentialValueId, "1234");
+			node.valueDB.setValue(credentialOwnerValueId, 3);
+
+			const userEvent = createDeferredPromise<{
+				args: unknown;
+				user: unknown;
+				credentials: unknown[];
+			}>();
+			node.on("user deleted", (_node, args) => {
+				userEvent.resolve({
+					args,
+					user: node.accessControl!.getUserCached(3),
+					credentials: node.accessControl!
+						.getCredentialsForUserCached(3),
+				});
+			});
 
 			const cc = new UserCredentialCCUserReport({
 				nodeId: mockController.ownNodeId,
@@ -525,9 +552,120 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await userEvent).toMatchObject({
-				userId: 3,
+			t.expect(await userEvent).toStrictEqual({
+				args: { userId: 3 },
+				user: undefined,
+				credentials: [],
 			});
+		},
+	},
+);
+
+integrationTest(
+	"Unsolicited UserReport with UserDeleted reportType and user ID 0 purges all cached users and credentials",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Version,
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					version: 1,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					maxUserNameLength: 32,
+					supportsAllUsersChecksum: true,
+					supportsUserChecksum: true,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, defaultPINCapability],
+					]),
+				}),
+			],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const cachedValueIds = [
+				UserCredentialCCValues.allUsersChecksum.endpoint(0),
+				...([1, 2] as const).flatMap((userId) => [
+					UserCredentialCCValues.userType(userId).endpoint(0),
+					UserCredentialCCValues.userActive(userId).endpoint(0),
+					UserCredentialCCValues.credentialRule(userId).endpoint(0),
+					UserCredentialCCValues.expiringTimeoutMinutes(userId)
+						.endpoint(0),
+					UserCredentialCCValues.userName(userId).endpoint(0),
+					UserCredentialCCValues.userModifierType(userId).endpoint(0),
+					UserCredentialCCValues.userModifierNodeId(userId)
+						.endpoint(0),
+					UserCredentialCCValues.userChecksum(userId).endpoint(0),
+					UserCredentialCCValues.credential(
+						UserCredentialType.PINCode,
+						userId,
+					).endpoint(0),
+					UserCredentialCCValues.credentialOwner(
+						UserCredentialType.PINCode,
+						userId,
+					).endpoint(0),
+					UserCredentialCCValues.credentialModifierType(
+						UserCredentialType.PINCode,
+						userId,
+					).endpoint(0),
+					UserCredentialCCValues.credentialModifierNodeId(
+						UserCredentialType.PINCode,
+						userId,
+					).endpoint(0),
+				]),
+			];
+			for (const [index, valueId] of cachedValueIds.entries()) {
+				node.valueDB.setValue(valueId, index);
+			}
+			const otherEndpointValueIds = [
+				UserCredentialCCValues.allUsersChecksum.endpoint(1),
+				UserCredentialCCValues.userType(1).endpoint(1),
+				UserCredentialCCValues.credential(
+					UserCredentialType.PINCode,
+					1,
+				).endpoint(1),
+				UserCredentialCCValues.credentialOwner(
+					UserCredentialType.PINCode,
+					1,
+				).endpoint(1),
+			];
+			for (const [index, valueId] of otherEndpointValueIds.entries()) {
+				node.valueDB.setValue(valueId, index);
+			}
+
+			for (const valueId of cachedValueIds) {
+				t.expect(node.getValue(valueId)).toBeDefined();
+			}
+
+			const deleted = createDeferredPromise<void>();
+			node.once("user deleted", () => deleted.resolve());
+
+			const cc = new UserCredentialCCUserReport({
+				nodeId: mockController.ownNodeId,
+				reportType: UserCredentialUserReportType.UserDeleted,
+				modifierType: UserCredentialModifierType.ZWave,
+				modifierNodeId: 1,
+				userId: 0,
+				userType: UserCredentialUserType.General,
+				active: false,
+				credentialRule: UserCredentialRule.Single,
+				expiringTimeoutMinutes: 0,
+				nameEncoding: UserCredentialNameEncoding.ASCII,
+				userName: "",
+			});
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(cc, { ackRequested: false }),
+			);
+			await deleted;
+
+			for (const valueId of cachedValueIds) {
+				t.expect(node.getValue(valueId)).toBeUndefined();
+			}
+			for (const valueId of otherEndpointValueIds) {
+				t.expect(node.getValue(valueId)).toBeDefined();
+			}
 		},
 	},
 );
@@ -1702,8 +1840,6 @@ integrationTest(
 			await node.accessControl!.deleteUser(1);
 			await deleted;
 
-			// User values are purged by the CC report handler,
-			// credentials must be purged by the AccessControl mixin
 			t.expect(node.accessControl!.getUserCached(1)).toBeUndefined();
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
