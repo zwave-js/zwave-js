@@ -2437,6 +2437,51 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 				ctx,
 				UserCredentialCCValues.userModifierNodeId(userId),
 			);
+			this.removeValue(
+				ctx,
+				UserCredentialCCValues.userChecksum(userId),
+			);
+			this.removeValue(
+				ctx,
+				UserCredentialCCValues.allUsersChecksum,
+			);
+
+			// Deleting a user also deletes all credentials assigned to them.
+			const valueDB = this.getValueDB(ctx);
+			const credentialOwners = valueDB.findValues(
+				(vid) =>
+					UserCredentialCCValues.credentialOwner.is(vid)
+					&& vid.endpoint === this.endpointIndex,
+			);
+			for (const { endpoint, propertyKey, value } of credentialOwners) {
+				if (value !== userId) continue;
+
+				const key = propertyKey as number;
+				const credentialType = key >>> 16;
+				const credentialSlot = key & 0xffff;
+				for (
+					const valueId of [
+						UserCredentialCCValues.credential(
+							credentialType,
+							credentialSlot,
+						),
+						UserCredentialCCValues.credentialOwner(
+							credentialType,
+							credentialSlot,
+						),
+						UserCredentialCCValues.credentialModifierType(
+							credentialType,
+							credentialSlot,
+						),
+						UserCredentialCCValues.credentialModifierNodeId(
+							credentialType,
+							credentialSlot,
+						),
+					]
+				) {
+					valueDB.removeValue(valueId.endpoint(endpoint));
+				}
+			}
 			return true;
 		}
 

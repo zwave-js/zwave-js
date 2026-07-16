@@ -506,8 +506,34 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
-			node.on("user deleted", (_node, args) => userEvent.resolve(args));
+			const userTypeValueId = UserCredentialCCValues.userType(3)
+				.endpoint(0);
+			const credentialValueId = UserCredentialCCValues.credential(
+				UserCredentialType.PINCode,
+				1,
+			).endpoint(0);
+			const credentialOwnerValueId = UserCredentialCCValues
+				.credentialOwner(UserCredentialType.PINCode, 1).endpoint(0);
+			node.valueDB.setValue(
+				userTypeValueId,
+				UserCredentialUserType.General,
+			);
+			node.valueDB.setValue(credentialValueId, "1234");
+			node.valueDB.setValue(credentialOwnerValueId, 3);
+
+			const userEvent = createDeferredPromise<{
+				args: unknown;
+				user: unknown;
+				credentials: unknown[];
+			}>();
+			node.on("user deleted", (_node, args) => {
+				userEvent.resolve({
+					args,
+					user: node.accessControl!.getUserCached(3),
+					credentials: node.accessControl!
+						.getCredentialsForUserCached(3),
+				});
+			});
 
 			const cc = new UserCredentialCCUserReport({
 				nodeId: mockController.ownNodeId,
@@ -526,8 +552,10 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			t.expect(await userEvent).toMatchObject({
-				userId: 3,
+			t.expect(await userEvent).toStrictEqual({
+				args: { userId: 3 },
+				user: undefined,
+				credentials: [],
 			});
 		},
 	},
@@ -1812,8 +1840,6 @@ integrationTest(
 			await node.accessControl!.deleteUser(1);
 			await deleted;
 
-			// User values are purged by the CC report handler,
-			// credentials must be purged by the AccessControl mixin
 			t.expect(node.accessControl!.getUserCached(1)).toBeUndefined();
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
