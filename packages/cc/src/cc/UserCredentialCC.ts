@@ -2360,7 +2360,44 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		if (this.userId === 0) return true;
+		if (this.userId === 0) {
+			if (
+				this.reportType === UserCredentialUserReportType.UserDeleted
+			) {
+				const valueDB = this.getValueDB(ctx);
+				const cachedUsersAndCredentials = valueDB.findValues(
+					(vid) =>
+						vid.endpoint === this.endpointIndex
+						&& (
+							UserCredentialCCValues.userType.is(vid)
+							|| UserCredentialCCValues.userActive.is(vid)
+							|| UserCredentialCCValues.credentialRule.is(vid)
+							|| UserCredentialCCValues.expiringTimeoutMinutes.is(
+								vid,
+							)
+							|| UserCredentialCCValues.userName.is(vid)
+							|| UserCredentialCCValues.userModifierType.is(vid)
+							|| UserCredentialCCValues.userModifierNodeId.is(vid)
+							|| UserCredentialCCValues.userChecksum.is(vid)
+							|| UserCredentialCCValues.credential.is(vid)
+							|| UserCredentialCCValues.credentialOwner.is(vid)
+							|| UserCredentialCCValues.credentialModifierType.is(
+								vid,
+							)
+							|| UserCredentialCCValues
+								.credentialModifierNodeId.is(vid)
+						),
+				);
+				for (const value of cachedUsersAndCredentials) {
+					valueDB.removeValue(value);
+				}
+				this.removeValue(
+					ctx,
+					UserCredentialCCValues.allUsersChecksum,
+				);
+			}
+			return true;
+		}
 
 		// A UserModifyRejectedLocationEmpty report means we have a stale cache
 		// entry for a user that no longer exists on the device.
