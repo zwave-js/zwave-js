@@ -289,7 +289,7 @@ Shuts off the entire system permanently and prevents schedules from running.
 }
 ```
 
-- **label:** `${string}: Error - Flow below high threshold`
+- **label:** `${string}: Error - Flow below low threshold`
 - **min. CC version:** 1
 - **readable:** true
 - **writeable:** false
@@ -633,7 +633,7 @@ Shuts off the entire system permanently and prevents schedules from running.
 - **writeable:** false
 - **stateful:** true
 - **secret:** false
-- **value type:** `"boolean"`
+- **value type:** `"number"`
 
 ### `nominalCurrentHighThreshold(valveId: ValveId)`
 
