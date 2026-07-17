@@ -49,7 +49,12 @@ import {
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
-import { IndicatorCommand, type IndicatorTimeout } from "../lib/_Types.js";
+import {
+	type IndicatorBlink,
+	IndicatorCommand,
+	type IndicatorState,
+	type IndicatorTimeout,
+} from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 function isManufacturerDefinedIndicator(indicatorId: number): boolean {
@@ -133,6 +138,297 @@ function indicatorObjectsToTimeout(
 	};
 }
 
+function rawIndicatorValue(value: number | boolean): number {
+	return value === true ? 0xff : value === false ? 0x00 : value;
+}
+
+function timeoutToIndicatorObjects(
+	indicatorId: number,
+	timeout: IndicatorTimeout,
+	supportedPropertyIDs: readonly number[] | undefined,
+): IndicatorObject[] {
+	const objects: IndicatorObject[] = [];
+	const hours = clamp(timeout.hours ?? 0, 0, 255);
+	const minutes = clamp(timeout.minutes ?? 0, 0, 255);
+	// Round to 2 decimals first, so seconds like 12.999 carry over into
+	// whole seconds instead of producing 100 hundredths
+	const totalSeconds = clamp(roundTo(timeout.seconds ?? 0, 2), 0, 59.99);
+	const seconds = Math.floor(totalSeconds);
+	const hundredths = Math.round((totalSeconds % 1) * 100);
+
+	if (hours) {
+		if (!supportedPropertyIDs?.includes(0x0a)) {
+			throw new ZWaveError(
+				`The indicator ${indicatorId} does not support setting the timeout in hours`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		objects.push({
+			indicatorId,
+			propertyId: 0x0a,
+			value: hours,
+		});
+	}
+
+	if (minutes) {
+		if (!supportedPropertyIDs?.includes(0x06)) {
+			throw new ZWaveError(
+				`The indicator ${indicatorId} does not support setting the timeout in minutes`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		objects.push({
+			indicatorId,
+			propertyId: 0x06,
+			value: minutes,
+		});
+	}
+
+	if (seconds) {
+		if (!supportedPropertyIDs?.includes(0x07)) {
+			throw new ZWaveError(
+				`The indicator ${indicatorId} does not support setting the timeout in seconds`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		objects.push({
+			indicatorId,
+			propertyId: 0x07,
+			value: seconds,
+		});
+	}
+
+	if (hundredths) {
+		if (!supportedPropertyIDs?.includes(0x08)) {
+			throw new ZWaveError(
+				`The indicator ${indicatorId} does not support setting the timeout in 1/100 seconds`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		objects.push({
+			indicatorId,
+			propertyId: 0x08,
+			value: hundredths,
+		});
+	}
+
+	return objects;
+}
+
+/**
+ * Converts the indicator objects of a single indicator ID into a complete map
+ * from property ID to raw value.
+ * @publicAPI
+ */
+export function indicatorObjectsToPropertyMap(
+	values: IndicatorObject[],
+	supportedPropertyIDs: readonly number[] | undefined,
+): Record<number, number> {
+	const ret: Record<number, number> = {};
+	if (supportedPropertyIDs?.length) {
+		// Properties not included in a command are assumed to be 0. Also some
+		// devices report properties they do not actually support - ignore those.
+		for (const propertyId of supportedPropertyIDs) {
+			ret[propertyId] = 0;
+		}
+		for (const value of values) {
+			if (supportedPropertyIDs.includes(value.propertyId)) {
+				ret[value.propertyId] = rawIndicatorValue(value.value);
+			}
+		}
+	} else {
+		// Without knowing the supported properties, preserve the report as-is
+		for (const value of values) {
+			ret[value.propertyId] = rawIndicatorValue(value.value);
+		}
+	}
+	return ret;
+}
+
+/**
+ * Converts a complete property map of an indicator into its normalized state
+ * @publicAPI
+ */
+export function indicatorPropertyMapToState(
+	map: Record<number, number>,
+	supportedPropertyIDs: readonly number[],
+): IndicatorState {
+	const supports = (propertyId: number) =>
+		supportedPropertyIDs.length
+			? supportedPropertyIDs.includes(propertyId)
+			: propertyId in map;
+
+	const ret: IndicatorState = {};
+
+	if (supports(0x02 /* Binary */)) {
+		ret.on = map[0x02] > 0;
+	} else if (supports(0x01 /* Multilevel */)) {
+		ret.on = map[0x01] > 0;
+	}
+	if (supports(0x01 /* Multilevel */)) {
+		ret.level = Math.min(map[0x01] ?? 0, 99);
+	}
+
+	if (
+		supports(0x03 /* On/Off Period */)
+		&& supports(0x04 /* On/Off Cycles */)
+		&& map[0x03] > 0
+	) {
+		const blink: IndicatorBlink = {
+			period: map[0x03] / 10,
+		};
+		if (map[0x04] > 0 && map[0x04] < 0xff) blink.cycles = map[0x04];
+		if (supports(0x05 /* On time */) && map[0x05] > 0) {
+			blink.onTime = map[0x05] / 10;
+		}
+		ret.blink = blink;
+	}
+
+	const timeout: IndicatorTimeout = {};
+	if (map[0x0a]) timeout.hours = map[0x0a];
+	if (map[0x06]) timeout.minutes = map[0x06];
+	const seconds = clamp(map[0x07] ?? 0, 0, 59)
+		+ clamp(map[0x08] ?? 0, 0, 99) / 100;
+	if (seconds) timeout.seconds = seconds;
+	if (Object.keys(timeout).length > 0) ret.timeout = timeout;
+
+	if (supports(0x09 /* Sound level */)) {
+		ret.soundLevel = map[0x09];
+	}
+
+	return ret;
+}
+
+/**
+ * Converts the normalized state of an indicator into indicator objects for a
+ * Set command. The state is applied as a whole: the device resets all
+ * properties not included in the resulting objects to 0.
+ * @publicAPI
+ */
+export function indicatorStateToObjects(
+	indicatorId: number,
+	state: IndicatorState,
+	supportedPropertyIDs: readonly number[],
+): IndicatorObject[] {
+	const supports = (propertyId: number) =>
+		supportedPropertyIDs.includes(propertyId);
+	const unsupported = (what: string): ZWaveError =>
+		new ZWaveError(
+			`The indicator ${indicatorId} does not support ${what}`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+
+	const ret: IndicatorObject[] = [];
+
+	// Binary and Multilevel are mutually exclusive property groups,
+	// so only one of them is sent
+	if (state.on === false) {
+		if (supports(0x02 /* Binary */)) {
+			ret.push({ indicatorId, propertyId: 0x02, value: 0x00 });
+		} else if (supports(0x01 /* Multilevel */)) {
+			ret.push({ indicatorId, propertyId: 0x01, value: 0x00 });
+		} else {
+			throw unsupported("being turned on or off");
+		}
+	} else if (state.level != undefined) {
+		if (supports(0x01 /* Multilevel */)) {
+			ret.push({
+				indicatorId,
+				propertyId: 0x01,
+				value: clamp(state.level, 0, 99),
+			});
+		} else if (supports(0x02 /* Binary */)) {
+			ret.push({
+				indicatorId,
+				propertyId: 0x02,
+				value: state.level > 0 ? 0xff : 0x00,
+			});
+		} else {
+			throw unsupported("setting a level");
+		}
+	} else if (state.on) {
+		if (supports(0x02 /* Binary */)) {
+			ret.push({ indicatorId, propertyId: 0x02, value: 0xff });
+		} else if (supports(0x01 /* Multilevel */)) {
+			ret.push({ indicatorId, propertyId: 0x01, value: 0xff });
+		} else {
+			throw unsupported("being turned on or off");
+		}
+	}
+
+	if (state.blink) {
+		if (
+			!supports(0x03 /* On/Off Period */)
+			|| !supports(0x04 /* On/Off Cycles */)
+		) {
+			throw unsupported("blinking");
+		}
+		ret.push({
+			indicatorId,
+			propertyId: 0x03,
+			value: clamp(Math.round(state.blink.period * 10), 1, 255),
+		});
+		ret.push({
+			indicatorId,
+			propertyId: 0x04,
+			value: state.blink.cycles != undefined
+				? clamp(state.blink.cycles, 1, 254)
+				: 0xff,
+		});
+		if (state.blink.onTime != undefined) {
+			if (!supports(0x05 /* On time */)) {
+				throw unsupported("asymmetric on/off periods");
+			}
+			ret.push({
+				indicatorId,
+				propertyId: 0x05,
+				value: clamp(Math.round(state.blink.onTime * 10), 0, 255),
+			});
+		}
+	}
+
+	if (state.timeout != undefined) {
+		let timeout = state.timeout;
+		if (typeof timeout === "string") {
+			const parsed = parseIndicatorTimeoutString(timeout);
+			if (!parsed) {
+				throw new ZWaveError(
+					`The timeout string "${timeout}" is not valid`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			timeout = parsed;
+		}
+		ret.push(
+			...timeoutToIndicatorObjects(
+				indicatorId,
+				timeout,
+				supportedPropertyIDs,
+			),
+		);
+	}
+
+	if (state.soundLevel != undefined) {
+		if (!supports(0x09 /* Sound level */)) {
+			throw unsupported("setting a sound level");
+		}
+		ret.push({
+			indicatorId,
+			propertyId: 0x09,
+			value: clamp(state.soundLevel, 0, 100),
+		});
+	}
+
+	if (!ret.length) {
+		throw new ZWaveError(
+			`The given state for indicator ${indicatorId} is empty`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+
+	return ret;
+}
+
 export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	...V.staticProperty("supportedIndicatorIds", undefined, {
 		internal: true,
@@ -168,6 +464,16 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 			&& typeof propertyKey === "number",
 		undefined,
 		{ internal: true },
+	),
+	...V.dynamicPropertyAndKeyWithName(
+		"indicatorState",
+		"indicatorState",
+		(indicatorId: number) => indicatorId,
+		({ property, propertyKey }) =>
+			property === "indicatorState"
+			&& typeof propertyKey === "number",
+		undefined,
+		{ internal: true, minVersion: 2 },
 	),
 	...V.dynamicPropertyAndKeyWithName(
 		"valueV2",
@@ -646,69 +952,13 @@ export class IndicatorCCAPI extends CCAPI {
 			indicatorId,
 		);
 
-		const objects: IndicatorObject[] = [];
-		if (timeout) {
-			const hours = timeout.hours ?? 0;
-			const minutes = timeout.minutes ?? 0;
-			const seconds = Math.floor(timeout.seconds ?? 0);
-			const hundredths = Math.round(((timeout.seconds ?? 0) % 1) * 100);
-
-			if (hours) {
-				if (!supportedPropertyIDs?.includes(0x0a)) {
-					throw new ZWaveError(
-						`The indicator ${indicatorId} does not support setting the timeout in hours`,
-						ZWaveErrorCodes.Argument_Invalid,
-					);
-				}
-				objects.push({
-					indicatorId,
-					propertyId: 0x0a,
-					value: hours,
-				});
-			}
-
-			if (minutes) {
-				if (!supportedPropertyIDs?.includes(0x06)) {
-					throw new ZWaveError(
-						`The indicator ${indicatorId} does not support setting the timeout in minutes`,
-						ZWaveErrorCodes.Argument_Invalid,
-					);
-				}
-				objects.push({
-					indicatorId,
-					propertyId: 0x06,
-					value: minutes,
-				});
-			}
-
-			if (seconds) {
-				if (!supportedPropertyIDs?.includes(0x07)) {
-					throw new ZWaveError(
-						`The indicator ${indicatorId} does not support setting the timeout in seconds`,
-						ZWaveErrorCodes.Argument_Invalid,
-					);
-				}
-				objects.push({
-					indicatorId,
-					propertyId: 0x07,
-					value: seconds,
-				});
-			}
-
-			if (hundredths) {
-				if (!supportedPropertyIDs?.includes(0x08)) {
-					throw new ZWaveError(
-						`The indicator ${indicatorId} does not support setting the timeout in 1/100 seconds`,
-						ZWaveErrorCodes.Argument_Invalid,
-					);
-				}
-				objects.push({
-					indicatorId,
-					propertyId: 0x08,
-					value: hundredths,
-				});
-			}
-		}
+		const objects: IndicatorObject[] = timeout
+			? timeoutToIndicatorObjects(
+				indicatorId,
+				timeout,
+				supportedPropertyIDs,
+			)
+			: [];
 
 		if (!objects.length) {
 			objects.push(
@@ -1224,13 +1474,32 @@ export class IndicatorCCReport extends IndicatorCC {
 				}
 			}
 		} else if (this.values) {
-			// Store the simple values first
+			const groupedValues = groupByIndicatorId(this.values);
+
+			// Persist the full per-indicator state before setIndicatorValue
+			// converts the raw values to booleans in place
+			for (const [indicatorId, values] of groupedValues) {
+				if (indicatorId === Indicator["Node Identify"]) continue;
+				const supportedPropertyIDs = this.getValue<number[]>(
+					ctx,
+					IndicatorCCValues.supportedPropertyIDs(indicatorId),
+				);
+				this.setValue(
+					ctx,
+					IndicatorCCValues.indicatorState(indicatorId),
+					indicatorObjectsToPropertyMap(
+						values,
+						supportedPropertyIDs,
+					),
+				);
+			}
+
+			// Store the simple values
 			for (const value of this.values) {
 				this.setIndicatorValue(ctx, value);
 			}
 
 			// Then group values into the convenience properties
-			const groupedValues = groupByIndicatorId(this.values);
 			for (const [indicatorId, values] of groupedValues) {
 				// Some devices report all properties it supports in every report,
 				// even if it does not support all properties for the given indicator ID.

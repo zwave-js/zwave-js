@@ -3,15 +3,88 @@ import type {
 	IndicatorCCGet,
 	IndicatorCCSet,
 	IndicatorCCSupportedGet,
+	IndicatorTimeout,
 	PersistValuesContext,
 } from "@zwave-js/cc";
 import {
+	type IndicatorCCReport,
+	IndicatorCCValues,
+	indicatorPropertyMapToState,
+} from "@zwave-js/cc/IndicatorCC";
+import {
 	CommandClasses,
 	EncapsulationFlags,
+	Indicator,
 	type LogNode,
 } from "@zwave-js/core";
 import type { ZWaveController } from "../../controller/Controller.js";
 import type { ZWaveNode } from "../Node.js";
+import type { IndicatorUpdatedArgs } from "../_Types.js";
+
+export function handleIndicatorReport(
+	node: ZWaveNode,
+	command: IndicatorCCReport,
+): void {
+	const endpoint = node.getEndpoint(command.endpointIndex) ?? node;
+
+	if (command.values) {
+		const indicatorIds = new Set(
+			command.values.map((v) => v.indicatorId),
+		);
+		for (const indicatorId of indicatorIds) {
+			if (indicatorId === Indicator["Node Identify"]) continue;
+
+			// The report was persisted before this handler runs, so emitting
+			// from the cached state keeps the event in sync with getCached()
+			const map = node.getValue<Record<number, number>>(
+				IndicatorCCValues.indicatorState(indicatorId).endpoint(
+					command.endpointIndex,
+				),
+			);
+			if (!map) continue;
+
+			const supportedPropertyIDs = node.getValue<number[]>(
+				IndicatorCCValues.supportedPropertyIDs(indicatorId).endpoint(
+					command.endpointIndex,
+				),
+			) ?? [];
+			const { timeout, ...state } = indicatorPropertyMapToState(
+				map,
+				supportedPropertyIDs,
+			);
+			const args: IndicatorUpdatedArgs = { indicatorId, ...state };
+			if (timeout != undefined) {
+				args.timeout = timeout as IndicatorTimeout;
+			}
+			node.emit("indicator updated", endpoint, args);
+		}
+	} else if (command.indicator0Value != undefined) {
+		// V1 reports from nodes supporting V2 indicators are ignored during
+		// persistence, so ignore them here as well
+		const supportedIndicatorIds = node.getValue<number[]>(
+			IndicatorCCValues.supportedIndicatorIds.endpoint(
+				command.endpointIndex,
+			),
+		);
+		const supportsV2Indicators = !!supportedIndicatorIds?.some((id) =>
+			!!node.getValue<number[]>(
+				IndicatorCCValues.supportedPropertyIDs(id).endpoint(
+					command.endpointIndex,
+				),
+			)?.length
+		);
+		if (supportsV2Indicators) return;
+
+		node.emit(
+			"indicator updated",
+			endpoint,
+			{
+				indicatorId: 0,
+				on: command.indicator0Value > 0,
+			} satisfies IndicatorUpdatedArgs,
+		);
+	}
+}
 
 export function handleIndicatorSupportedGet(
 	ctx: PersistValuesContext & LogNode,

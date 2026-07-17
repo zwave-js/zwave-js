@@ -6,6 +6,7 @@ import {
 	DeviceResetLocallyCCNotification,
 	IndicatorCCDescriptionGet,
 	IndicatorCCGet,
+	IndicatorCCReport,
 	IndicatorCCSet,
 	IndicatorCCSupportedGet,
 	MultiChannelAssociationCCGet,
@@ -215,6 +216,7 @@ import { getDefaultHailHandlerStore, handleHail } from "./CCHandlers/HailCC.js";
 import {
 	handleIndicatorDescriptionGet,
 	handleIndicatorGet,
+	handleIndicatorReport,
 	handleIndicatorSet,
 	handleIndicatorSupportedGet,
 } from "./CCHandlers/IndicatorCC.js";
@@ -3046,6 +3048,8 @@ protocol version:      ${this.protocolVersion}`;
 				this,
 				command,
 			);
+		} else if (command instanceof IndicatorCCReport) {
+			return handleIndicatorReport(this, command);
 		} else if (command instanceof PowerlevelCCSet) {
 			return handlePowerlevelSet(this.driver, this, command);
 		} else if (command instanceof PowerlevelCCGet) {

@@ -35,3 +35,5 @@ export type {
 	UserData,
 } from "./lib/node/feature-apis/AccessControl.js";
 export { FeatureAPI } from "./lib/node/feature-apis/FeatureAPI.js";
+export { IndicatorsAPI } from "./lib/node/feature-apis/Indicators.js";
+export type { IndicatorCapabilities } from "./lib/node/feature-apis/Indicators.js";
