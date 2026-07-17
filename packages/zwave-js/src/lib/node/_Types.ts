@@ -28,6 +28,7 @@ import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
 import type { UserData } from "./feature-apis/AccessControl.js";
+import type { CoverAspectState } from "./feature-apis/Covers.js";
 
 export {
 	EntryControlDataTypes,
@@ -317,6 +318,10 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 		endpoint: Endpoint,
 		args: CredentialLearnCompletedArgs,
 	) => void;
+	"cover state changed": (
+		endpoint: Endpoint,
+		state: CoverAspectState,
+	) => void;
 }
 
 export type ZWaveNodeEvents = Extract<keyof ZWaveNodeEventCallbacks, string>;
@@ -348,6 +353,7 @@ export const zWaveNodeEvents = [
 	"credential deleted",
 	"credential learn progress",
 	"credential learn completed",
+	"cover state changed",
 ] as const satisfies readonly ZWaveNodeEvents[];
 
 /** Represents the result of one health check round of a node's lifeline */
