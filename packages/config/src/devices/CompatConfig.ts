@@ -9,7 +9,7 @@ import { type JSONObject, pick } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import { throwInvalidConfig, tryParseCCId } from "../utils_safe.js";
 import { type ConditionalItem, conditionApplies } from "./ConditionalItem.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 export class ConditionalCompatConfig implements ConditionalItem<CompatConfig> {
 	private valueIdRegex = /^\$value\$\[.+\]$/;
@@ -668,8 +668,10 @@ compat option overrideQueries must be an object!`,
 
 	public readonly condition?: string | undefined;
 
-	public evaluateCondition(deviceId?: DeviceID): CompatConfig | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+	public evaluateCondition(
+		context?: ConditionalConfigContext,
+	): CompatConfig | undefined {
+		if (!conditionApplies(this, context)) return;
 		const ret = pick(this, [
 			"alarmMapping",
 			"remapNotifications",

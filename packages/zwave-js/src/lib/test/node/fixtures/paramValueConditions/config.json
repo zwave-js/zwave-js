@@ -1,0 +1,67 @@
+{
+	"manufacturer": "Z-Wave JS",
+	"manufacturerId": "0xfffe",
+	"label": "Param Value Conditions Test",
+	"description": "Test device for conditions referencing config parameter values",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0003"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Operating Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Mode A",
+					"value": 0
+				},
+				{
+					"label": "Mode B",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$if": "#1 == 1",
+			"label": "Advanced option",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 5
+		},
+		{
+			"#": "2",
+			"label": "Basic option",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 99,
+			"defaultValue": 5
+		},
+		{
+			"#": "3",
+			"$if": "#1 == 1",
+			"label": "Mode B only",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 7
+		}
+	],
+	"compat": [
+		{
+			"$if": "#1 == 1",
+			"manualValueRefreshDelayMs": 1000
+		}
+	]
+}

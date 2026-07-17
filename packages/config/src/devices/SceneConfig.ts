@@ -5,7 +5,7 @@ import {
 	conditionApplies,
 	validateCondition,
 } from "./ConditionalItem.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 export class ConditionalSceneConfig implements ConditionalItem<SceneConfig> {
 	public constructor(
@@ -51,9 +51,9 @@ Scene ${sceneId} has a non-string description`,
 	public readonly description?: string;
 
 	public evaluateCondition(
-		deviceId?: DeviceID,
+		context?: ConditionalConfigContext,
 	): SceneConfig | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+		if (!conditionApplies(this, context)) return;
 
 		return pick(this, [
 			"sceneId",

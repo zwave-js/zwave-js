@@ -1,6 +1,24 @@
 import { isArray } from "alcalzone-shared/typeguards";
 import { test } from "vitest";
 import { ConditionalDeviceConfig } from "./DeviceConfig.js";
+import type { ConditionalConfigContext } from "./shared.js";
+
+/** Builds an evaluation context with parameter values keyed by `endpoint:parameter` */
+function contextWithParamValues(
+	deviceId: {
+		manufacturerId: number;
+		productType: number;
+		productId: number;
+		firmwareVersion?: string;
+	},
+	paramValues: Record<string, number>,
+): ConditionalConfigContext {
+	return {
+		...deviceId,
+		getCachedParamValue: (endpoint, parameter) =>
+			paramValues[`${endpoint}:${parameter}`],
+	};
+}
 
 test("parses a simple device config", (t) => {
 	const json = {
@@ -623,4 +641,321 @@ test("legacy config with minValue/maxValue gets allowed set to single range", (t
 	} else {
 		t.expect.fail("Expected a range value definition");
 	}
+});
+
+test("supports param value references in conditions", (t) => {
+	const json = {
+		manufacturer: "Test Manufacturer",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with param value references",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "71",
+				label: "Operating Mode",
+				valueSize: 1,
+				defaultValue: 0,
+				allowManualEntry: false,
+				options: [
+					{ label: "Shutter", value: 0 },
+					{ label: "Venetian", value: 1 },
+				],
+			},
+			{
+				"#": "72",
+				$if: "#71 == 1",
+				label: "Slat Turn Time",
+				valueSize: 2,
+				minValue: 0,
+				maxValue: 900,
+				defaultValue: 150,
+			},
+			{
+				"#": "73",
+				label: "Calibration",
+				valueSize: 1,
+				defaultValue: 0,
+				allowManualEntry: false,
+				options: [
+					{
+						$if: "#71 == 0",
+						label: "Calibrate shutter",
+						value: 1,
+					},
+					{
+						$if: "#71 == 1",
+						label: "Calibrate venetian",
+						value: 1,
+					},
+				],
+			},
+		],
+	};
+
+	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
+
+	// The referenced params are collected while parsing
+	t.expect(condConfig.referencedParamValues.size).toBe(1);
+	t.expect([...condConfig.referencedParamValues.get(0)!]).toStrictEqual([
+		71,
+	]);
+
+	const deviceId = {
+		manufacturerId: 0x9999,
+		productType: 0x0001,
+		productId: 0x0001,
+		firmwareVersion: "1.0",
+	};
+
+	// While the value of param 71 is unknown, all guarded definitions apply
+	const unknownValue = condConfig.evaluate(
+		contextWithParamValues(deviceId, {}),
+	);
+	t.expect(unknownValue.paramInformation?.get({ parameter: 72 }))
+		.toBeDefined();
+	t.expect(
+		unknownValue.paramInformation?.get({ parameter: 73 })?.options.length,
+	).toBe(2);
+
+	// In shutter mode, the venetian-only param disappears
+	const shutterMode = condConfig.evaluate(
+		contextWithParamValues(deviceId, { "0:71": 0 }),
+	);
+	t.expect(shutterMode.paramInformation?.get({ parameter: 72 }))
+		.toBeUndefined();
+	t.expect(shutterMode.paramInformation?.get({ parameter: 73 })?.options)
+		.toStrictEqual([
+			{ label: "Calibrate shutter", value: 1 },
+		]);
+
+	// In venetian mode, it exists and the calibration option changes
+	const venetianMode = condConfig.evaluate(
+		contextWithParamValues(deviceId, { "0:71": 1 }),
+	);
+	t.expect(venetianMode.paramInformation?.get({ parameter: 72 }))
+		.toBeDefined();
+	t.expect(venetianMode.paramInformation?.get({ parameter: 73 })?.options)
+		.toStrictEqual([
+			{ label: "Calibrate venetian", value: 1 },
+		]);
+
+	// Evaluating without a context applies everything (used for index generation)
+	const noContext = condConfig.evaluate();
+	t.expect(noContext.paramInformation?.get({ parameter: 72 })).toBeDefined();
+});
+
+test("supports param value references in compat flag conditions", (t) => {
+	const json = {
+		manufacturer: "Test Manufacturer",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with param value references",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "5",
+				label: "Switch Type",
+				valueSize: 1,
+				minValue: 0,
+				maxValue: 2,
+				defaultValue: 0,
+			},
+		],
+		compat: [
+			{
+				$if: "#5 == 2",
+				manualValueRefreshDelayMs: 1000,
+			},
+		],
+	};
+
+	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
+	t.expect([...condConfig.referencedParamValues.get(0)!]).toStrictEqual([
+		5,
+	]);
+
+	const deviceId = {
+		manufacturerId: 0x9999,
+		productType: 0x0001,
+		productId: 0x0001,
+		firmwareVersion: "1.0",
+	};
+
+	const withFlag = condConfig.evaluate(
+		contextWithParamValues(deviceId, { "0:5": 2 }),
+	);
+	t.expect(withFlag.compat?.manualValueRefreshDelayMs).toBe(1000);
+
+	const withoutFlag = condConfig.evaluate(
+		contextWithParamValues(deviceId, { "0:5": 0 }),
+	);
+	t.expect(withoutFlag.compat).toBeUndefined();
+});
+
+test("param value references in endpoint sections resolve against that endpoint", (t) => {
+	const json = {
+		manufacturer: "Test Manufacturer",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with endpoint param value references",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		endpoints: {
+			"2": {
+				paramInformation: [
+					{
+						"#": "1",
+						label: "Mode",
+						valueSize: 1,
+						minValue: 0,
+						maxValue: 1,
+						defaultValue: 0,
+					},
+					{
+						"#": "2",
+						$if: "#1 == 1",
+						label: "Extra setting",
+						valueSize: 1,
+						minValue: 0,
+						maxValue: 255,
+						defaultValue: 0,
+					},
+				],
+			},
+		},
+	};
+
+	const condConfig = new ConditionalDeviceConfig("test.json", true, json);
+	t.expect(condConfig.referencedParamValues.get(0)).toBeUndefined();
+	t.expect([...condConfig.referencedParamValues.get(2)!]).toStrictEqual([
+		1,
+	]);
+
+	const deviceId = {
+		manufacturerId: 0x9999,
+		productType: 0x0001,
+		productId: 0x0001,
+		firmwareVersion: "1.0",
+	};
+
+	// The value of param 1 on the ROOT endpoint must not influence the condition
+	const rootValueOnly = condConfig.evaluate(
+		contextWithParamValues(deviceId, { "0:1": 1, "2:1": 0 }),
+	);
+	t.expect(
+		rootValueOnly.endpoints?.get(2)?.paramInformation?.get({
+			parameter: 2,
+		}),
+	).toBeUndefined();
+
+	const endpointValue = condConfig.evaluate(
+		contextWithParamValues(deviceId, { "0:1": 0, "2:1": 1 }),
+	);
+	t.expect(
+		endpointValue.endpoints?.get(2)?.paramInformation?.get({
+			parameter: 2,
+		}),
+	).toBeDefined();
+});
+
+test("throws when param value references form a cycle", (t) => {
+	const json = {
+		manufacturer: "Test",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with cyclic param value references",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				$if: "#2 == 1",
+				label: "Param 1",
+				valueSize: 1,
+				defaultValue: 0,
+				minValue: 0,
+				maxValue: 1,
+			},
+			{
+				"#": "2",
+				$if: "#1 == 1",
+				label: "Param 2",
+				valueSize: 1,
+				defaultValue: 0,
+				minValue: 0,
+				maxValue: 1,
+			},
+		],
+	};
+
+	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
+		.toThrow("must not form cycles: #1 -> #2 -> #1");
+});
+
+test("throws when a param value reference references the guarded param itself", (t) => {
+	const json = {
+		manufacturer: "Test",
+		manufacturerId: "0x9999",
+		label: "Test Device",
+		description: "Test device with a self-referencing param condition",
+		devices: [
+			{
+				productType: "0x0001",
+				productId: "0x0001",
+			},
+		],
+		firmwareVersion: {
+			min: "0.0",
+			max: "255.255",
+		},
+		paramInformation: [
+			{
+				"#": "1",
+				$if: "#1 != 5",
+				label: "Param 1",
+				valueSize: 1,
+				defaultValue: 0,
+				minValue: 0,
+				maxValue: 10,
+			},
+		],
+	};
+
+	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
+		.toThrow("must not form cycles: #1 -> #1");
 });
