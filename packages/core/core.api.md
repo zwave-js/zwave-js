@@ -53,6 +53,8 @@ export const applicationCCs: readonly CommandClasses[];
 // @public (undocumented)
 export interface ApplicationNodeInformation {
     // (undocumented)
+    controlledCCs?: CommandClasses[];
+    // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
     specificDeviceClass: number;
@@ -623,7 +625,7 @@ export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext> impl
     logNode(nodeId: number, options: LogNodeOptions): void;
     metadataUpdated(args: LogValueArgs<ValueID>): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    print(message: string, level?: "verbose" | "warn" | "error"): void;
+    print(message: string | LogPayload | MessageRecord, level?: "verbose" | "warn" | "error"): void;
     value(change: "added", args: LogValueArgs<ValueAddedArgs>): void;
     // (undocumented)
     value(change: "updated", args: LogValueArgs<ValueUpdatedArgs>): void;
@@ -807,6 +809,11 @@ export const decryptAES128OFB: (ciphertext: BytesView, key: BytesView, iv: Bytes
 //
 // @public (undocumented)
 export const decryptAES256CBC: (ciphertext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
+
+// Warning: (ae-missing-release-tag) "decryptAES256OFB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const decryptAES256OFB: (ciphertext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "decryptChaCha20Poly1305" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1069,6 +1076,11 @@ export const encryptAES128ECB: (plaintext: BytesView, key: BytesView) => Promise
 // @public (undocumented)
 export const encryptAES128OFB: (plaintext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
 
+// Warning: (ae-missing-release-tag) "encryptAES256OFB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const encryptAES256OFB: (plaintext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
+
 // Warning: (ae-missing-release-tag) "encryptChaCha20Poly1305" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1092,7 +1104,7 @@ export interface EndpointId {
 // Warning: (ae-missing-release-tag) "enumValuesToMetadataStates" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function enumValuesToMetadataStates<T extends Record<string, any>>(enumeration: T, values?: readonly number[]): Record<number, string>;
+export function enumValuesToMetadataStates(enumeration: Record<string, any>, values?: readonly number[]): Record<number, string>;
 
 // Warning: (ae-missing-release-tag) "extractFirmware" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1165,6 +1177,11 @@ export interface FloatParametersWithValue extends FloatParameters {
 // @public (undocumented)
 export function formatDate(date: Date, format: string): string;
 
+// Warning: (ae-missing-release-tag) "formatLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function formatLogPayload(payload: LogPayload | MessageRecord, width?: number): string[];
+
 // Warning: (ae-missing-release-tag) "FrameType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1190,6 +1207,8 @@ export function generateEncryptionKey(networkKey: BytesView): Promise<BytesView>
 // @public (undocumented)
 export interface GenericDeviceClass {
     // (undocumented)
+    readonly isSlowActuator: boolean;
+    // (undocumented)
     readonly key: number;
     // (undocumented)
     readonly label: string;
@@ -1197,8 +1216,6 @@ export interface GenericDeviceClass {
     readonly maySupportBasicCC: boolean;
     // (undocumented)
     readonly requiresSecurity: boolean;
-    // (undocumented)
-    readonly supportsOptimisticValueUpdate: boolean;
     // (undocumented)
     readonly zwavePlusDeviceType?: string;
 }
@@ -1462,7 +1479,7 @@ export function getNotificationValueName(type: number, event: number): string;
 // Warning: (ae-missing-release-tag) "getNumericEnumValues" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getNumericEnumValues<T extends Record<string, any>>(enumeration: T): readonly number[];
+export function getNumericEnumValues(enumeration: Record<string, any>): readonly number[];
 
 // Warning: (ae-missing-release-tag) "GetSafeCCVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1884,6 +1901,16 @@ export interface Interviewable {
     interviewStage: InterviewStage;
 }
 
+// Warning: (ae-missing-release-tag) "InterviewProgress" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface InterviewProgress {
+    commandClass?: CommandClasses;
+    endpoint?: number;
+    progress: number;
+    stage: InterviewStage;
+}
+
 // Warning: (ae-missing-release-tag) "InterviewStage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1933,6 +1960,11 @@ export function isEmptyRoute(route: Route): boolean;
 //
 // @public
 export function isEncapsulationCC(cc: CommandClasses): boolean;
+
+// Warning: (ae-missing-release-tag) "isLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function isLogPayload(value: unknown): value is LogPayload;
 
 // Warning: (ae-missing-release-tag) "isLongRangeNodeId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2053,6 +2085,11 @@ export const LOG_PREFIX_WIDTH = 20;
 // @public
 export const LOG_WIDTH = 80;
 
+// Warning: (ae-missing-release-tag) "logBuffer" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function logBuffer(buffer: BytesView): string | undefined;
+
 // Warning: (ae-missing-release-tag) "LogConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2099,10 +2136,20 @@ export interface LogContext<T extends string = string> {
     type?: string;
 }
 
+// Warning: (ae-missing-release-tag) "logDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function logDict(entries: MessageRecord, nested?: LogPayload | LogPayload[]): LogPayloadDict;
+
 // Warning: (ae-missing-release-tag) "LogFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export type LogFactory = (config?: Partial<LogConfig>) => LogContainer;
+
+// Warning: (ae-missing-release-tag) "logList" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function logList(items: Iterable<string | number>): LogPayloadList;
 
 // Warning: (ae-missing-release-tag) "LogNode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2127,8 +2174,72 @@ export interface LogNodeOptions {
     // (undocumented)
     level?: "silly" | "debug" | "verbose" | "warn" | "error";
     // (undocumented)
-    message: string;
+    message: string | LogPayload | MessageRecord;
 }
+
+// Warning: (ae-missing-release-tag) "LogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export type LogPayload = LogPayloadText | LogPayloadDict | LogPayloadList;
+
+// Warning: (ae-missing-release-tag) "logPayloadBrand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const logPayloadBrand: unique symbol;
+
+// Warning: (ae-missing-release-tag) "LogPayloadDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface LogPayloadDict {
+    // (undocumented)
+    [logPayloadBrand]: true;
+    // (undocumented)
+    entries: Array<[key: string, value: string | LogPayloadList]>;
+    // (undocumented)
+    nested?: LogPayload | LogPayload[];
+    // (undocumented)
+    type: "dict";
+}
+
+// Warning: (ae-missing-release-tag) "LogPayloadDictValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type LogPayloadDictValue = string | number | boolean | LogPayloadList;
+
+// Warning: (ae-missing-release-tag) "LogPayloadList" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface LogPayloadList {
+    // (undocumented)
+    [logPayloadBrand]: true;
+    // (undocumented)
+    items: string[];
+    // (undocumented)
+    type: "list";
+}
+
+// Warning: (ae-missing-release-tag) "LogPayloadText" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface LogPayloadText {
+    // (undocumented)
+    [logPayloadBrand]: true;
+    // (undocumented)
+    lines: string[];
+    // (undocumented)
+    nested?: LogPayload | LogPayload[];
+    tags?: string[];
+    // (undocumented)
+    type: "text";
+}
+
+// Warning: (ae-missing-release-tag) "logText" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function logText(lines: string | string[], options?: {
+    tags?: string[];
+    nested?: LogPayload | LogPayload[];
+}): LogPayloadText;
 
 // Warning: (ae-missing-release-tag) "LogValueArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2205,6 +2316,11 @@ export type MaybeUnknown<T> = Either<T, UNKNOWN_STATE>;
 // @public
 export function maybeUnknownToString<T>(val: MaybeUnknown<T>, ifNotUnknown?: (val: NonNullable<T>) => string): string;
 
+// Warning: (ae-missing-release-tag) "mergeLogDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function mergeLogDict(...sources: (LogPayload | MessageRecord | undefined)[]): LogPayloadDict;
+
 // Warning: (ae-missing-release-tag) "mergeSupervisionResults" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -2222,7 +2338,7 @@ export function messageFitsIntoOneLine(info: ZWaveLogInfo, messageLength: number
 // @public (undocumented)
 export interface MessageOrCCLogEntry {
     // (undocumented)
-    message?: MessageRecord;
+    message?: LogPayload | MessageRecord;
     // (undocumented)
     tags: string[];
 }
@@ -2254,13 +2370,8 @@ export enum MessagePriority {
 
 // Warning: (ae-missing-release-tag) "MessageRecord" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public (undocumented)
-export type MessageRecord = Record<string, string | number | boolean>;
-
-// Warning: (ae-missing-release-tag) "messageRecordToLines" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
 // @public
-export function messageRecordToLines(message: MessageRecord): string[];
+export type MessageRecord = Record<string, LogPayloadDictValue | undefined>;
 
 // Warning: (ae-missing-release-tag) "messageToLines" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3334,6 +3445,7 @@ export class SecurityManager2 {
         key: BytesView;
         iv: BytesView;
     }>;
+    getNextPeerSequenceNumber(peerNodeId: number): number | undefined;
     getPeerMPAN(peerNodeId: number, groupId: number): MPANTableEntry | {
         type: MPANState.None;
     };
@@ -3396,6 +3508,7 @@ export type SendCommandOptions = SendMessageOptions & SupervisionOptions & SendC
     encapsulationFlags?: EncapsulationFlags;
     transmitOptions?: TransmitOptions;
     reportTimeoutMs?: number;
+    ignoreNodeUpdate?: boolean;
 };
 
 // Warning: (ae-missing-release-tag) "SendCommandReturnType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3785,6 +3898,11 @@ export const timestampPadding: string;
 //
 // @public (undocumented)
 export const timestampPaddingShort: string;
+
+// Warning: (ae-missing-release-tag) "toLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function toLogPayload(message: LogPayload | MessageRecord): LogPayload;
 
 // Warning: (ae-missing-release-tag) "topologicalSort" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
