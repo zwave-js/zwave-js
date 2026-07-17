@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.26.0 (2026-07-17)
 ### Features
 * Added support for proprietary controller commands on Aeotec and Z-Wave.me controllers (#8949)
 * Ongoing interviews are now paused during inclusion, security bootstrapping and exclusion. This should greatly improve the reliability when adding multiple devices at once. (#8951)
