@@ -28,6 +28,10 @@ import {
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { FeatureAPI } from "./FeatureAPI.js";
 
+// Bulk deletions (all users, or all credentials matching a filter) can take
+// significantly longer than the default 1 second report timeout
+const BULK_DELETE_REPORT_TIMEOUT_MS = 15000;
+
 export interface UserCapabilities {
 	maxUsers: number;
 	supportedUserTypes: readonly UserCredentialUserType[];
@@ -915,7 +919,9 @@ export class AccessControlAPI extends FeatureAPI {
 	 */
 	public async deleteAllUsers(): Promise<SetUserResult> {
 		if (this.#usesUserCredentialCC) {
-			const api = this.#u3cAPI();
+			const api = this.#u3cAPI().withOptions({
+				reportTimeoutMs: BULK_DELETE_REPORT_TIMEOUT_MS,
+			});
 			const raw = await api.setUser({
 				operationType: UserCredentialOperationType.Delete,
 				userId: 0,
@@ -1350,7 +1356,9 @@ export class AccessControlAPI extends FeatureAPI {
 			?? UserCredentialType.None;
 
 		if (this.#usesUserCredentialCC) {
-			const api = this.#u3cAPI();
+			const api = this.#u3cAPI().withOptions({
+				reportTimeoutMs: BULK_DELETE_REPORT_TIMEOUT_MS,
+			});
 			const raw = await api.setCredential({
 				operationType: UserCredentialOperationType.Delete,
 				userId,
