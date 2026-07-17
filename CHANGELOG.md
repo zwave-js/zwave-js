@@ -4,6 +4,27 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Added support for proprietary controller commands on Aeotec and Z-Wave.me controllers (#8949)
+* Ongoing interviews are now paused during inclusion, security bootstrapping and exclusion. This should greatly improve the reliability when adding multiple devices at once. (#8951)
+
+### Bugfixes
+* Added a work around for some locks incorrectly reporting 0 steps remaining immediately after starting credential learning (#8976)
+* Increased timeouts for bulk-deleting users/credentials, which can take significantly longer than 1 second on some locks (#8978)
+* Fixed several issues that could lead to stale credentials being cached (#8977, #8966)
+
+### Config file changes
+* Add UltraPro 800 Series On/Off Switch (#8973)
+* Add UltraPro 800 Series dimmer (#8972)
+* Add GR-105N device configuration (#8960)
+* Add Nexa ZPR-111 parameters (#8495)
+* Correct and clean up all Fibaro device files (#8955)
+* Fix broken link to Honeywell T6 Pro manual (#8970)
+
+### Changes under the hood
+* The development MCP server is now able to search for config parameters semantically, allowing AI agents to spot similar parameters and matching templates (#8958, #8974)
+
 ## 15.25.3 (2026-07-09)
 ### Bugfixes
 * Added missing exports for `AssociationGroupInfo`, `UserCode` and `EndpointCapability` types (#8933)
