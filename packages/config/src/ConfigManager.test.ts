@@ -1,3 +1,4 @@
+import { configDir as embeddedConfigDir } from "#config_dir";
 import { log as createZWaveLogContainer } from "#default_bindings/log";
 import type { LogContainer } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
@@ -53,7 +54,7 @@ test.sequential(
 		const { tempDir, logger } = context;
 
 		const configDir = path.join(tempDir, "extconfig");
-		await syncExternalConfigDir(fs, configDir, logger);
+		await syncExternalConfigDir(fs, embeddedConfigDir, configDir, logger);
 
 		expect(await pathExists(fs, configDir)).toBe(true);
 		expect(
@@ -78,7 +79,7 @@ test.sequential(
 			"utf8",
 		);
 
-		await syncExternalConfigDir(fs, configDir, logger);
+		await syncExternalConfigDir(fs, embeddedConfigDir, configDir, logger);
 
 		expect(await pathExists(fs, configDir)).toBe(true);
 
@@ -104,7 +105,7 @@ test.sequential(
 			"utf8",
 		);
 
-		await syncExternalConfigDir(fs, configDir, logger);
+		await syncExternalConfigDir(fs, embeddedConfigDir, configDir, logger);
 
 		expect(await pathExists(fs, configDir)).toBe(true);
 

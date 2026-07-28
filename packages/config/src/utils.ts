@@ -1,4 +1,3 @@
-import { configDir } from "#config_dir";
 import { CommandClasses, ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import {
 	copyFilesRecursive,
@@ -102,6 +101,7 @@ export type SyncExternalConfigDirResult =
  */
 export async function syncExternalConfigDir(
 	fs: ManageDirectory & ReadFileSystemInfo & ReadFile & CopyFile & WriteFile,
+	embeddedConfigDir: string,
 	extConfigDir: string,
 	logger: ConfigLogger,
 ): Promise<SyncExternalConfigDirResult> {
@@ -164,7 +164,7 @@ export async function syncExternalConfigDir(
 		await fs.ensureDir(extConfigDir);
 		await copyFilesRecursive(
 			fs,
-			configDir,
+			embeddedConfigDir,
 			extConfigDir,
 			(src) => src.endsWith(".json"),
 		);
