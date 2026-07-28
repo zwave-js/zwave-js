@@ -2,6 +2,8 @@
 
 /// <reference path="types.d.ts" />
 
+const { listCommentsSinceTransfer } = require("./utils.cjs");
+
 const LOGFILE_COMMENT_TAG = "<!-- LOGFILE_COMMENT_TAG -->";
 
 /**
@@ -86,14 +88,16 @@ As a reminder, here's how to create one:
 
 	// Existing comments are tagged with LOGFILE_COMMENT_TAG
 	try {
-		const { data: comments } = await github.rest.issues.listComments({
-			...options,
-			issue_number: context.issue.number,
-		});
+		const comments = await listCommentsSinceTransfer(
+			github,
+			options.owner,
+			options.repo,
+			context.issue.number,
+		);
 		const existing = comments.find(
 			(c) =>
-				c.user.login === "zwave-js-bot"
-				&& c.body.includes(LOGFILE_COMMENT_TAG),
+				c.user?.login === "zwave-js-bot"
+				&& c.body?.includes(LOGFILE_COMMENT_TAG),
 		);
 		if (existing) {
 			if (message) {
