@@ -1,4 +1,12 @@
 {
+	"active_display_brightness": {
+		"label": "Active Display Brightness",
+		"valueSize": 1,
+		"unit": "10 %",
+		"minValue": 1,
+		"maxValue": 10,
+		"defaultValue": 10
+	},
 	"association_group_control": {
 		"valueSize": 1,
 		"defaultValue": 0,
@@ -17,5 +25,247 @@
 				"value": 2
 			}
 		]
+	},
+	"cooling_setpoint": {
+		"label": "Cooling Setpoint",
+		"valueSize": 2,
+		"unit": "0.1 °C",
+		"minValue": 50,
+		"maxValue": 400,
+		"defaultValue": 180
+	},
+	"eco_setpoint": {
+		"label": "Eco Setpoint",
+		"valueSize": 2,
+		"unit": "0.1 °C",
+		"minValue": 50,
+		"maxValue": 400,
+		"defaultValue": 180
+	},
+	"heating_setpoint": {
+		"label": "Heating Setpoint",
+		"valueSize": 2,
+		"unit": "0.1 °C",
+		"minValue": 50,
+		"maxValue": 400,
+		"defaultValue": 210
+	},
+	"load_power": {
+		"label": "Load Power",
+		"valueSize": 1,
+		"unit": "100 W",
+		"minValue": 0,
+		"maxValue": 99,
+		"defaultValue": 0,
+		"options": [
+			{
+				"label": "Use measured value",
+				"value": 0
+			}
+		]
+	},
+	"max_temperature_limit": {
+		"valueSize": 2,
+		"unit": "0.1 °C",
+		"minValue": 50,
+		"maxValue": 400,
+		"defaultValue": 400
+	},
+	"meter_report_interval": {
+		"label": "Meter Report Interval",
+		"valueSize": 2,
+		"unit": "seconds",
+		"minValue": 30,
+		"maxValue": 65535,
+		"defaultValue": 840,
+		"unsigned": true
+	},
+	"min_temperature_limit": {
+		"valueSize": 2,
+		"unit": "0.1 °C",
+		"minValue": 50,
+		"maxValue": 400,
+		"defaultValue": 50
+	},
+	"operating_mode": {
+		"label": "Operating Mode",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			},
+			{
+				"label": "Heating",
+				"value": 1
+			},
+			{
+				"label": "Cooling",
+				"value": 2
+			},
+			{
+				"label": "Eco",
+				"value": 3
+			}
+		]
+	},
+	"power_regulator_active_time": {
+		"label": "Power Regulator Active Time",
+		"valueSize": 1,
+		"unit": "10 %",
+		"minValue": 1,
+		"maxValue": 10,
+		"defaultValue": 2
+	},
+	"regulation_mode": {
+		"label": "Regulation Mode",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Hysteresis",
+				"value": 0
+			},
+			{
+				"label": "PWM",
+				"value": 1
+			}
+		]
+	},
+	"sensor_mode": {
+		// The option labels are used by Home Assistant to pick the temperature sensor
+		// the climate entity follows, so they must not be renamed
+		"label": "Sensor Mode",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Floor",
+				"value": 0
+			},
+			{
+				"label": "Internal",
+				"value": 1
+			},
+			{
+				"label": "Internal with floor limit",
+				"value": 2
+			},
+			{
+				"label": "External",
+				"value": 3
+			},
+			{
+				"label": "External with floor limit",
+				"value": 4
+			},
+			{
+				"label": "Power regulator",
+				"value": 5
+			}
+		]
+	},
+	"sensor_resistance_ntc": {
+		"label": "Sensor Resistance (NTC)",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "10 kΩ",
+				"value": 0
+			},
+			{
+				"label": "12 kΩ",
+				"value": 1
+			},
+			{
+				"label": "15 kΩ",
+				"value": 2
+			},
+			{
+				"label": "22 kΩ",
+				"value": 3
+			},
+			{
+				"label": "33 kΩ",
+				"value": 4
+			},
+			{
+				"label": "47 kΩ",
+				"value": 5
+			},
+			{
+				"label": "6.8 kΩ",
+				"value": 6
+			},
+			{
+				"label": "100 kΩ",
+				"value": 7
+			}
+		]
+	},
+	"standby_display_brightness": {
+		"label": "Standby Display Brightness",
+		"valueSize": 1,
+		"unit": "10 %",
+		"minValue": 1,
+		"maxValue": 10,
+		"defaultValue": 5
+	},
+	"temperature_control_hysteresis": {
+		"label": "Temperature Control Hysteresis",
+		"valueSize": 1,
+		"unit": "0.1 °C",
+		"minValue": 3,
+		"maxValue": 30,
+		"defaultValue": 5
+	},
+	"temperature_display": {
+		"label": "Temperature Display",
+		"valueSize": 1,
+		"defaultValue": 0,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Setpoint",
+				"value": 0
+			},
+			{
+				"label": "Measured",
+				"value": 1
+			}
+		]
+	},
+	"temperature_report_hysteresis": {
+		"$purpose": "reporting_threshold.temperature",
+		"label": "Temperature Report Hysteresis",
+		"valueSize": 1,
+		"unit": "0.1 °C",
+		"minValue": 1,
+		"maxValue": 100,
+		"defaultValue": 10
+	},
+	"temperature_report_interval": {
+		"$purpose": "reporting_interval.temperature",
+		"label": "Temperature Report Interval",
+		"valueSize": 2,
+		"unit": "seconds",
+		"minValue": 30,
+		"maxValue": 65535,
+		"defaultValue": 840,
+		"unsigned": true
+	},
+	"temperature_sensor_calibration": {
+		"$purpose": "calibration.temperature",
+		"valueSize": 1,
+		"unit": "0.1 °C",
+		"minValue": -60,
+		"maxValue": 60,
+		"defaultValue": 0
 	}
 }

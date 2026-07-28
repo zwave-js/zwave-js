@@ -79,75 +79,43 @@
 		},
 		{
 			"#": "4",
-			"label": "Temperature Control Hysteresis (DIFF I)",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": 3,
-			"maxValue": 30,
-			"defaultValue": 5
+			"$import": "templates/heatit_template.json#temperature_control_hysteresis",
+			"label": "Temperature Control Hysteresis (DIFF I)"
 		},
 		{
 			"#": "5",
-			"label": "Floor Minimum Temperature Limit (FLo)",
-			"valueSize": 2,
-			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 50
+			"$import": "templates/heatit_template.json#min_temperature_limit",
+			"label": "Floor Minimum Temperature Limit (FLo)"
 		},
 		{
 			"#": "6",
-			"label": "Floor Maximum Temperature (FHi)",
-			"valueSize": 2,
-			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 400
+			"$import": "templates/heatit_template.json#max_temperature_limit",
+			"label": "Floor Maximum Temperature (FHi)"
 		},
 		{
 			"#": "7",
-			"label": "Air Minimum Temperature Limit (ALo)",
-			"valueSize": 2,
-			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 50
+			"$import": "templates/heatit_template.json#min_temperature_limit",
+			"label": "Air Minimum Temperature Limit (ALo)"
 		},
 		{
 			"#": "8",
-			"label": "Air Maximum Temperature Limit (AHi)",
-			"valueSize": 2,
-			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 400
+			"$import": "templates/heatit_template.json#max_temperature_limit",
+			"label": "Air Maximum Temperature Limit (AHi)"
 		},
 		{
 			"#": "10",
-			"label": "Room Sensor Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": -60,
-			"maxValue": 60,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"label": "Room Sensor Calibration"
 		},
 		{
 			"#": "11",
-			"label": "Floor Sensor Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": -60,
-			"maxValue": 60,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"label": "Floor Sensor Calibration"
 		},
 		{
 			"#": "12",
-			"label": "External Sensor Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": -60,
-			"maxValue": 60,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"label": "External Sensor Calibration"
 		},
 		{
 			"#": "13",
