@@ -207,16 +207,20 @@ function extractLogfileUrl(logfileSection) {
  * @returns {Uint8Array}
  */
 function maybeDecompressLogfile(data) {
-	// Lazy import: fflate is only installed in workflows that extract
-	// logfiles, other bot scripts must work without node_modules
+	const isZip = data[0] === 0x50
+		&& data[1] === 0x4b
+		&& data[2] === 0x03
+		&& data[3] === 0x04;
+	const isGzip = data[0] === 0x1f && data[1] === 0x8b;
+	if (!isZip && !isGzip) return data;
+
+	// Lazy import, so bot scripts that never see compressed uploads work
+	// without node_modules. Workflows that extract logfiles must install
+	// dependencies - a missing module should fail the run, not degrade
+	// into "binary file" feedback.
+	const { gunzipSync, unzipSync } = require("fflate");
 	try {
-		const { gunzipSync, unzipSync } = require("fflate");
-		if (
-			data[0] === 0x50
-			&& data[1] === 0x4b
-			&& data[2] === 0x03
-			&& data[3] === 0x04
-		) {
+		if (isZip) {
 			const unzipped = unzipSync(data, {
 				filter: (file) =>
 					/\.(log|txt)$/i.test(file.name)
@@ -236,10 +240,11 @@ function maybeDecompressLogfile(data) {
 				if (current) names = [current];
 			}
 			if (names.length === 1) return unzipped[names[0]];
-		} else if (data[0] === 0x1f && data[1] === 0x8b) {
+		} else {
 			return gunzipSync(data);
 		}
 	} catch (e) {
+		// Corrupted or password-protected archives get binary-file feedback
 		console.error("Failed to decompress logfile:", e);
 	}
 	return data;
