@@ -6,7 +6,9 @@ echo "🏗️  Preparing repository..."
 echo ""
 yarn
 yarn node maintenance/patch-typescript.js
-yarn turbo run bootstrap
+# Run bootstrap tasks serially because they depend on building shared references,
+# which would unnecessarily be rebuilt in parallel.
+yarn turbo run bootstrap --concurrency=1
 echo "✅ Repository ready"
 
 # Do not install VSCode extension on CI
