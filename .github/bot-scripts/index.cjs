@@ -7,6 +7,10 @@ module.exports = {
 		require("./addFingerprintCreatePR.cjs")(...args),
 	approveWorkflows: (...args) => require("./approveWorkflows.cjs")(...args),
 	checkAuthorized: (...args) => require("./checkAuthorized.cjs")(...args),
+	classifyLogfile: (...args) =>
+		require("./classifyLogfile.cjs").classifyLogfile(...args),
+	classificationToFeedback: (...args) =>
+		require("./classifyLogfile.cjs").classificationToFeedback(...args),
 	extractLogfile: (...args) => require("./extractLogfile.cjs")(...args),
 	extractLogfileInDiscussion: (...args) =>
 		require("./extractLogfileInDiscussion.cjs")(...args),

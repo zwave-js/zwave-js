@@ -61,6 +61,13 @@ As a reminder, here's how to create the correct logfile:
 `;
 			break;
 
+		case "BINARY":
+			message = `👋 Hey @${user}!
+
+It looks like the file you attached is not a text file. Please attach the logfile as a plain text file with a \`.log\` or \`.txt\` extension, or a zip archive containing exactly one such file.
+`;
+			break;
+
 		default:
 			message = `👋 Hey @${user}!
 

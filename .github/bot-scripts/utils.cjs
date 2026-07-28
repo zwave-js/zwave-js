@@ -199,6 +199,58 @@ function extractLogfileUrl(logfileSection) {
 }
 
 /**
+ * Decompresses zipped or gzipped logfile uploads, following the pattern
+ * of tryUnzipFirmwareFile in @zwave-js/core. Returns the data unchanged
+ * when it is not compressed or no single logfile can be identified -
+ * the logfile classifier then flags it as binary.
+ * @param {Uint8Array} data
+ * @returns {Uint8Array}
+ */
+function maybeDecompressLogfile(data) {
+	const isZip = data[0] === 0x50
+		&& data[1] === 0x4b
+		&& data[2] === 0x03
+		&& data[3] === 0x04;
+	const isGzip = data[0] === 0x1f && data[1] === 0x8b;
+	if (!isZip && !isGzip) return data;
+
+	// Lazy import, so bot scripts that never see compressed uploads work
+	// without node_modules. Workflows that extract logfiles must install
+	// dependencies - a missing module should fail the run, not degrade
+	// into "binary file" feedback.
+	const { gunzipSync, unzipSync } = require("fflate");
+	try {
+		if (isZip) {
+			const unzipped = unzipSync(data, {
+				filter: (file) =>
+					/\.(log|txt)$/i.test(file.name)
+					// macOS zips contain resource-fork copies of each file
+					&& !file.name.startsWith("__MACOSX/")
+					&& !file.name.split("/").pop()?.startsWith("._"),
+			});
+			let names = Object.keys(unzipped);
+			if (names.length > 1) {
+				// Prefer the driver log when other logs are bundled along,
+				// and the active logfile over rotated ones
+				const zjsLogs = names.filter((name) => /zwavejs_/.test(name));
+				if (zjsLogs.length > 0) names = zjsLogs;
+				const current = names.find((name) =>
+					name.endsWith("zwavejs_current.log")
+				);
+				if (current) names = [current];
+			}
+			if (names.length === 1) return unzipped[names[0]];
+		} else {
+			return gunzipSync(data);
+		}
+	} catch (e) {
+		// Corrupted or password-protected archives get binary-file feedback
+		console.error("Failed to decompress logfile:", e);
+	}
+	return data;
+}
+
+/**
  * Extract logfile content from logfile section (URL or code block)
  * @param {string} logfileSection - Logfile section content
  * @returns {Promise<string|null>} - Logfile content or error codes
@@ -217,7 +269,10 @@ async function extractLogfileContent(logfileSection) {
 				);
 				return "ERROR_FETCH";
 			}
-			const logFile = await resp.text();
+			const data = maybeDecompressLogfile(
+				new Uint8Array(await resp.arrayBuffer()),
+			);
+			const logFile = new TextDecoder().decode(data);
 			// limit to the last 250 lines
 			return logFile.split("\n").slice(-250).join("\n");
 		} catch (e) {
@@ -244,6 +299,7 @@ module.exports = {
 	extractLogfileSection,
 	extractLogfileUrl,
 	extractLogfileContent,
+	maybeDecompressLogfile,
 	AUTO_ANALYSIS_COMMENT_TAG,
 	AUTO_ANALYSIS_START_TAG,
 	AUTO_ANALYSIS_END_TAG,

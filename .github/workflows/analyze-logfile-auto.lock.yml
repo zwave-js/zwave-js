@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"700633034f0f65e6b1089684cbae5649ca2f04315a7031f2b2325d8305c723d8","body_hash":"b35955aeb402ce30812bd49cc7f43e2bcd1396d4485c43b0086cba0d120d9d7b","compiler_version":"v0.81.6","strict":true,"agent_id":"copilot","engine_versions":{"copilot":"1.0.65"}}
-# gh-aw-manifest: {"version":1,"secrets":["BOT_TOKEN","COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/ai-inference","sha":"a7805884c80886efc241e94a5351df715968a0ad","version":"v2.1.1"},{"repo":"actions/cache/restore","sha":"27d5ce7f107fe9357f9df03efb73ab90386fccae","version":"v5.0.5"},{"repo":"actions/cache/save","sha":"27d5ce7f107fe9357f9df03efb73ab90386fccae","version":"v5.0.5"},{"repo":"actions/checkout","sha":"9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0","version":"v7.0.0"},{"repo":"actions/checkout","sha":"df4cb1c069e1874edd31b4311f1884172cec0e10","version":"v6.0.3 (source v6)"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"ba6380cc6e5be5d21677bebe04d52fb48e3abec7","version":"v0.81.6"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.27.11","digest":"sha256:979723c628182da7729333f2208bb249fd25ddee579645cf9a3892d681a929c7","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.27.11@sha256:979723c628182da7729333f2208bb249fd25ddee579645cf9a3892d681a929c7"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.11","digest":"sha256:807e4831999b44513b0a66e5859d478dc4da7ae74ab1918cec967d513f95bf9d","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.11@sha256:807e4831999b44513b0a66e5859d478dc4da7ae74ab1918cec967d513f95bf9d"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.27.11","digest":"sha256:ff27ea0525ad953a6adee28a5fbe9d2e22be47dbec755c15767af4ea3f91df7d","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.27.11@sha256:ff27ea0525ad953a6adee28a5fbe9d2e22be47dbec755c15767af4ea3f91df7d"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.30","digest":"sha256:35625d1a2269b1238606078c879f59a91cffc4ac33eb54bf39c6418822c1a8be","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.30@sha256:35625d1a2269b1238606078c879f59a91cffc4ac33eb54bf39c6418822c1a8be"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:529d02eb970b1161aa25c593a9c3df57fdfad5a8add328cb3b6eccef66f3183b","pinned_image":"ghcr.io/github/gh-aw-node@sha256:529d02eb970b1161aa25c593a9c3df57fdfad5a8add328cb3b6eccef66f3183b"},{"image":"ghcr.io/github/github-mcp-server:v1.4.0","digest":"sha256:2afb26356481d1a350e14544a6e160f7f7ec1561a1ea309b823665abf0309036","pinned_image":"ghcr.io/github/github-mcp-server:v1.4.0@sha256:2afb26356481d1a350e14544a6e160f7f7ec1561a1ea309b823665abf0309036"},{"image":"node:lts-alpine","digest":"sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14","pinned_image":"node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"}]}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"e4611acd3cbb07965044ad9a8d9fe40d03b1425b6bd2b87614479b6f7b576b13","body_hash":"b35955aeb402ce30812bd49cc7f43e2bcd1396d4485c43b0086cba0d120d9d7b","compiler_version":"v0.81.6","strict":true,"agent_id":"copilot","engine_versions":{"copilot":"1.0.65"}}
+# gh-aw-manifest: {"version":1,"secrets":["BOT_TOKEN","COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/cache/restore","sha":"27d5ce7f107fe9357f9df03efb73ab90386fccae","version":"v5.0.5"},{"repo":"actions/cache/save","sha":"27d5ce7f107fe9357f9df03efb73ab90386fccae","version":"v5.0.5"},{"repo":"actions/checkout","sha":"9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0","version":"v7.0.0"},{"repo":"actions/checkout","sha":"df4cb1c069e1874edd31b4311f1884172cec0e10","version":"v6.0.3 (source v6)"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"ba6380cc6e5be5d21677bebe04d52fb48e3abec7","version":"v0.81.6"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.27.11","digest":"sha256:979723c628182da7729333f2208bb249fd25ddee579645cf9a3892d681a929c7","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.27.11@sha256:979723c628182da7729333f2208bb249fd25ddee579645cf9a3892d681a929c7"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.11","digest":"sha256:807e4831999b44513b0a66e5859d478dc4da7ae74ab1918cec967d513f95bf9d","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.11@sha256:807e4831999b44513b0a66e5859d478dc4da7ae74ab1918cec967d513f95bf9d"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.27.11","digest":"sha256:ff27ea0525ad953a6adee28a5fbe9d2e22be47dbec755c15767af4ea3f91df7d","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.27.11@sha256:ff27ea0525ad953a6adee28a5fbe9d2e22be47dbec755c15767af4ea3f91df7d"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.30","digest":"sha256:35625d1a2269b1238606078c879f59a91cffc4ac33eb54bf39c6418822c1a8be","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.30@sha256:35625d1a2269b1238606078c879f59a91cffc4ac33eb54bf39c6418822c1a8be"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:529d02eb970b1161aa25c593a9c3df57fdfad5a8add328cb3b6eccef66f3183b","pinned_image":"ghcr.io/github/gh-aw-node@sha256:529d02eb970b1161aa25c593a9c3df57fdfad5a8add328cb3b6eccef66f3183b"},{"image":"ghcr.io/github/github-mcp-server:v1.4.0","digest":"sha256:2afb26356481d1a350e14544a6e160f7f7ec1561a1ea309b823665abf0309036","pinned_image":"ghcr.io/github/github-mcp-server:v1.4.0@sha256:2afb26356481d1a350e14544a6e160f7f7ec1561a1ea309b823665abf0309036"},{"image":"node:lts-alpine","digest":"sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14","pinned_image":"node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"}]}
 # This file was automatically generated by gh-aw (v0.81.6). DO NOT EDIT. To debug this workflow, load the skill at https://github.com/github/gh-aw/blob/main/debug.md
 #
 #    ___                   _   _      
@@ -37,7 +37,6 @@
 #   - GITHUB_TOKEN
 #
 # Custom actions used:
-#   - actions/ai-inference@a7805884c80886efc241e94a5351df715968a0ad # v2.1.1
 #   - actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
 #   - actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
 #   - actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -46,6 +45,7 @@
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
 #   - actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+#   - actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0 (source v6)
 #   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
 #   - github/gh-aw-actions/setup@ba6380cc6e5be5d21677bebe04d52fb48e3abec7 # v0.81.6
 #
@@ -67,11 +67,19 @@ on:
   # permissions: # Permissions applied to pre-activation job
     # contents: read
     # discussions: write
-    # models: read
   # roles: all # Roles processed as role check in pre-activation job
   # steps: # Steps injected into pre-activation job
   # - name: Checkout repository
     # uses: actions/checkout@v6
+  # - name: Enable Corepack
+    # run: corepack enable
+  # - name: Setup Node.js
+    # uses: actions/setup-node@v6
+    # with:
+      # cache: yarn
+      # node-version: 22
+  # - name: Install dependencies
+    # run: yarn workspaces focus @zwave-js/mcp-server-dev --production
   # - id: extract
     # name: Extract log file from discussion body
     # uses: actions/github-script@v9
@@ -96,30 +104,26 @@ on:
         # 
         # core.setOutput("shouldContinue", "true");
         # return extractResult;
-  # - id: ai_detection
-    # if: steps.extract.outputs.shouldContinue == 'true'
-    # name: Classify logfile using AI
-    # uses: actions/ai-inference@v2.1.1
-    # with:
-      # max-tokens: 100
-      # model: openai/gpt-4o-mini
-      # prompt: |
-        # Analyze the following log file and classify it according to the rules above:
-        # 
-        # ```
-        # ${{ steps.extract.outputs.result }}
-        # ```
-      # system-prompt: "You are a log file classifier for the Z-Wave JS project. Your task is to classify log files that users have uploaded, and check whether they uploaded the correct log files with the correct log level (\"debug\"). The log files you will typically encounter can be divided into the following groups:\n\n- Log files from Z-Wave JS with the correct log level\n- Log files from Z-Wave JS with the wrong log level\n- Log files from Z-Wave JS UI\n- Log files from Home Assistant\n- Unrelated log files\n\n## Classification Criteria\n\n**Log files from Z-Wave JS:**\nEntries in these log files start with a date and time, a tag (typically DRIVER, CNTRLR, SERIAL and similar), optional direction arrows (» or «), and the actual log text.\nIn multiline logs, everything but the log text is replaced with spaces.\n\nHere are some examples:\n```\n2025-06-13 13:20:33.397 CNTRLR   Querying configured RF region...\n2025-06-13 13:20:33.398 DRIVER » [REQ] [SerialAPISetup]\n                                  command: GetRFRegion\n2025-06-13 13:20:33.398 SERIAL » 0x0104000b20d0                                                       (6 bytes)\n2025-06-13 13:20:33.403 SERIAL « [ACK]                                                                   (0x06)\n2025-06-13 13:20:33.403 SERIAL « 0x0105010b200bdb                                                     (7 bytes)\n2025-06-13 13:20:33.404 SERIAL » [ACK]                                                                   (0x06)\n2025-06-13 13:20:33.405 DRIVER « [RES] [SerialAPISetup]\n                                  command: GetRFRegion\n                                  region:  Europe (Long Range)\n2025-06-13 13:20:33.406 CNTRLR   The controller is using RF region Europe (Long Range)\n```\n\nTo check if the log level is correct, look for lines containing `SERIAL »` and `SERIAL «`. Examples:\n```\n2025-06-12 21:10:37.343 SERIAL » 0x01030015e9                                                         (5 bytes)\n2025-06-12 21:10:37.344 SERIAL « [ACK]                                                                   (0x06)\n2025-06-12 21:10:37.345 SERIAL « 0x011001155a2d5761766520362e3037000197                              (18 bytes)\n2025-06-12 21:10:37.345 SERIAL » [ACK]                                                                   (0x06)\n```\n\nIf you find these lines, the log level is correct.\n\nIf you don't, the log level is most likely wrong.\n\n\n**Log files from Z-Wave JS UI:**\nLog entries from Z-Wave JS UI also start with the date and time, but are followed by the loglevel (INFO, DEBUG, ...), a tag (ZWAVE, GATEWAY, ...) and the log text. You will not find directional arrows in these logs.\n\nExample:\n```\n2021-08-04 15:56:59.250 INFO MQTT: MQTT is disabled\n2021-08-04 15:56:59.503 INFO ZWAVE: Connecting to /dev/ttyACM0\n2021-08-04 15:57:09.381 INFO ZWAVE: Zwave driver is ready\n2021-08-04 15:57:09.387 INFO ZWAVE: Controller status: Driver ready\n```\n\n\n**Log files from Home Assistant:**\nThese log entries look quite different from the ones created by Z-Wave JS and Z-Wave JS UI. You may find references to `zwave_js` or `zwave_js_server` in them. For example:\n```\n2025-06-13 13:32:31.856 INFO (MainThread) [homeassistant.components.zwave_js] Zwave-js-server logging is enabled\n2025-06-13 13:32:35.307 INFO (MainThread) [homeassistant.components.zwave_js] Disabling zwave_js server logging\n2025-06-13 13:32:35.307 INFO (MainThread) [homeassistant.components.zwave_js] Server logging is currently set to LogLevel.DEBUG as a result of server logging being enabled. It is now being reset to LogLevel.INFO\n2025-06-13 13:32:35.307 DEBUG (MainThread) [zwave_js_server] Publishing message:\n{'command': 'driver.update_log_config',\n'config': {'level': 'info'},\n'messageId': '60b4ebdaa4da498daf6d960712163f7d'}\n```\n\nThese logs may be interleaved with logs from Z-Wave JS, see above. Check if this is the case and include it in your classification.\n\n\n**Unrelated log files:**\nAny other log files that do not match the above patterns are considered unrelated.\n\n\n## Rules\n\n1. Compare the given log file against the classification criteria.\n2. Respond with one of the following classifications:\n  - Z-Wave JS: correct log level\n  - Z-Wave JS: wrong log level\n  - Z-Wave JS UI\n  - Home Assistant: No Z-Wave JS\n  - Home Assistant: Includes Z-Wave JS\n  - Unrelated\n3. If you are not sure about the classification (less than 75% certainty), return \"Unknown\".\n4. Do not return anything else.\n"
   # - env:
-      # AI_RESPONSE: ${{ steps.ai_detection.outputs.response }}
+      # LOGFILE: ${{ steps.extract.outputs.result }}
       # SHOULD_CONTINUE: ${{ steps.extract.outputs.shouldContinue }}
     # id: feedback
-    # name: Give feedback
+    # name: Classify logfile and give feedback
     # uses: actions/github-script@v9
     # with:
       # github-token: ${{ secrets.BOT_TOKEN }}
       # result-encoding: string
-      # script: "if (process.env.SHOULD_CONTINUE !== \"true\") return \"SKIP\";\n\nconst aiResponse = process.env.AI_RESPONSE;\nconsole.log('Raw AI response:', JSON.stringify(aiResponse));\n\nlet feedback = \"UNKNOWN\";\nswitch (aiResponse) {\n  case \"Z-Wave JS: correct log level\":\n    feedback = \"OK\";\n    break;\n  case \"Z-Wave JS: wrong log level\":\n    feedback = \"WRONG_LOG_LEVEL\";\n    break;\n  case \"Z-Wave JS UI\":\n    feedback = \"Z_UI\";\n    break;\n  case \"Home Assistant: No Z-Wave JS\":\n    feedback = \"HA_ONLY\";\n    break;\n  case \"Home Assistant: Includes Z-Wave JS\":\n    feedback = \"OK\";\n    break;\n  case \"Unrelated\":\n    feedback = \"UNRELATED\";\n    break;\n}\n\nconst bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);\nawait bot.ensureLogfileFeedbackInDiscussion({github, context}, feedback);\n\nreturn feedback;\n"
+      # script: |
+        # if (process.env.SHOULD_CONTINUE !== "true") return "SKIP";
+        # 
+        # const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+        # const classification = bot.classifyLogfile(process.env.LOGFILE);
+        # console.log('Classification:', classification);
+        # 
+        # const feedback = bot.classificationToFeedback(classification);
+        # await bot.ensureLogfileFeedbackInDiscussion({github, context}, feedback);
+        # 
+        # return feedback;
   # - id: gate
     # if: steps.feedback.outputs.result == 'OK'
     # name: Gate agentic analysis
@@ -136,7 +140,7 @@ jobs:
   activation:
     needs: pre_activation
     if: needs.pre_activation.outputs.activated == 'true' && (needs.pre_activation.outputs.gate_result == 'success')
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
@@ -1096,7 +1100,7 @@ jobs:
     if: >
       always() && (needs.agent.result != 'skipped' || needs.activation.outputs.lockdown_check_failed == 'true' ||
       needs.activation.outputs.stale_lock_file_failed == 'true' || needs.activation.outputs.daily_ai_credits_exceeded == 'true')
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       discussions: write
@@ -1584,16 +1588,14 @@ jobs:
             }
 
   pre_activation:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       discussions: write
-      models: read
     env:
       GH_AW_RUNTIME_FEATURES: ${{ vars.GH_AW_RUNTIME_FEATURES }}
     outputs:
       activated: ${{ 'true' }}
-      ai_detection_result: ${{ steps.ai_detection.outcome }}
       extract_result: ${{ steps.extract.outcome }}
       feedback_result: ${{ steps.feedback.outcome }}
       gate_result: ${{ steps.gate.outcome }}
@@ -1616,6 +1618,15 @@ jobs:
           GH_AW_INFO_ENGINE_ID: "copilot"
       - name: Checkout repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3 (source v6)
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0 (source v6)
+        with:
+          cache: yarn
+          node-version: 22
+      - name: Install dependencies
+        run: yarn workspaces focus @zwave-js/mcp-server-dev --production
       - name: Extract log file from discussion body
         id: extract
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
@@ -1640,110 +1651,11 @@ jobs:
 
             core.setOutput("shouldContinue", "true");
             return extractResult;
-      - name: Classify logfile using AI
-        id: ai_detection
-        if: steps.extract.outputs.shouldContinue == 'true'
-        uses: actions/ai-inference@a7805884c80886efc241e94a5351df715968a0ad # v2.1.1
-        with:
-          max-tokens: 100
-          model: openai/gpt-4o-mini
-          prompt: |
-            Analyze the following log file and classify it according to the rules above:
-
-            ```
-            ${{ steps.extract.outputs.result }}
-            ```
-          system-prompt: |
-            You are a log file classifier for the Z-Wave JS project. Your task is to classify log files that users have uploaded, and check whether they uploaded the correct log files with the correct log level ("debug"). The log files you will typically encounter can be divided into the following groups:
-
-            - Log files from Z-Wave JS with the correct log level
-            - Log files from Z-Wave JS with the wrong log level
-            - Log files from Z-Wave JS UI
-            - Log files from Home Assistant
-            - Unrelated log files
-
-            ## Classification Criteria
-
-            **Log files from Z-Wave JS:**
-            Entries in these log files start with a date and time, a tag (typically DRIVER, CNTRLR, SERIAL and similar), optional direction arrows (» or «), and the actual log text.
-            In multiline logs, everything but the log text is replaced with spaces.
-
-            Here are some examples:
-            ```
-            2025-06-13 13:20:33.397 CNTRLR   Querying configured RF region...
-            2025-06-13 13:20:33.398 DRIVER » [REQ] [SerialAPISetup]
-                                              command: GetRFRegion
-            2025-06-13 13:20:33.398 SERIAL » 0x0104000b20d0                                                       (6 bytes)
-            2025-06-13 13:20:33.403 SERIAL « [ACK]                                                                   (0x06)
-            2025-06-13 13:20:33.403 SERIAL « 0x0105010b200bdb                                                     (7 bytes)
-            2025-06-13 13:20:33.404 SERIAL » [ACK]                                                                   (0x06)
-            2025-06-13 13:20:33.405 DRIVER « [RES] [SerialAPISetup]
-                                              command: GetRFRegion
-                                              region:  Europe (Long Range)
-            2025-06-13 13:20:33.406 CNTRLR   The controller is using RF region Europe (Long Range)
-            ```
-
-            To check if the log level is correct, look for lines containing `SERIAL »` and `SERIAL «`. Examples:
-            ```
-            2025-06-12 21:10:37.343 SERIAL » 0x01030015e9                                                         (5 bytes)
-            2025-06-12 21:10:37.344 SERIAL « [ACK]                                                                   (0x06)
-            2025-06-12 21:10:37.345 SERIAL « 0x011001155a2d5761766520362e3037000197                              (18 bytes)
-            2025-06-12 21:10:37.345 SERIAL » [ACK]                                                                   (0x06)
-            ```
-
-            If you find these lines, the log level is correct.
-
-            If you don't, the log level is most likely wrong.
-
-
-            **Log files from Z-Wave JS UI:**
-            Log entries from Z-Wave JS UI also start with the date and time, but are followed by the loglevel (INFO, DEBUG, ...), a tag (ZWAVE, GATEWAY, ...) and the log text. You will not find directional arrows in these logs.
-
-            Example:
-            ```
-            2021-08-04 15:56:59.250 INFO MQTT: MQTT is disabled
-            2021-08-04 15:56:59.503 INFO ZWAVE: Connecting to /dev/ttyACM0
-            2021-08-04 15:57:09.381 INFO ZWAVE: Zwave driver is ready
-            2021-08-04 15:57:09.387 INFO ZWAVE: Controller status: Driver ready
-            ```
-
-
-            **Log files from Home Assistant:**
-            These log entries look quite different from the ones created by Z-Wave JS and Z-Wave JS UI. You may find references to `zwave_js` or `zwave_js_server` in them. For example:
-            ```
-            2025-06-13 13:32:31.856 INFO (MainThread) [homeassistant.components.zwave_js] Zwave-js-server logging is enabled
-            2025-06-13 13:32:35.307 INFO (MainThread) [homeassistant.components.zwave_js] Disabling zwave_js server logging
-            2025-06-13 13:32:35.307 INFO (MainThread) [homeassistant.components.zwave_js] Server logging is currently set to LogLevel.DEBUG as a result of server logging being enabled. It is now being reset to LogLevel.INFO
-            2025-06-13 13:32:35.307 DEBUG (MainThread) [zwave_js_server] Publishing message:
-            {'command': 'driver.update_log_config',
-            'config': {'level': 'info'},
-            'messageId': '60b4ebdaa4da498daf6d960712163f7d'}
-            ```
-
-            These logs may be interleaved with logs from Z-Wave JS, see above. Check if this is the case and include it in your classification.
-
-
-            **Unrelated log files:**
-            Any other log files that do not match the above patterns are considered unrelated.
-
-
-            ## Rules
-
-            1. Compare the given log file against the classification criteria.
-            2. Respond with one of the following classifications:
-              - Z-Wave JS: correct log level
-              - Z-Wave JS: wrong log level
-              - Z-Wave JS UI
-              - Home Assistant: No Z-Wave JS
-              - Home Assistant: Includes Z-Wave JS
-              - Unrelated
-            3. If you are not sure about the classification (less than 75% certainty), return "Unknown".
-            4. Do not return anything else.
-      - name: Give feedback
+      - name: Classify logfile and give feedback
         id: feedback
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
         env:
-          AI_RESPONSE: ${{ steps.ai_detection.outputs.response }}
+          LOGFILE: ${{ steps.extract.outputs.result }}
           SHOULD_CONTINUE: ${{ steps.extract.outputs.shouldContinue }}
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
@@ -1751,32 +1663,11 @@ jobs:
           script: |
             if (process.env.SHOULD_CONTINUE !== "true") return "SKIP";
 
-            const aiResponse = process.env.AI_RESPONSE;
-            console.log('Raw AI response:', JSON.stringify(aiResponse));
-
-            let feedback = "UNKNOWN";
-            switch (aiResponse) {
-              case "Z-Wave JS: correct log level":
-                feedback = "OK";
-                break;
-              case "Z-Wave JS: wrong log level":
-                feedback = "WRONG_LOG_LEVEL";
-                break;
-              case "Z-Wave JS UI":
-                feedback = "Z_UI";
-                break;
-              case "Home Assistant: No Z-Wave JS":
-                feedback = "HA_ONLY";
-                break;
-              case "Home Assistant: Includes Z-Wave JS":
-                feedback = "OK";
-                break;
-              case "Unrelated":
-                feedback = "UNRELATED";
-                break;
-            }
-
             const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+            const classification = bot.classifyLogfile(process.env.LOGFILE);
+            console.log('Classification:', classification);
+
+            const feedback = bot.classificationToFeedback(classification);
             await bot.ensureLogfileFeedbackInDiscussion({github, context}, feedback);
 
             return feedback;
@@ -1791,7 +1682,7 @@ jobs:
       - agent
       - detection
     if: (!cancelled()) && needs.agent.result != 'skipped' && needs.detection.result == 'success'
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       discussions: write
