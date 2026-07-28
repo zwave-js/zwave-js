@@ -222,9 +222,9 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: .docs-index
-        key: docs-embeddings-v2-${{ hashFiles('docs/**/*.md', '.github/bot-scripts/buildDocsIndex.cjs', '.github/bot-scripts/docsIndex.cjs', '.github/bot-scripts/modelsApi.cjs') }}
+        key: docs-embeddings-v3-${{ hashFiles('docs/**/*.md', '.github/bot-scripts/buildDocsIndex.cjs', '.github/bot-scripts/docsIndex.cjs', '.github/bot-scripts/localEmbeddings.cjs') }}
         restore-keys: |
-          docs-embeddings-v2-
+          docs-embeddings-v3-
 
     - name: Restore posts index
       id: restore-posts-index
@@ -233,9 +233,9 @@ jobs:
         path: .posts-index
         # There is no exact key to match, the newest index is picked
         # via the prefix
-        key: posts-embeddings-v1-
+        key: posts-embeddings-v2-
         restore-keys: |
-          posts-embeddings-v1-
+          posts-embeddings-v2-
 
     # Downvoted answers collected by the docs-embeddings workflow.
     # A missing cache just means no suppression is applied.
@@ -243,9 +243,9 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: .docs-feedback/feedback.json
-        key: docs-feedback-v1-
+        key: docs-feedback-v2-
         restore-keys: |
-          docs-feedback-v1-
+          docs-feedback-v2-
 
     - name: Warn if neither index is available
       if: steps.restore-index.outputs.cache-matched-key == '' && steps.restore-posts-index.outputs.cache-matched-key == ''
@@ -253,6 +253,28 @@ jobs:
       with:
         script: |
           core.warning('Neither the docs index nor the posts index cache is available yet - skipping the docs answer bot for this post.');
+
+    - name: Enable Corepack
+      if: steps.restore-index.outputs.cache-matched-key != '' || steps.restore-posts-index.outputs.cache-matched-key != ''
+      run: corepack enable
+
+    - name: Setup Node.js
+      if: steps.restore-index.outputs.cache-matched-key != '' || steps.restore-posts-index.outputs.cache-matched-key != ''
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+        cache: 'yarn'
+
+    - name: Install embedding dependencies
+      if: steps.restore-index.outputs.cache-matched-key != '' || steps.restore-posts-index.outputs.cache-matched-key != ''
+      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
+
+    - name: Restore embedding model
+      if: steps.restore-index.outputs.cache-matched-key != '' || steps.restore-posts-index.outputs.cache-matched-key != ''
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/zwave-js-mcp-server-dev/models
+        key: embedding-model-${{ hashFiles('.github/bot-scripts/localEmbeddings.cjs') }}
 
     - name: Answer from documentation
       if: steps.restore-index.outputs.cache-matched-key != '' || steps.restore-posts-index.outputs.cache-matched-key != ''
@@ -271,13 +293,12 @@ jobs:
   # Add the new post to the posts index, so it can be suggested as a
   # related post before the next nightly rebuild.
   # Edits are reconciled by the nightly rebuild instead, so repeated
-  # edits cannot burn Models API requests and cache storage.
+  # edits cannot burn compute and cache storage.
   update-posts-index:
     runs-on: [ubuntu-latest]
     timeout-minutes: 10
     permissions:
       contents: read
-      models: read
     if: github.event.action == 'opened' || github.event.action == 'created'
 
     steps:
@@ -291,16 +312,37 @@ jobs:
         path: .posts-index
         # There is no exact key to match, the newest index is picked
         # via the prefix
-        key: posts-embeddings-v1-
+        key: posts-embeddings-v2-
         restore-keys: |
-          posts-embeddings-v1-
+          posts-embeddings-v2-
+
+    - name: Enable Corepack
+      if: steps.restore-posts-index.outputs.cache-matched-key != ''
+      run: corepack enable
+
+    - name: Setup Node.js
+      if: steps.restore-posts-index.outputs.cache-matched-key != ''
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+        cache: 'yarn'
+
+    - name: Install embedding dependencies
+      if: steps.restore-posts-index.outputs.cache-matched-key != ''
+      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
+
+    - name: Restore embedding model
+      if: steps.restore-posts-index.outputs.cache-matched-key != ''
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/zwave-js-mcp-server-dev/models
+        key: embedding-model-${{ hashFiles('.github/bot-scripts/localEmbeddings.cjs') }}
 
     - name: Add post to index
       id: update
       if: steps.restore-posts-index.outputs.cache-matched-key != ''
       uses: actions/github-script@v9
       env:
-        MODELS_TOKEN: ${{ github.token }}
         POSTS_INDEX_PATH: .posts-index/index.json
       with:
         script: |
@@ -319,4 +361,4 @@ jobs:
       uses: actions/cache/save@v6
       with:
         path: .posts-index
-        key: posts-embeddings-v1-${{ github.run_id }}
+        key: posts-embeddings-v2-${{ github.run_id }}
