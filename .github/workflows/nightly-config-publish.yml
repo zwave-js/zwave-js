@@ -66,6 +66,9 @@ jobs:
 
     - name: Install dependencies
       if: steps.detect-changes.outputs.HAS_CHANGES == 'true'
+      # Skip installing the git hooks, so jobs that commit are not subject to them
+      env:
+        HUSKY: 0
       run: |
         yarn install --immutable
         yarn bootstrap
