@@ -139,7 +139,7 @@
     "release": "release-script",
     "release:all": "release-script --publish-all",
     "bootstrap": "./maintenance/bootstrap.sh",
-    "prepare": "husky",
+    "postinstall": "husky",
     "config": "yarn ts packages/config/maintenance/importConfig.ts",
     "docs": "docsify serve docs",
     "docs:generate": "yarn docs:generate-examples && yarn docs:generate-imports && yarn docs:generate-cc-apis",
@@ -156,8 +156,8 @@
     "extract-api": "FORCE_COLOR=1 yarn turbo run extract-api",
     "accept-api": "yarn extract-api -- --local",
     "monopack": "yarn exec monopack",
-    "check-references": "workspaces-to-typescript-project-references --check --tsconfigPath tsconfig.build.json",
-    "sync-references": "workspaces-to-typescript-project-references --tsconfigPath tsconfig.build.json && yarn fmt > /dev/null"
+    "check-references": "workspaces-to-typescript-project-references --check --tsconfigPath tsconfig.build.json --plugin maintenance/tsconfig-references-plugin.cjs",
+    "sync-references": "workspaces-to-typescript-project-references --tsconfigPath tsconfig.build.json --plugin maintenance/tsconfig-references-plugin.cjs && yarn fmt > /dev/null"
   },
   "readme": "README.md",
   "config": {
