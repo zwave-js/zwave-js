@@ -51,6 +51,8 @@ steps:
 safe-outputs:
   add-comment:
     discussions: true
+    # Post as zwave-js-bot like the other bot comments
+    github-token: ${{ secrets.BOT_TOKEN }}
 
 network: defaults
 
