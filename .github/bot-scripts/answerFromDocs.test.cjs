@@ -1,7 +1,29 @@
 // @ts-check
 
 import { describe, expect, it } from "vitest";
-import { checkSuppression, validateJudgeResponse } from "./answerFromDocs.cjs";
+import {
+	DOCS_ANSWER_COMMENT_TAG,
+	alreadyAnswered,
+	checkSuppression,
+	validateJudgeResponse,
+} from "./answerFromDocs.cjs";
+
+/**
+ * @param {any[]} comments
+ * @param {any[]} events
+ */
+function mockGithub(comments, events) {
+	return /** @type {any} */ ({
+		paginate: (/** @type {any} */ route, /** @type {any} */ params) =>
+			route(params),
+		rest: {
+			issues: {
+				listComments: () => comments,
+				listEventsForTimeline: () => events,
+			},
+		},
+	});
+}
 
 describe("answerFromDocs", () => {
 	it("accepts a valid judge response", () => {
@@ -65,5 +87,37 @@ describe("answerFromDocs", () => {
 				url: "https://example.com/2",
 			}],
 		}, "model")).toBe("silent");
+	});
+
+	it("ignores answers inherited from a transferred issue", async () => {
+		const events = [{
+			event: "transferred",
+			created_at: "2026-01-02T00:00:00Z",
+		}];
+		const inherited = {
+			created_at: "2026-01-01T00:00:00Z",
+			body: DOCS_ANSWER_COMMENT_TAG,
+		};
+		const own = {
+			created_at: "2026-01-03T00:00:00Z",
+			body: DOCS_ANSWER_COMMENT_TAG,
+		};
+		/** @param {any[]} comments */
+		const param = (comments) => ({
+			github: mockGithub(comments, events),
+			context: /** @type {any} */ ({
+				repo: { owner: "zwave-js", repo: "zwave-js" },
+			}),
+		});
+
+		expect(await alreadyAnswered(param([inherited]), { number: 1 }, false))
+			.toBe(false);
+		expect(
+			await alreadyAnswered(
+				param([inherited, own]),
+				{ number: 1 },
+				false,
+			),
+		).toBe(true);
 	});
 });

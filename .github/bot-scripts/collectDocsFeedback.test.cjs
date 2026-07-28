@@ -54,12 +54,12 @@ describe("collectDocsFeedback", () => {
 
 	it("counts at most one net reaction vote per user", () => {
 		expect(scoreReactions([
-			{ user: "alice", content: "+1" },
-			{ user: "alice", content: "heart" },
+			{ user: "alice", content: "THUMBS_UP" },
+			{ user: "alice", content: "HEART" },
 		], "author")).toMatchObject({ score: 1 });
 		expect(scoreReactions([
-			{ user: "alice", content: "+1" },
-			{ user: "alice", content: "-1" },
+			{ user: "alice", content: "THUMBS_UP" },
+			{ user: "alice", content: "THUMBS_DOWN" },
 		], "author")).toEqual({ votes: [], score: 0 });
 	});
 });
