@@ -98,6 +98,7 @@
   },
   "dependencies": {
     "@alcalzone/jsonl-db": "^4.0.2",
+    "@noble/ciphers": "^2.2.0",
     "@zwave-js/shared": "workspace:*",
     "alcalzone-shared": "^5.0.0",
     "ansi-colors": "^4.1.3",

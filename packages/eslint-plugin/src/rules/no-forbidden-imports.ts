@@ -12,6 +12,7 @@ const whitelistedImports = new Set([
 	"nrf-intel-hex",
 	"triple-beam",
 	"@andrewbranch/untar.js",
+	"@noble/ciphers/chacha.js",
 	"alcalzone-shared/arrays",
 	"alcalzone-shared/async",
 	"alcalzone-shared/comparable",

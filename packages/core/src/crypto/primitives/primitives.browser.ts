@@ -1,3 +1,4 @@
+import { chacha20poly1305 } from "@noble/ciphers/chacha.js";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
 import type { webcrypto } from "node:crypto";
@@ -434,9 +435,10 @@ async function digest(
 	algorithm: "md5" | "sha-1" | "sha-256",
 	data: BytesView,
 ): Promise<BytesView> {
-	// The WebCrypto API does not support MD5, but we don't actually care.
-	// MD5 is only used for hashing cached device configurations, and if anyone
-	// is going to use these methods, they should be on a new installation anyways.
+	// Substitute SHA-256 for the MD5 the WebCrypto API lacks. md5 is only reachable
+	// through DeviceConfig.getHash(0), which is only used for a 16-byte unprefixed
+	// cached hash written by a pre-hash-v1 Node build. The resulting length mismatch
+	// makes the node re-interview once and rewrite the hash at the current version.
 	if (algorithm === "md5") {
 		algorithm = "sha-256";
 	}
@@ -459,31 +461,44 @@ async function hmacSHA256(
 	return new Uint8Array(signature);
 }
 
-// ChaCha20-Poly1305 is not supported in the browser environment.
-// Web Crypto API does not provide ChaCha20-Poly1305.
-// These functions will throw if called; a proper solution needs to be implemented.
+const POLY1305_TAG_LENGTH = 16;
 
+// No shipping browser exposes ChaCha20-Poly1305 through the Web Crypto API,
+// so the pure JS implementation from @noble/ciphers is used instead
 async function encryptChaCha20Poly1305(
-	_key: BytesView,
-	_nonce: BytesView,
-	_additionalData: BytesView,
-	_plaintext: BytesView,
+	key: BytesView,
+	nonce: BytesView,
+	additionalData: BytesView,
+	plaintext: BytesView,
 ): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
-	throw new Error(
-		"ChaCha20-Poly1305 is not supported in the browser environment",
-	);
+	const output = chacha20poly1305(key, nonce, additionalData)
+		.encrypt(plaintext);
+
+	// noble appends the Poly1305 tag to the ciphertext
+	const ciphertext = output.slice(0, -POLY1305_TAG_LENGTH);
+	const authTag = output.slice(-POLY1305_TAG_LENGTH);
+
+	return { ciphertext, authTag };
 }
 
 async function decryptChaCha20Poly1305(
-	_key: BytesView,
-	_nonce: BytesView,
-	_additionalData: BytesView,
-	_ciphertext: BytesView,
-	_authTag: BytesView,
+	key: BytesView,
+	nonce: BytesView,
+	additionalData: BytesView,
+	ciphertext: BytesView,
+	authTag: BytesView,
 ): Promise<{ plaintext: BytesView; authOK: boolean }> {
-	throw new Error(
-		"ChaCha20-Poly1305 is not supported in the browser environment",
-	);
+	// noble expects the Poly1305 tag to be part of the ciphertext
+	const input = Bytes.concat([ciphertext, authTag]);
+
+	try {
+		const plaintext = chacha20poly1305(key, nonce, additionalData)
+			.decrypt(input);
+		return { plaintext, authOK: true };
+	} catch {
+		// noble throws when the tag does not match
+		return { plaintext: new Uint8Array(), authOK: false };
+	}
 }
 
 async function generateECDHKeyPair(): Promise<KeyPair> {

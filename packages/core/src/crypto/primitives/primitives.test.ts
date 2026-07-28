@@ -22,6 +22,8 @@ for (
 		encryptAES128OFB,
 		encryptAES128CCM,
 		decryptAES128CCM,
+		encryptChaCha20Poly1305,
+		decryptChaCha20Poly1305,
 		randomBytes,
 	}: CryptoPrimitives = (await import(primitives)).primitives;
 
@@ -360,6 +362,105 @@ for (
 
 		assertBufferEquals(t.expect, actual.plaintext, expectedPlaintext);
 		t.expect(actual.authOK).toBe(expectedAuthOK);
+	});
+
+	// Test vectors taken from RFC 8439, section 2.8.2
+	const chachaKey = Bytes.from(
+		"808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+		"hex",
+	);
+	const chachaNonce = Bytes.from("070000004041424344454647", "hex");
+	const chachaAAD = Bytes.from("50515253c0c1c2c3c4c5c6c7", "hex");
+	const chachaPlaintext = Bytes.from(
+		"4c616469657320616e642047656e746c656d656e206f662074686520636c617373206f66202739393a204966204920636f756c64206f6666657220796f75206f6e6c79206f6e652074697020666f7220746865206675747572652c2073756e73637265656e20776f756c642062652069742e",
+		"hex",
+	);
+	const chachaCiphertext = Bytes.from(
+		"d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b6116",
+		"hex",
+	);
+	const chachaAuthTag = Bytes.from(
+		"1ae10b594f09e26a7e902ecbd0600691",
+		"hex",
+	);
+
+	test(`${primitives} -> encryptChaCha20Poly1305() -> should work correctly`, async (t) => {
+		const actual = await encryptChaCha20Poly1305(
+			chachaKey,
+			chachaNonce,
+			chachaAAD,
+			chachaPlaintext,
+		);
+
+		assertBufferEquals(t.expect, actual.ciphertext, chachaCiphertext);
+		assertBufferEquals(t.expect, actual.authTag, chachaAuthTag);
+	});
+
+	test(`${primitives} -> decryptChaCha20Poly1305() -> should work correctly`, async (t) => {
+		const actual = await decryptChaCha20Poly1305(
+			chachaKey,
+			chachaNonce,
+			chachaAAD,
+			chachaCiphertext,
+			chachaAuthTag,
+		);
+
+		assertBufferEquals(t.expect, actual.plaintext, chachaPlaintext);
+		t.expect(actual.authOK).toBe(true);
+	});
+
+	test(`${primitives} -> decryptChaCha20Poly1305() -> should fail authentication when the auth tag was corrupted`, async (t) => {
+		const corruptedAuthTag = chachaAuthTag.slice();
+		corruptedAuthTag[0] ^= 0xff;
+
+		const actual = await decryptChaCha20Poly1305(
+			chachaKey,
+			chachaNonce,
+			chachaAAD,
+			chachaCiphertext,
+			corruptedAuthTag,
+		);
+
+		assertBufferEquals(t.expect, actual.plaintext, new Uint8Array());
+		t.expect(actual.authOK).toBe(false);
+	});
+
+	test(`${primitives} -> decryptChaCha20Poly1305() -> should fail authentication when the additional data was changed`, async (t) => {
+		const actual = await decryptChaCha20Poly1305(
+			chachaKey,
+			chachaNonce,
+			chachaAAD.subarray(0, -1),
+			chachaCiphertext,
+			chachaAuthTag,
+		);
+
+		assertBufferEquals(t.expect, actual.plaintext, new Uint8Array());
+		t.expect(actual.authOK).toBe(false);
+	});
+
+	test(`${primitives} -> encryptChaCha20Poly1305() / decryptChaCha20Poly1305() -> should be able to en- and decrypt the same data`, async (t) => {
+		const plaintextIn =
+			"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam";
+		const key = randomBytes(32);
+		const nonce = randomBytes(12);
+		const additionalData = randomBytes(8);
+
+		const { ciphertext, authTag } = await encryptChaCha20Poly1305(
+			key,
+			nonce,
+			additionalData,
+			Bytes.from(plaintextIn),
+		);
+		const { plaintext, authOK } = await decryptChaCha20Poly1305(
+			key,
+			nonce,
+			additionalData,
+			ciphertext,
+			authTag,
+		);
+
+		t.expect(authOK).toBe(true);
+		t.expect(Bytes.view(plaintext).toString()).toBe(plaintextIn);
 	});
 }
 

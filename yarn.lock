@@ -1701,6 +1701,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@noble/ciphers@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@noble/ciphers@npm:2.2.0"
+  checksum: 10/d75348aa682b41ad3e24cdd0a56c6d9ca033fb629ab93f37d6690be41c4882359b27598a11af0f5439ba82df4f9e3875dea1f875064310f68fef63cf24e3481a
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -3405,6 +3412,7 @@ __metadata:
   resolution: "@zwave-js/core@workspace:packages/core"
   dependencies:
     "@alcalzone/jsonl-db": "npm:^4.0.2"
+    "@noble/ciphers": "npm:^2.2.0"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.7.1"
     "@types/sinon": "npm:^21.0.0"
