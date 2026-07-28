@@ -6,9 +6,8 @@ echo "🏗️  Preparing repository..."
 echo ""
 yarn
 yarn node maintenance/patch-typescript.js
-# Run serially: the bootstrap scripts each build the shared project references
-# (core, shared, config) themselves, and concurrent builds clobber each other's
-# declaration outputs. Sequential runs skip them as up-to-date instead.
+# Run bootstrap tasks serially because they depend on building shared references,
+# which would unnecessarily be rebuilt in parallel.
 yarn turbo run bootstrap --concurrency=1
 echo "✅ Repository ready"
 
