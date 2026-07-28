@@ -83,6 +83,7 @@ import {
 	noop,
 	num2hex,
 	pick,
+	setImmediate,
 } from "@zwave-js/shared";
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ZnifferLogger } from "../log/Zniffer.js";
