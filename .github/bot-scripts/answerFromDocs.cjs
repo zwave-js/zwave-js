@@ -76,6 +76,7 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 							}
 						}
 					}
+				}
 				`,
 				{ discussionId: post.node_id, cursor },
 			);
