@@ -577,8 +577,9 @@ async function prepareDocsAnswer(param) {
 
 	if (chunks) {
 		// Hand off to the agentic judge, which decides whether the docs
-		// answer the question. It posts the comment either way, so the
-		// related-posts section travels along.
+		// answer the question. Posting moves to the judge's safe-output job,
+		// so the related-posts section is not lost when the judge rejects
+		// the docs answer.
 		const handoffPath = process.env.DOCS_HANDOFF_PATH;
 		if (!handoffPath) {
 			throw new Error(
