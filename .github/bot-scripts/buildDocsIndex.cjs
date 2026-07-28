@@ -13,9 +13,11 @@ const { EMBEDDING_MODEL, embedBatched } = require("./localEmbeddings.cjs");
 // Chunks shorter than this are unlikely to contain useful information
 const MIN_CHUNK_LENGTH = 50;
 // Sections longer than this are sub-split so nothing gets truncated away.
-// The embedding model truncates input at 256 tokens, so chunks must stay
-// well below that
-const MAX_CHUNK_LENGTH = 1000;
+// The embedding model truncates input at 256 tokens, and code blocks
+// tokenize at ~2-3 characters/token. At this limit 1.5% of the doc
+// chunks exceed the window slightly, all of them dense code blocks
+// whose tails BM25 still matches.
+const MAX_CHUNK_LENGTH = 700;
 // Overlap between sub-splits so answers spanning a split boundary aren't lost
 const CHUNK_OVERLAP = 150;
 
