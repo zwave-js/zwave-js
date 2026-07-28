@@ -32,7 +32,10 @@ module.exports = {
 		require("./importConfigCreatePR.cjs")(...args),
 	shouldAutomerge: (...args) => require("./shouldAutomerge.cjs")(...args),
 	packPr: (...args) => require("./packPr.cjs")(...args),
-	answerFromDocs: (...args) => require("./answerFromDocs.cjs")(...args),
+	prepareDocsAnswer: (...args) =>
+		require("./answerFromDocs.cjs").prepareDocsAnswer(...args),
+	postDocsAnswer: (...args) =>
+		require("./answerFromDocs.cjs").postDocsAnswer(...args),
 	extractLogfileUrlFromDiscussion: (...args) =>
 		require("./extractLogfileUrlFromDiscussion.cjs")(...args),
 	escalate: (...args) => require("./escalate.cjs")(...args),
