@@ -52,15 +52,15 @@ function chunkUrl(chunk) {
 }
 
 /**
- * Checks whether the bot already answered this post.
- * Discussions have no timeline API, so an answer inherited from a transfer
- * cannot be told apart from ours and still counts as answered.
+ * Checks whether the bot already answered this post
  * @param {{github: Github, context: Context}} param0
  * @param {any} post
  * @param {boolean} isDiscussion
  */
 async function alreadyAnswered({ github, context }, post, isDiscussion) {
 	if (isDiscussion) {
+		// Discussions have no timeline API, so an answer inherited from a
+		// transfer cannot be told apart from ours
 		/** @type {string | null | undefined} */
 		let cursor = null;
 		while (cursor !== undefined) {

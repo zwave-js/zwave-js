@@ -106,13 +106,13 @@ async function wasPRModifiedAfterComment(
 /**
  * Returns when an issue was last transferred into this repository,
  * or 0 if it was created here.
- * @param {any[]} events - Timeline events of the issue
+ * @param {{event?: string, created_at?: string}[]} events - Timeline events
  * @returns {number} Epoch milliseconds
  */
 function lastTransferTime(events) {
 	let transferredAt = 0;
 	for (const event of events) {
-		if (event.event !== "transferred" || !("created_at" in event)) continue;
+		if (event.event !== "transferred" || !event.created_at) continue;
 		// Issues may be transferred repeatedly, only the last hop matters
 		transferredAt = Math.max(
 			transferredAt,
