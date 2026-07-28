@@ -122,6 +122,7 @@ import {
 	serializeCacheValue,
 	timespan,
 	wasControllerReset,
+	setCryptoPrimitives,
 } from "@zwave-js/core";
 import {
 	type BootloaderChunk,
@@ -1592,7 +1593,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				?? (await import("#default_bindings/db")).db,
 			log: this._options.host?.log
 				?? (await import("#default_bindings/log")).log,
+			crypto: this._options.host?.crypto
+				?? (await import("#default_bindings/crypto")).crypto,
 		};
+
+		// Must happen before anything performs a crypto operation
+		setCryptoPrimitives(this.bindings.crypto);
 
 		// Initialize logging
 		this._logContainer = this.bindings.log(this._options.logConfig);

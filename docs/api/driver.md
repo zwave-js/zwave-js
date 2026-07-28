@@ -988,6 +988,12 @@ interface ZWaveOptions {
 		 * Specifies the logging implementation to be used
 		 */
 		log?: LogFactory;
+
+		/**
+		 * Specifies which implementation is used for cryptographic operations.
+		 * Crypto is process-global, so all drivers in the same process share the last one that was set.
+		 */
+		crypto?: CryptoPrimitives;
 	};
 
 	storage: {

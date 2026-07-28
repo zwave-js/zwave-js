@@ -310,7 +310,7 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 		Required<
 			NonNullable<ZWaveOptions["host"]>
 		>,
-		"db"
+		"db" | "crypto"
 	>;
 
 	private serialFactory: ZnifferSerialStreamFactory | undefined;
