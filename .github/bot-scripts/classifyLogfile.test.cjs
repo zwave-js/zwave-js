@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+	CLASSIFICATION,
 	classificationToFeedback,
 	classifyLogfile,
 } from "./classifyLogfile.cjs";
@@ -40,13 +41,13 @@ const HA_LINES = [
 describe("classifyLogfile", () => {
 	it("detects a driver log on loglevel debug", () => {
 		expect(classifyLogfile(repeatLines(ZJS_DEBUG_LINES))).toBe(
-			"Z-Wave JS: correct log level",
+			CLASSIFICATION.CORRECT_LOG_LEVEL,
 		);
 	});
 
 	it("detects a driver log with the wrong loglevel", () => {
 		expect(classifyLogfile(repeatLines(ZJS_INFO_LINES))).toBe(
-			"Z-Wave JS: wrong log level",
+			CLASSIFICATION.WRONG_LOG_LEVEL,
 		);
 	});
 
@@ -56,7 +57,7 @@ describe("classifyLogfile", () => {
 			"2025-03-23T18:49:45.764Z SERIAL « [ACK]                                (0x06)",
 			"2025-03-23T18:49:45.765Z DRIVER « [REQ] [BridgeApplicationCommand]",
 		]);
-		expect(classifyLogfile(log)).toBe("Z-Wave JS: correct log level");
+		expect(classifyLogfile(log)).toBe(CLASSIFICATION.CORRECT_LOG_LEVEL);
 	});
 
 	it("handles bare-time timestamps from console exports", () => {
@@ -65,11 +66,13 @@ describe("classifyLogfile", () => {
 			"14:51:36.790 SERIAL » 0x0105000b40ff4e                              (7 bytes)",
 			"14:51:36.795 CNTRLR   [Node 011] pinging the node...",
 		]);
-		expect(classifyLogfile(log)).toBe("Z-Wave JS: correct log level");
+		expect(classifyLogfile(log)).toBe(CLASSIFICATION.CORRECT_LOG_LEVEL);
 	});
 
 	it("detects a Z-Wave JS UI log", () => {
-		expect(classifyLogfile(repeatLines(ZUI_LINES))).toBe("Z-Wave JS UI");
+		expect(classifyLogfile(repeatLines(ZUI_LINES))).toBe(
+			CLASSIFICATION.Z_UI,
+		);
 	});
 
 	it("detects a Z-Wave JS UI log with ANSI colors", () => {
@@ -79,7 +82,7 @@ describe("classifyLogfile", () => {
 				`\x1b[90m${line.slice(0, 23)}\x1b[39m${line.slice(23)}`
 			)
 			.join("\n");
-		expect(classifyLogfile(colored)).toBe("Z-Wave JS UI");
+		expect(classifyLogfile(colored)).toBe(CLASSIFICATION.Z_UI);
 	});
 
 	it("classifies stray driver lines inside a Z-Wave JS UI log as Z-Wave JS UI", () => {
@@ -87,31 +90,31 @@ describe("classifyLogfile", () => {
 			"2025-11-08 20:35:35.838 CNTRLR « [Node 025] Received update",
 			...repeatLines(ZUI_LINES, 2).split("\n"),
 		], 5);
-		expect(classifyLogfile(log)).toBe("Z-Wave JS UI");
+		expect(classifyLogfile(log)).toBe(CLASSIFICATION.Z_UI);
 	});
 
 	it("detects a Home Assistant log without driver logs", () => {
 		expect(classifyLogfile(repeatLines(HA_LINES))).toBe(
-			"Home Assistant: No Z-Wave JS",
+			CLASSIFICATION.HA_ONLY,
 		);
 	});
 
 	it("detects driver logs interleaved with a Home Assistant log", () => {
 		const log = repeatLines([...HA_LINES, ...ZJS_DEBUG_LINES]);
 		expect(classifyLogfile(log)).toBe(
-			"Home Assistant: Includes Z-Wave JS",
+			CLASSIFICATION.HA_WITH_ZJS,
 		);
 	});
 
 	it("detects zip uploads by their magic bytes", () => {
 		expect(classifyLogfile("PK\x03\x04lots of compressed data here")).toBe(
-			"Binary or compressed file",
+			CLASSIFICATION.BINARY,
 		);
 	});
 
 	it("detects gzip uploads by their magic bytes", () => {
 		expect(classifyLogfile("\x1f\x8b\x08more compressed data")).toBe(
-			"Binary or compressed file",
+			CLASSIFICATION.BINARY,
 		);
 	});
 
@@ -120,7 +123,7 @@ describe("classifyLogfile", () => {
 			{ length: 2000 },
 			(_, i) => (i % 3 === 0 ? "�" : "a"),
 		).join("");
-		expect(classifyLogfile(garbage)).toBe("Binary or compressed file");
+		expect(classifyLogfile(garbage)).toBe(CLASSIFICATION.BINARY);
 	});
 
 	it("classifies JSON dumps as unrelated", () => {
@@ -129,12 +132,12 @@ describe("classifyLogfile", () => {
 			"          \"commandClass\": 49,",
 			"          \"newValue\": 1,",
 		], 30);
-		expect(classifyLogfile(json)).toBe("Unrelated");
+		expect(classifyLogfile(json)).toBe(CLASSIFICATION.UNRELATED);
 	});
 
 	it("classifies empty content as unrelated", () => {
-		expect(classifyLogfile("")).toBe("Unrelated");
-		expect(classifyLogfile("\n\n\n")).toBe("Unrelated");
+		expect(classifyLogfile("")).toBe(CLASSIFICATION.UNRELATED);
+		expect(classifyLogfile("\n\n\n")).toBe(CLASSIFICATION.UNRELATED);
 	});
 
 	it("returns Unknown for a few matching lines in mostly unrecognized content", () => {
@@ -142,29 +145,33 @@ describe("classifyLogfile", () => {
 			...ZJS_INFO_LINES,
 			...Array.from({ length: 100 }, (_, i) => `random line ${i}`),
 		].join("\n");
-		expect(classifyLogfile(log)).toBe("Unknown");
+		expect(classifyLogfile(log)).toBe(CLASSIFICATION.UNKNOWN);
 	});
 });
 
 describe("classificationToFeedback", () => {
 	it("maps every classification to a feedback code", () => {
-		expect(classificationToFeedback("Z-Wave JS: correct log level")).toBe(
+		expect(classificationToFeedback(CLASSIFICATION.CORRECT_LOG_LEVEL)).toBe(
 			"OK",
 		);
 		expect(
-			classificationToFeedback("Home Assistant: Includes Z-Wave JS"),
+			classificationToFeedback(CLASSIFICATION.HA_WITH_ZJS),
 		).toBe("OK");
-		expect(classificationToFeedback("Z-Wave JS: wrong log level")).toBe(
+		expect(classificationToFeedback(CLASSIFICATION.WRONG_LOG_LEVEL)).toBe(
 			"WRONG_LOG_LEVEL",
 		);
-		expect(classificationToFeedback("Z-Wave JS UI")).toBe("Z_UI");
-		expect(classificationToFeedback("Home Assistant: No Z-Wave JS")).toBe(
+		expect(classificationToFeedback(CLASSIFICATION.Z_UI)).toBe("Z_UI");
+		expect(classificationToFeedback(CLASSIFICATION.HA_ONLY)).toBe(
 			"HA_ONLY",
 		);
-		expect(classificationToFeedback("Binary or compressed file")).toBe(
+		expect(classificationToFeedback(CLASSIFICATION.BINARY)).toBe(
 			"BINARY",
 		);
-		expect(classificationToFeedback("Unrelated")).toBe("UNKNOWN");
-		expect(classificationToFeedback("Unknown")).toBe("UNKNOWN");
+		expect(classificationToFeedback(CLASSIFICATION.UNRELATED)).toBe(
+			"UNKNOWN",
+		);
+		expect(classificationToFeedback(CLASSIFICATION.UNKNOWN)).toBe(
+			"UNKNOWN",
+		);
 	});
 });

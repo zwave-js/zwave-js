@@ -12,6 +12,19 @@ on:
     - name: Checkout repository
       uses: actions/checkout@v6
 
+    - name: Enable Corepack
+      run: corepack enable
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+        cache: 'yarn'
+
+    # Provides fflate for decompressing zipped logfile uploads
+    - name: Install dependencies
+      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
+
     - name: Extract log file from discussion body
       uses: actions/github-script@v9
       id: extract
@@ -75,6 +88,10 @@ if: needs.pre_activation.outputs.gate_result == 'success'
 permissions:
   contents: read
   discussions: read
+
+# The logfile extraction in the pre-activation job needs a full runner
+# image for corepack/yarn
+runs-on-slim: ubuntu-latest
 
 engine:
   id: copilot

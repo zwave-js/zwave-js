@@ -7,6 +7,17 @@
 // where it outperformed LLM classifiers including the previously used
 // gpt-4o-mini.
 
+const CLASSIFICATION = Object.freeze({
+	CORRECT_LOG_LEVEL: "Z-Wave JS: correct log level",
+	WRONG_LOG_LEVEL: "Z-Wave JS: wrong log level",
+	Z_UI: "Z-Wave JS UI",
+	HA_ONLY: "Home Assistant: No Z-Wave JS",
+	HA_WITH_ZJS: "Home Assistant: Includes Z-Wave JS",
+	BINARY: "Binary or compressed file",
+	UNRELATED: "Unrelated",
+	UNKNOWN: "Unknown",
+});
+
 // Log lines may carry ANSI color codes when copied from a terminal
 const ANSI_REGEX = /\x1b\[[0-9;]*m/g;
 
@@ -56,20 +67,20 @@ function looksBinary(content) {
 
 /**
  * Classifies an extracted logfile. Returns one of:
- * - "Z-Wave JS: correct log level"
- * - "Z-Wave JS: wrong log level"
- * - "Z-Wave JS UI"
- * - "Home Assistant: No Z-Wave JS"
- * - "Home Assistant: Includes Z-Wave JS"
- * - "Binary or compressed file"
- * - "Unrelated"
- * - "Unknown"
+ * - CLASSIFICATION.CORRECT_LOG_LEVEL
+ * - CLASSIFICATION.WRONG_LOG_LEVEL
+ * - CLASSIFICATION.Z_UI
+ * - CLASSIFICATION.HA_ONLY
+ * - CLASSIFICATION.HA_WITH_ZJS
+ * - CLASSIFICATION.BINARY
+ * - CLASSIFICATION.UNRELATED
+ * - CLASSIFICATION.UNKNOWN
  * @param {string} content
  */
 function classifyLogfile(content) {
 	// Strip ANSI colors first so their escape bytes don't count as binary
 	content = content.replace(ANSI_REGEX, "");
-	if (looksBinary(content)) return "Binary or compressed file";
+	if (looksBinary(content)) return CLASSIFICATION.BINARY;
 
 	const lines = content.split("\n");
 
@@ -93,24 +104,24 @@ function classifyLogfile(content) {
 		}
 	}
 
-	if (nonEmpty === 0) return "Unrelated";
+	if (nonEmpty === 0) return CLASSIFICATION.UNRELATED;
 
 	// Multiline log entries only match on their first line, so decide on
 	// absolute counts rather than the share of matching lines
 	if (zjs >= 5) {
 		if (zjsSerial >= 2) {
 			return ha >= 5
-				? "Home Assistant: Includes Z-Wave JS"
-				: "Z-Wave JS: correct log level";
+				? CLASSIFICATION.HA_WITH_ZJS
+				: CLASSIFICATION.CORRECT_LOG_LEVEL;
 		}
 		// Only stray driver lines inside a log that is clearly Z-Wave JS UI
-		if (zui >= 5 * zjs) return "Z-Wave JS UI";
-		return "Z-Wave JS: wrong log level";
+		if (zui >= 5 * zjs) return CLASSIFICATION.Z_UI;
+		return CLASSIFICATION.WRONG_LOG_LEVEL;
 	}
-	if (ha >= 5) return "Home Assistant: No Z-Wave JS";
-	if (zui >= 5) return "Z-Wave JS UI";
-	if (zjs + zui + ha >= 3) return "Unknown";
-	return "Unrelated";
+	if (ha >= 5) return CLASSIFICATION.HA_ONLY;
+	if (zui >= 5) return CLASSIFICATION.Z_UI;
+	if (zjs + zui + ha >= 3) return CLASSIFICATION.UNKNOWN;
+	return CLASSIFICATION.UNRELATED;
 }
 
 /**
@@ -120,16 +131,16 @@ function classifyLogfile(content) {
  */
 function classificationToFeedback(classification) {
 	switch (classification) {
-		case "Z-Wave JS: correct log level":
-		case "Home Assistant: Includes Z-Wave JS":
+		case CLASSIFICATION.CORRECT_LOG_LEVEL:
+		case CLASSIFICATION.HA_WITH_ZJS:
 			return "OK";
-		case "Z-Wave JS: wrong log level":
+		case CLASSIFICATION.WRONG_LOG_LEVEL:
 			return "WRONG_LOG_LEVEL";
-		case "Z-Wave JS UI":
+		case CLASSIFICATION.Z_UI:
 			return "Z_UI";
-		case "Home Assistant: No Z-Wave JS":
+		case CLASSIFICATION.HA_ONLY:
 			return "HA_ONLY";
-		case "Binary or compressed file":
+		case CLASSIFICATION.BINARY:
 			return "BINARY";
 		default:
 			return "UNKNOWN";
@@ -137,6 +148,7 @@ function classificationToFeedback(classification) {
 }
 
 module.exports = {
+	CLASSIFICATION,
 	classifyLogfile,
 	classificationToFeedback,
 };
