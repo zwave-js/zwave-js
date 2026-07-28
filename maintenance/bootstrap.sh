@@ -6,7 +6,10 @@ echo "🏗️  Preparing repository..."
 echo ""
 yarn
 yarn node maintenance/patch-typescript.js
-yarn turbo run bootstrap
+# Run serially: the bootstrap scripts each build the shared project references
+# (core, shared, config) themselves, and concurrent builds clobber each other's
+# declaration outputs. Sequential runs skip them as up-to-date instead.
+yarn turbo run bootstrap --concurrency=1
 echo "✅ Repository ready"
 
 # Do not install VSCode extension on CI
