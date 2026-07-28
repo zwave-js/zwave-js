@@ -3,6 +3,10 @@ mcp-servers:
   zwave-log-analyzer:
     command: npx
     args: ["-y", "--package=@zwave-js/log-analyzer@0.1.1", "zwave-log-analyzer-mcp"]
+    # The MCP gateway runs this server in its own container, so the
+    # downloaded logfile must be mounted into it for loadLogFile to work
+    mounts:
+      - "/tmp/gh-aw/agent:/tmp/gh-aw/agent:ro"
     allowed: ["*"]
 ---
 
