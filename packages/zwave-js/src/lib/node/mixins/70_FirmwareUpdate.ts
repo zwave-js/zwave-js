@@ -31,7 +31,12 @@ import {
 	timespan,
 } from "@zwave-js/core";
 import { containsCC } from "@zwave-js/serial/serialapi";
-import { type BytesView, getEnumMemberName, throttle } from "@zwave-js/shared";
+import {
+	type BytesView,
+	getEnumMemberName,
+	setImmediate,
+	throttle,
+} from "@zwave-js/shared";
 import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";

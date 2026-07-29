@@ -298,6 +298,7 @@ import {
 	noop,
 	num2hex,
 	pick,
+	setImmediate,
 } from "@zwave-js/shared";
 import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";

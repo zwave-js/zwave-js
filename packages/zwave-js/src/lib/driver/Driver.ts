@@ -183,6 +183,7 @@ import {
 	AsyncQueue,
 	Bytes,
 	type BytesView,
+	type Immediate,
 	type Interval,
 	type Timer,
 	TypedEventTarget,
@@ -198,6 +199,7 @@ import {
 	noop,
 	num2hex,
 	pick,
+	setImmediate,
 	setInterval,
 	setTimer,
 } from "@zwave-js/shared";
@@ -6800,10 +6802,10 @@ ${handlers.length} left`,
 	private async drainTransactionQueue(
 		queue: TransactionQueue,
 	): Promise<void> {
-		let setIdleTimer: NodeJS.Immediate | undefined;
+		let setIdleTimer: Immediate | undefined;
 		for await (const transaction of queue) {
 			if (setIdleTimer) {
-				clearImmediate(setIdleTimer);
+				setIdleTimer.clear();
 				setIdleTimer = undefined;
 			}
 			this.markQueueBusy(queue, true);

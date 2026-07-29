@@ -68,6 +68,7 @@ import {
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
+import { setImmediate } from "@zwave-js/shared";
 import {
 	MOCK_FRAME_ACK_TIMEOUT,
 	type MockController,
