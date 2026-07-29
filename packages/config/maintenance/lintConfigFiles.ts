@@ -1,4 +1,3 @@
-import { getConfigDir } from "#config_dir";
 import {
 	getBitMaskWidth,
 	getIntegerLimits,
@@ -24,6 +23,7 @@ import * as path from "node:path";
 import { ConfigManager } from "../src/ConfigManager.js";
 import { readJsonWithTemplate } from "../src/JsonTemplate.js";
 import { parseLogic } from "../src/Logic.js";
+import { getConfigDir } from "../src/configDir.js";
 import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,

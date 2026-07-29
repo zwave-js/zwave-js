@@ -1,4 +1,3 @@
-import { getConfigDir } from "#config_dir";
 import {
 	type LogContainer,
 	ZWaveError,
@@ -15,6 +14,7 @@ import {
 	saveManufacturersInternal,
 } from "./Manufacturers.js";
 import { PACKAGE_VERSION } from "./_version.js";
+import { getConfigDir } from "./configDir.js";
 import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,

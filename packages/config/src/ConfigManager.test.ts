@@ -1,4 +1,3 @@
-import { getConfigDir } from "#config_dir";
 import { log as createZWaveLogContainer } from "#default_bindings/log";
 import type { LogContainer } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
@@ -11,6 +10,7 @@ import { type ExpectStatic, beforeEach, test as baseTest } from "vitest";
 import ownPackageJson from "../package.json" with { type: "json" };
 import { ConfigManager } from "./ConfigManager.js";
 import { ConfigLogger } from "./Logger.js";
+import { getConfigDir } from "./configDir.js";
 import { syncExternalConfigDir } from "./utils.js";
 
 const embeddedConfigDir = getConfigDir();
