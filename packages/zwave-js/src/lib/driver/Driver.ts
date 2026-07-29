@@ -1600,11 +1600,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				?? (await import("#default_bindings/log")).log,
 		};
 
-		// Must happen before anything performs a crypto operation
-		setCryptoPrimitives(
-			this._options.host?.crypto
-				?? (await import("#default_bindings/crypto")).crypto,
-		);
+		// Only override the process-wide default when an implementation was passed,
+		// so one an embedder installed directly is left alone
+		if (this._options.host?.crypto) {
+			// Must happen before anything performs a crypto operation
+			setCryptoPrimitives(this._options.host.crypto);
+		}
 
 		// Initialize logging
 		this._logContainer = this.bindings.log(this._options.logConfig);

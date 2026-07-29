@@ -65,11 +65,6 @@
       "node": "@zwave-js/core/bindings/log/node",
       "default": "@zwave-js/core/bindings/log/stub"
     },
-    "#default_bindings/crypto": {
-      "@@dev": "@zwave-js/core/bindings/crypto/node",
-      "node": "@zwave-js/core/bindings/crypto/node",
-      "default": "@zwave-js/core/bindings/crypto/browser"
-    },
     "#mdns_discovery": {
       "@@dev": "./src/lib/driver/mDNSDiscovery/node.ts",
       "node": "./build/lib/driver/mDNSDiscovery/node.js",
