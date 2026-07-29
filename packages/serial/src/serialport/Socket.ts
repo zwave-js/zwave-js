@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import type { BytesView } from "@zwave-js/shared";
+import { type BytesView, noop } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import type { SocketConnect } from "./Bindings.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
@@ -27,6 +27,9 @@ export function createSocketFactory(
 
 		async function close(): Promise<void> {
 			isOpen = false;
+			// Cancel the reader so the background read loop ends even if a host's
+			// connect implementation leaves the readable side open on close
+			await reader.cancel().catch(noop);
 			await socket.close();
 		}
 
