@@ -170,6 +170,7 @@ import {
 	getenv,
 	noop,
 	pick,
+	setImmediate,
 } from "@zwave-js/shared";
 import { waitFor } from "@zwave-js/waddle";
 import { wait } from "alcalzone-shared/async";
