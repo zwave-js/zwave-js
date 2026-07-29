@@ -120,6 +120,7 @@ import {
 	securityClassIsS2,
 	securityClassOrder,
 	serializeCacheValue,
+	setCryptoPrimitives,
 	timespan,
 	wasControllerReset,
 } from "@zwave-js/core";
@@ -1564,7 +1565,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	 * The host bindings used to access file system etc.
 	 */
 	// This is set during `start()` and should not be accessed before
-	private bindings!: Required<NonNullable<ZWaveOptions["host"]>>;
+	// Crypto is applied process-globally through setCryptoPrimitives instead of being
+	// kept here, since no driver-scoped code reads it back
+	private bindings!: Omit<
+		Required<NonNullable<ZWaveOptions["host"]>>,
+		"crypto"
+	>;
 
 	private _wasStarted: boolean = false;
 	private _isOpen: boolean = false;
@@ -1595,6 +1601,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			log: this._options.host?.log
 				?? (await import("#default_bindings/log")).log,
 		};
+
+		// Only override the process-wide default when an implementation was passed,
+		// so one an embedder installed directly is left alone
+		if (this._options.host?.crypto) {
+			// Must happen before anything performs a crypto operation
+			setCryptoPrimitives(this._options.host.crypto);
+		}
 
 		// Initialize logging
 		this._logContainer = this.bindings.log(this._options.logConfig);

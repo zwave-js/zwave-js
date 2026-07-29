@@ -8,7 +8,11 @@ import type {
 } from "@zwave-js/core";
 import type { Serial, ZWaveSerialStream } from "@zwave-js/serial";
 import type { BytesView, DeepPartial, Expand } from "@zwave-js/shared";
-import type { DatabaseFactory, FileSystem } from "@zwave-js/shared/bindings";
+import type {
+	CryptoPrimitives,
+	DatabaseFactory,
+	FileSystem,
+} from "@zwave-js/shared/bindings";
 import type {
 	InclusionUserCallbacks,
 	JoinNetworkUserCallbacks,
@@ -184,6 +188,12 @@ export interface ZWaveOptions {
 		 * Specifies the logging implementation to be used
 		 */
 		log?: LogFactory;
+
+		/**
+		 * Specifies which implementation is used for cryptographic operations.
+		 * Crypto is process-global, so all drivers in the same process share the last one that was set.
+		 */
+		crypto?: CryptoPrimitives;
 	};
 
 	storage: {

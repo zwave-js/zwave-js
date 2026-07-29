@@ -1,3 +1,4 @@
+import { primitives as defaultPrimitives } from "#crypto_primitives";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
 import {
@@ -5,6 +6,8 @@ import {
 	computeMAC,
 	decryptAES256OFB,
 	encryptAES256OFB,
+	randomBytes,
+	setCryptoPrimitives,
 } from "./operations.js";
 
 function assertBufferEquals(
@@ -106,4 +109,18 @@ test(`decryptAES256OFB() -> should invert encryptAES256OFB()`, async (t) => {
 	const ciphertext = await encryptAES256OFB(plaintext, key, iv);
 	const roundtrip = await decryptAES256OFB(ciphertext, key, iv);
 	assertBufferEquals(t.expect, roundtrip, plaintext);
+});
+
+test(`setCryptoPrimitives() -> redirects calls to the given implementation`, (t) => {
+	const stubbedRandomBytes = new Uint8Array([1, 2, 3, 4]);
+	setCryptoPrimitives({
+		...defaultPrimitives,
+		randomBytes: () => stubbedRandomBytes,
+	});
+	try {
+		t.expect(randomBytes(4)).toBe(stubbedRandomBytes);
+	} finally {
+		setCryptoPrimitives(defaultPrimitives);
+	}
+	t.expect(randomBytes(4)).not.toBe(stubbedRandomBytes);
 });
