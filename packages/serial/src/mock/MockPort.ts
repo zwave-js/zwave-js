@@ -63,15 +63,20 @@ export class MockPort {
 	}
 
 	public emitData(data: BytesView): void {
-		this.#sourceController?.enqueue(data);
+		try {
+			this.#sourceController?.enqueue(data);
+		} catch {
+			// Drop late frames during teardown
+		}
 	}
 
 	public destroy(): void {
 		try {
 			this.#sourceController?.close();
-			this.#sourceController = undefined;
 		} catch {
 			// Ignore - the controller might already be closed
+		} finally {
+			this.#sourceController = undefined;
 		}
 	}
 }
