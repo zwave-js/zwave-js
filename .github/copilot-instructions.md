@@ -7,35 +7,9 @@
 - Canonical agent skills live in `.agents/skills/`. The entries in `.claude/skills/` are symlinks to them for Claude Code. Always edit the canonical files, never the symlinks.
 - The rules for authoring, editing and reviewing device configuration files live in `.agents/instructions/config-files.md`. Read and follow that file when working on `*.json` files in `packages/config/config/devices`.
 
-This repository holds the Z-Wave JS driver library, a TypeScript implementation of a Z-Wave controller software stack and supporting tools.
-
-## Project structure
-
-- The `packages/` directory contains all of the packages in this monorepo.
-  - `packages/zwave-js`: The main driver library (name: `zwave-js`)
-  - `packages/shared`: Internal utilities shared between packages (name: `@zwave-js/shared`)
-  - `packages/core`: Core definitions, utilities and types used by other packages and applications (name: `@zwave-js/core`)
-  - `packages/cc`: Command Class definitions and implementations (name: `@zwave-js/cc`)
-  - `packages/config`: Functionality related to device configuration and all configuration files (name: `@zwave-js/config`)
-  - `packages/eslint-plugin`: A custom ESLint plugin, used internally throughout the project (name: `@zwave-js/eslint-plugin`)
-  - `packages/flash`: Command-line based Z-Wave firmware flashing tool (name: `@zwave-js/flash`)
-  - `packages/host`: Host abstractions layer for integration tests (name: `@zwave-js/host`)
-  - `packages/nvmedit`: Utilities and a command-line tool for editing the contents of Z-Wave controller memory/NVM (name: `@zwave-js/nvmedit`)
-  - `packages/serial`: Serial port abstraction and Serial API message implementation (name: `@zwave-js/serial`)
-  - `packages/testing`: Utilities for testing (name: `@zwave-js/testing`)
-  - `packages/transformers`: Plugins for the TypeScript compiler used to auto-generate code at build time (name: `@zwave-js/transformers`)
-- Device configuration files are located in `packages/config/config/devices` and have a `.json` extension.
-
 ## Tools and Tasks
 
-- Build the entire project: `yarn build`
-- Build a specific package: `yarn build <package-name>`, e.g. `yarn build zwave-js` or `yarn build @zwave-js/cc`
-- Run tests: `yarn test:ts`
-- Run tests for a specific file: `yarn test:ts <file>`
-- Format all code: `yarn fmt`
-- Check configuration files for semantic errors: `yarn lint:zwave`
-- Detect and fix linting issues in TypeScript code: `yarn lint:ts:fix`
-- Prefer built-in tools for finding files (e.g. `Grep`) over shell commands like `find`, `ls`, `grep`, `xargs`, to ensure cross-platform compatibility.
+- To compile the project, prefer building the entire project with `yarn build`. If absolutely necessary, you can build a single package with `yarn build <package-name>`.
 - For any task that authors or reviews device configuration files, use the repository's `zwave-dev` MCP tools as the primary interface. Do not replace its template resolution and targeted diagnostics with manual `$import` tracing or repository-wide lint commands.
 
 ## Common Guidelines
@@ -97,9 +71,3 @@ Keep comments concise (1-3 sentences), use professional technical tone, and assu
 - Unit tests must be located next to the code they test, but with a `.test.ts` extension instead of `.ts`.
 - Do not create tests for functionality that interacts with (mock) devices, unless specifically instructed to do so.
 - Do not create tests when you are assigned a Github issue to fix, unless specifically instructed to do so.
-
-## Reviewing Pull Requests
-
-The rules to apply for reviewing pull requests depend on which files were changed:
-
-- If the PR changes device configuration files (`*.json` files in `packages/config/config/devices`), follow the instructions in [.agents/skills/review-config-pr/SKILL.md](../.agents/skills/review-config-pr/SKILL.md) to review the changes.
