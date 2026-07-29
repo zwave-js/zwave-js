@@ -1,5 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes, type BytesView } from "@zwave-js/shared";
+import { Bytes, type BytesView, noop } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import { DisconnectRequest } from "../esphome/ConnectionMessages.js";
 import {
@@ -74,6 +74,9 @@ export function createESPHomeFactory(
 			noDelay: true,
 		});
 		const writer = socket.writable.getWriter();
+		let messageReader:
+			| ReadableStreamDefaultReader<ESPHomeMessage>
+			| undefined;
 
 		/**
 		 * Send a raw Noise frame (during handshake)
@@ -343,14 +346,14 @@ export function createESPHomeFactory(
 				parserReadable = socket.readable.pipeThrough(messageParser);
 			}
 
-			const reader = parserReadable.getReader();
+			messageReader = parserReadable.getReader();
 
 			// Perform ESPHome handshake
-			await performESPHomeHandshake(reader);
+			await performESPHomeHandshake(messageReader);
 			isOpen = true;
 
 			// Start processing messages in the background
-			processMessages(reader);
+			processMessages(messageReader);
 		} catch (e) {
 			await socket.close();
 			throw e;
@@ -368,6 +371,9 @@ export function createESPHomeFactory(
 			}
 
 			isOpen = false;
+			// Cancel the reader so processMessages ends even if a host's connect
+			// implementation leaves the readable side open on close
+			await messageReader?.cancel().catch(noop);
 			await socket.close();
 		}
 
