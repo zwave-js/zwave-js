@@ -23,7 +23,7 @@ import * as path from "node:path";
 import { ConfigManager } from "../src/ConfigManager.js";
 import { readJsonWithTemplate } from "../src/JsonTemplate.js";
 import { parseLogic } from "../src/Logic.js";
-import { getConfigDir } from "../src/configDir.js";
+import { getEmbeddedConfigDir } from "../src/configDir.js";
 import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,
@@ -488,7 +488,7 @@ async function lintTemplates(
 	addError: (filename: string, error: string) => void,
 	addWarning: (filename: string, warning: string) => void,
 ): Promise<void> {
-	const rootDir = path.join(getConfigDir(), "devices");
+	const rootDir = path.join(getEmbeddedConfigDir(), "devices");
 
 	const templateFiles = await enumFilesRecursive(
 		fs,
@@ -574,7 +574,7 @@ async function lintDevices(): Promise<void> {
 		warnings.get(filename)!.push(errorPrefix + warning);
 	}
 
-	const rootDir = path.join(getConfigDir(), "devices");
+	const rootDir = path.join(getEmbeddedConfigDir(), "devices");
 
 	const forbiddenFiles = await enumFilesRecursive(
 		fs,

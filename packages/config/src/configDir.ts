@@ -2,7 +2,7 @@ import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import path from "pathe";
 
 /** Returns the absolute path of the embedded configuration directory */
-export function getConfigDir(): string {
+export function getEmbeddedConfigDir(): string {
 	// Only defined when this module was loaded from a file: URL, so bundled
 	// applications and runtimes without it have to set the option instead
 	if (import.meta.dirname) {

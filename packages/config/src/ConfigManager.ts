@@ -14,7 +14,7 @@ import {
 	saveManufacturersInternal,
 } from "./Manufacturers.js";
 import { PACKAGE_VERSION } from "./_version.js";
-import { getConfigDir } from "./configDir.js";
+import { getEmbeddedConfigDir } from "./configDir.js";
 import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,
@@ -47,18 +47,18 @@ export class ConfigManager {
 
 		this.deviceConfigPriorityDir = options.deviceConfigPriorityDir;
 		this.deviceConfigExternalDir = options.deviceConfigExternalDir;
-		this.#deviceConfigEmbeddedDir = options.deviceConfigEmbeddedDir;
+		this.deviceConfigEmbeddedDir = options.deviceConfigEmbeddedDir;
 
 		this._configVersion = PACKAGE_VERSION;
 	}
 
-	#deviceConfigEmbeddedDir: string | undefined;
+	private deviceConfigEmbeddedDir: string | undefined;
 
 	/** The absolute path of the configuration directory shipped with this package */
 	public get embeddedConfigDir(): string {
 		// Resolve on first use, so runtimes that require the option only fail
 		// when configuration is actually loaded
-		return (this.#deviceConfigEmbeddedDir ??= getConfigDir());
+		return (this.deviceConfigEmbeddedDir ??= getEmbeddedConfigDir());
 	}
 
 	/** The absolute path of the device configuration directory shipped with this package */

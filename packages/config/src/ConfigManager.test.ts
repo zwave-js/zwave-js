@@ -10,10 +10,10 @@ import { type ExpectStatic, beforeEach, test as baseTest } from "vitest";
 import ownPackageJson from "../package.json" with { type: "json" };
 import { ConfigManager } from "./ConfigManager.js";
 import { ConfigLogger } from "./Logger.js";
-import { getConfigDir } from "./configDir.js";
+import { getEmbeddedConfigDir } from "./configDir.js";
 import { syncExternalConfigDir } from "./utils.js";
 
-const embeddedConfigDir = getConfigDir();
+const embeddedConfigDir = getEmbeddedConfigDir();
 
 interface LocalTestContext {
 	context: {
