@@ -33,6 +33,11 @@ import {
 } from "../../node/feature-apis/AccessControl.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
+// Emitted events may lag behind the frame that triggers them, so assertions on them
+// are retried. The bound is generous because CI runners are slow under load, and well
+// below the 30s each integration test gets, so a real mismatch still fails as one.
+const eventWaitOptions = { timeout: 5000, interval: 10 };
+
 // =============================================================================
 // Capabilities
 // =============================================================================
@@ -2258,8 +2263,9 @@ integrationTest(
 				credentialSlot: 2,
 				data: "2222",
 			});
-			await vi.waitFor(() =>
-				t.expect(events).toStrictEqual(["credential modified"])
+			await vi.waitFor(
+				() => t.expect(events).toStrictEqual(["credential modified"]),
+				eventWaitOptions,
 			);
 		},
 	},
@@ -2309,8 +2315,9 @@ integrationTest(
 				userId: 2,
 				active: false,
 			});
-			await vi.waitFor(() =>
-				t.expect(events).toStrictEqual(["user modified"])
+			await vi.waitFor(
+				() => t.expect(events).toStrictEqual(["user modified"]),
+				eventWaitOptions,
 			);
 		},
 	},
@@ -2477,26 +2484,28 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			await vi.waitFor(() =>
-				t.expect(events).toStrictEqual([
-					["credential modified", {
-						userId: 2,
-						credentialType: UserCredentialType.PINCode,
-						credentialSlot: 2,
-						data: "9999",
-					}],
-					["user added", {
-						userId: 3,
-						active: true,
-						userType: UserCredentialUserType.General,
-					}],
-					["credential added", {
-						userId: 3,
-						credentialType: UserCredentialType.PINCode,
-						credentialSlot: 3,
-						data: "3333",
-					}],
-				])
+			await vi.waitFor(
+				() =>
+					t.expect(events).toStrictEqual([
+						["credential modified", {
+							userId: 2,
+							credentialType: UserCredentialType.PINCode,
+							credentialSlot: 2,
+							data: "9999",
+						}],
+						["user added", {
+							userId: 3,
+							active: true,
+							userType: UserCredentialUserType.General,
+						}],
+						["credential added", {
+							userId: 3,
+							credentialType: UserCredentialType.PINCode,
+							credentialSlot: 3,
+							data: "3333",
+						}],
+					]),
+				eventWaitOptions,
 			);
 		},
 	},
