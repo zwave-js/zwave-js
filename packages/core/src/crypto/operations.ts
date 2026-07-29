@@ -5,8 +5,7 @@ import { BLOCK_SIZE, leftShift1, xor, zeroPad } from "./shared.js";
 // Import the correct primitives based on the environment
 import { primitives as defaultPrimitives } from "#crypto_primitives";
 
-// Re-exported as mutable bindings, so importers observe a replaced implementation
-// without an extra layer of wrapper functions in front of every operation
+// Re-exported as mutable bindings, so the implementation can be swapped at runtime.
 export let randomBytes: CryptoPrimitives["randomBytes"];
 export let encryptAES128ECB: CryptoPrimitives["encryptAES128ECB"];
 export let encryptAES128CBC: CryptoPrimitives["encryptAES128CBC"];
