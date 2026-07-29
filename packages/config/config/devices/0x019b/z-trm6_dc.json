@@ -208,7 +208,7 @@
 		{
 			"#": "27",
 			"$import": "templates/heatit_template.json#load_power",
-			"description": "Allows the user to set the size of the load in 100 W increments, used when connected to a contactor.",
+			"description": "Used when connected to a contactor.",
 			"valueSize": 2
 		},
 		{

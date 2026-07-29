@@ -184,7 +184,8 @@
 		},
 		{
 			"#": "29",
-			"$import": "templates/heatit_template.json#load_power"
+			"$import": "templates/heatit_template.json#load_power",
+			"valueSize": 2
 		}
 	],
 	"compat": {

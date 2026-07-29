@@ -130,37 +130,36 @@
 			"#": "4",
 			"$if": "firmwareVersion >= 1.8",
 			"$import": "templates/heatit_template.json#temperature_control_hysteresis",
-			"label": "DIFF L. Temperature Control Hysteresis",
 			"valueSize": 2
 		},
 		{
 			"#": "5",
 			"$if": "firmwareVersion >= 1.8",
 			"$import": "templates/heatit_template.json#min_temperature_limit",
-			"label": "FLo, Floor Min Limit"
+			"label": "Floor Min Limit"
 		},
 		{
 			"#": "6",
 			"$if": "firmwareVersion >= 1.8",
 			"$import": "templates/heatit_template.json#max_temperature_limit",
-			"label": "FHi, Floor Max Limit"
+			"label": "Floor Max Limit"
 		},
 		{
 			"#": "7",
 			"$if": "firmwareVersion >= 1.8",
 			"$import": "templates/heatit_template.json#min_temperature_limit",
-			"label": "ALo, Air Min Limit"
+			"label": "Air Min Limit"
 		},
 		{
 			"#": "8",
 			"$if": "firmwareVersion >= 1.8",
 			"$import": "templates/heatit_template.json#max_temperature_limit",
-			"label": "AHi, Air Max Limit"
+			"label": "Air Max Limit"
 		},
 		{
 			"#": "9",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "PLo, FP-Mode P Setting",
+			"label": "FP-Mode P Setting",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 9,

@@ -79,28 +79,27 @@
 		},
 		{
 			"#": "4",
-			"$import": "templates/heatit_template.json#temperature_control_hysteresis",
-			"label": "Temperature Control Hysteresis (DIFF I)"
+			"$import": "templates/heatit_template.json#temperature_control_hysteresis"
 		},
 		{
 			"#": "5",
 			"$import": "templates/heatit_template.json#min_temperature_limit",
-			"label": "Floor Minimum Temperature Limit (FLo)"
+			"label": "Floor Minimum Temperature Limit"
 		},
 		{
 			"#": "6",
 			"$import": "templates/heatit_template.json#max_temperature_limit",
-			"label": "Floor Maximum Temperature (FHi)"
+			"label": "Floor Maximum Temperature Limit"
 		},
 		{
 			"#": "7",
 			"$import": "templates/heatit_template.json#min_temperature_limit",
-			"label": "Air Minimum Temperature Limit (ALo)"
+			"label": "Air Minimum Temperature Limit"
 		},
 		{
 			"#": "8",
 			"$import": "templates/heatit_template.json#max_temperature_limit",
-			"label": "Air Maximum Temperature Limit (AHi)"
+			"label": "Air Maximum Temperature Limit"
 		},
 		{
 			"#": "10",
