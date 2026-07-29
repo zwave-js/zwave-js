@@ -31,7 +31,9 @@ export interface SocketConnectOptions {
 }
 
 /** A bidirectional byte stream to a remote host */
-export interface BinarySocket extends ReadableWritablePair<BytesView, BytesView> {
+export interface BinarySocket
+	extends ReadableWritablePair<BytesView, BytesView>
+{
 	/** Closes the connection and releases the resources associated with it */
 	close(): Promise<void>;
 }
@@ -40,7 +42,9 @@ export interface BinarySocket extends ReadableWritablePair<BytesView, BytesView>
  * Connects to a remote host. Failures after the returned promise resolves, including
  * losing the connection, are surfaced as an error on the `readable` side of the socket.
  */
-export type SocketFactory = (options: SocketConnectOptions) => Promise<BinarySocket>;
+export type SocketFactory = (
+	options: SocketConnectOptions,
+) => Promise<BinarySocket>;
 
 /** Abstractions to interact with serial ports on different platforms */
 export interface Serial {

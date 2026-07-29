@@ -71,6 +71,9 @@ async function connect(
 	// a way to do that natively.
 	// https://github.com/derhuerst/node-sockopt might help.
 
+	// Once the socket is opened, wrap it as web streams.
+	// This could be done in the start method of the sink, but handling async errors is a pain there.
+
 	const readable = new ReadableStream<BytesView>({
 		start(controller) {
 			socket.on("data", (data) => controller.enqueue(data));
