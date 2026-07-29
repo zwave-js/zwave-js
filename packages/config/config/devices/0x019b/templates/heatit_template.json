@@ -170,7 +170,8 @@
 		]
 	},
 	"sensor_resistance_ntc": {
-		"label": "Sensor Resistance (NTC)",
+		"label": "Floor and External Sensor Resistance",
+		"description": "Both NTC sensors must have the same resistance value.",
 		"valueSize": 1,
 		"defaultValue": 0,
 		"allowManualEntry": false,
