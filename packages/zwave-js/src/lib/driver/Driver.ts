@@ -120,9 +120,9 @@ import {
 	securityClassIsS2,
 	securityClassOrder,
 	serializeCacheValue,
+	setCryptoPrimitives,
 	timespan,
 	wasControllerReset,
-	setCryptoPrimitives,
 } from "@zwave-js/core";
 import {
 	type BootloaderChunk,
