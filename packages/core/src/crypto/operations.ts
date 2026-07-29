@@ -1,47 +1,57 @@
 import { Bytes, type BytesView } from "@zwave-js/shared";
+import type { CryptoPrimitives } from "@zwave-js/shared/bindings";
 import { BLOCK_SIZE, leftShift1, xor, zeroPad } from "./shared.js";
 
 // Import the correct primitives based on the environment
-import { primitives } from "#crypto_primitives";
-const {
-	decryptAES128OFB,
-	encryptAES128CBC,
-	encryptAES128ECB,
-	encryptAES128OFB,
-	encryptAES128CCM,
-	decryptAES128CCM,
-	decryptAES256CBC,
-	encryptAES256OFB,
-	decryptAES256OFB,
-	randomBytes,
-	digest,
-	hmacSHA256,
-	encryptChaCha20Poly1305,
-	decryptChaCha20Poly1305,
-	generateECDHKeyPair,
-	deriveSharedECDHSecret,
-	keyPairFromRawECDHPrivateKey,
-} = primitives;
+import { primitives as defaultPrimitives } from "#crypto_primitives";
 
-export {
-	decryptAES128CCM,
-	decryptAES128OFB,
-	decryptAES256CBC,
-	decryptAES256OFB,
-	decryptChaCha20Poly1305,
-	deriveSharedECDHSecret,
-	digest,
-	encryptAES128CBC,
-	encryptAES128CCM,
-	encryptAES128ECB,
-	encryptAES128OFB,
-	encryptAES256OFB,
-	encryptChaCha20Poly1305,
-	generateECDHKeyPair,
-	hmacSHA256,
-	keyPairFromRawECDHPrivateKey,
-	randomBytes,
-};
+// Re-exported as mutable bindings, so the implementation can be swapped at runtime.
+export let randomBytes: CryptoPrimitives["randomBytes"];
+export let encryptAES128ECB: CryptoPrimitives["encryptAES128ECB"];
+export let encryptAES128CBC: CryptoPrimitives["encryptAES128CBC"];
+export let encryptAES128OFB: CryptoPrimitives["encryptAES128OFB"];
+export let decryptAES128OFB: CryptoPrimitives["decryptAES128OFB"];
+export let decryptAES256CBC: CryptoPrimitives["decryptAES256CBC"];
+export let encryptAES256OFB: CryptoPrimitives["encryptAES256OFB"];
+export let decryptAES256OFB: CryptoPrimitives["decryptAES256OFB"];
+export let encryptAES128CCM: CryptoPrimitives["encryptAES128CCM"];
+export let decryptAES128CCM: CryptoPrimitives["decryptAES128CCM"];
+export let digest: CryptoPrimitives["digest"];
+export let hmacSHA256: CryptoPrimitives["hmacSHA256"];
+export let encryptChaCha20Poly1305: CryptoPrimitives["encryptChaCha20Poly1305"];
+export let decryptChaCha20Poly1305: CryptoPrimitives["decryptChaCha20Poly1305"];
+export let generateECDHKeyPair: CryptoPrimitives["generateECDHKeyPair"];
+export let keyPairFromRawECDHPrivateKey:
+	CryptoPrimitives["keyPairFromRawECDHPrivateKey"];
+export let deriveSharedECDHSecret: CryptoPrimitives["deriveSharedECDHSecret"];
+
+/**
+ * Replaces the crypto implementation used for all Z-Wave related cryptographic operations.
+ * Since crypto is a property of the runtime rather than of a Z-Wave network, this affects
+ * the entire process and must be called before any crypto operation happens.
+ */
+export function setCryptoPrimitives(impl: CryptoPrimitives): void {
+	// Bound to the implementation, so a host may pass an object whose methods use `this`
+	randomBytes = impl.randomBytes.bind(impl);
+	encryptAES128ECB = impl.encryptAES128ECB.bind(impl);
+	encryptAES128CBC = impl.encryptAES128CBC.bind(impl);
+	encryptAES128OFB = impl.encryptAES128OFB.bind(impl);
+	decryptAES128OFB = impl.decryptAES128OFB.bind(impl);
+	decryptAES256CBC = impl.decryptAES256CBC.bind(impl);
+	encryptAES256OFB = impl.encryptAES256OFB.bind(impl);
+	decryptAES256OFB = impl.decryptAES256OFB.bind(impl);
+	encryptAES128CCM = impl.encryptAES128CCM.bind(impl);
+	decryptAES128CCM = impl.decryptAES128CCM.bind(impl);
+	digest = impl.digest.bind(impl);
+	hmacSHA256 = impl.hmacSHA256.bind(impl);
+	encryptChaCha20Poly1305 = impl.encryptChaCha20Poly1305.bind(impl);
+	decryptChaCha20Poly1305 = impl.decryptChaCha20Poly1305.bind(impl);
+	generateECDHKeyPair = impl.generateECDHKeyPair.bind(impl);
+	keyPairFromRawECDHPrivateKey = impl.keyPairFromRawECDHPrivateKey.bind(impl);
+	deriveSharedECDHSecret = impl.deriveSharedECDHSecret.bind(impl);
+}
+
+setCryptoPrimitives(defaultPrimitives);
 
 const Z128 = new Uint8Array(16).fill(0);
 const R128 = Bytes.from("00000000000000000000000000000087", "hex");
