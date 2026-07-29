@@ -463,8 +463,6 @@ async function hmacSHA256(
 
 const POLY1305_TAG_LENGTH = 16;
 
-// No shipping browser exposes ChaCha20-Poly1305 through the Web Crypto API,
-// so the pure JS implementation from @noble/ciphers is used instead
 async function encryptChaCha20Poly1305(
 	key: BytesView,
 	nonce: BytesView,
