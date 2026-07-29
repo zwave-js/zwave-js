@@ -22,7 +22,7 @@ import {
 import { ESPHomeMessageParser } from "../esphome/parsers/ESPHomeMessageParser.js";
 import { NoiseDecryptTransform } from "../esphome/parsers/NoiseDecryptTransform.js";
 import { NoiseFrameParser } from "../esphome/parsers/NoiseFrameParser.js";
-import type { SocketConnect } from "./Bindings.js";
+import type { SocketFactory } from "./Bindings.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export interface ESPHomeSocketOptions {
@@ -35,7 +35,7 @@ export interface ESPHomeSocketOptions {
 }
 
 export function createESPHomeFactory(
-	connect: SocketConnect,
+	connect: SocketFactory,
 	options: ESPHomeSocketOptions,
 ): ZWaveSerialBindingFactory {
 	return async function() {

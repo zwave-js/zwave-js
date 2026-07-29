@@ -1,6 +1,6 @@
 /* oxlint-disable typescript/no-unused-vars */
 import type {
-	ByteStreamSocket,
+	BinarySocket,
 	Serial,
 	SocketConnectOptions,
 } from "../serialport/Bindings.js";
@@ -9,7 +9,7 @@ import type {
 export const serial: Serial = {
 	connect: function(
 		options: SocketConnectOptions,
-	): Promise<ByteStreamSocket> {
+	): Promise<BinarySocket> {
 		throw new Error(
 			"The default serial bindings are not available on this platform",
 		);

@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { SerialPort } from "serialport";
 import type {
-	ByteStreamSocket,
+	BinarySocket,
 	EnumeratedPort,
 	Serial,
 	SocketConnectOptions,
@@ -17,7 +17,7 @@ import { createSocketFactory } from "../serialport/Socket.js";
 
 async function connect(
 	options: SocketConnectOptions,
-): Promise<ByteStreamSocket> {
+): Promise<BinarySocket> {
 	const { host, port, timeout = 5000, keepAliveInterval, noDelay } = options;
 	const socket = new net.Socket();
 

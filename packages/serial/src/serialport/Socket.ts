@@ -1,12 +1,12 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { type BytesView, noop } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
-import type { SocketConnect } from "./Bindings.js";
+import type { SocketFactory } from "./Bindings.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 /** The version of the Z-Wave serial binding factory for controllers that are reachable over a socket */
 export function createSocketFactory(
-	connect: SocketConnect,
+	connect: SocketFactory,
 	host: string,
 	port: number,
 ): ZWaveSerialBindingFactory {
