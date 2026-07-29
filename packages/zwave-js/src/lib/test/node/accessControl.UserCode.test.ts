@@ -26,6 +26,7 @@ import {
 } from "@zwave-js/testing";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+import { vi } from "vitest";
 import {
 	SetCredentialResult,
 	SetUserResult,
@@ -2257,8 +2258,9 @@ integrationTest(
 				credentialSlot: 2,
 				data: "2222",
 			});
-			await wait(50);
-			t.expect(events).toStrictEqual(["credential modified"]);
+			await vi.waitFor(() =>
+				t.expect(events).toStrictEqual(["credential modified"])
+			);
 		},
 	},
 );
@@ -2307,8 +2309,9 @@ integrationTest(
 				userId: 2,
 				active: false,
 			});
-			await wait(50);
-			t.expect(events).toStrictEqual(["user modified"]);
+			await vi.waitFor(() =>
+				t.expect(events).toStrictEqual(["user modified"])
+			);
 		},
 	},
 );
@@ -2474,26 +2477,27 @@ integrationTest(
 				createMockZWaveRequestFrame(cc, { ackRequested: false }),
 			);
 
-			await wait(100);
-			t.expect(events).toStrictEqual([
-				["credential modified", {
-					userId: 2,
-					credentialType: UserCredentialType.PINCode,
-					credentialSlot: 2,
-					data: "9999",
-				}],
-				["user added", {
-					userId: 3,
-					active: true,
-					userType: UserCredentialUserType.General,
-				}],
-				["credential added", {
-					userId: 3,
-					credentialType: UserCredentialType.PINCode,
-					credentialSlot: 3,
-					data: "3333",
-				}],
-			]);
+			await vi.waitFor(() =>
+				t.expect(events).toStrictEqual([
+					["credential modified", {
+						userId: 2,
+						credentialType: UserCredentialType.PINCode,
+						credentialSlot: 2,
+						data: "9999",
+					}],
+					["user added", {
+						userId: 3,
+						active: true,
+						userType: UserCredentialUserType.General,
+					}],
+					["credential added", {
+						userId: 3,
+						credentialType: UserCredentialType.PINCode,
+						credentialSlot: 3,
+						data: "3333",
+					}],
+				])
+			);
 		},
 	},
 );
