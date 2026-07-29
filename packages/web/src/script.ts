@@ -31,6 +31,10 @@ async function init() {
 			},
 		},
 
+		storage: {
+			deviceConfigEmbeddedDir: "/config",
+		},
+
 		securityKeys: {
 			S0_Legacy: Bytes.from("0102030405060708090a0b0c0d0e0f10", "hex"),
 			S2_Unauthenticated: Bytes.from(

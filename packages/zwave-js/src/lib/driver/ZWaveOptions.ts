@@ -215,6 +215,13 @@ export interface ZWaveOptions {
 		deviceConfigPriorityDir?: string;
 
 		/**
+		 * Allows specifying which path to use to resolve the configuration files embedded in the `@zwave-js/config` package.
+		 * By default, this location is resolved automatically, which requires support for `import.meta.resolve`.
+		 * Embedders on runtimes without it, e.g. QuickJS or txiki.js, or applications bundling zwave-js into an executable, have to set this option.
+		 */
+		deviceConfigEmbeddedDir?: string;
+
+		/**
 		 * How frequently the values and metadata should be written to the DB files. This is a compromise between data loss
 		 * in cause of a crash and disk wear:
 		 *

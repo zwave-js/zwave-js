@@ -91,7 +91,6 @@ import {
 } from "@zwave-js/cc/VersionCC";
 import { WakeUpCCWakeUpNotification } from "@zwave-js/cc/WakeUpCC";
 import { ZWavePlusCCGet } from "@zwave-js/cc/ZWavePlusCC";
-import { embeddedDevicesDir } from "@zwave-js/config";
 import {
 	BasicDeviceClass,
 	CommandClasses,
@@ -4676,7 +4675,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 		if (this.deviceConfig) {
 			const relativePath = path.relative(
-				embeddedDevicesDir,
+				this.driver.configManager.embeddedDevicesDir,
 				this.deviceConfig.filename,
 			);
 			if (relativePath.startsWith("..")) {

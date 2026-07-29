@@ -1,4 +1,3 @@
-import { configDir } from "#config_dir";
 import {
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -84,9 +83,6 @@ export interface FulltextDeviceConfigIndexEntry {
 	filename: string;
 }
 
-export const embeddedDevicesDir = path.join(configDir, "devices");
-const fulltextIndexPath = path.join(embeddedDevicesDir, "fulltext_index.json");
-
 export function getDevicesPaths(configDir: string): {
 	devicesDir: string;
 	indexPath: string;
@@ -142,6 +138,7 @@ async function hasChangedDeviceFiles(
 async function generateIndex<T extends Record<string, unknown>>(
 	fs: ReadFileSystemInfo & ReadFile,
 	devicesDir: string,
+	embeddedDevicesDir: string,
 	isEmbedded: boolean,
 	extractIndexEntries: (config: DeviceConfig) => T[],
 	logger?: ConfigLogger,
@@ -214,6 +211,7 @@ async function generateIndex<T extends Record<string, unknown>>(
 async function loadDeviceIndexShared<T extends Record<string, unknown>>(
 	fs: ReadFileSystemInfo & ReadFile & WriteFile,
 	devicesDir: string,
+	embeddedDevicesDir: string,
 	indexPath: string,
 	extractIndexEntries: (config: DeviceConfig) => T[],
 	logger?: ConfigLogger,
@@ -266,6 +264,7 @@ async function loadDeviceIndexShared<T extends Record<string, unknown>>(
 		index = await generateIndex(
 			fs,
 			devicesDir,
+			embeddedDevicesDir,
 			true,
 			extractIndexEntries,
 			logger,
@@ -302,12 +301,14 @@ ${stringify(index, "\t")}
 export async function generatePriorityDeviceIndex(
 	fs: ReadFileSystemInfo & ReadFile,
 	deviceConfigPriorityDir: string,
+	embeddedDevicesDir: string,
 	logger?: ConfigLogger,
 ): Promise<DeviceConfigIndex> {
 	return (
 		await generateIndex(
 			fs,
 			deviceConfigPriorityDir,
+			embeddedDevicesDir,
 			false,
 			(config) =>
 				config.devices.map((dev) => ({
@@ -339,16 +340,18 @@ export async function generatePriorityDeviceIndex(
  */
 export async function loadDeviceIndexInternal(
 	fs: ReadFileSystemInfo & ReadFile & WriteFile,
+	embeddedConfigDir: string,
 	logger?: ConfigLogger,
 	externalConfigDir?: string,
 ): Promise<DeviceConfigIndex> {
 	const { devicesDir, indexPath } = getDevicesPaths(
-		externalConfigDir || configDir,
+		externalConfigDir || embeddedConfigDir,
 	);
 
 	return loadDeviceIndexShared(
 		fs,
 		devicesDir,
+		getDevicesPaths(embeddedConfigDir).devicesDir,
 		indexPath,
 		(config) =>
 			config.devices.map((dev) => ({
@@ -371,13 +374,16 @@ export async function loadDeviceIndexInternal(
  */
 export async function loadFulltextDeviceIndexInternal(
 	fs: ReadFileSystemInfo & ReadFile & WriteFile,
+	embeddedConfigDir: string,
 	logger?: ConfigLogger,
 ): Promise<FulltextDeviceConfigIndex> {
+	const embeddedDevicesDir = getDevicesPaths(embeddedConfigDir).devicesDir;
 	// This method is not meant to operate with the external device index!
 	return loadDeviceIndexShared(
 		fs,
 		embeddedDevicesDir,
-		fulltextIndexPath,
+		embeddedDevicesDir,
+		path.join(embeddedDevicesDir, "fulltext_index.json"),
 		(config) =>
 			config.devices.map((dev) => ({
 				manufacturerId: formatId(config.manufacturerId.toString(16)),

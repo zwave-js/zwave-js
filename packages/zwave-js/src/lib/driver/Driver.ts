@@ -1607,6 +1607,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				this._options.storage.deviceConfigPriorityDir,
 			deviceConfigExternalDir:
 				this._options.storage.deviceConfigExternalDir,
+			deviceConfigEmbeddedDir:
+				this._options.storage.deviceConfigEmbeddedDir,
 		});
 
 		const spOpenResolver = Promise.withResolvers<void>();
