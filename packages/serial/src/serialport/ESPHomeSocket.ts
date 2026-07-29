@@ -1,6 +1,5 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import { Bytes, type BytesView } from "@zwave-js/shared";
-import net from "node:net";
+import { Bytes, type BytesView, noop } from "@zwave-js/shared";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import { DisconnectRequest } from "../esphome/ConnectionMessages.js";
 import {
@@ -23,6 +22,7 @@ import {
 import { ESPHomeMessageParser } from "../esphome/parsers/ESPHomeMessageParser.js";
 import { NoiseDecryptTransform } from "../esphome/parsers/NoiseDecryptTransform.js";
 import { NoiseFrameParser } from "../esphome/parsers/NoiseFrameParser.js";
+import type { SocketFactory } from "./Bindings.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 
 export interface ESPHomeSocketOptions {
@@ -35,12 +35,10 @@ export interface ESPHomeSocketOptions {
 }
 
 export function createESPHomeFactory(
+	connect: SocketFactory,
 	options: ESPHomeSocketOptions,
 ): ZWaveSerialBindingFactory {
 	return async function() {
-		const socket = new net.Socket();
-		const host = options.host;
-		const port = options.port ?? 6053;
 		const timeout = 5000;
 
 		// Determine if we're using encryption
@@ -66,25 +64,25 @@ export function createESPHomeFactory(
 		// Noise protocol state (only used when encryption is enabled)
 		let sendCipher: NoiseCipherState | undefined;
 
-		function removeListeners() {
-			socket.removeAllListeners("close");
-			socket.removeAllListeners("error");
-			socket.removeAllListeners("connect");
-			socket.removeAllListeners("timeout");
-			socket.removeAllListeners("data");
-		}
+		const socket = await connect({
+			host: options.host,
+			port: options.port ?? 6053,
+			timeout,
+			// During testing, values below 1000 caused the keep alive functionality to silently fail
+			keepAliveInterval: 1000,
+			// Prevent communication delays
+			noDelay: true,
+		});
+		const writer = socket.writable.getWriter();
+		let messageReader:
+			| ReadableStreamDefaultReader<ESPHomeMessage>
+			| undefined;
 
 		/**
 		 * Send a raw Noise frame (during handshake)
 		 */
-		function sendNoiseFrame(payload: BytesView): Promise<void> {
-			const frame = encodeNoiseFrame(payload);
-			return new Promise((resolve, reject) => {
-				socket.write(frame, (err) => {
-					if (err) reject(err);
-					else resolve();
-				});
-			});
+		async function sendNoiseFrame(payload: BytesView): Promise<void> {
+			await writer.write(encodeNoiseFrame(payload));
 		}
 
 		/**
@@ -120,13 +118,7 @@ export function createESPHomeFactory(
 				await sendNoiseFrame(encrypted);
 			} else {
 				// Plaintext mode
-				const frame = message.serialize();
-				return new Promise((resolve, reject) => {
-					socket.write(frame, (err) => {
-						if (err) reject(err);
-						else resolve();
-					});
-				});
+				await writer.write(message.serialize());
 			}
 		}
 
@@ -302,147 +294,70 @@ export function createESPHomeFactory(
 						// Other message types are ignored after handshake
 					}
 				} catch {
-					// Stream closed or error - handled by socket events
+					// Both an error and the end of the stream mean the connection is gone
+				}
+
+				if (isOpen) {
+					isOpen = false;
+					sourceController?.error(
+						new ZWaveError(
+							`ESPHome connection closed unexpectedly!`,
+							ZWaveErrorCodes.Driver_SerialPortClosed,
+						),
+					);
 				}
 			})();
 		}
 
-		// Connect and perform handshake
-		await new Promise<void>((resolve, reject) => {
-			const onClose = () => {
-				removeListeners();
-				socket.destroy();
-				reject(
-					new ZWaveError(
-						`ESPHome connection closed unexpectedly!`,
-						ZWaveErrorCodes.Driver_SerialPortClosed,
-					),
+		try {
+			// Build the appropriate pipeline based on encryption mode
+			let parserReadable: ReadableStream<ESPHomeMessage>;
+
+			if (useEncryption) {
+				// Encrypted: socket → NoiseFrameParser → [handshake] → NoiseDecryptTransform → ESPHomeMessageParser
+				const frameParser = new NoiseFrameParser();
+				const noiseFramesStream = socket.readable.pipeThrough(
+					frameParser,
 				);
-			};
 
-			const onError = (err: Error) => {
-				removeListeners();
-				socket.destroy();
-				reject(err);
-			};
+				// Get a reader for the Noise handshake
+				const frameReader = noiseFramesStream.getReader();
 
-			const onTimeout = () => {
-				removeListeners();
-				socket.destroy();
-				reject(
-					new ZWaveError(
-						`Connection timed out after ${timeout}ms`,
-						ZWaveErrorCodes.Driver_SerialPortClosed,
-					),
+				// Perform Noise handshake using the stream
+				const receiveCipher = await performNoiseHandshake(frameReader);
+
+				// Release the reader so we can continue piping
+				frameReader.releaseLock();
+
+				// Continue the pipeline with decryption and message parsing
+				const decryptTransform = new NoiseDecryptTransform(
+					receiveCipher,
 				);
-			};
+				const messageParser = new ESPHomeMessageParser({
+					noiseMode: true,
+				});
 
-			const onConnect = async () => {
-				removeListeners();
+				parserReadable = noiseFramesStream
+					.pipeThrough(decryptTransform)
+					.pipeThrough(messageParser);
+			} else {
+				// Plaintext: socket → ESPHomeMessageParser
+				const messageParser = new ESPHomeMessageParser();
+				parserReadable = socket.readable.pipeThrough(messageParser);
+			}
 
-				// During testing, values below 1000 caused the keep alive functionality to silently fail
-				socket.setKeepAlive(true, 1000);
-				// Prevent communication delays
-				socket.setNoDelay();
+			messageReader = parserReadable.getReader();
 
-				// FIXME: We should set the SO_RCVBUF to 2 MB or so
-				// like aioesphome does, but Node.js does not expose
-				// a way to do that natively.
-				// https://github.com/derhuerst/node-sockopt might help.
+			// Perform ESPHome handshake
+			await performESPHomeHandshake(messageReader);
+			isOpen = true;
 
-				try {
-					// Create a ReadableStream from socket data
-					const socketReadable = new ReadableStream<BytesView>({
-						start(controller) {
-							socket.on("data", (data: Buffer) => {
-								controller.enqueue(new Bytes(data));
-							});
-							socket.on("close", () => {
-								try {
-									controller.close();
-								} catch {
-									// Controller may already be closed
-								}
-							});
-							socket.on("error", (e) => {
-								try {
-									controller.error(e);
-								} catch {
-									// Controller may already be errored
-								}
-							});
-						},
-					});
-
-					// Build the appropriate pipeline based on encryption mode
-					let parserReadable: ReadableStream<ESPHomeMessage>;
-					let receiveCipher: NoiseCipherState | undefined;
-
-					if (useEncryption) {
-						// Encrypted: socket → NoiseFrameParser → [handshake] → NoiseDecryptTransform → ESPHomeMessageParser
-						const frameParser = new NoiseFrameParser();
-						const noiseFramesStream = socketReadable.pipeThrough(
-							frameParser,
-						);
-
-						// Get a reader for the Noise handshake
-						const frameReader = noiseFramesStream.getReader();
-
-						// Perform Noise handshake using the stream
-						receiveCipher = await performNoiseHandshake(
-							frameReader,
-						);
-
-						// Release the reader so we can continue piping
-						frameReader.releaseLock();
-
-						// Continue the pipeline with decryption and message parsing
-						const decryptTransform = new NoiseDecryptTransform(
-							receiveCipher,
-						);
-						const messageParser = new ESPHomeMessageParser({
-							noiseMode: true,
-						});
-
-						parserReadable = noiseFramesStream
-							.pipeThrough(decryptTransform)
-							.pipeThrough(messageParser);
-					} else {
-						// Plaintext: socket → ESPHomeMessageParser
-						const messageParser = new ESPHomeMessageParser();
-						parserReadable = socketReadable.pipeThrough(
-							messageParser,
-						);
-					}
-
-					const reader = parserReadable.getReader();
-
-					// Perform ESPHome handshake
-					await performESPHomeHandshake(reader);
-					isOpen = true;
-
-					// Start processing messages in the background
-					processMessages(reader);
-
-					resolve();
-				} catch (error) {
-					socket.destroy();
-					reject(
-						error instanceof Error
-							? error
-							: new Error(String(error)),
-					);
-				}
-			};
-
-			socket.setTimeout(timeout);
-			socket.once("close", onClose);
-			socket.once("error", onError);
-			socket.once("timeout", onTimeout);
-			socket.once("connect", onConnect);
-
-			socket.connect(port, host);
-		});
+			// Start processing messages in the background
+			processMessages(messageReader);
+		} catch (e) {
+			await socket.close();
+			throw e;
+		}
 
 		async function close(): Promise<void> {
 			try {
@@ -455,15 +370,11 @@ export function createESPHomeFactory(
 				// Ignore errors during disconnect
 			}
 
-			return new Promise((resolve) => {
-				removeListeners();
-				isOpen = false;
-				if (socket.destroyed) {
-					resolve();
-				} else {
-					socket.once("close", () => resolve()).destroy();
-				}
-			});
+			isOpen = false;
+			// Cancel the reader so processMessages ends even if a host's connect
+			// implementation leaves the readable side open on close
+			await messageReader?.cancel().catch(noop);
+			await socket.close();
 		}
 
 		const sink: UnderlyingSink<BytesView> = {
@@ -506,31 +417,9 @@ export function createESPHomeFactory(
 			start(controller) {
 				// Store the controller so we can enqueue data when needed
 				sourceController = controller;
-
-				// Handle ESPHome connection events
-				socket.on("close", () => {
-					isOpen = false;
-					controller.error(
-						new ZWaveError(
-							`ESPHome connection closed unexpectedly!`,
-							ZWaveErrorCodes.Driver_SerialPortClosed,
-						),
-					);
-				});
-
-				socket.on("error", (_e) => {
-					isOpen = false;
-					controller.error(
-						new ZWaveError(
-							`ESPHome connection error!`,
-							ZWaveErrorCodes.Driver_SerialPortClosed,
-						),
-					);
-				});
 			},
 			cancel() {
 				sourceController = undefined;
-				socket.removeAllListeners();
 			},
 		};
 
