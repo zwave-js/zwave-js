@@ -1,4 +1,4 @@
-import { configDir } from "#config_dir";
+import { getConfigDir } from "#config_dir";
 import {
 	getBitMaskWidth,
 	getIntegerLimits,
@@ -488,7 +488,7 @@ async function lintTemplates(
 	addError: (filename: string, error: string) => void,
 	addWarning: (filename: string, warning: string) => void,
 ): Promise<void> {
-	const rootDir = path.join(configDir, "devices");
+	const rootDir = path.join(getConfigDir(), "devices");
 
 	const templateFiles = await enumFilesRecursive(
 		fs,
@@ -574,7 +574,7 @@ async function lintDevices(): Promise<void> {
 		warnings.get(filename)!.push(errorPrefix + warning);
 	}
 
-	const rootDir = path.join(configDir, "devices");
+	const rootDir = path.join(getConfigDir(), "devices");
 
 	const forbiddenFiles = await enumFilesRecursive(
 		fs,

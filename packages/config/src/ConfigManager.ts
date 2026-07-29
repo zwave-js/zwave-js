@@ -1,4 +1,4 @@
-import { configDir } from "#config_dir";
+import { getConfigDir } from "#config_dir";
 import {
 	type LogContainer,
 	ZWaveError,
@@ -47,13 +47,19 @@ export class ConfigManager {
 
 		this.deviceConfigPriorityDir = options.deviceConfigPriorityDir;
 		this.deviceConfigExternalDir = options.deviceConfigExternalDir;
-		this.embeddedConfigDir = options.deviceConfigEmbeddedDir ?? configDir;
+		this.#deviceConfigEmbeddedDir = options.deviceConfigEmbeddedDir;
 
 		this._configVersion = PACKAGE_VERSION;
 	}
 
+	#deviceConfigEmbeddedDir: string | undefined;
+
 	/** The absolute path of the configuration directory shipped with this package */
-	public readonly embeddedConfigDir: string;
+	public get embeddedConfigDir(): string {
+		// Resolve on first use, so runtimes that require the option only fail
+		// when configuration is actually loaded
+		return (this.#deviceConfigEmbeddedDir ??= getConfigDir());
+	}
 
 	/** The absolute path of the device configuration directory shipped with this package */
 	public get embeddedDevicesDir(): string {

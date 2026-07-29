@@ -1,4 +1,9 @@
-/** The absolute path of the embedded configuration directory */
-// Fall back to a bare path on runtimes without import.meta.resolve like QuickJS,
-// where embedders set the deviceConfigEmbeddedDir option instead
-export const configDir: string = import.meta.resolve?.("/config") ?? "/config";
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+
+/** Returns the absolute path of the embedded configuration directory */
+export function getConfigDir(): string {
+	throw new ZWaveError(
+		"On this runtime, the location of the configuration files embedded in @zwave-js/config must be set using the deviceConfigEmbeddedDir option",
+		ZWaveErrorCodes.Driver_InvalidOptions,
+	);
+}
