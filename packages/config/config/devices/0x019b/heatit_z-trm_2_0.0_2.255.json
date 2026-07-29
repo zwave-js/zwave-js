@@ -107,51 +107,32 @@
 		},
 		{
 			"#": "4",
-			"label": "Temperature Control Hysteresis (DIFF I)",
-			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 30,
-			"defaultValue": 5
+			"$import": "templates/heatit_template.json#temperature_control_hysteresis",
+			"minValue": 0
 		},
 		{
 			"#": "5",
-			"label": "Floor Minimum Temperature Limit (FLo)",
-			"valueSize": 2,
-			"unit": "oC",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 50
+			"$import": "templates/heatit_template.json#min_temperature_limit",
+			"label": "Floor Minimum Temperature Limit"
 		},
 		{
 			"#": "6",
-			"label": "Floor Maximum Temperature (FHi)",
-			"valueSize": 2,
-			"unit": "oC",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 400
+			"$import": "templates/heatit_template.json#max_temperature_limit",
+			"label": "Floor Maximum Temperature Limit"
 		},
 		{
 			"#": "7",
-			"label": "Air Minimum Temperature Limit (ALo)",
-			"valueSize": 2,
-			"unit": "oC",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 50
+			"$import": "templates/heatit_template.json#min_temperature_limit",
+			"label": "Air Minimum Temperature Limit"
 		},
 		{
 			"#": "8",
-			"label": "Air Maximum Temperature Limit (AHi)",
-			"valueSize": 2,
-			"unit": "oC",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 400
+			"$import": "templates/heatit_template.json#max_temperature_limit",
+			"label": "Air Maximum Temperature Limit"
 		},
 		{
 			"#": "9",
-			"label": "FP Mode P Setting (PLo)",
+			"label": "FP Mode P Setting",
 			"valueSize": 1,
 			"minValue": 0,
 			"maxValue": 9,
@@ -159,66 +140,41 @@
 		},
 		{
 			"#": "10",
-			"label": "Heating Mode Setpoint (CO)",
-			"valueSize": 2,
-			"unit": "oC",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 210
+			"$import": "templates/heatit_template.json#heating_setpoint",
+			"label": "Heating Mode Setpoint"
 		},
 		{
 			"#": "11",
-			"label": "Energy Saving Mode Setpoint (ECO)",
-			"valueSize": 2,
-			"unit": "oC",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 180
+			"$import": "templates/heatit_template.json#eco_setpoint",
+			"label": "Energy Saving Mode Setpoint"
 		},
 		{
 			"#": "12",
 			"label": "P Setting",
 			"valueSize": 1,
-			"unit": "oC",
 			"minValue": 0,
 			"maxValue": 10,
 			"defaultValue": 2
 		},
 		{
 			"#": "13",
-			"label": "Cooling Setpoint (COOL)",
-			"valueSize": 2,
-			"unit": "oC",
-			"minValue": 50,
-			"maxValue": 400,
+			"$import": "templates/heatit_template.json#cooling_setpoint",
 			"defaultValue": 210
 		},
 		{
 			"#": "14",
-			"label": "Room Sensor Calibration",
-			"valueSize": 1,
-			"unit": "oC",
-			"minValue": -40,
-			"maxValue": 40,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_40",
+			"label": "Room Sensor Calibration"
 		},
 		{
 			"#": "15",
-			"label": "Floor Sensor Calibration",
-			"valueSize": 1,
-			"unit": "oC",
-			"minValue": -40,
-			"maxValue": 40,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_40",
+			"label": "Floor Sensor Calibration"
 		},
 		{
 			"#": "16",
-			"label": "External Sensor Calibration",
-			"valueSize": 1,
-			"unit": "oC",
-			"minValue": -40,
-			"maxValue": 40,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_40",
+			"label": "External Sensor Calibration"
 		},
 		{
 			"#": "17",
@@ -285,12 +241,7 @@
 		},
 		{
 			"#": "23",
-			"label": "Temperature Report Hysteresis",
-			"valueSize": 1,
-			"unit": "oC",
-			"minValue": 1,
-			"maxValue": 100,
-			"defaultValue": 10
+			"$import": "templates/heatit_template.json#temperature_report_hysteresis"
 		},
 		{
 			"#": "24",

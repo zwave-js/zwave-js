@@ -64,7 +64,7 @@
 			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Calibration",
 			"valueSize": 2,
-			"unit": "°C",
+			"unit": "0.1 °C",
 			"minValue": -100,
 			"maxValue": 100,
 			"defaultValue": 0,
@@ -118,30 +118,18 @@
 		},
 		{
 			"#": "10",
-			"label": "Temperature Control Hysteresis",
-			"valueSize": 2,
-			"unit": "0.1 °C",
-			"minValue": 3,
-			"maxValue": 30,
-			"defaultValue": 5
+			"$import": "templates/heatit_template.json#temperature_control_hysteresis",
+			"valueSize": 2
 		},
 		{
 			"#": "11",
-			"label": "Minimum Temperature Limit",
-			"valueSize": 2,
-			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 50
+			"$import": "templates/heatit_template.json#min_temperature_limit",
+			"label": "Minimum Temperature Limit"
 		},
 		{
 			"#": "12",
-			"label": "Maximum Temperature Limit",
-			"valueSize": 2,
-			"unit": "0.1 °C",
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 400
+			"$import": "templates/heatit_template.json#max_temperature_limit",
+			"label": "Maximum Temperature Limit"
 		},
 		{
 			"#": "13",

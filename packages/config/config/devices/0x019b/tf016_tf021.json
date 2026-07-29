@@ -129,57 +129,37 @@
 		{
 			"#": "4",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "DIFF L. Temperature Control Hysteresis",
-			"description": "Range 3-30 (0.3 °C 3.0 °C)",
-			"valueSize": 2,
-			"minValue": 3,
-			"maxValue": 30,
-			"defaultValue": 5
+			"$import": "templates/heatit_template.json#temperature_control_hysteresis",
+			"valueSize": 2
 		},
 		{
 			"#": "5",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "FLo, Floor Min Limit",
-			"description": "Range 50-400 (5.0 °C 40.0 °C)",
-			"valueSize": 2,
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 50
+			"$import": "templates/heatit_template.json#min_temperature_limit",
+			"label": "Floor Min Limit"
 		},
 		{
 			"#": "6",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "FHi, Floor Max Limit",
-			"description": "Range 50-400 (5.0 °C 40.0 °C)",
-			"valueSize": 2,
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 400
+			"$import": "templates/heatit_template.json#max_temperature_limit",
+			"label": "Floor Max Limit"
 		},
 		{
 			"#": "7",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "ALo, Air Min Limit",
-			"description": "Range 50-400 (5.0 °C 40.0 °C)",
-			"valueSize": 2,
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 50
+			"$import": "templates/heatit_template.json#min_temperature_limit",
+			"label": "Air Min Limit"
 		},
 		{
 			"#": "8",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "AHi, Air Max Limit",
-			"description": "Range 50-400 (5.0 °C 40.0 °C)",
-			"valueSize": 2,
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 400
+			"$import": "templates/heatit_template.json#max_temperature_limit",
+			"label": "Air Max Limit"
 		},
 		{
 			"#": "9",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "PLo, FP-Mode P Setting",
+			"label": "FP-Mode P Setting",
 			"valueSize": 2,
 			"minValue": 0,
 			"maxValue": 9,
@@ -188,22 +168,14 @@
 		{
 			"#": "10",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "CO Mode Setpoint",
-			"description": "Range 50-400 (5.0 °C 40.0 °C)",
-			"valueSize": 2,
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 210
+			"$import": "templates/heatit_template.json#heating_setpoint",
+			"label": "CO Mode Setpoint"
 		},
 		{
 			"#": "11",
 			"$if": "firmwareVersion >= 1.8",
-			"label": "ECO Mode Setpoint",
-			"description": "Range 50-400 (5.0 °C 40.0 °C)",
-			"valueSize": 2,
-			"minValue": 50,
-			"maxValue": 400,
-			"defaultValue": 180
+			"$import": "templates/heatit_template.json#eco_setpoint",
+			"label": "ECO Mode Setpoint"
 		},
 		{
 			"#": "12",
@@ -217,11 +189,9 @@
 		{
 			"#": "13",
 			"$if": "firmwareVersion >= 1.8",
+			"$import": "templates/heatit_template.json#cooling_setpoint",
 			"label": "COOL Setpoint",
-			"description": "Only if cooling enabled. Range 50-400 (5.0 °C - 40.0 °C)",
-			"valueSize": 2,
-			"minValue": 50,
-			"maxValue": 400,
+			"description": "Only if cooling enabled.",
 			"defaultValue": 210
 		},
 		{
@@ -244,12 +214,8 @@
 		{
 			"#": "18",
 			"$if": "firmwareVersion >= 1.92",
-			"label": "Temperature Report Change Threshold",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": 1,
-			"maxValue": 100,
-			"defaultValue": 10
+			"$import": "templates/heatit_template.json#temperature_report_hysteresis",
+			"label": "Temperature Report Change Threshold"
 		}
 	],
 	"compat": {
