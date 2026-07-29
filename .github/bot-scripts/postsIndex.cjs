@@ -34,7 +34,7 @@ function cleanQuestion(title, body) {
 	// an index scan, a regex would backtrack polynomially on crafted input
 	let text = body;
 	let searchFrom = 0;
-	for (;;) {
+	while (true) {
 		const start = text.indexOf("<!--", searchFrom);
 		if (start === -1) break;
 		const end = text.indexOf("-->", start + 4);
