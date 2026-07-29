@@ -187,8 +187,9 @@ export function setInterval<TArgs extends any[]>(
 }
 
 /**
- * Schedules the callback to run after the current operation completes and pending I/O
- * has been processed, equivalent to Node's `setImmediate`.
+ * Schedules the callback to run in a later task, once the microtask queue has drained.
+ * This uses Node's `setImmediate` where available, so its ordering relative to timers
+ * and I/O is whatever the runtime provides.
  */
 export function setImmediate<TArgs extends any[]>(
 	callback: (...args: TArgs) => void,
