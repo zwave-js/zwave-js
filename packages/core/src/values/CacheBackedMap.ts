@@ -60,6 +60,21 @@ export class CacheBackedMap<K extends string | number, V> implements Map<K, V> {
 		return this;
 	}
 
+	// Only supported in Node.js 26, but the types for Node 22 already include it on the Map interface for some reason.
+	getOrInsert(key: K, defaultValue: V): V {
+		if (this.map.has(key)) return this.map.get(key)!;
+		this.set(key, defaultValue);
+		return defaultValue;
+	}
+
+	// Only supported in Node.js 26, but the types for Node 22 already include it on the Map interface for some reason.
+	getOrInsertComputed(key: K, callbackfn: (key: K) => V): V {
+		if (this.map.has(key)) return this.map.get(key)!;
+		const value = callbackfn(key);
+		this.set(key, value);
+		return value;
+	}
+
 	get size(): number {
 		return this.map.size;
 	}
@@ -74,8 +89,8 @@ export class CacheBackedMap<K extends string | number, V> implements Map<K, V> {
 	) => void;
 	declare get: (key: K) => V | undefined;
 	declare has: (key: K) => boolean;
-	declare entries: () => IterableIterator<[K, V]>;
-	declare keys: () => IterableIterator<K>;
-	declare values: () => IterableIterator<V>;
-	declare [Symbol.iterator]: () => IterableIterator<[K, V]>;
+	declare entries: () => MapIterator<[K, V]>;
+	declare keys: () => MapIterator<K>;
+	declare values: () => MapIterator<V>;
+	declare [Symbol.iterator]: () => MapIterator<[K, V]>;
 }

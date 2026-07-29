@@ -10,14 +10,12 @@
   "exports": {
     ".": {
       "@@dev": "./src/index.ts",
-      "browser": "./build/esm/index_browser.js",
-      "import": "./build/esm/index.js",
-      "require": "./build/cjs/index.js"
+      "browser": "./build/index_browser.js",
+      "default": "./build/index.js"
     },
     "./safe": {
       "@@dev": "./src/index_safe.ts",
-      "import": "./build/esm/index_safe.js",
-      "require": "./build/cjs/index_safe.js"
+      "default": "./build/index_safe.js"
     },
     "./package.json": "./package.json"
   },
@@ -45,7 +43,7 @@
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 20"
+    "node": ">= 22.12"
   },
   "dependencies": {
     "@zwave-js/core": "workspace:*",
@@ -57,16 +55,12 @@
     "yargs": "^18.0.0"
   },
   "scripts": {
-    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "extract-api": "yarn api-extractor run",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.58.7",
     "@types/node": "^20.19.35",
     "@types/semver": "^7.7.1",
     "@types/yargs": "^17.0.35",

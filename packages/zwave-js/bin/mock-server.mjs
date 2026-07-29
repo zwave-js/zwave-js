@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 
 // @ts-check
-const { MockServer, createMockNodeOptionsFromDump } = require(
-	"../build/cjs/mockServer.js",
-);
-const { readFileSync, statSync, readdirSync } = require("fs");
-const path = require("path");
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+import {
+	MockServer,
+	createMockNodeOptionsFromDump,
+} from "../build/mockServer.js";
 
-// Allow putting .js mock configs outside the repo
-const { createRequire } = require("module");
-const childRequire = createRequire(module.filename);
+// Allow loading user-supplied config files (which may be .js / .cjs)
+const childRequire = createRequire(import.meta.url);
 
 const args = process.argv.slice(2);
 
@@ -17,7 +18,7 @@ const args = process.argv.slice(2);
 function printUsage() {
 	// Print a help text explaining the usage of this script and mention the options it supports
 	console.log(`
-Usage: node ${path.basename(__filename)} [options]
+Usage: node ${path.basename(import.meta.filename)} [options]
 
 Options:
   -h, --help        Displays this help
@@ -87,7 +88,7 @@ Each node ID may only be used once in mock configs. Node ID ${nodeConfig.id} is 
 function getConfig(filename) {
 	if (filename.endsWith(".js") || filename.endsWith(".cjs")) {
 		// The export can either be a static config object or a function that accepts a require
-		let config = require(filename).default;
+		let config = childRequire(filename).default;
 		if (typeof config === "function") {
 			config = config({ require: childRequire });
 		}

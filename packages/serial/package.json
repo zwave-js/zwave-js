@@ -10,28 +10,23 @@
   "exports": {
     ".": {
       "@@dev": "./src/index.ts",
-      "import": "./build/esm/index.js",
-      "require": "./build/cjs/index.js"
+      "default": "./build/index.js"
     },
     "./safe": {
       "@@dev": "./src/index_safe.ts",
-      "import": "./build/esm/index_safe.js",
-      "require": "./build/cjs/index_safe.js"
+      "default": "./build/index_safe.js"
     },
     "./serialapi": {
       "@@dev": "./src/index_serialapi.ts",
-      "import": "./build/esm/index_serialapi.js",
-      "require": "./build/cjs/index_serialapi.js"
+      "default": "./build/index_serialapi.js"
     },
     "./mock": {
       "@@dev": "./src/index_mock.ts",
-      "import": "./build/esm/index_mock.js",
-      "require": "./build/cjs/index_mock.js"
+      "default": "./build/index_mock.js"
     },
     "./bindings/*": {
       "@@dev": "./src/bindings/*.ts",
-      "import": "./build/esm/bindings/*.js",
-      "require": "./build/cjs/bindings/*.js"
+      "default": "./build/bindings/*.js"
     },
     "./package.json": "./package.json"
   },
@@ -64,13 +59,11 @@
     "url": "https://github.com/sponsors/AlCalzone/"
   },
   "engines": {
-    "node": ">= 20"
+    "node": ">= 22.12"
   },
   "scripts": {
-    "build": "tsgo -b tsconfig.build.json --pretty && yarn postbuild",
-    "postbuild": "yarn esm2cjs --in build/esm --out build/cjs -l error -t node20",
+    "build": "tsgo -b tsconfig.build.json --pretty",
     "clean": "del-cli build/ \"*.tsbuildinfo\"",
-    "extract-api": "yarn api-extractor run",
     "test:ts": "vitest",
     "test:dirty": "tsx ../maintenance/src/resolveDirtyTests.ts --run"
   },
@@ -86,8 +79,6 @@
     "winston": "^3.18.3"
   },
   "devDependencies": {
-    "@alcalzone/esm2cjs": "^1.4.2",
-    "@microsoft/api-extractor": "^7.58.7",
     "@serialport/binding-mock": "^10.2.2",
     "@serialport/bindings-interface": "patch:@serialport/bindings-interface@npm%3A1.2.2#~/.yarn/patches/@serialport-bindings-interface-npm-1.2.2-e597dbc676.patch",
     "@types/node": "^20.19.35",

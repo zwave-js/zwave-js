@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import * as path from "node:path";
 import semverInc from "semver/functions/inc.js";
 import { type ExpectStatic, beforeEach, test as baseTest } from "vitest";
+import ownPackageJson from "../package.json" with { type: "json" };
 import { ConfigManager } from "./ConfigManager.js";
 import { ConfigLogger } from "./Logger.js";
 import { syncExternalConfigDir } from "./utils.js";
@@ -19,7 +20,7 @@ interface LocalTestContext {
 	};
 }
 
-const ownVersion = require("../package.json").version;
+const ownVersion = ownPackageJson.version;
 
 const test = baseTest.extend<LocalTestContext>({
 	context: [
