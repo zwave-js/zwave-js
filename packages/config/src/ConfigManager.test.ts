@@ -136,6 +136,22 @@ test.sequential(
 );
 
 test.sequential(
+	"loadAll() rejects a deviceConfigEmbeddedDir that is not a config directory",
+	async ({ context, expect }) => {
+		delete process.env.ZWAVEJS_EXTERNAL_CONFIG;
+
+		const { tempDir, logContainer } = context;
+		const cm = new ConfigManager({
+			logContainer,
+			deviceConfigEmbeddedDir: tempDir,
+		});
+
+		await expect(cm.loadAll()).rejects.toThrow("manufacturers.json");
+	},
+	60000,
+);
+
+test.sequential(
 	"loading config files from the ZWAVEJS_EXTERNAL_CONFIG",
 	async ({ context, expect }) => {
 		const { tempDir, logContainer } = context;
