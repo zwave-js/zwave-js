@@ -17,12 +17,12 @@
 	"paramInformation": [
 		{
 			"#": "1",
-			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_60",
 			"label": "Input 1 Calibration"
 		},
 		{
 			"#": "2",
-			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_60",
 			"label": "Input 2 Calibration"
 		},
 		{

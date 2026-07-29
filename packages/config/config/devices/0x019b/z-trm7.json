@@ -79,17 +79,17 @@
 		},
 		{
 			"#": "10",
-			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_60",
 			"label": "Internal Sensor Calibration"
 		},
 		{
 			"#": "11",
-			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_60",
 			"label": "Floor Sensor Calibration"
 		},
 		{
 			"#": "12",
-			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_60",
 			"label": "External Sensor Calibration"
 		},
 		{

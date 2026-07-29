@@ -86,21 +86,13 @@
 		},
 		{
 			"#": "5",
-			"label": "Input 1 Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": -40,
-			"maxValue": 40,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_40",
+			"label": "Input 1 Calibration"
 		},
 		{
 			"#": "6",
-			"label": "Input 2 Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": -40,
-			"maxValue": 40,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_40",
+			"label": "Input 2 Calibration"
 		},
 		{
 			"#": "7",

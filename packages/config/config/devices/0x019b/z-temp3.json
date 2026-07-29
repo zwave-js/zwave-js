@@ -52,7 +52,7 @@
 		},
 		{
 			"#": "4",
-			"$import": "templates/heatit_template.json#temperature_sensor_calibration",
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_60",
 			"label": "Temp Sensor Calibration"
 		},
 		{

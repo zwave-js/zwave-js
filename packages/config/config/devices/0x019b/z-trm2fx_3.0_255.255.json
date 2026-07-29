@@ -134,21 +134,13 @@
 		},
 		{
 			"#": "12",
-			"label": "Floor Sensor Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": -40,
-			"maxValue": 40,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_40",
+			"label": "Floor Sensor Calibration"
 		},
 		{
 			"#": "13",
-			"label": "External Sensor Calibration",
-			"valueSize": 1,
-			"unit": "0.1 °C",
-			"minValue": -40,
-			"maxValue": 40,
-			"defaultValue": 0
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_40",
+			"label": "External Sensor Calibration"
 		},
 		{
 			"#": "14",

@@ -261,7 +261,15 @@
 		"defaultValue": 840,
 		"unsigned": true
 	},
-	"temperature_sensor_calibration": {
+	"temperature_sensor_calibration_40": {
+		"$purpose": "calibration.temperature",
+		"valueSize": 1,
+		"unit": "0.1 °C",
+		"minValue": -40,
+		"maxValue": 40,
+		"defaultValue": 0
+	},
+	"temperature_sensor_calibration_60": {
 		"$purpose": "calibration.temperature",
 		"valueSize": 1,
 		"unit": "0.1 °C",

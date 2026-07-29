@@ -64,7 +64,7 @@
 			"$purpose": "calibration.temperature",
 			"label": "Temperature Sensor Calibration",
 			"valueSize": 2,
-			"unit": "°C",
+			"unit": "0.1 °C",
 			"minValue": -100,
 			"maxValue": 100,
 			"defaultValue": 0,
