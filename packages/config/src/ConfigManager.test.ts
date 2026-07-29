@@ -10,7 +10,10 @@ import { type ExpectStatic, beforeEach, test as baseTest } from "vitest";
 import ownPackageJson from "../package.json" with { type: "json" };
 import { ConfigManager } from "./ConfigManager.js";
 import { ConfigLogger } from "./Logger.js";
+import { getEmbeddedConfigDir } from "./configDir.js";
 import { syncExternalConfigDir } from "./utils.js";
+
+const embeddedConfigDir = getEmbeddedConfigDir();
 
 interface LocalTestContext {
 	context: {
@@ -53,7 +56,7 @@ test.sequential(
 		const { tempDir, logger } = context;
 
 		const configDir = path.join(tempDir, "extconfig");
-		await syncExternalConfigDir(fs, configDir, logger);
+		await syncExternalConfigDir(fs, embeddedConfigDir, configDir, logger);
 
 		expect(await pathExists(fs, configDir)).toBe(true);
 		expect(
@@ -78,7 +81,7 @@ test.sequential(
 			"utf8",
 		);
 
-		await syncExternalConfigDir(fs, configDir, logger);
+		await syncExternalConfigDir(fs, embeddedConfigDir, configDir, logger);
 
 		expect(await pathExists(fs, configDir)).toBe(true);
 
@@ -104,7 +107,7 @@ test.sequential(
 			"utf8",
 		);
 
-		await syncExternalConfigDir(fs, configDir, logger);
+		await syncExternalConfigDir(fs, embeddedConfigDir, configDir, logger);
 
 		expect(await pathExists(fs, configDir)).toBe(true);
 

@@ -1,4 +1,3 @@
-import { configDir } from "#config_dir";
 import {
 	type LogContainer,
 	ZWaveError,
@@ -15,6 +14,7 @@ import {
 	saveManufacturersInternal,
 } from "./Manufacturers.js";
 import { PACKAGE_VERSION } from "./_version.js";
+import { getEmbeddedConfigDir } from "./configDir.js";
 import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,
@@ -37,6 +37,7 @@ export interface ConfigManagerOptions {
 	logContainer?: LogContainer;
 	deviceConfigPriorityDir?: string;
 	deviceConfigExternalDir?: string;
+	deviceConfigEmbeddedDir?: string;
 }
 
 export class ConfigManager {
@@ -46,8 +47,23 @@ export class ConfigManager {
 
 		this.deviceConfigPriorityDir = options.deviceConfigPriorityDir;
 		this.deviceConfigExternalDir = options.deviceConfigExternalDir;
+		this.deviceConfigEmbeddedDir = options.deviceConfigEmbeddedDir;
 
 		this._configVersion = PACKAGE_VERSION;
+	}
+
+	private deviceConfigEmbeddedDir: string | undefined;
+
+	/** The absolute path of the configuration directory shipped with this package */
+	public get embeddedConfigDir(): string {
+		// Resolve on first use, so runtimes that require the option only fail
+		// when configuration is actually loaded
+		return (this.deviceConfigEmbeddedDir ??= getEmbeddedConfigDir());
+	}
+
+	/** The absolute path of the device configuration directory shipped with this package */
+	public get embeddedDevicesDir(): string {
+		return getDevicesPaths(this.embeddedConfigDir).devicesDir;
 	}
 
 	private _fs: FileSystem | undefined;
@@ -113,6 +129,7 @@ export class ConfigManager {
 		if (externalConfigDir) {
 			syncResult = await syncExternalConfigDir(
 				await this.getFS(),
+				this.embeddedConfigDir,
 				externalConfigDir,
 				logger,
 			);
@@ -138,6 +155,7 @@ export class ConfigManager {
 		try {
 			this._manufacturers = await loadManufacturersInternal(
 				await this.getFS(),
+				this.embeddedConfigDir,
 				this._useExternalConfig && this.externalConfigDir || undefined,
 			);
 		} catch (e) {
@@ -167,6 +185,7 @@ export class ConfigManager {
 
 		await saveManufacturersInternal(
 			await this.getFS(),
+			this.embeddedConfigDir,
 			this._manufacturers,
 		);
 	}
@@ -212,6 +231,7 @@ export class ConfigManager {
 			// The index of config files included in this package
 			const embeddedIndex = await loadDeviceIndexInternal(
 				fs,
+				this.embeddedConfigDir,
 				logger,
 				this._useExternalConfig && this.externalConfigDir || undefined,
 			);
@@ -223,6 +243,7 @@ export class ConfigManager {
 						...(await generatePriorityDeviceIndex(
 							fs,
 							this.deviceConfigPriorityDir,
+							this.embeddedDevicesDir,
 							logger,
 						)),
 					);
@@ -265,6 +286,7 @@ export class ConfigManager {
 	public async loadFulltextDeviceIndex(): Promise<void> {
 		this.fulltextIndex = await loadFulltextDeviceIndexInternal(
 			await this.getFS(),
+			this.embeddedConfigDir,
 			await this.getLogger(),
 		);
 	}
@@ -307,7 +329,8 @@ export class ConfigManager {
 
 		if (indexEntry) {
 			const devicesDir = getDevicesPaths(
-				this._useExternalConfig && this.externalConfigDir || configDir,
+				this._useExternalConfig && this.externalConfigDir
+					|| this.embeddedConfigDir,
 			).devicesDir;
 			const filePath = path.isAbsolute(indexEntry.filename)
 				? indexEntry.filename

@@ -25,11 +25,6 @@
       "@@dev": "@zwave-js/core/bindings/log/node",
       "node": "@zwave-js/core/bindings/log/node",
       "default": "@zwave-js/core/bindings/log/stub"
-    },
-    "#config_dir": {
-      "@@dev": "./src/configDir.node.ts",
-      "browser": "./build/configDir.browser.js",
-      "default": "./build/configDir.node.js"
     }
   },
   "files": [

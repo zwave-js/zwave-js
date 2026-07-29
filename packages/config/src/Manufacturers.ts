@@ -1,4 +1,3 @@
-import { configDir } from "#config_dir";
 import { ZWaveError, ZWaveErrorCodes, isZWaveError } from "@zwave-js/core";
 import {
 	formatId,
@@ -22,10 +21,11 @@ export type ManufacturersMap = Map<number, string>;
 /** @internal */
 export async function loadManufacturersInternal(
 	fs: ReadFileSystemInfo & ReadFile,
+	embeddedConfigDir: string,
 	externalConfigDir?: string,
 ): Promise<ManufacturersMap> {
 	const configPath = path.join(
-		externalConfigDir || configDir,
+		externalConfigDir || embeddedConfigDir,
 		"manufacturers.json",
 	);
 
@@ -78,6 +78,7 @@ export async function loadManufacturersInternal(
  */
 export async function saveManufacturersInternal(
 	fs: WriteFile,
+	embeddedConfigDir: string,
 	manufacturers: ManufacturersMap,
 ): Promise<void> {
 	const data: Record<string, string> = {};
@@ -90,6 +91,6 @@ export async function saveManufacturersInternal(
 		data[formatId(id)] = name;
 	}
 
-	const configPath = path.join(configDir, "manufacturers.json");
+	const configPath = path.join(embeddedConfigDir, "manufacturers.json");
 	await writeTextFile(fs, configPath, stringify(data, "\t") + "\n");
 }
