@@ -1,185 +1,58 @@
 import { Bytes, type BytesView } from "@zwave-js/shared";
-import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
+import type { CryptoPrimitives } from "@zwave-js/shared/bindings";
 import { BLOCK_SIZE, leftShift1, xor, zeroPad } from "./shared.js";
 
 // Import the correct primitives based on the environment
 import { primitives as defaultPrimitives } from "#crypto_primitives";
 
-// Crypto is a property of the runtime rather than of a Z-Wave network, so the implementation is
-// process-global and shared by all drivers running in the same process
-let primitives: CryptoPrimitives = defaultPrimitives;
+// Re-exported as mutable bindings, so importers observe a replaced implementation
+// without an extra layer of wrapper functions in front of every operation
+export let randomBytes: CryptoPrimitives["randomBytes"];
+export let encryptAES128ECB: CryptoPrimitives["encryptAES128ECB"];
+export let encryptAES128CBC: CryptoPrimitives["encryptAES128CBC"];
+export let encryptAES128OFB: CryptoPrimitives["encryptAES128OFB"];
+export let decryptAES128OFB: CryptoPrimitives["decryptAES128OFB"];
+export let decryptAES256CBC: CryptoPrimitives["decryptAES256CBC"];
+export let encryptAES256OFB: CryptoPrimitives["encryptAES256OFB"];
+export let decryptAES256OFB: CryptoPrimitives["decryptAES256OFB"];
+export let encryptAES128CCM: CryptoPrimitives["encryptAES128CCM"];
+export let decryptAES128CCM: CryptoPrimitives["decryptAES128CCM"];
+export let digest: CryptoPrimitives["digest"];
+export let hmacSHA256: CryptoPrimitives["hmacSHA256"];
+export let encryptChaCha20Poly1305: CryptoPrimitives["encryptChaCha20Poly1305"];
+export let decryptChaCha20Poly1305: CryptoPrimitives["decryptChaCha20Poly1305"];
+export let generateECDHKeyPair: CryptoPrimitives["generateECDHKeyPair"];
+export let keyPairFromRawECDHPrivateKey:
+	CryptoPrimitives["keyPairFromRawECDHPrivateKey"];
+export let deriveSharedECDHSecret: CryptoPrimitives["deriveSharedECDHSecret"];
 
 /**
  * Replaces the crypto implementation used for all Z-Wave related cryptographic operations.
- * Since this affects the entire process, it must be called before any crypto operation happens.
+ * Since crypto is a property of the runtime rather than of a Z-Wave network, this affects
+ * the entire process and must be called before any crypto operation happens.
  */
 export function setCryptoPrimitives(impl: CryptoPrimitives): void {
-	primitives = impl;
+	// Bound to the implementation, so a host may pass an object whose methods use `this`
+	randomBytes = impl.randomBytes.bind(impl);
+	encryptAES128ECB = impl.encryptAES128ECB.bind(impl);
+	encryptAES128CBC = impl.encryptAES128CBC.bind(impl);
+	encryptAES128OFB = impl.encryptAES128OFB.bind(impl);
+	decryptAES128OFB = impl.decryptAES128OFB.bind(impl);
+	decryptAES256CBC = impl.decryptAES256CBC.bind(impl);
+	encryptAES256OFB = impl.encryptAES256OFB.bind(impl);
+	decryptAES256OFB = impl.decryptAES256OFB.bind(impl);
+	encryptAES128CCM = impl.encryptAES128CCM.bind(impl);
+	decryptAES128CCM = impl.decryptAES128CCM.bind(impl);
+	digest = impl.digest.bind(impl);
+	hmacSHA256 = impl.hmacSHA256.bind(impl);
+	encryptChaCha20Poly1305 = impl.encryptChaCha20Poly1305.bind(impl);
+	decryptChaCha20Poly1305 = impl.decryptChaCha20Poly1305.bind(impl);
+	generateECDHKeyPair = impl.generateECDHKeyPair.bind(impl);
+	keyPairFromRawECDHPrivateKey = impl.keyPairFromRawECDHPrivateKey.bind(impl);
+	deriveSharedECDHSecret = impl.deriveSharedECDHSecret.bind(impl);
 }
 
-export function randomBytes(length: number): BytesView {
-	return primitives.randomBytes(length);
-}
-
-/** Encrypts a payload using AES-128-ECB */
-export function encryptAES128ECB(
-	plaintext: BytesView,
-	key: BytesView,
-): Promise<BytesView> {
-	return primitives.encryptAES128ECB(plaintext, key);
-}
-
-/** Encrypts a payload using AES-128-CBC */
-export function encryptAES128CBC(
-	plaintext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-): Promise<BytesView> {
-	return primitives.encryptAES128CBC(plaintext, key, iv);
-}
-
-/** Encrypts a payload using AES-128-OFB */
-export function encryptAES128OFB(
-	plaintext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-): Promise<BytesView> {
-	return primitives.encryptAES128OFB(plaintext, key, iv);
-}
-
-/** Decrypts a payload using AES-128-OFB */
-export function decryptAES128OFB(
-	ciphertext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-): Promise<BytesView> {
-	return primitives.decryptAES128OFB(ciphertext, key, iv);
-}
-
-/** Decrypts a payload using AES-256-CBC */
-export function decryptAES256CBC(
-	ciphertext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-): Promise<BytesView> {
-	return primitives.decryptAES256CBC(ciphertext, key, iv);
-}
-
-/** Encrypts a payload using AES-256-OFB */
-export function encryptAES256OFB(
-	plaintext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-): Promise<BytesView> {
-	return primitives.encryptAES256OFB(plaintext, key, iv);
-}
-
-/** Decrypts a payload using AES-256-OFB */
-export function decryptAES256OFB(
-	ciphertext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-): Promise<BytesView> {
-	return primitives.decryptAES256OFB(ciphertext, key, iv);
-}
-
-/** Encrypts and authenticates a payload using AES-128-CCM */
-export function encryptAES128CCM(
-	plaintext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-	additionalData: BytesView,
-	authTagLength: number,
-): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
-	return primitives.encryptAES128CCM(
-		plaintext,
-		key,
-		iv,
-		additionalData,
-		authTagLength,
-	);
-}
-
-/** Decrypts and verifies a payload using AES-128-CCM */
-export function decryptAES128CCM(
-	ciphertext: BytesView,
-	key: BytesView,
-	iv: BytesView,
-	additionalData: BytesView,
-	authTag: BytesView,
-): Promise<{ plaintext: BytesView; authOK: boolean }> {
-	return primitives.decryptAES128CCM(
-		ciphertext,
-		key,
-		iv,
-		additionalData,
-		authTag,
-	);
-}
-
-export function digest(
-	algorithm: "md5" | "sha-1" | "sha-256",
-	data: BytesView,
-): Promise<BytesView> {
-	return primitives.digest(algorithm, data);
-}
-
-/** Computes HMAC-SHA256 */
-export function hmacSHA256(
-	key: BytesView,
-	data: BytesView,
-): Promise<BytesView> {
-	return primitives.hmacSHA256(key, data);
-}
-
-/** Encrypts and authenticates a payload using ChaCha20-Poly1305 */
-export function encryptChaCha20Poly1305(
-	key: BytesView,
-	nonce: BytesView,
-	additionalData: BytesView,
-	plaintext: BytesView,
-): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
-	return primitives.encryptChaCha20Poly1305(
-		key,
-		nonce,
-		additionalData,
-		plaintext,
-	);
-}
-
-/** Decrypts and verifies a payload using ChaCha20-Poly1305 */
-export function decryptChaCha20Poly1305(
-	key: BytesView,
-	nonce: BytesView,
-	additionalData: BytesView,
-	ciphertext: BytesView,
-	authTag: BytesView,
-): Promise<{ plaintext: BytesView; authOK: boolean }> {
-	return primitives.decryptChaCha20Poly1305(
-		key,
-		nonce,
-		additionalData,
-		ciphertext,
-		authTag,
-	);
-}
-
-/** Generates an x25519 / ECDH key pair */
-export function generateECDHKeyPair(): Promise<KeyPair> {
-	return primitives.generateECDHKeyPair();
-}
-
-/** Expand an x25519 / ECDH private key into the full key pair */
-export function keyPairFromRawECDHPrivateKey(
-	privateKey: BytesView,
-): Promise<KeyPair> {
-	return primitives.keyPairFromRawECDHPrivateKey(privateKey);
-}
-
-/** Derives the shared ECDH secret from an x25519 / ECDH key pair */
-export function deriveSharedECDHSecret(keyPair: KeyPair): Promise<BytesView> {
-	return primitives.deriveSharedECDHSecret(keyPair);
-}
+setCryptoPrimitives(defaultPrimitives);
 
 const Z128 = new Uint8Array(16).fill(0);
 const R128 = Bytes.from("00000000000000000000000000000087", "hex");
