@@ -66,6 +66,24 @@ export class ConfigManager {
 		return getDevicesPaths(this.embeddedConfigDir).devicesDir;
 	}
 
+	private embeddedConfigDirVerified: boolean = false;
+
+	private async assertEmbeddedConfigDir(): Promise<void> {
+		if (this.embeddedConfigDirVerified) return;
+
+		// A wrong location is otherwise only visible as an empty device index, because
+		// the manufacturers and device index loaders both tolerate missing files
+		const marker = path.join(this.embeddedConfigDir, "manufacturers.json");
+		if (!(await pathExists(await this.getFS(), marker))) {
+			throw new ZWaveError(
+				`The embedded configuration directory ${this.embeddedConfigDir} does not contain manufacturers.json. Set the deviceConfigEmbeddedDir option to the location of the configuration files shipped with @zwave-js/config.`,
+				ZWaveErrorCodes.Driver_InvalidOptions,
+			);
+		}
+
+		this.embeddedConfigDirVerified = true;
+	}
+
 	private _fs: FileSystem | undefined;
 	private async getFS(): Promise<FileSystem> {
 		this._fs ??= (await import("#default_bindings/fs")).fs;
@@ -121,6 +139,8 @@ export class ConfigManager {
 	}
 
 	public async loadAll(): Promise<void> {
+		await this.assertEmbeddedConfigDir();
+
 		const logger = await this.getLogger();
 		// If the environment option for an external config dir is set
 		// try to sync it and then use it
