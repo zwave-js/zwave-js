@@ -273,7 +273,7 @@ async function collectFromIssues(owner, repo, since, token) {
 	const searchQuery =
 		`repo:${owner}/${repo} is:issue commenter:${BOT_USER} updated:>=${since}`;
 	let cursor = null;
-	for (;;) {
+	while (true) {
 		const data = await ghGraphql(
 			`
 			query search($searchQuery: String!, $cursor: String) {
@@ -360,7 +360,7 @@ async function collectFromDiscussions(owner, repo, since, token) {
 	const searchQuery =
 		`repo:${owner}/${repo} commenter:${BOT_USER} updated:>=${since}`;
 	let cursor = null;
-	for (;;) {
+	while (true) {
 		const data = await ghGraphql(
 			`
 			query search($searchQuery: String!, $cursor: String) {
