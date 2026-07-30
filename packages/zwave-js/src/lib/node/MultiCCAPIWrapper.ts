@@ -11,6 +11,7 @@ import {
 	ZWaveErrorCodes,
 	mergeSupervisionResults,
 } from "@zwave-js/core";
+import { getenv } from "@zwave-js/shared";
 
 /** Creates a wrapper that looks like an instance of a specific CC API, but can handle multiple instances of that API */
 export function createMultiCCAPIWrapper<T extends CCAPI>(apiInstances: T[]): T {
@@ -63,7 +64,7 @@ export function createMultiCCAPIWrapper<T extends CCAPI>(apiInstances: T[]): T {
 		get(target, prop) {
 			// Avoid ultra-weird error messages during testing
 			if (
-				process.env.NODE_ENV === "test"
+				getenv("NODE_ENV") === "test"
 				&& typeof prop === "string"
 				&& (prop === "$$typeof"
 					|| prop === "constructor"

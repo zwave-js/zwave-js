@@ -163,6 +163,7 @@ import {
 	formatId,
 	getEnumMemberName,
 	getErrorMessage,
+	getenv,
 	noop,
 	pick,
 } from "@zwave-js/shared";
@@ -959,7 +960,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 							&& self.productId != undefined
 							&& self.firmwareVersion != undefined
 							&& !self.deviceConfig
-							&& process.env.NODE_ENV !== "test"
+							&& getenv("NODE_ENV") !== "test"
 						) {
 							void reportMissingDeviceConfig(
 								self.driver,

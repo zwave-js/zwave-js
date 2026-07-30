@@ -5,7 +5,7 @@ import {
 	ZWaveErrorCodes,
 	isZWaveError,
 } from "@zwave-js/core";
-import { getErrorMessage, pathExists } from "@zwave-js/shared";
+import { getErrorMessage, getenv, pathExists } from "@zwave-js/shared";
 import type { FileSystem } from "@zwave-js/shared/bindings";
 import path from "pathe";
 import { ConfigLogger } from "./Logger.js";
@@ -143,7 +143,7 @@ export class ConfigManager {
 		} catch (e) {
 			// If the config file is missing or invalid, don't try to find it again
 			if (isZWaveError(e) && e.code === ZWaveErrorCodes.Config_Invalid) {
-				if (process.env.NODE_ENV !== "test") {
+				if (getenv("NODE_ENV") !== "test") {
 					(await this.getLogger()).print(
 						`Could not load manufacturers config: ${e.message}`,
 						"error",
@@ -244,7 +244,7 @@ export class ConfigManager {
 			) {
 				// Fall back to no index on production systems
 				if (!this.index) this.index = [];
-				if (process.env.NODE_ENV !== "test") {
+				if (getenv("NODE_ENV") !== "test") {
 					logger.print(
 						`Could not load or regenerate device config index: ${e.message}`,
 						"error",
@@ -335,7 +335,7 @@ export class ConfigManager {
 					{ rootDir, fallbackDirs },
 				);
 			} catch (e) {
-				if (process.env.NODE_ENV !== "test") {
+				if (getenv("NODE_ENV") !== "test") {
 					(await this.getLogger()).print(
 						`Error loading device config ${filePath}: ${
 							getErrorMessage(

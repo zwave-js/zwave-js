@@ -46,6 +46,7 @@ import {
 	type BytesView,
 	buffer2hex,
 	getEnumMemberName,
+	getenv,
 	pick,
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
@@ -2002,8 +2003,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		};
 		// Log the used keys in integration tests
 		if (
-			process.env.NODE_ENV === "test"
-			|| process.env.NODE_ENV === "development"
+			getenv("NODE_ENV") === "test"
+			|| getenv("NODE_ENV") === "development"
 		) {
 			if (this.key) {
 				message.key = buffer2hex(this.key);
