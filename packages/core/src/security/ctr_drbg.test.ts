@@ -1,9 +1,24 @@
-import { hexToUint8Array } from "@zwave-js/shared";
+import { type BytesView, hexToUint8Array } from "@zwave-js/shared";
 import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test } from "vitest";
+import { test, vi } from "vitest";
 import { CtrDRBG } from "./ctr_drbg.js";
+
+const seenArguments: [plaintext: BytesView, key: BytesView][] = [];
+
+vi.mock("../crypto/index.js", async () => {
+	const actual = await vi.importActual<
+		typeof import("../crypto/index.js")
+	>("../crypto/index.js");
+	return {
+		...actual,
+		encryptAES128ECB(plaintext: BytesView, key: BytesView) {
+			seenArguments.push([plaintext, key]);
+			return actual.encryptAES128ECB(plaintext, key);
+		},
+	};
+});
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -75,3 +90,16 @@ for (const id of ["AES-128"]) {
 		);
 	}
 }
+
+test("does not pass aliased views to the crypto primitives", async (t) => {
+	// Some runtimes make an ArrayBuffer temporarily immutable while an async WebCrypto
+	// call reads from any view of it, so two views of one buffer cannot be passed together
+	const drbg = new CtrDRBG();
+	await drbg.init(new Uint8Array(32).fill(0xa5));
+	await drbg.generate(32);
+
+	t.expect(seenArguments.length).toBeGreaterThan(0);
+	for (const [plaintext, key] of seenArguments) {
+		t.expect(plaintext.buffer).not.toBe(key.buffer);
+	}
+});
