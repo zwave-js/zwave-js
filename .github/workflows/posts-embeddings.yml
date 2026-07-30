@@ -3,7 +3,7 @@ name: Build posts embeddings index
 # Builds and caches a semantic search index over issues and discussions,
 # used by the bot to suggest related/duplicate posts.
 # Between the nightly rebuilds, new posts are appended incrementally by
-# the update-posts-index jobs in the issue and discussion bot workflows.
+# the update-posts-index job in the issue/discussion bot workflow.
 
 on:
   schedule:
@@ -16,6 +16,8 @@ on:
       - '.github/bot-scripts/buildPostsIndex.cjs'
       - '.github/bot-scripts/postsIndex.cjs'
       - '.github/bot-scripts/localEmbeddings.cjs'
+      - '.github/bot-scripts/package.json'
+      - '.github/bot-scripts/package-lock.json'
       - '.github/bot-scripts/githubApi.cjs'
       - '.github/bot-scripts/evalRelatedPosts.cjs'
       - '.github/bot-scripts/evalUtils.cjs'
@@ -52,23 +54,10 @@ jobs:
         restore-keys: |
           posts-embeddings-v2-
 
-    - name: Enable Corepack
-      run: corepack enable
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
+    - name: Setup embeddings
+      uses: ./.github/actions/setup-bot-embeddings
       with:
-        node-version: 22
-        cache: 'yarn'
-
-    - name: Install embedding dependencies
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
-
-    - name: Restore embedding model
-      uses: actions/cache@v6
-      with:
-        path: ~/.cache/zwave-js-mcp-server-dev/models
-        key: embedding-model-${{ hashFiles('.github/bot-scripts/localEmbeddings.cjs') }}
+        save-model-cache: 'true'
 
     - name: Build index
       env:
@@ -80,6 +69,23 @@ jobs:
       with:
         path: .posts-index
         key: posts-embeddings-v2-${{ github.run_id }}
+
+    # The cache entry is regularly evicted before the answer bot gets to use it
+    # (the repository cache is capped and evicted least-recently-used), so keep
+    # a durable copy it can fall back to.
+    - name: Upload index artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: posts-index
+        path: .posts-index
+        retention-days: 30
+        # .posts-index is a dot-directory and the glob skips hidden entries by
+        # default, search root included - without this the upload matches zero
+        # files and silently produces no artifact at all
+        include-hidden-files: true
+        # The answer bot depends on this artifact existing, so an empty upload
+        # is a failure, not a warning
+        if-no-files-found: error
 
   evaluate:
     needs: build-index
@@ -101,28 +107,16 @@ jobs:
         key: posts-embeddings-v2-${{ github.run_id }}
 
     - name: Fail if posts index is missing
+      # build-index should always have just saved this exact run-scoped
+      # cache entry; surface the problem loudly instead of silently
+      # skipping the evaluation and reporting green
       if: steps.restore-index.outputs.cache-hit != 'true'
       run: |
         echo "::error::Posts index cache miss after build-index - cannot evaluate retrieval quality"
         exit 1
 
-    - name: Enable Corepack
-      run: corepack enable
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 22
-        cache: 'yarn'
-
-    - name: Install embedding dependencies
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
-
-    - name: Restore embedding model
-      uses: actions/cache@v6
-      with:
-        path: ~/.cache/zwave-js-mcp-server-dev/models
-        key: embedding-model-${{ hashFiles('.github/bot-scripts/localEmbeddings.cjs') }}
+    - name: Setup embeddings
+      uses: ./.github/actions/setup-bot-embeddings
 
     - name: Evaluate retrieval quality
       id: eval
