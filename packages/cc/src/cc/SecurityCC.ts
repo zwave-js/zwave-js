@@ -34,6 +34,7 @@ import {
 	Bytes,
 	type BytesView,
 	buffer2hex,
+	getenv,
 	num2hex,
 	pick,
 } from "@zwave-js/shared";
@@ -869,8 +870,8 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		}
 		// Log the plaintext in integration tests and development mode
 		if (
-			process.env.NODE_ENV === "test"
-			|| process.env.NODE_ENV === "development"
+			getenv("NODE_ENV") === "test"
+			|| getenv("NODE_ENV") === "development"
 		) {
 			if (this.iv) {
 				message.IV = buffer2hex(this.iv);

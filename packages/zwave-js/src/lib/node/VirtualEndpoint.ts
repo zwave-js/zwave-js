@@ -19,7 +19,7 @@ import {
 	getCCName,
 	securityClassIsS2,
 } from "@zwave-js/core";
-import { staticExtends } from "@zwave-js/shared";
+import { getenv, staticExtends } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
 import type { Driver } from "../driver/Driver.js";
 import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper.js";
@@ -149,7 +149,7 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 		get: (target, ccNameOrId: string | symbol) => {
 			// Avoid ultra-weird error messages during testing
 			if (
-				process.env.NODE_ENV === "test"
+				getenv("NODE_ENV") === "test"
 				&& typeof ccNameOrId === "string"
 				&& (ccNameOrId === "$$typeof"
 					|| ccNameOrId === "constructor"

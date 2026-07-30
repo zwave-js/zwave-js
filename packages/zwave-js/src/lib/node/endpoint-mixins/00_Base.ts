@@ -29,7 +29,7 @@ import {
 	getCCName,
 	isCCInfoEqual,
 } from "@zwave-js/core";
-import { getEnumMemberName, num2hex } from "@zwave-js/shared";
+import { getEnumMemberName, getenv, num2hex } from "@zwave-js/shared";
 import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
@@ -361,7 +361,7 @@ export class EndpointBase
 		get: (target, ccNameOrId: string | symbol) => {
 			// Avoid ultra-weird error messages during testing
 			if (
-				process.env.NODE_ENV === "test"
+				getenv("NODE_ENV") === "test"
 				&& typeof ccNameOrId === "string"
 				&& (ccNameOrId === "$$typeof"
 					|| ccNameOrId === "constructor"
