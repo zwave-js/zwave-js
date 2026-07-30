@@ -420,7 +420,7 @@ export function deserializeNetworkCacheValue(
 	switch (cacheKeyUtils.nodePropertyFromKey(key)) {
 		case "interviewStage": {
 			value = tryParseInterviewStage(value);
-			if (value) return value;
+			if (value != undefined) return value;
 			fail();
 		}
 		case "deviceClass": {
@@ -470,7 +470,7 @@ export function deserializeNetworkCacheValue(
 
 		case "nodeType": {
 			value = tryParseNodeType(value);
-			if (value) return value;
+			if (value != undefined) return value;
 			fail();
 		}
 
