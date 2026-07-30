@@ -2741,6 +2741,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@txikijs/types@npm:26.6.0":
+  version: 26.6.0
+  resolution: "@txikijs/types@npm:26.6.0"
+  checksum: 10/6d0b022d3dff14c7791db931958c149f0a951fba78f42500eb8043138debc68528c1ccf112e193c749409548cc1ac5b7bc4545ab62c43ac1e41a36b9c9762c8d
+  languageName: node
+  linkType: hard
+
 "@tybys/wasm-util@npm:^0.10.1":
   version: 0.10.1
   resolution: "@tybys/wasm-util@npm:0.10.1"
@@ -3571,6 +3578,21 @@ __metadata:
     yargs: "npm:^18.0.0"
   bin:
     nvmedit: bin/nvmedit.mjs
+  languageName: unknown
+  linkType: soft
+
+"@zwave-js/quickjs@workspace:packages/quickjs":
+  version: 0.0.0-use.local
+  resolution: "@zwave-js/quickjs@workspace:packages/quickjs"
+  dependencies:
+    "@txikijs/types": "npm:26.6.0"
+    "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
+    "@zwave-js/core": "workspace:*"
+    "@zwave-js/serial": "workspace:*"
+    "@zwave-js/shared": "workspace:*"
+    del-cli: "npm:^7.0.0"
+    esbuild: "npm:^0.25.11"
+    zwave-js: "workspace:*"
   languageName: unknown
   linkType: soft
 

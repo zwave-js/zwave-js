@@ -1,0 +1,13 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"target": "ESNext",
+		"lib": ["ESNext"],
+		"types": ["@txikijs/types"],
+		"customConditions": ["browser"]
+	},
+	"include": ["src/**/*.ts"]
+}

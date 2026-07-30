@@ -58,7 +58,7 @@ import type { CommandClassDump, NodeDump } from "./lib/node/Dump.js";
 export type MockServerControllerOptions =
 	& Pick<
 		MockControllerOptions,
-		"ownNodeId" | "homeId" | "capabilities"
+		"ownNodeId" | "homeId" | "capabilities" | "securityKeys"
 	>
 	& {
 		behaviors?: MockControllerBehavior[];

@@ -1,0 +1,42 @@
+{
+  "name": "@zwave-js/quickjs",
+  "private": true,
+  "version": "15.26.0",
+  "description": "zwave-js: host bindings and boot script for txiki.js / QuickJS",
+  "keywords": [],
+  "type": "module",
+  "author": {
+    "name": "AlCalzone",
+    "email": "d.griesel@gmx.net"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zwave-js/zwave-js/issues"
+  },
+  "funding": {
+    "url": "https://github.com/sponsors/AlCalzone/"
+  },
+  "engines": {
+    "node": ">= 22.17"
+  },
+  "scripts": {
+    "bundle": "node .build.mjs",
+    "check": "tsgo -p tsconfig.json --pretty",
+    "clean": "del-cli build/ \"*.tsbuildinfo\""
+  },
+  "devDependencies": {
+    "@txikijs/types": "26.6.0",
+    "@typescript/native-preview": "7.0.0-dev.20260423.1",
+    "@zwave-js/core": "workspace:*",
+    "@zwave-js/serial": "workspace:*",
+    "@zwave-js/shared": "workspace:*",
+    "del-cli": "^7.0.0",
+    "esbuild": "^0.25.11",
+    "zwave-js": "workspace:*"
+  }
+}
