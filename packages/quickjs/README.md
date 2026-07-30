@@ -15,8 +15,8 @@ yarn workspace @zwave-js/quickjs bundle
 # Optional: type-check this package (it is not part of the TypeScript build)
 yarn workspace @zwave-js/quickjs check
 
-# Serve a mock controller and node, under Node.js
-yarn mock-server -c server_config.cjs
+# Serve a mock controller and a securely communicating node, under Node.js
+yarn mock-server -c test/secure_server_config.cjs
 
 # Then, with a txiki.js binary on your PATH or built locally
 tjs run packages/quickjs/build/boot.js
@@ -27,10 +27,10 @@ driver reaches them over TCP through the `connect` serial binding. It waits for 
 for every node's interview to complete, reports whether the device config index had to be
 regenerated, and destroys the driver.
 
-The repository's `server_config.cjs` defines an insecure node, so the interview does not exercise
-the WebCrypto-backed S2 primitives. To cover those, point `-c` at a config whose controller carries
-`securityKeys` and whose node declares a `securityClasses` capability, using the same keys as
-`boot.ts`.
+`test/secure_server_config.cjs` defines a node that communicates securely, so the interview runs the
+S2 nonce exchange and encrypts every command — that is what covers the WebCrypto-backed primitives.
+Its keys have to match the ones in `boot.ts`. Pointing `-c` at the repository's `server_config.cjs`
+also works, but its node is insecure and no crypto is exercised.
 
 Environment variables:
 
