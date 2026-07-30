@@ -187,7 +187,7 @@ async function findBotAnalysisComment(github, context) {
 		const queryResult = await github.graphql(queryComments, queryVars);
 		const comments = queryResult.repository.discussion.comments.nodes;
 
-		// Find the comment from zwave-js-bot that contains the AUTO_ANALYSIS_COMMENT_TAG
+		// Find the bot comment that contains the AUTO_ANALYSIS_COMMENT_TAG
 		const botComment = comments.find(
 			(c) =>
 				c.author.login === config.bot.login
