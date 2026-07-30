@@ -10,7 +10,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { logCase, reportResults } = require("./evalUtils.cjs");
-const { EMBEDDING_MODEL, embed } = require("./localEmbeddings.cjs");
+const { embed, indexMatchesModel } = require("./localEmbeddings.cjs");
 const { rankRelatedPosts } = require("./postsIndex.cjs");
 
 const NUM_RESULTS = 5;
@@ -24,12 +24,7 @@ async function main() {
 		process.exit(1);
 	}
 	const index = JSON.parse(await fs.readFile(indexFile, "utf8"));
-	if (index.model !== EMBEDDING_MODEL) {
-		console.error(
-			`Index was created with ${index.model}, but questions would be embedded with ${EMBEDDING_MODEL}`,
-		);
-		process.exit(1);
-	}
+	if (!indexMatchesModel(index, "posts index")) process.exit(1);
 	/** @type {{question: string, expectedPosts: {type: string, number: number}[]}[]} */
 	const allCases = JSON.parse(
 		await fs.readFile(
@@ -54,6 +49,10 @@ async function main() {
 		);
 		return false;
 	});
+
+	// A hit rate over zero cases is meaningless, and embed([]) would be
+	// a wasted/malformed request - fail loudly instead of silently
+	// "passing" an empty eval (see also reportResults()'s own guard)
 	if (cases.length === 0) {
 		throw new Error(
 			"No eval cases remain after filtering - cannot evaluate retrieval quality",

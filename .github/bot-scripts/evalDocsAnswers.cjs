@@ -11,7 +11,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { loadDocsIndex, retrieve } = require("./docsIndex.cjs");
 const { logCase, reportResults } = require("./evalUtils.cjs");
-const { EMBEDDING_MODEL, embed } = require("./localEmbeddings.cjs");
+const { embed, indexMatchesModel } = require("./localEmbeddings.cjs");
 
 const NUM_RESULTS = 5;
 // Allow a small number of misses before failing, retrieval is not exact
@@ -31,12 +31,7 @@ async function main() {
 		);
 		process.exit(1);
 	}
-	if (index.model !== EMBEDDING_MODEL) {
-		console.error(
-			`Index was created with ${index.model}, but questions would be embedded with ${EMBEDDING_MODEL}`,
-		);
-		process.exit(1);
-	}
+	if (!indexMatchesModel(index, "docs index")) process.exit(1);
 	/** @type {{question: string, expectedFiles: string[]}[]} */
 	const cases = JSON.parse(
 		await fs.readFile(
@@ -44,6 +39,10 @@ async function main() {
 			"utf8",
 		),
 	);
+
+	// A hit rate over zero cases is meaningless, and embed([]) would be
+	// a wasted/malformed request - fail loudly instead of silently
+	// "passing" an empty eval (see also reportResults()'s own guard)
 	if (cases.length === 0) {
 		throw new Error(
 			"No eval cases found in docsAnswersEvalCases.json - cannot evaluate retrieval quality",

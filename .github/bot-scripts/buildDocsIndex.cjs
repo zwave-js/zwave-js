@@ -13,13 +13,13 @@ const { EMBEDDING_MODEL, embedBatched } = require("./localEmbeddings.cjs");
 // Chunks shorter than this are unlikely to contain useful information
 const MIN_CHUNK_LENGTH = 50;
 // Sections longer than this are sub-split so nothing gets truncated away.
-// The embedding model truncates input at 256 tokens, and code blocks
-// tokenize at ~2-3 characters/token. At this limit 1.5% of the doc
-// chunks exceed the window slightly, all of them dense code blocks
-// whose tails BM25 still matches.
-const MAX_CHUNK_LENGTH = 700;
+// Sized for the 512-token window the tokenizer enforces: at 1200 chars the
+// median chunk measures 132 tokens and 0.6% exceed the window. The 256 word
+// pieces on the model card are sentence-transformers' inference default,
+// which this ONNX port does not ship.
+const MAX_CHUNK_LENGTH = 1200;
 // Overlap between sub-splits so answers spanning a split boundary aren't lost
-const CHUNK_OVERLAP = 150;
+const CHUNK_OVERLAP = 200;
 
 /**
  * Removes HTML tags, repeating to avoid leaving partial tags behind
@@ -111,6 +111,9 @@ function chunkMarkdown(file, content) {
 	const pushChunk = () => {
 		const text = currentLines.join("\n").trim();
 		if (text.length >= MIN_CHUNK_LENGTH) {
+			// Content before the first heading has an empty heading stack.
+			// Fall back to the chunk title so breadcrumbs (used as the link
+			// label when this chunk is cited) are never empty.
 			const breadcrumbs = headingStack.length > 0
 				? headingStack.map((h) => h.title)
 				: [currentTitle];
@@ -256,6 +259,7 @@ if (require.main === module) {
 	});
 }
 
+// Exported for unit tests, not used at runtime outside this module
 module.exports.chunkMarkdown = chunkMarkdown;
 module.exports.slugify = slugify;
 module.exports.cleanHeading = cleanHeading;

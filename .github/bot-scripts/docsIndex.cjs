@@ -7,10 +7,15 @@
 
 const fs = require("node:fs/promises");
 
-// Bump whenever the index shape or chunking logic changes incompatibly.
+// Bump whenever the index shape or chunking logic changes incompatibly,
+// so stale caches are rebuilt instead of being (mis)used as-is.
 const DOCS_INDEX_VERSION = 1;
 
-/** @param {any} chunk */
+/**
+ * Checks that a chunk has the shape produced by buildDocsIndex.cjs and
+ * expected by retrieve(), guarding against a corrupted or hand-edited index
+ * @param {any} chunk
+ */
 function isValidChunk(chunk) {
 	return (
 		!!chunk
@@ -20,7 +25,7 @@ function isValidChunk(chunk) {
 		&& typeof chunk.title === "string"
 		&& Array.isArray(chunk.breadcrumbs)
 		&& chunk.breadcrumbs.every(
-			(/** @type {any} */ breadcrumb) => typeof breadcrumb === "string",
+			(/** @type {any} */ b) => typeof b === "string",
 		)
 		&& typeof chunk.text === "string"
 		&& Array.isArray(chunk.embedding)
@@ -36,6 +41,9 @@ function isValidChunk(chunk) {
 }
 
 /**
+ * Loads and validates the docs embeddings index, returning undefined if
+ * it is missing, of an incompatible version, or malformed, so callers
+ * can degrade gracefully instead of retrieving against garbage data
  * @param {string | undefined} path
  * @returns {Promise<{version: number, model: string, createdAt: string, chunks: any[]} | undefined>}
  */
