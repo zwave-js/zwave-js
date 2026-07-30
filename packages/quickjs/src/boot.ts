@@ -32,7 +32,8 @@ async function main(): Promise<void> {
 			enabled: !!tjs.env.ZWAVEJS_LOGLEVEL,
 			level: tjs.env.ZWAVEJS_LOGLEVEL,
 		},
-		// Must match packages/quickjs/mock-config.mjs so S2 communication works
+		// Only used when the mock config defines a secure node, in which case the
+		// keys have to match the ones it configures
 		securityKeys: {
 			S0_Legacy: Bytes.from("0102030405060708090a0b0c0d0e0f10", "hex"),
 			S2_Unauthenticated: Bytes.from(
