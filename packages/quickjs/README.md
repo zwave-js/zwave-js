@@ -92,6 +92,10 @@ The bundle is ESM, not a flattened IIFE: a single top-level function scope excee
 required for CommonJS-only dependencies without an `exports` map (`json5`, `json-logic-js`,
 `dayjs`).
 
+The source map is emitted as `external`, without a `sourceMappingURL` comment. txiki.js loads and
+parses a referenced map eagerly at startup, which raises peak RSS from ~75 MB to ~180 MB — more than
+the rest of the driver costs. Pass the map to a decoder manually when a stack trace needs resolving.
+
 No Node builtin polyfills are needed. `packages/web`'s `nodeModulesPolyfillPlugin` entries
 (`path`, `module`, `url`, `dgram`, `os`, `buffer`, `events`) are not required here, and are no longer
 required by that package either.

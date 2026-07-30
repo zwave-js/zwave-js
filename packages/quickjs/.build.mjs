@@ -3,7 +3,9 @@ import esbuild from "esbuild";
 await esbuild.build({
 	entryPoints: ["src/boot.ts"],
 	bundle: true,
-	sourcemap: true,
+	// External rather than linked: txiki.js eagerly loads and parses a referenced source
+	// map at startup, which costs more memory than the entire rest of the driver
+	sourcemap: "external",
 	outdir: "build",
 	// quickjs-ng supports everything up to ES2023
 	target: "es2023",
