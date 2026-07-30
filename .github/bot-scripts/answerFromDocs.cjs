@@ -5,7 +5,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { readAgentOutputItem } = require("./agentOutput.cjs");
-const { authorizedUsers } = require("./users.cjs");
+const { config, excludedUsers } = require("./config.cjs");
 const { cosineSimilarity, loadDocsIndex, retrieve } = require(
 	"./docsIndex.cjs",
 );
@@ -24,13 +24,10 @@ const {
 	postFromContext,
 } = require("./utils.cjs");
 
-const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
+const DOCS_BASE_URL = config.docs.baseUrl;
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
 const DOCS_ANSWER_METADATA_TAG = "DOCS_ANSWER_METADATA";
 const DOCS_ANSWER_METADATA_VERSION = 1;
-
-// Users whose posts should never be answered automatically
-const EXCLUDED_USERS = [...authorizedUsers, "zwave-js-bot"];
 
 const MAX_RETRIEVED_CHUNKS = 5;
 // Below this best-match cosine similarity the post is off-topic and the
@@ -506,7 +503,7 @@ async function checkAnswerGates(param) {
 	const author = post.user?.login;
 	if (
 		!author
-		|| EXCLUDED_USERS.includes(author)
+		|| excludedUsers.includes(author)
 		|| post.user?.type === "Bot"
 	) {
 		console.log(`Skipping post by ${author}`);

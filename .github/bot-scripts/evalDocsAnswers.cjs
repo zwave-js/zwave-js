@@ -9,6 +9,7 @@
 
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { config } = require("./config.cjs");
 const { loadDocsIndex, retrieve } = require("./docsIndex.cjs");
 const { logCase, reportResults } = require("./evalUtils.cjs");
 const { embed, indexMatchesModel } = require("./localEmbeddings.cjs");
@@ -35,7 +36,7 @@ async function main() {
 	/** @type {{question: string, expectedFiles: string[]}[]} */
 	const cases = JSON.parse(
 		await fs.readFile(
-			path.join(__dirname, "docsAnswersEvalCases.json"),
+			path.join(__dirname, config.evalCases.docsAnswers),
 			"utf8",
 		),
 	);
@@ -43,7 +44,7 @@ async function main() {
 	// Fail loudly instead of silently "passing" an empty eval
 	if (cases.length === 0) {
 		throw new Error(
-			"No eval cases found in docsAnswersEvalCases.json - cannot evaluate retrieval quality",
+			`No eval cases found in ${config.evalCases.docsAnswers} - cannot evaluate retrieval quality`,
 		);
 	}
 

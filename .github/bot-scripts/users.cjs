@@ -1,6 +1,8 @@
 /** This module defines which users are authorized to give the bot commands */
 
-const authorizedUsers = ["AlCalzone", "robertsLando", "blhoward2"];
+const { config } = require("./config.cjs");
+
+const authorizedUsers = config.users.authorized;
 const reviewers = {
 	config: ["AlCalzone", "blhoward2"],
 };

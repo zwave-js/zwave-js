@@ -7,6 +7,7 @@
 
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
+const { config } = require("./config.cjs");
 const { cosineSimilarity } = require("./docsIndex.cjs");
 
 // v2: posts carry the modelKey field so a revision/dtype change rejects
@@ -14,10 +15,7 @@ const { cosineSimilarity } = require("./docsIndex.cjs");
 const POSTS_INDEX_VERSION = 2;
 
 // Discussion categories where questions are expected
-const QUESTION_CATEGORY_SLUGS = [
-	"request-support-investigate-issue",
-	"q-a",
-];
+const QUESTION_CATEGORY_SLUGS = config.docs.questionCategorySlugs;
 
 // Limit the post size to keep prompt and embedding within the token budget
 const MAX_QUESTION_LENGTH = 6000;
