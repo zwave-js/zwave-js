@@ -8,13 +8,13 @@ name: Check gh-aw workflows
 on:
   pull_request:
     paths:
-      - '.github/workflows/*.md'
+      - '.github/workflows/**/*.md'
       - '.github/workflows/*.lock.yml'
       - '.github/aw/**'
   push:
     branches: [master]
     paths:
-      - '.github/workflows/*.md'
+      - '.github/workflows/**/*.md'
       - '.github/workflows/*.lock.yml'
       - '.github/aw/**'
 
