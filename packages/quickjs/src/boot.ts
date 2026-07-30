@@ -4,7 +4,6 @@ import { Driver } from "zwave-js";
 import { db } from "./bindings/db.js";
 import { fs } from "./bindings/fs.js";
 import { serial } from "./bindings/serial.js";
-import "./setImmediate.js";
 
 const configDir = tjs.env.ZWAVEJS_CONFIG_DIR
 	?? `${import.meta.dirname}/../../config/config`;

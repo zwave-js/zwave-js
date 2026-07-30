@@ -55,8 +55,6 @@ stable `mtime`.
   written through to SQLite.
 - **`serial`** — the `connect` capability over `tjs.connect`, which yields TCP and ESPHome transports
   through `createSocketFactory` and `createESPHomeFactory`.
-- **`setImmediate`** — installed on `globalThis`, because `@zwave-js/waddle` schedules its task steps
-  with it and txiki.js has no native implementation.
 
 Crypto needs no binding: bundling with `--conditions=browser` selects
 `@zwave-js/core`'s WebCrypto-based primitives, and txiki.js's `crypto.subtle` covers AES-CBC,
