@@ -2,6 +2,7 @@
 
 /// <reference path="types.d.ts" />
 
+const { config } = require("./config.cjs");
 const {
 	AUTO_ANALYSIS_COMMENT_TAG,
 	AUTO_ANALYSIS_START_TAG,
@@ -189,7 +190,7 @@ async function findBotAnalysisComment(github, context) {
 		// Find the comment from zwave-js-bot that contains the AUTO_ANALYSIS_COMMENT_TAG
 		const botComment = comments.find(
 			(c) =>
-				c.author.login === "zwave-js-bot"
+				c.author.login === config.bot.login
 				&& c.body.includes(AUTO_ANALYSIS_COMMENT_TAG),
 		);
 
