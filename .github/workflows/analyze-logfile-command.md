@@ -54,6 +54,14 @@ safe-outputs:
     # Post as zwave-js-bot like the other bot comments
     github-token: ${{ secrets.BOT_TOKEN }}
 
+# The agent analyzes the downloaded logfile through the zwave-log-analyzer
+# MCP server and posts via the add-comment safe output - it needs neither
+# the GitHub MCP toolset nor read access to the repository through it
+tools:
+  github: false
+
+# Network stays open: the log-analyzer MCP server is fetched with npx at
+# startup, and the logfile is downloaded in a step above
 network: defaults
 
 timeout-minutes: 30
