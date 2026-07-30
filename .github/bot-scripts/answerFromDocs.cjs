@@ -4,11 +4,12 @@
 
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { readAgentOutputItem } = require("./agentOutput.cjs");
 const { authorizedUsers } = require("./users.cjs");
 const { cosineSimilarity, loadDocsIndex, retrieve } = require(
 	"./docsIndex.cjs",
 );
-const { EMBEDDING_MODEL, embed } = require("./localEmbeddings.cjs");
+const { embed, indexMatchesModel } = require("./localEmbeddings.cjs");
 const {
 	QUESTION_CATEGORY_SLUGS,
 	cleanQuestion,
@@ -43,6 +44,10 @@ const LINKS_CONFIDENCE = 40;
 // score 0.52-0.81 and unrelated posts stay <= 0.5
 const POSTS_MIN_SIMILARITY = 0.6;
 const MAX_RELATED_POSTS = 3;
+// The judge's answer is capped so a runaway completion cannot 422 the
+// comment API, while leaving room for comprehensive answers to large
+// topics
+const MAX_ANSWER_LENGTH = 15000;
 
 // Questions at least this similar to a previously downvoted answer
 // get a demoted response: full answer -> links only, links only -> silence
@@ -57,7 +62,10 @@ function chunkUrl(chunk) {
 }
 
 /**
- * Checks whether the bot already answered this post
+ * Checks whether the bot already answered this post. Paginates through
+ * all comments rather than only the first page/batch, since a busy
+ * post could otherwise have an existing answer missed, causing a
+ * duplicate to be posted.
  * @param {{github: Github, context: Context}} param0
  * @param {any} post
  * @param {boolean} isDiscussion
@@ -66,10 +74,10 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 	if (isDiscussion) {
 		// Discussions have no timeline API, so an answer inherited from a
 		// transfer cannot be told apart from ours
-		/** @type {string | null | undefined} */
+		/** @type {string | null} */
 		let cursor = null;
-		while (cursor !== undefined) {
-			const existing = await github.graphql(
+		for (;;) {
+			const data = await github.graphql(
 				`
 				query getComments($discussionId: ID!, $cursor: String) {
 					node(id: $discussionId) {
@@ -84,20 +92,18 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 				`,
 				{ discussionId: post.node_id, cursor },
 			);
-			const comments = existing.node?.comments;
+			const comments = data.node?.comments;
 			if (
 				comments?.nodes?.some(
-					(/** @type {any} */ comment) =>
-						comment.body.includes(DOCS_ANSWER_COMMENT_TAG),
+					(/** @type {any} */ c) =>
+						c.body.includes(DOCS_ANSWER_COMMENT_TAG),
 				)
 			) {
 				return true;
 			}
-			cursor = comments?.pageInfo?.hasNextPage
-				? comments.pageInfo.endCursor
-				: undefined;
+			if (!comments?.pageInfo?.hasNextPage) return false;
+			cursor = comments.pageInfo.endCursor;
 		}
-		return false;
 	} else {
 		const comments = await listCommentsSinceTransfer(
 			github,
@@ -109,12 +115,18 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 	}
 }
 
-/** @param {any} parsed */
+/**
+ * Validates the shape of the judge's verdict, which is untrusted model
+ * output: it can contain out-of-range numbers, wrong types, or omit
+ * fields entirely. Malformed output degrades to a safe "no answer"
+ * result instead of throwing.
+ * @param {any} parsed
+ * @returns {{confidence: number, answer: string | null, relatedExcerpts: number[]}}
+ */
 function validateJudgeResponse(parsed) {
 	const noAnswer = { confidence: 0, answer: null, relatedExcerpts: [] };
-	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-		return noAnswer;
-	}
+	if (!parsed || typeof parsed !== "object") return noAnswer;
+
 	const { confidence } = parsed;
 	if (
 		typeof confidence !== "number"
@@ -124,12 +136,17 @@ function validateJudgeResponse(parsed) {
 	) {
 		return noAnswer;
 	}
-	const answer = typeof parsed.answer === "string" ? parsed.answer : null;
+
+	const answer = typeof parsed.answer === "string"
+		? parsed.answer.slice(0, MAX_ANSWER_LENGTH)
+		: null;
+
 	const relatedExcerpts = Array.isArray(parsed.relatedExcerpts)
 		? parsed.relatedExcerpts.filter(
-			(/** @type {any} */ index) => Number.isInteger(index) && index >= 0,
+			(/** @type {any} */ i) => Number.isInteger(i) && i >= 0,
 		)
 		: [];
+
 	return { confidence, answer, relatedExcerpts };
 }
 
@@ -252,6 +269,9 @@ function renderDocsSection(result, chunks, allowAnswer) {
 
 	const links = deduped
 		.map((chunk) => {
+			// breadcrumbs is normally never empty (buildDocsIndex.cjs falls
+			// back to the chunk title for pre-heading content), but an older
+			// cached index could still have one - keep the label nonempty
 			const label = chunk.breadcrumbs.join(" → ") || chunk.title;
 			return `- [${label}](${chunkUrl(chunk)})`;
 		})
@@ -259,11 +279,15 @@ function renderDocsSection(result, chunks, allowAnswer) {
 
 	const sections = deduped.map((chunk) => `${chunk.file}#${chunk.anchor}`);
 	const single = deduped.length === 1;
+	// The model's answer is untrusted output - sanitize it before it is
+	// ever rendered in the comment. The doc links below are generated
+	// from our own index data and must NOT be sanitized the same way.
 	const sanitizedAnswer = result.answer
 		? sanitizeModelAnswer(result.answer)
 		: null;
 	if (
-		allowAnswer && result.confidence >= ANSWER_CONFIDENCE && sanitizedAnswer
+		allowAnswer && result.confidence >= ANSWER_CONFIDENCE
+		&& sanitizedAnswer
 	) {
 		return {
 			text: `${sanitizedAnswer}
@@ -394,6 +418,8 @@ ${postsSection}`;
 		style: docsSection?.style ?? "posts",
 		confidence: docsSection?.confidence ?? null,
 		sections: docsSection?.sections ?? [],
+		// Traces a posted comment back to the workflow run that judged it
+		run: Number(process.env.GITHUB_RUN_ID) || null,
 	};
 
 	body += `
@@ -433,6 +459,17 @@ ${DOCS_ANSWER_COMMENT_TAG}
 }
 
 /**
+ * Extracts the triggering post from the event payload
+ * @param {Context} context
+ * @returns {{post: any, isDiscussion: boolean}}
+ */
+function postFromContext(context) {
+	const isDiscussion = !!context.payload.discussion;
+	const post = context.payload.discussion ?? context.payload.issue;
+	return { post, isDiscussion };
+}
+
+/**
  * Applies all gates that decide whether a post gets a docs answer.
  * Returns undefined when the post should not be answered.
  * @param {{github: Github, context: Context}} param
@@ -441,8 +478,7 @@ ${DOCS_ANSWER_COMMENT_TAG}
 async function checkAnswerGates(param) {
 	const { context } = param;
 
-	const isDiscussion = !!context.payload.discussion;
-	const post = context.payload.discussion ?? context.payload.issue;
+	const { post, isDiscussion } = postFromContext(context);
 	if (!post) {
 		console.log("No issue or discussion in payload, skipping");
 		return;
@@ -529,16 +565,10 @@ async function prepareDocsAnswer(param) {
 	// The question is embedded locally. Similarities are only comparable
 	// within one model, so indexes built with a different model are skipped
 	// until the nightly rebuild replaces them.
-	if (docsIndex && docsIndex.model !== EMBEDDING_MODEL) {
-		console.log(
-			`Docs index model ${docsIndex.model} does not match ${EMBEDDING_MODEL}, ignoring it`,
-		);
+	if (docsIndex && !indexMatchesModel(docsIndex, "docs index")) {
 		docsIndex = undefined;
 	}
-	if (postsIndex && postsIndex.model !== EMBEDDING_MODEL) {
-		console.log(
-			`Posts index model ${postsIndex.model} does not match ${EMBEDDING_MODEL}, ignoring it`,
-		);
+	if (postsIndex && !indexMatchesModel(postsIndex, "posts index")) {
 		postsIndex = undefined;
 	}
 	if (!docsIndex && !postsIndex) return false;
@@ -561,7 +591,7 @@ async function prepareDocsAnswer(param) {
 		suppression = checkSuppression(
 			questionEmbedding,
 			feedback,
-			EMBEDDING_MODEL,
+			require("./localEmbeddings.cjs").EMBEDDING_MODEL,
 		);
 	}
 
@@ -578,9 +608,11 @@ async function prepareDocsAnswer(param) {
 
 	if (chunks) {
 		// Hand off to the agentic judge, which decides whether the docs
-		// answer the question. Posting moves to the judge's safe-output job,
-		// so the related-posts section is not lost when the judge rejects
-		// the docs answer.
+		// answer the question. Posting happens in the judge's safe-output
+		// job, so an explicit low-confidence verdict still delivers the
+		// related-posts section. Accepted tradeoff: when the judge crashes
+		// or never reports a verdict, no comment is posted at all - that
+		// is rare, and the safe-output job warns when it drops an answer.
 		const handoffPath = process.env.DOCS_HANDOFF_PATH;
 		if (!handoffPath) {
 			throw new Error(
@@ -595,6 +627,19 @@ async function prepareDocsAnswer(param) {
 				allowAnswer: suppression === "allow",
 				chunks,
 				postsSection: postsSection ?? null,
+			}),
+		);
+		// The judge only needs the question and the excerpt text - the
+		// full chunks carry embedding vectors that would be pure noise
+		// in its context
+		await fs.writeFile(
+			path.join(path.dirname(handoffPath), "judge-input.json"),
+			JSON.stringify({
+				question,
+				excerpts: chunks.map(({ breadcrumbs, text }) => ({
+					breadcrumbs,
+					text,
+				})),
 			}),
 		);
 		console.log(`Wrote handoff for the judge to ${handoffPath}`);
@@ -627,41 +672,47 @@ async function prepareDocsAnswer(param) {
  * @param {{github: Github, context: Context}} param
  */
 async function postDocsAnswer(param) {
-	const isDiscussion = !!param.context.payload.discussion;
-	const post = param.context.payload.discussion
-		?? param.context.payload.issue;
+	const { post, isDiscussion } = postFromContext(param.context);
 	if (!post) {
 		console.log("No issue or discussion in payload, skipping");
 		return;
 	}
 
-	const handoff = JSON.parse(
-		await fs.readFile(
-			/** @type {string} */ (process.env.DOCS_HANDOFF_PATH),
-			"utf8",
-		),
-	);
+	// The handoff crosses a job boundary as an artifact. Artifact writes
+	// need actions: write, which no job in this workflow has, but treat
+	// the content as data, not trusted structure.
+	/** @type {any} */
+	let handoff;
+	try {
+		handoff = JSON.parse(
+			await fs.readFile(
+				/** @type {string} */ (process.env.DOCS_HANDOFF_PATH),
+				"utf8",
+			),
+		);
+	} catch (e) {
+		console.log(`::warning::Could not read the handoff: ${e.message}`);
+		return;
+	}
+	if (!Array.isArray(handoff?.chunks)) {
+		console.log("::warning::Malformed handoff, skipping");
+		return;
+	}
 
-	const agentOutput = JSON.parse(
-		await fs.readFile(
-			/** @type {string} */ (process.env.GH_AW_AGENT_OUTPUT),
-			"utf8",
-		),
-	);
-	const verdict = (agentOutput.items ?? []).find(
-		(/** @type {any} */ item) => item.type === "post_docs_answer",
-	);
+	const verdict = await readAgentOutputItem("post_docs_answer");
 	if (!verdict) {
-		console.log("The judge did not produce a verdict, skipping");
+		console.log(
+			"::warning::The judge did not produce a verdict - no comment is posted",
+		);
 		return;
 	}
 	console.log("Judge verdict:", JSON.stringify(verdict));
 
-	// Tool arguments arrive as strings, normalize before validating
-	const relatedExcerpts = String(verdict.related_excerpts ?? "")
-		.split(",")
-		.map((s) => Number.parseInt(s.trim(), 10))
-		.filter((n) => Number.isInteger(n));
+	// Tool arguments arrive as strings, and the ids may be separated or
+	// wrapped in more than plain commas - extract all integers
+	const relatedExcerpts = [
+		...String(verdict.related_excerpts ?? "").matchAll(/\d+/g),
+	].map((m) => Number.parseInt(m[0], 10));
 	const result = validateJudgeResponse({
 		confidence: Number(verdict.confidence),
 		answer: typeof verdict.answer === "string" && verdict.answer.trim()
@@ -673,9 +724,11 @@ async function postDocsAnswer(param) {
 	const docsSection = renderDocsSection(
 		result,
 		handoff.chunks,
-		handoff.allowAnswer,
+		handoff.allowAnswer === true,
 	);
-	const postsSection = handoff.postsSection ?? undefined;
+	const postsSection = typeof handoff.postsSection === "string"
+		? handoff.postsSection
+		: undefined;
 	if (!docsSection && !postsSection) {
 		console.log("Nothing to answer or suggest, skipping");
 		return;
@@ -701,10 +754,15 @@ module.exports = {
 	prepareDocsAnswer,
 	postDocsAnswer,
 	alreadyAnswered,
+	checkAnswerGates,
+	composeAndPostAnswer,
 	validateJudgeResponse,
 	checkSuppression,
 	renderDocsSection,
+	buildRelatedPostsSection,
 	chunkUrl,
+	MIN_SIMILARITY,
+	POSTS_MIN_SIMILARITY,
 	DOCS_ANSWER_COMMENT_TAG,
 	DOCS_ANSWER_METADATA_TAG,
 	DOCS_ANSWER_METADATA_VERSION,
