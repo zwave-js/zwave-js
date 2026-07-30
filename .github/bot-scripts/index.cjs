@@ -23,11 +23,6 @@ module.exports = {
 	fixLintFeedback: (...args) => require("./fixLintFeedback.cjs")(...args),
 	getFixLintInfo: (...args) => require("./getFixLintInfo.cjs")(...args),
 	rebaseFeedback: (...args) => require("./rebaseFeedback.cjs")(...args),
-	renameCommitGetPRInfo: (...args) =>
-		require("./renameCommitGetPRInfo.cjs")(...args),
-	renameCommitCheck: (...args) => require("./renameCommitCheck.cjs")(...args),
-	renameCommitFeedback: (...args) =>
-		require("./renameCommitFeedback.cjs")(...args),
 	importConfigCreatePR: (...args) =>
 		require("./importConfigCreatePR.cjs")(...args),
 	shouldAutomerge: (...args) => require("./shouldAutomerge.cjs")(...args),
