@@ -40,9 +40,7 @@ async function main(param) {
 	// before getting that far.
 	const isInfraFailure = failed && !summary;
 
-	// Find an existing tracking issue, open or closed. Paginated since
-	// this repo can accumulate more than one page of github-actions[bot]
-	// issues over time (other scheduled workflows also open issues this way)
+	// Find an existing tracking issue, open or closed
 	const issues = await github.paginate(github.rest.issues.listForRepo, {
 		...context.repo,
 		creator: "github-actions[bot]",

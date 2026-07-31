@@ -1,18 +1,7 @@
 name: Bot index self-check
 
-# The answer bot only runs when someone opens an issue or discussion, and this
-# repository can go weeks between those - long enough for a broken index
-# pipeline to sit unnoticed, which is how the original outage went undetected.
-# This exercises the same restore path on a schedule instead.
-#
-# It is not a duplicate of the nightly embeddings workflows' own failure signal.
-# Those cover the *build*; this covers the *restore* - artifact expiry, the
-# provenance filter, token scope, and a schedule that stopped firing at all,
-# none of which a producer can detect about itself.
-#
-# A failed scheduled run notifies whoever last edited the cron (with Actions
-# notifications enabled), which is a weak channel - the tracking issue below is
-# the signal meant to be noticed.
+# Test the *restore* path of the index pipeline without relying on a user to
+# open a discussion or issue
 
 on:
   schedule:

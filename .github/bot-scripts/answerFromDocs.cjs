@@ -28,25 +28,20 @@ const DOCS_ANSWER_METADATA_VERSION = 1;
 const EXCLUDED_USERS = [...authorizedUsers, "zwave-js-bot"];
 
 const MAX_RETRIEVED_CHUNKS = 5;
-// If not even the best dense match reaches this cosine similarity,
-// the post is considered off-topic and the judge is not invoked.
-// The real relevance judgment is left to the judge. Calibrated for
-// all-MiniLM-L6-v2: on-topic eval questions score >= 0.44, posts
-// without any Z-Wave connection stay <= 0.3
+// Below this best-match cosine similarity the post is off-topic and the
+// judge is not invoked. Calibrated for all-MiniLM-L6-v2: on-topic eval
+// questions score >= 0.44, unrelated posts stay <= 0.3
 const MIN_SIMILARITY = 0.35;
 // Confidence thresholds for the different response styles
 const ANSWER_CONFIDENCE = 75;
 const LINKS_CONFIDENCE = 40;
 
-// A related post is only suggested above this cosine similarity.
-// A wrong suggestion is worse than a missed one, so keep this high.
-// Calibrated for all-MiniLM-L6-v2, where known-duplicate eval pairs
-// score 0.52-0.81 and unrelated posts stay <= 0.5
+// A related post is only suggested above this cosine similarity; kept high
+// because a wrong suggestion is worse than a missed one. Calibrated for
+// all-MiniLM-L6-v2: known-duplicate eval pairs score 0.52-0.81
 const POSTS_MIN_SIMILARITY = 0.6;
 const MAX_RELATED_POSTS = 3;
-// The judge's answer is capped so a runaway completion cannot 422 the
-// comment API, while leaving room for comprehensive answers to large
-// topics
+// Cap the answer so a runaway completion cannot 422 the comment API
 const MAX_ANSWER_LENGTH = 15000;
 
 // Questions at least this similar to a previously downvoted answer
@@ -62,10 +57,8 @@ function chunkUrl(chunk) {
 }
 
 /**
- * Checks whether the bot already answered this post. Paginates through
- * all comments rather than only the first page/batch, since a busy
- * post could otherwise have an existing answer missed, causing a
- * duplicate to be posted.
+ * Checks whether the bot already answered this post, paginating through
+ * all comments so a busy post cannot hide an existing answer.
  * @param {{github: Github, context: Context}} param0
  * @param {any} post
  * @param {boolean} isDiscussion
@@ -76,7 +69,7 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 		// transfer cannot be told apart from ours
 		/** @type {string | null} */
 		let cursor = null;
-		for (;;) {
+		while (true) {
 			const data = await github.graphql(
 				`
 				query getComments($discussionId: ID!, $cursor: String) {
@@ -607,11 +600,8 @@ async function prepareDocsAnswer(param) {
 
 	if (chunks) {
 		// Hand off to the agentic judge, which decides whether the docs
-		// answer the question. Posting happens in the judge's safe-output
-		// job, so an explicit low-confidence verdict still delivers the
-		// related-posts section. Accepted tradeoff: when the judge crashes
-		// or never reports a verdict, no comment is posted at all - that
-		// is rare, and the safe-output job warns when it drops an answer.
+		// answer the question. Posting moves to the judge's safe-output job,
+		// so the related-posts section survives a low-confidence verdict.
 		const handoffPath = process.env.DOCS_HANDOFF_PATH;
 		if (!handoffPath) {
 			throw new Error(
@@ -677,9 +667,8 @@ async function postDocsAnswer(param) {
 		return;
 	}
 
-	// The handoff crosses a job boundary as an artifact. Artifact writes
-	// need actions: write, which no job in this workflow has, but treat
-	// the content as data, not trusted structure.
+	// The handoff crosses a job boundary as an artifact, so treat its
+	// content as data, not trusted structure.
 	/** @type {any} */
 	let handoff;
 	try {

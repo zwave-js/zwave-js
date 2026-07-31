@@ -70,21 +70,16 @@ jobs:
         path: .posts-index
         key: posts-embeddings-v2-${{ github.run_id }}
 
-    # The cache entry is regularly evicted before the answer bot gets to use it
-    # (the repository cache is capped and evicted least-recently-used), so keep
-    # a durable copy it can fall back to.
+    # Use artifacts as a fallback for the actions cache getting evicted
     - name: Upload index artifact
       uses: actions/upload-artifact@v7
       with:
         name: posts-index
         path: .posts-index
         retention-days: 30
-        # .posts-index is a dot-directory and the glob skips hidden entries by
-        # default, search root included - without this the upload matches zero
-        # files and silently produces no artifact at all
+        # Include dot directories, including `.posts-index`
         include-hidden-files: true
-        # The answer bot depends on this artifact existing, so an empty upload
-        # is a failure, not a warning
+        # The answer bot depends on this artifact existing
         if-no-files-found: error
 
   evaluate:
@@ -107,9 +102,6 @@ jobs:
         key: posts-embeddings-v2-${{ github.run_id }}
 
     - name: Fail if posts index is missing
-      # build-index should always have just saved this exact run-scoped
-      # cache entry; surface the problem loudly instead of silently
-      # skipping the evaluation and reporting green
       if: steps.restore-index.outputs.cache-hit != 'true'
       run: |
         echo "::error::Posts index cache miss after build-index - cannot evaluate retrieval quality"

@@ -33,10 +33,8 @@ function logCase(hit, result) {
  * @param {number} minHitRate
  */
 async function reportResults(numResults, total, failures, minHitRate) {
-	// A hit rate over zero cases is meaningless (0/0 is NaN, which would
-	// silently compare as "not below the floor" and pass) - this always
-	// indicates a bug (e.g. an empty golden set, or every case filtered
-	// out), so it must fail loudly rather than report a false pass.
+	// Fail loudly instead of silently "passing" an empty eval: 0/0 is NaN,
+	// which would compare as "not below the floor" and pass
 	if (total === 0) {
 		throw new Error(
 			"No eval cases were evaluated - refusing to report a hit rate for zero cases",

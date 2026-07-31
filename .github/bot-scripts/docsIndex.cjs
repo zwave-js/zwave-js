@@ -42,8 +42,7 @@ function isValidChunk(chunk) {
 
 /**
  * Loads and validates the docs embeddings index, returning undefined if
- * it is missing, of an incompatible version, or malformed, so callers
- * can degrade gracefully instead of retrieving against garbage data
+ * it is missing, of an incompatible version, or malformed.
  * @param {string | undefined} path
  * @returns {Promise<{version: number, model: string, createdAt: string, chunks: any[]} | undefined>}
  */

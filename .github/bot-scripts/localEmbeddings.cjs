@@ -143,8 +143,7 @@ async function embedBatched(texts) {
 /**
  * Checks that an index was embedded with the pinned model, so its
  * similarities are comparable to freshly embedded questions. Emits a
- * workflow warning on mismatch, so a skipped index shows up in the run
- * annotations instead of only in the log.
+ * workflow warning on mismatch.
  * @param {{model?: string} | undefined} index
  * @param {string} description
  */

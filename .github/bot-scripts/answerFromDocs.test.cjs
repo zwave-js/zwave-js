@@ -20,8 +20,6 @@ import {
 	validateJudgeResponse,
 } from "./answerFromDocs.cjs";
 
-// Reached through `require`, because that is the instance the bot scripts
-// share among themselves - an `import` of a .cjs file yields a second one
 const { EMBEDDING_MODEL, setExtractor } = require("./localEmbeddings.cjs");
 
 // Substitute the pipeline so the answer path runs against the tiny test

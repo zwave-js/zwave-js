@@ -120,10 +120,6 @@ jobs:
         github-token: ${{ github.token }}
 
     - name: Warn if no posts index is available
-      # Only a warning: this append is best effort, the 04:30 rebuild picks the
-      # post up either way. answer-from-docs is where an outage is worth a red
-      # run - failing here too would just paint every community post red for
-      # something that self-corrects.
       if: steps.posts-index.outputs.found != 'true'
       run: |
         echo "::warning::The posts index could not be restored, from cache or from artifacts - this post will only be indexed by the next nightly rebuild"

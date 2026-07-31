@@ -40,9 +40,7 @@ async function main() {
 		),
 	);
 
-	// A hit rate over zero cases is meaningless, and embed([]) would be
-	// a wasted/malformed request - fail loudly instead of silently
-	// "passing" an empty eval (see also reportResults()'s own guard)
+	// Fail loudly instead of silently "passing" an empty eval
 	if (cases.length === 0) {
 		throw new Error(
 			"No eval cases found in docsAnswersEvalCases.json - cannot evaluate retrieval quality",
