@@ -66,8 +66,6 @@ on:
       with:
         docs: ${{ steps.docs-index.outputs.found }}
         posts: ${{ steps.posts-index.outputs.found }}
-        docs-stale: ${{ steps.docs-index.outputs.stale }}
-        posts-stale: ${{ steps.posts-index.outputs.stale }}
         docs-status: ${{ steps.docs-index.outputs.status }}
         posts-status: ${{ steps.posts-index.outputs.status }}
         docs-age-days: ${{ steps.docs-index.outputs.age-days }}

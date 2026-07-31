@@ -161,6 +161,17 @@ async function listCommentsSinceTransfer(github, owner, repo, issueNumber) {
 }
 
 /**
+ * Extracts the triggering post from the event payload
+ * @param {Context} context
+ * @returns {{post: any, isDiscussion: boolean}}
+ */
+function postFromContext(context) {
+	const isDiscussion = !!context.payload.discussion;
+	const post = context.payload.discussion ?? context.payload.issue;
+	return { post, isDiscussion };
+}
+
+/**
  * Extract logfile section from discussion body
  * @param {string} body - Discussion body
  * @returns {string} - Logfile section content
@@ -296,6 +307,7 @@ module.exports = {
 	wasPRModifiedAfterComment,
 	lastTransferTime,
 	listCommentsSinceTransfer,
+	postFromContext,
 	extractLogfileSection,
 	extractLogfileUrl,
 	extractLogfileContent,

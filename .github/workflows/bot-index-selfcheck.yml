@@ -52,8 +52,6 @@ jobs:
       with:
         docs: ${{ steps.docs-index.outputs.found }}
         posts: ${{ steps.posts-index.outputs.found }}
-        docs-stale: ${{ steps.docs-index.outputs.stale }}
-        posts-stale: ${{ steps.posts-index.outputs.stale }}
         docs-status: ${{ steps.docs-index.outputs.status }}
         posts-status: ${{ steps.posts-index.outputs.status }}
         docs-age-days: ${{ steps.docs-index.outputs.age-days }}
@@ -70,5 +68,5 @@ jobs:
     - name: Fail if either index is missing or stale
       if: always() && steps.status.outputs.healthy != 'true'
       run: |
-        echo "::error::Index restore unhealthy (docs: found=${{ steps.docs-index.outputs.found }} stale=${{ steps.docs-index.outputs.stale }}, posts: found=${{ steps.posts-index.outputs.found }} stale=${{ steps.posts-index.outputs.stale }})"
+        echo "::error::Index restore unhealthy (docs: found=${{ steps.docs-index.outputs.found }} status=${{ steps.docs-index.outputs.status }}, posts: found=${{ steps.posts-index.outputs.found }} status=${{ steps.posts-index.outputs.status }})"
         exit 1

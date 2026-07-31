@@ -8,10 +8,10 @@
 const { DOCS_INDEX_VERSION } = require("./docsIndex.cjs");
 const { POSTS_INDEX_VERSION } = require("./postsIndex.cjs");
 
-// The +2/+1 offsets carry over the cache generations that predate index
-// versioning, so a version bump moves the prefix forward by the same step.
-const DOCS_CACHE_PREFIX = `docs-embeddings-v${DOCS_INDEX_VERSION + 2}-`;
-const POSTS_CACHE_PREFIX = `posts-embeddings-v${POSTS_INDEX_VERSION + 1}-`;
+// The "-index-" key family is distinct from the retired "-embeddings-"
+// prefixes, so no version number can collide with an old cache generation
+const DOCS_CACHE_PREFIX = `docs-index-v${DOCS_INDEX_VERSION}-`;
+const POSTS_CACHE_PREFIX = `posts-index-v${POSTS_INDEX_VERSION}-`;
 
 module.exports = {
 	DOCS_CACHE_PREFIX,

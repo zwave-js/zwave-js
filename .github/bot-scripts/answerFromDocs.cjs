@@ -19,7 +19,10 @@ const {
 	rankRelatedPosts,
 } = require("./postsIndex.cjs");
 const { sanitizeModelAnswer } = require("./sanitizeAnswer.cjs");
-const { listCommentsSinceTransfer } = require("./utils.cjs");
+const {
+	listCommentsSinceTransfer,
+	postFromContext,
+} = require("./utils.cjs");
 
 const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
@@ -483,17 +486,6 @@ ${DOCS_ANSWER_COMMENT_TAG}
 		});
 	}
 	console.log("Posted docs answer comment");
-}
-
-/**
- * Extracts the triggering post from the event payload
- * @param {Context} context
- * @returns {{post: any, isDiscussion: boolean}}
- */
-function postFromContext(context) {
-	const isDiscussion = !!context.payload.discussion;
-	const post = context.payload.discussion ?? context.payload.issue;
-	return { post, isDiscussion };
 }
 
 /**

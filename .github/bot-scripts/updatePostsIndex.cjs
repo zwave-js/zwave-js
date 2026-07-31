@@ -14,6 +14,7 @@ const {
 	hashPost,
 	loadPostsIndex,
 } = require("./postsIndex.cjs");
+const { postFromContext } = require("./utils.cjs");
 
 /**
  * Expects the following environment variables:
@@ -25,8 +26,7 @@ const {
 async function main(param) {
 	const { context } = param;
 
-	const isDiscussion = !!context.payload.discussion;
-	const post = context.payload.discussion ?? context.payload.issue;
+	const { post, isDiscussion } = postFromContext(context);
 	if (!post) {
 		console.log("No issue or discussion in payload, skipping");
 		return false;

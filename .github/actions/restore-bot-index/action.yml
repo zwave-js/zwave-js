@@ -31,21 +31,22 @@ outputs:
   found:
     description: '"true" when the index is available afterwards'
     value: ${{ steps.report.outputs.found }}
-  stale:
-    description: >-
-      '"true" when the index is usable but the pipeline that publishes it looks
-      dead - no unexpired artifact at all, or the newest one is older than
-      max-age-days. Callers that are health checks should treat this as a
-      failure; callers serving a user should keep going.'
-    value: ${{ steps.report.outputs.stale }}
   age-days:
     description: 'Age of the newest artifact in whole days, or "" if unknown'
     value: ${{ steps.report.outputs.age-days }}
   status:
     description: >-
       '"fresh", "stale" (the API confirmed no recent publication) or "unknown"
-      (the artifacts API could not be queried), for accurate alarm wording.'
+      (the artifacts API could not be queried), for accurate alarm wording.
+      Anything other than "fresh" means the pipeline that publishes the index
+      looks dead - health checks should treat that as a failure; callers
+      serving a user should keep going.'
     value: ${{ steps.report.outputs.status }}
+  prefix:
+    description: >-
+      The version-derived cache key prefix for this index, for callers that
+      save an updated index back to the cache.
+    value: ${{ steps.cfg.outputs.prefix }}
   source:
     description: 'Where the index was restored from - "cache", "artifact" or "none"'
     value: ${{ steps.report.outputs.source }}

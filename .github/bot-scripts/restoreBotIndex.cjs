@@ -59,9 +59,10 @@ function selectArtifact(artifacts, branch, artifactName) {
  * either way.
  * The status distinguishes an outage the API confirmed ('stale') from one it
  * could not rule out ('unknown'), so the tracking issue can word it honestly;
- * both keep stale=true so a genuine outage still opens the issue.
+ * consumers treat anything other than 'fresh' as unhealthy, so a genuine
+ * outage still opens the issue.
  * @param {{artifactCreated?: string, searched: boolean, maxAgeDays: number, now?: number}} param
- * @returns {{status: "fresh" | "stale" | "unknown", stale: boolean, ageDays: string, warning?: string}}
+ * @returns {{status: "fresh" | "stale" | "unknown", ageDays: string, warning?: string}}
  */
 function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 	const nowMs = now ?? Date.now();
@@ -70,7 +71,6 @@ function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 		if (Number.isNaN(createdMs)) {
 			return {
 				status: "stale",
-				stale: true,
 				ageDays: "",
 				warning:
 					`Unreadable upload timestamp for the index artifact ('${artifactCreated}')`,
@@ -80,13 +80,12 @@ function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 		if (ageDays >= maxAgeDays) {
 			return {
 				status: "stale",
-				stale: true,
 				ageDays: String(ageDays),
 				warning:
 					`The newest index artifact is ${ageDays} day(s) old (limit ${maxAgeDays}) - the nightly rebuild may be failing`,
 			};
 		}
-		return { status: "fresh", stale: false, ageDays: String(ageDays) };
+		return { status: "fresh", ageDays: String(ageDays) };
 	}
 	if (searched) {
 		// The API answered and there is nothing published: an outage, not a gap
@@ -94,7 +93,6 @@ function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 		// artifact cannot produce an index at all.
 		return {
 			status: "stale",
-			stale: true,
 			ageDays: "",
 			warning:
 				"No unexpired index artifact exists - serving a cached index off a pipeline that has published nothing",
@@ -102,7 +100,6 @@ function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 	}
 	return {
 		status: "unknown",
-		stale: true,
 		ageDays: "",
 		warning:
 			"Could not reach the artifacts API - publication state unknown",
@@ -148,11 +145,14 @@ async function findIndexArtifact({ github, context, core }) {
 		return;
 	}
 
-	// Read the branch pin from an authority that does not vary by trigger:
-	// github.event.repository is absent from some payloads and github.ref_name
-	// is only usually the default branch - neither belongs in a trust boundary.
-	const { data: repoData } = await github.rest.repos.get({ owner, repo });
-	const branch = repoData.default_branch;
+	// The payload's repository object carries the default branch on the events
+	// that trigger us; the repos API covers payloads without it. github.ref_name
+	// is only usually the default branch, so it stays out of this trust boundary.
+	let branch = context.payload?.repository?.default_branch;
+	if (!branch) {
+		const { data: repoData } = await github.rest.repos.get({ owner, repo });
+		branch = repoData.default_branch;
+	}
 	if (!branch) {
 		core.setFailed(
 			"Could not resolve the default branch - refusing to select an artifact",
@@ -160,29 +160,24 @@ async function findIndexArtifact({ github, context, core }) {
 		return;
 	}
 
-	// Successful runs of the producing workflow on the default branch, newest
-	// first - a fork run never satisfies both branch and success here
-	const runs = await github.paginate(
-		github.rest.actions.listWorkflowRuns,
-		{
+	// Successful runs of the producing workflow on the default branch - a fork
+	// run never satisfies both branch and success here. The API returns runs
+	// newest-first, so one page of MAX_PRODUCER_RUNS is the whole scan window.
+	const { data: { workflow_runs: runs } } = await github.rest.actions
+		.listWorkflowRuns({
 			owner,
 			repo,
 			workflow_id: producerWorkflow,
 			branch,
 			status: "success",
-			per_page: 50,
-		},
-	);
+			per_page: MAX_PRODUCER_RUNS,
+		});
 
 	// Reaching here at all means the API answered, which is what separates
 	// "nothing published" (an outage) from "could not ask" (unknown)
 	core.setOutput("searched", "true");
 
-	runs.sort((a, b) =>
-		new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-	);
-
-	for (const run of runs.slice(0, MAX_PRODUCER_RUNS)) {
+	for (const run of runs) {
 		const artifacts = await github.paginate(
 			github.rest.actions.listWorkflowRunArtifacts,
 			{ owner, repo, run_id: run.id, per_page: 100 },
@@ -225,7 +220,6 @@ function reportRestore({ core }) {
 
 	if (!readIndexFileIsUsable(file)) {
 		core.setOutput("found", "false");
-		core.setOutput("stale", "true");
 		core.setOutput("status", "");
 		core.setOutput("source", "none");
 		core.setOutput("age-days", "");
@@ -247,7 +241,7 @@ function reportRestore({ core }) {
 			: `Using ${file} from the ${artifact} artifact of run ${artifactRun}`,
 	);
 
-	const { status, stale, ageDays, warning } = computeStaleness({
+	const { status, ageDays, warning } = computeStaleness({
 		artifactCreated,
 		searched,
 		maxAgeDays,
@@ -259,7 +253,6 @@ function reportRestore({ core }) {
 	}
 	if (warning) core.warning(warning);
 
-	core.setOutput("stale", stale ? "true" : "false");
 	core.setOutput("status", status);
 	core.setOutput("age-days", ageDays);
 }

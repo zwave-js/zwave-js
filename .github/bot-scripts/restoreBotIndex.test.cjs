@@ -112,7 +112,6 @@ describe("restoreBotIndex", () => {
 				maxAgeDays: 3,
 				now,
 			});
-			expect(r.stale).toBe(false);
 			expect(r.status).toBe("fresh");
 			expect(r.ageDays).toBe("1");
 			expect(r.warning).toBeUndefined();
@@ -125,7 +124,7 @@ describe("restoreBotIndex", () => {
 				maxAgeDays: 3,
 				now,
 			});
-			expect(r.stale).toBe(true);
+			expect(r.status).toBe("stale");
 			expect(r.ageDays).toBe("5");
 			expect(r.warning).toMatch(/nightly rebuild may be failing/);
 		});
@@ -137,7 +136,7 @@ describe("restoreBotIndex", () => {
 				maxAgeDays: 3,
 				now,
 			});
-			expect(r.stale).toBe(true);
+			expect(r.status).toBe("stale");
 			expect(r.ageDays).toBe("");
 			expect(r.warning).toMatch(/Unreadable upload timestamp/);
 		});
@@ -148,7 +147,6 @@ describe("restoreBotIndex", () => {
 				maxAgeDays: 3,
 				now,
 			});
-			expect(r.stale).toBe(true);
 			expect(r.status).toBe("stale");
 			expect(r.warning).toMatch(/published nothing/);
 		});
@@ -159,7 +157,6 @@ describe("restoreBotIndex", () => {
 				maxAgeDays: 3,
 				now,
 			});
-			expect(r.stale).toBe(true);
 			expect(r.status).toBe("unknown");
 			expect(r.warning).toMatch(/publication state unknown/);
 		});

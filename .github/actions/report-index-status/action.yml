@@ -19,14 +19,6 @@ inputs:
   posts:
     description: '"true" when the posts index was restored'
     required: true
-  docs-stale:
-    description: '"true" when the docs pipeline looks dead'
-    required: false
-    default: 'false'
-  posts-stale:
-    description: '"true" when the posts pipeline looks dead'
-    required: false
-    default: 'false'
   docs-status:
     description: '"fresh", "stale" or "unknown" for the docs index'
     required: false
@@ -77,8 +69,6 @@ runs:
       env:
         DOCS: ${{ inputs.docs }}
         POSTS: ${{ inputs.posts }}
-        DOCS_STALE: ${{ inputs.docs-stale }}
-        POSTS_STALE: ${{ inputs.posts-stale }}
         DOCS_STATUS: ${{ inputs.docs-status }}
         POSTS_STATUS: ${{ inputs.posts-status }}
         DOCS_AGE: ${{ inputs.docs-age-days }}
@@ -91,12 +81,12 @@ runs:
         # Word the problem line for one index, distinguishing a confirmed
         # outage from a state the API could not be queried for
         index_problem() {
-          local label="$1" found="$2" stale="$3" status="$4" age="$5"
+          local label="$1" found="$2" status="$3" age="$4"
           if [ "$found" != "true" ]; then
             printf -- '- The %s index could not be restored, from cache or from artifacts.\n' "$label"
             return
           fi
-          [ "$stale" = "true" ] || return
+          [ "$status" != "fresh" ] || return
           if [ "$status" = "unknown" ]; then
             printf -- '- The %s index'"'"'s publication state is unknown - the artifact API could not be queried.\n' "$label"
           elif [ -n "$age" ]; then
@@ -107,23 +97,21 @@ runs:
         }
 
         problems=""
-        problems="${problems}$(index_problem docs "$DOCS" "$DOCS_STALE" "$DOCS_STATUS" "$DOCS_AGE")"
-        problems="${problems}$(index_problem posts "$POSTS" "$POSTS_STALE" "$POSTS_STATUS" "$POSTS_AGE")"
+        problems="${problems}$(index_problem docs "$DOCS" "$DOCS_STATUS" "$DOCS_AGE")"
+        problems="${problems}$(index_problem posts "$POSTS" "$POSTS_STATUS" "$POSTS_AGE")"
 
         if [ -z "$problems" ]; then
           echo "healthy=true" >> "$GITHUB_OUTPUT"
-          echo "outcome=success" >> "$GITHUB_OUTPUT"
         else
           echo "healthy=false" >> "$GITHUB_OUTPUT"
-          echo "outcome=failure" >> "$GITHUB_OUTPUT"
+          {
+            echo 'body<<TRACKING_EOF'
+            printf 'The answer bot'"'"'s search index is degraded:\n\n'
+            printf '%s\n' "$problems"
+            printf '\nCheck that `docs-embeddings.yml` and `posts-embeddings.yml` are still succeeding and still uploading their `docs-index` / `posts-index` artifacts.\n'
+            echo 'TRACKING_EOF'
+          } >> "$GITHUB_OUTPUT"
         fi
-        {
-          echo 'body<<TRACKING_EOF'
-          printf 'The answer bot'"'"'s search index is degraded:\n\n'
-          printf '%s\n' "$problems"
-          printf '\nCheck that `docs-embeddings.yml` and `posts-embeddings.yml` are still succeeding and still uploading their `docs-index` / `posts-index` artifacts.\n'
-          echo 'TRACKING_EOF'
-        } >> "$GITHUB_OUTPUT"
 
         # A run-level summary a maintainer sees without expanding step logs
         restored() { [ "$1" = "true" ] && echo "yes" || echo "no"; }
@@ -145,7 +133,7 @@ runs:
       env:
         TRACKING_ISSUE_TITLE: '🚨 Answer bot search index is degraded'
         EVAL_NAME: answer bot index restore
-        EVAL_OUTCOME: ${{ steps.assess.outputs.outcome }}
+        EVAL_OUTCOME: ${{ steps.assess.outputs.healthy == 'true' && 'success' || 'failure' }}
         TRACKING_ISSUE_BODY: ${{ steps.assess.outputs.body }}
         TRACKING_ISSUE_QUIET: ${{ inputs.quiet }}
       with:

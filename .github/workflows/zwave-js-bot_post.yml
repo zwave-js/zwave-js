@@ -110,14 +110,6 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v7
 
-    # Save under the same version-derived prefix the producers use
-    - name: Compute the cache key
-      id: cachekey
-      run: |
-        set -euo pipefail
-        prefix=$(node -p "require('./.github/bot-scripts/indexCacheKeys.cjs').POSTS_CACHE_PREFIX")
-        echo "key=${prefix}${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
     # Restoring from the artifact and re-saving the cache below is also how an
     # evicted cache entry heals itself between two nightly rebuilds
     - name: Restore posts index
@@ -147,9 +139,10 @@ jobs:
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.updatePostsIndex({github, context});
 
+    # Save under the same version-derived prefix the producers use
     - name: Save posts index
       if: steps.update.outputs.result == 'true'
       uses: actions/cache/save@v6
       with:
         path: .posts-index
-        key: ${{ steps.cachekey.outputs.key }}
+        key: ${{ steps.posts-index.outputs.prefix }}${{ github.run_id }}
