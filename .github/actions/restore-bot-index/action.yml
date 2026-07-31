@@ -65,7 +65,14 @@ runs:
       uses: actions/cache/restore@v6
       with:
         path: .docs-index
-        key: docs-embeddings-v3-${{ hashFiles('docs/**/*.md', '.github/bot-scripts/buildDocsIndex.cjs', '.github/bot-scripts/docsIndex.cjs', '.github/bot-scripts/localEmbeddings.cjs', '.github/bot-scripts/package-lock.json') }}
+        key: >-
+          docs-embeddings-v3-${{ hashFiles(
+            'docs/**/*.md',
+            '.github/bot-scripts/buildDocsIndex.cjs',
+            '.github/bot-scripts/docsIndex.cjs',
+            '.github/bot-scripts/localEmbeddings.cjs',
+            '.github/bot-scripts/package-lock.json'
+          ) }}
         restore-keys: docs-embeddings-v3-
 
     - name: Restore the posts index from cache
@@ -82,77 +89,29 @@ runs:
     # entry that was saved while its build was still writing it
     - name: Check what the cache gave us
       id: cached
-      shell: bash
+      uses: actions/github-script@v9
       env:
         INDEX_FILE: ${{ steps.cfg.outputs.path }}/index.json
-      run: |
-        set -euo pipefail
-        # Parseable JSON is not enough: a truncated embeddings response or an
-        # interrupted write leaves a file that loads fine and retrieves nothing
-        if [ -s "$INDEX_FILE" ] \
-          && jq -e '((.chunks // .posts) | length) > 0' "$INDEX_FILE" >/dev/null 2>&1; then
-          echo "ok=true" >> "$GITHUB_OUTPUT"
-          echo "Cache hit: $INDEX_FILE"
-        else
-          echo "ok=false" >> "$GITHUB_OUTPUT"
-          echo "Cache did not yield a usable $INDEX_FILE"
-        fi
+      with:
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/restoreBotIndex.cjs`);
+          bot.checkCachedIndex({ core });
 
-    # Runs even on a cache hit, because its upload time is also the only honest
-    # "is the nightly still running" signal - see the staleness check below.
-    #
-    # Selecting on the artifact rather than on a run's conclusion matters: the
-    # index is produced by build-index alone, so an unrelated evaluate/feedback
-    # failure would otherwise hide a perfectly good artifact.
+    # Runs even on a cache hit: its upload time is also the only honest "is the
+    # nightly still running" signal, and selecting on the artifact rather than a
+    # run's conclusion keeps an unrelated evaluate/feedback failure from hiding a
+    # perfectly good artifact.
     - name: Find the newest usable index artifact
       id: artifact
-      # A lookup failure degrades to "no index" for the caller to handle, it
-      # must not take down a job triggered by someone opening an issue
       continue-on-error: true
-      shell: bash
+      uses: actions/github-script@v9
       env:
-        GH_TOKEN: ${{ inputs.github-token }}
-        GH_REPO: ${{ github.repository }}
         ARTIFACT: ${{ steps.cfg.outputs.artifact }}
-      run: |
-        set -euo pipefail
-
-        # The branch pin is half of the provenance guarantee, so read it from an
-        # authority that does not vary by trigger. `github.event.repository` is
-        # absent from some payloads and `github.ref_name` is only usually equal
-        # to the default branch - neither belongs in a trust boundary.
-        BRANCH=$(gh api "repos/$GH_REPO" --jq '.default_branch')
-        if [ -z "$BRANCH" ]; then
-          echo "::error::Could not resolve the default branch - refusing to select an artifact"
-          exit 1
-        fi
-
-        # Newest first. Pinned to a non-expired artifact built on the default
-        # branch of this repository itself, so neither a fork PR (whose
-        # head_branch can also be "master") nor an expired entry can be picked.
-        newest=$(BRANCH="$BRANCH" gh api "repos/$GH_REPO/actions/artifacts?name=$ARTIFACT&per_page=100" \
-          --jq '[ .artifacts[]
-                  | select(.expired == false)
-                  | select(.workflow_run.head_branch == env.BRANCH)
-                  | select(.workflow_run.head_repository_id == .workflow_run.repository_id) ]
-                | .[0] // empty')
-
-        # Reaching here at all means the API answered, which is what separates
-        # "nothing published" (an outage) from "could not ask" (unknown)
-        echo "searched=true" >> "$GITHUB_OUTPUT"
-
-        if [ -z "$newest" ]; then
-          echo "No unexpired $ARTIFACT artifact built on $BRANCH"
-          exit 0
-        fi
-
-        id=$(printf '%s' "$newest" | jq -r '.workflow_run.id // empty')
-        # created_at is nullable in the REST schema, and `jq -r` renders null as
-        # the string "null", which would sail past a -n test and blow up `date`
-        created=$(printf '%s' "$newest" | jq -r '.created_at // empty')
-        echo "Newest usable $ARTIFACT artifact comes from run ${id:-?}, uploaded ${created:-unknown}"
-        echo "id=$id" >> "$GITHUB_OUTPUT"
-        echo "created=$created" >> "$GITHUB_OUTPUT"
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/restoreBotIndex.cjs`);
+          await bot.findIndexArtifact({ github, context, core });
 
     # A partial cache restore must not be mixed with the artifact contents
     - name: Clear the target directory
@@ -175,7 +134,7 @@ runs:
 
     - name: Report what was restored
       id: report
-      shell: bash
+      uses: actions/github-script@v9
       env:
         INDEX_FILE: ${{ steps.cfg.outputs.path }}/index.json
         ARTIFACT: ${{ steps.cfg.outputs.artifact }}
@@ -186,63 +145,7 @@ runs:
         LOOKUP: ${{ steps.artifact.outcome }}
         DOWNLOAD: ${{ steps.download.outcome }}
         MAX_AGE_DAYS: ${{ inputs.max-age-days }}
-      run: |
-        set -euo pipefail
-
-        emit() { echo "$1=$2" >> "$GITHUB_OUTPUT"; }
-
-        if [ ! -s "$INDEX_FILE" ]; then
-          emit found false
-          emit stale true
-          emit age-days ""
-          # Name the leg that failed - an expired artifact and a misconfigured
-          # lookup look identical from the outside otherwise
-          echo "::warning::No $INDEX_FILE (cache: miss, artifact lookup: ${LOOKUP:-skipped}, download: ${DOWNLOAD:-skipped}, run: ${ARTIFACT_RUN:-none})"
-          exit 0
-        fi
-
-        emit found true
-        if [ "$FROM_CACHE" = "true" ]; then
-          echo "Using $INDEX_FILE from the Actions cache"
-        else
-          echo "Using $INDEX_FILE from the $ARTIFACT artifact of run $ARTIFACT_RUN"
-        fi
-
-        # Content age is informational only: docs-embeddings skips the rebuild
-        # on a cache hit, so an index whose docs have not changed in a month is
-        # perfectly healthy and its own createdAt says nothing about the
-        # pipeline. The upload time does - the nightly re-uploads either way.
-        built=$(jq -r '.createdAt // empty' "$INDEX_FILE")
-        [ -n "$built" ] && echo "Index content built $built"
-
-        # Staleness is what catches a dead nightly while the cache still serves
-        # a usable index - including the case where this very check keeps the
-        # cache entry warm past the 7-day eviction window and so never misses.
-        age=""
-        stale=false
-        if [ -n "$ARTIFACT_CREATED" ]; then
-          # A bad timestamp must not abort a step the bot's hot path depends on
-          if created_epoch=$(date -u -d "$ARTIFACT_CREATED" +%s 2>/dev/null); then
-            age=$(( ( $(date -u +%s) - created_epoch ) / 86400 ))
-            echo "Newest $ARTIFACT artifact uploaded $ARTIFACT_CREATED ($age day(s) ago)"
-            if [ "$age" -ge "$MAX_AGE_DAYS" ]; then
-              stale=true
-              echo "::warning::The newest $ARTIFACT artifact is $age day(s) old (limit $MAX_AGE_DAYS) - the nightly rebuild may be failing"
-            fi
-          else
-            stale=true
-            echo "::warning::Unreadable upload timestamp for $ARTIFACT ('$ARTIFACT_CREATED')"
-          fi
-        elif [ "$SEARCHED" = "true" ]; then
-          # The API answered and there is nothing published: an outage, not a
-          # gap in our knowledge. Only reachable on a cache hit, since a miss
-          # with no artifact cannot produce an index at all.
-          stale=true
-          echo "::warning::No unexpired $ARTIFACT artifact exists - serving a cached index off a pipeline that has published nothing"
-        else
-          stale=true
-          echo "::warning::Could not reach the artifacts API for $ARTIFACT (lookup: ${LOOKUP:-skipped}) - publication state unknown"
-        fi
-
-        emit stale "$stale"
-        emit age-days "$age"
+      with:
+        script: |
+          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/restoreBotIndex.cjs`);
+          bot.reportRestore({ core });
