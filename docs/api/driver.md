@@ -992,6 +992,11 @@ interface ZWaveOptions {
 		/**
 		 * Specifies which implementation is used for cryptographic operations.
 		 * Crypto is process-global, so all drivers in the same process share the last one that was set.
+		 *
+		 * `@zwave-js/core/bindings/crypto/node` uses `node:crypto`, and is the default on Node.js.
+		 * `@zwave-js/core/bindings/crypto/browser` uses WebCrypto, and is required on runtimes whose
+		 * `node:crypto` does not implement every cipher Z-Wave needs, such as Deno and Bun, which
+		 * both lack `aes-128-ccm`.
 		 */
 		crypto?: CryptoPrimitives;
 	};
