@@ -1,10 +1,10 @@
 // @ts-check
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
 	chunkMarkdown,
-	slugify,
 	cleanHeading,
+	slugify,
 	splitLongText,
 } from "./buildDocsIndex.cjs";
 
@@ -59,7 +59,10 @@ describe("buildDocsIndex", () => {
 			// The split should land on the paragraph break rather than
 			// mid-run of 'a's or 'b's
 			expect(parts[0].endsWith("a")).toBe(true);
-			expect(parts[parts.length - 1].startsWith("b") || parts[parts.length - 1].includes("b")).toBe(true);
+			expect(
+				parts[parts.length - 1].startsWith("b")
+					|| parts[parts.length - 1].includes("b"),
+			).toBe(true);
 		});
 	});
 

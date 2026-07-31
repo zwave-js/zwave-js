@@ -286,8 +286,7 @@ function renderDocsSection(result, chunks, allowAnswer) {
 		? sanitizeModelAnswer(result.answer)
 		: null;
 	if (
-		allowAnswer && result.confidence >= ANSWER_CONFIDENCE
-		&& sanitizedAnswer
+		allowAnswer && result.confidence >= ANSWER_CONFIDENCE && sanitizedAnswer
 	) {
 		return {
 			text: `${sanitizedAnswer}

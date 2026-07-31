@@ -69,7 +69,9 @@ describe("updateEvalTrackingIssue", () => {
 			process.env.EVAL_SUMMARY = "hit rate 40%";
 
 			const [created] = await run([]);
-			expect(created.body).toContain("did not meet the required hit rate");
+			expect(created.body).toContain(
+				"did not meet the required hit rate",
+			);
 			expect(created.body).toContain("hit rate 40%");
 		});
 	});

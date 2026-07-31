@@ -1,14 +1,14 @@
 // @ts-check
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	DOCS_INDEX_VERSION,
+	cosineSimilarity,
 	isValidChunk,
 	loadDocsIndex,
-	cosineSimilarity,
 	retrieve,
 } from "./docsIndex.cjs";
 

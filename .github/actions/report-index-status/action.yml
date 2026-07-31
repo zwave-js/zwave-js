@@ -80,7 +80,7 @@ runs:
       continue-on-error: true
       uses: actions/github-script@v9
       env:
-        TRACKING_ISSUE_TITLE: "🚨 Answer bot search index is degraded"
+        TRACKING_ISSUE_TITLE: '🚨 Answer bot search index is degraded'
         EVAL_NAME: answer bot index restore
         EVAL_OUTCOME: ${{ steps.assess.outputs.outcome }}
         TRACKING_ISSUE_BODY: ${{ steps.assess.outputs.body }}

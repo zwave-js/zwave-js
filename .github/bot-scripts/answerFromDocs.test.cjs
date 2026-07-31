@@ -1,23 +1,23 @@
 // @ts-check
 
-import { beforeEach, describe, it, expect } from "vitest";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import {
-	validateJudgeResponse,
-	checkSuppression,
-	alreadyAnswered,
-	checkAnswerGates,
-	composeAndPostAnswer,
-	renderDocsSection,
-	prepareDocsAnswer,
-	postDocsAnswer,
-	buildRelatedPostsSection,
-	POSTS_MIN_SIMILARITY,
 	DOCS_ANSWER_COMMENT_TAG,
 	DOCS_ANSWER_METADATA_TAG,
+	POSTS_MIN_SIMILARITY,
+	alreadyAnswered,
+	buildRelatedPostsSection,
+	checkAnswerGates,
+	checkSuppression,
+	composeAndPostAnswer,
+	postDocsAnswer,
+	prepareDocsAnswer,
+	renderDocsSection,
+	validateJudgeResponse,
 } from "./answerFromDocs.cjs";
 
 // Reached through `require`, because that is the instance the bot scripts
@@ -143,7 +143,9 @@ describe("answerFromDocs", () => {
 		const questionEmbedding = [1, 0, 0];
 
 		it("allows when there is no feedback cache", () => {
-			expect(checkSuppression(questionEmbedding, undefined, embeddingModel))
+			expect(
+				checkSuppression(questionEmbedding, undefined, embeddingModel),
+			)
 				.toBe("allow");
 		});
 
@@ -317,7 +319,11 @@ describe("answerFromDocs", () => {
 
 		it("renders a full answer at high confidence", () => {
 			const section = renderDocsSection(
-				{ confidence: 80, answer: "Do the thing.", relatedExcerpts: [0] },
+				{
+					confidence: 80,
+					answer: "Do the thing.",
+					relatedExcerpts: [0],
+				},
 				chunks,
 				true,
 			);
@@ -329,7 +335,11 @@ describe("answerFromDocs", () => {
 
 		it("degrades to links between the thresholds", () => {
 			const section = renderDocsSection(
-				{ confidence: 50, answer: "Do the thing.", relatedExcerpts: [0] },
+				{
+					confidence: 50,
+					answer: "Do the thing.",
+					relatedExcerpts: [0],
+				},
 				chunks,
 				true,
 			);
@@ -339,7 +349,11 @@ describe("answerFromDocs", () => {
 
 		it("degrades to links when answers are suppressed", () => {
 			const section = renderDocsSection(
-				{ confidence: 95, answer: "Do the thing.", relatedExcerpts: [0] },
+				{
+					confidence: 95,
+					answer: "Do the thing.",
+					relatedExcerpts: [0],
+				},
 				chunks,
 				false,
 			);

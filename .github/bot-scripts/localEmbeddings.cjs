@@ -55,9 +55,7 @@ async function createExtractor() {
 			console.log(
 				`::warning::Loading the embedding model failed (attempt ${attempt}/3): ${e.message}`,
 			);
-			await new Promise((resolve) =>
-				setTimeout(resolve, attempt * 5000)
-			);
+			await new Promise((resolve) => setTimeout(resolve, attempt * 5000));
 		}
 	}
 	throw new Error(
