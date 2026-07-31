@@ -1,5 +1,5 @@
 import { digest } from "@zwave-js/core";
-import { Bytes, formatId } from "@zwave-js/shared";
+import { Bytes, type RuntimeInfo, formatId } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { Driver } from "../driver/Driver.js";
 
@@ -10,8 +10,12 @@ export interface AppInfo {
 	driverVersion: string;
 	applicationName: string;
 	applicationVersion: string;
+	/** The Node.js version the runtime reports, which Deno and Bun fabricate */
 	nodeVersion: string;
-	os: NodeJS.Platform;
+	/** Which JavaScript runtime this actually is, and its own version */
+	runtime: RuntimeInfo["name"];
+	runtimeVersion: string | undefined;
+	os: string;
 	arch: string;
 }
 
