@@ -15,6 +15,7 @@ on:
     paths:
       - '.github/bot-scripts/buildPostsIndex.cjs'
       - '.github/bot-scripts/postsIndex.cjs'
+      - '.github/bot-scripts/indexCacheKeys.cjs'
       - '.github/bot-scripts/localEmbeddings.cjs'
       - '.github/bot-scripts/package.json'
       - '.github/bot-scripts/package-lock.json'
@@ -35,10 +36,22 @@ jobs:
   build-index:
     runs-on: [ubuntu-latest]
     timeout-minutes: 20
+    outputs:
+      cache-key: ${{ steps.cachekey.outputs.key }}
 
     steps:
     - name: Checkout master branch
       uses: actions/checkout@v7
+
+    # The version-derived prefix lives in indexCacheKeys.cjs; the run-scoped
+    # save key is computed once here and reused by the evaluate job
+    - name: Compute the cache key
+      id: cachekey
+      run: |
+        set -euo pipefail
+        prefix=$(node -p "require('./.github/bot-scripts/indexCacheKeys.cjs').POSTS_CACHE_PREFIX")
+        echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+        echo "key=${prefix}${{ github.run_id }}" >> "$GITHUB_OUTPUT"
 
     # Cache keys are immutable, so the rolling index is always saved under
     # a fresh run-scoped key and restored via the newest prefix match.
@@ -50,9 +63,9 @@ jobs:
         path: .posts-index
         # There is no exact key to match, the newest index is picked
         # via the prefix
-        key: posts-embeddings-v2-
+        key: ${{ steps.cachekey.outputs.prefix }}
         restore-keys: |
-          posts-embeddings-v2-
+          ${{ steps.cachekey.outputs.prefix }}
 
     - name: Setup embeddings
       uses: ./.github/actions/setup-bot-embeddings
@@ -68,7 +81,7 @@ jobs:
       uses: actions/cache/save@v6
       with:
         path: .posts-index
-        key: posts-embeddings-v2-${{ github.run_id }}
+        key: ${{ steps.cachekey.outputs.key }}
 
     # Use artifacts as a fallback for the actions cache getting evicted
     - name: Upload index artifact
@@ -99,7 +112,7 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: .posts-index
-        key: posts-embeddings-v2-${{ github.run_id }}
+        key: ${{ needs.build-index.outputs.cache-key }}
 
     - name: Fail if posts index is missing
       if: steps.restore-index.outputs.cache-hit != 'true'

@@ -9,7 +9,9 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const { cosineSimilarity } = require("./docsIndex.cjs");
 
-const POSTS_INDEX_VERSION = 1;
+// v2: posts carry the modelKey field so a revision/dtype change rejects
+// the old index instead of mixing vectors from two model variants.
+const POSTS_INDEX_VERSION = 2;
 
 // Discussion categories where questions are expected
 const QUESTION_CATEGORY_SLUGS = [

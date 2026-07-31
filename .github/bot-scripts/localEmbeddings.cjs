@@ -36,9 +36,26 @@ function defaultModelCacheDir() {
 /** @type {Promise<any> | undefined} */
 let extractorPromise;
 
+/** @type {(ms: number) => Promise<void>} */
+let sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** @type {((task: string, model: string, options: any) => Promise<any>) | undefined} */
+let pipelineOverride;
+
+/**
+ * Substitutes the model loader and the backoff sleep so tests exercise the
+ * retry loop without downloading the model or waiting on real timers.
+ * @param {{pipeline?: typeof pipelineOverride, sleep?: (ms: number) => Promise<void>}} hooks
+ */
+function setRetryHooks(hooks) {
+	pipelineOverride = hooks.pipeline;
+	if (hooks.sleep) sleep = hooks.sleep;
+}
+
 async function createExtractor() {
 	// The package is ESM-only, hence the dynamic import
-	const { pipeline } = await import("@huggingface/transformers");
+	const pipeline = pipelineOverride
+		?? (await import("@huggingface/transformers")).pipeline;
 	// A cache miss downloads the weights from huggingface.co. Retry with
 	// backoff so a hiccup there does not fail a user-triggered run.
 	let lastError;
@@ -55,7 +72,8 @@ async function createExtractor() {
 			console.log(
 				`::warning::Loading the embedding model failed (attempt ${attempt}/3): ${e.message}`,
 			);
-			await new Promise((resolve) => setTimeout(resolve, attempt * 5000));
+			// No point sleeping after the last attempt - the throw follows
+			if (attempt < 3) await sleep(attempt * 5000);
 		}
 	}
 	throw new Error(
@@ -144,14 +162,18 @@ async function embedBatched(texts) {
  * Checks that an index was embedded with the pinned model, so its
  * similarities are comparable to freshly embedded questions. Emits a
  * workflow warning on mismatch.
- * @param {{model?: string} | undefined} index
+ * @param {{model?: string, modelKey?: string} | undefined} index
  * @param {string} description
  */
 function indexMatchesModel(index, description) {
 	if (!index) return false;
-	if (index.model === EMBEDDING_MODEL) return true;
+	// Compare the full model@revision@dtype identity, not just the name, so a
+	// revision or dtype change is not silently mixed into reused embeddings
+	if (index.modelKey === MODEL_CACHE_KEY) return true;
 	console.log(
-		`::warning::The ${description} was created with ${index.model}, not ${EMBEDDING_MODEL} - ignoring it until it is rebuilt`,
+		`::warning::The ${description} was created with ${
+			index.model ?? "an unknown model"
+		}, not ${EMBEDDING_MODEL} - ignoring it until it is rebuilt`,
 	);
 	return false;
 }
@@ -161,6 +183,9 @@ module.exports = {
 	embedBatched,
 	indexMatchesModel,
 	setExtractor,
+	setRetryHooks,
 	EMBEDDING_MODEL,
+	MODEL_REVISION,
+	MODEL_DTYPE,
 	MODEL_CACHE_KEY,
 };

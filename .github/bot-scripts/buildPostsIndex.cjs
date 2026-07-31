@@ -11,7 +11,9 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { ghGraphql, ghPaginated } = require("./githubApi.cjs");
-const { EMBEDDING_MODEL, embedBatched } = require("./localEmbeddings.cjs");
+const { EMBEDDING_MODEL, MODEL_CACHE_KEY, embedBatched } = require(
+	"./localEmbeddings.cjs",
+);
 const {
 	POSTS_INDEX_VERSION,
 	QUESTION_CATEGORY_SLUGS,
@@ -170,7 +172,7 @@ async function main() {
 		const previous = JSON.parse(await fs.readFile(outputFile, "utf8"));
 		if (
 			previous.version === POSTS_INDEX_VERSION
-			&& previous.model === EMBEDDING_MODEL
+			&& previous.modelKey === MODEL_CACHE_KEY
 		) {
 			for (const post of previous.posts) {
 				previousEmbeddings.set(post.hash, post.embedding);
@@ -210,6 +212,7 @@ async function main() {
 	const index = {
 		version: POSTS_INDEX_VERSION,
 		model: EMBEDDING_MODEL,
+		modelKey: MODEL_CACHE_KEY,
 		createdAt: new Date().toISOString(),
 		posts: allPosts.map(({ embeddedText, ...post }) => post),
 	};

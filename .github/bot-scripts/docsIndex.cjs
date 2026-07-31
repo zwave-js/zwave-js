@@ -9,7 +9,9 @@ const fs = require("node:fs/promises");
 
 // Bump whenever the index shape or chunking logic changes incompatibly,
 // so stale caches are rebuilt instead of being (mis)used as-is.
-const DOCS_INDEX_VERSION = 1;
+// v2: chunk retune (700->1200 chars, overlap 150->200) plus the modelKey
+// field, so old-shape indexes are rejected rather than served.
+const DOCS_INDEX_VERSION = 2;
 
 /**
  * Checks that a chunk has the shape produced by buildDocsIndex.cjs and

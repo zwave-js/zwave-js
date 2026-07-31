@@ -8,7 +8,9 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { DOCS_INDEX_VERSION } = require("./docsIndex.cjs");
-const { EMBEDDING_MODEL, embedBatched } = require("./localEmbeddings.cjs");
+const { EMBEDDING_MODEL, MODEL_CACHE_KEY, embedBatched } = require(
+	"./localEmbeddings.cjs",
+);
 
 // Chunks shorter than this are unlikely to contain useful information
 const MIN_CHUNK_LENGTH = 50;
@@ -194,7 +196,7 @@ async function main() {
 		const previous = JSON.parse(await fs.readFile(outputFile, "utf8"));
 		if (
 			previous.version === DOCS_INDEX_VERSION
-			&& previous.model === EMBEDDING_MODEL
+			&& previous.modelKey === MODEL_CACHE_KEY
 		) {
 			for (const chunk of previous.chunks) {
 				previousEmbeddings.set(chunk.hash, chunk.embedding);
@@ -244,6 +246,7 @@ async function main() {
 	const index = {
 		version: DOCS_INDEX_VERSION,
 		model: EMBEDDING_MODEL,
+		modelKey: MODEL_CACHE_KEY,
 		createdAt: new Date().toISOString(),
 		chunks: allChunks.map(({ embeddedText, ...chunk }) => chunk),
 	};

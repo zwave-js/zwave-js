@@ -2,7 +2,14 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-const { embed, embedBatched, setExtractor } = require("./localEmbeddings.cjs");
+const {
+	MODEL_CACHE_KEY,
+	embed,
+	embedBatched,
+	indexMatchesModel,
+	setExtractor,
+	setRetryHooks,
+} = require("./localEmbeddings.cjs");
 
 /** @type {string[][]} */
 const extractorCalls = [];
@@ -68,5 +75,89 @@ describe("localEmbeddings", () => {
 	it("rounds index embeddings to 5 decimals", async () => {
 		const [vector] = await embedBatched(["ab"]);
 		expect(vector).toEqual([2, 0.12346, 0]);
+	});
+
+	describe("indexMatchesModel", () => {
+		it("accepts an index stamped with the current model identity", () => {
+			expect(
+				indexMatchesModel({ modelKey: MODEL_CACHE_KEY }, "docs index"),
+			).toBe(true);
+		});
+
+		it("rejects a missing index", () => {
+			expect(indexMatchesModel(undefined, "docs index")).toBe(false);
+		});
+
+		it("rejects a mismatched model, revision or dtype", () => {
+			// A different name, revision or dtype all change MODEL_CACHE_KEY
+			for (
+				const key of [
+					"Xenova_other@rev@q8",
+					`${MODEL_CACHE_KEY}-different-revision`,
+					MODEL_CACHE_KEY.replace("q8", "fp32"),
+				]
+			) {
+				expect(
+					indexMatchesModel(
+						{ model: "old", modelKey: key },
+						"docs index",
+					),
+				).toBe(false);
+			}
+		});
+
+		it("rejects a legacy index that predates the modelKey field", () => {
+			expect(
+				indexMatchesModel(
+					{ model: "Xenova/all-MiniLM-L6-v2" },
+					"docs index",
+				),
+			).toBe(false);
+		});
+	});
+
+	describe("createExtractor retry", () => {
+		it("retries with backoff, skipping the sleep after the final attempt", async () => {
+			setExtractor(undefined);
+			/** @type {number[]} */
+			const sleeps = [];
+			let attempts = 0;
+			setRetryHooks({
+				sleep: async (/** @type {number} */ ms) => {
+					sleeps.push(ms);
+				},
+				pipeline: async () => {
+					attempts++;
+					if (attempts < 3) throw new Error("boom");
+					return async (/** @type {string[]} */ batch) => ({
+						dims: [batch.length, 1],
+						tolist: () => batch.map(() => [1]),
+					});
+				},
+			});
+			const [vector] = await embed(["x"]);
+			expect(vector).toEqual([1]);
+			expect(attempts).toBe(3);
+			// attempt*5000 for attempts 1 and 2, none after the third
+			expect(sleeps).toEqual([5000, 10000]);
+		});
+
+		it("throws a wrapped error after exhausting retries, sleeping only twice", async () => {
+			setExtractor(undefined);
+			/** @type {number[]} */
+			const sleeps = [];
+			setRetryHooks({
+				sleep: async (/** @type {number} */ ms) => {
+					sleeps.push(ms);
+				},
+				pipeline: async () => {
+					throw new Error("always down");
+				},
+			});
+			await expect(embed(["x"])).rejects.toThrow(
+				/Could not load the embedding model/,
+			);
+			expect(sleeps.length).toBe(2);
+		});
 	});
 });
