@@ -2741,6 +2741,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@txikijs/types@npm:26.6.0":
+  version: 26.6.0
+  resolution: "@txikijs/types@npm:26.6.0"
+  checksum: 10/6d0b022d3dff14c7791db931958c149f0a951fba78f42500eb8043138debc68528c1ccf112e193c749409548cc1ac5b7bc4545ab62c43ac1e41a36b9c9762c8d
+  languageName: node
+  linkType: hard
+
 "@tybys/wasm-util@npm:^0.10.1":
   version: 0.10.1
   resolution: "@tybys/wasm-util@npm:0.10.1"
@@ -3574,6 +3581,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@zwave-js/quickjs@workspace:packages/quickjs":
+  version: 0.0.0-use.local
+  resolution: "@zwave-js/quickjs@workspace:packages/quickjs"
+  dependencies:
+    "@txikijs/types": "npm:26.6.0"
+    "@typescript/native-preview": "npm:7.0.0-dev.20260423.1"
+    "@zwave-js/core": "workspace:*"
+    "@zwave-js/serial": "workspace:*"
+    "@zwave-js/shared": "workspace:*"
+    del-cli: "npm:^7.0.0"
+    esbuild: "npm:^0.25.11"
+    zwave-js: "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@zwave-js/repo@workspace:.":
   version: 0.0.0-use.local
   resolution: "@zwave-js/repo@workspace:."
@@ -3731,12 +3753,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@zwave-js/waddle@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@zwave-js/waddle@npm:1.2.1"
+"@zwave-js/waddle@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "@zwave-js/waddle@npm:1.2.3"
   dependencies:
     alcalzone-shared: "npm:^5.0.0"
-  checksum: 10/922ae9eb03ff6b501b8b1cb6c93ef713c55d8413a82148d89c6f6fd368832c265565aa1e1639cb290af770387c8a6841ef86e89fb6fb384f1aea78ad983c8485
+  checksum: 10/41f2179477a920ed5a1cef52573f927d1741314ff2c82a4ee80c8b6bc8a2172d0be0d042bdccbaf9a2f5420f677b1faad91e0ac9604c3bf7203f621a7cf54fc9
   languageName: node
   linkType: hard
 
@@ -10611,7 +10633,7 @@ __metadata:
     "@zwave-js/serial": "workspace:*"
     "@zwave-js/shared": "workspace:*"
     "@zwave-js/testing": "workspace:*"
-    "@zwave-js/waddle": "npm:^1.2.1"
+    "@zwave-js/waddle": "npm:^1.2.3"
     alcalzone-shared: "npm:^5.0.0"
     ansi-colors: "npm:^4.1.3"
     del-cli: "npm:^7.0.0"
