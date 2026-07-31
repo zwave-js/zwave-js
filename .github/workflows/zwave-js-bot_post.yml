@@ -20,18 +20,18 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v7
 
-    - name: Enable Corepack
-      run: corepack enable
-
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
         node-version: 22
-        cache: 'yarn'
+        cache: 'npm'
+        cache-dependency-path: .github/bot-scripts/package-lock.json
 
-    # Provides fflate for decompressing zipped logfile uploads
-    - name: Install dependencies
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
+    # The bot scripts declare fflate (used to decompress zipped logfile
+    # uploads); --ignore-scripts skips onnxruntime-node's GPU-provider download
+    - name: Install bot-script dependencies
+      working-directory: .github/bot-scripts
+      run: npm ci --ignore-scripts
 
     - name: Extract log file from issue body
       uses: actions/github-script@v9
@@ -110,6 +110,14 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v7
 
+    # Save under the same version-derived prefix the producers use
+    - name: Compute the cache key
+      id: cachekey
+      run: |
+        set -euo pipefail
+        prefix=$(node -p "require('./.github/bot-scripts/indexCacheKeys.cjs').POSTS_CACHE_PREFIX")
+        echo "key=${prefix}${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+
     # Restoring from the artifact and re-saving the cache below is also how an
     # evicted cache entry heals itself between two nightly rebuilds
     - name: Restore posts index
@@ -144,4 +152,4 @@ jobs:
       uses: actions/cache/save@v6
       with:
         path: .posts-index
-        key: posts-embeddings-v2-${{ github.run_id }}
+        key: ${{ steps.cachekey.outputs.key }}

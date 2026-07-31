@@ -6,7 +6,8 @@
   },
   "description": "Runtime dependencies for the bot scripts, installed separately (npm ci --ignore-scripts in this directory) so the bot jobs don't pay for a full application install",
   "dependencies": {
-    "@huggingface/transformers": "^4.2.0"
+    "@huggingface/transformers": "^4.2.0",
+    "fflate": "^0.8.3"
   },
   "overrides": {
     "adm-zip": "^0.6.0",

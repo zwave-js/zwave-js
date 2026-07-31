@@ -11,19 +11,23 @@ on:
   steps:
     - name: Checkout repository
       uses: actions/checkout@v6
-
-    - name: Enable Corepack
-      run: corepack enable
+      with:
+        # This pre-activation job runs third-party packages; don't persist the
+        # workflow token in .git for them to read
+        persist-credentials: false
 
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
         node-version: 22
-        cache: 'yarn'
+        cache: 'npm'
+        cache-dependency-path: .github/bot-scripts/package-lock.json
 
-    # Provides fflate for decompressing zipped logfile uploads
-    - name: Install dependencies
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
+    # The bot scripts declare fflate (used to decompress zipped logfile
+    # uploads); --ignore-scripts skips onnxruntime-node's GPU-provider download
+    - name: Install bot-script dependencies
+      working-directory: .github/bot-scripts
+      run: npm ci --ignore-scripts
 
     - name: Extract log file from discussion body
       uses: actions/github-script@v9
