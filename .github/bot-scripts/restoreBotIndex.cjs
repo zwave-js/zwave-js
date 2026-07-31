@@ -21,8 +21,6 @@ function indexHasContent(parsed) {
  */
 function readIndexFileIsUsable(file) {
 	try {
-		const stat = fs.statSync(file);
-		if (!stat.isFile() || stat.size === 0) return false;
 		return indexHasContent(JSON.parse(fs.readFileSync(file, "utf8")));
 	} catch {
 		return false;
