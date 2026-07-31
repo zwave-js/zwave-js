@@ -43,6 +43,8 @@ class SQLiteCache<V> implements Database<V> {
 		`);
 
 		this.#db = db;
+		// tjs:sqlite matches named parameters including their prefix, so bindings must be
+		// passed as `:key` rather than `key`
 		this.#insert = db.prepare(
 			`INSERT INTO entries (key, value, timestamp) VALUES (:key, :value, :timestamp)
 			 ON CONFLICT(key) DO UPDATE SET value = excluded.value, timestamp = excluded.timestamp`,
