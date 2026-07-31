@@ -6,17 +6,16 @@
 const semver = require("semver");
 const { config } = require("./config.cjs");
 
-const options = {
-	owner: "zwave-js",
-	repo: "zwave-js",
-};
-
 /**
  * @param {{github: Github, context: Context}} param
  */
 async function main(param) {
 	const { exec } = await import("@actions/exec");
 	const { github, context } = param;
+	const options = {
+		owner: context.repo.owner,
+		repo: context.repo.repo,
+	};
 
 	const npmToken = /** @type {string} */ (process.env.NPM_TOKEN);
 	const pr = context.issue.number;
