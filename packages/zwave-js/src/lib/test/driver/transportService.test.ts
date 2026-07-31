@@ -384,19 +384,23 @@ integrationTest(
 				createMockZWaveRequestFrame(frame2),
 			);
 			await wait(30);
+
+			// Register the expectation before sending the final segment, or the
+			// SegmentComplete may arrive before the expectation is set up
+			const expectSegmentComplete = mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentComplete,
+				{
+					timeout: 1000,
+				},
+			);
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(frame3),
 			);
 
 			// The node should have received the confirmation
-			await mockNode.expectControllerFrame(
-				(f): f is MockZWaveRequestFrame =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof TransportServiceCCSegmentComplete,
-				{
-					timeout: 100,
-				},
-			);
+			await expectSegmentComplete;
 			mockNode.clearReceivedControllerFrames();
 
 			// And the ConfigurationCCInfoReport should have been assembled correctly
@@ -408,19 +412,20 @@ integrationTest(
 
 			// Simulate the SegmentComplete being lost. The node should send the last segment again
 
+			const expectSegmentComplete2 = mockNode.expectControllerFrame(
+				(f): f is MockZWaveRequestFrame =>
+					f.type === MockZWaveFrameType.Request
+					&& f.payload instanceof TransportServiceCCSegmentComplete,
+				{
+					timeout: 1000,
+				},
+			);
 			await mockNode.sendToController(
 				createMockZWaveRequestFrame(frame3),
 			);
 
 			// The node should have received the confirmation again
-			await mockNode.expectControllerFrame(
-				(f): f is MockZWaveRequestFrame =>
-					f.type === MockZWaveFrameType.Request
-					&& f.payload instanceof TransportServiceCCSegmentComplete,
-				{
-					timeout: 100,
-				},
-			);
+			await expectSegmentComplete2;
 			mockNode.clearReceivedControllerFrames();
 		},
 	},
