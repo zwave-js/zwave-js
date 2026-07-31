@@ -10,17 +10,22 @@ import {
 	DOCS_ANSWER_METADATA_TAG,
 	POSTS_MIN_SIMILARITY,
 	alreadyAnswered,
+	balanceCodeFences,
 	buildRelatedPostsSection,
 	checkAnswerGates,
 	checkSuppression,
 	composeAndPostAnswer,
+	parseRelatedExcerpts,
 	postDocsAnswer,
 	prepareDocsAnswer,
 	renderDocsSection,
 	validateJudgeResponse,
 } from "./answerFromDocs.cjs";
 
-const { EMBEDDING_MODEL, setExtractor } = require("./localEmbeddings.cjs");
+const { DOCS_INDEX_VERSION } = require("./docsIndex.cjs");
+const { EMBEDDING_MODEL, MODEL_CACHE_KEY, setExtractor } = require(
+	"./localEmbeddings.cjs",
+);
 
 // Substitute the pipeline so the answer path runs against the tiny test
 // vectors in the fixture indexes instead of downloading the model
@@ -133,6 +138,35 @@ describe("answerFromDocs", () => {
 					relatedExcerpts: "not an array",
 				}).relatedExcerpts,
 			).toEqual([]);
+		});
+
+		it("closes a fence left open by the length cap", () => {
+			const answer = "text\n```js\n" + "x".repeat(20000);
+			const { answer: truncated } = validateJudgeResponse({
+				confidence: 80,
+				answer,
+				relatedExcerpts: [],
+			});
+			// The slice lands inside the code block; a closing fence is appended
+			// so the trailing doc-links list is not swallowed
+			const fences = truncated.match(/^[ \t]*(?:`{3,}|~{3,})/gm);
+			expect(fences).toHaveLength(2);
+			expect(truncated.endsWith("```")).toBe(true);
+		});
+
+		it("leaves a balanced answer untouched", () => {
+			expect(balanceCodeFences("no fences here")).toBe("no fences here");
+			expect(balanceCodeFences("```\ncode\n```")).toBe("```\ncode\n```");
+		});
+	});
+
+	describe("parseRelatedExcerpts", () => {
+		it("extracts ids across mixed separators", () => {
+			expect(parseRelatedExcerpts("2, 0")).toEqual([2, 0]);
+			expect(parseRelatedExcerpts("1;2")).toEqual([1, 2]);
+			expect(parseRelatedExcerpts("0")).toEqual([0]);
+			expect(parseRelatedExcerpts("")).toEqual([]);
+			expect(parseRelatedExcerpts(undefined)).toEqual([]);
 		});
 	});
 
@@ -536,8 +570,9 @@ describe("answerFromDocs", () => {
 		it("hands off retrieved chunks and posts the judged answer", async () => {
 			const dir = await mkdtemp(join(tmpdir(), "docs-answer-"));
 			const docsIndex = {
-				version: 1,
+				version: DOCS_INDEX_VERSION,
 				model: EMBEDDING_MODEL,
+				modelKey: MODEL_CACHE_KEY,
 				createdAt: "2026-01-01T00:00:00Z",
 				chunks: [
 					{

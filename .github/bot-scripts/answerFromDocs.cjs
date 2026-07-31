@@ -9,7 +9,9 @@ const { authorizedUsers } = require("./users.cjs");
 const { cosineSimilarity, loadDocsIndex, retrieve } = require(
 	"./docsIndex.cjs",
 );
-const { embed, indexMatchesModel } = require("./localEmbeddings.cjs");
+const { EMBEDDING_MODEL, embed, indexMatchesModel } = require(
+	"./localEmbeddings.cjs",
+);
 const {
 	QUESTION_CATEGORY_SLUGS,
 	cleanQuestion,
@@ -43,6 +45,20 @@ const POSTS_MIN_SIMILARITY = 0.6;
 const MAX_RELATED_POSTS = 3;
 // Cap the answer so a runaway completion cannot 422 the comment API
 const MAX_ANSWER_LENGTH = 15000;
+// Bound comment pagination so a malformed pageInfo cannot loop to the timeout
+const MAX_COMMENT_PAGES = 20;
+
+/**
+ * Closes a fenced code block left open when the length cap slices inside one,
+ * so the truncation cannot swallow the doc-links list rendered after it.
+ * @param {string} text
+ */
+function balanceCodeFences(text) {
+	const fences = text.match(/^[ \t]*(?:`{3,}|~{3,})/gm) ?? [];
+	if (fences.length % 2 === 0) return text;
+	const marker = fences[fences.length - 1].replace(/^[ \t]+/, "");
+	return `${text}\n${marker}`;
+}
 
 // Questions at least this similar to a previously downvoted answer
 // get a demoted response: full answer -> links only, links only -> silence
@@ -69,7 +85,9 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 		// transfer cannot be told apart from ours
 		/** @type {string | null} */
 		let cursor = null;
-		while (true) {
+		// Bound the walk: a null endCursor returned alongside hasNextPage would
+		// otherwise reset to page 1 and loop until the job times out
+		for (let page = 0; page < MAX_COMMENT_PAGES; page++) {
 			const data = await github.graphql(
 				`
 				query getComments($discussionId: ID!, $cursor: String) {
@@ -94,9 +112,14 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 			) {
 				return true;
 			}
-			if (!comments?.pageInfo?.hasNextPage) return false;
-			cursor = comments.pageInfo.endCursor;
+			const pageInfo = comments?.pageInfo;
+			if (!pageInfo?.hasNextPage || !pageInfo.endCursor) return false;
+			cursor = pageInfo.endCursor;
 		}
+		console.log(
+			`::warning::Stopped scanning discussion comments after ${MAX_COMMENT_PAGES} pages`,
+		);
+		return false;
 	} else {
 		const comments = await listCommentsSinceTransfer(
 			github,
@@ -106,6 +129,18 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 		);
 		return comments.some((c) => c.body?.includes(DOCS_ANSWER_COMMENT_TAG));
 	}
+}
+
+/**
+ * Extracts the excerpt ids from the judge's tool argument, which arrives as a
+ * string whose ids may be joined by any separator ("2, 0", "1;2")
+ * @param {unknown} raw
+ * @returns {number[]}
+ */
+function parseRelatedExcerpts(raw) {
+	return [...String(raw ?? "").matchAll(/\d+/g)].map((m) =>
+		Number.parseInt(m[0], 10)
+	);
 }
 
 /**
@@ -131,7 +166,7 @@ function validateJudgeResponse(parsed) {
 	}
 
 	const answer = typeof parsed.answer === "string"
-		? parsed.answer.slice(0, MAX_ANSWER_LENGTH)
+		? balanceCodeFences(parsed.answer.slice(0, MAX_ANSWER_LENGTH))
 		: null;
 
 	const relatedExcerpts = Array.isArray(parsed.relatedExcerpts)
@@ -583,7 +618,7 @@ async function prepareDocsAnswer(param) {
 		suppression = checkSuppression(
 			questionEmbedding,
 			feedback,
-			require("./localEmbeddings.cjs").EMBEDDING_MODEL,
+			EMBEDDING_MODEL,
 		);
 	}
 
@@ -696,17 +731,12 @@ async function postDocsAnswer(param) {
 	}
 	console.log("Judge verdict:", JSON.stringify(verdict));
 
-	// Tool arguments arrive as strings, and the ids may be separated or
-	// wrapped in more than plain commas - extract all integers
-	const relatedExcerpts = [
-		...String(verdict.related_excerpts ?? "").matchAll(/\d+/g),
-	].map((m) => Number.parseInt(m[0], 10));
 	const result = validateJudgeResponse({
 		confidence: Number(verdict.confidence),
 		answer: typeof verdict.answer === "string" && verdict.answer.trim()
 			? verdict.answer
 			: null,
-		relatedExcerpts,
+		relatedExcerpts: parseRelatedExcerpts(verdict.related_excerpts),
 	});
 
 	const docsSection = renderDocsSection(
@@ -745,6 +775,8 @@ module.exports = {
 	checkAnswerGates,
 	composeAndPostAnswer,
 	validateJudgeResponse,
+	parseRelatedExcerpts,
+	balanceCodeFences,
 	checkSuppression,
 	renderDocsSection,
 	buildRelatedPostsSection,
