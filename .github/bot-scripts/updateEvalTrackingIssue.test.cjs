@@ -77,14 +77,16 @@ describe("updateEvalTrackingIssue", () => {
 	});
 
 	describe("TRACKING_ISSUE_QUIET", () => {
-		it("does not comment again on an already-open issue", async () => {
+		it("refreshes the body without commenting on an already-open issue", async () => {
 			process.env.EVAL_OUTCOME = "failure";
 			process.env.TRACKING_ISSUE_QUIET = "true";
+			process.env.TRACKING_ISSUE_BODY = "outage worsening";
 
 			const calls = await run([
 				{ title: TITLE, state: "open", number: 7 },
 			]);
-			expect(calls).toEqual([]);
+			expect(calls.map((c) => c.op)).toEqual(["update"]);
+			expect(calls[0].body).toContain("outage worsening");
 		});
 
 		it("still reopens and explains a closed issue", async () => {

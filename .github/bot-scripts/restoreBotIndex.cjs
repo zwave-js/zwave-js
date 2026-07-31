@@ -28,17 +28,20 @@ function readIndexFileIsUsable(file) {
 }
 
 /**
- * Picks the newest usable index artifact. Pinned to a non-expired artifact
- * built on the default branch of this repository itself, so neither a fork PR
- * (whose head_branch can also be "master") nor an expired entry can be picked.
+ * Picks the newest usable index artifact. Pinned to a non-expired artifact of
+ * the expected name, built on the default branch of this repository itself, so
+ * neither a fork PR (whose head_branch can also be "master"), an expired entry,
+ * nor a foreign-named artifact from the same run can be picked.
  * @param {any[]} artifacts
  * @param {string} branch
+ * @param {string | undefined} artifactName
  * @returns {any | undefined}
  */
-function selectArtifact(artifacts, branch) {
+function selectArtifact(artifacts, branch, artifactName) {
 	return artifacts
 		.filter((a) =>
 			a?.expired === false
+			&& a?.name === artifactName
 			&& a?.workflow_run?.head_branch === branch
 			&& a?.workflow_run?.head_repository_id
 				=== a?.workflow_run?.repository_id
@@ -54,8 +57,11 @@ function selectArtifact(artifacts, branch) {
  * signal, not the index's own createdAt: docs-embeddings skips the rebuild on a
  * cache hit, so unchanged content is still healthy - the nightly re-uploads
  * either way.
+ * The status distinguishes an outage the API confirmed ('stale') from one it
+ * could not rule out ('unknown'), so the tracking issue can word it honestly;
+ * both keep stale=true so a genuine outage still opens the issue.
  * @param {{artifactCreated?: string, searched: boolean, maxAgeDays: number, now?: number}} param
- * @returns {{stale: boolean, ageDays: string, warning?: string}}
+ * @returns {{status: "fresh" | "stale" | "unknown", stale: boolean, ageDays: string, warning?: string}}
  */
 function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 	const nowMs = now ?? Date.now();
@@ -63,6 +69,7 @@ function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 		const createdMs = new Date(artifactCreated).getTime();
 		if (Number.isNaN(createdMs)) {
 			return {
+				status: "stale",
 				stale: true,
 				ageDays: "",
 				warning:
@@ -72,19 +79,21 @@ function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 		const ageDays = Math.floor((nowMs - createdMs) / MS_PER_DAY);
 		if (ageDays >= maxAgeDays) {
 			return {
+				status: "stale",
 				stale: true,
 				ageDays: String(ageDays),
 				warning:
 					`The newest index artifact is ${ageDays} day(s) old (limit ${maxAgeDays}) - the nightly rebuild may be failing`,
 			};
 		}
-		return { stale: false, ageDays: String(ageDays) };
+		return { status: "fresh", stale: false, ageDays: String(ageDays) };
 	}
 	if (searched) {
 		// The API answered and there is nothing published: an outage, not a gap
 		// in our knowledge. Only reachable on a cache hit, since a miss with no
 		// artifact cannot produce an index at all.
 		return {
+			status: "stale",
 			stale: true,
 			ageDays: "",
 			warning:
@@ -92,6 +101,7 @@ function computeStaleness({ artifactCreated, searched, maxAgeDays, now }) {
 		};
 	}
 	return {
+		status: "unknown",
 		stale: true,
 		ageDays: "",
 		warning:
@@ -114,15 +124,29 @@ function checkCachedIndex({ core }) {
 	);
 }
 
+// How many recent producer runs to scan for a usable artifact before giving
+// up: the newest run all but always still holds it, the rest cover retention
+// gaps without an unbounded walk
+const MAX_PRODUCER_RUNS = 10;
+
 /**
- * github-script step: finds the newest usable index artifact. A lookup failure
- * degrades to "no index" for the caller to handle via continue-on-error, it
- * must not take down a job triggered by someone opening an issue.
+ * github-script step: finds the newest usable index artifact. Pinned to the
+ * workflow file that produces it, so no other workflow with actions:write can
+ * publish an artifact of the same name that the bot would then load. A lookup
+ * failure degrades to "no index" for the caller to handle via continue-on-error,
+ * it must not take down a job triggered by someone opening an issue.
  * @param {{github: any, context: any, core: any}} param
  */
 async function findIndexArtifact({ github, context, core }) {
 	const { owner, repo } = context.repo;
 	const name = process.env.ARTIFACT;
+	const producerWorkflow = process.env.PRODUCER_WORKFLOW;
+	if (!producerWorkflow) {
+		core.setFailed(
+			"PRODUCER_WORKFLOW is not set - refusing to select an artifact",
+		);
+		return;
+	}
 
 	// Read the branch pin from an authority that does not vary by trigger:
 	// github.event.repository is absent from some payloads and github.ref_name
@@ -136,30 +160,51 @@ async function findIndexArtifact({ github, context, core }) {
 		return;
 	}
 
-	const artifacts = await github.paginate(
-		github.rest.actions.listArtifactsForRepo,
-		{ owner, repo, name, per_page: 100 },
+	// Successful runs of the producing workflow on the default branch, newest
+	// first - a fork run never satisfies both branch and success here
+	const runs = await github.paginate(
+		github.rest.actions.listWorkflowRuns,
+		{
+			owner,
+			repo,
+			workflow_id: producerWorkflow,
+			branch,
+			status: "success",
+			per_page: 50,
+		},
 	);
 
 	// Reaching here at all means the API answered, which is what separates
 	// "nothing published" (an outage) from "could not ask" (unknown)
 	core.setOutput("searched", "true");
 
-	const newest = selectArtifact(artifacts, branch);
-	if (!newest) {
-		console.log(`No unexpired ${name} artifact built on ${branch}`);
+	runs.sort((a, b) =>
+		new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+	);
+
+	for (const run of runs.slice(0, MAX_PRODUCER_RUNS)) {
+		const artifacts = await github.paginate(
+			github.rest.actions.listWorkflowRunArtifacts,
+			{ owner, repo, run_id: run.id, per_page: 100 },
+		);
+		const newest = selectArtifact(artifacts, branch, name);
+		if (!newest) continue;
+
+		const id = newest.workflow_run?.id ?? run.id;
+		const created = newest.created_at ?? "";
+		console.log(
+			`Newest usable ${name} artifact comes from run ${id}, uploaded ${
+				created || "unknown"
+			}`,
+		);
+		core.setOutput("id", String(id));
+		core.setOutput("created", String(created));
 		return;
 	}
 
-	const id = newest.workflow_run?.id ?? "";
-	const created = newest.created_at ?? "";
 	console.log(
-		`Newest usable ${name} artifact comes from run ${id || "?"}, uploaded ${
-			created || "unknown"
-		}`,
+		`No unexpired ${name} artifact from ${producerWorkflow} on ${branch}`,
 	);
-	core.setOutput("id", String(id));
-	core.setOutput("created", String(created));
 }
 
 /**
@@ -181,6 +226,8 @@ function reportRestore({ core }) {
 	if (!readIndexFileIsUsable(file)) {
 		core.setOutput("found", "false");
 		core.setOutput("stale", "true");
+		core.setOutput("status", "");
+		core.setOutput("source", "none");
 		core.setOutput("age-days", "");
 		// Name the leg that failed - an expired artifact and a misconfigured
 		// lookup look identical from the outside otherwise
@@ -193,13 +240,14 @@ function reportRestore({ core }) {
 	}
 
 	core.setOutput("found", "true");
+	core.setOutput("source", fromCache ? "cache" : "artifact");
 	console.log(
 		fromCache
 			? `Using ${file} from the Actions cache`
 			: `Using ${file} from the ${artifact} artifact of run ${artifactRun}`,
 	);
 
-	const { stale, ageDays, warning } = computeStaleness({
+	const { status, stale, ageDays, warning } = computeStaleness({
 		artifactCreated,
 		searched,
 		maxAgeDays,
@@ -212,6 +260,7 @@ function reportRestore({ core }) {
 	if (warning) core.warning(warning);
 
 	core.setOutput("stale", stale ? "true" : "false");
+	core.setOutput("status", status);
 	core.setOutput("age-days", ageDays);
 }
 

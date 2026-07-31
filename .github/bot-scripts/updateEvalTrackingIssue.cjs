@@ -93,6 +93,14 @@ See the [workflow run](${runUrl}) for details.`
 				issue_number: tracking.number,
 				body,
 			});
+		} else {
+			// Quiet: refresh the body so a worsening outage still shows its
+			// current state, but skip the comment ping
+			await github.rest.issues.update({
+				...context.repo,
+				issue_number: tracking.number,
+				body,
+			});
 		}
 	} else if (tracking && tracking.state === "open") {
 		await github.rest.issues.createComment({

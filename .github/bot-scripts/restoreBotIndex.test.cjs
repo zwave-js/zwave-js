@@ -31,8 +31,10 @@ describe("restoreBotIndex", () => {
 	});
 
 	describe("selectArtifact", () => {
+		const NAME = "docs-index";
 		const onBranch = (overrides = {}) => ({
 			expired: false,
+			name: NAME,
 			created_at: "2026-01-01T00:00:00Z",
 			workflow_run: {
 				id: 1,
@@ -44,12 +46,19 @@ describe("restoreBotIndex", () => {
 		});
 
 		it("returns undefined when nothing qualifies", () => {
-			expect(selectArtifact([], "master")).toBeUndefined();
+			expect(selectArtifact([], "master", NAME)).toBeUndefined();
 		});
 
 		it("skips expired artifacts", () => {
-			expect(selectArtifact([onBranch({ expired: true })], "master"))
+			expect(
+				selectArtifact([onBranch({ expired: true })], "master", NAME),
+			)
 				.toBeUndefined();
+		});
+
+		it("skips a foreign-named artifact from the same run", () => {
+			const foreign = onBranch({ name: "some-other-artifact" });
+			expect(selectArtifact([foreign], "master", NAME)).toBeUndefined();
 		});
 
 		it("skips artifacts from another branch", () => {
@@ -61,7 +70,7 @@ describe("restoreBotIndex", () => {
 					repository_id: 42,
 				},
 			});
-			expect(selectArtifact([fork], "master")).toBeUndefined();
+			expect(selectArtifact([fork], "master", NAME)).toBeUndefined();
 		});
 
 		it("skips artifacts not built on the default branch", () => {
@@ -73,7 +82,7 @@ describe("restoreBotIndex", () => {
 					repository_id: 42,
 				},
 			});
-			expect(selectArtifact([feature], "master")).toBeUndefined();
+			expect(selectArtifact([feature], "master", NAME)).toBeUndefined();
 		});
 
 		it("picks the newest qualifying artifact", () => {
@@ -87,8 +96,9 @@ describe("restoreBotIndex", () => {
 					repository_id: 42,
 				},
 			});
-			expect(selectArtifact([older, newer], "master").workflow_run.id)
-				.toBe(7);
+			expect(
+				selectArtifact([older, newer], "master", NAME).workflow_run.id,
+			).toBe(7);
 		});
 	});
 
@@ -103,6 +113,7 @@ describe("restoreBotIndex", () => {
 				now,
 			});
 			expect(r.stale).toBe(false);
+			expect(r.status).toBe("fresh");
 			expect(r.ageDays).toBe("1");
 			expect(r.warning).toBeUndefined();
 		});
@@ -138,16 +149,18 @@ describe("restoreBotIndex", () => {
 				now,
 			});
 			expect(r.stale).toBe(true);
+			expect(r.status).toBe("stale");
 			expect(r.warning).toMatch(/published nothing/);
 		});
 
-		it("is stale when the API could not be reached", () => {
+		it("reports unknown, still stale, when the API could not be reached", () => {
 			const r = computeStaleness({
 				searched: false,
 				maxAgeDays: 3,
 				now,
 			});
 			expect(r.stale).toBe(true);
+			expect(r.status).toBe("unknown");
 			expect(r.warning).toMatch(/publication state unknown/);
 		});
 	});

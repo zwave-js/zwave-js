@@ -41,6 +41,14 @@ outputs:
   age-days:
     description: 'Age of the newest artifact in whole days, or "" if unknown'
     value: ${{ steps.report.outputs.age-days }}
+  status:
+    description: >-
+      '"fresh", "stale" (the API confirmed no recent publication) or "unknown"
+      (the artifacts API could not be queried), for accurate alarm wording.'
+    value: ${{ steps.report.outputs.status }}
+  source:
+    description: 'Where the index was restored from - "cache", "artifact" or "none"'
+    value: ${{ steps.report.outputs.source }}
 
 runs:
   using: composite
@@ -54,36 +62,26 @@ runs:
       run: |
         set -euo pipefail
         case "$INDEX" in
-          docs|posts) ;;
+          docs)  prefixName=DOCS_CACHE_PREFIX ;;
+          posts) prefixName=POSTS_CACHE_PREFIX ;;
           *) echo "::error::Unknown index '$INDEX' - expected 'docs' or 'posts'"; exit 1 ;;
         esac
+        # The cache prefix and index version live together in one module, so a
+        # version bump namespaces the cache afresh without editing this file
+        prefix=$(node -p "require('$GITHUB_WORKSPACE/.github/bot-scripts/indexCacheKeys.cjs').$prefixName")
         echo "path=.$INDEX-index" >> "$GITHUB_OUTPUT"
         echo "artifact=$INDEX-index" >> "$GITHUB_OUTPUT"
+        echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+        echo "workflow=$INDEX-embeddings.yml" >> "$GITHUB_OUTPUT"
 
-    - name: Restore the docs index from cache
-      if: inputs.index == 'docs'
+    # A prefix restore picks the newest entry; the file is validated below, so
+    # an entry saved mid-write is caught rather than the key having to be exact
+    - name: Restore the index from cache
       uses: actions/cache/restore@v6
       with:
-        path: .docs-index
-        key: >-
-          docs-embeddings-v3-${{ hashFiles(
-            'docs/**/*.md',
-            '.github/bot-scripts/buildDocsIndex.cjs',
-            '.github/bot-scripts/docsIndex.cjs',
-            '.github/bot-scripts/localEmbeddings.cjs',
-            '.github/bot-scripts/package-lock.json'
-          ) }}
-        restore-keys: docs-embeddings-v3-
-
-    - name: Restore the posts index from cache
-      if: inputs.index == 'posts'
-      uses: actions/cache/restore@v6
-      with:
-        path: .posts-index
-        # There is no exact key to match, the newest index is picked
-        # via the prefix
-        key: posts-embeddings-v2-
-        restore-keys: posts-embeddings-v2-
+        path: ${{ steps.cfg.outputs.path }}
+        key: ${{ steps.cfg.outputs.prefix }}
+        restore-keys: ${{ steps.cfg.outputs.prefix }}
 
     # Decide on the file, not on the cache key: a prefix match can restore an
     # entry that was saved while its build was still writing it
@@ -107,6 +105,7 @@ runs:
       uses: actions/github-script@v9
       env:
         ARTIFACT: ${{ steps.cfg.outputs.artifact }}
+        PRODUCER_WORKFLOW: ${{ steps.cfg.outputs.workflow }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |

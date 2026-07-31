@@ -13,6 +13,10 @@ on:
   steps:
     - name: Checkout repository
       uses: actions/checkout@v6
+      with:
+        # This job runs npm ci and third-party packages alongside a github-script
+        # step holding BOT_TOKEN; don't also persist the workflow token in .git
+        persist-credentials: false
 
     - name: Restore docs index
       id: docs-index
@@ -64,6 +68,13 @@ on:
         posts: ${{ steps.posts-index.outputs.found }}
         docs-stale: ${{ steps.docs-index.outputs.stale }}
         posts-stale: ${{ steps.posts-index.outputs.stale }}
+        docs-status: ${{ steps.docs-index.outputs.status }}
+        posts-status: ${{ steps.posts-index.outputs.status }}
+        docs-age-days: ${{ steps.docs-index.outputs.age-days }}
+        posts-age-days: ${{ steps.posts-index.outputs.age-days }}
+        docs-source: ${{ steps.docs-index.outputs.source }}
+        posts-source: ${{ steps.posts-index.outputs.source }}
+        github-token: ${{ secrets.BOT_TOKEN }}
         # Fires once per new issue or discussion, so an open outage must not
         # collect a comment every time
         quiet: 'true'
@@ -175,6 +186,8 @@ safe-outputs:
       steps:
         - name: Checkout repository
           uses: actions/checkout@v6
+          with:
+            persist-credentials: false
 
         - name: Download handoff
           uses: actions/download-artifact@v8

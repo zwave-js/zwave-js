@@ -54,6 +54,12 @@ jobs:
         posts: ${{ steps.posts-index.outputs.found }}
         docs-stale: ${{ steps.docs-index.outputs.stale }}
         posts-stale: ${{ steps.posts-index.outputs.stale }}
+        docs-status: ${{ steps.docs-index.outputs.status }}
+        posts-status: ${{ steps.posts-index.outputs.status }}
+        docs-age-days: ${{ steps.docs-index.outputs.age-days }}
+        posts-age-days: ${{ steps.posts-index.outputs.age-days }}
+        docs-source: ${{ steps.docs-index.outputs.source }}
+        posts-source: ${{ steps.posts-index.outputs.source }}
         # Daily, so one comment per night on a standing outage is a useful
         # heartbeat rather than noise
         quiet: 'false'
