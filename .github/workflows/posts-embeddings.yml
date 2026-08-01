@@ -4,6 +4,8 @@ name: Build posts embeddings index
 # used by the bot to suggest related/duplicate posts.
 # Between the nightly rebuilds, new posts are appended incrementally by
 # the update-posts-index job in the issue/discussion bot workflow.
+# The heavy lifting lives in zwave-js/bot-workflows; this caller owns
+# the schedule and push filter.
 
 on:
   schedule:
@@ -13,17 +15,6 @@ on:
   push:
     branches: [master]
     paths:
-      - '.github/bot-scripts/buildPostsIndex.cjs'
-      - '.github/bot-scripts/postsIndex.cjs'
-      - '.github/bot-scripts/indexCacheKeys.cjs'
-      - '.github/bot-scripts/localEmbeddings.cjs'
-      - '.github/bot-scripts/package.json'
-      - '.github/bot-scripts/package-lock.json'
-      - '.github/bot-scripts/githubApi.cjs'
-      - '.github/bot-scripts/evalRelatedPosts.cjs'
-      - '.github/bot-scripts/evalUtils.cjs'
-      - '.github/bot-scripts/relatedPostsEvalCases.json'
-      - '.github/bot-scripts/updateEvalTrackingIssue.cjs'
       - '.github/workflows/posts-embeddings.yml'
   workflow_dispatch:
 
@@ -33,109 +24,9 @@ permissions:
   discussions: read
 
 jobs:
-  build-index:
-    runs-on: [ubuntu-latest]
-    timeout-minutes: 20
-    outputs:
-      cache-key: ${{ steps.cachekey.outputs.key }}
-
-    steps:
-    - name: Checkout master branch
-      uses: actions/checkout@v7
-
-    # The version-derived prefix lives in indexCacheKeys.cjs; the run-scoped
-    # save key is computed once here and reused by the evaluate job
-    - name: Compute the cache key
-      id: cachekey
-      run: |
-        set -euo pipefail
-        prefix=$(node -p "require('./.github/bot-scripts/indexCacheKeys.cjs').POSTS_CACHE_PREFIX")
-        echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
-        echo "key=${prefix}${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
-    # Cache keys are immutable, so the rolling index is always saved under
-    # a fresh run-scoped key and restored via the newest prefix match.
-    # The explicit restore/save split ensures a failed build does not
-    # re-save a stale index under a new key.
-    - name: Restore previous index
-      uses: actions/cache/restore@v6
-      with:
-        path: .posts-index
-        # There is no exact key to match, the newest index is picked
-        # via the prefix
-        key: ${{ steps.cachekey.outputs.prefix }}
-        restore-keys: |
-          ${{ steps.cachekey.outputs.prefix }}
-
-    - name: Setup embeddings
-      uses: ./.github/actions/setup-bot-embeddings
-      with:
-        save-model-cache: 'true'
-
-    - name: Build index
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-      run: node .github/bot-scripts/buildPostsIndex.cjs ${{ github.repository }} .posts-index/index.json
-
-    - name: Save index
-      uses: actions/cache/save@v6
-      with:
-        path: .posts-index
-        key: ${{ steps.cachekey.outputs.key }}
-
-    # Use artifacts as a fallback for the actions cache getting evicted
-    - name: Upload index artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: posts-index
-        path: .posts-index
-        retention-days: 30
-        # Include dot directories, including `.posts-index`
-        include-hidden-files: true
-        # The answer bot depends on this artifact existing
-        if-no-files-found: error
-
-  evaluate:
-    needs: build-index
-    runs-on: [ubuntu-latest]
-    timeout-minutes: 15
+  posts-embeddings:
     permissions:
       contents: read
       issues: write
-
-    steps:
-    - name: Checkout master branch
-      uses: actions/checkout@v7
-
-    - name: Restore posts index
-      id: restore-index
-      uses: actions/cache/restore@v6
-      with:
-        path: .posts-index
-        key: ${{ needs.build-index.outputs.cache-key }}
-
-    - name: Fail if posts index is missing
-      if: steps.restore-index.outputs.cache-hit != 'true'
-      run: |
-        echo "::error::Posts index cache miss after build-index - cannot evaluate retrieval quality"
-        exit 1
-
-    - name: Setup embeddings
-      uses: ./.github/actions/setup-bot-embeddings
-
-    - name: Evaluate retrieval quality
-      id: eval
-      continue-on-error: true
-      run: node .github/bot-scripts/evalRelatedPosts.cjs .posts-index/index.json
-
-    - name: Update tracking issue
-      uses: actions/github-script@v9
-      env:
-        TRACKING_ISSUE_TITLE: "🚨 Related posts bot retrieval quality regression"
-        EVAL_NAME: related posts bot
-        EVAL_OUTCOME: ${{ steps.eval.outcome }}
-        EVAL_SUMMARY: ${{ steps.eval.outputs.summary }}
-      with:
-        script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
-          await bot.updateEvalTrackingIssue({github, context});
+      discussions: read
+    uses: zwave-js/bot-workflows/.github/workflows/posts-embeddings.yml@v1
