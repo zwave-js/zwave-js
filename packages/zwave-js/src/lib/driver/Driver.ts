@@ -193,6 +193,7 @@ import {
 	cloneDeep,
 	createWrappingCounter,
 	getErrorMessage,
+	getRuntimeVersion,
 	getenv,
 	isAbortError,
 	isUint8Array,
@@ -2921,7 +2922,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			const statistics = await compileStatistics(this, {
 				driverVersion: libVersion,
 				...this.statisticsAppInfo,
-				nodeVersion: process.versions.node,
+				nodeVersion: getRuntimeVersion(),
 				os: process.platform,
 				arch: process.arch,
 			});

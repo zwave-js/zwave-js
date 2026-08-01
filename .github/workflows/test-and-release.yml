@@ -127,6 +127,8 @@ jobs:
         node -e '(async () => { await import("@zwave-js/shared") })()'
         node -e '(async () => { await import("@zwave-js/testing") })()'
         node -e '(async () => { await import("@zwave-js/bindings-browser/fs") })()'
+        node -e '(async () => { await import("@zwave-js/core/bindings/crypto/node") })()'
+        node -e '(async () => { await import("@zwave-js/core/bindings/crypto/browser") })()'
 
         echo "Testing version exports..."
         node -e '

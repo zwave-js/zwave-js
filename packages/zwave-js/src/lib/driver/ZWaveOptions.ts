@@ -192,6 +192,9 @@ export interface ZWaveOptions {
 		/**
 		 * Specifies which implementation is used for cryptographic operations.
 		 * Crypto is process-global, so all drivers in the same process share the last one that was set.
+		 *
+		 * Defaults to `node:crypto` on Node.js and compatible runtimes; and WebCrypto in the browser or with `--conditions=browser`.
+		 * On runtimes that resolve to `node`, but do not implement all ciphers, use `@zwave-js/core/bindings/crypto/browser`.
 		 */
 		crypto?: CryptoPrimitives;
 	};
