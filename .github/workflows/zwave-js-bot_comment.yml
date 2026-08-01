@@ -6,6 +6,7 @@ on:
   discussion_comment:
     types: [created] # edited, deleted
 
+# Force all jobs to specifically list the permissions they need
 permissions: {}
 
 jobs:
