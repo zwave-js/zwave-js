@@ -13,11 +13,9 @@ permissions:
   discussions: read
   issues: read
 
-engine:
-  id: copilot
-
 imports:
-  - shared/zwave-log-analysis.md
+  - zwave-js/bot-workflows/workflows/shared/hardening.md@main
+  - zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@main
 
 steps:
   - name: Parse command
@@ -48,20 +46,15 @@ steps:
 safe-outputs:
   add-comment:
     discussions: true
-    # Post as zwave-js-bot like the other bot comments
+    # Post as the bot account like the other bot comments
     github-token: ${{ secrets.BOT_TOKEN }}
-
-# The agent analyzes the downloaded logfile through the zwave-log-analyzer
-# MCP server and posts via the add-comment safe output - it needs neither
-# the GitHub MCP toolset nor read access to the repository through it
-tools:
-  github: false
 
 # Network stays open: the log-analyzer MCP server is fetched with npx at
 # startup, and the logfile is downloaded in a step above
 network: defaults
 
 timeout-minutes: 30
+source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@3dd7955f4d8730d34e92dc624fdae9566d6bface
 ---
 
 # Z-Wave JS Logfile Analysis

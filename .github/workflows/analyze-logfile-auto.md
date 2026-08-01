@@ -16,18 +16,8 @@ on:
         # workflow token in .git for them to read
         persist-credentials: false
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 22
-        cache: 'npm'
-        cache-dependency-path: .github/bot-scripts/package-lock.json
-
-    # The bot scripts declare fflate (used to decompress zipped logfile
-    # uploads); --ignore-scripts skips onnxruntime-node's GPU-provider download
-    - name: Install bot-script dependencies
-      working-directory: .github/bot-scripts
-      run: npm ci --ignore-scripts
+    - name: Setup bot scripts
+      uses: zwave-js/bot-workflows/actions/setup-bot@v1
 
     - name: Extract log file from discussion body
       uses: actions/github-script@v9
@@ -36,7 +26,7 @@ on:
         github-token: ${{ secrets.BOT_TOKEN }}
         result-encoding: string
         script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
           const extractResult = await bot.extractLogfileInDiscussion({github, context});
 
           if (!extractResult) {
@@ -66,7 +56,7 @@ on:
         script: |
           if (process.env.SHOULD_CONTINUE !== "true") return "SKIP";
 
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
           const classification = bot.classifyLogfile(process.env.LOGFILE);
           console.log('Classification:', classification);
 
@@ -97,17 +87,13 @@ permissions:
 # image for corepack/yarn
 runs-on-slim: ubuntu-latest
 
-engine:
-  id: copilot
-
 imports:
-  - shared/zwave-log-analysis.md
+  - zwave-js/bot-workflows/workflows/shared/hardening.md@main
+  - zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@main
 
 steps:
-  - name: Checkout repository
-    uses: actions/checkout@v6
-    with:
-      persist-credentials: false
+  - name: Setup bot scripts
+    uses: zwave-js/bot-workflows/actions/setup-bot@v1
 
   - name: Get logfile URL from discussion
     id: get_logfile_url
@@ -116,7 +102,7 @@ steps:
       github-token: ${{ secrets.BOT_TOKEN }}
       result-encoding: string
       script: |
-        const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+        const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
         return bot.extractLogfileUrlFromDiscussion({github, context});
 
   - name: Download logfile
@@ -127,20 +113,15 @@ steps:
 safe-outputs:
   add-comment:
     discussions: true
-    # Post as zwave-js-bot like the other bot comments
+    # Post as the bot account like the other bot comments
     github-token: ${{ secrets.BOT_TOKEN }}
-
-# The agent analyzes the downloaded logfile through the zwave-log-analyzer
-# MCP server and posts via the add-comment safe output - it needs neither
-# the GitHub MCP toolset nor read access to the repository through it
-tools:
-  github: false
 
 # Network stays open: the log-analyzer MCP server is fetched with npx at
 # startup, and the logfile is downloaded in a step above
 network: defaults
 
 timeout-minutes: 30
+source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@3dd7955f4d8730d34e92dc624fdae9566d6bface
 ---
 
 # Z-Wave JS Logfile Analysis
