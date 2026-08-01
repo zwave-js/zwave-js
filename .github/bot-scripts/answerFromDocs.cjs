@@ -4,11 +4,14 @@
 
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { readAgentOutputItem } = require("./agentOutput.cjs");
 const { authorizedUsers } = require("./users.cjs");
 const { cosineSimilarity, loadDocsIndex, retrieve } = require(
 	"./docsIndex.cjs",
 );
-const { EMBEDDING_MODEL, embed } = require("./localEmbeddings.cjs");
+const { EMBEDDING_MODEL, embed, indexMatchesModel } = require(
+	"./localEmbeddings.cjs",
+);
 const {
 	QUESTION_CATEGORY_SLUGS,
 	cleanQuestion,
@@ -16,7 +19,10 @@ const {
 	rankRelatedPosts,
 } = require("./postsIndex.cjs");
 const { sanitizeModelAnswer } = require("./sanitizeAnswer.cjs");
-const { listCommentsSinceTransfer } = require("./utils.cjs");
+const {
+	listCommentsSinceTransfer,
+	postFromContext,
+} = require("./utils.cjs");
 
 const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
@@ -27,22 +33,35 @@ const DOCS_ANSWER_METADATA_VERSION = 1;
 const EXCLUDED_USERS = [...authorizedUsers, "zwave-js-bot"];
 
 const MAX_RETRIEVED_CHUNKS = 5;
-// If not even the best dense match reaches this cosine similarity,
-// the post is considered off-topic and the judge is not invoked.
-// The real relevance judgment is left to the judge. Calibrated for
-// all-MiniLM-L6-v2: on-topic eval questions score >= 0.44, posts
-// without any Z-Wave connection stay <= 0.3
+// Below this best-match cosine similarity the post is off-topic and the
+// judge is not invoked. Calibrated for all-MiniLM-L6-v2: on-topic eval
+// questions score >= 0.44, unrelated posts stay <= 0.3
 const MIN_SIMILARITY = 0.35;
 // Confidence thresholds for the different response styles
 const ANSWER_CONFIDENCE = 75;
 const LINKS_CONFIDENCE = 40;
 
-// A related post is only suggested above this cosine similarity.
-// A wrong suggestion is worse than a missed one, so keep this high.
-// Calibrated for all-MiniLM-L6-v2, where known-duplicate eval pairs
-// score 0.52-0.81 and unrelated posts stay <= 0.5
+// A related post is only suggested above this cosine similarity; kept high
+// because a wrong suggestion is worse than a missed one. Calibrated for
+// all-MiniLM-L6-v2: known-duplicate eval pairs score 0.52-0.81
 const POSTS_MIN_SIMILARITY = 0.6;
 const MAX_RELATED_POSTS = 3;
+// Cap the answer so a runaway completion cannot 422 the comment API
+const MAX_ANSWER_LENGTH = 15000;
+// Bound comment pagination so a malformed pageInfo cannot loop to the timeout
+const MAX_COMMENT_PAGES = 20;
+
+/**
+ * Closes a fenced code block left open when the length cap slices inside one,
+ * so the truncation cannot swallow the doc-links list rendered after it.
+ * @param {string} text
+ */
+function balanceCodeFences(text) {
+	const fences = text.match(/^[ \t]*(?:`{3,}|~{3,})/gm) ?? [];
+	if (fences.length % 2 === 0) return text;
+	const marker = fences[fences.length - 1].replace(/^[ \t]+/, "");
+	return `${text}\n${marker}`;
+}
 
 // Questions at least this similar to a previously downvoted answer
 // get a demoted response: full answer -> links only, links only -> silence
@@ -57,7 +76,8 @@ function chunkUrl(chunk) {
 }
 
 /**
- * Checks whether the bot already answered this post
+ * Checks whether the bot already answered this post, paginating through
+ * all comments so a busy post cannot hide an existing answer.
  * @param {{github: Github, context: Context}} param0
  * @param {any} post
  * @param {boolean} isDiscussion
@@ -66,10 +86,12 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 	if (isDiscussion) {
 		// Discussions have no timeline API, so an answer inherited from a
 		// transfer cannot be told apart from ours
-		/** @type {string | null | undefined} */
+		/** @type {string | null} */
 		let cursor = null;
-		while (cursor !== undefined) {
-			const existing = await github.graphql(
+		// Bound the walk: a null endCursor returned alongside hasNextPage would
+		// otherwise reset to page 1 and loop until the job times out
+		for (let page = 0; page < MAX_COMMENT_PAGES; page++) {
+			const data = await github.graphql(
 				`
 				query getComments($discussionId: ID!, $cursor: String) {
 					node(id: $discussionId) {
@@ -84,19 +106,22 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 				`,
 				{ discussionId: post.node_id, cursor },
 			);
-			const comments = existing.node?.comments;
+			const comments = data.node?.comments;
 			if (
 				comments?.nodes?.some(
-					(/** @type {any} */ comment) =>
-						comment.body.includes(DOCS_ANSWER_COMMENT_TAG),
+					(/** @type {any} */ c) =>
+						c.body.includes(DOCS_ANSWER_COMMENT_TAG),
 				)
 			) {
 				return true;
 			}
-			cursor = comments?.pageInfo?.hasNextPage
-				? comments.pageInfo.endCursor
-				: undefined;
+			const pageInfo = comments?.pageInfo;
+			if (!pageInfo?.hasNextPage || !pageInfo.endCursor) return false;
+			cursor = pageInfo.endCursor;
 		}
+		console.log(
+			`::warning::Stopped scanning discussion comments after ${MAX_COMMENT_PAGES} pages`,
+		);
 		return false;
 	} else {
 		const comments = await listCommentsSinceTransfer(
@@ -109,12 +134,30 @@ async function alreadyAnswered({ github, context }, post, isDiscussion) {
 	}
 }
 
-/** @param {any} parsed */
+/**
+ * Extracts the excerpt ids from the judge's tool argument, which arrives as a
+ * string whose ids may be joined by any separator ("2, 0", "1;2")
+ * @param {unknown} raw
+ * @returns {number[]}
+ */
+function parseRelatedExcerpts(raw) {
+	return [...String(raw ?? "").matchAll(/\d+/g)].map((m) =>
+		Number.parseInt(m[0], 10)
+	);
+}
+
+/**
+ * Validates the shape of the judge's verdict, which is untrusted model
+ * output: it can contain out-of-range numbers, wrong types, or omit
+ * fields entirely. Malformed output degrades to a safe "no answer"
+ * result instead of throwing.
+ * @param {any} parsed
+ * @returns {{confidence: number, answer: string | null, relatedExcerpts: number[]}}
+ */
 function validateJudgeResponse(parsed) {
 	const noAnswer = { confidence: 0, answer: null, relatedExcerpts: [] };
-	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-		return noAnswer;
-	}
+	if (!parsed || typeof parsed !== "object") return noAnswer;
+
 	const { confidence } = parsed;
 	if (
 		typeof confidence !== "number"
@@ -124,12 +167,17 @@ function validateJudgeResponse(parsed) {
 	) {
 		return noAnswer;
 	}
-	const answer = typeof parsed.answer === "string" ? parsed.answer : null;
+
+	const answer = typeof parsed.answer === "string"
+		? balanceCodeFences(parsed.answer.slice(0, MAX_ANSWER_LENGTH))
+		: null;
+
 	const relatedExcerpts = Array.isArray(parsed.relatedExcerpts)
 		? parsed.relatedExcerpts.filter(
-			(/** @type {any} */ index) => Number.isInteger(index) && index >= 0,
+			(/** @type {any} */ i) => Number.isInteger(i) && i >= 0,
 		)
 		: [];
+
 	return { confidence, answer, relatedExcerpts };
 }
 
@@ -252,6 +300,9 @@ function renderDocsSection(result, chunks, allowAnswer) {
 
 	const links = deduped
 		.map((chunk) => {
+			// breadcrumbs is normally never empty (buildDocsIndex.cjs falls
+			// back to the chunk title for pre-heading content), but an older
+			// cached index could still have one - keep the label nonempty
 			const label = chunk.breadcrumbs.join(" → ") || chunk.title;
 			return `- [${label}](${chunkUrl(chunk)})`;
 		})
@@ -259,6 +310,9 @@ function renderDocsSection(result, chunks, allowAnswer) {
 
 	const sections = deduped.map((chunk) => `${chunk.file}#${chunk.anchor}`);
 	const single = deduped.length === 1;
+	// The model's answer is untrusted output - sanitize it before it is
+	// ever rendered in the comment. The doc links below are generated
+	// from our own index data and must NOT be sanitized the same way.
 	const sanitizedAnswer = result.answer
 		? sanitizeModelAnswer(result.answer)
 		: null;
@@ -394,6 +448,8 @@ ${postsSection}`;
 		style: docsSection?.style ?? "posts",
 		confidence: docsSection?.confidence ?? null,
 		sections: docsSection?.sections ?? [],
+		// Traces a posted comment back to the workflow run that judged it
+		run: Number(process.env.GITHUB_RUN_ID) || null,
 	};
 
 	body += `
@@ -441,8 +497,7 @@ ${DOCS_ANSWER_COMMENT_TAG}
 async function checkAnswerGates(param) {
 	const { context } = param;
 
-	const isDiscussion = !!context.payload.discussion;
-	const post = context.payload.discussion ?? context.payload.issue;
+	const { post, isDiscussion } = postFromContext(context);
 	if (!post) {
 		console.log("No issue or discussion in payload, skipping");
 		return;
@@ -529,16 +584,10 @@ async function prepareDocsAnswer(param) {
 	// The question is embedded locally. Similarities are only comparable
 	// within one model, so indexes built with a different model are skipped
 	// until the nightly rebuild replaces them.
-	if (docsIndex && docsIndex.model !== EMBEDDING_MODEL) {
-		console.log(
-			`Docs index model ${docsIndex.model} does not match ${EMBEDDING_MODEL}, ignoring it`,
-		);
+	if (docsIndex && !indexMatchesModel(docsIndex, "docs index")) {
 		docsIndex = undefined;
 	}
-	if (postsIndex && postsIndex.model !== EMBEDDING_MODEL) {
-		console.log(
-			`Posts index model ${postsIndex.model} does not match ${EMBEDDING_MODEL}, ignoring it`,
-		);
+	if (postsIndex && !indexMatchesModel(postsIndex, "posts index")) {
 		postsIndex = undefined;
 	}
 	if (!docsIndex && !postsIndex) return false;
@@ -579,8 +628,7 @@ async function prepareDocsAnswer(param) {
 	if (chunks) {
 		// Hand off to the agentic judge, which decides whether the docs
 		// answer the question. Posting moves to the judge's safe-output job,
-		// so the related-posts section is not lost when the judge rejects
-		// the docs answer.
+		// so the related-posts section survives a low-confidence verdict.
 		const handoffPath = process.env.DOCS_HANDOFF_PATH;
 		if (!handoffPath) {
 			throw new Error(
@@ -595,6 +643,19 @@ async function prepareDocsAnswer(param) {
 				allowAnswer: suppression === "allow",
 				chunks,
 				postsSection: postsSection ?? null,
+			}),
+		);
+		// The judge only needs the question and the excerpt text - the
+		// full chunks carry embedding vectors that would be pure noise
+		// in its context
+		await fs.writeFile(
+			path.join(path.dirname(handoffPath), "judge-input.json"),
+			JSON.stringify({
+				question,
+				excerpts: chunks.map(({ breadcrumbs, text }) => ({
+					breadcrumbs,
+					text,
+				})),
 			}),
 		);
 		console.log(`Wrote handoff for the judge to ${handoffPath}`);
@@ -627,55 +688,57 @@ async function prepareDocsAnswer(param) {
  * @param {{github: Github, context: Context}} param
  */
 async function postDocsAnswer(param) {
-	const isDiscussion = !!param.context.payload.discussion;
-	const post = param.context.payload.discussion
-		?? param.context.payload.issue;
+	const { post, isDiscussion } = postFromContext(param.context);
 	if (!post) {
 		console.log("No issue or discussion in payload, skipping");
 		return;
 	}
 
-	const handoff = JSON.parse(
-		await fs.readFile(
-			/** @type {string} */ (process.env.DOCS_HANDOFF_PATH),
-			"utf8",
-		),
-	);
+	// The handoff crosses a job boundary as an artifact, so treat its
+	// content as data, not trusted structure.
+	/** @type {any} */
+	let handoff;
+	try {
+		handoff = JSON.parse(
+			await fs.readFile(
+				/** @type {string} */ (process.env.DOCS_HANDOFF_PATH),
+				"utf8",
+			),
+		);
+	} catch (e) {
+		console.log(`::warning::Could not read the handoff: ${e.message}`);
+		return;
+	}
+	if (!Array.isArray(handoff?.chunks)) {
+		console.log("::warning::Malformed handoff, skipping");
+		return;
+	}
 
-	const agentOutput = JSON.parse(
-		await fs.readFile(
-			/** @type {string} */ (process.env.GH_AW_AGENT_OUTPUT),
-			"utf8",
-		),
-	);
-	const verdict = (agentOutput.items ?? []).find(
-		(/** @type {any} */ item) => item.type === "post_docs_answer",
-	);
+	const verdict = await readAgentOutputItem("post_docs_answer");
 	if (!verdict) {
-		console.log("The judge did not produce a verdict, skipping");
+		console.log(
+			"::warning::The judge did not produce a verdict - no comment is posted",
+		);
 		return;
 	}
 	console.log("Judge verdict:", JSON.stringify(verdict));
 
-	// Tool arguments arrive as strings, normalize before validating
-	const relatedExcerpts = String(verdict.related_excerpts ?? "")
-		.split(",")
-		.map((s) => Number.parseInt(s.trim(), 10))
-		.filter((n) => Number.isInteger(n));
 	const result = validateJudgeResponse({
 		confidence: Number(verdict.confidence),
 		answer: typeof verdict.answer === "string" && verdict.answer.trim()
 			? verdict.answer
 			: null,
-		relatedExcerpts,
+		relatedExcerpts: parseRelatedExcerpts(verdict.related_excerpts),
 	});
 
 	const docsSection = renderDocsSection(
 		result,
 		handoff.chunks,
-		handoff.allowAnswer,
+		handoff.allowAnswer === true,
 	);
-	const postsSection = handoff.postsSection ?? undefined;
+	const postsSection = typeof handoff.postsSection === "string"
+		? handoff.postsSection
+		: undefined;
 	if (!docsSection && !postsSection) {
 		console.log("Nothing to answer or suggest, skipping");
 		return;
@@ -701,10 +764,17 @@ module.exports = {
 	prepareDocsAnswer,
 	postDocsAnswer,
 	alreadyAnswered,
+	checkAnswerGates,
+	composeAndPostAnswer,
 	validateJudgeResponse,
+	parseRelatedExcerpts,
+	balanceCodeFences,
 	checkSuppression,
 	renderDocsSection,
+	buildRelatedPostsSection,
 	chunkUrl,
+	MIN_SIMILARITY,
+	POSTS_MIN_SIMILARITY,
 	DOCS_ANSWER_COMMENT_TAG,
 	DOCS_ANSWER_METADATA_TAG,
 	DOCS_ANSWER_METADATA_VERSION,

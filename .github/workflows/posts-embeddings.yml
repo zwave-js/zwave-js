@@ -3,7 +3,7 @@ name: Build posts embeddings index
 # Builds and caches a semantic search index over issues and discussions,
 # used by the bot to suggest related/duplicate posts.
 # Between the nightly rebuilds, new posts are appended incrementally by
-# the update-posts-index jobs in the issue and discussion bot workflows.
+# the update-posts-index job in the issue/discussion bot workflow.
 
 on:
   schedule:
@@ -15,7 +15,10 @@ on:
     paths:
       - '.github/bot-scripts/buildPostsIndex.cjs'
       - '.github/bot-scripts/postsIndex.cjs'
+      - '.github/bot-scripts/indexCacheKeys.cjs'
       - '.github/bot-scripts/localEmbeddings.cjs'
+      - '.github/bot-scripts/package.json'
+      - '.github/bot-scripts/package-lock.json'
       - '.github/bot-scripts/githubApi.cjs'
       - '.github/bot-scripts/evalRelatedPosts.cjs'
       - '.github/bot-scripts/evalUtils.cjs'
@@ -33,10 +36,22 @@ jobs:
   build-index:
     runs-on: [ubuntu-latest]
     timeout-minutes: 20
+    outputs:
+      cache-key: ${{ steps.cachekey.outputs.key }}
 
     steps:
     - name: Checkout master branch
       uses: actions/checkout@v7
+
+    # The version-derived prefix lives in indexCacheKeys.cjs; the run-scoped
+    # save key is computed once here and reused by the evaluate job
+    - name: Compute the cache key
+      id: cachekey
+      run: |
+        set -euo pipefail
+        prefix=$(node -p "require('./.github/bot-scripts/indexCacheKeys.cjs').POSTS_CACHE_PREFIX")
+        echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+        echo "key=${prefix}${{ github.run_id }}" >> "$GITHUB_OUTPUT"
 
     # Cache keys are immutable, so the rolling index is always saved under
     # a fresh run-scoped key and restored via the newest prefix match.
@@ -48,27 +63,14 @@ jobs:
         path: .posts-index
         # There is no exact key to match, the newest index is picked
         # via the prefix
-        key: posts-embeddings-v2-
+        key: ${{ steps.cachekey.outputs.prefix }}
         restore-keys: |
-          posts-embeddings-v2-
+          ${{ steps.cachekey.outputs.prefix }}
 
-    - name: Enable Corepack
-      run: corepack enable
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
+    - name: Setup embeddings
+      uses: ./.github/actions/setup-bot-embeddings
       with:
-        node-version: 22
-        cache: 'yarn'
-
-    - name: Install embedding dependencies
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
-
-    - name: Restore embedding model
-      uses: actions/cache@v6
-      with:
-        path: ~/.cache/zwave-js-mcp-server-dev/models
-        key: embedding-model-${{ hashFiles('.github/bot-scripts/localEmbeddings.cjs') }}
+        save-model-cache: 'true'
 
     - name: Build index
       env:
@@ -79,7 +81,19 @@ jobs:
       uses: actions/cache/save@v6
       with:
         path: .posts-index
-        key: posts-embeddings-v2-${{ github.run_id }}
+        key: ${{ steps.cachekey.outputs.key }}
+
+    # Use artifacts as a fallback for the actions cache getting evicted
+    - name: Upload index artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: posts-index
+        path: .posts-index
+        retention-days: 30
+        # Include dot directories, including `.posts-index`
+        include-hidden-files: true
+        # The answer bot depends on this artifact existing
+        if-no-files-found: error
 
   evaluate:
     needs: build-index
@@ -98,7 +112,7 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: .posts-index
-        key: posts-embeddings-v2-${{ github.run_id }}
+        key: ${{ needs.build-index.outputs.cache-key }}
 
     - name: Fail if posts index is missing
       if: steps.restore-index.outputs.cache-hit != 'true'
@@ -106,23 +120,8 @@ jobs:
         echo "::error::Posts index cache miss after build-index - cannot evaluate retrieval quality"
         exit 1
 
-    - name: Enable Corepack
-      run: corepack enable
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 22
-        cache: 'yarn'
-
-    - name: Install embedding dependencies
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
-
-    - name: Restore embedding model
-      uses: actions/cache@v6
-      with:
-        path: ~/.cache/zwave-js-mcp-server-dev/models
-        key: embedding-model-${{ hashFiles('.github/bot-scripts/localEmbeddings.cjs') }}
+    - name: Setup embeddings
+      uses: ./.github/actions/setup-bot-embeddings
 
     - name: Evaluate retrieval quality
       id: eval

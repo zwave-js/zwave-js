@@ -20,18 +20,18 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v7
 
-    - name: Enable Corepack
-      run: corepack enable
-
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
         node-version: 22
-        cache: 'yarn'
+        cache: 'npm'
+        cache-dependency-path: .github/bot-scripts/package-lock.json
 
-    # Provides fflate for decompressing zipped logfile uploads
-    - name: Install dependencies
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
+    # The bot scripts declare fflate (used to decompress zipped logfile
+    # uploads); --ignore-scripts skips onnxruntime-node's GPU-provider download
+    - name: Install bot-script dependencies
+      working-directory: .github/bot-scripts
+      run: npm ci --ignore-scripts
 
     - name: Extract log file from issue body
       uses: actions/github-script@v9
@@ -102,6 +102,7 @@ jobs:
     runs-on: [ubuntu-latest]
     timeout-minutes: 10
     permissions:
+      actions: read
       contents: read
     if: github.event.action == 'opened' || github.event.action == 'created'
 
@@ -109,42 +110,27 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v7
 
+    # Restoring from the artifact and re-saving the cache below is also how an
+    # evicted cache entry heals itself between two nightly rebuilds
     - name: Restore posts index
-      id: restore-posts-index
-      uses: actions/cache/restore@v6
+      id: posts-index
+      uses: ./.github/actions/restore-bot-index
       with:
-        path: .posts-index
-        # There is no exact key to match, the newest index is picked
-        # via the prefix
-        key: posts-embeddings-v2-
-        restore-keys: |
-          posts-embeddings-v2-
+        index: posts
+        github-token: ${{ github.token }}
 
-    - name: Enable Corepack
-      if: steps.restore-posts-index.outputs.cache-matched-key != ''
-      run: corepack enable
+    - name: Warn if no posts index is available
+      if: steps.posts-index.outputs.found != 'true'
+      run: |
+        echo "::warning::The posts index could not be restored, from cache or from artifacts - this post will only be indexed by the next nightly rebuild"
 
-    - name: Setup Node.js
-      if: steps.restore-posts-index.outputs.cache-matched-key != ''
-      uses: actions/setup-node@v6
-      with:
-        node-version: 22
-        cache: 'yarn'
-
-    - name: Install embedding dependencies
-      if: steps.restore-posts-index.outputs.cache-matched-key != ''
-      run: yarn workspaces focus @zwave-js/mcp-server-dev --production
-
-    - name: Restore embedding model
-      if: steps.restore-posts-index.outputs.cache-matched-key != ''
-      uses: actions/cache@v6
-      with:
-        path: ~/.cache/zwave-js-mcp-server-dev/models
-        key: embedding-model-${{ hashFiles('.github/bot-scripts/localEmbeddings.cjs') }}
+    - name: Setup embeddings
+      if: steps.posts-index.outputs.found == 'true'
+      uses: ./.github/actions/setup-bot-embeddings
 
     - name: Add post to index
       id: update
-      if: steps.restore-posts-index.outputs.cache-matched-key != ''
+      if: steps.posts-index.outputs.found == 'true'
       uses: actions/github-script@v9
       env:
         POSTS_INDEX_PATH: .posts-index/index.json
@@ -153,16 +139,10 @@ jobs:
           const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
           return bot.updatePostsIndex({github, context});
 
-    - name: Warn if no posts index is available
-      if: steps.restore-posts-index.outputs.cache-matched-key == ''
-      uses: actions/github-script@v9
-      with:
-        script: |
-          core.warning('No posts index cache is available yet - skipping the incremental posts index update for this post.');
-
+    # Save under the same version-derived prefix the producers use
     - name: Save posts index
       if: steps.update.outputs.result == 'true'
       uses: actions/cache/save@v6
       with:
         path: .posts-index
-        key: posts-embeddings-v2-${{ github.run_id }}
+        key: ${{ steps.posts-index.outputs.prefix }}${{ github.run_id }}

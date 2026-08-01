@@ -1,0 +1,72 @@
+name: Bot index self-check
+
+# Test the *restore* path of the index pipeline without relying on a user to
+# open a discussion or issue
+
+on:
+  schedule:
+    # After both nightly rebuilds (03:30 docs, 04:30 posts)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+# The tracking issue is found by title, so two overlapping runs could both miss
+# it and open duplicates
+concurrency:
+  group: bot-index-selfcheck
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout master branch
+      uses: actions/checkout@v7
+
+    - name: Restore docs index
+      id: docs-index
+      uses: ./.github/actions/restore-bot-index
+      with:
+        index: docs
+        github-token: ${{ github.token }}
+
+    - name: Restore posts index
+      id: posts-index
+      uses: ./.github/actions/restore-bot-index
+      with:
+        index: posts
+        github-token: ${{ github.token }}
+
+    # always(), so a restore that hard-fails still gets reported rather than
+    # leaving the scheduled-run email as the only trace
+    - name: Report index status
+      id: status
+      if: always()
+      uses: ./.github/actions/report-index-status
+      with:
+        docs: ${{ steps.docs-index.outputs.found }}
+        posts: ${{ steps.posts-index.outputs.found }}
+        docs-status: ${{ steps.docs-index.outputs.status }}
+        posts-status: ${{ steps.posts-index.outputs.status }}
+        docs-age-days: ${{ steps.docs-index.outputs.age-days }}
+        posts-age-days: ${{ steps.posts-index.outputs.age-days }}
+        docs-source: ${{ steps.docs-index.outputs.source }}
+        posts-source: ${{ steps.posts-index.outputs.source }}
+        # Daily, so one comment per night on a standing outage is a useful
+        # heartbeat rather than noise
+        quiet: 'false'
+
+    # Stricter than the bot, which degrades to a single index and keeps
+    # answering: a health check exists to go red early, including on a stale
+    # pipeline that the cache is still papering over
+    - name: Fail if either index is missing or stale
+      if: always() && steps.status.outputs.healthy != 'true'
+      run: |
+        echo "::error::Index restore unhealthy (docs: found=${{ steps.docs-index.outputs.found }} status=${{ steps.docs-index.outputs.status }}, posts: found=${{ steps.posts-index.outputs.found }} status=${{ steps.posts-index.outputs.status }})"
+        exit 1
