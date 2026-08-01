@@ -125,7 +125,9 @@ steps:
       LOGFILE_PATH: /tmp/gh-aw/agent/logfile.log
     run: |
       mkdir -p /tmp/gh-aw/agent
-      curl -fsSL --max-filesize 52428800 --connect-timeout 15 --max-time 120 --retry 3 --retry-delay 2 -o "$LOGFILE_PATH" "$LOGFILE_URL"
+      # 2 GB is the cap for plaintext logs; the decompress step rejects
+      # compressed uploads over 250 MB
+      curl -fsSL --max-filesize 2147483648 --connect-timeout 15 --max-time 600 --retry 3 --retry-delay 2 -o "$LOGFILE_PATH" "$LOGFILE_URL"
       node .github/bot-scripts/decompressLogfile.cjs
       wc -l "$LOGFILE_PATH"
 

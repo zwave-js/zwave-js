@@ -26,7 +26,7 @@ describe("decompressLogfile", () => {
 		delete process.env.LOGFILE_PATH;
 	});
 
-	it("replaces a zip with the logfile it contains", () => {
+	it("replaces a zip with the logfile it contains", async () => {
 		writeFileSync(
 			path,
 			zipSync({
@@ -35,11 +35,11 @@ describe("decompressLogfile", () => {
 				),
 			}),
 		);
-		decompressLogfile();
+		await decompressLogfile();
 		expect(readFileSync(path, "utf8")).toBe(logContent);
 	});
 
-	it("picks the active driver log out of a bundle", () => {
+	it("picks the active driver log out of a bundle", async () => {
 		writeFileSync(
 			path,
 			zipSync({
@@ -48,23 +48,23 @@ describe("decompressLogfile", () => {
 				"logs/zwavejs_current.log": encoder.encode(logContent),
 			}),
 		);
-		decompressLogfile();
+		await decompressLogfile();
 		expect(readFileSync(path, "utf8")).toBe(logContent);
 	});
 
-	it("decompresses gzipped logfiles", () => {
+	it("decompresses gzipped logfiles", async () => {
 		writeFileSync(path, gzipSync(encoder.encode(logContent)));
-		decompressLogfile();
+		await decompressLogfile();
 		expect(readFileSync(path, "utf8")).toBe(logContent);
 	});
 
-	it("leaves plain logfiles alone", () => {
+	it("leaves plain logfiles alone", async () => {
 		writeFileSync(path, logContent);
-		decompressLogfile();
+		await decompressLogfile();
 		expect(readFileSync(path, "utf8")).toBe(logContent);
 	});
 
-	it("fails when no single logfile can be identified", () => {
+	it("fails when no single logfile can be identified", async () => {
 		writeFileSync(
 			path,
 			zipSync({
@@ -72,6 +72,6 @@ describe("decompressLogfile", () => {
 				"two.log": encoder.encode(logContent),
 			}),
 		);
-		expect(() => decompressLogfile()).toThrow("single logfile");
+		await expect(decompressLogfile()).rejects.toThrow("single logfile");
 	});
 });
