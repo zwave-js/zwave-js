@@ -19,10 +19,9 @@ const { pipeline } = require("node:stream/promises");
 const { createGunzip } = require("node:zlib");
 const {
 	compressedUploadKind,
+	MAX_ARCHIVE_SIZE,
 	pickLogfileFromArchive,
 } = require("./utils.cjs");
-
-const MAX_ARCHIVE_SIZE = 250 * 1024 * 1024;
 
 /**
  * @param {string} path

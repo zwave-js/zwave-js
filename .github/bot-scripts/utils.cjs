@@ -23,6 +23,13 @@ const AUTO_ANALYSIS_END_TAG = "<!-- AUTO_ANALYSIS_END_TAG -->";
 const markdownLinkRegex = /\[.*\]\((http.*?)\)/;
 const codeBlockRegex = /`{3,4}(.*?)`{3,4}/s;
 
+// Plaintext logfiles may be up to 2 GB, but zipping one that large is a sign
+// that something other than a driver log was uploaded
+const MAX_ARCHIVE_SIZE = 250 * 1024 * 1024;
+// The classifier only looks at line patterns, so the tail is enough
+const LOGFILE_TAIL_LINES = 250;
+const INFLATE_CHUNK_SIZE = 1024 * 1024;
+
 /**
  * Check if a PR was modified after a specific comment using the timeline API.
  * This is more robust than timestamp comparisons because it uses GitHub's
@@ -257,37 +264,153 @@ function pickLogfileFromArchive(names) {
 }
 
 /**
- * Decompresses zipped or gzipped logfile uploads, following the pattern
- * of tryUnzipFirmwareFile in @zwave-js/core. Returns the data unchanged
- * when it is not compressed or no single logfile can be identified -
- * the logfile classifier then flags it as binary.
- * @param {Uint8Array} data
- * @returns {Uint8Array}
+ * Collects the trailing lines of a text stream, holding on to no more than
+ * those lines
+ * @param {number} maxLines
  */
-function maybeDecompressLogfile(data) {
-	const kind = compressedUploadKind(data);
-	if (!kind) return data;
+function createTailCollector(maxLines) {
+	const decoder = new TextDecoder();
+	/** @type {string[]} */
+	let lines = [];
+	let partial = "";
 
-	// Lazy import, so bot scripts that never see compressed uploads work
-	// without node_modules. Workflows that extract logfiles must install
-	// dependencies - a missing module should fail the run, not degrade
-	// into "binary file" feedback.
-	const { gunzipSync, unzipSync } = require("fflate");
+	/** @param {string} text */
+	function add(text) {
+		const split = text.split("\n");
+		partial = split.pop() ?? "";
+		for (const line of split) lines.push(line);
+		if (lines.length > maxLines) lines = lines.slice(-maxLines);
+	}
+
+	return {
+		/** @param {Uint8Array} chunk */
+		push(chunk) {
+			add(partial + decoder.decode(chunk, { stream: true }));
+		},
+		end() {
+			add(partial + decoder.decode());
+			if (partial) lines.push(partial);
+			return lines.slice(-maxLines).join("\n");
+		},
+	};
+}
+
+/**
+ * Decodes the head of an upload that could not be decompressed, so the
+ * classifier sees the magic bytes and reports a binary file
+ * @param {Uint8Array} data
+ */
+function binarySample(data) {
+	return new TextDecoder().decode(data.subarray(0, 8192));
+}
+
+/**
+ * @param {Uint8Array} data - The buffered zip archive
+ * @param {ReturnType<typeof createTailCollector>} tail
+ */
+function readZippedLogfileTail(data, tail) {
+	const { Unzip, UnzipInflate, unzipSync } = require("fflate");
 	try {
-		if (kind === "zip") {
-			const unzipped = unzipSync(data, {
-				filter: (file) => isLogfileEntry(file.name),
+		/** @type {string[]} */
+		const names = [];
+		// Returning false from the filter collects the entry names without
+		// inflating anything
+		unzipSync(data, {
+			filter: (file) => {
+				names.push(file.name);
+				return false;
+			},
+		});
+		const name = pickLogfileFromArchive(names);
+		if (name) {
+			// Inflate only the picked entry, and only far enough to keep its
+			// tail - the decompressed log can exceed the maximum string length
+			const unzip = new Unzip((file) => {
+				if (file.name !== name) return;
+				file.ondata = (err, chunk) => {
+					if (err) throw err;
+					tail.push(chunk);
+				};
+				file.start();
 			});
-			const name = pickLogfileFromArchive(Object.keys(unzipped));
-			if (name) return unzipped[name];
-		} else {
-			return gunzipSync(data);
+			unzip.register(UnzipInflate);
+			// Inflate emits one chunk per push, so feed the archive in slices
+			// rather than in one call
+			for (let i = 0; i < data.length; i += INFLATE_CHUNK_SIZE) {
+				const end = i + INFLATE_CHUNK_SIZE;
+				unzip.push(data.subarray(i, end), end >= data.length);
+			}
+			return tail.end();
 		}
 	} catch (e) {
 		// Corrupted or password-protected archives get binary-file feedback
 		console.error("Failed to decompress logfile:", e);
 	}
-	return data;
+	return binarySample(data);
+}
+
+/**
+ * Reads the trailing lines of a logfile response, decompressing zipped or
+ * gzipped uploads on the fly. Uploads are allowed to be gigabytes large, so
+ * only the tail - and, for zips, the compressed bytes - is held in memory.
+ * @param {Response} resp
+ * @returns {Promise<string>}
+ */
+async function readLogfileTail(resp) {
+	if (!resp.body) return "";
+
+	const tail = createTailCollector(LOGFILE_TAIL_LINES);
+	/** @type {"zip" | "gzip" | undefined} */
+	let kind;
+	/** @type {import("fflate").Gunzip | undefined} */
+	let gunzip;
+	/** @type {Uint8Array[]} */
+	const zipChunks = [];
+	let zipSize = 0;
+	let oversized = false;
+	let first = true;
+
+	for await (const chunk of resp.body) {
+		if (first) {
+			first = false;
+			// Lazy import, so bot scripts that never see compressed uploads
+			// work without node_modules. Workflows that extract logfiles must
+			// install dependencies - a missing module should fail the run, not
+			// degrade into "binary file" feedback.
+			kind = compressedUploadKind(chunk);
+			if (kind === "gzip") {
+				const { Gunzip } = require("fflate");
+				gunzip = new Gunzip((data) => tail.push(data));
+			}
+		}
+
+		if (kind === "zip") {
+			// A zip can only be read once its central directory has arrived
+			zipSize += chunk.length;
+			if (zipSize > MAX_ARCHIVE_SIZE) {
+				oversized = true;
+				break;
+			}
+			zipChunks.push(chunk);
+		} else if (gunzip) {
+			gunzip.push(chunk);
+		} else {
+			tail.push(chunk);
+		}
+	}
+
+	if (kind === "zip") {
+		const data = new Uint8Array(zipSize);
+		let offset = 0;
+		for (const chunk of zipChunks) {
+			data.set(chunk, offset);
+			offset += chunk.length;
+		}
+		if (oversized) return binarySample(data);
+		return readZippedLogfileTail(data, tail);
+	}
+	if (gunzip) gunzip.push(new Uint8Array(0), true);
+	return tail.end();
 }
 
 /**
@@ -309,12 +432,7 @@ async function extractLogfileContent(logfileSection) {
 				);
 				return "ERROR_FETCH";
 			}
-			const data = maybeDecompressLogfile(
-				new Uint8Array(await resp.arrayBuffer()),
-			);
-			const logFile = new TextDecoder().decode(data);
-			// limit to the last 250 lines
-			return logFile.split("\n").slice(-250).join("\n");
+			return await readLogfileTail(resp);
 		} catch (e) {
 			console.error(`Failed to fetch logfile from ${link}:`, e);
 			return "ERROR_FETCH";
@@ -342,7 +460,8 @@ module.exports = {
 	extractLogfileContent,
 	compressedUploadKind,
 	pickLogfileFromArchive,
-	maybeDecompressLogfile,
+	readLogfileTail,
+	MAX_ARCHIVE_SIZE,
 	AUTO_ANALYSIS_COMMENT_TAG,
 	AUTO_ANALYSIS_START_TAG,
 	AUTO_ANALYSIS_END_TAG,
