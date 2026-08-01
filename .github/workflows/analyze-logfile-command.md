@@ -41,16 +41,9 @@ steps:
         core.setOutput("query", (match.groups.query || "").trim());
 
   - name: Download logfile
-    env:
-      LOGFILE_URL: ${{ steps.parse_command.outputs.url }}
-      LOGFILE_PATH: /tmp/gh-aw/agent/logfile.log
-    run: |
-      mkdir -p /tmp/gh-aw/agent
-      # 2 GB is the cap for plaintext logs; the decompress step rejects
-      # compressed uploads over 250 MB
-      curl -fsSL --max-filesize 2147483648 --connect-timeout 15 --max-time 600 --retry 3 --retry-delay 2 -o "$LOGFILE_PATH" "$LOGFILE_URL"
-      node .github/bot-scripts/decompressLogfile.cjs
-      wc -l "$LOGFILE_PATH"
+    uses: ./.github/actions/download-logfile
+    with:
+      url: ${{ steps.parse_command.outputs.url }}
 
 safe-outputs:
   add-comment:
