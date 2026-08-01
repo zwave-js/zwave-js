@@ -2,6 +2,7 @@
 
 /// <reference path="types.d.ts" />
 
+const { config } = require("./config.cjs");
 const { listCommentsSinceTransfer } = require("./utils.cjs");
 
 const LOGFILE_COMMENT_TAG = "<!-- LOGFILE_COMMENT_TAG -->";
@@ -103,7 +104,7 @@ As a reminder, here's how to create one:
 		);
 		const existing = comments.find(
 			(c) =>
-				c.user?.login === "zwave-js-bot"
+				c.user?.login === config.bot.login
 				&& c.body?.includes(LOGFILE_COMMENT_TAG),
 		);
 		if (existing) {

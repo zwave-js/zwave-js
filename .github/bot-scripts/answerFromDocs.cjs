@@ -5,7 +5,7 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { readAgentOutputItem } = require("./agentOutput.cjs");
-const { authorizedUsers } = require("./users.cjs");
+const { config, excludedUsers } = require("./config.cjs");
 const { cosineSimilarity, loadDocsIndex, retrieve } = require(
 	"./docsIndex.cjs",
 );
@@ -24,13 +24,9 @@ const {
 	postFromContext,
 } = require("./utils.cjs");
 
-const DOCS_BASE_URL = "https://zwave-js.github.io/zwave-js/#";
 const DOCS_ANSWER_COMMENT_TAG = "<!-- DOCS_ANSWER_COMMENT_TAG -->";
 const DOCS_ANSWER_METADATA_TAG = "DOCS_ANSWER_METADATA";
 const DOCS_ANSWER_METADATA_VERSION = 1;
-
-// Users whose posts should never be answered automatically
-const EXCLUDED_USERS = [...authorizedUsers, "zwave-js-bot"];
 
 const MAX_RETRIEVED_CHUNKS = 5;
 // Below this best-match cosine similarity the post is off-topic and the
@@ -70,7 +66,7 @@ const SUPPRESS_SIMILARITY = 0.9;
 /** @param {{file: string, anchor: string}} chunk */
 function chunkUrl(chunk) {
 	const docPath = chunk.file.replace(/(README|index)?\.md$/, "");
-	let url = `${DOCS_BASE_URL}/${docPath}`;
+	let url = `${config.docs.baseUrl}/${docPath}`;
 	if (chunk.anchor) url += `?id=${chunk.anchor}`;
 	return url;
 }
@@ -506,7 +502,7 @@ async function checkAnswerGates(param) {
 	const author = post.user?.login;
 	if (
 		!author
-		|| EXCLUDED_USERS.includes(author)
+		|| excludedUsers.includes(author)
 		|| post.user?.type === "Bot"
 	) {
 		console.log(`Skipping post by ${author}`);
@@ -778,5 +774,4 @@ module.exports = {
 	DOCS_ANSWER_COMMENT_TAG,
 	DOCS_ANSWER_METADATA_TAG,
 	DOCS_ANSWER_METADATA_VERSION,
-	DOCS_BASE_URL,
 };

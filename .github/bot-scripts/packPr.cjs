@@ -4,11 +4,7 @@
 /// <reference path="../bot-scripts/types.d.ts" />
 
 const semver = require("semver");
-
-const options = {
-	owner: "zwave-js",
-	repo: "zwave-js",
-};
+const { config } = require("./config.cjs");
 
 /**
  * @param {{github: Github, context: Context}} param
@@ -16,6 +12,10 @@ const options = {
 async function main(param) {
 	const { exec } = await import("@actions/exec");
 	const { github, context } = param;
+	const options = {
+		owner: context.repo.owner,
+		repo: context.repo.repo,
+	};
 
 	const npmToken = /** @type {string} */ (process.env.NPM_TOKEN);
 	const pr = context.issue.number;
@@ -35,8 +35,8 @@ async function main(param) {
 		await exec("yarn", ["run", "build"]);
 
 		// Configure git
-		await exec("git", ["config", "user.email", "bot@zwave-js.io"]);
-		await exec("git", ["config", "user.name", "Z-Wave JS Bot"]);
+		await exec("git", ["config", "user.email", config.bot.email]);
+		await exec("git", ["config", "user.name", config.bot.name]);
 
 		// Configure npm login
 		await exec("yarn", ["config", "set", "npmAuthToken", npmToken]);
