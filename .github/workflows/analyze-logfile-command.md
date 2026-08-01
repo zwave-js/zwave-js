@@ -41,12 +41,9 @@ steps:
         core.setOutput("query", (match.groups.query || "").trim());
 
   - name: Download logfile
-    env:
-      LOGFILE_URL: ${{ steps.parse_command.outputs.url }}
-    run: |
-      mkdir -p /tmp/gh-aw/agent
-      curl -fsSL --max-filesize 52428800 --connect-timeout 15 --max-time 120 --retry 3 --retry-delay 2 -o /tmp/gh-aw/agent/logfile.log "$LOGFILE_URL"
-      wc -l /tmp/gh-aw/agent/logfile.log
+    uses: ./.github/actions/download-logfile
+    with:
+      url: ${{ steps.parse_command.outputs.url }}
 
 safe-outputs:
   add-comment:
