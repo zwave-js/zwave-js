@@ -149,7 +149,15 @@ jobs:
         yarn version apply --all
 
     - name: Pack the packages
-      run: yarn workspaces foreach --all -v --no-private pack --out "$RUNNER_TEMP/tarballs/%s.tgz"
+      run: |
+        set -o pipefail
+        yarn workspaces foreach --all -v --no-private pack --out "$RUNNER_TEMP/tarballs/%s.tgz"
+
+        # Record the topological order, so dependencies get published before their dependents.
+        # yarn's `pack --out %s` turns the package name into the file name the same way.
+        yarn workspaces foreach --all -t --no-private exec \
+          'node -p "require(process.cwd() + \"/package.json\").name.replace(\"/\", \"-\") + \".tgz\""' \
+          | grep '\.tgz$' > "$RUNNER_TEMP/tarballs/order.txt"
 
     - name: Upload the tarballs
       uses: actions/upload-artifact@v7
@@ -192,17 +200,36 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       # npm is used instead of yarn, because yarn can only publish a workspace it
       # packs itself, which would require the PR code in this job again
+      working-directory: tarballs
       run: |
-        for tarball in tarballs/*.tgz ; do
-          if output=$(npm publish "$tarball" --tag next 2>&1) ; then
-            echo "$output"
-            continue
+        while read -r tarball ; do
+          if [ ! -f "$tarball" ] ; then
+            echo "$tarball is missing from the artifact"
+            exit 1
           fi
 
-          echo "$output"
-          # Tolerate a version that already exists, e.g. when the command gets repeated
-          echo "$output" | grep -q "cannot publish over" || exit 1
-        done
+          delay=5
+          while true ; do
+            if output=$(npm publish "$tarball" --tag next 2>&1) ; then
+              echo "$output"
+              break
+            fi
+            echo "$output"
+
+            # Tolerate a version that already exists, e.g. when the command gets
+            # repeated or when a retry follows a publish that did go through
+            if echo "$output" | grep -q "cannot publish over" ; then
+              break
+            fi
+            if [ "$delay" -gt 20 ] ; then
+              exit 1
+            fi
+
+            echo "Retrying $tarball in ${delay}s"
+            sleep "$delay"
+            delay=$((delay * 2))
+          done
+        done < order.txt
 
     - name: Give feedback
       if: always()
