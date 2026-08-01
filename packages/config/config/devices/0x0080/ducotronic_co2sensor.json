@@ -17,7 +17,7 @@
 	"compat": {
 		"commandClasses": {
 			"remove": {
-				// Interview fails during endpoint discovery, so force-remove Multi Channel CC
+				// Multi Channel CC is reported as supported, but interview queries are never answered
 				"Multi Channel": {
 					"endpoints": "*"
 				}
