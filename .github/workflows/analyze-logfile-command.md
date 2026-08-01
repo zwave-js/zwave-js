@@ -1,62 +1,58 @@
 ---
-description: Analyze a Z-Wave JS logfile on demand via /analyze-logfile <url>
+
 
 on:
+  roles:
+  - admin
+  - maintainer
+  - write
   slash_command:
+    events:
+    - issue_comment
+    - discussion_comment
     name: analyze-logfile
-    events: [issue_comment, discussion_comment]
-  # Only maintainers may trigger the analysis
-  roles: [admin, maintainer, write]
-
 permissions:
   contents: read
   discussions: read
   issues: read
-
+network: defaults
 imports:
-  - zwave-js/bot-workflows/workflows/shared/hardening.md@main
-  - zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@main
-
-steps:
-  - name: Parse command
-    id: parse_command
-    uses: actions/github-script@v9
-    env:
-      COMMENT_BODY: ${{ github.event.comment.body }}
-    with:
-      script: |
-        const body = process.env.COMMENT_BODY ?? "";
-        const match =
-          /^\/analyze-logfile\s+(?<url>https?:\/\/\S+)\s*\n?(?<query>[\s\S]*)/m
-            .exec(body);
-        if (!match?.groups?.url) {
-          core.setFailed(
-            "No valid URL provided. Please use the format: /analyze-logfile <url>",
-          );
-          return;
-        }
-        core.setOutput("url", match.groups.url.trim());
-        core.setOutput("query", (match.groups.query || "").trim());
-
-  - name: Download logfile
-    uses: ./.github/actions/download-logfile
-    with:
-      url: ${{ steps.parse_command.outputs.url }}
-
+- zwave-js/bot-workflows/workflows/shared/hardening.md@main
+- zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@main
 safe-outputs:
   add-comment:
     discussions: true
-    # Post as the bot account like the other bot comments
     github-token: ${{ secrets.BOT_TOKEN }}
-
-# Network stays open: the log-analyzer MCP server is fetched with npx at
-# startup, and the logfile is downloaded in a step above
-network: defaults
-
+steps:
+- env:
+    COMMENT_BODY: ${{ github.event.comment.body }}
+  id: parse_command
+  name: Parse command
+  uses: actions/github-script@v9.0.0
+  with:
+    script: |
+      const body = process.env.COMMENT_BODY ?? "";
+      const match =
+        /^\/analyze-logfile\s+(?<url>https?:\/\/\S+)\s*\n?(?<query>[\s\S]*)/m
+          .exec(body);
+      if (!match?.groups?.url) {
+        core.setFailed(
+          "No valid URL provided. Please use the format: /analyze-logfile <url>",
+        );
+        return;
+      }
+      core.setOutput("url", match.groups.url.trim());
+      core.setOutput("query", (match.groups.query || "").trim());
+- 
+  name: Download logfile
+  uses: ./.github/actions/download-logfile
+  with:
+      url: ${{ steps.parse_command.outputs.url }}
+description: Analyze a Z-Wave JS logfile on demand via /analyze-logfile <url>
+engine: copilot
+source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@d0de475bbe438b313321e0b1a22cbcbc8b3634a9
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@3dd7955f4d8730d34e92dc624fdae9566d6bface
 ---
-
 # Z-Wave JS Logfile Analysis
 
 A maintainer requested an analysis of a Z-Wave JS driver logfile by commenting on an issue or discussion. The logfile has been downloaded to `/tmp/gh-aw/agent/logfile.log` on this runner.
