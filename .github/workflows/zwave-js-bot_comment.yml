@@ -189,7 +189,7 @@ jobs:
     # This also creates the .npmrc that npm publish needs to authenticate
     - name: Set up Node.js
       if: needs.pack-pr.result == 'success'
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: 22 # This should be LTS
         registry-url: 'https://registry.npmjs.org'
