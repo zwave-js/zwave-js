@@ -210,6 +210,53 @@ function extractLogfileUrl(logfileSection) {
 }
 
 /**
+ * Detects zipped or gzipped logfile uploads by their magic bytes
+ * @param {Uint8Array} data
+ * @returns {"zip" | "gzip" | undefined}
+ */
+function compressedUploadKind(data) {
+	if (
+		data[0] === 0x50
+		&& data[1] === 0x4b
+		&& data[2] === 0x03
+		&& data[3] === 0x04
+	) {
+		return "zip";
+	}
+	if (data[0] === 0x1f && data[1] === 0x8b) return "gzip";
+}
+
+/**
+ * @param {string} name
+ */
+function isLogfileEntry(name) {
+	return /\.(log|txt)$/i.test(name)
+		// macOS zips contain resource-fork copies of each file
+		&& !name.startsWith("__MACOSX/")
+		&& !name.split("/").pop()?.startsWith("._");
+}
+
+/**
+ * Picks the logfile to analyze from the entry names of a zipped upload.
+ * @param {string[]} names
+ * @returns {string | undefined} - undefined when no single candidate can be identified
+ */
+function pickLogfileFromArchive(names) {
+	let candidates = names.filter(isLogfileEntry);
+	if (candidates.length > 1) {
+		// Prefer the driver log when other logs are bundled along,
+		// and the active logfile over rotated ones
+		const zjsLogs = candidates.filter((name) => /zwavejs_/.test(name));
+		if (zjsLogs.length > 0) candidates = zjsLogs;
+		const current = candidates.find((name) =>
+			name.endsWith("zwavejs_current.log")
+		);
+		if (current) candidates = [current];
+	}
+	return candidates.length === 1 ? candidates[0] : undefined;
+}
+
+/**
  * Decompresses zipped or gzipped logfile uploads, following the pattern
  * of tryUnzipFirmwareFile in @zwave-js/core. Returns the data unchanged
  * when it is not compressed or no single logfile can be identified -
@@ -218,12 +265,8 @@ function extractLogfileUrl(logfileSection) {
  * @returns {Uint8Array}
  */
 function maybeDecompressLogfile(data) {
-	const isZip = data[0] === 0x50
-		&& data[1] === 0x4b
-		&& data[2] === 0x03
-		&& data[3] === 0x04;
-	const isGzip = data[0] === 0x1f && data[1] === 0x8b;
-	if (!isZip && !isGzip) return data;
+	const kind = compressedUploadKind(data);
+	if (!kind) return data;
 
 	// Lazy import, so bot scripts that never see compressed uploads work
 	// without node_modules. Workflows that extract logfiles must install
@@ -231,26 +274,12 @@ function maybeDecompressLogfile(data) {
 	// into "binary file" feedback.
 	const { gunzipSync, unzipSync } = require("fflate");
 	try {
-		if (isZip) {
+		if (kind === "zip") {
 			const unzipped = unzipSync(data, {
-				filter: (file) =>
-					/\.(log|txt)$/i.test(file.name)
-					// macOS zips contain resource-fork copies of each file
-					&& !file.name.startsWith("__MACOSX/")
-					&& !file.name.split("/").pop()?.startsWith("._"),
+				filter: (file) => isLogfileEntry(file.name),
 			});
-			let names = Object.keys(unzipped);
-			if (names.length > 1) {
-				// Prefer the driver log when other logs are bundled along,
-				// and the active logfile over rotated ones
-				const zjsLogs = names.filter((name) => /zwavejs_/.test(name));
-				if (zjsLogs.length > 0) names = zjsLogs;
-				const current = names.find((name) =>
-					name.endsWith("zwavejs_current.log")
-				);
-				if (current) names = [current];
-			}
-			if (names.length === 1) return unzipped[names[0]];
+			const name = pickLogfileFromArchive(Object.keys(unzipped));
+			if (name) return unzipped[name];
 		} else {
 			return gunzipSync(data);
 		}
@@ -311,6 +340,8 @@ module.exports = {
 	extractLogfileSection,
 	extractLogfileUrl,
 	extractLogfileContent,
+	compressedUploadKind,
+	pickLogfileFromArchive,
 	maybeDecompressLogfile,
 	AUTO_ANALYSIS_COMMENT_TAG,
 	AUTO_ANALYSIS_START_TAG,
