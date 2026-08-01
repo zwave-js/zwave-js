@@ -10,7 +10,7 @@ export interface AppInfo {
 	driverVersion: string;
 	applicationName: string;
 	applicationVersion: string;
-	/** A bare version on Node.js, prefixed with the runtime name elsewhere, e.g. `Bun v1.3.14` */
+	/** A bare version on Node.js, prefixed with the runtime name elsewhere, e.g. `Bun 1.3.14` */
 	nodeVersion: string;
 	os: string;
 	arch: string;
