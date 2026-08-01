@@ -20,13 +20,9 @@ module.exports = {
 		require("./ensureLogfileFeedbackInDiscussion.cjs")(...args),
 	hideTransferredComments: (...args) =>
 		require("./hideTransferredComments.cjs")(...args),
-	fixLintFeedback: (...args) => require("./fixLintFeedback.cjs")(...args),
-	getFixLintInfo: (...args) => require("./getFixLintInfo.cjs")(...args),
-	rebaseFeedback: (...args) => require("./rebaseFeedback.cjs")(...args),
 	importConfigCreatePR: (...args) =>
 		require("./importConfigCreatePR.cjs")(...args),
 	shouldAutomerge: (...args) => require("./shouldAutomerge.cjs")(...args),
-	packPr: (...args) => require("./packPr.cjs")(...args),
 	prepareDocsAnswer: (...args) =>
 		require("./answerFromDocs.cjs").prepareDocsAnswer(...args),
 	postDocsAnswer: (...args) =>
