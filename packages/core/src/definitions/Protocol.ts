@@ -144,6 +144,18 @@ export enum ProtocolHeaderFormat {
 	LongRange = 2,
 }
 
+export function znifferRegionToRFRegion(region: ZnifferRegion): RFRegion {
+	switch (region) {
+		// These Zniffer-only regions have no RFRegion counterpart. Map them to
+		// the closest region with the same channel configuration
+		case ZnifferRegion["USA (Long Range, backup)"]:
+		case ZnifferRegion["USA (Long Range, end device)"]:
+			return RFRegion["USA (Long Range)"];
+		default:
+			return region as number as RFRegion;
+	}
+}
+
 export function rfRegionToRadioProtocolMode(
 	region: RFRegion,
 ): RadioProtocolMode {

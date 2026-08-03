@@ -1,24 +1,37 @@
 import type { CommandClass } from "@zwave-js/cc";
 import {
-	type BeamingInfo,
-	MPDUHeaderType,
+	AckLongRangeMPDU,
+	AckZWaveMPDU,
+	ExplorerZWaveMPDU,
+	InclusionRequestExplorerZWaveMPDU,
+	LongRangeMPDU,
+	MPDU,
+	type MPDUParsingContext,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
+	MulticastZWaveMPDU,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
+	NormalExplorerZWaveMPDU,
 	Protocols,
 	type RSSI,
+	RoutedZWaveMPDU,
+	SearchResultExplorerZWaveMPDU,
+	SinglecastLongRangeMPDU,
+	SinglecastZWaveMPDU,
 	ZWaveError,
 	ZWaveErrorCodes,
+	ZWaveMPDU,
 	type ZnifferProtocolDataRate,
-	ZnifferRegion,
-	logBuffer,
-	mergeLogDict,
-	parseNodeBitMask,
-	parseRSSI,
+	type ZnifferRegion,
+	formatNodeId,
+	longRangeBeamPowerToDBm,
 	rssiToString,
 	validatePayload,
+	znifferProtocolDataRateToProtocolDataRate,
 	znifferProtocolDataRateToString,
+	znifferRegionToChannelConfiguration,
+	znifferRegionToRFRegion,
 } from "@zwave-js/core";
 import {
 	type ZnifferDataMessage,
@@ -30,755 +43,33 @@ import {
 	Bytes,
 	type BytesView,
 	buffer2hex,
-	pick,
-	staticExtends,
 } from "@zwave-js/shared";
-import {
-	ExplorerFrameCommand,
-	LongRangeFrameType,
-	ZWaveFrameType,
-} from "./_Types.js";
+import { LongRangeFrameType, ZWaveFrameType } from "./_Types.js";
 
-function getChannelConfiguration(region: ZnifferRegion): "1/2" | "3" | "4" {
-	switch (region) {
-		case ZnifferRegion.Japan:
-		case ZnifferRegion.Korea:
-			return "3";
-		case ZnifferRegion["USA (Long Range)"]:
-		case ZnifferRegion["USA (Long Range, backup)"]:
-		case ZnifferRegion["USA (Long Range, end device)"]:
-			return "4";
-		default:
-			return "1/2";
-	}
-}
-
-function longRangeBeamPowerToDBm(power: number): number {
-	return [
-		-6,
-		-2,
-		2,
-		6,
-		10,
-		13,
-		16,
-		19,
-		21,
-		23,
-		25,
-		26,
-		27,
-		28,
-		29,
-		30,
-	][power];
-}
-
-function formatNodeId(nodeId: number): string {
-	return nodeId.toString().padStart(3, "0");
-}
-
-function formatRoute(
-	source: number,
-	repeaters: readonly number[],
-	destination: number,
-	direction: "outbound" | "inbound",
-	currentHop: number,
-	failedHop?: number,
-): string {
-	return [
-		direction === "outbound"
-			? formatNodeId(source)
-			: formatNodeId(destination),
-		...repeaters.map(formatNodeId),
-		direction === "outbound"
-			? formatNodeId(destination)
-			: formatNodeId(source),
-	].map((id, i) => {
-		if (i === 0) return id;
-		if (i - 1 === failedHop) return " × " + id;
-		if (i - 1 === currentHop) {
-			return (direction === "outbound" ? " » " : " « ") + id;
-		}
-		return (direction === "outbound" ? " › " : " ‹ ") + id;
-	})
-		.join("");
-}
-
-export interface MPDUOptions {
-	data: Bytes;
-	frameInfo: ZnifferFrameInfo;
-}
-
-export interface MPDU {
-	frameInfo: ZnifferFrameInfo;
-	homeId: number;
-	sourceNodeId: number;
-	ackRequested: boolean;
-	headerType: MPDUHeaderType;
-	sequenceNumber: number;
-	payload: Bytes;
+export function znifferFrameInfoToMPDUParsingContext(
+	frameInfo: ZnifferFrameInfo,
+): MPDUParsingContext {
+	return {
+		channel: frameInfo.channel,
+		region: znifferRegionToRFRegion(frameInfo.region),
+		protocolDataRate: znifferProtocolDataRateToProtocolDataRate(
+			frameInfo.protocolDataRate,
+		),
+	};
 }
 
 export function parseMPDU(
 	frame: ZnifferDataMessage,
 ): ZWaveMPDU | LongRangeMPDU {
-	switch (frame.channel) {
-		case 0:
-		case 1:
-		case 2:
-			return ZWaveMPDU.from(frame);
-		case 3:
-		case 4:
-			return LongRangeMPDU.from(frame);
-		default:
-			validatePayload.fail(
-				`Unsupported channel ${frame.channel}. MPDU payload: ${
-					buffer2hex(frame.payload)
-				}`,
-			);
-	}
+	const ctx = znifferFrameInfoToMPDUParsingContext(frame);
+	return MPDU.parse(Bytes.view(frame.payload), ctx) as
+		| ZWaveMPDU
+		| LongRangeMPDU;
 }
 
-export class LongRangeMPDU implements MPDU {
-	public constructor(options: MPDUOptions) {
-		const data = options.data;
-		this.frameInfo = options.frameInfo;
-
-		if (
-			options.frameInfo.channel !== 3 // LR Channel A
-			&& options.frameInfo.channel !== 4 // LR Channel B
-		) {
-			validatePayload.fail(
-				`Unsupported channel ${options.frameInfo.channel} for LongRangeMPDU`,
-			);
-		}
-
-		this.homeId = data.readUInt32BE(0);
-		const nodeIds = data.readUIntBE(4, 3);
-		this.sourceNodeId = nodeIds >>> 12;
-		this.destinationNodeId = nodeIds & 0xfff;
-
-		// skip length byte
-
-		const frameControl = data[8];
-		this.ackRequested = !!(frameControl & 0b1000_0000);
-		const hasExtendedHeader = !!(frameControl & 0b0100_0000);
-		this.headerType = frameControl & 0b0000_0111;
-
-		this.sequenceNumber = data[9];
-		this.noiseFloor = parseRSSI(data, 10);
-		this.txPower = data.readInt8(11);
-
-		let offset = 12;
-		if (hasExtendedHeader) {
-			const extensionControl = data[offset++];
-			const extensionLength = extensionControl & 0b111;
-			// const discardUnknown = extensionControl & 0b0000_1000;
-			// const extensionType = (extensionControl & 0b0111_0000) >>> 4;
-			// TODO: Parse extension (once there is a definition)
-			offset += extensionLength;
-		}
-
-		const Constructor = this.headerType === MPDUHeaderType.Acknowledgement
-			? AckLongRangeMPDU
-			: this.headerType === MPDUHeaderType.Singlecast
-			? SinglecastLongRangeMPDU
-			: undefined;
-		if (!Constructor) {
-			validatePayload.fail(
-				`Unsupported Long Range MPDU header type ${this.headerType}`,
-			);
-		} else if (
-			new.target !== Constructor
-			&& !staticExtends(new.target, Constructor)
-		) {
-			return new Constructor(options);
-		}
-
-		this.payload = data.subarray(offset);
-	}
-
-	public readonly frameInfo: ZnifferFrameInfo;
-	public readonly homeId: number;
-	public readonly sourceNodeId: number;
-	public readonly destinationNodeId: number;
-	public readonly ackRequested: boolean;
-	public readonly headerType: MPDUHeaderType;
-	public readonly sequenceNumber: number;
-	public readonly noiseFloor: RSSI;
-	public readonly txPower: number;
-	public payload!: Bytes;
-
-	public static from(msg: ZnifferDataMessage): LongRangeMPDU {
-		return new LongRangeMPDU({
-			data: msg.payload,
-			frameInfo: pick(msg, [
-				"channel",
-				"frameType",
-				"region",
-				"protocolDataRate",
-				"rssiRaw",
-			]),
-		});
-	}
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const tags = [
-			formatRoute(
-				this.sourceNodeId,
-				[],
-				this.destinationNodeId,
-				// Singlecast frames do not contain a bit for this, we consider them all "outbound"
-				"outbound",
-				0,
-			),
-		];
-		if (this.headerType === MPDUHeaderType.Acknowledgement) {
-			tags.unshift("ACK");
-		}
-
-		const message: MessageRecord = {
-			"sequence no.": this.sequenceNumber,
-			channel: this.frameInfo.channel,
-			"protocol/data rate": znifferProtocolDataRateToString(
-				this.frameInfo.protocolDataRate,
-			),
-			"TX power": `${this.txPower} dBm`,
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
-			"noise floor": rssiToString(this.noiseFloor),
-		};
-		if (this.headerType !== MPDUHeaderType.Acknowledgement) {
-			message["ack requested"] = this.ackRequested;
-		}
-		if (this.payload.length > 0) {
-			message.payload = buffer2hex(this.payload);
-		}
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class SinglecastLongRangeMPDU extends LongRangeMPDU {
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-
-		const message = mergeLogDict(original, {
-			payload: buffer2hex(this.payload),
-		});
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class AckLongRangeMPDU extends LongRangeMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-
-		this.incomingRSSI = parseRSSI(this.payload, 0);
-		this.payload = this.payload.subarray(1);
-	}
-
-	public readonly incomingRSSI: RSSI;
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-
-		const message = mergeLogDict(original, {
-			"incoming RSSI": rssiToString(this.incomingRSSI),
-			payload: logBuffer(this.payload),
-		});
-
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class ZWaveMPDU implements MPDU {
-	public constructor(options: MPDUOptions) {
-		const data = options.data;
-		this.frameInfo = options.frameInfo;
-
-		let destinationOffset = 8;
-		const frameControl = data.subarray(5, 7);
-		switch (options.frameInfo.channel) {
-			case 0:
-			case 1: {
-				this.routed = !!(frameControl[0] & 0b1000_0000);
-				this.ackRequested = !!(frameControl[0] & 0b0100_0000);
-				this.lowPower = !!(frameControl[0] & 0b0010_0000);
-				this.speedModified = !!(frameControl[0] & 0b0001_0000);
-				this.headerType = frameControl[0] & 0b0000_1111;
-				this.beamingInfo = frameControl[1] & 0b0110_0000;
-				this.sequenceNumber = frameControl[1] & 0b0000_1111;
-				break;
-			}
-			case 2: {
-				this.routed = false;
-				this.ackRequested = !!(frameControl[0] & 0b1000_0000);
-				this.lowPower = !!(frameControl[0] & 0b0100_0000);
-				this.speedModified = false;
-				this.headerType = frameControl[0] & 0b0000_1111;
-				this.beamingInfo = frameControl[1] & 0b0111_0000;
-				this.sequenceNumber = data[destinationOffset];
-				destinationOffset++;
-				break;
-			}
-			case 3:
-			case 4: {
-				validatePayload.fail(
-					`Channel ${options.frameInfo.channel} (ZWLR) must be parsed as a LongRangeMPDU!`,
-				);
-			}
-			default: {
-				validatePayload.fail(
-					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
-						buffer2hex(data)
-					}`,
-				);
-			}
-		}
-
-		const Constructor = this.headerType === MPDUHeaderType.Acknowledgement
-			? AckZWaveMPDU
-			: (this.headerType === MPDUHeaderType.Routed
-					|| (this.headerType === MPDUHeaderType.Singlecast
-						&& this.routed))
-			? RoutedZWaveMPDU
-			: this.headerType === MPDUHeaderType.Singlecast
-			? SinglecastZWaveMPDU
-			: this.headerType === MPDUHeaderType.Multicast
-			? MulticastZWaveMPDU
-			: this.headerType === MPDUHeaderType.Explorer
-			? ExplorerZWaveMPDU
-			: undefined;
-		if (!Constructor) {
-			validatePayload.fail(
-				`Unsupported MPDU header type ${this.headerType}`,
-			);
-		} else if (
-			new.target !== Constructor
-			&& !staticExtends(new.target, Constructor)
-		) {
-			return new Constructor(options);
-		}
-
-		// FIXME: Parse Beams
-
-		this.homeId = data.readUInt32BE(0);
-		this.sourceNodeId = data[4];
-
-		// byte 7 is another length byte
-		// FIXME: This should consider the multicast control byte
-		const destinationLength = this.headerType === MPDUHeaderType.Multicast
-			? 30
-			: 1;
-		this.destinationBuffer = data.subarray(
-			destinationOffset,
-			destinationOffset + destinationLength,
-		);
-		this.payload = data.subarray(destinationOffset + destinationLength);
-	}
-
-	public readonly frameInfo: ZnifferFrameInfo;
-
-	public readonly homeId!: number;
-	public readonly sourceNodeId!: number;
-
-	public readonly routed: boolean;
-	public readonly ackRequested: boolean;
-	public readonly lowPower: boolean;
-	public readonly speedModified: boolean;
-	public readonly headerType: MPDUHeaderType;
-	public readonly beamingInfo: BeamingInfo;
-	public readonly sequenceNumber: number;
-
-	protected readonly destinationBuffer!: Bytes;
-	public payload!: Bytes;
-
-	public static from(msg: ZnifferDataMessage): ZWaveMPDU {
-		return new ZWaveMPDU({
-			data: msg.payload,
-			frameInfo: pick(msg, [
-				"channel",
-				"frameType",
-				"region",
-				"protocolDataRate",
-				"rssiRaw",
-			]),
-		});
-	}
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const tags = [formatNodeId(this.sourceNodeId)];
-
-		const message: MessageRecord = {
-			"sequence no.": this.sequenceNumber,
-			channel: this.frameInfo.channel,
-			"protocol/data rate":
-				znifferProtocolDataRateToString(this.frameInfo.protocolDataRate)
-				+ (this.speedModified ? " (reduced)" : ""),
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
-		};
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class SinglecastZWaveMPDU extends ZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-
-		this.destinationNodeId = this.destinationBuffer[0];
-	}
-
-	public readonly destinationNodeId: number;
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-		tags[0] = formatRoute(
-			this.sourceNodeId,
-			[],
-			this.destinationNodeId,
-			// Singlecast frames do not contain a bit for this, we consider them all "outbound"
-			"outbound",
-			0,
-		);
-
-		const message = mergeLogDict(original, {
-			"ack requested": this.ackRequested,
-			payload: buffer2hex(this.payload),
-		});
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class AckZWaveMPDU extends ZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-
-		this.destinationNodeId = this.destinationBuffer[0];
-	}
-
-	public readonly destinationNodeId: number;
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message } = super.toLogEntry();
-		tags[0] = formatRoute(
-			this.sourceNodeId,
-			[],
-			this.destinationNodeId,
-			// ACK frames do not contain a bit for this, we consider them all "inbound"
-			"inbound",
-			0,
-		);
-		tags.unshift("ACK");
-
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class RoutedZWaveMPDU extends ZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-
-		const channelConfig = getChannelConfiguration(this.frameInfo.region);
-
-		this.direction = (this.payload[0] & 0b1) ? "inbound" : "outbound";
-		this.routedAck = !!(this.payload[0] & 0b10);
-		this.routedError = !!(this.payload[0] & 0b100);
-		const hasExtendedHeader = !!(this.payload[0] & 0b1000);
-		if (this.routedError) {
-			this.failedHop = this.payload[0] >>> 4;
-		} else if (channelConfig === "1/2") {
-			// @ts-expect-error speedModified is readonly
-			this.speedModified = !!(this.payload[0] & 0b10000);
-		}
-
-		this.hop = this.payload[1] & 0b1111;
-		// The hop field in the MPDU indicates which repeater should handle the frame next.
-		// This means that for an inbound frame between repeater 0 and 1, the value is one
-		// less (0) than for an outbound frame (1). This also means that the field overflows
-		// to 0x0f when the frame returns to the source node.
-		//
-		// We normalize this, so hop = 0 always means the frame is transmitted between the source node and repeater 0.
-		if (this.direction === "inbound") {
-			this.hop = (this.hop + 1) % 16;
-		}
-
-		const numRepeaters = this.payload[1] >>> 4;
-		this.repeaters = [...this.payload.subarray(2, 2 + numRepeaters)];
-
-		let offset = 2 + numRepeaters;
-		if (channelConfig === "3") {
-			this.destinationWakeup = this.payload[offset++] === 0x02;
-		}
-
-		if (hasExtendedHeader) {
-			const headerPreamble = this.payload[offset++];
-			const headerLength = headerPreamble >>> 4;
-			const headerType = headerPreamble & 0b1111;
-			const header = this.payload.subarray(offset, offset + headerLength);
-			offset += headerLength;
-
-			if (headerType === 0x00) {
-				this.destinationWakeupType = header[0] & 0b0100_0000
-					? "1000ms"
-					: header[0] & 0b0010_0000
-					? "250ms"
-					: undefined;
-			} else if (headerType === 0x01) {
-				const repeaterRSSI = [];
-				for (let i = 0; i < numRepeaters; i++) {
-					repeaterRSSI.push(parseRSSI(header, i));
-				}
-				this.repeaterRSSI = repeaterRSSI;
-			}
-		}
-
-		this.payload = this.payload.subarray(offset);
-
-		this.destinationNodeId = this.destinationBuffer[0];
-	}
-
-	public readonly destinationNodeId: number;
-	public readonly direction: "outbound" | "inbound";
-	public readonly routedAck: boolean;
-	public readonly routedError: boolean;
-	public readonly failedHop?: number;
-	public readonly hop: number;
-	public readonly repeaters: readonly number[];
-	public readonly destinationWakeup?: boolean;
-	public readonly destinationWakeupType?: "250ms" | "1000ms";
-	public readonly repeaterRSSI?: readonly RSSI[];
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-		tags[0] = formatRoute(
-			this.sourceNodeId,
-			this.repeaters,
-			this.destinationNodeId,
-			this.direction,
-			this.hop,
-			this.failedHop,
-		);
-
-		const message = mergeLogDict(original, {
-			"ack requested": this.ackRequested,
-			payload: buffer2hex(this.payload),
-		});
-
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class MulticastZWaveMPDU extends ZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-
-		const control = this.destinationBuffer[0]; // 3 bits offset, 5 bits mask length, but this MUST be set to 29
-		validatePayload.withReason("Invalid multicast control byte")(
-			control === 29,
-		);
-		this.destinationNodeIds = parseNodeBitMask(
-			this.destinationBuffer.subarray(1),
-		);
-	}
-
-	public readonly destinationNodeIds: readonly number[];
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-		tags.push("MULTICAST");
-
-		const message = mergeLogDict(
-			{ destinations: this.destinationNodeIds.join(", ") },
-			original,
-			{ payload: buffer2hex(this.payload) },
-		);
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class ExplorerZWaveMPDU extends ZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-		this.version = this.payload[0] >>> 5;
-		this.command = this.payload[0] & 0b0001_1111;
-		this.stop = !!(this.payload[1] & 0b100);
-		this.direction = this.payload[1] & 0b010 ? "inbound" : "outbound";
-		this.sourceRouted = !!(this.payload[1] & 0b001);
-		this.randomTXInterval = this.payload[2];
-		this.ttl = this.payload[3] >>> 4;
-		const numRepeaters = this.payload[3] & 0b1111;
-		this.repeaters = [...this.payload.subarray(4, 4 + numRepeaters)];
-
-		// Make sure the correct constructor gets called
-		const Constructor = this.command === ExplorerFrameCommand.Normal
-			? NormalExplorerZWaveMPDU
-			: this.command === ExplorerFrameCommand.InclusionRequest
-			? InclusionRequestExplorerZWaveMPDU
-			: this.command === ExplorerFrameCommand.SearchResult
-			? SearchResultExplorerZWaveMPDU
-			: undefined;
-
-		if (!Constructor) {
-			validatePayload.fail(
-				`Unsupported Explorer MPDU command ${this.command}`,
-			);
-		} else if (
-			new.target !== Constructor
-			&& !staticExtends(new.target, Constructor)
-		) {
-			return new Constructor(options);
-		}
-
-		this.destinationNodeId = this.destinationBuffer[0];
-		this.payload = this.payload.subarray(8);
-	}
-
-	public readonly destinationNodeId!: number;
-
-	public readonly version: number;
-	public readonly command: ExplorerFrameCommand;
-	public readonly stop: boolean;
-	public readonly sourceRouted: boolean;
-	public readonly direction: "outbound" | "inbound";
-	public readonly randomTXInterval: number;
-	public readonly ttl: number;
-	public readonly repeaters: readonly number[];
-}
-
-export class NormalExplorerZWaveMPDU extends ExplorerZWaveMPDU {
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-		tags[0] = formatRoute(
-			this.sourceNodeId,
-			this.repeaters,
-			this.destinationNodeId,
-			// Explorer frames do not contain a bit for the direction, we consider them all "outbound"
-			"outbound",
-			4 - this.ttl,
-		);
-		tags.unshift("EXPLORER");
-
-		const message = mergeLogDict(original, {
-			"ack requested": this.ackRequested,
-			payload: buffer2hex(this.payload),
-		});
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-
-		this.networkHomeId = this.payload.readUInt32BE(0);
-		this.payload = this.payload.subarray(4);
-	}
-
-	/** The home ID of the repeating node */
-	public readonly networkHomeId: number;
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-		tags[0] = formatRoute(
-			this.sourceNodeId,
-			this.repeaters,
-			this.destinationNodeId,
-			// Explorer frames do not contain a bit for the direction, we consider them all "outbound"
-			"outbound",
-			4 - this.ttl,
-		);
-		tags.unshift("INCL REQUEST");
-
-		const message = mergeLogDict(original, {
-			"network home ID": this.networkHomeId.toString(16).padStart(
-				8,
-				"0",
-			),
-			payload: buffer2hex(this.payload),
-		});
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
-	public constructor(options: MPDUOptions) {
-		super(options);
-
-		this.searchingNodeId = this.payload[0];
-		this.frameHandle = this.payload[1];
-		this.resultTTL = this.payload[2] >>> 4;
-		const numRepeaters = this.payload[2] & 0b1111;
-		this.resultRepeaters = [
-			...this.payload.subarray(3, 3 + numRepeaters),
-		];
-
-		// This frame contains no payload
-		this.payload = new Bytes();
-	}
-
-	/** The node ID that sent the explorer frame that's being answered here */
-	public readonly searchingNodeId: number;
-	/** The sequence number of the original explorer frame */
-	public readonly frameHandle: number;
-	public readonly resultTTL: number;
-	public readonly resultRepeaters: readonly number[];
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-		tags[0] = formatRoute(
-			this.sourceNodeId,
-			this.repeaters,
-			this.destinationNodeId,
-			// Explorer frames do not contain a bit for the direction, we consider their responses "inbound"
-			"inbound",
-			4 - this.ttl,
-		);
-		tags.unshift("EXPLORER RESULT");
-
-		const message = mergeLogDict(original, {
-			"frame handle": this.frameHandle,
-			"result TTL": this.resultTTL,
-			"result repeaters": this.resultRepeaters.join(", "),
-		});
-		return {
-			tags,
-			message,
-		};
-	}
+export interface BeamOptions {
+	data: Bytes;
+	frameInfo: ZnifferFrameInfo;
 }
 
 export function parseBeamFrame(
@@ -791,7 +82,7 @@ export function parseBeamFrame(
 		});
 	}
 
-	const channelConfig = getChannelConfiguration(frame.region);
+	const channelConfig = znifferRegionToChannelConfiguration(frame.region);
 	switch (channelConfig) {
 		case "1/2":
 		case "3": {
@@ -817,7 +108,7 @@ export function parseBeamFrame(
 }
 
 export class ZWaveBeamStart {
-	public constructor(options: MPDUOptions) {
+	public constructor(options: BeamOptions) {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
@@ -874,7 +165,7 @@ export class ZWaveBeamStart {
 }
 
 export class LongRangeBeamStart {
-	public constructor(options: MPDUOptions) {
+	public constructor(options: BeamOptions) {
 		const data = options.data;
 		this.frameInfo = options.frameInfo;
 
@@ -934,7 +225,7 @@ export class LongRangeBeamStart {
 }
 
 export class BeamStop {
-	public constructor(options: MPDUOptions) {
+	public constructor(options: BeamOptions) {
 		this.frameInfo = options.frameInfo;
 	}
 
@@ -1168,11 +459,15 @@ export type CorruptedFrame = {
 	payload: BytesView;
 };
 
-export function mpduToFrame(mpdu: MPDU, payloadCC?: CommandClass): Frame {
+export function mpduToFrame(
+	mpdu: MPDU,
+	frameInfo: ZnifferFrameInfo,
+	payloadCC?: CommandClass,
+): Frame {
 	if (mpdu instanceof ZWaveMPDU) {
-		return mpduToZWaveFrame(mpdu, payloadCC);
+		return mpduToZWaveFrame(mpdu, frameInfo, payloadCC);
 	} else if (mpdu instanceof LongRangeMPDU) {
-		return mpduToLongRangeFrame(mpdu, payloadCC);
+		return mpduToLongRangeFrame(mpdu, frameInfo, payloadCC);
 	}
 
 	throw new ZWaveError(
@@ -1183,17 +478,18 @@ export function mpduToFrame(mpdu: MPDU, payloadCC?: CommandClass): Frame {
 
 export function mpduToZWaveFrame(
 	mpdu: ZWaveMPDU,
+	frameInfo: ZnifferFrameInfo,
 	payloadCC?: CommandClass,
 ): ZWaveFrame {
 	const retBase = {
 		protocol: Protocols.ZWave as const,
 
-		channel: mpdu.frameInfo.channel,
-		region: mpdu.frameInfo.region,
-		rssiRaw: mpdu.frameInfo.rssiRaw,
-		rssi: mpdu.frameInfo.rssi,
+		channel: frameInfo.channel,
+		region: frameInfo.region,
+		rssiRaw: frameInfo.rssiRaw,
+		rssi: frameInfo.rssi,
 
-		protocolDataRate: mpdu.frameInfo.protocolDataRate,
+		protocolDataRate: frameInfo.protocolDataRate,
 		speedModified: mpdu.speedModified,
 
 		sequenceNumber: mpdu.sequenceNumber,
@@ -1291,17 +587,18 @@ export function mpduToZWaveFrame(
 
 export function mpduToLongRangeFrame(
 	mpdu: LongRangeMPDU,
+	frameInfo: ZnifferFrameInfo,
 	payloadCC?: CommandClass,
 ): LongRangeFrame {
 	const retBase = {
 		protocol: Protocols.ZWaveLongRange as const,
 
-		channel: mpdu.frameInfo.channel,
-		region: mpdu.frameInfo.region,
-		protocolDataRate: mpdu.frameInfo.protocolDataRate,
+		channel: frameInfo.channel,
+		region: frameInfo.region,
+		protocolDataRate: frameInfo.protocolDataRate,
 
-		rssiRaw: mpdu.frameInfo.rssiRaw,
-		rssi: mpdu.frameInfo.rssi,
+		rssiRaw: frameInfo.rssiRaw,
+		rssi: frameInfo.rssi,
 		noiseFloor: mpdu.noiseFloor,
 		txPower: mpdu.txPower,
 

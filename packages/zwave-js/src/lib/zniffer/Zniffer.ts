@@ -14,6 +14,7 @@ import {
 	type HostIDs,
 	type LogConfig,
 	type LogContainer,
+	LongRangeMPDU,
 	MPDUHeaderType,
 	type MaybeNotKnown,
 	NODE_ID_BROADCAST,
@@ -27,6 +28,7 @@ import {
 	type UnknownZWaveChipType,
 	ZWaveError,
 	ZWaveErrorCodes,
+	ZWaveMPDU,
 	ZnifferLRChannelConfig,
 	ZnifferRegion,
 	ZnifferRegionLegacy,
@@ -40,6 +42,7 @@ import {
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
 	type ZnifferDataMessage,
+	type ZnifferFrameInfo,
 	ZnifferFrameType,
 	ZnifferGetFrequenciesRequest,
 	ZnifferGetFrequenciesResponse,
@@ -73,6 +76,7 @@ import {
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
+	type AwaitedThing,
 	Bytes,
 	type BytesView,
 	TypedEventTarget,
@@ -83,6 +87,7 @@ import {
 	noop,
 	num2hex,
 	pick,
+	setTimer,
 } from "@zwave-js/shared";
 import {
 	type DeferredPromise,
@@ -95,9 +100,7 @@ import {
 	type CorruptedFrame,
 	type Frame,
 	LongRangeBeamStart,
-	LongRangeMPDU,
 	ZWaveBeamStart,
-	ZWaveMPDU,
 	beamToFrame,
 	mpduToFrame,
 	parseBeamFrame,
@@ -131,12 +134,6 @@ export interface ZnifferEventCallbacks {
 }
 
 export type ZnifferEvents = Extract<keyof ZnifferEventCallbacks, string>;
-
-interface AwaitedThing<T> {
-	handler: (thing: T) => void;
-	timeout?: NodeJS.Timeout;
-	predicate: (msg: T) => boolean;
-}
 
 type AwaitedMessageEntry = AwaitedThing<ZnifferMessage>;
 
@@ -723,10 +720,11 @@ supported frequencies: ${
 			}
 
 			if (
-				frame.internal instanceof ZWaveMPDU
-				|| frame.internal instanceof LongRangeMPDU
+				(frame.internal instanceof ZWaveMPDU
+					|| frame.internal instanceof LongRangeMPDU)
+				&& frame.frameInfo
 			) {
-				this.znifferLog.mpdu(frame.internal, frame.cc);
+				this.znifferLog.mpdu(frame.internal, frame.frameInfo, frame.cc);
 				this.emit("frame", frame.external as Frame, capture.frameData);
 				return;
 			}
@@ -753,12 +751,12 @@ supported frequencies: ${
 			};
 			this.awaitedMessages.push(entry);
 			const removeEntry = () => {
-				if (entry.timeout) clearTimeout(entry.timeout);
+				entry.timeout?.clear();
 				const index = this.awaitedMessages.indexOf(entry);
 				if (index !== -1) this.awaitedMessages.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimeout(() => {
+			entry.timeout = setTimer(() => {
 				removeEntry();
 				reject(
 					new ZWaveError(
@@ -1193,6 +1191,7 @@ supported frequencies: ${
 		convertRSSI: boolean = this._options.convertRSSI ?? false,
 	): Promise<{
 		internal: any;
+		frameInfo?: ZnifferFrameInfo;
 		cc?: CommandClass;
 		external: Frame | CorruptedFrame;
 	}> {
@@ -1226,7 +1225,16 @@ supported frequencies: ${
 		}
 
 		const mpdu = parseMPDU(msg);
-		mpdu.frameInfo.rssi = convertedRSSI;
+		const frameInfo: ZnifferFrameInfo = {
+			...pick(msg, [
+				"channel",
+				"frameType",
+				"region",
+				"protocolDataRate",
+				"rssiRaw",
+			]),
+			rssi: convertedRSSI,
+		};
 
 		// Try to decode the CC while assuming the role of the receiver
 		let destSecurityManager: SecurityManager | undefined;
@@ -1373,8 +1381,9 @@ supported frequencies: ${
 
 		return {
 			internal: mpdu,
+			frameInfo,
 			cc,
-			external: mpduToFrame(mpdu, cc),
+			external: mpduToFrame(mpdu, frameInfo, cc),
 		};
 	}
 }
