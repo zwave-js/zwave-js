@@ -330,6 +330,8 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 	}
 
 	private _chipType: string | UnknownZWaveChipType | undefined;
+	/** Whether the connected Zniffer reports regions in the legacy (pre-700 series) encoding */
+	private _usesLegacyRegions: boolean = false;
 
 	private _currentFrequency: number | undefined;
 	/** The currently configured frequency */
@@ -462,6 +464,7 @@ export class Zniffer extends TypedEventTarget<ZnifferEventCallbacks> {
 
 		const versionInfo = await this.getVersion();
 		this._chipType = versionInfo.chipType;
+		this._usesLegacyRegions = !is700PlusSeries(versionInfo.chipType);
 		this.znifferLog.print(
 			`received Zniffer info:
   Chip type:       ${
@@ -700,10 +703,9 @@ supported frequencies: ${
 			capture.parsedFrame = frame.external;
 
 			if (
-				(frame.internal instanceof ZWaveBeamStart
-					|| frame.internal instanceof LongRangeBeamStart
-					|| frame.internal instanceof BeamStop)
-				&& frame.frameInfo
+				frame.internal instanceof ZWaveBeamStart
+				|| frame.internal instanceof LongRangeBeamStart
+				|| frame.internal instanceof BeamStop
 			) {
 				this.znifferLog.beam(frame.internal, frame.frameInfo);
 				this.emit("frame", frame.external as Frame, capture.frameData);
@@ -722,9 +724,8 @@ supported frequencies: ${
 			}
 
 			if (
-				(frame.internal instanceof ZWaveMPDU
-					|| frame.internal instanceof LongRangeMPDU)
-				&& frame.frameInfo
+				frame.internal instanceof ZWaveMPDU
+				|| frame.internal instanceof LongRangeMPDU
 			) {
 				this.znifferLog.mpdu(frame.internal, frame.frameInfo, frame.cc);
 				this.emit("frame", frame.external as Frame, capture.frameData);
@@ -1193,7 +1194,7 @@ supported frequencies: ${
 		convertRSSI: boolean = this._options.convertRSSI ?? false,
 	): Promise<{
 		internal: any;
-		frameInfo?: ZnifferFrameInfo;
+		frameInfo: ZnifferFrameInfo;
 		cc?: CommandClass;
 		external: Frame | CorruptedFrame;
 	}> {
@@ -1205,14 +1206,6 @@ supported frequencies: ${
 			);
 		}
 
-		// Legacy Zniffers report regions in a legacy encoding whose values
-		// collide with the modern one, e.g. legacy Japan (10) is the modern
-		// "USA (Long Range, backup)". Translate them to avoid misinterpreting frames.
-		const region =
-			this._chipType != undefined && !is700PlusSeries(this._chipType)
-				? znifferLegacyRegionToZnifferRegion(msg.region)
-				: msg.region;
-
 		const frameInfo: ZnifferFrameInfo = {
 			...pick(msg, [
 				"channel",
@@ -1220,7 +1213,12 @@ supported frequencies: ${
 				"protocolDataRate",
 				"rssiRaw",
 			]),
-			region,
+			// Legacy Zniffers report regions in a legacy encoding whose values
+			// collide with the modern one, e.g. legacy Japan (10) is the modern
+			// "USA (Long Range, backup)"
+			region: this._usesLegacyRegions
+				? znifferLegacyRegionToZnifferRegion(msg.region)
+				: msg.region,
 			rssi: convertedRSSI,
 		};
 
@@ -1241,7 +1239,8 @@ supported frequencies: ${
 		if (!msg.checksumOK) {
 			return {
 				internal: undefined,
-				external: znifferDataMessageToCorruptedFrame(msg),
+				frameInfo,
+				external: znifferDataMessageToCorruptedFrame(msg, frameInfo),
 			};
 		}
 

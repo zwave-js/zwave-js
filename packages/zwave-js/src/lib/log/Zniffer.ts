@@ -24,7 +24,7 @@ import {
 	type BeamStop,
 	type LongRangeBeamStart,
 	type ZWaveBeamStart,
-	znifferFrameInfoToMPDUParsingContext,
+	znifferFrameInfoToMPDUContext,
 } from "../zniffer/MPDU.js";
 import type { Zniffer } from "../zniffer/Zniffer.js";
 
@@ -111,11 +111,9 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 	): void {
 		if (!this.isLogVisible()) return;
 
-		const logEntry = mpdu.toLogEntry({
-			...znifferFrameInfoToMPDUParsingContext(frameInfo),
-			rssi: frameInfo.rssi,
-			rssiRaw: frameInfo.rssiRaw,
-		});
+		const logEntry = mpdu.toLogEntry(
+			znifferFrameInfoToMPDUContext(frameInfo),
+		);
 
 		const nested: LogPayload[] = [];
 		if (logEntry.message) {
@@ -161,11 +159,9 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 	): void {
 		if (!this.isLogVisible()) return;
 
-		const logEntry = beam.toLogEntry({
-			...znifferFrameInfoToMPDUParsingContext(frameInfo),
-			rssi: frameInfo.rssi,
-			rssiRaw: frameInfo.rssiRaw,
-		});
+		const logEntry = beam.toLogEntry(
+			znifferFrameInfoToMPDUContext(frameInfo),
+		);
 
 		const msg = formatLogPayload(logText([], {
 			tags: logEntry.tags,

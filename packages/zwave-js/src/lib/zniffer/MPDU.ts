@@ -31,7 +31,6 @@ import {
 	rssiToString,
 	validatePayload,
 	znifferProtocolDataRateToProtocolDataRate,
-	znifferRegionToChannelConfiguration,
 	znifferRegionToRFRegion,
 } from "@zwave-js/core";
 import {
@@ -41,60 +40,56 @@ import {
 } from "@zwave-js/serial";
 import {
 	type AllOrNone,
-	Bytes,
+	type Bytes,
 	type BytesView,
 	buffer2hex,
 } from "@zwave-js/shared";
 import { LongRangeFrameType, ZWaveFrameType } from "./_Types.js";
 
-export function znifferFrameInfoToMPDUParsingContext(
+/** MPDULogContext extends MPDUParsingContext, so one context serves both purposes */
+export function znifferFrameInfoToMPDUContext(
 	frameInfo: ZnifferFrameInfo,
-): MPDUParsingContext {
+): MPDULogContext {
 	return {
 		channel: frameInfo.channel,
 		region: znifferRegionToRFRegion(frameInfo.region),
 		protocolDataRate: znifferProtocolDataRateToProtocolDataRate(
 			frameInfo.protocolDataRate,
 		),
+		rssi: frameInfo.rssi,
+		rssiRaw: frameInfo.rssiRaw,
 	};
 }
 
 export function parseMPDU(
 	frame: ZnifferDataMessage,
-	frameInfo: ZnifferFrameInfo = frame,
+	frameInfo: ZnifferFrameInfo,
 ): ZWaveMPDU | LongRangeMPDU {
-	const ctx = znifferFrameInfoToMPDUParsingContext(frameInfo);
-	return MPDU.parse(Bytes.view(frame.payload), ctx);
+	return MPDU.parse(frame.payload, znifferFrameInfoToMPDUContext(frameInfo));
 }
 
 export function parseBeamFrame(
 	frame: ZnifferDataMessage,
-	frameInfo: ZnifferFrameInfo = frame,
+	frameInfo: ZnifferFrameInfo,
 ): ZWaveBeamStart | LongRangeBeamStart | BeamStop {
 	if (frame.frameType === ZnifferFrameType.BeamStop) {
 		return new BeamStop();
 	}
 
-	const ctx = znifferFrameInfoToMPDUParsingContext(frameInfo);
-	const channelConfig = znifferRegionToChannelConfiguration(
-		frameInfo.region,
-	);
-	switch (channelConfig) {
-		case "1/2":
-		case "3": {
-			return ZWaveBeamStart.parse(frame.payload, ctx);
-		}
-		case "4": {
-			return LongRangeBeamStart.parse(frame.payload, ctx);
-		}
-		default:
-			validatePayload.fail(
-				// oxlint-disable-next-line typescript/restrict-template-expressions
-				`Unsupported channel configuration ${channelConfig}. MPDU payload: ${
-					buffer2hex(frame.payload)
-				}`,
-			);
+	// Dispatch on the channel like MPDU.parse does: LR regions carry
+	// classic beams on channels 0-2 and LR beams on channels 3-4
+	const ctx = znifferFrameInfoToMPDUContext(frameInfo);
+	if (ctx.channel <= 2) {
+		return ZWaveBeamStart.parse(frame.payload, ctx);
 	}
+	if (ctx.channel <= 4) {
+		return LongRangeBeamStart.parse(frame.payload, ctx);
+	}
+	validatePayload.fail(
+		`Unsupported channel ${ctx.channel}. Beam payload: ${
+			buffer2hex(frame.payload)
+		}`,
+	);
 }
 
 export interface ZWaveBeamStartOptions {
@@ -688,7 +683,7 @@ export function beamToFrame(
 
 export function znifferDataMessageToCorruptedFrame(
 	msg: ZnifferDataMessage,
-	rssi?: RSSI,
+	frameInfo: ZnifferFrameInfo,
 ): CorruptedFrame {
 	if (msg.checksumOK) {
 		throw new ZWaveError(
@@ -698,11 +693,11 @@ export function znifferDataMessageToCorruptedFrame(
 	}
 
 	return {
-		channel: msg.channel,
-		region: msg.region,
-		rssiRaw: msg.rssiRaw,
-		rssi,
-		protocolDataRate: msg.protocolDataRate,
+		channel: frameInfo.channel,
+		region: frameInfo.region,
+		rssiRaw: frameInfo.rssiRaw,
+		rssi: frameInfo.rssi,
+		protocolDataRate: frameInfo.protocolDataRate,
 		payload: msg.payload,
 	};
 }
