@@ -53,7 +53,7 @@ export abstract class MPDU {
 	public static parse(
 		data: Bytes,
 		ctx: MPDUParsingContext,
-	): MPDU {
+	): ZWaveMPDU | LongRangeMPDU {
 		if (ctx.channel <= 2) {
 			// Channels 0-2 are Z-Wave classic
 			const raw = ZWaveMPDURaw.parse(data, ctx);
