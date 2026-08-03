@@ -1519,9 +1519,12 @@ export class NotificationCCReport extends NotificationCC {
 				this.eventParameters.length === 1
 				&& notification.type === 0x06
 				&& (this.notificationEvent === 0x05
-					|| this.notificationEvent === 0x06)
+					|| this.notificationEvent === 0x06
+					|| this.notificationEvent === 0x0d
+					|| this.notificationEvent === 0x0e
+					|| this.notificationEvent === 0x0f)
 			) {
-				// Access control -> Keypad Lock/Unlock operation
+				// Access control -> Keypad Lock/Unlock operation or user code events
 				// Some devices only send the User ID, not a complete CC payload
 				this.eventParameters = {
 					userId: this.eventParameters[0],
@@ -1595,12 +1598,17 @@ export class NotificationCCReport extends NotificationCC {
 							=== ZWaveErrorCodes.PacketFormat_InvalidPayload
 						&& isUint8Array(this.eventParameters)
 					) {
-						const { ccId, ccCommand } = CCRaw.parse(
-							this.eventParameters,
-						);
+						// Parsing may fail before the CC id and command are known.
+						// In that case they cannot be used for the fallback below.
+						let raw: CCRaw | undefined;
+						try {
+							raw = CCRaw.parse(this.eventParameters);
+						} catch {
+							// ignore
+						}
 						if (
-							ccId === CommandClasses["User Code"]
-							&& ccCommand === UserCodeCommand.Report
+							raw?.ccId === CommandClasses["User Code"]
+							&& raw.ccCommand === UserCodeCommand.Report
 							&& this.eventParameters.length >= 3
 						) {
 							// Access control -> Keypad Lock/Unlock operation

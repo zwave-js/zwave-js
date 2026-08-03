@@ -4170,34 +4170,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 								&& msg.command instanceof InvalidCC
 							) {
 								// If it was, we need to notify the sender that we couldn't decode the command
-								const node = this.tryGetNode(msg);
-								if (node) {
-									const endpoint = node.getEndpoint(
-										msg.command.endpointIndex,
-									) ?? node;
-									const encapsulationFlags =
-										msg.command.encapsulationFlags;
-									await endpoint
-										.createAPI(
-											CommandClasses.Supervision,
-											false,
-										)
-										.sendReport({
-											sessionId: supervisionSessionId,
-											moreUpdatesFollow: false,
-											status: SupervisionStatus.NoSupport,
-											requestWakeUpOnDemand: this
-												.shouldRequestWakeupOnDemand(
-													node,
-												),
-											encapsulationFlags,
-											lowPriority: this
-												.shouldUseLowPriorityForSupervisionReport(
-													node,
-													encapsulationFlags,
-												),
-										});
-								}
+								await this.answerUnsuccessfulSupervisedCommand(
+									msg,
+									SupervisionStatus.NoSupport,
+								);
 								return;
 							}
 						} else {
@@ -4317,6 +4293,12 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 									: ""
 							}`,
 							"warn",
+						);
+						// If the command was received with supervision encapsulation,
+						// notify the sender that we failed to handle it
+						await this.answerUnsuccessfulSupervisedCommand(
+							completeMsg,
+							SupervisionStatus.Fail,
 						);
 						// TODO: We may need to do the S2 MOS dance here - or we can deal with it when the next valid CC arrives
 						return;
@@ -5046,6 +5028,37 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					&& t.message.getNodeId() === node.id,
 			)
 		);
+	}
+
+	/**
+	 * Answers a supervised command that cannot be handled with the given status.
+	 */
+	private async answerUnsuccessfulSupervisedCommand(
+		msg: Message & ContainsCC,
+		status: SupervisionStatus.NoSupport | SupervisionStatus.Fail,
+	): Promise<void> {
+		const command = getInnermostCommandClass(msg.command);
+		const supervisionSessionId = SupervisionCC.getSessionId(command);
+		if (supervisionSessionId == undefined) return;
+
+		const node = this.tryGetNode(msg);
+		if (!node) return;
+
+		const endpoint = node.getEndpoint(command.endpointIndex) ?? node;
+		const encapsulationFlags = command.encapsulationFlags;
+		await endpoint
+			.createAPI(CommandClasses.Supervision, false)
+			.sendReport({
+				sessionId: supervisionSessionId,
+				moreUpdatesFollow: false,
+				status,
+				requestWakeUpOnDemand: this.shouldRequestWakeupOnDemand(node),
+				encapsulationFlags,
+				lowPriority: this.shouldUseLowPriorityForSupervisionReport(
+					node,
+					encapsulationFlags,
+				),
+			});
 	}
 
 	private partialCCSessions = new PartialCCSessionManager({
