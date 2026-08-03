@@ -26,6 +26,11 @@ updates:
         update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
+    # Dependabot cannot exclude the generated gh-aw workflows (*.lock.yml,
+    # agentics-maintenance.yml) from these updates
+    # (https://github.com/dependabot/dependabot-core/issues/2883). Their
+    # action pins are managed via .github/aw/actions-lock.json, so
+    # gh-aw-dependabot-recompile.yml recompiles Dependabot PRs touching them.
     directories:
       - '/'
       # Workaround for Dependabot not updating reusable composite actions

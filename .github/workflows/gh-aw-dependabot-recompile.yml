@@ -1,0 +1,70 @@
+name: Recompile gh-aw workflows on Dependabot PRs
+
+# Dependabot cannot exclude individual workflow files in the github-actions
+# ecosystem (https://github.com/dependabot/dependabot-core/issues/2883), so
+# its PRs also bump action pins inside the generated gh-aw workflows, which
+# the compile check rejects. This workflow recompiles those PRs: generated
+# files revert to the pins from .github/aw/actions-lock.json, while bumps in
+# hand-written workflows survive. PRs left without effective changes are
+# closed.
+
+on:
+  # WARNING: This runs with write permissions in the PR base and checks out
+  # PR code, so it must stay restricted to Dependabot branches from this
+  # repository. Details under
+  # https://github.blog/changelog/2021-02-19-github-actions-workflows-triggered-by-dependabot-prs-will-run-with-read-only-permissions/
+  pull_request_target:
+    paths:
+      - '.github/workflows/*.lock.yml'
+      - '.github/workflows/agentics-maintenance.yml'
+
+permissions: {}
+
+jobs:
+  recompile:
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: [ubuntu-latest]
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout PR branch
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+        # BOT_TOKEN is a PAT, so the fix-up push retriggers CI on the PR
+        token: ${{ secrets.BOT_TOKEN }}
+        # Full (blobless) history so the effective PR diff can be computed
+        # against the merge base
+        fetch-depth: 0
+        filter: blob:none
+
+    - name: Install gh-aw
+      env:
+        GH_TOKEN: ${{ github.token }}
+      # Keep the pin in sync with gh-aw-compile-check.yml
+      run: gh extension install github/gh-aw --pin v0.81.6
+
+    - name: Recompile workflows
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh aw compile
+
+    - name: Push recompiled workflows or close empty PR
+      env:
+        GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+      run: |
+        merge_base=$(git merge-base HEAD "origin/$BASE_REF")
+        if git diff --quiet "$merge_base"; then
+          gh pr close "$PR_URL" --comment "Closing: this PR only bumped action pins inside generated gh-aw workflows. Those pins are managed via \`.github/aw/actions-lock.json\` and \`gh aw compile\`, so recompiling reverts all changes in this PR. They will be updated with the next gh-aw upgrade instead."
+          exit 0
+        fi
+        if git diff --quiet; then
+          echo "Generated workflows are already in sync"
+          exit 0
+        fi
+        git config user.email "bot@zwave-js.io"
+        git config user.name "Z-Wave JS Bot"
+        git commit -am "chore: recompile gh-aw workflows"
+        git push
