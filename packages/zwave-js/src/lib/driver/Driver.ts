@@ -3115,10 +3115,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	private async recreateNetworkCacheAndValueDBs(): Promise<void> {
-		this._valueDBsOpen = false;
-		await this._networkCache?.close();
-		await this._valueDB?.close();
-		await this._metadataDB?.close();
+		await this.closeDatabases();
 
 		// Reopen with the new home ID
 		await this.initNetworkCache(this.controller.homeId!);
