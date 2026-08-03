@@ -14,7 +14,6 @@ import {
 	type HostIDs,
 	type LogConfig,
 	type LogContainer,
-	LongRangeBeamStart,
 	LongRangeMPDU,
 	MPDUHeaderType,
 	type MaybeNotKnown,
@@ -27,7 +26,6 @@ import {
 	SecurityManager2,
 	type SecurityManagers,
 	type UnknownZWaveChipType,
-	ZWaveBeamStart,
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZWaveMPDU,
@@ -39,6 +37,7 @@ import {
 	isZWaveError,
 	sdkVersionGte,
 	securityClassIsS2,
+	znifferLegacyRegionToZnifferRegion,
 } from "@zwave-js/core";
 import {
 	type ZWaveSerialBindingFactory,
@@ -101,6 +100,8 @@ import {
 	BeamStop,
 	type CorruptedFrame,
 	type Frame,
+	LongRangeBeamStart,
+	ZWaveBeamStart,
 	beamToFrame,
 	mpduToFrame,
 	parseBeamFrame,
@@ -1204,14 +1205,22 @@ supported frequencies: ${
 			);
 		}
 
+		// Legacy Zniffers report regions in a legacy encoding whose values
+		// collide with the modern one, e.g. legacy Japan (10) is the modern
+		// "USA (Long Range, backup)". Translate them to avoid misinterpreting frames.
+		const region =
+			this._chipType != undefined && !is700PlusSeries(this._chipType)
+				? znifferLegacyRegionToZnifferRegion(msg.region)
+				: msg.region;
+
 		const frameInfo: ZnifferFrameInfo = {
 			...pick(msg, [
 				"channel",
 				"frameType",
-				"region",
 				"protocolDataRate",
 				"rssiRaw",
 			]),
+			region,
 			rssi: convertedRSSI,
 		};
 
@@ -1220,7 +1229,7 @@ supported frequencies: ${
 			msg.frameType === ZnifferFrameType.BeamStart
 			|| msg.frameType === ZnifferFrameType.BeamStop
 		) {
-			const beam = parseBeamFrame(msg);
+			const beam = parseBeamFrame(msg, frameInfo);
 			return {
 				internal: beam,
 				frameInfo,
@@ -1236,7 +1245,7 @@ supported frequencies: ${
 			};
 		}
 
-		const mpdu = parseMPDU(msg);
+		const mpdu = parseMPDU(msg, frameInfo);
 
 		// Try to decode the CC while assuming the role of the receiver
 		let destSecurityManager: SecurityManager | undefined;

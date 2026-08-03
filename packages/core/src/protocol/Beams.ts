@@ -7,25 +7,26 @@ import { validatePayload } from "../util/misc.js";
 import type { MPDULogContext, MPDUParsingContext } from "./MPDU.js";
 import { formatNodeId, longRangeBeamPowerToDBm } from "./utils.js";
 
-export interface ZWaveBeamStartOptions {
+export interface ZWaveBeamOptions {
 	destinationNodeId: number;
 	homeIdHash?: number;
 }
 
 /** A beam frame used to awaken FL nodes, see ITU-T G.9959, Figure 8-18 */
-export class ZWaveBeamStart {
-	public constructor(options: ZWaveBeamStartOptions) {
+export class ZWaveBeam {
+	public constructor(options: ZWaveBeamOptions) {
 		this.destinationNodeId = options.destinationNodeId;
 		this.homeIdHash = options.homeIdHash;
 	}
 
-	public static parse(
+	public static parse<T extends ZWaveBeam>(
+		this: new (options: ZWaveBeamOptions) => T,
 		data: Bytes,
 		ctx: MPDUParsingContext,
-	): ZWaveBeamStart {
+	): T {
 		if (ctx.channel > 2) {
 			validatePayload.fail(
-				`Channel ${ctx.channel} (ZWLR) must be parsed as a LongRangeBeamStart!`,
+				`Channel ${ctx.channel} (ZWLR) must be parsed as a LongRangeBeam!`,
 			);
 		}
 
@@ -36,7 +37,7 @@ export class ZWaveBeamStart {
 			homeIdHash = data[3];
 		}
 
-		return new ZWaveBeamStart({
+		return new this({
 			destinationNodeId,
 			homeIdHash,
 		});
@@ -68,27 +69,28 @@ export class ZWaveBeamStart {
 	}
 }
 
-export interface LongRangeBeamStartOptions {
+export interface LongRangeBeamOptions {
 	txPower: number;
 	destinationNodeId: number;
 	homeIdHash: number;
 }
 
 /** A beam frame used to awaken FL nodes, Z-Wave Long Range variant */
-export class LongRangeBeamStart {
-	public constructor(options: LongRangeBeamStartOptions) {
+export class LongRangeBeam {
+	public constructor(options: LongRangeBeamOptions) {
 		this.txPower = options.txPower;
 		this.destinationNodeId = options.destinationNodeId;
 		this.homeIdHash = options.homeIdHash;
 	}
 
-	public static parse(
+	public static parse<T extends LongRangeBeam>(
+		this: new (options: LongRangeBeamOptions) => T,
 		data: Bytes,
 		ctx: MPDUParsingContext,
-	): LongRangeBeamStart {
+	): T {
 		if (ctx.channel <= 2) {
 			validatePayload.fail(
-				`Channel ${ctx.channel} (Mesh) must be parsed as a ZWaveBeamStart!`,
+				`Channel ${ctx.channel} (Mesh) must be parsed as a ZWaveBeam!`,
 			);
 		}
 
@@ -97,7 +99,7 @@ export class LongRangeBeamStart {
 		const destinationNodeId = data.readUInt16BE(1) & 0x0fff;
 		const homeIdHash = data[3];
 
-		return new LongRangeBeamStart({
+		return new this({
 			txPower,
 			destinationNodeId,
 			homeIdHash,

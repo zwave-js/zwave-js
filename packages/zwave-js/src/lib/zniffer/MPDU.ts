@@ -4,7 +4,7 @@ import {
 	AckZWaveMPDU,
 	ExplorerZWaveMPDU,
 	InclusionRequestExplorerZWaveMPDU,
-	LongRangeBeamStart,
+	LongRangeBeam,
 	LongRangeMPDU,
 	MPDU,
 	type MPDULogContext,
@@ -21,7 +21,7 @@ import {
 	SearchResultExplorerZWaveMPDU,
 	SinglecastLongRangeMPDU,
 	SinglecastZWaveMPDU,
-	ZWaveBeamStart,
+	ZWaveBeam,
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZWaveMPDU,
@@ -59,20 +59,24 @@ export function znifferFrameInfoToMPDUParsingContext(
 
 export function parseMPDU(
 	frame: ZnifferDataMessage,
+	frameInfo: ZnifferFrameInfo = frame,
 ): ZWaveMPDU | LongRangeMPDU {
-	const ctx = znifferFrameInfoToMPDUParsingContext(frame);
+	const ctx = znifferFrameInfoToMPDUParsingContext(frameInfo);
 	return MPDU.parse(Bytes.view(frame.payload), ctx);
 }
 
 export function parseBeamFrame(
 	frame: ZnifferDataMessage,
+	frameInfo: ZnifferFrameInfo = frame,
 ): ZWaveBeamStart | LongRangeBeamStart | BeamStop {
 	if (frame.frameType === ZnifferFrameType.BeamStop) {
 		return new BeamStop();
 	}
 
-	const ctx = znifferFrameInfoToMPDUParsingContext(frame);
-	const channelConfig = znifferRegionToChannelConfiguration(frame.region);
+	const ctx = znifferFrameInfoToMPDUParsingContext(frameInfo);
+	const channelConfig = znifferRegionToChannelConfiguration(
+		frameInfo.region,
+	);
 	switch (channelConfig) {
 		case "1/2":
 		case "3": {
@@ -90,6 +94,12 @@ export function parseBeamFrame(
 			);
 	}
 }
+
+/** Marks the start of a beam on the Zniffer */
+export class ZWaveBeamStart extends ZWaveBeam {}
+
+/** Marks the start of a Long Range beam on the Zniffer */
+export class LongRangeBeamStart extends LongRangeBeam {}
 
 /** The Zniffer signals the end of an ongoing beam with a separate frame */
 export class BeamStop {
