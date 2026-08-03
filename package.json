@@ -94,7 +94,7 @@
     "reflect-metadata": "^0.2.2",
     "semver": "^7.7.2",
     "source-map-support": "^0.5.21",
-    "tmp": "^0.2.5",
+    "tmp": "^0.2.7",
     "ts-morph": "^28.0.0",
     "tsx": "^4.21.0",
     "turbo": "2.9.18",
