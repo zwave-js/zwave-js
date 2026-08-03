@@ -41,7 +41,10 @@ jobs:
     - name: Update installed workflows
       env:
         GH_TOKEN: ${{ github.token }}
-      run: gh aw update
+      # --no-release-bump keeps the action refs as the shared workflows write
+      # them; without it the sync rewrites every floating major as the newest
+      # exact release, so a major upgrade rides along in a pin-sync PR
+      run: gh aw update --no-release-bump
 
     - name: Fail on merge conflicts
       # gh aw update does a 3-way merge preserving local edits; conflicts
