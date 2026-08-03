@@ -87,7 +87,7 @@
     "es-main": "^1.4.0",
     "oxlint": "^1.71.0",
     "oxlint-tsgolint": "^0.23.0",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.1",
     "typescript": "5.9.3",
     "vitest": "^4.1.0"
   }
