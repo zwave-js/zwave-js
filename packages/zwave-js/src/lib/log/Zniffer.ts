@@ -4,10 +4,12 @@ import {
 	type LogContainer,
 	type LogContext,
 	type LogPayload,
+	type LongRangeBeamStart,
 	type LongRangeMPDU,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type RSSI,
+	type ZWaveBeamStart,
 	ZWaveLoggerBase,
 	type ZWaveMPDU,
 	formatLogPayload,
@@ -22,8 +24,6 @@ import type { ZnifferDataMessage, ZnifferFrameInfo } from "@zwave-js/serial";
 import { buffer2hex, num2hex } from "@zwave-js/shared";
 import {
 	type BeamStop,
-	type LongRangeBeamStart,
-	type ZWaveBeamStart,
 	znifferFrameInfoToMPDUParsingContext,
 } from "../zniffer/MPDU.js";
 import type { Zniffer } from "../zniffer/Zniffer.js";
@@ -157,10 +157,15 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 
 	public beam(
 		beam: ZWaveBeamStart | LongRangeBeamStart | BeamStop,
+		frameInfo: ZnifferFrameInfo,
 	): void {
 		if (!this.isLogVisible()) return;
 
-		const logEntry = beam.toLogEntry();
+		const logEntry = beam.toLogEntry({
+			...znifferFrameInfoToMPDUParsingContext(frameInfo),
+			rssi: frameInfo.rssi,
+			rssiRaw: frameInfo.rssiRaw,
+		});
 
 		const msg = formatLogPayload(logText([], {
 			tags: logEntry.tags,

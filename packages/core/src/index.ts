@@ -10,6 +10,7 @@ export * from "./log/ZWaveLoggerBase.js";
 export * from "./log/formatPayload.js";
 export * from "./log/shared.js";
 export type * from "./log/traits.js";
+export * from "./protocol/Beams.js";
 export * from "./protocol/MPDU.js";
 export * from "./protocol/_Types.js";
 export * from "./protocol/utils.js";

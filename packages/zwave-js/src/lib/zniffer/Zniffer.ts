@@ -14,6 +14,7 @@ import {
 	type HostIDs,
 	type LogConfig,
 	type LogContainer,
+	LongRangeBeamStart,
 	LongRangeMPDU,
 	MPDUHeaderType,
 	type MaybeNotKnown,
@@ -26,6 +27,7 @@ import {
 	SecurityManager2,
 	type SecurityManagers,
 	type UnknownZWaveChipType,
+	ZWaveBeamStart,
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZWaveMPDU,
@@ -99,8 +101,6 @@ import {
 	BeamStop,
 	type CorruptedFrame,
 	type Frame,
-	LongRangeBeamStart,
-	ZWaveBeamStart,
 	beamToFrame,
 	mpduToFrame,
 	parseBeamFrame,
@@ -699,11 +699,12 @@ supported frequencies: ${
 			capture.parsedFrame = frame.external;
 
 			if (
-				frame.internal instanceof ZWaveBeamStart
-				|| frame.internal instanceof LongRangeBeamStart
-				|| frame.internal instanceof BeamStop
+				(frame.internal instanceof ZWaveBeamStart
+					|| frame.internal instanceof LongRangeBeamStart
+					|| frame.internal instanceof BeamStop)
+				&& frame.frameInfo
 			) {
-				this.znifferLog.beam(frame.internal);
+				this.znifferLog.beam(frame.internal, frame.frameInfo);
 				this.emit("frame", frame.external as Frame, capture.frameData);
 				return;
 			}
@@ -1203,16 +1204,27 @@ supported frequencies: ${
 			);
 		}
 
+		const frameInfo: ZnifferFrameInfo = {
+			...pick(msg, [
+				"channel",
+				"frameType",
+				"region",
+				"protocolDataRate",
+				"rssiRaw",
+			]),
+			rssi: convertedRSSI,
+		};
+
 		// Short-circuit if we're dealing with beam frames
 		if (
 			msg.frameType === ZnifferFrameType.BeamStart
 			|| msg.frameType === ZnifferFrameType.BeamStop
 		) {
 			const beam = parseBeamFrame(msg);
-			beam.frameInfo.rssi = convertedRSSI;
 			return {
 				internal: beam,
-				external: beamToFrame(beam),
+				frameInfo,
+				external: beamToFrame(beam, frameInfo),
 			};
 		}
 
@@ -1225,16 +1237,6 @@ supported frequencies: ${
 		}
 
 		const mpdu = parseMPDU(msg);
-		const frameInfo: ZnifferFrameInfo = {
-			...pick(msg, [
-				"channel",
-				"frameType",
-				"region",
-				"protocolDataRate",
-				"rssiRaw",
-			]),
-			rssi: convertedRSSI,
-		};
 
 		// Try to decode the CC while assuming the role of the receiver
 		let destSecurityManager: SecurityManager | undefined;

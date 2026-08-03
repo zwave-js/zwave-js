@@ -4,8 +4,10 @@ import {
 	AckZWaveMPDU,
 	ExplorerZWaveMPDU,
 	InclusionRequestExplorerZWaveMPDU,
+	LongRangeBeamStart,
 	LongRangeMPDU,
 	MPDU,
+	type MPDULogContext,
 	type MPDUParsingContext,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
@@ -19,17 +21,14 @@ import {
 	SearchResultExplorerZWaveMPDU,
 	SinglecastLongRangeMPDU,
 	SinglecastZWaveMPDU,
+	ZWaveBeamStart,
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZWaveMPDU,
 	type ZnifferProtocolDataRate,
 	type ZnifferRegion,
-	formatNodeId,
-	longRangeBeamPowerToDBm,
-	rssiToString,
 	validatePayload,
 	znifferProtocolDataRateToProtocolDataRate,
-	znifferProtocolDataRateToString,
 	znifferRegionToChannelConfiguration,
 	znifferRegionToRFRegion,
 } from "@zwave-js/core";
@@ -62,40 +61,25 @@ export function parseMPDU(
 	frame: ZnifferDataMessage,
 ): ZWaveMPDU | LongRangeMPDU {
 	const ctx = znifferFrameInfoToMPDUParsingContext(frame);
-	return MPDU.parse(Bytes.view(frame.payload), ctx) as
-		| ZWaveMPDU
-		| LongRangeMPDU;
-}
-
-export interface BeamOptions {
-	data: Bytes;
-	frameInfo: ZnifferFrameInfo;
+	return MPDU.parse(Bytes.view(frame.payload), ctx);
 }
 
 export function parseBeamFrame(
 	frame: ZnifferDataMessage,
 ): ZWaveBeamStart | LongRangeBeamStart | BeamStop {
 	if (frame.frameType === ZnifferFrameType.BeamStop) {
-		return new BeamStop({
-			data: frame.payload,
-			frameInfo: frame,
-		});
+		return new BeamStop();
 	}
 
+	const ctx = znifferFrameInfoToMPDUParsingContext(frame);
 	const channelConfig = znifferRegionToChannelConfiguration(frame.region);
 	switch (channelConfig) {
 		case "1/2":
 		case "3": {
-			return new ZWaveBeamStart({
-				data: frame.payload,
-				frameInfo: frame,
-			});
+			return ZWaveBeamStart.parse(frame.payload, ctx);
 		}
 		case "4": {
-			return new LongRangeBeamStart({
-				data: frame.payload,
-				frameInfo: frame,
-			});
+			return LongRangeBeamStart.parse(frame.payload, ctx);
 		}
 		default:
 			validatePayload.fail(
@@ -107,137 +91,15 @@ export function parseBeamFrame(
 	}
 }
 
-export class ZWaveBeamStart {
-	public constructor(options: BeamOptions) {
-		const data = options.data;
-		this.frameInfo = options.frameInfo;
-
-		switch (options.frameInfo.channel) {
-			case 0:
-			case 1:
-			case 2:
-				// OK
-				break;
-			case 3:
-			case 4: {
-				validatePayload.fail(
-					`Channel ${options.frameInfo.channel} (ZWLR) must be parsed as a LongRangeMPDU!`,
-				);
-			}
-			default: {
-				validatePayload.fail(
-					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
-						buffer2hex(data)
-					}`,
-				);
-			}
-		}
-
-		this.destinationNodeId = data[1];
-		if (data[2] === 0x01) {
-			this.homeIdHash = data[3];
-		}
-	}
-
-	public readonly frameInfo: ZnifferFrameInfo;
-	public readonly homeIdHash?: number;
-	public readonly destinationNodeId: number;
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const tags = [
-			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
-		];
-
-		const message: MessageRecord = {
-			channel: this.frameInfo.channel,
-			"protocol/data rate": znifferProtocolDataRateToString(
-				this.frameInfo.protocolDataRate,
-			),
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
-		};
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
-export class LongRangeBeamStart {
-	public constructor(options: BeamOptions) {
-		const data = options.data;
-		this.frameInfo = options.frameInfo;
-
-		switch (options.frameInfo.channel) {
-			case 0:
-			case 1:
-			case 2:
-				validatePayload.fail(
-					`Channel ${options.frameInfo.channel} (Mesh) must be parsed as a ZWaveMPDU!`,
-				);
-
-			case 3:
-			case 4: {
-				// OK
-				break;
-			}
-			default: {
-				validatePayload.fail(
-					`Unsupported channel ${options.frameInfo.channel}. MPDU payload: ${
-						buffer2hex(data)
-					}`,
-				);
-			}
-		}
-
-		const txPower = data[1] >>> 4;
-		this.txPower = longRangeBeamPowerToDBm(txPower);
-		this.destinationNodeId = data.readUInt16BE(1) & 0x0fff;
-		this.homeIdHash = data[3];
-	}
-
-	public readonly frameInfo: ZnifferFrameInfo;
-	public readonly homeIdHash: number;
-	public readonly destinationNodeId: number;
-	public readonly txPower: number;
-
-	public toLogEntry(): MessageOrCCLogEntry {
-		const tags = [
-			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
-		];
-
-		const message: MessageRecord = {
-			channel: this.frameInfo.channel,
-			"protocol/data rate": znifferProtocolDataRateToString(
-				this.frameInfo.protocolDataRate,
-			),
-			"TX power": `${this.txPower} dBm`,
-			RSSI: this.frameInfo.rssi != undefined
-				? rssiToString(this.frameInfo.rssi)
-				: this.frameInfo.rssiRaw.toString(),
-		};
-		return {
-			tags,
-			message,
-		};
-	}
-}
-
+/** The Zniffer signals the end of an ongoing beam with a separate frame */
 export class BeamStop {
-	public constructor(options: BeamOptions) {
-		this.frameInfo = options.frameInfo;
-	}
-
-	public readonly frameInfo: ZnifferFrameInfo;
-
-	public toLogEntry(): MessageOrCCLogEntry {
+	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const tags = [
 			"BEAM STOP",
 		];
 
 		const message: MessageRecord = {
-			channel: this.frameInfo.channel,
+			channel: ctx.channel,
 		};
 		return {
 			tags,
@@ -644,14 +506,15 @@ export function mpduToLongRangeFrame(
 
 export function beamToFrame(
 	beam: ZWaveBeamStart | LongRangeBeamStart | BeamStop,
+	frameInfo: ZnifferFrameInfo,
 ): Frame {
 	const retBase = {
-		channel: beam.frameInfo.channel,
-		region: beam.frameInfo.region,
-		rssiRaw: beam.frameInfo.rssiRaw,
-		rssi: beam.frameInfo.rssi,
+		channel: frameInfo.channel,
+		region: frameInfo.region,
+		rssiRaw: frameInfo.rssiRaw,
+		rssi: frameInfo.rssi,
 
-		protocolDataRate: beam.frameInfo.protocolDataRate,
+		protocolDataRate: frameInfo.protocolDataRate,
 	};
 
 	if (beam instanceof ZWaveBeamStart) {
@@ -673,18 +536,18 @@ export function beamToFrame(
 		};
 	} else {
 		// Beam Stop - contains only the channel, the other fields are garbage
-		const isLR = beam.frameInfo.channel === 4;
+		const isLR = frameInfo.channel === 4;
 		if (isLR) {
 			return {
 				protocol: Protocols.ZWaveLongRange,
 				type: LongRangeFrameType.BeamStop,
-				channel: beam.frameInfo.channel,
+				channel: frameInfo.channel,
 			};
 		} else {
 			return {
 				protocol: Protocols.ZWave,
 				type: ZWaveFrameType.BeamStop,
-				channel: beam.frameInfo.channel,
+				channel: frameInfo.channel,
 			};
 		}
 	}
