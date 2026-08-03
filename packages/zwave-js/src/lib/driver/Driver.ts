@@ -1135,6 +1135,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public get metadataDB(): Database<ValueMetadata> | undefined {
 		return this._metadataDB;
 	}
+	private _valueDBsOpen: boolean = false;
 	private _networkCache: Database<any> | undefined;
 	/** @internal */
 	public get networkCache(): Database<any> {
@@ -1979,6 +1980,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this._valueDB.clear();
 			this._metadataDB.clear();
 		}
+
+		this._valueDBsOpen = true;
 	}
 
 	private async performCacheMigration(): Promise<void> {
@@ -3112,6 +3115,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	private async recreateNetworkCacheAndValueDBs(): Promise<void> {
+		this._valueDBsOpen = false;
 		await this._networkCache?.close();
 		await this._valueDB?.close();
 		await this._metadataDB?.close();
@@ -3961,6 +3965,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	private async closeDatabases(): Promise<void> {
+		this._valueDBsOpen = false;
 		try {
 			await this._valueDB?.close();
 		} catch (e) {
@@ -4023,6 +4028,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		try {
 			for await (const frame of serial.readable) {
 				setImmediate(() => {
+					// Frames that were read before the driver was destroyed
+					// must not be handled anymore
+					if (this.wasDestroyed) return;
+
 					if (frame.type === ZWaveSerialFrameType.SerialAPI) {
 						void this.serialport_onData(frame.data);
 					} else if (frame.type === ZWaveSerialFrameType.Bootloader) {
@@ -6581,6 +6590,10 @@ ${handlers.length} left`,
 	}
 
 	private shouldPersistCCValues(cc: CommandClass): boolean {
+		// Drop values from commands that are still being handled while the
+		// value DB is closed, e.g. during shutdown
+		if (!this._valueDBsOpen) return false;
+
 		// Always persist encapsulation CCs, otherwise interviews don't work.
 		if (isEncapsulationCC(cc.ccId)) return true;
 
