@@ -1,0 +1,109 @@
+name: Recompile gh-aw workflows on Dependabot PRs
+
+# Dependabot cannot exclude individual workflow files in the github-actions
+# ecosystem (https://github.com/dependabot/dependabot-core/issues/2883), so
+# its PRs also bump action pins inside the generated gh-aw workflows, which
+# the compile check rejects. This workflow recompiles those PRs: generated
+# files revert to the pins from .github/aw/actions-lock.json, while bumps in
+# hand-written workflows survive. PRs left without effective changes are
+# closed.
+
+on:
+  # WARNING: This runs in the PR base with access to secrets while checking
+  # out PR code, so it must stay restricted to Dependabot branches from this
+  # repository. No step both holds a credential and runs PR-authored content.
+  # Details under
+  # https://github.blog/changelog/2021-02-19-github-actions-workflows-triggered-by-dependabot-prs-will-run-with-read-only-permissions/
+  pull_request_target:
+    paths:
+      - '.github/workflows/*.lock.yml'
+      - '.github/workflows/agentics-maintenance.yml'
+
+permissions: {}
+
+jobs:
+  recompile:
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: [ubuntu-latest]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - name: Checkout PR head
+      uses: actions/checkout@v7
+      with:
+        # Pin to the SHA the event fired for, so a push to the branch cannot
+        # swap the code out between the event and the checkout
+        ref: ${{ github.event.pull_request.head.sha }}
+        # gh aw compile runs over PR-authored content, so leave no credential
+        # behind in .git/config
+        persist-credentials: false
+        # Full (blobless) history so the effective PR diff can be computed
+        # against the merge base
+        fetch-depth: 0
+        filter: blob:none
+
+    - name: Fetch base branch
+      env:
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+      run: git fetch --no-tags origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
+
+    - name: Install gh-aw
+      env:
+        GH_TOKEN: ${{ github.token }}
+      # Keep the pin in sync with gh-aw-compile-check.yml. gh resolves --pin
+      # against release tags only, so this cannot be a commit SHA.
+      run: gh extension install github/gh-aw --pin v0.81.6
+
+    - name: Recompile workflows
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh aw compile
+
+    - name: Determine outcome
+      id: decide
+      env:
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+      run: |
+        # Refuse to commit anything outside the generated files, since that
+        # would mean the compile step did something unanticipated
+        unexpected=$(git diff --name-only | grep -Ev '^\.github/workflows/([^/]+\.lock\.yml|agentics-maintenance\.yml)$' || true)
+        if [ -n "$unexpected" ]; then
+          echo "::error::gh aw compile modified unexpected files:"
+          echo "$unexpected"
+          exit 1
+        fi
+        merge_base=$(git merge-base HEAD "origin/$BASE_REF")
+        if git diff --quiet "$merge_base"; then
+          echo "action=close" >> "$GITHUB_OUTPUT"
+        elif git diff --quiet; then
+          echo "action=none" >> "$GITHUB_OUTPUT"
+        else
+          echo "action=push" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Close PR without effective changes
+      if: ${{ steps.decide.outputs.action == 'close' }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+      run: |
+        gh pr close "$PR_URL" --comment "Closing: this PR only bumped action pins inside generated gh-aw workflows. Those pins are managed via \`.github/aw/actions-lock.json\` and \`gh aw compile\`, so recompiling reverts all changes in this PR. They will be updated with the next gh-aw upgrade instead."
+
+    - name: Push recompiled workflows
+      if: ${{ steps.decide.outputs.action == 'push' }}
+      env:
+        # A PAT, so the push retriggers CI on the PR
+        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      run: |
+        git config user.email "bot@zwave-js.io"
+        git config user.name "Z-Wave JS Bot"
+        # Read the PAT from the environment at push time, so it reaches
+        # neither .git/config nor a process argument
+        git config credential.helper '!f() { echo username=x-access-token; echo "password=$BOT_TOKEN"; }; f'
+        git commit -am "chore: recompile gh-aw workflows"
+        # Fails if the branch moved since the checkout, which is intended
+        git push origin "HEAD:refs/heads/$HEAD_REF"
