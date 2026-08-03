@@ -18,4 +18,3 @@ export type RCPChunk =
 	| Bytes
 	| MessageHeaders.ACK
 	| MessageHeaders.NAK;
-// | MessageHeaders.CAN;

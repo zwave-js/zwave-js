@@ -519,11 +519,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	/**
-	 * Sends a low-level message like ACK, NAK or CAN immediately
+	 * Sends a low-level message like ACK or NAK immediately
 	 * @param header The low-level message to send
 	 */
 	private writeHeader(header: MessageHeaders): Promise<void> {
-		// ACK, CAN, NAK
 		return this.writeSerial(Uint8Array.from([header]));
 	}
 
@@ -537,30 +536,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	/** Handles sequencing of queued Serial API commands */
 	private async drainTransactionQueue(): Promise<void> {
 		for await (const transaction of this.queue) {
-			// Attempt the command multiple times if necessary
-			attempts: for (let attempt = 1;; attempt++) {
-				try {
-					const ret = await this.executeSerialAPICommand(
-						transaction.message,
-						transaction.stack,
-					);
-					transaction.promise.resolve(ret);
-				} catch (e) {
-					if (
-						isZWaveError(e)
-						&& e.code === ZWaveErrorCodes.Controller_MessageDropped
-						&& e.context === "CAN"
-						&& attempt < 3
-					) {
-						// Retry up to 3 times if there are serial collisions
-						await wait(100);
-						continue attempts;
-					}
-
-					// In all other cases, reject the transaction
-					transaction.promise.reject(e as Error);
-				}
-				break attempts;
+			try {
+				const ret = await this.executeSerialAPICommand(
+					transaction.message,
+					transaction.stack,
+				);
+				transaction.promise.resolve(ret);
+			} catch (e) {
+				transaction.promise.reject(e as Error);
 			}
 		}
 	}
@@ -632,8 +615,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 						nextInput = { value: "timeout" };
 					} else if (controlFlow === MessageHeaders.ACK) {
 						nextInput = { value: "ACK" };
-					} else if (controlFlow === MessageHeaders.CAN) {
-						nextInput = { value: "CAN" };
 					} else if (controlFlow === MessageHeaders.NAK) {
 						nextInput = { value: "NAK" };
 					}

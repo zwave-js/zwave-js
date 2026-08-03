@@ -117,7 +117,10 @@ class RCPParserTransformer implements
 		}
 	}
 }
-export class RCPParser extends TransformStream {
+export class RCPParser extends TransformStream<
+	BytesView,
+	RCPParserTransformerOutput
+> {
 	constructor(
 		logger?: SerialLogger,
 	) {

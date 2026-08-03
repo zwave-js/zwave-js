@@ -45,7 +45,7 @@ export class RCPSerialStreamFactory {
 /** Single-use serial stream. Has to be re-created after being closed. */
 export class RCPSerialStream implements
 	ReadableWritablePair<
-		// The serial binding emits ZniferSerialFrames
+		// The serial binding emits RCPSerialFrames
 		RCPSerialFrame,
 		// and accepts binary data
 		BytesView
@@ -62,10 +62,7 @@ export class RCPSerialStream implements
 		// Expose the underlying sink as the writable side of this stream.
 		// We use an identity stream in the middle to pipe through, so we
 		// can properly abort the stream
-		const { readable: input, writable } = new TransformStream<
-			BytesView,
-			BytesView
-		>();
+		const { readable: input, writable } = new TransformStream();
 		this.writable = writable;
 		const sinkStream = new WritableStream(sink);
 		void input
@@ -73,20 +70,14 @@ export class RCPSerialStream implements
 			.catch(noop);
 
 		// Pipe the underlying source through the parser to the readable side
-		const { readable, writable: output } = new TransformStream<
-			RCPSerialFrame,
-			RCPSerialFrame
-		>();
-		this.readable = readable;
 		const parser = new RCPParser(logger);
+		this.readable = parser.readable;
 		const sourceStream = new ReadableStream(source);
-
-		void sourceStream
-			.pipeThrough(parser, { signal: this.#abort.signal })
-			.pipeTo(output, { signal: this.#abort.signal })
-			.catch((_e) => {
-				this._isOpen = false;
-			});
+		void sourceStream.pipeTo(parser.writable, {
+			signal: this.#abort.signal,
+		}).catch((_e) => {
+			this._isOpen = false;
+		});
 	}
 
 	protected logger: SerialLogger;
@@ -101,7 +92,15 @@ export class RCPSerialStream implements
 	public async close(): Promise<void> {
 		this._isOpen = false;
 		// Close the underlying stream
-		this._writer?.releaseLock();
+		if (this._writer) {
+			try {
+				this._writer?.releaseLock();
+				this._writer = undefined;
+				await this.writable.close();
+			} catch {
+				// ignore
+			}
+		}
 		this.#abort.abort();
 
 		return Promise.resolve();
@@ -126,9 +125,6 @@ export class RCPSerialStream implements
 			switch (data[0]) {
 				case MessageHeaders.ACK:
 					this.logger.ACK("outbound");
-					break;
-				case MessageHeaders.CAN:
-					this.logger.CAN("outbound");
 					break;
 				case MessageHeaders.NAK:
 					this.logger.NAK("outbound");
