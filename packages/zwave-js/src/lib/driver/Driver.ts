@@ -735,6 +735,11 @@ function messageIsPing<T extends Message>(
 	return containsCC(msg) && msg.command instanceof NoOperationCC;
 }
 
+/** Whether an error was caused by accessing one of the JSONL DBs before it was opened or after it was closed */
+function isDatabaseNotOpenError(e: unknown): boolean {
+	return e instanceof Error && /database is not open/.test(e.message);
+}
+
 function assertValidCCs(container: ContainsCC): void {
 	if (container.command instanceof InvalidCC) {
 		if (typeof container.command.reason === "number") {
@@ -4023,6 +4028,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		try {
 			for await (const frame of serial.readable) {
 				setImmediate(() => {
+					// Frames that were read before the driver was destroyed
+					// must not be handled anymore
+					if (this.wasDestroyed) return;
+
 					if (frame.type === ZWaveSerialFrameType.SerialAPI) {
 						void this.serialport_onData(frame.data);
 					} else if (frame.type === ZWaveSerialFrameType.Bootloader) {
@@ -4311,6 +4320,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						);
 						// TODO: We may need to do the S2 MOS dance here - or we can deal with it when the next valid CC arrives
 						return;
+					} else if (isDatabaseNotOpenError(e)) {
+						// The value DB is closed while the driver is shutting
+						// down or reinitializing the controller
+						this.driverLog.print(
+							`Dropping message because the driver is not ready to handle it.`,
+							"warn",
+						);
+						return;
 					} else {
 						throw e;
 					}
@@ -4426,8 +4443,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					return MessageHeaders.ACK;
 			}
 		} else {
-			if (/database is not open/.test(e.message)) {
-				// The JSONL-DB is not open yet
+			if (isDatabaseNotOpenError(e)) {
 				this.driverLog.print(
 					`Dropping message because the driver is not ready to handle it yet.`,
 					"warn",

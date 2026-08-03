@@ -20,18 +20,9 @@ jobs:
     - name: Checkout master branch
       uses: actions/checkout@v7
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v7
-      with:
-        node-version: 22
-        cache: 'npm'
-        cache-dependency-path: .github/bot-scripts/package-lock.json
-
-    # The bot scripts declare fflate (used to decompress zipped logfile
-    # uploads); --ignore-scripts skips onnxruntime-node's GPU-provider download
-    - name: Install bot-script dependencies
-      working-directory: .github/bot-scripts
-      run: npm ci --ignore-scripts
+    # Installs the shared bot-scripts dependencies and exports BOT_SCRIPTS_DIR
+    - name: Setup bot scripts
+      uses: zwave-js/bot-workflows/actions/setup-bot@v1
 
     - name: Extract log file from issue body
       uses: actions/github-script@v9
@@ -40,7 +31,7 @@ jobs:
         github-token: ${{secrets.BOT_TOKEN}}
         result-encoding: string
         script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
           const extractResult = await bot.extractLogfile({github, context});
 
           if (!extractResult) {
@@ -69,7 +60,7 @@ jobs:
         github-token: ${{secrets.BOT_TOKEN}}
         result-encoding: string
         script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
           const classification = bot.classifyLogfile(process.env.LOGFILE);
           console.log('Classification:', classification);
 
@@ -114,7 +105,7 @@ jobs:
     # evicted cache entry heals itself between two nightly rebuilds
     - name: Restore posts index
       id: posts-index
-      uses: ./.github/actions/restore-bot-index
+      uses: zwave-js/bot-workflows/actions/restore-bot-index@v1
       with:
         index: posts
         github-token: ${{ github.token }}
@@ -124,9 +115,11 @@ jobs:
       run: |
         echo "::warning::The posts index could not be restored, from cache or from artifacts - this post will only be indexed by the next nightly rebuild"
 
-    - name: Setup embeddings
+    # Installs the shared bot-scripts dependencies (including the local
+    # embedding model cache) and exports BOT_SCRIPTS_DIR
+    - name: Setup bot scripts
       if: steps.posts-index.outputs.found == 'true'
-      uses: ./.github/actions/setup-bot-embeddings
+      uses: zwave-js/bot-workflows/actions/setup-bot@v1
 
     - name: Add post to index
       id: update
@@ -136,7 +129,7 @@ jobs:
         POSTS_INDEX_PATH: .posts-index/index.json
       with:
         script: |
-          const bot = require(`${process.env.GITHUB_WORKSPACE}/.github/bot-scripts/index.cjs`);
+          const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
           return bot.updatePostsIndex({github, context});
 
     # Save under the same version-derived prefix the producers use

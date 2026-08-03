@@ -7,30 +7,10 @@ module.exports = {
 		require("./addFingerprintCreatePR.cjs")(...args),
 	approveWorkflows: (...args) => require("./approveWorkflows.cjs")(...args),
 	checkAuthorized: (...args) => require("./checkAuthorized.cjs")(...args),
-	classifyLogfile: (...args) =>
-		require("./classifyLogfile.cjs").classifyLogfile(...args),
-	classificationToFeedback: (...args) =>
-		require("./classifyLogfile.cjs").classificationToFeedback(...args),
-	extractLogfile: (...args) => require("./extractLogfile.cjs")(...args),
-	extractLogfileInDiscussion: (...args) =>
-		require("./extractLogfileInDiscussion.cjs")(...args),
-	ensureLogfileFeedback: (...args) =>
-		require("./ensureLogfileFeedback.cjs")(...args),
-	ensureLogfileFeedbackInDiscussion: (...args) =>
-		require("./ensureLogfileFeedbackInDiscussion.cjs")(...args),
 	hideTransferredComments: (...args) =>
 		require("./hideTransferredComments.cjs")(...args),
 	importConfigCreatePR: (...args) =>
 		require("./importConfigCreatePR.cjs")(...args),
 	shouldAutomerge: (...args) => require("./shouldAutomerge.cjs")(...args),
-	prepareDocsAnswer: (...args) =>
-		require("./answerFromDocs.cjs").prepareDocsAnswer(...args),
-	postDocsAnswer: (...args) =>
-		require("./answerFromDocs.cjs").postDocsAnswer(...args),
-	extractLogfileUrlFromDiscussion: (...args) =>
-		require("./extractLogfileUrlFromDiscussion.cjs")(...args),
 	escalate: (...args) => require("./escalate.cjs")(...args),
-	updatePostsIndex: (...args) => require("./updatePostsIndex.cjs")(...args),
-	updateEvalTrackingIssue: (...args) =>
-		require("./updateEvalTrackingIssue.cjs")(...args),
 };
