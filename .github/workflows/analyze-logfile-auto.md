@@ -10,7 +10,7 @@ on:
   reaction: none
   steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7.0.1
       with:
         # This pre-activation job runs third-party packages; don't persist the
         # workflow token in .git for them to read
@@ -20,7 +20,7 @@ on:
       uses: zwave-js/bot-workflows/actions/setup-bot@v1
 
     - name: Extract log file from discussion body
-      uses: actions/github-script@v9
+      uses: actions/github-script@v9.0.0
       id: extract
       with:
         github-token: ${{ secrets.BOT_TOKEN }}
@@ -45,7 +45,7 @@ on:
           return extractResult;
 
     - name: Classify logfile and give feedback
-      uses: actions/github-script@v9
+      uses: actions/github-script@v9.0.0
       id: feedback
       env:
         LOGFILE: ${{ steps.extract.outputs.result }}
@@ -99,7 +99,7 @@ steps:
 
   - name: Get logfile URL from discussion
     id: get_logfile_url
-    uses: actions/github-script@v9
+    uses: actions/github-script@v9.0.0
     with:
       github-token: ${{ secrets.BOT_TOKEN }}
       result-encoding: string
@@ -123,7 +123,7 @@ safe-outputs:
 network: defaults
 
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@391fbd56f93436357e26af53a573a16dd7c53c5f
+source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@bb324b62a0e6b629d59a081bbf0391bb851c8c1d
 ---
 
 # Z-Wave JS Logfile Analysis
