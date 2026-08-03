@@ -73,6 +73,7 @@ import {
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
+	type AwaitedThing,
 	Bytes,
 	type BytesView,
 	TypedEventTarget,
@@ -83,6 +84,7 @@ import {
 	noop,
 	num2hex,
 	pick,
+	setTimer,
 } from "@zwave-js/shared";
 import {
 	type DeferredPromise,
@@ -131,12 +133,6 @@ export interface ZnifferEventCallbacks {
 }
 
 export type ZnifferEvents = Extract<keyof ZnifferEventCallbacks, string>;
-
-interface AwaitedThing<T> {
-	handler: (thing: T) => void;
-	timeout?: NodeJS.Timeout;
-	predicate: (msg: T) => boolean;
-}
 
 type AwaitedMessageEntry = AwaitedThing<ZnifferMessage>;
 
@@ -753,12 +749,12 @@ supported frequencies: ${
 			};
 			this.awaitedMessages.push(entry);
 			const removeEntry = () => {
-				if (entry.timeout) clearTimeout(entry.timeout);
+				entry.timeout?.clear();
 				const index = this.awaitedMessages.indexOf(entry);
 				if (index !== -1) this.awaitedMessages.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimeout(() => {
+			entry.timeout = setTimer(() => {
 				removeEntry();
 				reject(
 					new ZWaveError(
