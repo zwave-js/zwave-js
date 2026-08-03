@@ -82,7 +82,10 @@ export class ZnifferMessageRaw {
 				);
 			}
 			const frameType: ZnifferFrameType = data[1];
-			if (frameType === ZnifferFrameType.BeamStop) {
+			if (frameType === ZnifferFrameType.BeamStart) {
+				// BeamStart frames are always 11 bytes long, including the type byte
+				totalLength = 11;
+			} else if (frameType === ZnifferFrameType.BeamStop) {
 				// BeamStop frames always seem to be 7 bytes long, including the type byte
 				totalLength = 7;
 			} else {
@@ -253,6 +256,7 @@ export interface ZnifferDataMessageOptions {
 	protocolDataRate: ZnifferProtocolDataRate;
 	region: number;
 	rssiRaw: number;
+	rssi?: RSSI;
 	payload: Bytes;
 	checksumOK: boolean;
 }
@@ -273,6 +277,7 @@ export class ZnifferDataMessage extends ZnifferMessage
 		this.protocolDataRate = options.protocolDataRate;
 		this.region = options.region;
 		this.rssiRaw = options.rssiRaw;
+		this.rssi = options.rssi;
 		this.checksumOK = options.checksumOK;
 	}
 
@@ -386,6 +391,7 @@ export class ZnifferDataMessage extends ZnifferMessage
 	public readonly protocolDataRate: ZnifferProtocolDataRate;
 	public readonly region: number;
 	public readonly rssiRaw: number;
+	public rssi?: RSSI;
 
 	public readonly checksumOK: boolean;
 }

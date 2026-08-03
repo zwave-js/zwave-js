@@ -1198,7 +1198,8 @@ supported frequencies: ${
 		cc?: CommandClass;
 		external: Frame | CorruptedFrame;
 	}> {
-		let convertedRSSI: RSSI | undefined;
+		// PTI-based captures contain the RSSI in dBm already
+		let convertedRSSI: RSSI | undefined = msg.rssi;
 		if (convertRSSI && this._chipType) {
 			convertedRSSI = tryConvertRSSI(
 				msg.rssiRaw,
@@ -1240,7 +1241,10 @@ supported frequencies: ${
 			return {
 				internal: undefined,
 				frameInfo,
-				external: znifferDataMessageToCorruptedFrame(msg, frameInfo),
+				external: znifferDataMessageToCorruptedFrame(
+					msg,
+					frameInfo,
+				),
 			};
 		}
 
