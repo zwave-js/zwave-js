@@ -4170,7 +4170,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 								&& msg.command instanceof InvalidCC
 							) {
 								// If it was, we need to notify the sender that we couldn't decode the command
-								await this.answerSupervisedCommand(
+								await this.answerUnsuccessfulSupervisedCommand(
 									msg,
 									SupervisionStatus.NoSupport,
 								);
@@ -4296,7 +4296,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						);
 						// If the command was received with supervision encapsulation,
 						// notify the sender that we failed to handle it
-						await this.answerSupervisedCommand(
+						await this.answerUnsuccessfulSupervisedCommand(
 							completeMsg,
 							SupervisionStatus.Fail,
 						);
@@ -5031,10 +5031,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	/**
-	 * Answers a supervised command that cannot be handled with the given status,
-	 * so the sending node does not wait for the Supervision Report until it times out.
+	 * Answers a supervised command that cannot be handled with the given status.
 	 */
-	private async answerSupervisedCommand(
+	private async answerUnsuccessfulSupervisedCommand(
 		msg: Message & ContainsCC,
 		status: SupervisionStatus.NoSupport | SupervisionStatus.Fail,
 	): Promise<void> {
