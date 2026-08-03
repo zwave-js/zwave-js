@@ -1,5 +1,5 @@
 import { num2hex } from "@zwave-js/shared";
-import { RFRegion, ZnifferRegion } from "./RFRegion.js";
+import { RFRegion } from "./RFRegion.js";
 
 export enum Protocols {
 	ZWave = 0,
@@ -159,23 +159,6 @@ export enum ProtocolHeaderFormat {
 	Classic2Channel = 0,
 	Classic3Channel = 1,
 	LongRange,
-}
-
-export function znifferRegionToChannelConfiguration(
-	region: ZnifferRegion,
-): "1/2" | "3" | "4" {
-	switch (region) {
-		case ZnifferRegion.Japan:
-		case ZnifferRegion.Korea:
-			return "3";
-		case ZnifferRegion["USA (Long Range)"]:
-		case ZnifferRegion["USA (Long Range, backup)"]:
-		case ZnifferRegion["USA (Long Range, end device)"]:
-		case ZnifferRegion["Europe (Long Range)"]:
-			return "4";
-		default:
-			return "1/2";
-	}
 }
 
 export function rfRegionToRadioProtocolMode(
