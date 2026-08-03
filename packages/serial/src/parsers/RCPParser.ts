@@ -46,9 +46,6 @@ class RCPParserTransformer implements
 
 	private receiveBuffer = new Bytes();
 
-	// Allow ignoring the high nibble of an ACK once to work around an issue in the 700 series firmware
-	public ignoreAckHighNibble: boolean = false;
-
 	transform(
 		chunk: BytesView,
 		controller: TransformStreamDefaultController<
@@ -68,7 +65,6 @@ class RCPParserTransformer implements
 						controller.enqueue(
 							wrapRCPChunk(MessageHeaders.ACK),
 						);
-						this.ignoreAckHighNibble = false;
 						break;
 					}
 					case MessageHeaders.NAK: {
@@ -78,13 +74,6 @@ class RCPParserTransformer implements
 						);
 						break;
 					}
-					// case MessageHeaders.CAN: {
-					// 	this.logger?.CAN("inbound");
-					// 	controller.enqueue(
-					// 		wrapRCPChunk(MessageHeaders.CAN),
-					// 	);
-					// 	break;
-					// }
 					default: {
 						// Scan ahead until the next valid byte and log the invalid bytes
 						while (skip < this.receiveBuffer.length) {
@@ -93,7 +82,6 @@ class RCPParserTransformer implements
 								byte === MessageHeaders.SOF
 								|| byte === MessageHeaders.ACK
 								|| byte === MessageHeaders.NAK
-								// || byte === MessageHeaders.CAN
 							) {
 								// Next byte is valid, keep it
 								break;

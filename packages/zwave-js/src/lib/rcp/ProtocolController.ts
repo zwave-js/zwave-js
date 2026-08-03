@@ -27,6 +27,7 @@ import {
 	TransmitResponseStatus,
 } from "@zwave-js/serial";
 import {
+	type AwaitedThing,
 	Bytes,
 	type BytesView,
 	TypedEventTarget,
@@ -46,7 +47,6 @@ import {
 	type MACTransmitOptions,
 	MACTransmitResult,
 } from "./_Types.js";
-import type { AwaitedThing } from "./util.js";
 
 type AwaitedMPDUEntry = AwaitedThing<MPDU>;
 
@@ -64,22 +64,6 @@ export interface ProtocolControllerOptions {
 	>;
 
 	phy: PHYLayerFactory;
-
-	// host?: ZWaveOptions["host"];
-
-	// /** Specify timeouts in milliseconds */
-	// timeouts: {
-	// 	/** how long to wait for an ACK */
-	// 	ack: number; // >=1, default: 500 ms
-
-	// 	/**
-	// 	 * How long to wait for a controller response. Usually this should never elapse, but when it does,
-	// 	 * the driver will abort the transmission and try to recover the controller if it is unresponsive.
-	// 	 */
-	// 	response: number; // [100...10000], default: 1000 ms
-
-	// 	callback: number; // [500...10000], default: 2000 ms
-	// };
 }
 
 export interface ProtocolControllerEventCallbacks {
@@ -148,10 +132,6 @@ export class ProtocolController
 		// Populate default bindings. This has to happen asynchronously, so the driver does not have a hard dependency
 		// on Node.js internals
 		this.bindings = {
-			// fs: this._options.host?.fs
-			// 	?? (await import("@zwave-js/core/bindings/fs/node")).fs,
-			// serial: this._options.host?.serial
-			// 	?? (await import("@zwave-js/serial/bindings/node")).serial,
 			log: this._options.host?.log
 				?? (await import("@zwave-js/core/bindings/log/node")).log,
 		};
@@ -433,7 +413,7 @@ export class ProtocolController
 			if (!mpdu.ackRequested) return MACTransmitResult.OK;
 
 			// Wait for the ACK.
-			// If an Ack MPDU is received within the random backoﬀ period (10..40ms)
+			// If an Ack MPDU is received within the random backoff period (10..40ms)
 			// and contains the correct HomeID, source NodeID and a matching sequence number,
 			// the transmission is considered successful.
 			const ackTimeout = 10 + Math.round(Math.random() * 30);

@@ -1,5 +1,10 @@
-import { encodeBitMask, parseBitMask } from "@zwave-js/core";
-import { Bytes } from "@zwave-js/shared";
+import {
+	type MessageOrCCLogEntry,
+	encodeBitMask,
+	logList,
+	parseBitMask,
+} from "@zwave-js/core";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -7,7 +12,7 @@ import {
 	type RCPMessageEncodingContext,
 	type RCPMessageParsingContext,
 	type RCPMessageRaw,
-	expectedRcpResponse,
+	expectedRCPResponse,
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
 
@@ -16,8 +21,7 @@ export enum RadioLibrary {
 }
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.GetFirmwareInfo)
-// @priority(MessagePriority.Normal)
-@expectedRcpResponse(RCPFunctionType.GetFirmwareInfo)
+@expectedRCPResponse(RCPFunctionType.GetFirmwareInfo)
 export class GetFirmwareInfoRequest extends RCPMessage {}
 
 export interface GetFirmwareInfoResponseOptions {
@@ -97,13 +101,22 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 		return super.serialize(ctx);
 	}
 
-	// public toLogEntry(): MessageOrCCLogEntry {
-	// 	return {
-	// 		...super.toLogEntry(),
-	// 		message: {
-	// 			"firmware version": this.firmwareVersion,
-	// 			"supported function types": this.supportedFunctionTypes,
-	// 		 },
-	// 	};
-	// }
+	public toLogEntry(): MessageOrCCLogEntry {
+		return {
+			...super.toLogEntry(),
+			message: {
+				"firmware version": this.rcpFirmwareVersion,
+				"radio library": getEnumMemberName(
+					RadioLibrary,
+					this.radioLibrary,
+				),
+				"radio library version": this.radioLibraryVersion,
+				"supported function types": logList(
+					this.supportedFunctionTypes.map((type) =>
+						getEnumMemberName(RCPFunctionType, type)
+					),
+				),
+			},
+		};
+	}
 }

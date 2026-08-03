@@ -2,11 +2,13 @@ import {
 	ChannelConfiguration,
 	type MaybeNotKnown,
 	type MessageOrCCLogEntry,
-	type MessageRecord,
 	type ProtocolDataRate,
 	RFRegion,
 	createSimpleReflectionDecorator,
+	logBuffer,
+	logList,
 	mergeLogDict,
+	protocolDataRateToString,
 	znifferProtocolDataRateToProtocolDataRate,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
@@ -18,7 +20,7 @@ import {
 	type RCPMessageEncodingContext,
 	type RCPMessageParsingContext,
 	type RCPMessageRaw,
-	expectedRcpResponse,
+	expectedRCPResponse,
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
 import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
@@ -32,6 +34,12 @@ export interface ChannelInfo {
 	channel: number;
 	frequency: number;
 	dataRate: ProtocolDataRate;
+}
+
+function formatChannelInfo(channel: ChannelInfo): string {
+	const frequency = (channel.frequency / 1e6).toFixed(2);
+	const dataRate = protocolDataRateToString(channel.dataRate);
+	return `channel ${channel.channel} (${frequency} MHz): ${dataRate}`;
 }
 
 // We need to define the decorators for Requests and Responses separately
@@ -72,8 +80,7 @@ export interface SetupRadioRequestOptions {
 }
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.SetupRadio)
-// @priority(MessagePriority.Controller)
-@expectedRcpResponse(testResponseForSetupRadioRequest)
+@expectedRCPResponse(testResponseForSetupRadioRequest)
 export class SetupRadioRequest extends RCPMessage {
 	public constructor(
 		options: SetupRadioRequestOptions & RCPMessageBaseOptions = {},
@@ -110,7 +117,7 @@ export class SetupRadioRequest extends RCPMessage {
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
-			Bytes.from([this.command]),
+			[this.command],
 			this.payload,
 		]);
 
@@ -118,15 +125,12 @@ export class SetupRadioRequest extends RCPMessage {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			command: getEnumMemberName(SetupRadioCommand, this.command),
-		};
-		if (this.payload.length > 0) {
-			message.payload = `0x${this.payload.toString("hex")}`;
-		}
 		return {
 			...super.toLogEntry(),
-			message,
+			message: {
+				command: getEnumMemberName(SetupRadioCommand, this.command),
+				payload: logBuffer(this.payload),
+			},
 		};
 	}
 }
@@ -171,15 +175,12 @@ export class SetupRadioResponse extends RCPMessage {
 	public command: SetupRadioCommand;
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const message: MessageRecord = {
-			command: getEnumMemberName(SetupRadioCommand, this.command),
-		};
-		if (this.payload.length > 0) {
-			message.payload = `0x${this.payload.toString("hex")}`;
-		}
 		return {
 			...super.toLogEntry(),
-			message,
+			message: {
+				command: getEnumMemberName(SetupRadioCommand, this.command),
+				payload: logBuffer(this.payload),
+			},
 		};
 	}
 }
@@ -236,22 +237,22 @@ export class SetupRadio_GetRegionResponse extends SetupRadioResponse {
 	public channelConfig: ChannelConfiguration;
 	public channels: ChannelInfo[];
 
-	// public toLogEntry(): MessageOrCCLogEntry {
-	// 	const ret = { ...super.toLogEntry() };
-	// 	const message = ret.message!;
-	// 	message.region = getEnumMemberName(RFRegion, this.region);
-	// 	message["channel config"] = getEnumMemberName(
-	// 		ChannelConfiguration,
-	// 		this.channelConfig,
-	// 	);
-	// 	message.channels = this.channels.map((ch) =>
-	// 		`\n  channel ${ch.channel} (${
-	// 			(ch.frequency / 1e6).toFixed(2)
-	// 		} MHz): ${protocolDataRateToString(ch.dataRate)}`
-	// 	).join("");
-	// 	delete message.payload;
-	// 	return ret;
-	// }
+	public toLogEntry(): MessageOrCCLogEntry {
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				region: getEnumMemberName(RFRegion, this.region),
+				"channel config": getEnumMemberName(
+					ChannelConfiguration,
+					this.channelConfig,
+				),
+				channels: logList(this.channels.map(formatChannelInfo)),
+				// The parsed fields supersede the raw payload
+				payload: undefined,
+			}),
+		};
+	}
 }
 
 // =============================================================================
@@ -293,18 +294,19 @@ export class SetupRadio_SetRegionRequest extends SetupRadioRequest {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const { tags, message: original } = super.toLogEntry();
-
-		const message = mergeLogDict(original, {
-			region: getEnumMemberName(RFRegion, this.region),
-			"channel config": getEnumMemberName(
-				ChannelConfiguration,
-				this.channelConfig,
-			),
-			// The region and channel config supersede the raw payload
-			payload: undefined,
-		});
-		return { tags, message };
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				region: getEnumMemberName(RFRegion, this.region),
+				"channel config": getEnumMemberName(
+					ChannelConfiguration,
+					this.channelConfig,
+				),
+				// The parsed fields supersede the raw payload
+				payload: undefined,
+			}),
+		};
 	}
 }
 
@@ -365,18 +367,17 @@ export class SetupRadio_SetRegionResponse extends SetupRadioResponse
 	public success: boolean;
 	public channels: MaybeNotKnown<ChannelInfo[]>;
 
-	// public toLogEntry(): MessageOrCCLogEntry {
-	// 	const ret = { ...super.toLogEntry() };
-	// 	const message = ret.message!;
-	// 	message.success = this.success;
-	// 	if (this.channels) {
-	// 		message.channels = this.channels.map((ch) =>
-	// 			`\n  channel ${ch.channel} (${
-	// 				(ch.frequency / 1e6).toFixed(2)
-	// 			} MHz): ${protocolDataRateToString(ch.dataRate)}`
-	// 		).join("");
-	// 	}
-	// 	delete message.payload;
-	// 	return ret;
-	// }
+	public toLogEntry(): MessageOrCCLogEntry {
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				success: this.success,
+				channels: this.channels
+					&& logList(this.channels.map(formatChannelInfo)),
+				// The parsed fields supersede the raw payload
+				payload: undefined,
+			}),
+		};
+	}
 }

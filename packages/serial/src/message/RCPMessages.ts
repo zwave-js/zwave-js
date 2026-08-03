@@ -4,6 +4,7 @@ import {
 	ZWaveErrorCodes,
 	createReflectionDecorator,
 	highResTimestamp,
+	logBuffer,
 } from "@zwave-js/core";
 import {
 	Bytes,
@@ -121,10 +122,10 @@ export class RCPMessage {
 			// Try to determine the message type if none is given
 			type = getRCPMessageType(this),
 			// Try to determine the function type if none is given
-			functionType = getRcpFunctionType(this),
+			functionType = getRCPFunctionType(this),
 			// Fall back to decorated response/callback types if none is given
-			expectedResponse = getExpectedRcpResponse(this),
-			expectedCallback = getExpectedRcpCallback(this),
+			expectedResponse = getExpectedRCPResponse(this),
+			expectedCallback = getExpectedRCPCallback(this),
 			payload = new Bytes(),
 		} = options;
 
@@ -211,7 +212,6 @@ export class RCPMessage {
 	 */
 	public needsCallbackId(): boolean {
 		return false;
-		// return true;
 	}
 
 	/** Returns the response timeout for this message in case the default settings do not apply. */
@@ -250,14 +250,10 @@ export class RCPMessage {
 			this.type === RCPMessageType.Request ? "REQ" : "RES",
 			RCPFunctionType[this.functionType],
 		];
-		// const nodeId = this.getNodeId();
-		// if (nodeId) tags.unshift(getNodeTag(nodeId));
 
 		return {
 			tags,
-			message: this.payload.length > 0
-				? { payload: `0x${this.payload.toString("hex")}` }
-				: undefined,
+			message: { payload: logBuffer(this.payload) },
 		};
 	}
 
@@ -312,11 +308,6 @@ export class RCPMessage {
 	/** Checks if a message is an expected callback for this message */
 	public isExpectedCallback(msg: RCPMessage): boolean {
 		if (msg.type !== RCPMessageType.Callback) return false;
-
-		// // If a received request included a callback id, enforce that the response contains the same
-		// if (this.callbackId !== msg.callbackId) {
-		// 	return false;
-		// }
 
 		return this.testMessage(msg, this.expectedCallback);
 	}
@@ -430,7 +421,7 @@ export function getRCPMessageTypeStatic<
 /**
  * Retrieves the function type defined for a Z-Wave message class
  */
-export function getRcpFunctionType<T extends RCPMessage>(
+export function getRCPFunctionType<T extends RCPMessage>(
 	messageClass: T,
 ): RCPFunctionType | undefined {
 	return rcpMessageTypesDecorator.lookupValue(messageClass)?.functionType;
@@ -439,7 +430,7 @@ export function getRcpFunctionType<T extends RCPMessage>(
 /**
  * Retrieves the function type defined for a Z-Wave message class
  */
-export function getRcpFunctionTypeStatic<
+export function getRCPFunctionTypeStatic<
 	T extends RCPMessageConstructor<RCPMessage>,
 >(
 	classConstructor: T,
@@ -460,7 +451,7 @@ function getRCPMessageConstructor(
 	);
 }
 
-const expectedRcpResponseDecorator = createReflectionDecorator<
+const expectedRCPResponseDecorator = createReflectionDecorator<
 	typeof RCPMessage,
 	[
 		typeOrPredicate:
@@ -471,7 +462,7 @@ const expectedRcpResponseDecorator = createReflectionDecorator<
 	RCPFunctionType | typeof RCPMessage | RCPResponsePredicate,
 	RCPMessageConstructor<RCPMessage>
 >({
-	name: "expectedRcpResponse",
+	name: "expectedRCPResponse",
 	valueFromArgs: (typeOrPredicate) => typeOrPredicate,
 	constructorLookupKey: false,
 });
@@ -479,29 +470,29 @@ const expectedRcpResponseDecorator = createReflectionDecorator<
 /**
  * Defines the expected response function type or message class for a Z-Wave message
  */
-export const expectedRcpResponse = expectedRcpResponseDecorator.decorator;
+export const expectedRCPResponse = expectedRCPResponseDecorator.decorator;
 
 /**
  * Retrieves the expected response function type or message class defined for a Z-Wave message class
  */
-export function getExpectedRcpResponse<T extends RCPMessage>(
+export function getExpectedRCPResponse<T extends RCPMessage>(
 	messageClass: T,
 ): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined {
-	return expectedRcpResponseDecorator.lookupValue(messageClass);
+	return expectedRCPResponseDecorator.lookupValue(messageClass);
 }
 
 /**
  * Retrieves the function type defined for a Z-Wave message class
  */
-export function getExpectedRcpResponseStatic<
+export function getExpectedRCPResponseStatic<
 	T extends RCPMessageConstructor<RCPMessage>,
 >(
 	classConstructor: T,
 ): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined {
-	return expectedRcpResponseDecorator.lookupValueStatic(classConstructor);
+	return expectedRCPResponseDecorator.lookupValueStatic(classConstructor);
 }
 
-const expectedRcpCallbackDecorator = createReflectionDecorator<
+const expectedRCPCallbackDecorator = createReflectionDecorator<
 	typeof RCPMessage,
 	[
 		typeOrPredicate:
@@ -512,7 +503,7 @@ const expectedRcpCallbackDecorator = createReflectionDecorator<
 	RCPFunctionType | typeof RCPMessage | RCPResponsePredicate,
 	RCPMessageConstructor<RCPMessage>
 >({
-	name: "expectedRcpCallback",
+	name: "expectedRCPCallback",
 	valueFromArgs: (typeOrPredicate) => typeOrPredicate,
 	constructorLookupKey: false,
 });
@@ -520,66 +511,31 @@ const expectedRcpCallbackDecorator = createReflectionDecorator<
 /**
  * Defines the expected callback function type or message class for a Z-Wave message
  */
-export function expectedRcpCallback<TSent extends typeof RCPMessage>(
+export function expectedRCPCallback<TSent extends typeof RCPMessage>(
 	typeOrPredicate:
 		| RCPFunctionType
 		| typeof RCPMessage
 		| RCPResponsePredicate<InstanceType<TSent>>,
 ): TypedClassDecorator<TSent> {
-	return expectedRcpCallbackDecorator.decorator(typeOrPredicate as any);
+	return expectedRCPCallbackDecorator.decorator(typeOrPredicate as any);
 }
 
 /**
  * Retrieves the expected callback function type or message class defined for a Z-Wave message class
  */
-export function getExpectedRcpCallback<T extends RCPMessage>(
+export function getExpectedRCPCallback<T extends RCPMessage>(
 	messageClass: T,
 ): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined {
-	return expectedRcpCallbackDecorator.lookupValue(messageClass);
+	return expectedRCPCallbackDecorator.lookupValue(messageClass);
 }
 
 /**
  * Retrieves the function type defined for a Z-Wave message class
  */
-export function getExpectedRcpCallbackStatic<
+export function getExpectedRCPCallbackStatic<
 	T extends RCPMessageConstructor<RCPMessage>,
 >(
 	classConstructor: T,
 ): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined {
-	return expectedRcpCallbackDecorator.lookupValueStatic(classConstructor);
+	return expectedRCPCallbackDecorator.lookupValueStatic(classConstructor);
 }
-
-// const priorityDecorator = createReflectionDecorator<
-// 	typeof RCPMessage,
-// 	[prio: MessagePriority],
-// 	MessagePriority
-// >({
-// 	name: "priority",
-// 	valueFromArgs: (priority) => priority,
-// 	constructorLookupKey: false,
-// });
-
-// /**
-//  * Defines the default priority associated with a Z-Wave message
-//  */
-// export const priority = priorityDecorator.decorator;
-
-// /**
-//  * Retrieves the default priority defined for a Z-Wave message class
-//  */
-// export function getDefaultPriority<T extends RCPMessage>(
-// 	messageClass: T,
-// ): MessagePriority | undefined {
-// 	return priorityDecorator.lookupValue(messageClass);
-// }
-
-// /**
-//  * Retrieves the default priority defined for a Z-Wave message class
-//  */
-// export function getDefaultPriorityStatic<
-// 	T extends RCPMessageConstructor<RCPMessage>,
-// >(
-// 	classConstructor: T,
-// ): MessagePriority | undefined {
-// 	return priorityDecorator.lookupValueStatic(classConstructor);
-// }

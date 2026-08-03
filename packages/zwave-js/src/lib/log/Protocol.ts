@@ -23,7 +23,6 @@ export interface ProtocolLogContext extends LogContext<"protocol"> {
 
 export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 	constructor(
-		// private readonly driver: RCPHost,
 		loggers: LogContainer,
 	) {
 		super(loggers, PROTOCOL_LABEL);
@@ -60,7 +59,6 @@ export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 		mpdu: MPDU,
 		logContext: MPDULogContext,
 		direction: DataDirection,
-		// payloadCC?: CommandClass,
 	): void {
 		if (!this.isMPDULogVisible()) return;
 
@@ -72,43 +70,6 @@ export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 		}
 
 		try {
-			// // If possible, include information about the CCs
-			// if (!!payloadCC) {
-			// 	// Remove the default payload message and draw a bracket
-			// 	msg = msg.filter((line) => !line.startsWith("│ payload:"));
-
-			// 	const logCC = (cc: CommandClass, indent: number = 0) => {
-			// 		const isEncapCC = isEncapsulatingCommandClass(cc)
-			// 			|| isMultiEncapsulatingCommandClass(cc);
-			// 		const loggedCC = cc.toLogEntry(this.zniffer as any);
-			// 		msg.push(
-			// 			" ".repeat(indent * 2) + "└─" + tagify(loggedCC.tags),
-			// 		);
-
-			// 		indent++;
-			// 		if (loggedCC.message) {
-			// 			msg.push(
-			// 				...messageRecordToLines(loggedCC.message).map(
-			// 					(line) =>
-			// 						`${" ".repeat(indent * 2)}${
-			// 							isEncapCC ? "│ " : "  "
-			// 						}${line}`,
-			// 				),
-			// 			);
-			// 		}
-			// 		// If this is an encap CC, continue
-			// 		if (isEncapsulatingCommandClass(cc)) {
-			// 			logCC(cc.encapsulated, indent);
-			// 		} else if (isMultiEncapsulatingCommandClass(cc)) {
-			// 			for (const encap of cc.encapsulated) {
-			// 				logCC(encap, indent);
-			// 			}
-			// 		}
-			// 	};
-
-			// 	logCC(payloadCC);
-			// }
-
 			const msg = formatLogPayload(
 				logText([], { tags: logEntry.tags, nested }),
 			);

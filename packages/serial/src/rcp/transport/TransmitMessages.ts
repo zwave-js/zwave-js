@@ -7,8 +7,8 @@ import {
 	type RCPMessageEncodingContext,
 	type RCPMessageParsingContext,
 	type RCPMessageRaw,
-	expectedRcpCallback,
-	expectedRcpResponse,
+	expectedRCPCallback,
+	expectedRCPResponse,
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
 import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
@@ -44,9 +44,8 @@ export interface TransmitRequestOptions {
 }
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.Transmit)
-// @priority(MessagePriority.Normal)
-@expectedRcpResponse(RCPFunctionType.Transmit)
-@expectedRcpCallback(RCPFunctionType.Transmit)
+@expectedRCPResponse(RCPFunctionType.Transmit)
+@expectedRCPCallback(RCPFunctionType.Transmit)
 export class TransmitRequest extends RCPMessage {
 	public constructor(
 		options: TransmitRequestOptions & RCPMessageBaseOptions,

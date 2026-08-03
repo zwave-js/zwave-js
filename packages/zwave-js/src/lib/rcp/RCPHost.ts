@@ -46,11 +46,11 @@ import {
 } from "@zwave-js/serial/rcp";
 import {
 	AsyncQueue,
+	type AwaitedThing,
 	Bytes,
 	type BytesView,
 	type DeepPartial,
 	type Expand,
-	type Timer,
 	TypedEventTarget,
 	buffer2hex,
 	cloneDeep,
@@ -85,13 +85,6 @@ const logo: string = `
 ╚══════╝      ╚══╝╚══╝  ╚═╝  ╚═╝   ╚═══╝   ╚═════╝   ╚═╝  ╚═╝  ╚════╝ ╚═╝
 `.trim();
 
-interface AwaitedThing<T> {
-	handler: (thing: T) => void;
-	timeout?: Timer;
-	predicate: (msg: T) => boolean;
-	refreshPredicate?: (msg: T) => boolean;
-}
-
 type AwaitedMessageHeader = AwaitedThing<MessageHeaders>;
 type AwaitedMessageEntry = AwaitedThing<RCPMessage>;
 
@@ -99,8 +92,6 @@ export interface RCPHostEventCallbacks {
 	ready: () => void;
 	error: (err: Error) => void;
 	"mpdu received": (mpdu: MPDU, info: MpduRxInfo) => void;
-	// frame: (frame: Frame, rawData: Uint8Array) => void;
-	// "corrupted frame": (err: CorruptedFrame, rawData: Uint8Array) => void;
 }
 
 export type RCPHostEvents = Extract<keyof RCPHostEventCallbacks, string>;
@@ -291,7 +282,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		// Initialize logging
 		this._logContainer = this.bindings.log(this._options.logConfig);
-		this.rcpLog = new RCPLogger(this, this._logContainer);
+		this.rcpLog = new RCPLogger(this._logContainer);
 
 		this.rcpLog.print(logo, "info");
 
@@ -418,9 +409,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_Failed
 			) {
 				// A disconnection while soft resetting is to be expected.
-				// // The soft reset method will handle reopening
-				// if (this.isSoftResetting) return;
-
 				void this.destroyWithMessage(e.message);
 				return;
 			}
@@ -455,8 +443,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		let msg: RCPMessage | undefined;
 		try {
-			// Parse the message while remembering potential decoding errors in embedded CCs
-			// This way we can log the invalid CC contents
 			msg = RCPMessage.parse(
 				data,
 				{},
@@ -466,7 +452,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			await this.writeHeader(MessageHeaders.ACK);
 		} catch (e: any) {
 			try {
-				const response = this.handleDecodeError(e, data, msg);
+				const response = this.handleDecodeError(e);
 				if (response) await this.writeHeader(response);
 			} catch (ee: any) {
 				if (ee instanceof Error) {
@@ -491,8 +477,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	/** Handles a decoding error and returns the desired reply to the stick */
 	private handleDecodeError(
 		e: Error,
-		_data: BytesView,
-		_msg: RCPMessage | undefined,
 	): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
 			switch (e.code) {
@@ -519,38 +503,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 						"warn",
 					);
 					return MessageHeaders.ACK;
-
-					// case ZWaveErrorCodes.PacketFormat_InvalidPayload:
-					// 	if (msg) {
-					// 		this.rcpLog.print(
-					// 			`Dropping message with invalid payload`,
-					// 			"warn",
-					// 		);
-					// 		try {
-					// 			this.rcpLog.logMessage(msg, {
-					// 				direction: "inbound",
-					// 			});
-					// 		} catch (e) {
-					// 			// We shouldn't throw just because logging a message fails
-					// 			this.rcpLog.print(
-					// 				`Logging a message failed: ${
-					// 					getErrorMessage(
-					// 						e,
-					// 					)
-					// 				}`,
-					// 			);
-					// 		}
-					// 	} else {
-					// 		this.rcpLog.print(
-					// 			`Dropping message with invalid payload${
-					// 				typeof e.context === "string"
-					// 					? ` (Reason: ${e.context})`
-					// 					: ""
-					// 			}:\n${buffer2hex(data)}`,
-					// 			"warn",
-					// 		);
-					// 	}
-					// 	return MessageHeaders.ACK;
 			}
 		} else {
 			if (/database is not open/.test(e.message)) {
@@ -621,11 +573,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		msg: RCPMessage,
 		transactionSource?: string,
 	): Promise<RCPMessage | undefined> {
-		// // Give the command a callback ID if it needs one
-		// if (msg.needsCallbackId() && !msg.hasCallbackId()) {
-		// 	msg.callbackId = this.getNextCallbackId();
-		// }
-
 		const machine = createSerialAPICommandMachine(msg);
 		const abortController = new AbortController();
 
@@ -772,60 +719,22 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	/**
 	 * Sends a message to the Firmware
 	 * @param msg The message to send
-	 * @param options (optional) Options regarding the message transmission
 	 */
 	public async queueSerialApiCommand<
 		TResponse extends RCPMessage = RCPMessage,
 	>(
 		msg: RCPMessage,
-		_options: unknown = {},
 	): Promise<TResponse> {
-		// this.ensureReady();
-
-		// if (options.supportCheck == undefined) options.supportCheck = true;
-		// if (
-		// 	options.supportCheck
-		// 	&& this._controller != undefined
-		// 	&& !this._controller.isFunctionSupported(msg.functionType)
-		// ) {
-		// 	throw new ZWaveError(
-		// 		`Your hardware does not support the ${
-		// 			FunctionType[msg.functionType]
-		// 		} function`,
-		// 		ZWaveErrorCodes.Driver_NotSupported,
-		// 	);
-		// }
-
 		const resultPromise = createDeferredPromise<TResponse>();
 
 		// Create the transaction
 		const transaction = new RCPTransaction({
 			message: msg,
-			// priority: options.priority,
-			// parts: generator,
 			promise: resultPromise,
-			// listener: options.onProgress,
 		});
 
 		// And queue it
 		this.queue.add(transaction);
-
-		// // If the transaction should expire, start the timeout
-		// let expirationTimeout: Timer | undefined;
-		// if (options.expire) {
-		// 	expirationTimeout = setTimer(() => {
-		// 		this.reduceQueues((t, _source) => {
-		// 			if (t === transaction) {
-		// 				return {
-		// 					type: "reject",
-		// 					message: `The message has expired`,
-		// 					code: ZWaveErrorCodes.Controller_MessageExpired,
-		// 				};
-		// 			}
-		// 			return { type: "keep" };
-		// 		});
-		// 	}, options.expire).unref();
-		// }
 
 		try {
 			return await resultPromise;
@@ -842,9 +751,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				}
 			}
 			throw e;
-		} finally {
-			// The transaction was handled, so it can no longer expire
-			// expirationTimeout?.clear();
 		}
 	}
 
@@ -1002,7 +908,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			}
 		}
 
-		// this.rcpLog.transactionResponse(msg, undefined, "unexpected");
 		this.rcpLog.print("unexpected response, discarding...", "warn");
 
 		return Promise.resolve();
@@ -1026,7 +931,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			return;
 		}
 
-		// this.rcpLog.transactionResponse(msg, undefined, "unexpected");
 		this.rcpLog.print(
 			`TODO: Handle callback: ${buffer2hex(msg.payload)}`,
 			"warn",
@@ -1217,10 +1121,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		this._destroyPromise = createDeferredPromise();
 
 		this.rcpLog.print("Destroying RCP host...");
-
-		// if (this._active) {
-		// 	await this.stop().catch(noop);
-		// }
 
 		if (this.serial != undefined) {
 			// Avoid spewing errors if the port was in the middle of receiving something
