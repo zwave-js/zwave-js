@@ -4,7 +4,6 @@ import {
 	AckZWaveMPDU,
 	ExplorerZWaveMPDU,
 	InclusionRequestExplorerZWaveMPDU,
-	LongRangeBeam,
 	LongRangeMPDU,
 	MPDU,
 	type MPDULogContext,
@@ -21,12 +20,15 @@ import {
 	SearchResultExplorerZWaveMPDU,
 	SinglecastLongRangeMPDU,
 	SinglecastZWaveMPDU,
-	ZWaveBeam,
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZWaveMPDU,
 	type ZnifferProtocolDataRate,
 	type ZnifferRegion,
+	formatNodeId,
+	longRangeBeamPowerToDBm,
+	protocolDataRateToString,
+	rssiToString,
 	validatePayload,
 	znifferProtocolDataRateToProtocolDataRate,
 	znifferRegionToChannelConfiguration,
@@ -68,7 +70,7 @@ export function parseMPDU(
 export function parseBeamFrame(
 	frame: ZnifferDataMessage,
 	frameInfo: ZnifferFrameInfo = frame,
-): ZWaveBeam | LongRangeBeam | BeamStop {
+): ZWaveBeamStart | LongRangeBeamStart | BeamStop {
 	if (frame.frameType === ZnifferFrameType.BeamStop) {
 		return new BeamStop();
 	}
@@ -80,10 +82,10 @@ export function parseBeamFrame(
 	switch (channelConfig) {
 		case "1/2":
 		case "3": {
-			return ZWaveBeam.parse(frame.payload, ctx);
+			return ZWaveBeamStart.parse(frame.payload, ctx);
 		}
 		case "4": {
-			return LongRangeBeam.parse(frame.payload, ctx);
+			return LongRangeBeamStart.parse(frame.payload, ctx);
 		}
 		default:
 			validatePayload.fail(
@@ -92,6 +94,133 @@ export function parseBeamFrame(
 					buffer2hex(frame.payload)
 				}`,
 			);
+	}
+}
+
+export interface ZWaveBeamStartOptions {
+	destinationNodeId: number;
+	homeIdHash?: number;
+}
+
+/** The Zniffer signals the start of a beam with a separate frame */
+export class ZWaveBeamStart {
+	public constructor(options: ZWaveBeamStartOptions) {
+		this.destinationNodeId = options.destinationNodeId;
+		this.homeIdHash = options.homeIdHash;
+	}
+
+	public static parse(
+		data: Bytes,
+		ctx: MPDUParsingContext,
+	): ZWaveBeamStart {
+		if (ctx.channel > 2) {
+			validatePayload.fail(
+				`Channel ${ctx.channel} (ZWLR) must be parsed as a LongRangeBeamStart!`,
+			);
+		}
+
+		// data[0] is the beam tag (0x55)
+		const destinationNodeId = data[1];
+		let homeIdHash: number | undefined;
+		// Contrary to G.9959, the Zniffer output has a 0x01 marker byte
+		// before the home ID hash
+		if (data[2] === 0x01) {
+			homeIdHash = data[3];
+		}
+
+		return new ZWaveBeamStart({
+			destinationNodeId,
+			homeIdHash,
+		});
+	}
+
+	public readonly homeIdHash?: number;
+	public readonly destinationNodeId: number;
+
+	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
+		const tags = [
+			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
+		];
+
+		const message: MessageRecord = {
+			channel: ctx.channel,
+			"protocol/data rate": protocolDataRateToString(
+				ctx.protocolDataRate,
+			),
+		};
+		if (ctx.rssi != undefined) {
+			message.RSSI = rssiToString(ctx.rssi);
+		} else if (ctx.rssiRaw != undefined) {
+			message.RSSI = ctx.rssiRaw.toString();
+		}
+		return {
+			tags,
+			message,
+		};
+	}
+}
+
+export interface LongRangeBeamStartOptions {
+	txPower: number;
+	destinationNodeId: number;
+	homeIdHash: number;
+}
+
+/** The Zniffer signals the start of a Long Range beam with a separate frame */
+export class LongRangeBeamStart {
+	public constructor(options: LongRangeBeamStartOptions) {
+		this.txPower = options.txPower;
+		this.destinationNodeId = options.destinationNodeId;
+		this.homeIdHash = options.homeIdHash;
+	}
+
+	public static parse(
+		data: Bytes,
+		ctx: MPDUParsingContext,
+	): LongRangeBeamStart {
+		if (ctx.channel <= 2) {
+			validatePayload.fail(
+				`Channel ${ctx.channel} (Mesh) must be parsed as a ZWaveBeamStart!`,
+			);
+		}
+
+		// data[0] is the beam tag (0x55)
+		const txPower = longRangeBeamPowerToDBm(data[1] >>> 4);
+		const destinationNodeId = data.readUInt16BE(1) & 0x0fff;
+		const homeIdHash = data[3];
+
+		return new LongRangeBeamStart({
+			txPower,
+			destinationNodeId,
+			homeIdHash,
+		});
+	}
+
+	public readonly homeIdHash: number;
+	public readonly destinationNodeId: number;
+	public readonly txPower: number;
+
+	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
+		const tags = [
+			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
+		];
+
+		const message: MessageRecord = {
+			channel: ctx.channel,
+			"protocol/data rate": protocolDataRateToString(
+				ctx.protocolDataRate,
+			),
+			"TX power": `${this.txPower} dBm`,
+		};
+		if (ctx.rssi != undefined) {
+			message.RSSI = rssiToString(ctx.rssi);
+		} else if (ctx.rssiRaw != undefined) {
+			message.RSSI = ctx.rssiRaw.toString();
+		}
+		return {
+			tags,
+			message,
+		};
 	}
 }
 
@@ -509,7 +638,7 @@ export function mpduToLongRangeFrame(
 }
 
 export function beamToFrame(
-	beam: ZWaveBeam | LongRangeBeam | BeamStop,
+	beam: ZWaveBeamStart | LongRangeBeamStart | BeamStop,
 	frameInfo: ZnifferFrameInfo,
 ): Frame {
 	const retBase = {
@@ -521,7 +650,7 @@ export function beamToFrame(
 		protocolDataRate: frameInfo.protocolDataRate,
 	};
 
-	if (beam instanceof ZWaveBeam) {
+	if (beam instanceof ZWaveBeamStart) {
 		return {
 			protocol: Protocols.ZWave,
 			type: ZWaveFrameType.BeamStart,
@@ -529,7 +658,7 @@ export function beamToFrame(
 			destinationNodeId: beam.destinationNodeId,
 			homeIdHash: beam.homeIdHash,
 		};
-	} else if (beam instanceof LongRangeBeam) {
+	} else if (beam instanceof LongRangeBeamStart) {
 		return {
 			protocol: Protocols.ZWaveLongRange,
 			type: LongRangeFrameType.BeamStart,

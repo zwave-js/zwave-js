@@ -6,7 +6,6 @@ export * from "./error/ZWaveError.js";
 export * from "./log/LogPayload.js";
 export * from "./log/formatPayload.js";
 export * from "./log/shared.js";
-export * from "./protocol/Beams.js";
 export * from "./protocol/MPDU.js";
 export * from "./protocol/_Types.js";
 export * from "./protocol/utils.js";
