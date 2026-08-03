@@ -22,7 +22,7 @@ imports:
 steps:
   - name: Parse command
     id: parse_command
-    uses: actions/github-script@v9
+    uses: actions/github-script@v9.0.0
     env:
       COMMENT_BODY: ${{ github.event.comment.body }}
     with:
@@ -56,7 +56,7 @@ safe-outputs:
 network: defaults
 
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@391fbd56f93436357e26af53a573a16dd7c53c5f
+source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@bb324b62a0e6b629d59a081bbf0391bb851c8c1d
 ---
 
 # Z-Wave JS Logfile Analysis

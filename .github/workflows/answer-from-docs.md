@@ -115,7 +115,7 @@ engine:
   id: copilot
   max-turns: 5
 runs-on-slim: ubuntu-latest
-source: zwave-js/bot-workflows/workflows/answer-from-docs.md@79bf914044d6d648bee4f297b63f4f4a5562ea5c
+source: zwave-js/bot-workflows/workflows/answer-from-docs.md@bb324b62a0e6b629d59a081bbf0391bb851c8c1d
 timeout-minutes: 15
 ---
 Follow the Documentation Answer Judge instructions below.
