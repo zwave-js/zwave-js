@@ -1137,8 +1137,6 @@ export class LongRangeMPDURaw {
 		if (hasExtendedHeader) {
 			const extensionControl = data[offset++];
 			const extensionLength = extensionControl & 0b111;
-			// const discardUnknown = extensionControl & 0b0000_1000;
-			// const extensionType = (extensionControl & 0b0111_0000) >>> 4;
 			// TODO: Parse extension (once there is a definition)
 			offset += extensionLength;
 		}
