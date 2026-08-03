@@ -735,6 +735,11 @@ function messageIsPing<T extends Message>(
 	return containsCC(msg) && msg.command instanceof NoOperationCC;
 }
 
+/** Whether an error was caused by accessing one of the JSONL DBs before it was opened or after it was closed */
+function isDatabaseNotOpenError(e: unknown): boolean {
+	return e instanceof Error && /database is not open/.test(e.message);
+}
+
 function assertValidCCs(container: ContainsCC): void {
 	if (container.command instanceof InvalidCC) {
 		if (typeof container.command.reason === "number") {
@@ -1135,7 +1140,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	public get metadataDB(): Database<ValueMetadata> | undefined {
 		return this._metadataDB;
 	}
-	private _valueDBsOpen: boolean = false;
 	private _networkCache: Database<any> | undefined;
 	/** @internal */
 	public get networkCache(): Database<any> {
@@ -1980,8 +1984,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			this._valueDB.clear();
 			this._metadataDB.clear();
 		}
-
-		this._valueDBsOpen = true;
 	}
 
 	private async performCacheMigration(): Promise<void> {
@@ -3115,7 +3117,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	private async recreateNetworkCacheAndValueDBs(): Promise<void> {
-		await this.closeDatabases();
+		await this._networkCache?.close();
+		await this._valueDB?.close();
+		await this._metadataDB?.close();
 
 		// Reopen with the new home ID
 		await this.initNetworkCache(this.controller.homeId!);
@@ -3962,7 +3966,6 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	private async closeDatabases(): Promise<void> {
-		this._valueDBsOpen = false;
 		try {
 			await this._valueDB?.close();
 		} catch (e) {
@@ -4317,6 +4320,14 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 						);
 						// TODO: We may need to do the S2 MOS dance here - or we can deal with it when the next valid CC arrives
 						return;
+					} else if (isDatabaseNotOpenError(e)) {
+						// The value DB is closed while the driver is shutting
+						// down or reinitializing the controller
+						this.driverLog.print(
+							`Dropping message because the driver is not ready to handle it.`,
+							"warn",
+						);
+						return;
 					} else {
 						throw e;
 					}
@@ -4432,8 +4443,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					return MessageHeaders.ACK;
 			}
 		} else {
-			if (/database is not open/.test(e.message)) {
-				// The JSONL-DB is not open yet
+			if (isDatabaseNotOpenError(e)) {
 				this.driverLog.print(
 					`Dropping message because the driver is not ready to handle it yet.`,
 					"warn",
@@ -6587,10 +6597,6 @@ ${handlers.length} left`,
 	}
 
 	private shouldPersistCCValues(cc: CommandClass): boolean {
-		// Drop values from commands that are still being handled while the
-		// value DB is closed, e.g. during shutdown
-		if (!this._valueDBsOpen) return false;
-
 		// Always persist encapsulation CCs, otherwise interviews don't work.
 		if (isEncapsulationCC(cc.ccId)) return true;
 
