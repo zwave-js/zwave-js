@@ -181,6 +181,7 @@ import {
 } from "@zwave-js/serial/serialapi";
 import {
 	AsyncQueue,
+	type AwaitedThing,
 	Bytes,
 	type BytesView,
 	type Interval,
@@ -666,15 +667,6 @@ export type RequestHandler<T extends Message = Message> = (
 interface RequestHandlerEntry<T extends Message = Message> {
 	invoke: RequestHandler<T>;
 	oneTime: boolean;
-}
-
-interface AwaitedThing<T> {
-	handler: (thing: T) => void;
-	timeout?: Timer;
-	predicate: (msg: T) => boolean;
-	refreshPredicate?: (msg: T) => boolean;
-	/** Whether a matching thing is consumed (default) or only observed. */
-	consume?: boolean;
 }
 
 type AwaitedMessageHeader = AwaitedThing<MessageHeaders>;
