@@ -14,6 +14,7 @@ import {
 	type HostIDs,
 	type LogConfig,
 	type LogContainer,
+	LongRangeBeam,
 	LongRangeMPDU,
 	MPDUHeaderType,
 	type MaybeNotKnown,
@@ -26,6 +27,7 @@ import {
 	SecurityManager2,
 	type SecurityManagers,
 	type UnknownZWaveChipType,
+	ZWaveBeam,
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZWaveMPDU,
@@ -100,8 +102,6 @@ import {
 	BeamStop,
 	type CorruptedFrame,
 	type Frame,
-	LongRangeBeamStart,
-	ZWaveBeamStart,
 	beamToFrame,
 	mpduToFrame,
 	parseBeamFrame,
@@ -700,8 +700,8 @@ supported frequencies: ${
 			capture.parsedFrame = frame.external;
 
 			if (
-				(frame.internal instanceof ZWaveBeamStart
-					|| frame.internal instanceof LongRangeBeamStart
+				(frame.internal instanceof ZWaveBeam
+					|| frame.internal instanceof LongRangeBeam
 					|| frame.internal instanceof BeamStop)
 				&& frame.frameInfo
 			) {

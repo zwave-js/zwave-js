@@ -19,11 +19,10 @@ export class ZWaveBeam {
 		this.homeIdHash = options.homeIdHash;
 	}
 
-	public static parse<T extends ZWaveBeam>(
-		this: new (options: ZWaveBeamOptions) => T,
+	public static parse(
 		data: Bytes,
 		ctx: MPDUParsingContext,
-	): T {
+	): ZWaveBeam {
 		if (ctx.channel > 2) {
 			validatePayload.fail(
 				`Channel ${ctx.channel} (ZWLR) must be parsed as a LongRangeBeam!`,
@@ -33,11 +32,13 @@ export class ZWaveBeam {
 		// data[0] is the beam tag (0x55)
 		const destinationNodeId = data[1];
 		let homeIdHash: number | undefined;
+		// Contrary to G.9959, the Zniffer output has a 0x01 marker byte
+		// before the home ID hash
 		if (data[2] === 0x01) {
 			homeIdHash = data[3];
 		}
 
-		return new this({
+		return new ZWaveBeam({
 			destinationNodeId,
 			homeIdHash,
 		});
@@ -83,11 +84,10 @@ export class LongRangeBeam {
 		this.homeIdHash = options.homeIdHash;
 	}
 
-	public static parse<T extends LongRangeBeam>(
-		this: new (options: LongRangeBeamOptions) => T,
+	public static parse(
 		data: Bytes,
 		ctx: MPDUParsingContext,
-	): T {
+	): LongRangeBeam {
 		if (ctx.channel <= 2) {
 			validatePayload.fail(
 				`Channel ${ctx.channel} (Mesh) must be parsed as a ZWaveBeam!`,
@@ -99,7 +99,7 @@ export class LongRangeBeam {
 		const destinationNodeId = data.readUInt16BE(1) & 0x0fff;
 		const homeIdHash = data[3];
 
-		return new this({
+		return new LongRangeBeam({
 			txPower,
 			destinationNodeId,
 			homeIdHash,

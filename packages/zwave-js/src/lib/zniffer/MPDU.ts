@@ -68,7 +68,7 @@ export function parseMPDU(
 export function parseBeamFrame(
 	frame: ZnifferDataMessage,
 	frameInfo: ZnifferFrameInfo = frame,
-): ZWaveBeamStart | LongRangeBeamStart | BeamStop {
+): ZWaveBeam | LongRangeBeam | BeamStop {
 	if (frame.frameType === ZnifferFrameType.BeamStop) {
 		return new BeamStop();
 	}
@@ -80,10 +80,10 @@ export function parseBeamFrame(
 	switch (channelConfig) {
 		case "1/2":
 		case "3": {
-			return ZWaveBeamStart.parse(frame.payload, ctx);
+			return ZWaveBeam.parse(frame.payload, ctx);
 		}
 		case "4": {
-			return LongRangeBeamStart.parse(frame.payload, ctx);
+			return LongRangeBeam.parse(frame.payload, ctx);
 		}
 		default:
 			validatePayload.fail(
@@ -94,12 +94,6 @@ export function parseBeamFrame(
 			);
 	}
 }
-
-/** Marks the start of a beam on the Zniffer */
-export class ZWaveBeamStart extends ZWaveBeam {}
-
-/** Marks the start of a Long Range beam on the Zniffer */
-export class LongRangeBeamStart extends LongRangeBeam {}
 
 /** The Zniffer signals the end of an ongoing beam with a separate frame */
 export class BeamStop {
@@ -515,7 +509,7 @@ export function mpduToLongRangeFrame(
 }
 
 export function beamToFrame(
-	beam: ZWaveBeamStart | LongRangeBeamStart | BeamStop,
+	beam: ZWaveBeam | LongRangeBeam | BeamStop,
 	frameInfo: ZnifferFrameInfo,
 ): Frame {
 	const retBase = {
@@ -527,7 +521,7 @@ export function beamToFrame(
 		protocolDataRate: frameInfo.protocolDataRate,
 	};
 
-	if (beam instanceof ZWaveBeamStart) {
+	if (beam instanceof ZWaveBeam) {
 		return {
 			protocol: Protocols.ZWave,
 			type: ZWaveFrameType.BeamStart,
@@ -535,7 +529,7 @@ export function beamToFrame(
 			destinationNodeId: beam.destinationNodeId,
 			homeIdHash: beam.homeIdHash,
 		};
-	} else if (beam instanceof LongRangeBeamStart) {
+	} else if (beam instanceof LongRangeBeam) {
 		return {
 			protocol: Protocols.ZWaveLongRange,
 			type: LongRangeFrameType.BeamStart,
