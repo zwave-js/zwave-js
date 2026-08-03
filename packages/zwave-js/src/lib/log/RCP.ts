@@ -2,10 +2,13 @@ import {
 	type DataDirection,
 	type LogContainer,
 	type LogContext,
+	type LogPayload,
 	ZWaveLoggerBase,
+	formatLogPayload,
 	getDirectionPrefix,
-	messageRecordToLines,
+	logText,
 	tagify,
+	toLogPayload,
 } from "@zwave-js/core";
 import type { RCPMessage } from "@zwave-js/serial";
 import type { RCPHost } from "../rcp/RCPHost.js";
@@ -70,16 +73,11 @@ export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
 		// 	return;
 		// }
 
-		const isCCContainer = false; // containsCC(message);
 		const logEntry = message.toLogEntry();
 
-		const msg: string[] = [tagify(logEntry.tags)];
+		const nested: LogPayload[] = [];
 		if (logEntry.message) {
-			msg.push(
-				...messageRecordToLines(logEntry.message).map(
-					(line) => (isCCContainer ? "│ " : "  ") + line,
-				),
-			);
+			nested.push(toLogPayload(logEntry.message));
 		}
 
 		try {
@@ -119,6 +117,10 @@ export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
 
 			// 	logCC(message.command);
 			// }
+
+			const msg = formatLogPayload(
+				logText([], { tags: logEntry.tags, nested }),
+			);
 
 			this.logger.log({
 				level: RCP_LOGLEVEL,

@@ -2,12 +2,15 @@ import {
 	type DataDirection,
 	type LogContainer,
 	type LogContext,
+	type LogPayload,
 	type MPDU,
 	type MPDULogContext,
 	ZWaveLoggerBase,
+	formatLogPayload,
 	getDirectionPrefix,
-	messageRecordToLines,
+	logText,
 	tagify,
+	toLogPayload,
 } from "@zwave-js/core";
 
 export const PROTOCOL_LABEL = "PROTCL";
@@ -61,16 +64,11 @@ export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 	): void {
 		if (!this.isMPDULogVisible()) return;
 
-		const hasPayload = false; // !!payloadCC || mpdu.payload.length > 0;
 		const logEntry = mpdu.toLogEntry(logContext);
 
-		const msg: string[] = [tagify(logEntry.tags)];
+		const nested: LogPayload[] = [];
 		if (logEntry.message) {
-			msg.push(
-				...messageRecordToLines(logEntry.message).map(
-					(line) => (hasPayload ? "│ " : "  ") + line,
-				),
-			);
+			nested.push(toLogPayload(logEntry.message));
 		}
 
 		try {
@@ -110,6 +108,10 @@ export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 
 			// 	logCC(payloadCC);
 			// }
+
+			const msg = formatLogPayload(
+				logText([], { tags: logEntry.tags, nested }),
+			);
 
 			const homeId = mpdu.homeId.toString(16).padStart(8, "0")
 				.toLowerCase();

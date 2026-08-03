@@ -6,6 +6,7 @@ import {
 	type ProtocolDataRate,
 	RFRegion,
 	createSimpleReflectionDecorator,
+	mergeLogDict,
 	znifferProtocolDataRateToProtocolDataRate,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
@@ -292,15 +293,18 @@ export class SetupRadio_SetRegionRequest extends SetupRadioRequest {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
-		const ret = { ...super.toLogEntry() };
-		const message = ret.message!;
-		message.region = getEnumMemberName(RFRegion, this.region);
-		message["channel config"] = getEnumMemberName(
-			ChannelConfiguration,
-			this.channelConfig,
-		);
-		delete message.payload;
-		return ret;
+		const { tags, message: original } = super.toLogEntry();
+
+		const message = mergeLogDict(original, {
+			region: getEnumMemberName(RFRegion, this.region),
+			"channel config": getEnumMemberName(
+				ChannelConfiguration,
+				this.channelConfig,
+			),
+			// The region and channel config supersede the raw payload
+			payload: undefined,
+		});
+		return { tags, message };
 	}
 }
 
