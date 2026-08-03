@@ -3640,7 +3640,7 @@ __metadata:
     del-cli: "npm:^7.0.0"
     dprint: "npm:^0.54.0"
     eslint: "npm:^10.3.0"
-    eslint-plugin-oxlint: "npm:^1.71.0"
+    eslint-plugin-oxlint: "npm:^1.75.0"
     eslint-plugin-unused-imports: "patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch"
     husky: "npm:^9.1.7"
     js-yaml: "npm:^4.1.1"
@@ -5441,14 +5441,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-oxlint@npm:^1.71.0":
-  version: 1.71.0
-  resolution: "eslint-plugin-oxlint@npm:1.71.0"
+"eslint-plugin-oxlint@npm:^1.75.0":
+  version: 1.75.0
+  resolution: "eslint-plugin-oxlint@npm:1.75.0"
   dependencies:
     jsonc-parser: "npm:^3.3.1"
   peerDependencies:
-    oxlint: ~1.71.0
-  checksum: 10/6f23a4e59d8c086f96ddf6d4a1ad911f3cc6f19b9c828cd089a77efe078c2fe7805b26a246f26eb8ffd4cfa8772aa92f2c4b19732dff612a28303381238b6832
+    oxlint: ~1.75.0
+  checksum: 10/ad3989d8e480c8c51ae2d61f7b8cae76766a8c2297392fb8e07155d1179d4201f1a5e737d7bc7dc8c6e9dbf8a8bc89e67996c7553f0195aee4257c227e6e1ff4
   languageName: node
   linkType: hard
 
