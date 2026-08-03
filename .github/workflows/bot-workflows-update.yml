@@ -78,17 +78,26 @@ jobs:
         GH_TOKEN: ${{ secrets.BOT_TOKEN }}
       run: |
         set -euo pipefail
-        if git diff --quiet; then
+        # git status also catches untracked files (a new workflow would
+        # arrive as an untracked .md + .lock.yml pair)
+        if [ -z "$(git status --porcelain)" ]; then
           echo "Already up to date"
           exit 0
         fi
-        branch="bot-workflows-update-$(date -u +%Y%m%d)"
+        # Fixed branch name, force-pushed: a rerun replaces last week's
+        # still-open update PR instead of stacking a second one next to it
+        branch="bot-workflows-update"
         git config user.name "Z-Wave JS Bot"
         git config user.email "bot@zwave-js.io"
         git checkout -b "$branch"
         git add -A
         git commit -m "ci(bot): update to the latest bot-workflows release"
-        git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$branch"
-        gh pr create \
-          --title "ci(bot): update to the latest bot-workflows release" \
-          --body "Weekly automated sync with [zwave-js/bot-workflows](https://github.com/zwave-js/bot-workflows): updates the installed agentic workflow sources and repins the shared action SHAs to the current \`v1\`. See the lock diffs for what changed."
+        # Authenticate git through gh's credential helper so the token
+        # never appears in a command line
+        gh auth setup-git
+        git push --force origin "$branch"
+        if [ "$(gh pr list --head "$branch" --state open --json number --jq length)" = "0" ]; then
+          gh pr create \
+            --title "ci(bot): update to the latest bot-workflows release" \
+            --body "Weekly automated sync with [zwave-js/bot-workflows](https://github.com/zwave-js/bot-workflows): updates the installed agentic workflow sources and repins the shared action SHAs to the current \`v1\`. See the lock diffs for what changed."
+        fi
