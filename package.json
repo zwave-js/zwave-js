@@ -97,7 +97,7 @@
     "tmp": "^0.2.5",
     "ts-morph": "^28.0.0",
     "tsx": "^4.21.0",
-    "turbo": "2.9.18",
+    "turbo": "2.10.7",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.60.0",
     "vitest": "~4.0.18",
