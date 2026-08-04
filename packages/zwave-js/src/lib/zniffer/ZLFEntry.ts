@@ -5,7 +5,6 @@ import {
 	ZWaveErrorCodes,
 	ZnifferProtocolDataRate,
 	ZnifferRegion,
-	computeChecksumXOR,
 	getProtocolHeaderFormat,
 	isZWaveError,
 	rfRegionToRadioProtocolMode,
@@ -16,6 +15,7 @@ import {
 	ZnifferFrameType,
 	ZnifferMessage,
 	ZnifferMessageType,
+	computeChecksumXOR,
 } from "@zwave-js/serial";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { ZLFAttachment } from "./ZLFAttachment.js";

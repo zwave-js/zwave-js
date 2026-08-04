@@ -5,7 +5,6 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZnifferProtocolDataRate,
-	computeChecksumXOR,
 	getZWaveChipType,
 	validatePayload,
 } from "@zwave-js/core";
@@ -232,6 +231,18 @@ export class ZnifferMessage {
 			);
 		}
 	}
+}
+
+/**
+ * Computes the checksum of a 9.6k or 40k Z-Wave frame. Unlike the Serial API,
+ * this spans the entire MPDU.
+ */
+export function computeChecksumXOR(data: BytesView): number {
+	let ret = 0xff;
+	for (let i = 0; i < data.length; i++) {
+		ret ^= data[i];
+	}
+	return ret;
 }
 
 export interface ZnifferFrameInfo {
