@@ -88,10 +88,4 @@ First read `/tmp/gh-aw/agent/command.json`. It contains:
 
 Load the logfile with the `loadLogFile` tool, then analyze it thoroughly following your analysis instructions to answer the query.
 
-<<<<<<< current (local changes)
-Finally, post your findings as a comment using the `add_comment` safe output. You MUST pass `item_number: ${{ steps.parse_command.outputs.item_number }}` explicitly — automatic targeting does not work in this workflow. If the following comment node ID is not empty, also pass it as `reply_to_id` so the findings appear as a threaded reply to the command: "${{ steps.parse_command.outputs.reply_to_id }}"
-||||||| base (original)
-Finally, post your findings as a comment using the `add_comment` safe output. You MUST pass `item_number: ${{ steps.parse_command.outputs.item_number }}` explicitly — automatic targeting does not work in this workflow. If the following comment node ID is not empty, also pass it as `reply_to_id` so the findings appear as a threaded reply to the command: "${{ steps.parse_command.outputs.reply_to_id }}"
-=======
 Finally, post your findings as a comment using the `add_comment` safe output. You MUST pass `item_number: ${{ github.event.discussion.number }}${{ github.event.issue.number }}` explicitly — automatic targeting does not work in this workflow. Also pass the `reply_to_id` from `command.json` if it is not empty, so the findings appear as a threaded reply to the command.
->>>>>>> new (upstream)
