@@ -25,8 +25,8 @@ import {
 	ZWaveMPDU,
 	type ZnifferProtocolDataRate,
 	type ZnifferRegion,
-	formatNodeId,
 	longRangeBeamPowerToDBm,
+	padNodeId,
 	protocolDataRateToString,
 	rssiToString,
 	validatePayload,
@@ -143,7 +143,7 @@ export class ZWaveBeamStart {
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const tags = [
-			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
+			`BEAM » ${padNodeId(this.destinationNodeId)}`,
 		];
 
 		const message: MessageRecord = {
@@ -206,7 +206,7 @@ export class LongRangeBeamStart {
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const tags = [
-			`BEAM » ${formatNodeId(this.destinationNodeId)}`,
+			`BEAM » ${padNodeId(this.destinationNodeId)}`,
 		];
 
 		const message: MessageRecord = {
