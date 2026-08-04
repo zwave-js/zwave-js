@@ -4,10 +4,12 @@ import {
 	type LogContainer,
 	type LogContext,
 	type LogPayload,
+	type LongRangeMPDU,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type RSSI,
 	ZWaveLoggerBase,
+	type ZWaveMPDU,
 	formatLogPayload,
 	getDirectionPrefix,
 	logText,
@@ -16,14 +18,13 @@ import {
 	toLogPayload,
 	znifferProtocolDataRateToString,
 } from "@zwave-js/core";
-import type { ZnifferDataMessage } from "@zwave-js/serial";
+import type { ZnifferDataMessage, ZnifferFrameInfo } from "@zwave-js/serial";
 import { buffer2hex, num2hex } from "@zwave-js/shared";
-import type {
-	BeamStop,
-	LongRangeBeamStart,
-	LongRangeMPDU,
-	ZWaveBeamStart,
-	ZWaveMPDU,
+import {
+	type BeamStop,
+	type LongRangeBeamStart,
+	type ZWaveBeamStart,
+	znifferFrameInfoToMPDULogContext,
 } from "../zniffer/MPDU.js";
 import type { Zniffer } from "../zniffer/Zniffer.js";
 
@@ -105,11 +106,14 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 
 	public mpdu(
 		mpdu: ZWaveMPDU | LongRangeMPDU,
+		frameInfo: ZnifferFrameInfo,
 		payloadCC?: CommandClass,
 	): void {
 		if (!this.isLogVisible()) return;
 
-		const logEntry = mpdu.toLogEntry();
+		const logEntry = mpdu.toLogEntry(
+			znifferFrameInfoToMPDULogContext(frameInfo),
+		);
 
 		const nested: LogPayload[] = [];
 		if (logEntry.message) {
@@ -151,10 +155,13 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 
 	public beam(
 		beam: ZWaveBeamStart | LongRangeBeamStart | BeamStop,
+		frameInfo: ZnifferFrameInfo,
 	): void {
 		if (!this.isLogVisible()) return;
 
-		const logEntry = beam.toLogEntry();
+		const logEntry = beam.toLogEntry(
+			znifferFrameInfoToMPDULogContext(frameInfo),
+		);
 
 		const msg = formatLogPayload(logText([], {
 			tags: logEntry.tags,

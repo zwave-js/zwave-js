@@ -1,5 +1,5 @@
 import { num2hex } from "@zwave-js/shared";
-import { RFRegion } from "./RFRegion.js";
+import { RFRegion, ZnifferRegion, ZnifferRegionLegacy } from "./RFRegion.js";
 
 export enum Protocols {
 	ZWave = 0,
@@ -142,6 +142,61 @@ export enum ProtocolHeaderFormat {
 	Classic2Channel = 0,
 	Classic3Channel = 1,
 	LongRange = 2,
+}
+
+/**
+ * Converts a region reported by a legacy (500 series or older) Zniffer
+ * to the modern {@link ZnifferRegion} encoding. The legacy values collide
+ * with the modern ones, e.g. legacy India (9) is the modern "USA (Long Range)".
+ */
+export function znifferLegacyRegionToZnifferRegion(
+	region: number,
+): ZnifferRegion {
+	switch (region) {
+		case ZnifferRegionLegacy.EU:
+			return ZnifferRegion.Europe;
+		case ZnifferRegionLegacy.US:
+			return ZnifferRegion.USA;
+		case ZnifferRegionLegacy.ANZ:
+			return ZnifferRegion["Australia/New Zealand"];
+		case ZnifferRegionLegacy.HK:
+			return ZnifferRegion["Hong Kong"];
+		case ZnifferRegionLegacy.IN:
+			return ZnifferRegion.India;
+		case ZnifferRegionLegacy.JP:
+			return ZnifferRegion.Japan;
+		case ZnifferRegionLegacy.RU:
+			return ZnifferRegion.Russia;
+		case ZnifferRegionLegacy.IL:
+			return ZnifferRegion.Israel;
+		case ZnifferRegionLegacy.KR:
+			return ZnifferRegion.Korea;
+		case ZnifferRegionLegacy.CN:
+			return ZnifferRegion.China;
+		// The 3-channel test frequencies behave like Japan
+		case ZnifferRegionLegacy.TF_932_3CH:
+		case ZnifferRegionLegacy.TF_940_3CH:
+		case ZnifferRegionLegacy.TF_835_3CH:
+		case ZnifferRegionLegacy.TF_840_3CH:
+		case ZnifferRegionLegacy.TF_850_3CH:
+			return ZnifferRegion.Japan;
+		// Everything else (Malaysia, 2-channel test frequencies) uses the
+		// default 2-channel configuration
+		default:
+			return ZnifferRegion.Unknown;
+	}
+}
+
+export function znifferRegionToRFRegion(region: ZnifferRegion): RFRegion {
+	switch (region) {
+		// These Zniffer-only regions have no RFRegion counterpart. Map them to
+		// the closest region with the same channel configuration
+		case ZnifferRegion["USA (Long Range, backup)"]:
+		case ZnifferRegion["USA (Long Range, end device)"]:
+			return RFRegion["USA (Long Range)"];
+		default:
+			return region as number as RFRegion;
+	}
 }
 
 export function rfRegionToRadioProtocolMode(
