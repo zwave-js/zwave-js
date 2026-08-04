@@ -5,6 +5,7 @@ import {
 	ZWaveErrorCodes,
 	ZnifferProtocolDataRate,
 	ZnifferRegion,
+	computeChecksumXOR,
 	getProtocolHeaderFormat,
 	isZWaveError,
 	rfRegionToRadioProtocolMode,
@@ -71,6 +72,31 @@ export enum ZLFEntryKind {
 	Pti = 0x09,
 	/** PTI frames with incomplete fragments, e.g. aborted transmissions */
 	PtiDiagnostic = 0x0a,
+}
+
+/** Delimiters surrounding a single debug channel frame */
+const DCH_FRAME_START = 0x5b;
+const DCH_FRAME_END = 0x5d;
+
+/** Beam frames start with this tag instead of an MPDU header */
+const BEAM_TAG = 0x55;
+
+/** Debug channel message types that carry a radio packet */
+enum DCHMessageType {
+	EFRTxPacket = 0x29,
+	EFRRxPacket = 0x2a,
+}
+
+/** Marks what the radio was doing when the capture started */
+enum PTIHardwareStart {
+	RxStart = 0xf8,
+	TxStart = 0xfc,
+	DMPProtocolSwitch = 0xf0,
+}
+
+/** Protocol IDs in the low nibble of the PTI status byte */
+enum PTIProtocolId {
+	ZWaveOnRAIL = 0x06,
 }
 
 /** Z-Wave region IDs used in the radio config of PTI appended info */
@@ -175,37 +201,48 @@ function channelToDataRate(
 	}
 }
 
-function computeChecksumXOR(buffer: BytesView): number {
-	let ret = 0xff;
-	for (let i = 0; i < buffer.length; i++) {
-		ret ^= buffer[i];
-	}
-	return ret;
-}
-
 /**
- * Parses a single Silicon Labs debug channel frame (`5B ... 5D`) containing a PTI radio packet
+ * Parses a single Silicon Labs debug channel frame containing a PTI radio packet
  * and converts it into a Zniffer data message. Returns `undefined` for unsupported frames.
+ *
+ * The frame is laid out as follows, where the length field counts itself and the
+ * message, but neither delimiter:
+ * ```text
+ * 5B <length, 2 bytes LE> <DCH message> 5D
+ * ```
+ * The DCH message header depends on its version, and is followed by the PTI data:
+ * ```text
+ * v2: <version, 2 bytes> <timestamp, 6 bytes (µs)> <type, 2 bytes> <sequence no., 1 byte>
+ * v3: <version, 2 bytes> <timestamp, 8 bytes (ns)> <type, 2 bytes> <flags, 4 bytes> <sequence no., 2 bytes>
+ * ```
+ * The PTI data wraps the captured radio frame in a hardware start/end marker,
+ * followed by the appended info, which is parsed back to front:
+ * ```text
+ * <hw start, 1 byte> <radio frame> <hw end, 1 byte> <appended info>
+ * ```
  */
 function parsePTIFrame(
 	frame: BytesView,
 	timestamp: Date,
 ): { msg: ZnifferDataMessage; capture: CapturedData } | undefined {
-	if (frame.at(-1) !== 0x5d) return;
+	// Frame start, length and frame end
+	if (frame.length < 4) return;
+	if (frame[0] !== DCH_FRAME_START) return;
+	if (frame.at(-1) !== DCH_FRAME_END) return;
+	// The length includes itself, but neither delimiter
+	if (Bytes.view(frame).readUInt16LE(1) !== frame.length - 2) return;
 
 	// The message starts after the start delimiter and the length bytes
 	const body = Bytes.view(frame.subarray(3, -1));
 	if (body.length < 2) return;
 	const version = body.readUInt16LE(0);
-	let messageType: number;
+	let messageType: DCHMessageType;
 	let ptiOffset: number;
 	if (version === 2) {
-		// Version, timestamp (6 bytes µs), type, sequence number
 		if (body.length < 11) return;
 		messageType = body.readUInt16LE(8);
 		ptiOffset = 11;
 	} else if (version === 3) {
-		// Version, timestamp (8 bytes ns), type, flags (4 bytes), sequence number (2 bytes)
 		if (body.length < 18) return;
 		messageType = body.readUInt16LE(10);
 		ptiOffset = 18;
@@ -213,13 +250,23 @@ function parsePTIFrame(
 		return;
 	}
 
-	// Only EFR Tx (0x29) and EFR Rx (0x2A) packets contain radio frames
-	if (messageType !== 0x29 && messageType !== 0x2a) return;
+	// Only Tx and Rx packets contain radio frames
+	if (
+		messageType !== DCHMessageType.EFRTxPacket
+		&& messageType !== DCHMessageType.EFRRxPacket
+	) {
+		return;
+	}
 	const pti = Bytes.view(body.subarray(ptiOffset));
 
-	// Rx start (0xF8) or Tx start (0xFC), other values like DMP protocol switches are not supported
-	const hwStart = pti[0];
-	if (hwStart !== 0xf8 && hwStart !== 0xfc) return;
+	// Only actual radio traffic is supported, no DMP protocol switches
+	const hwStart: PTIHardwareStart = pti[0];
+	if (
+		hwStart !== PTIHardwareStart.RxStart
+		&& hwStart !== PTIHardwareStart.TxStart
+	) {
+		return;
+	}
 
 	// The appended info at the end of the frame is parsed back to front,
 	// starting with its configuration byte
@@ -288,14 +335,14 @@ function parsePTIFrame(
 	}
 	// The appended info additionally contains radio info, status and the config byte
 	const appendedLength = varLen + 3;
-	// hw start + OTA data + hw end + appended info
+	// hw start + radio frame + hw end + appended info
 	if (pti.length < 1 + 1 + 1 + appendedLength) return;
 
 	// Only Z-Wave frames are supported
 	const status = pti.at(-2)!;
-	if ((status & 0x0f) !== 0x06) return;
+	if ((status & 0x0f) !== PTIProtocolId.ZWaveOnRAIL) return;
 
-	let ota = pti.subarray(1, pti.length - appendedLength - 1);
+	const radioFrame = pti.subarray(1, pti.length - appendedLength - 1);
 
 	let offset = pti.length - appendedLength;
 	let rssiRaw = 0;
@@ -320,42 +367,57 @@ function parsePTIFrame(
 	const region = railRegionToZnifferRegion(railRegion);
 	const protocolDataRate = channelToDataRate(region, channel);
 
-	if (ota.length === 0) return;
+	if (radioFrame.length === 0) return;
+
+	const isLongRange =
+		protocolDataRate === ZnifferProtocolDataRate.LongRange_100k;
 
 	let frameType: ZnifferFrameType;
 	let payload: Bytes;
 	let checksumOK: boolean;
-	if (ota[0] === 0x55) {
-		// Beam trains are recorded as a single entry with many beam frame repetitions.
-		// Keep only the first one.
+	let mpdu: BytesView | undefined;
+	if (radioFrame[0] === BEAM_TAG) {
 		frameType = ZnifferFrameType.BeamStart;
-		if (protocolDataRate === ZnifferProtocolDataRate.LongRange_100k) {
-			payload = Bytes.view(ota.subarray(0, 4));
+		// A beam train is captured as a single frame containing many repetitions
+		// of the beam, so only the first one is of interest
+		if (isLongRange) {
+			// Long Range beams are beam tag, TX power and destination, home ID hash
+			if (radioFrame.length < 4) return;
+			payload = Bytes.view(radioFrame.subarray(0, 4));
 		} else {
-			// Classic OTA beams are beam tag, node ID, home ID hash. Insert
-			// the 0x01 marker the Zniffer firmware puts before the hash.
-			payload = Bytes.from([0x55, ota[1] ?? 0, 0x01, ota[2] ?? 0]);
+			// Classic beams are beam tag, destination and an optional home ID
+			// hash, whose presence the Zniffer indicates with a 0x01 marker byte
+			if (radioFrame.length < 2) return;
+			const hasHomeIdHash = radioFrame.length > 2;
+			payload = Bytes.from([
+				BEAM_TAG,
+				radioFrame[1],
+				hasHomeIdHash ? 0x01 : 0,
+				hasHomeIdHash ? radioFrame[2] : 0,
+			]);
 		}
 		checksumOK = true;
 	} else {
 		frameType = ZnifferFrameType.Data;
+		mpdu = radioFrame;
 		// The radio may capture trailing bytes after the actual frame ends.
-		// Trim the OTA data to the length encoded in the MPDU, which is at
-		// byte 7 for both classic Z-Wave and Z-Wave LR
-		if (ota.length > 8 && ota[7] > 7 && ota[7] < ota.length) {
-			ota = ota.subarray(0, ota[7]);
+		// Trim to the length encoded in the MPDU, which is at byte 7 for
+		// both classic Z-Wave and Z-Wave LR
+		if (mpdu.length > 8 && mpdu[7] > 7 && mpdu[7] < mpdu.length) {
+			mpdu = mpdu.subarray(0, mpdu[7]);
 		}
 		const checksumLength =
 			protocolDataRate >= ZnifferProtocolDataRate.ZWave_100k
 				? 2
 				: 1;
-		if (ota.length <= checksumLength) return;
-		payload = Bytes.view(ota.subarray(0, -checksumLength));
+		if (mpdu.length <= checksumLength) return;
+		// The MPDU length includes the checksum, the Zniffer payload does not
+		payload = Bytes.view(mpdu.subarray(0, -checksumLength));
 		const expectedChecksum = checksumLength === 2
 			? CRC16_CCITT(payload)
 			: computeChecksumXOR(payload);
-		const checksum = Bytes.view(ota).readUIntBE(
-			ota.length - checksumLength,
+		const checksum = Bytes.view(mpdu).readUIntBE(
+			mpdu.length - checksumLength,
 			checksumLength,
 		);
 		checksumOK = checksum === expectedChecksum;
@@ -376,7 +438,7 @@ function parsePTIFrame(
 	// the capture again produces a file the Zniffer application can read
 	const channelAndDataRate = (channel << 5) | protocolDataRate;
 	let rawData: Bytes;
-	if (frameType === ZnifferFrameType.Data) {
+	if (mpdu) {
 		rawData = Bytes.concat([
 			[
 				ZnifferMessageType.Data,
@@ -388,12 +450,14 @@ function parsePTIFrame(
 				rssiRaw,
 				0x21,
 				0x03,
-				ota.length,
+				mpdu.length,
 			],
-			ota,
+			mpdu,
 		]);
 	} else {
-		// Beam start frames are always 11 bytes long
+		// While PTI captures the entire beam train, the Zniffer represents a
+		// beam with a single 11-byte BeamStart frame: 7 header bytes and the
+		// 4 byte beam
 		rawData = Bytes.concat([
 			[
 				ZnifferMessageType.Data,
@@ -550,8 +614,8 @@ export function parseZLFEntry(
 			|| kind === ZLFEntryKind.PtiDiagnostic
 		) {
 			while (rawData.length > 0) {
-				// DCH frames are delimited by 0x5B ... 0x5D. Anything else cannot be parsed.
-				if (rawData[0] !== 0x5b) break;
+				// Anything not starting with a delimiter cannot be parsed
+				if (rawData[0] !== DCH_FRAME_START) break;
 				if (rawData.length < 3) {
 					throw new ZWaveError(
 						"Incomplete debug channel frame",

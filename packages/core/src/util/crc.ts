@@ -18,3 +18,12 @@ export function CRC16_CCITT(
 	}
 	return crc & 0xffff;
 }
+
+/** Computes the checksum for 9.6k and 40k Z-Wave frames */
+export function computeChecksumXOR(data: BytesView): number {
+	let ret = 0xff;
+	for (let i = 0; i < data.length; i++) {
+		ret ^= data[i];
+	}
+	return ret;
+}

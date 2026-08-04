@@ -5,6 +5,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZnifferProtocolDataRate,
+	computeChecksumXOR,
 	getZWaveChipType,
 	validatePayload,
 } from "@zwave-js/core";
@@ -231,14 +232,6 @@ export class ZnifferMessage {
 			);
 		}
 	}
-}
-
-function computeChecksumXOR(buffer: BytesView): number {
-	let ret = 0xff;
-	for (let i = 0; i < buffer.length; i++) {
-		ret ^= buffer[i];
-	}
-	return ret;
 }
 
 export interface ZnifferFrameInfo {
