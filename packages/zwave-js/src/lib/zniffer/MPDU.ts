@@ -47,15 +47,23 @@ import {
 import { LongRangeFrameType, ZWaveFrameType } from "./_Types.js";
 
 /** MPDULogContext extends MPDUParsingContext, so one context serves both purposes */
-export function znifferFrameInfoToMPDUContext(
+export function znifferFrameInfoToMPDUParsingContext(
 	frameInfo: ZnifferFrameInfo,
-): MPDULogContext {
+): MPDUParsingContext {
 	return {
 		channel: frameInfo.channel,
 		region: znifferRegionToRFRegion(frameInfo.region),
 		protocolDataRate: znifferProtocolDataRateToProtocolDataRate(
 			frameInfo.protocolDataRate,
 		),
+	};
+}
+
+export function znifferFrameInfoToMPDULogContext(
+	frameInfo: ZnifferFrameInfo,
+): MPDULogContext {
+	return {
+		...znifferFrameInfoToMPDUParsingContext(frameInfo),
 		rssi: frameInfo.rssi,
 		rssiRaw: frameInfo.rssiRaw,
 	};
@@ -65,7 +73,10 @@ export function parseMPDU(
 	frame: ZnifferDataMessage,
 	frameInfo: ZnifferFrameInfo,
 ): ZWaveMPDU | LongRangeMPDU {
-	return MPDU.parse(frame.payload, znifferFrameInfoToMPDUContext(frameInfo));
+	return MPDU.parse(
+		frame.payload,
+		znifferFrameInfoToMPDUParsingContext(frameInfo),
+	);
 }
 
 export function parseBeamFrame(
@@ -76,9 +87,8 @@ export function parseBeamFrame(
 		return new BeamStop();
 	}
 
-	// Dispatch on the channel like MPDU.parse does: LR regions carry
-	// classic beams on channels 0-2 and LR beams on channels 3-4
-	const ctx = znifferFrameInfoToMPDUContext(frameInfo);
+	// The specific type of `...BeamStart` depends on the channel
+	const ctx = znifferFrameInfoToMPDUParsingContext(frameInfo);
 	if (ctx.channel <= 2) {
 		return ZWaveBeamStart.parse(frame.payload, ctx);
 	}
@@ -114,11 +124,10 @@ export class ZWaveBeamStart {
 			);
 		}
 
-		// data[0] is the beam tag (0x55)
 		const destinationNodeId = data[1];
 		let homeIdHash: number | undefined;
-		// Contrary to G.9959, the Zniffer output has a 0x01 marker byte
-		// before the home ID hash
+		// The home ID hash is optional in G.9959. The Zniffer output
+		// indicates its presence with a 0x01 marker byte
 		if (data[2] === 0x01) {
 			homeIdHash = data[3];
 		}
@@ -179,9 +188,9 @@ export class LongRangeBeamStart {
 			);
 		}
 
-		// data[0] is the beam tag (0x55)
 		const txPower = longRangeBeamPowerToDBm(data[1] >>> 4);
 		const destinationNodeId = data.readUInt16BE(1) & 0x0fff;
+		// Unlike classic beams, LR beams always include the home ID hash
 		const homeIdHash = data[3];
 
 		return new LongRangeBeamStart({
