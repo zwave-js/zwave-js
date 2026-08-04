@@ -55,6 +55,7 @@ import {
 	buffer2hex,
 	cloneDeep,
 	getEnumMemberName,
+	getErrorMessage,
 	isAbortError,
 	mergeDeep,
 	num2hex,
@@ -405,14 +406,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		} catch (e) {
 			if (isAbortError(e)) {
 				return;
-			} else if (
-				isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_Failed
-			) {
-				// A disconnection while soft resetting is to be expected.
-				void this.destroyWithMessage(e.message);
-				return;
 			}
-			throw e;
+			// This call is not awaited, so a rethrow would surface as an
+			// unhandled rejection. Destroy the driver instead, which also
+			// emits the "error" event
+			void this.destroyWithMessage(getErrorMessage(e));
 		}
 	}
 
@@ -954,7 +952,16 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			region: this.rfRegion,
 		};
 
-		const mpdu = MPDU.parse(Bytes.view(msg.data), ctx);
+		let mpdu: MPDU;
+		try {
+			mpdu = MPDU.parse(Bytes.view(msg.data), ctx);
+		} catch (e) {
+			this.rcpLog.print(
+				`Failed to parse received frame: ${getErrorMessage(e)}`,
+				"error",
+			);
+			return;
+		}
 		const rssi = convertRawRSSI(msg.rssi, this.channelConfig, msg.channel);
 
 		this.emit(

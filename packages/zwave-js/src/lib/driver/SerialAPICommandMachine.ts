@@ -57,12 +57,6 @@ export type SerialAPICommandMachine<T extends SerialAPICommand> = StateMachine<
 	SerialAPICommandMachineInput<T>
 >;
 
-function to<T extends SerialAPICommand>(
-	state: SerialAPICommandState<T>,
-): StateMachineTransition<SerialAPICommandState<T>> {
-	return { newState: state };
-}
-
 function callbackIsFinal(callback: unknown): boolean {
 	return (
 		// assume callbacks without success indication to be OK
@@ -79,21 +73,41 @@ export function createSerialAPICommandMachine<T extends SerialAPICommand>(
 		value: "initial",
 	};
 
+	function to(
+		state: SerialAPICommandState<T>,
+	): StateMachineTransition<SerialAPICommandState<T>> {
+		return { newState: state };
+	}
+
 	const transitions: InferStateMachineTransitions<
 		SerialAPICommandMachine<T>
-	> =
-		// @ts-expect-error TODO: Fix the type declaration
-		(state) => (input) => {
-			switch (state.value) {
-				case "initial":
-					if (input.value === "start") {
-						return to({ value: "sending" });
+	> = (state) => (input) => {
+		switch (state.value) {
+			case "initial":
+				if (input.value === "start") {
+					return to({ value: "sending" });
+				}
+				break;
+			case "sending":
+				if (input.value === "message sent") {
+					if (message.expectsAck()) {
+						return to({ value: "waitingForACK" });
+					} else {
+						return to({
+							value: "success",
+							result: undefined,
+							done: true,
+						});
 					}
-					break;
-				case "sending":
-					if (input.value === "message sent") {
-						if (message.expectsAck()) {
-							return to({ value: "waitingForACK" });
+				}
+				break;
+			case "waitingForACK":
+				switch (input.value) {
+					case "ACK":
+						if (message.expectsResponse()) {
+							return to({ value: "waitingForResponse" });
+						} else if (message.expectsCallback()) {
+							return to({ value: "waitingForCallback" });
 						} else {
 							return to({
 								value: "success",
@@ -101,103 +115,87 @@ export function createSerialAPICommandMachine<T extends SerialAPICommand>(
 								done: true,
 							});
 						}
-					}
-					break;
-				case "waitingForACK":
-					switch (input.value) {
-						case "ACK":
-							if (message.expectsResponse()) {
-								return to({ value: "waitingForResponse" });
-							} else if (message.expectsCallback()) {
-								return to({ value: "waitingForCallback" });
-							} else {
-								return to({
-									value: "success",
-									result: undefined,
-									done: true,
-								});
-							}
-						case "CAN":
-							return to({ value: "failure", reason: "CAN" });
-						case "NAK":
-							return to({ value: "failure", reason: "NAK" });
-						case "timeout":
+					case "CAN":
+						return to({ value: "failure", reason: "CAN" });
+					case "NAK":
+						return to({ value: "failure", reason: "NAK" });
+					case "timeout":
+						return to({
+							value: "failure",
+							reason: "ACK timeout",
+						});
+				}
+				break;
+			case "waitingForResponse":
+				switch (input.value) {
+					case "response":
+						if (message.expectsCallback()) {
+							return to({ value: "waitingForCallback" });
+						} else {
 							return to({
-								value: "failure",
-								reason: "ACK timeout",
-							});
-					}
-					break;
-				case "waitingForResponse":
-					switch (input.value) {
-						case "response":
-							if (message.expectsCallback()) {
-								return to({ value: "waitingForCallback" });
-							} else {
-								return to({
-									value: "success",
-									result: input.response,
-									done: true,
-								});
-							}
-						case "response NOK":
-							return to({
-								value: "failure",
-								reason: "response NOK",
+								value: "success",
 								result: input.response,
+								done: true,
 							});
-						case "timeout":
-							if (isSendData(message)) {
-								return {
-									newState: {
-										value: "waitingForCallback",
-										responseTimedOut: true,
-									},
-								};
-							} else {
-								return to({
-									value: "failure",
-									reason: "response timeout",
-								});
-							}
-					}
-					break;
-				case "waitingForCallback":
-					switch (input.value) {
-						case "callback":
-							if (callbackIsFinal(input.callback)) {
-								return to({
-									value: "success",
-									result: input.callback,
-									done: true,
-								});
-							} else {
-								return to({ value: "waitingForCallback" });
-							}
-						case "callback NOK":
-							// Preserve "response timeout" errors
-							// A NOK callback afterwards is expected, but we're not interested in it
-							if (state.responseTimedOut) {
-								return to({
-									value: "failure",
-									reason: "response timeout",
-								});
-							} else {
-								return to({
-									value: "failure",
-									reason: "callback NOK",
-									result: input.callback,
-								});
-							}
-						case "timeout":
+						}
+					case "response NOK":
+						return to({
+							value: "failure",
+							reason: "response NOK",
+							result: input.response,
+						});
+					case "timeout":
+						if (isSendData(message)) {
+							return {
+								newState: {
+									value: "waitingForCallback",
+									responseTimedOut: true,
+								},
+							};
+						} else {
 							return to({
 								value: "failure",
-								reason: "callback timeout",
+								reason: "response timeout",
 							});
-					}
-					break;
-			}
-		};
+						}
+				}
+				break;
+			case "waitingForCallback":
+				switch (input.value) {
+					case "callback":
+						if (callbackIsFinal(input.callback)) {
+							return to({
+								value: "success",
+								result: input.callback,
+								done: true,
+							});
+						} else {
+							return to({ value: "waitingForCallback" });
+						}
+					case "callback NOK":
+						// Preserve "response timeout" errors
+						// A NOK callback afterwards is expected, but we're not interested in it
+						if (state.responseTimedOut) {
+							return to({
+								value: "failure",
+								reason: "response timeout",
+							});
+						} else {
+							return to({
+								value: "failure",
+								reason: "callback NOK",
+								result: input.callback,
+							});
+						}
+					case "timeout":
+						return to({
+							value: "failure",
+							reason: "callback timeout",
+						});
+				}
+				break;
+		}
+	};
 
 	return new StateMachine(initialState, transitions);
 }

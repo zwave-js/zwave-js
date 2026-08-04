@@ -7,13 +7,13 @@ import {
 import type { Message } from "@zwave-js/serial";
 import {
 	SendDataBridgeRequest,
-	type SendDataBridgeRequestTransmitReport,
+	SendDataBridgeRequestTransmitReport,
 	SendDataMulticastBridgeRequest,
-	type SendDataMulticastBridgeRequestTransmitReport,
+	SendDataMulticastBridgeRequestTransmitReport,
 	SendDataMulticastRequest,
-	type SendDataMulticastRequestTransmitReport,
+	SendDataMulticastRequestTransmitReport,
 	SendDataRequest,
-	type SendDataRequestTransmitReport,
+	SendDataRequestTransmitReport,
 	isSendData,
 	isSendDataTransmitReport,
 } from "@zwave-js/serial/serialapi";
@@ -92,14 +92,13 @@ export function serialAPICommandErrorToZWaveError<T extends SerialAPICommand>(
 			}
 
 			if (
-				sentMessage instanceof SendDataRequest
-				|| sentMessage instanceof SendDataBridgeRequest
+				(sentMessage instanceof SendDataRequest
+					|| sentMessage instanceof SendDataBridgeRequest)
+				&& (receivedMessage instanceof SendDataRequestTransmitReport
+					|| receivedMessage
+						instanceof SendDataBridgeRequestTransmitReport)
 			) {
-				const status = (
-					receivedMessage as unknown as
-						| SendDataRequestTransmitReport
-						| SendDataBridgeRequestTransmitReport
-				).transmitStatus;
+				const status = receivedMessage.transmitStatus;
 				return new ZWaveError(
 					`Failed to send the command (Status ${
 						getEnumMemberName(
@@ -114,14 +113,14 @@ export function serialAPICommandErrorToZWaveError<T extends SerialAPICommand>(
 					transactionSource,
 				);
 			} else if (
-				sentMessage instanceof SendDataMulticastRequest
-				|| sentMessage instanceof SendDataMulticastBridgeRequest
+				(sentMessage instanceof SendDataMulticastRequest
+					|| sentMessage instanceof SendDataMulticastBridgeRequest)
+				&& (receivedMessage
+						instanceof SendDataMulticastRequestTransmitReport
+					|| receivedMessage
+						instanceof SendDataMulticastBridgeRequestTransmitReport)
 			) {
-				const status = (
-					receivedMessage as unknown as
-						| SendDataMulticastRequestTransmitReport
-						| SendDataMulticastBridgeRequestTransmitReport
-				).transmitStatus;
+				const status = receivedMessage.transmitStatus;
 				return new ZWaveError(
 					`One or more nodes did not respond to the multicast request (Status ${
 						getEnumMemberName(

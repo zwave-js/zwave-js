@@ -31,6 +31,7 @@ import {
 	Bytes,
 	type BytesView,
 	TypedEventTarget,
+	getErrorMessage,
 	setTimer,
 } from "@zwave-js/shared";
 import {
@@ -142,7 +143,14 @@ export class ProtocolController
 
 		this.phyLayer = await this._options.phy();
 		this.phyLayer.on("mpdu received", (mpdu, info) => {
-			void this.handleReceivedMPDU(mpdu, info);
+			try {
+				this.handleReceivedMPDU(mpdu, info);
+			} catch (e) {
+				this.emit(
+					"error",
+					e instanceof Error ? e : new Error(getErrorMessage(e)),
+				);
+			}
 		});
 
 		this.emit("ready");
@@ -568,7 +576,8 @@ export class ProtocolController
 						"Acknowledging incoming frame",
 						"verbose",
 					);
-					void this.transmitACK({
+					// A failed ACK behaves like a lost ACK, so it only needs to be logged
+					this.transmitACK({
 						homeId: mpdu.homeId,
 						destinationNodeId: mpdu.sourceNodeId,
 						sourceNodeId: this.ownNodeId,
@@ -583,6 +592,13 @@ export class ProtocolController
 							: {
 								protocol: Protocols.ZWave,
 							}),
+					}).catch((e) => {
+						this.protocolLog.print(
+							`Failed to acknowledge incoming frame: ${
+								getErrorMessage(e)
+							}`,
+							"error",
+						);
 					});
 				} else {
 					mustHandle = true;
