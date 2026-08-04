@@ -123,7 +123,7 @@ safe-outputs:
 network: defaults
 
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@bb324b62a0e6b629d59a081bbf0391bb851c8c1d
+source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@53b6db7db2a2157e33b684f0609a3b021d918163
 ---
 
 # Z-Wave JS Logfile Analysis
@@ -138,4 +138,4 @@ Determine the user's question or problem from the discussion content. If no spec
 
 Load the logfile with the `loadLogFile` tool, then analyze it thoroughly following your analysis instructions to answer the user's question.
 
-Finally, post your findings as a comment on the discussion using the `add-comment` safe output.
+Finally, post your findings as a comment on the discussion using the `add_comment` safe output. You MUST pass `item_number: ${{ github.event.discussion.number }}` explicitly — automatic targeting does not work in this workflow.
