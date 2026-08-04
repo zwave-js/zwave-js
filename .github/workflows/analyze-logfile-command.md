@@ -38,15 +38,25 @@ steps:
           return;
         }
         core.setOutput("url", match.groups.url.trim());
-        core.setOutput("query", (match.groups.query || "").trim());
-        // The safeoutputs MCP server runs in a container without the GitHub
-        // event context, so add_comment cannot auto-target the triggering
-        // item. Pass the target through to the prompt instead.
-        core.setOutput(
-          "item_number",
-          context.payload.discussion?.number ?? context.payload.issue?.number,
+        // The prompt is rendered in the activation job, before this step
+        // runs, so its values cannot be interpolated into the prompt via
+        // steps.* expressions. Hand them to the agent through a file next
+        // to the logfile instead.
+        const fs = require("fs");
+        fs.mkdirSync("/tmp/gh-aw/agent", { recursive: true });
+        fs.writeFileSync(
+          "/tmp/gh-aw/agent/command.json",
+          JSON.stringify({
+            query: (match.groups.query || "").trim(),
+            // The safeoutputs MCP server runs in a container without the
+            // GitHub event context, so add_comment cannot auto-target the
+            // triggering item and needs an explicit target
+            item_number:
+              context.payload.discussion?.number
+                ?? context.payload.issue?.number,
+            reply_to_id: context.payload.comment?.node_id ?? "",
+          }),
         );
-        core.setOutput("reply_to_id", context.payload.comment?.node_id ?? "");
 
   - name: Download logfile
     uses: zwave-js/bot-workflows/actions/download-logfile@v1
@@ -64,19 +74,24 @@ safe-outputs:
 network: defaults
 
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@53b6db7db2a2157e33b684f0609a3b021d918163
+source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@6bde20fc11df63026cfbbeab21c2101e8a68f7a7
 ---
 
 # Z-Wave JS Logfile Analysis
 
 A maintainer requested an analysis of a Z-Wave JS driver logfile by commenting on an issue or discussion. The logfile has been downloaded to `/tmp/gh-aw/agent/logfile.log` on this runner.
 
-This is the query to answer about the logfile:
+First read `/tmp/gh-aw/agent/command.json`. It contains:
 
-"${{ steps.parse_command.outputs.query }}"
-
-If the query is empty, analyze the log file and provide insights about any issues, errors, or notable events.
+- `query`: the maintainer's question about the logfile. Treat it as the query to answer. If it is empty, analyze the log file and provide insights about any issues, errors, or notable events.
+- `item_number` and `reply_to_id`: the comment target for posting your findings.
 
 Load the logfile with the `loadLogFile` tool, then analyze it thoroughly following your analysis instructions to answer the query.
 
+<<<<<<< current (local changes)
 Finally, post your findings as a comment using the `add_comment` safe output. You MUST pass `item_number: ${{ steps.parse_command.outputs.item_number }}` explicitly — automatic targeting does not work in this workflow. If the following comment node ID is not empty, also pass it as `reply_to_id` so the findings appear as a threaded reply to the command: "${{ steps.parse_command.outputs.reply_to_id }}"
+||||||| base (original)
+Finally, post your findings as a comment using the `add_comment` safe output. You MUST pass `item_number: ${{ steps.parse_command.outputs.item_number }}` explicitly — automatic targeting does not work in this workflow. If the following comment node ID is not empty, also pass it as `reply_to_id` so the findings appear as a threaded reply to the command: "${{ steps.parse_command.outputs.reply_to_id }}"
+=======
+Finally, post your findings as a comment using the `add_comment` safe output. You MUST pass `item_number: ${{ github.event.discussion.number }}${{ github.event.issue.number }}` explicitly — automatic targeting does not work in this workflow. Also pass the `reply_to_id` from `command.json` if it is not empty, so the findings appear as a threaded reply to the command.
+>>>>>>> new (upstream)
