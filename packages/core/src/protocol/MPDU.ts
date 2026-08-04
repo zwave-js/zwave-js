@@ -10,7 +10,12 @@ import {
 	rfRegionToRadioProtocolMode,
 } from "../definitions/Protocol.js";
 import type { RFRegion } from "../definitions/RFRegion.js";
-import { type RSSI, parseRSSI, rssiToString } from "../definitions/RSSI.js";
+import {
+	type RSSI,
+	RssiError,
+	parseRSSI,
+	rssiToString,
+} from "../definitions/RSSI.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import {
 	type MessageRecord,
@@ -21,7 +26,9 @@ import type { MessageOrCCLogEntry } from "../log/shared.js";
 import { validatePayload } from "../util/misc.js";
 import { encodeNodeBitMask, parseBitMask } from "../values/Primitive.js";
 import { ExplorerFrameCommand } from "./_Types.js";
-import { formatNodeId, formatRoute } from "./utils.js";
+import { getRouteTag, padNodeId } from "./utils.js";
+
+const EXPLORER_MAX_TTL = 4;
 
 export interface MPDUOptions {
 	homeId: number;
@@ -59,6 +66,13 @@ export abstract class MPDU {
 			const raw = ZWaveMPDURaw.parse(data, ctx);
 			switch (raw.headerType) {
 				case MPDUHeaderType.Singlecast:
+					// Routed frames are encoded differently depending on the channel
+					// configuration. ITU-T G.9959 (01/2015), §9.3: "MPDUs may carry
+					// mesh routing information when the 'Routed' flag of the frame
+					// control field is set or if the 'Routed Frame' header type is used."
+					if (raw.routed) {
+						return RoutedZWaveMPDU.from(raw, ctx);
+					}
 					return SinglecastZWaveMPDU.from(raw, ctx);
 				case MPDUHeaderType.Multicast:
 					return MulticastZWaveMPDU.from(raw, ctx);
@@ -121,8 +135,17 @@ export abstract class MPDU {
 		);
 	}
 
-	public serialize(_ctx: MPDUEncodingContext): Bytes {
-		return this.payload;
+	public serialize(ctx: MPDUEncodingContext): Bytes {
+		return this.serializeBody(ctx, Bytes.view(this.payload));
+	}
+
+	/**
+	 * Wraps the given body with this MPDU layer's header fields.
+	 * Subclasses prepend their own fields and delegate to `super`,
+	 * so `serialize()` stays free of side effects.
+	 */
+	protected serializeBody(_ctx: MPDUEncodingContext, body: Bytes): Bytes {
+		return body;
 	}
 
 	public abstract toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
@@ -209,6 +232,7 @@ export class ZWaveMPDURaw {
 				headerType = frameControl[0] & 0b0000_1111;
 				beamingInfo = (frameControl[1] & 0b0111_0000) >>> 4;
 				sequenceNumber = data[payloadOffset++];
+				break;
 			}
 			default: {
 				validatePayload.fail(
@@ -265,8 +289,8 @@ export class ZWaveMPDU extends MPDU {
 	public speedModified: boolean;
 	public beamingInfo: BeamingInfo;
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		let payload: Bytes;
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+		let header: Bytes;
 
 		const headerFormat = getProtocolHeaderFormat(
 			rfRegionToRadioProtocolMode(ctx.region),
@@ -282,9 +306,9 @@ export class ZWaveMPDU extends MPDU {
 				const frameControl1 = ((this.beamingInfo << 5) & 0b0110_0000)
 					| (this.sequenceNumber & 0b0000_1111);
 
-				payload = new Bytes(8);
-				payload[5] = frameControl0;
-				payload[6] = frameControl1;
+				header = new Bytes(8);
+				header[5] = frameControl0;
+				header[6] = frameControl1;
 				break;
 			}
 			case ProtocolHeaderFormat.Classic3Channel: {
@@ -293,10 +317,13 @@ export class ZWaveMPDU extends MPDU {
 					| (this.headerType & 0b0000_1111);
 				const frameControl1 = (this.beamingInfo << 4) & 0b0111_0000;
 
-				payload = new Bytes(9);
-				payload[5] = frameControl0;
-				payload[6] = frameControl1;
-				payload[7] = this.sequenceNumber;
+				header = new Bytes(9);
+				header[5] = frameControl0;
+				header[6] = frameControl1;
+				// ITU-T G.9959 (01/2015), Figure 8-6: in the 3-channel format the
+				// Length field precedes the Sequence number field
+				header[8] = this.sequenceNumber;
+				break;
 			}
 			default: {
 				throw new ZWaveError(
@@ -306,24 +333,19 @@ export class ZWaveMPDU extends MPDU {
 			}
 		}
 
-		payload.writeUInt32BE(this.homeId, 0);
-		payload[4] = this.sourceNodeId;
+		header.writeUInt32BE(this.homeId, 0);
+		header[4] = this.sourceNodeId;
 		// The length spans the entire MPDU, payload and the checksum (1 or 2 bytes)
-		const length = payload.length
-			+ this.payload.length
+		const length = header.length
+			+ body.length
 			+ (ctx.protocolDataRate < ProtocolDataRate.ZWave_100k ? 1 : 2);
-		payload[payload.length - 1] = length;
+		header[7] = length;
 
-		this.payload = Bytes.concat([
-			payload,
-			this.payload,
-		]);
-
-		return super.serialize(ctx);
+		return Bytes.concat([header, body]);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
-		const tags = [formatNodeId(this.sourceNodeId)];
+		const tags = [padNodeId(this.sourceNodeId)];
 
 		const message: MessageRecord = {
 			"sequence no.": this.sequenceNumber,
@@ -376,17 +398,16 @@ export class SinglecastZWaveMPDU extends ZWaveMPDU {
 
 	public readonly destinationNodeId: number;
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		this.payload = Bytes.concat([
-			[this.destinationNodeId],
-			this.payload,
-		]);
-		return super.serialize(ctx);
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+		return super.serializeBody(
+			ctx,
+			Bytes.concat([[this.destinationNodeId], body]),
+		);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry(ctx);
-		tags[0] = formatRoute(
+		tags[0] = getRouteTag(
 			this.sourceNodeId,
 			[],
 			this.destinationNodeId,
@@ -438,14 +459,17 @@ export class AckZWaveMPDU extends ZWaveMPDU {
 
 	public readonly destinationNodeId: number;
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		this.payload = Bytes.from([this.destinationNodeId]);
-		return super.serialize(ctx);
+	protected serializeBody(ctx: MPDUEncodingContext, _body: Bytes): Bytes {
+		// ACK frames carry no payload besides the destination node ID
+		return super.serializeBody(
+			ctx,
+			Bytes.from([this.destinationNodeId]),
+		);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const { tags, message } = super.toLogEntry(ctx);
-		tags[0] = formatRoute(
+		tags[0] = getRouteTag(
 			this.sourceNodeId,
 			[],
 			this.destinationNodeId,
@@ -528,6 +552,11 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		}
 
 		const numRepeaters = raw.payload[2] >>> 4;
+		// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
+		// NWK:0019.1: "This field MUST be in the range 1..4"
+		validatePayload.withReason(
+			`Invalid number of repeaters ${numRepeaters}`,
+		)(numRepeaters >= 1 && numRepeaters <= 4);
 		const repeaters = [...raw.payload.subarray(3, 3 + numRepeaters)];
 
 		let offset = 3 + numRepeaters;
@@ -552,6 +581,13 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 					? "250ms"
 					: undefined;
 			} else if (headerType === 0x01) {
+				// Z-Wave and Z-Wave Long Range Network Layer Specification
+				// (2023.05.26), NWK:0030.1: "The length of this extension MUST
+				// always be 4 bytes, even if fewer repeaters are involved in
+				// routing the frame."
+				validatePayload.withReason(
+					`Invalid repeater RSSI extension length ${headerLength}`,
+				)(headerLength === 4);
 				repeaterRSSI = [];
 				for (let i = 0; i < numRepeaters; i++) {
 					repeaterRSSI.push(parseRSSI(header, i));
@@ -589,27 +625,35 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 	public destinationWakeupType?: "250ms" | "1000ms";
 	public repeaterRSSI?: readonly RSSI[];
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
 		const headerFormat = getProtocolHeaderFormat(
 			rfRegionToRadioProtocolMode(ctx.region),
 			ctx.channel,
 		);
 
-		const hasExtendedHeader =
-			(headerFormat === ProtocolHeaderFormat.Classic2Channel
-				&& this.destinationWakeupType != undefined)
+		const hasExtendedHeader = this.destinationWakeupType != undefined
 			|| this.repeaterRSSI?.length;
 
 		// Until the end of the repeater list, all channel configurations
-		// are identical
-		let payload = new Bytes(7);
-		payload[0] = this.destinationNodeId;
-		payload[1] = (this.direction === "inbound" ? 0b1 : 0)
+		// are identical. Z-Wave and Z-Wave Long Range Network Layer
+		// Specification (2023.05.26), NWK:001F.1 ff.: the Repeater 1..3 fields
+		// "MUST be omitted" when the Repeaters field value is smaller,
+		// so only the actual repeaters are emitted
+		let header = new Bytes(3 + this.repeaters.length);
+		header[0] = this.destinationNodeId;
+		header[1] = (this.direction === "inbound" ? 0b1 : 0)
 			| (this.routedAck ? 0b10 : 0)
 			| (this.routedError ? 0b100 : 0)
 			| (hasExtendedHeader ? 0b1000 : 0);
 		if (this.routedError && this.failedHop) {
-			payload[1] |= this.failedHop << 4;
+			header[1] |= this.failedHop << 4;
+		} else if (headerFormat === ProtocolHeaderFormat.Classic2Channel) {
+			// Z-Wave and Z-Wave Long Range Network Layer Specification
+			// (2023.05.26), NWK:000D.1: "The 'Speed Modified' subfield from the
+			// MPDU Frame Control [G.9959] MUST be ignored and this field MUST
+			// be used instead when a routing header is present."
+			// For channel configuration 3, the field is reserved (NWK:000E.1)
+			if (this.speedModified) header[1] |= 0b10000;
 		}
 
 		// The hop field in the MPDU indicates which repeater should handle the frame next.
@@ -622,31 +666,28 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		const hop = this.direction === "inbound"
 			? (this.hop - 1)
 			: this.hop;
-		payload[2] = ((this.repeaters.length & 0xf) << 4) | (hop & 0xf);
-		for (let i = 0; i < 4; i++) {
-			payload[3 + i] = this.repeaters[i] ?? 0;
+		header[2] = ((this.repeaters.length & 0xf) << 4) | (hop & 0xf);
+		for (let i = 0; i < this.repeaters.length; i++) {
+			header[3 + i] = this.repeaters[i];
 		}
 
 		// Add destination wakeup byte for channel configuration 3
 		if (headerFormat === ProtocolHeaderFormat.Classic3Channel) {
-			payload = Bytes.concat([
-				payload,
+			header = Bytes.concat([
+				header,
 				[this.destinationWakeup ? 0x02 : 0x00],
 			]);
 		}
 
-		if (
-			headerFormat === ProtocolHeaderFormat.Classic2Channel
-			&& this.destinationWakeupType != undefined
-		) {
-			// Add destination wakeup header for other channel configurations
+		if (this.destinationWakeupType != undefined) {
+			// Add destination wakeup type extended header
 			const headerLength = 1;
 			const headerType = 0x00;
 			const headerBody = this.destinationWakeupType === "1000ms"
 				? 0b0100_0000
 				: 0b0010_0000; // 250ms
-			payload = Bytes.concat([
-				payload,
+			header = Bytes.concat([
+				header,
 				[
 					(headerLength << 4) | headerType,
 					headerBody,
@@ -658,27 +699,24 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			const headerType = 0x01;
 			const headerBody = new Bytes(4);
 			for (let i = 0; i < headerBody.length; i++) {
-				headerBody[i] = this.repeaterRSSI[i] ?? 0;
+				// Z-Wave and Z-Wave Long Range Network Layer Specification
+				// (2023.05.26), NWK:0031.1: "A node returning a Routed
+				// Acknowledgement MUST set these fields to 0x7F." (unused hops)
+				headerBody[i] = this.repeaterRSSI[i] ?? RssiError.NotAvailable;
 			}
-			payload = Bytes.concat([
-				payload,
+			header = Bytes.concat([
+				header,
 				[(headerLength << 4) | headerType],
 				headerBody,
 			]);
 		}
 
-		// Include the actual payload
-		this.payload = Bytes.concat([
-			payload,
-			this.payload,
-		]);
-
-		return super.serialize(ctx);
+		return super.serializeBody(ctx, Bytes.concat([header, body]));
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry(ctx);
-		tags[0] = formatRoute(
+		tags[0] = getRouteTag(
 			this.sourceNodeId,
 			this.repeaters,
 			this.destinationNodeId,
@@ -721,10 +759,17 @@ export class MulticastZWaveMPDU extends ZWaveMPDU {
 		const control = raw.payload[0];
 		const addressOffset = control >>> 5;
 		const maskLength = control & 0b11111;
+		// ITU-T G.9959 (01/2015), §8.1.3.6.1: "A receiving node shall support
+		// values of the number of Mask Bytes field in the range 1..29."
+		validatePayload.withReason(
+			`Invalid multicast mask length ${maskLength}`,
+		)(maskLength >= 1 && maskLength <= 29);
 		const destinationMask = raw.payload.subarray(1, 1 + maskLength);
+		// ITU-T G.9959 (01/2015), §8.1.3.6.1:
+		// "Dst NodeID = bit address offset + mask byte number × 8 + mask bit number + 1"
 		const destinationNodeIds = parseBitMask(
 			destinationMask,
-			32 * addressOffset,
+			1 + 32 * addressOffset,
 		);
 
 		const payload = raw.payload.subarray(1 + maskLength);
@@ -738,19 +783,16 @@ export class MulticastZWaveMPDU extends ZWaveMPDU {
 
 	public destinationNodeIds: number[];
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		// ITU-T G.9959:
-		// a sending node shall set the address offset field to zero
-		// and the number of mask bytes field shall be set to 29
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+		// ITU-T G.9959 (01/2015), §8.1.3.6.1: "a sending node shall set the
+		// address offset field to zero and the number of mask bytes field
+		// shall be set to 29"
 		const control = 29;
 		const mask = encodeNodeBitMask(this.destinationNodeIds);
-		this.payload = Bytes.concat([
-			[control],
-			mask,
-			this.payload,
-		]);
-
-		return super.serialize(ctx);
+		return super.serializeBody(
+			ctx,
+			Bytes.concat([[control], mask, body]),
+		);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -886,39 +928,34 @@ export class ExplorerZWaveMPDU extends ZWaveMPDU {
 	public ttl: number;
 	public repeaters: readonly number[];
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		const payload = new Bytes(9);
-		payload[0] = this.destinationNodeId;
-		payload[1] = ((this.version & 0b111) << 5) | (this.command & 0b11111);
-		payload[2] = (this.stop ? 0b100 : 0)
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+		const header = new Bytes(9);
+		header[0] = this.destinationNodeId;
+		header[1] = ((this.version & 0b111) << 5) | (this.command & 0b11111);
+		header[2] = (this.stop ? 0b100 : 0)
 			| (this.direction === "inbound" ? 0b010 : 0)
 			| (this.sourceRouted ? 0b001 : 0);
-		payload[3] = this.randomTXInterval;
-		payload[4] = ((this.ttl & 0b1111) << 4)
+		header[3] = this.randomTXInterval;
+		header[4] = ((this.ttl & 0b1111) << 4)
 			| (this.repeaters.length & 0b1111);
 		for (let i = 0; i < 4; i++) {
-			payload[5 + i] = this.repeaters[i] ?? 0;
+			header[5 + i] = this.repeaters[i] ?? 0;
 		}
 
-		this.payload = Bytes.concat([
-			payload,
-			this.payload,
-		]);
-
-		return super.serialize(ctx);
+		return super.serializeBody(ctx, Bytes.concat([header, body]));
 	}
 }
 
 export class NormalExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry(ctx);
-		tags[0] = formatRoute(
+		tags[0] = getRouteTag(
 			this.sourceNodeId,
 			this.repeaters,
 			this.destinationNodeId,
 			// Explorer frames do not contain a bit for the direction, we consider them all "outbound"
 			"outbound",
-			4 - this.ttl,
+			EXPLORER_MAX_TTL - this.ttl,
 		);
 		tags.unshift("EXPLORER");
 
@@ -962,26 +999,22 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 	/** The home ID of the repeating node */
 	public readonly networkHomeId: number;
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
 		const homeId = new Bytes(4);
 		homeId.writeUInt32BE(this.networkHomeId, 0);
 
-		this.payload = Bytes.concat([
-			homeId,
-			this.payload,
-		]);
-		return super.serialize(ctx);
+		return super.serializeBody(ctx, Bytes.concat([homeId, body]));
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry(ctx);
-		tags[0] = formatRoute(
+		tags[0] = getRouteTag(
 			this.sourceNodeId,
 			this.repeaters,
 			this.destinationNodeId,
 			// Explorer frames do not contain a bit for the direction, we consider them all "outbound"
 			"outbound",
-			4 - this.ttl,
+			EXPLORER_MAX_TTL - this.ttl,
 		);
 		tags.unshift("INCL REQUEST");
 
@@ -1047,29 +1080,29 @@ export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 	public readonly resultTTL: number;
 	public readonly resultRepeaters: number[];
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		const payload = new Bytes(7);
-		payload[0] = this.searchingNodeId;
-		payload[1] = this.frameHandle;
-		payload[2] = ((this.resultTTL & 0b1111) << 4)
+	protected serializeBody(ctx: MPDUEncodingContext, _body: Bytes): Bytes {
+		// This frame contains no payload besides the search result fields
+		const body = new Bytes(7);
+		body[0] = this.searchingNodeId;
+		body[1] = this.frameHandle;
+		body[2] = ((this.resultTTL & 0b1111) << 4)
 			| (this.resultRepeaters.length & 0b1111);
 		for (let i = 0; i < 4; i++) {
-			payload[3 + i] = this.resultRepeaters[i] ?? 0;
+			body[3 + i] = this.resultRepeaters[i] ?? 0;
 		}
 
-		this.payload = payload;
-		return super.serialize(ctx);
+		return super.serializeBody(ctx, body);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const { tags, message: original } = super.toLogEntry(ctx);
-		tags[0] = formatRoute(
+		tags[0] = getRouteTag(
 			this.sourceNodeId,
 			this.repeaters,
 			this.destinationNodeId,
 			// Explorer frames do not contain a bit for the direction, we consider their responses "inbound"
 			"inbound",
-			4 - this.ttl,
+			EXPLORER_MAX_TTL - this.ttl,
 		);
 		tags.unshift("EXPLORER RESULT");
 
@@ -1193,11 +1226,11 @@ export class LongRangeMPDU extends MPDU {
 	public noiseFloor: RSSI;
 	public txPower: number;
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		const payload = new Bytes(12);
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+		const header = new Bytes(12);
 
-		payload.writeUInt32BE(this.homeId, 0);
-		payload.writeUIntBE(
+		header.writeUInt32BE(this.homeId, 0);
+		header.writeUIntBE(
 			((this.sourceNodeId & 0xfff) << 12)
 				| (this.destinationNodeId & 0xfff),
 			4,
@@ -1206,28 +1239,23 @@ export class LongRangeMPDU extends MPDU {
 
 		// The length includes the entire MPDU, with additional payload
 		// plus 2 bytes for the checksum
-		payload[7] = 12 + this.payload.length + 2;
+		header[7] = 12 + body.length + 2;
 
 		const frameControl = (this.ackRequested ? 0b1000_0000 : 0)
 			// | (this.hasExtendedHeader ? 0b0100_0000 : 0)
 			| (this.headerType & 0b0000_0111);
-		payload[8] = frameControl;
-		payload[9] = this.sequenceNumber;
-		payload.writeUInt8(this.noiseFloor, 10);
-		payload.writeInt8(this.txPower, 11);
+		header[8] = frameControl;
+		header[9] = this.sequenceNumber;
+		header.writeUInt8(this.noiseFloor, 10);
+		header.writeInt8(this.txPower, 11);
 		// TODO: Once extensions are defined, add them here
 
-		this.payload = Bytes.concat([
-			payload,
-			this.payload,
-		]);
-
-		return super.serialize(ctx);
+		return super.serializeBody(ctx, Bytes.concat([header, body]));
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
 		const tags = [
-			formatRoute(
+			getRouteTag(
 				this.sourceNodeId,
 				[],
 				this.destinationNodeId,
@@ -1326,12 +1354,11 @@ export class AckLongRangeMPDU extends LongRangeMPDU {
 
 	public readonly incomingRSSI: RSSI;
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		const payload = new Bytes(1);
-		payload.writeUInt8(this.incomingRSSI, 0);
+	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+		const rssi = new Bytes(1);
+		rssi.writeUInt8(this.incomingRSSI, 0);
 
-		this.payload = Bytes.concat([payload, this.payload]);
-		return super.serialize(ctx);
+		return super.serializeBody(ctx, Bytes.concat([rssi, body]));
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {

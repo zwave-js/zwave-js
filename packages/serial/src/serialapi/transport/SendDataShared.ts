@@ -64,8 +64,6 @@ export type TransmitReport =
 	| DeleteReturnRouteRequestTransmitReport
 	| DeleteSUCReturnRouteRequestTransmitReport;
 
-// const RSSI_RESERVED_START = 11;
-
 function parseTXPower(
 	payload: BytesView,
 	offset: number = 0,

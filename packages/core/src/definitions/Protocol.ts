@@ -102,23 +102,6 @@ export function znifferProtocolDataRateToString(
 	return `Unknown (${num2hex(rate)})`;
 }
 
-export function channelToZnifferProtocolDataRate(
-	channel: number,
-): ZnifferProtocolDataRate {
-	switch (channel) {
-		case 0:
-			return ZnifferProtocolDataRate.ZWave_100k;
-		case 1:
-			return ZnifferProtocolDataRate.ZWave_40k;
-		case 2:
-			return ZnifferProtocolDataRate.ZWave_9k6;
-		case 3:
-		case 4:
-			return ZnifferProtocolDataRate.LongRange_100k;
-	}
-	throw new Error(`Invalid channel: ${channel}`);
-}
-
 export const protocolDataRateMask = 0b111;
 
 export enum ProtocolType {
@@ -158,7 +141,7 @@ export enum RadioProtocolMode {
 export enum ProtocolHeaderFormat {
 	Classic2Channel = 0,
 	Classic3Channel = 1,
-	LongRange,
+	LongRange = 2,
 }
 
 export function rfRegionToRadioProtocolMode(
@@ -192,10 +175,12 @@ export function getProtocolHeaderFormat(
 	) {
 		return ProtocolHeaderFormat.LongRange;
 	}
-	// The header format follows the channel, not the region: channels 0/1
-	// carry 100k/40k frames with the 2-channel header format, channel 2
-	// carries 9.6k frames with the 3-channel header format
-	return channel === 2
+	// The classic header format follows the channel configuration, which is a
+	// property of the region. ITU-T G.9959 (01/2015), Table 7-3 defines
+	// configuration 3 (Japan/Korea) with three R3 channels, whose frames use the
+	// Figure 8-6 layout: "General MPDU format (Channel configuration 3)".
+	// Configurations 1/2 use the Figure 8-5 layout on all their channels
+	return mode === RadioProtocolMode.Classic3Channel
 		? ProtocolHeaderFormat.Classic3Channel
 		: ProtocolHeaderFormat.Classic2Channel;
 }
