@@ -74,6 +74,10 @@ export enum ZLFEntryKind {
 	PtiDiagnostic = 0x0a,
 }
 
+// The debug channel and PTI definitions below follow the format documentation in
+// https://github.com/SiliconLabsSoftware/java_packet_trace_library/blob/master/doc/debug-channel.md
+// and the value tables in Wireshark's packet-silabs-dch.c dissector
+
 /** Delimiters surrounding a single debug channel frame */
 const DCH_FRAME_START = 0x5b;
 const DCH_FRAME_END = 0x5d;
@@ -99,6 +103,7 @@ enum PTIProtocolId {
 	ZWaveOnRAIL = 0x06,
 }
 
+// Mirrors RAIL_ZWAVE_RegionId_t from RAIL's rail_zwave.h
 /** Z-Wave region IDs used in the radio config of PTI appended info */
 enum RAILZWaveRegionId {
 	Unknown = 0,
@@ -204,27 +209,21 @@ function channelToDataRate(
 /**
  * Parses a single Silicon Labs debug channel frame containing a PTI radio packet
  * and converts it into a Zniffer data message. Returns `undefined` for unsupported frames.
- *
- * The frame is laid out as follows, where the length field counts itself and the
- * message, but neither delimiter:
- * ```text
- * 5B <length, 2 bytes LE> <DCH message> 5D
- * ```
- * The DCH message header depends on its version, and is followed by the PTI data:
- * ```text
- * v2: <version, 2 bytes> <timestamp, 6 bytes (µs)> <type, 2 bytes> <sequence no., 1 byte>
- * v3: <version, 2 bytes> <timestamp, 8 bytes (ns)> <type, 2 bytes> <flags, 4 bytes> <sequence no., 2 bytes>
- * ```
- * The PTI data wraps the captured radio frame in a hardware start/end marker,
- * followed by the appended info, which is parsed back to front:
- * ```text
- * <hw start, 1 byte> <radio frame> <hw end, 1 byte> <appended info>
- * ```
  */
 function parsePTIFrame(
 	frame: BytesView,
 	timestamp: Date,
 ): { msg: ZnifferDataMessage; capture: CapturedData } | undefined {
+	// The frame is laid out as follows, where the length counts itself and the
+	// message, but neither delimiter:
+	//   5B <length, 2 bytes LE> <DCH message> 5D
+	// The DCH message header depends on its version, and is followed by the PTI data:
+	//   v2: <version, 2 bytes> <timestamp, 6 bytes (µs)> <type, 2 bytes> <sequence no., 1 byte>
+	//   v3: <version, 2 bytes> <timestamp, 8 bytes (ns)> <type, 2 bytes> <flags, 4 bytes> <sequence no., 2 bytes>
+	// The PTI data wraps the captured radio frame in a hardware start/end marker,
+	// followed by the appended info, which is parsed back to front:
+	//   <hw start, 1 byte> <radio frame> <hw end, 1 byte> <appended info>
+
 	// Frame start, length and frame end
 	if (frame.length < 4) return;
 	if (frame[0] !== DCH_FRAME_START) return;
