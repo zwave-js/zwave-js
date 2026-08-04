@@ -16,6 +16,7 @@ export * from "./Controller.js";
 export * from "./Driver.js";
 export * from "./Error.js";
 export * from "./Node.js";
+export * from "./RCPHost.js";
 export * from "./Utils.js";
 export * from "./Values.js";
 export * from "./Zniffer.js";
