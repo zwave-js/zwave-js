@@ -6,6 +6,7 @@ import {
 	UNKNOWN_STATE,
 	encodeBitMask,
 	encodeFloatWithScale,
+	encodeNodeBitMask,
 	encodePartial,
 	getMinIntegerSize,
 	parseBitMask,
@@ -448,4 +449,18 @@ test("encodePartial() -> should work correctly for signed and unsigned partials"
 			expected,
 		);
 	}
+});
+
+test("encodeNodeBitMask() -> encodes a 29-byte mask covering classic node IDs", (t) => {
+	// Classic multicast addresses at most 232 nodes with a 29-byte mask
+	const mask = encodeNodeBitMask([1, 8, 232]);
+	t.expect(mask.length).toBe(29);
+	t.expect(mask[0]).toBe(0b1000_0001);
+	t.expect(mask[28]).toBe(0b1000_0000);
+});
+
+test("encodeNodeBitMask() -> ignores node IDs above 232", (t) => {
+	const mask = encodeNodeBitMask([2, 233, 4000]);
+	t.expect(mask.length).toBe(29);
+	t.expect(parseBitMask(mask)).toStrictEqual([2]);
 });

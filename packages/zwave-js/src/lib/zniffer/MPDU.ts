@@ -15,6 +15,7 @@ import {
 	logBuffer,
 	mergeLogDict,
 	parseNodeBitMask,
+	parseRSSI,
 	rssiToString,
 	validatePayload,
 	znifferProtocolDataRateToString,
@@ -24,7 +25,6 @@ import {
 	type ZnifferFrameInfo,
 	ZnifferFrameType,
 } from "@zwave-js/serial";
-import { parseRSSI } from "@zwave-js/serial/serialapi";
 import {
 	type AllOrNone,
 	Bytes,
