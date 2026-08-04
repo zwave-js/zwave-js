@@ -135,17 +135,8 @@ export abstract class MPDU {
 		);
 	}
 
-	public serialize(ctx: MPDUEncodingContext): Bytes {
-		return this.serializeBody(ctx, Bytes.view(this.payload));
-	}
-
-	/**
-	 * Wraps the given body with this MPDU layer's header fields.
-	 * Subclasses prepend their own fields and delegate to `super`,
-	 * so `serialize()` stays free of side effects.
-	 */
-	protected serializeBody(_ctx: MPDUEncodingContext, body: Bytes): Bytes {
-		return body;
+	public serialize(_ctx: MPDUEncodingContext): Bytes {
+		return this.payload;
 	}
 
 	public abstract toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
@@ -289,7 +280,7 @@ export class ZWaveMPDU extends MPDU {
 	public speedModified: boolean;
 	public beamingInfo: BeamingInfo;
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		let header: Bytes;
 
 		const headerFormat = getProtocolHeaderFormat(
@@ -337,11 +328,16 @@ export class ZWaveMPDU extends MPDU {
 		header[4] = this.sourceNodeId;
 		// The length spans the entire MPDU, payload and the checksum (1 or 2 bytes)
 		const length = header.length
-			+ body.length
+			+ this.payload.length
 			+ (ctx.protocolDataRate < ProtocolDataRate.ZWave_100k ? 1 : 2);
 		header[7] = length;
 
-		return Bytes.concat([header, body]);
+		this.payload = Bytes.concat([
+			header,
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -398,11 +394,12 @@ export class SinglecastZWaveMPDU extends ZWaveMPDU {
 
 	public readonly destinationNodeId: number;
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
-		return super.serializeBody(
-			ctx,
-			Bytes.concat([[this.destinationNodeId], body]),
-		);
+	public serialize(ctx: MPDUEncodingContext): Bytes {
+		this.payload = Bytes.concat([
+			[this.destinationNodeId],
+			this.payload,
+		]);
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -459,12 +456,9 @@ export class AckZWaveMPDU extends ZWaveMPDU {
 
 	public readonly destinationNodeId: number;
 
-	protected serializeBody(ctx: MPDUEncodingContext, _body: Bytes): Bytes {
-		// ACK frames carry no payload besides the destination node ID
-		return super.serializeBody(
-			ctx,
-			Bytes.from([this.destinationNodeId]),
-		);
+	public serialize(ctx: MPDUEncodingContext): Bytes {
+		this.payload = Bytes.from([this.destinationNodeId]);
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -625,7 +619,7 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 	public destinationWakeupType?: "250ms" | "1000ms";
 	public repeaterRSSI?: readonly RSSI[];
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		const headerFormat = getProtocolHeaderFormat(
 			rfRegionToRadioProtocolMode(ctx.region),
 			ctx.channel,
@@ -711,7 +705,13 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			]);
 		}
 
-		return super.serializeBody(ctx, Bytes.concat([header, body]));
+		// Include the actual payload
+		this.payload = Bytes.concat([
+			header,
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -783,16 +783,19 @@ export class MulticastZWaveMPDU extends ZWaveMPDU {
 
 	public destinationNodeIds: number[];
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		// ITU-T G.9959 (01/2015), §8.1.3.6.1: "a sending node shall set the
 		// address offset field to zero and the number of mask bytes field
 		// shall be set to 29"
 		const control = 29;
 		const mask = encodeNodeBitMask(this.destinationNodeIds);
-		return super.serializeBody(
-			ctx,
-			Bytes.concat([[control], mask, body]),
-		);
+		this.payload = Bytes.concat([
+			[control],
+			mask,
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -928,7 +931,7 @@ export class ExplorerZWaveMPDU extends ZWaveMPDU {
 	public ttl: number;
 	public repeaters: readonly number[];
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		const header = new Bytes(9);
 		header[0] = this.destinationNodeId;
 		header[1] = ((this.version & 0b111) << 5) | (this.command & 0b11111);
@@ -942,7 +945,12 @@ export class ExplorerZWaveMPDU extends ZWaveMPDU {
 			header[5 + i] = this.repeaters[i] ?? 0;
 		}
 
-		return super.serializeBody(ctx, Bytes.concat([header, body]));
+		this.payload = Bytes.concat([
+			header,
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
 	}
 }
 
@@ -999,11 +1007,15 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 	/** The home ID of the repeating node */
 	public readonly networkHomeId: number;
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		const homeId = new Bytes(4);
 		homeId.writeUInt32BE(this.networkHomeId, 0);
 
-		return super.serializeBody(ctx, Bytes.concat([homeId, body]));
+		this.payload = Bytes.concat([
+			homeId,
+			this.payload,
+		]);
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -1080,18 +1092,18 @@ export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 	public readonly resultTTL: number;
 	public readonly resultRepeaters: number[];
 
-	protected serializeBody(ctx: MPDUEncodingContext, _body: Bytes): Bytes {
-		// This frame contains no payload besides the search result fields
-		const body = new Bytes(7);
-		body[0] = this.searchingNodeId;
-		body[1] = this.frameHandle;
-		body[2] = ((this.resultTTL & 0b1111) << 4)
+	public serialize(ctx: MPDUEncodingContext): Bytes {
+		const payload = new Bytes(7);
+		payload[0] = this.searchingNodeId;
+		payload[1] = this.frameHandle;
+		payload[2] = ((this.resultTTL & 0b1111) << 4)
 			| (this.resultRepeaters.length & 0b1111);
 		for (let i = 0; i < 4; i++) {
-			body[3 + i] = this.resultRepeaters[i] ?? 0;
+			payload[3 + i] = this.resultRepeaters[i] ?? 0;
 		}
 
-		return super.serializeBody(ctx, body);
+		this.payload = payload;
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -1226,7 +1238,7 @@ export class LongRangeMPDU extends MPDU {
 	public noiseFloor: RSSI;
 	public txPower: number;
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		const header = new Bytes(12);
 
 		header.writeUInt32BE(this.homeId, 0);
@@ -1239,7 +1251,7 @@ export class LongRangeMPDU extends MPDU {
 
 		// The length includes the entire MPDU, with additional payload
 		// plus 2 bytes for the checksum
-		header[7] = 12 + body.length + 2;
+		header[7] = 12 + this.payload.length + 2;
 
 		const frameControl = (this.ackRequested ? 0b1000_0000 : 0)
 			// | (this.hasExtendedHeader ? 0b0100_0000 : 0)
@@ -1250,7 +1262,12 @@ export class LongRangeMPDU extends MPDU {
 		header.writeInt8(this.txPower, 11);
 		// TODO: Once extensions are defined, add them here
 
-		return super.serializeBody(ctx, Bytes.concat([header, body]));
+		this.payload = Bytes.concat([
+			header,
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
@@ -1354,11 +1371,12 @@ export class AckLongRangeMPDU extends LongRangeMPDU {
 
 	public readonly incomingRSSI: RSSI;
 
-	protected serializeBody(ctx: MPDUEncodingContext, body: Bytes): Bytes {
+	public serialize(ctx: MPDUEncodingContext): Bytes {
 		const rssi = new Bytes(1);
 		rssi.writeUInt8(this.incomingRSSI, 0);
 
-		return super.serializeBody(ctx, Bytes.concat([rssi, body]));
+		this.payload = Bytes.concat([rssi, this.payload]);
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry {
