@@ -973,13 +973,14 @@ export class UserCodeCC extends CommandClass {
 				endpoint,
 			);
 			if (u3cUsers == undefined) {
+				// The U3C interview may have timed out - proceed with the User Code CC interview
+				// so credential management still works
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message:
-						"Cannot determine if the node uses User Credential CC for user management, skipping User Code CC interview...",
+						"Cannot determine if the node uses User Credential CC for user management, continuing with User Code CC interview...",
 					level: "warn",
 				});
-				return;
 			} else if (u3cUsers > 0) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
