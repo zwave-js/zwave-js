@@ -227,6 +227,6 @@
 		"inclusion": "Press the button 3 times quickly. The blue LED will flash quickly. When included, the LED will light solid blue. A flashing purple LED indicates the device is already paired or in exclusion mode.",
 		"exclusion": "Press the button 3 times quickly.",
 		"reset": "Press the button twice quickly, then hold a 3rd press for 10 seconds.",
-		"manual": "https://versawireless.com/apps/resources/lamp-zw2-installation-instruction-manual"
+		"manual": "https://versawireless.com/blogs/installation-manuals/lamp-zw2-installation-manual"
 	}
 }
