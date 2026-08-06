@@ -978,7 +978,7 @@ export class UserCodeCC extends CommandClass {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message:
-						"Cannot determine if the node uses User Credential CC for user management, continuing with User Code CC interview...",
+						"Could not determine if the node uses User Credential CC for user management, continuing with User Code CC interview...",
 					level: "warn",
 				});
 			} else if (u3cUsers > 0) {
