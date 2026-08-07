@@ -17,7 +17,7 @@ engine: copilot
 
 imports:
   - zwave-js/bot-workflows/workflows/shared/hardening.md@75148e07b701ca92e052212a9b7710864068ef6e
-  - zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@84a2fbd5f9604b357c8615466c3aaa86fad58d8e
+  - zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@0fedb405bbe6acb4060d6e31f547994b28892866
 
 steps:
   - name: Parse command
@@ -74,7 +74,7 @@ safe-outputs:
 network: defaults
 
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@6bde20fc11df63026cfbbeab21c2101e8a68f7a7
+source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@43d9dd67ab9c49d08c85002b35b6a02f300dde2f
 ---
 
 # Z-Wave JS Logfile Analysis

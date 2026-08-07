@@ -91,7 +91,7 @@ engine: copilot
 
 imports:
   - zwave-js/bot-workflows/workflows/shared/hardening.md@75148e07b701ca92e052212a9b7710864068ef6e
-  - zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@84a2fbd5f9604b357c8615466c3aaa86fad58d8e
+  - zwave-js/bot-workflows/workflows/shared/zwave-log-analysis.md@0fedb405bbe6acb4060d6e31f547994b28892866
 
 steps:
   - name: Setup bot scripts
@@ -123,7 +123,7 @@ safe-outputs:
 network: defaults
 
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@53b6db7db2a2157e33b684f0609a3b021d918163
+source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@43d9dd67ab9c49d08c85002b35b6a02f300dde2f
 ---
 
 # Z-Wave JS Logfile Analysis
@@ -134,7 +134,9 @@ This is the discussion content (sanitized):
 
 "${{ steps.sanitized.outputs.text }}"
 
-Determine the user's question or problem from the discussion content. If no specific question can be identified, analyze the log for any issues, errors, or notable events that could explain the problem described in the discussion.
+Determine what the user wants to know. The discussion follows a support template, so the problem is described in prose spread over sections like "Describe the issue", "Steps to reproduce the behavior" and "Device information". Read all of them. The description of what happens and what the user expected instead is the question to answer, even when the body contains no question mark and nothing phrased as a question. When a node ID is given, the problem is about that node. Screenshots are not available to you, so rely on the surrounding text.
+
+Only when the discussion describes no concrete symptom at all, report the most severe problems you find in the log instead.
 
 Load the logfile with the `loadLogFile` tool, then analyze it thoroughly following your analysis instructions to answer the user's question.
 

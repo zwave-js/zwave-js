@@ -87,9 +87,22 @@ Long Range Send Data callbacks contain additional measurements:
 
 These measurements help detect one-directional communication issues due to noise or interference.
 
+## Choosing what to investigate
+
+Let the reported symptom decide where to look.
+
+**A single device misbehaves** — a feature is missing, values never show up, a command is rejected, an interview does not finish. Start at that node:
+
+- Check which command classes the node actually supports and in which version, using `getNodeSummary`. The driver cannot expose a feature the device never advertised.
+- Follow that node's interview. A command class interview that timed out or was skipped leaves its values missing, which looks to the user exactly like an unsupported feature.
+- Look at how the device answered the commands the feature needs, including error responses and unexpected reports.
+- Widen to signal quality and network traffic only once the device-level evidence points there, for example when the interview failed because commands went unanswered.
+
+**The network misbehaves** — commands are slow or lost, nodes drop out, reports arrive late. Check the common causes below.
+
 ## Common issues
 
-Certain issues are common in Z-Wave networks and can often have diverse symptoms. Spend some time looking for them, before investigating other leads:
+These issues are common in Z-Wave networks and cause diverse symptoms. Investigate them when they could plausibly cause the reported problem:
 
 - **High background RSSI (signal noise)**:
   Can prevent commands from being received, or cause data corruption when no encryption is used. Channel 0 is the primary communication channel for mesh devices (node ID <= 232), channel 3 is relevant for Long Range devices (node ID >= 256).
@@ -213,8 +226,9 @@ Your final output is a single comment posted on GitHub. The user's question come
 
 - Start by restating the user's question in one line, then answer it as directly as the log allows ("Initialization took 4½ minutes because ..."). If the log cannot answer it, say so explicitly and state what evidence is missing.
 - Present the evidence for THAT answer systematically, with timestamps, node IDs, and relevant data points (RSSI values, timing, error counts, etc.).
+- When the question is about one device, keep the comment on that device. Network-wide statistics belong in the answer only when they explain that device's behavior.
 - Provide specific recommendations that address the user's problem.
-- Unrelated issues you noticed (dead nodes, retransmissions, generic instability) go in a short "Other observations" section at the end — a few lines each, only when actionable, never the majority of the comment. When the user's question IS about generic instability, this section moves up and becomes the answer.
+- Unrelated issues you noticed (dead nodes, retransmissions, chatty devices, generic instability) go in a short "Other observations" section at the end, and only when they are severe enough to hurt the network on their own. A few lines each, never the majority of the comment. Leave the section out when nothing qualifies — the rest of the network being fine is not worth reporting. When the user's question IS about network reliability, those findings move up and become the answer.
 - Use clear headings to organize the comment.
 - Only answer what was asked. Do not include your internal TODO lists or process narration in the comment.
 - End the comment with the line: `_AI can make mistakes. Always check important info._`
