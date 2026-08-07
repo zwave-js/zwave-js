@@ -1,0 +1,49 @@
+{
+	"manufacturer": "Z-Wave JS",
+	"manufacturerId": "0xfffe",
+	"label": "Param Value Conditions Endpoint Test",
+	"description": "Test device for endpoint-scoped conditions referencing config parameter values",
+	"devices": [
+		{
+			"productType": "0x0005",
+			"productId": "0x0005"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Root Mode",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 1,
+			"defaultValue": 1
+		}
+	],
+	"endpoints": {
+		"1": {
+			"paramInformation": [
+				{
+					"#": "1",
+					"label": "Endpoint Mode",
+					"valueSize": 1,
+					"minValue": 0,
+					"maxValue": 1,
+					"defaultValue": 0
+				},
+				{
+					"#": "2",
+					"$if": "#1 == 1",
+					"label": "Endpoint extra",
+					"valueSize": 1,
+					"minValue": 0,
+					"maxValue": 255,
+					"defaultValue": 0
+				}
+			]
+		}
+	}
+}

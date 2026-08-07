@@ -1,7 +1,7 @@
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import { throwInvalidConfig } from "../utils_safe.js";
 import { type ConditionalItem, conditionApplies } from "./ConditionalItem.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 type ToPrimitive<T extends string> = T extends "string" ? string
 	: T extends "number" ? number
@@ -57,8 +57,10 @@ export class ConditionalPrimitiveVariant<T extends number | string | boolean>
 		public readonly condition?: string,
 	) {}
 
-	public evaluateCondition(deviceId?: DeviceID): T | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+	public evaluateCondition(
+		context?: ConditionalConfigContext,
+	): T | undefined {
+		if (!conditionApplies(this, context)) return;
 		return this.value;
 	}
 }

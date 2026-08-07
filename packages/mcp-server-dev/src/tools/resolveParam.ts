@@ -42,7 +42,7 @@ export async function resolveParamsForFirmware(
 ): Promise<ParamInformation[]> {
 	const raw = parseJsonC(await readFile(filename, "utf8"));
 	const firstDevice = (raw?.devices as any[] | undefined)?.[0];
-	const deviceId = {
+	const context = {
 		manufacturerId: Number(raw?.manufacturerId),
 		productType: Number(firstDevice?.productType),
 		productId: Number(firstDevice?.productId),
@@ -50,7 +50,7 @@ export async function resolveParamsForFirmware(
 	};
 	const config = await DeviceConfig.from(fs, filename, true, {
 		rootDir: DEVICES_DIR,
-		deviceId,
+		context,
 	});
 	return [...(config.paramInformation?.values() ?? [])]
 		.filter((p) =>
