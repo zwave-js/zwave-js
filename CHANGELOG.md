@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.27.0 (2026-08-07)
 ### Features
 * Added support for opening Zniffer traces that were captured by a PTI Zniffer (#9053)
 
