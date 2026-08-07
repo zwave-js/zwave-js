@@ -1,0 +1,19 @@
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0x010f",
+	"label": "Test Venetian Blind",
+	"description": "Venetian Blind Controller",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"proprietary": {
+		"fibaroCCs": [38]
+	}
+}
