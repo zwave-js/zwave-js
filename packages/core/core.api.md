@@ -17,6 +17,52 @@ import type Transport from 'winston-transport';
 import type { TypedClassDecorator } from '@zwave-js/shared';
 import { TypedEventTarget } from '@zwave-js/shared';
 
+// Warning: (ae-missing-release-tag) "AckLongRangeMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class AckLongRangeMPDU extends LongRangeMPDU {
+    constructor(options: AckLongRangeMPDUOptions);
+    // (undocumented)
+    static from(raw: LongRangeMPDURaw, _ctx: MPDUParsingContext): AckLongRangeMPDU;
+    // (undocumented)
+    readonly incomingRSSI: RSSI;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "AckLongRangeMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface AckLongRangeMPDUOptions extends Omit<LongRangeMPDUOptions, "headerType" | "ackRequested"> {
+    // (undocumented)
+    incomingRSSI: RSSI;
+}
+
+// Warning: (ae-missing-release-tag) "AckZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class AckZWaveMPDU extends ZWaveMPDU {
+    constructor(options: AckZWaveMPDUOptions);
+    // (undocumented)
+    readonly destinationNodeId: number;
+    // (undocumented)
+    static from(raw: ZWaveMPDURaw, _ctx: MPDUParsingContext): AckZWaveMPDU;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "AckZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface AckZWaveMPDUOptions extends Omit<ZWaveMPDUOptions, "routed" | "headerType" | "ackRequested"> {
+    // (undocumented)
+    destinationNodeId: number;
+}
+
 // Warning: (ae-missing-release-tag) "actuatorCCs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -52,6 +98,8 @@ export const applicationCCs: readonly CommandClasses[];
 //
 // @public (undocumented)
 export interface ApplicationNodeInformation {
+    // (undocumented)
+    controlledCCs?: CommandClasses[];
     // (undocumented)
     genericDeviceClass: number;
     // (undocumented)
@@ -210,6 +258,20 @@ export interface CCId extends CCAddress {
     ccCommand?: number;
     // (undocumented)
     ccId: CommandClasses;
+}
+
+// Warning: (ae-missing-release-tag) "ChannelConfiguration" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ChannelConfiguration {
+    // (undocumented)
+    "Classic & LR A" = 1,
+    // (undocumented)
+    "Classic & LR B" = 2,
+    // (undocumented)
+    "LR A & B" = 3,
+    // (undocumented)
+    "Classic" = 0
 }
 
 // Warning: (ae-internal-missing-underscore) The name "channelPadding" should be prefixed with an underscore because the declaration is marked as @internal
@@ -623,7 +685,7 @@ export class ControllerLogger extends ZWaveLoggerBase<ControllerLogContext> impl
     logNode(nodeId: number, options: LogNodeOptions): void;
     metadataUpdated(args: LogValueArgs<ValueID>): void;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    print(message: string, level?: "verbose" | "warn" | "error"): void;
+    print(message: string | LogPayload | MessageRecord, level?: "verbose" | "warn" | "error"): void;
     value(change: "added", args: LogValueArgs<ValueAddedArgs>): void;
     // (undocumented)
     value(change: "updated", args: LogValueArgs<ValueUpdatedArgs>): void;
@@ -689,6 +751,11 @@ export interface ControlsCC {
     // (undocumented)
     controlsCC(cc: CommandClasses): boolean;
 }
+
+// Warning: (ae-missing-release-tag) "convertRawRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function convertRawRSSI(rssi: number, channelConfig: ChannelConfiguration, channel: number): RSSI;
 
 // Warning: (ae-missing-release-tag) "CRC16_CCITT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -807,6 +874,11 @@ export const decryptAES128OFB: (ciphertext: BytesView, key: BytesView, iv: Bytes
 //
 // @public (undocumented)
 export const decryptAES256CBC: (ciphertext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
+
+// Warning: (ae-missing-release-tag) "decryptAES256OFB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const decryptAES256OFB: (ciphertext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
 
 // Warning: (ae-missing-release-tag) "decryptChaCha20Poly1305" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1069,6 +1141,11 @@ export const encryptAES128ECB: (plaintext: BytesView, key: BytesView) => Promise
 // @public (undocumented)
 export const encryptAES128OFB: (plaintext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
 
+// Warning: (ae-missing-release-tag) "encryptAES256OFB" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const encryptAES256OFB: (plaintext: BytesView, key: BytesView, iv: BytesView) => Promise<BytesView>;
+
 // Warning: (ae-missing-release-tag) "encryptChaCha20Poly1305" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1092,7 +1169,127 @@ export interface EndpointId {
 // Warning: (ae-missing-release-tag) "enumValuesToMetadataStates" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function enumValuesToMetadataStates<T extends Record<string, any>>(enumeration: T, values?: readonly number[]): Record<number, string>;
+export function enumValuesToMetadataStates(enumeration: Record<string, any>, values?: readonly number[]): Record<number, string>;
+
+// Warning: (ae-missing-release-tag) "ExplorerFrameCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ExplorerFrameCommand {
+    // (undocumented)
+    InclusionRequest = 1,
+    // (undocumented)
+    Normal = 0,
+    // (undocumented)
+    SearchResult = 2
+}
+
+// Warning: (ae-missing-release-tag) "ExplorerZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ExplorerZWaveMPDU extends ZWaveMPDU {
+    constructor(options: ExplorerZWaveMPDUOptions);
+    // (undocumented)
+    command: ExplorerFrameCommand;
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    direction: "outbound" | "inbound";
+    // (undocumented)
+    static from(raw: ExplorerZWaveMPDURaw, _ctx: MPDUParsingContext): ExplorerZWaveMPDU;
+    // (undocumented)
+    randomTXInterval: number;
+    // (undocumented)
+    repeaters: readonly number[];
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    sourceRouted: boolean;
+    // (undocumented)
+    stop: boolean;
+    // (undocumented)
+    ttl: number;
+    // (undocumented)
+    version: number;
+}
+
+// Warning: (ae-missing-release-tag) "ExplorerZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ExplorerZWaveMPDUOptions extends ZWaveMPDUOptions {
+    // (undocumented)
+    command: ExplorerFrameCommand;
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    direction: "outbound" | "inbound";
+    // (undocumented)
+    randomTXInterval: number;
+    // (undocumented)
+    repeaters: readonly number[];
+    // (undocumented)
+    sourceRouted: boolean;
+    // (undocumented)
+    stop: boolean;
+    // (undocumented)
+    ttl: number;
+    // (undocumented)
+    version: number;
+}
+
+// Warning: (ae-missing-release-tag) "ExplorerZWaveMPDURaw" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ExplorerZWaveMPDURaw extends ZWaveMPDURaw {
+    constructor(options: ExplorerZWaveMPDURawOptions);
+    // (undocumented)
+    command: ExplorerFrameCommand;
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    direction: "outbound" | "inbound";
+    // (undocumented)
+    static from(parent: ZWaveMPDURaw, _ctx: MPDUParsingContext): ExplorerZWaveMPDURaw;
+    // (undocumented)
+    payload: Bytes;
+    // (undocumented)
+    randomTXInterval: number;
+    // (undocumented)
+    repeaters: readonly number[];
+    // (undocumented)
+    sourceRouted: boolean;
+    // (undocumented)
+    stop: boolean;
+    // (undocumented)
+    ttl: number;
+    // (undocumented)
+    version: number;
+}
+
+// Warning: (ae-missing-release-tag) "ExplorerZWaveMPDURawOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ExplorerZWaveMPDURawOptions extends ZWaveMPDURawOptions {
+    // (undocumented)
+    command: ExplorerFrameCommand;
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    direction: "outbound" | "inbound";
+    // (undocumented)
+    payload: Bytes;
+    // (undocumented)
+    randomTXInterval: number;
+    // (undocumented)
+    repeaters: readonly number[];
+    // (undocumented)
+    sourceRouted: boolean;
+    // (undocumented)
+    stop: boolean;
+    // (undocumented)
+    ttl: number;
+    // (undocumented)
+    version: number;
+}
 
 // Warning: (ae-missing-release-tag) "extractFirmware" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1165,6 +1362,11 @@ export interface FloatParametersWithValue extends FloatParameters {
 // @public (undocumented)
 export function formatDate(date: Date, format: string): string;
 
+// Warning: (ae-missing-release-tag) "formatLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function formatLogPayload(payload: LogPayload | MessageRecord, width?: number): string[];
+
 // Warning: (ae-missing-release-tag) "FrameType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1190,6 +1392,8 @@ export function generateEncryptionKey(networkKey: BytesView): Promise<BytesView>
 // @public (undocumented)
 export interface GenericDeviceClass {
     // (undocumented)
+    readonly isSlowActuator: boolean;
+    // (undocumented)
     readonly key: number;
     // (undocumented)
     readonly label: string;
@@ -1197,8 +1401,6 @@ export interface GenericDeviceClass {
     readonly maySupportBasicCC: boolean;
     // (undocumented)
     readonly requiresSecurity: boolean;
-    // (undocumented)
-    readonly supportsOptimisticValueUpdate: boolean;
     // (undocumented)
     readonly zwavePlusDeviceType?: string;
 }
@@ -1462,7 +1664,17 @@ export function getNotificationValueName(type: number, event: number): string;
 // Warning: (ae-missing-release-tag) "getNumericEnumValues" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getNumericEnumValues<T extends Record<string, any>>(enumeration: T): readonly number[];
+export function getNumericEnumValues(enumeration: Record<string, any>): readonly number[];
+
+// Warning: (ae-missing-release-tag) "getProtocolHeaderFormat" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getProtocolHeaderFormat(mode: RadioProtocolMode, channel: number): ProtocolHeaderFormat;
+
+// Warning: (ae-missing-release-tag) "getRouteTag" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getRouteTag(source: number, repeaters: readonly number[], destination: number, direction: "outbound" | "inbound", currentHop: number, failedHop?: number): string;
 
 // Warning: (ae-missing-release-tag) "GetSafeCCVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1565,6 +1777,28 @@ export const HOMEID_BYTES = 4;
 export interface HostIDs {
     homeId: number;
     ownNodeId: number;
+}
+
+// Warning: (ae-missing-release-tag) "InclusionRequestExplorerZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
+    constructor(options: InclusionRequestExplorerZWaveMPDUOptions);
+    // (undocumented)
+    static from(raw: ExplorerZWaveMPDURaw, _ctx: MPDUParsingContext): InclusionRequestExplorerZWaveMPDU;
+    readonly networkHomeId: number;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "InclusionRequestExplorerZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface InclusionRequestExplorerZWaveMPDUOptions extends ExplorerZWaveMPDUOptions {
+    // (undocumented)
+    networkHomeId: number;
 }
 
 // Warning: (ae-missing-release-tag) "indexDBsByNode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1884,6 +2118,16 @@ export interface Interviewable {
     interviewStage: InterviewStage;
 }
 
+// Warning: (ae-missing-release-tag) "InterviewProgress" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface InterviewProgress {
+    commandClass?: CommandClasses;
+    endpoint?: number;
+    progress: number;
+    stage: InterviewStage;
+}
+
 // Warning: (ae-missing-release-tag) "InterviewStage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1933,6 +2177,11 @@ export function isEmptyRoute(route: Route): boolean;
 //
 // @public
 export function isEncapsulationCC(cc: CommandClasses): boolean;
+
+// Warning: (ae-missing-release-tag) "isLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function isLogPayload(value: unknown): value is LogPayload;
 
 // Warning: (ae-missing-release-tag) "isLongRangeNodeId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2053,6 +2302,11 @@ export const LOG_PREFIX_WIDTH = 20;
 // @public
 export const LOG_WIDTH = 80;
 
+// Warning: (ae-missing-release-tag) "logBuffer" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function logBuffer(buffer: BytesView): string | undefined;
+
 // Warning: (ae-missing-release-tag) "LogConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2099,10 +2353,20 @@ export interface LogContext<T extends string = string> {
     type?: string;
 }
 
+// Warning: (ae-missing-release-tag) "logDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function logDict(entries: MessageRecord, nested?: LogPayload | LogPayload[]): LogPayloadDict;
+
 // Warning: (ae-missing-release-tag) "LogFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export type LogFactory = (config?: Partial<LogConfig>) => LogContainer;
+
+// Warning: (ae-missing-release-tag) "logList" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function logList(items: Iterable<string | number>): LogPayloadList;
 
 // Warning: (ae-missing-release-tag) "LogNode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2127,8 +2391,72 @@ export interface LogNodeOptions {
     // (undocumented)
     level?: "silly" | "debug" | "verbose" | "warn" | "error";
     // (undocumented)
-    message: string;
+    message: string | LogPayload | MessageRecord;
 }
+
+// Warning: (ae-missing-release-tag) "LogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export type LogPayload = LogPayloadText | LogPayloadDict | LogPayloadList;
+
+// Warning: (ae-missing-release-tag) "logPayloadBrand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const logPayloadBrand: unique symbol;
+
+// Warning: (ae-missing-release-tag) "LogPayloadDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface LogPayloadDict {
+    // (undocumented)
+    [logPayloadBrand]: true;
+    // (undocumented)
+    entries: Array<[key: string, value: string | LogPayloadList]>;
+    // (undocumented)
+    nested?: LogPayload | LogPayload[];
+    // (undocumented)
+    type: "dict";
+}
+
+// Warning: (ae-missing-release-tag) "LogPayloadDictValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type LogPayloadDictValue = string | number | boolean | LogPayloadList;
+
+// Warning: (ae-missing-release-tag) "LogPayloadList" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface LogPayloadList {
+    // (undocumented)
+    [logPayloadBrand]: true;
+    // (undocumented)
+    items: string[];
+    // (undocumented)
+    type: "list";
+}
+
+// Warning: (ae-missing-release-tag) "LogPayloadText" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface LogPayloadText {
+    // (undocumented)
+    [logPayloadBrand]: true;
+    // (undocumented)
+    lines: string[];
+    // (undocumented)
+    nested?: LogPayload | LogPayload[];
+    tags?: string[];
+    // (undocumented)
+    type: "text";
+}
+
+// Warning: (ae-missing-release-tag) "logText" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function logText(lines: string | string[], options?: {
+    tags?: string[];
+    nested?: LogPayload | LogPayload[];
+}): LogPayloadText;
 
 // Warning: (ae-missing-release-tag) "LogValueArgs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2148,6 +2476,11 @@ export interface LogVisibility {
     isNodeLoggingVisible(nodeId: number): boolean;
 }
 
+// Warning: (ae-missing-release-tag) "longRangeBeamPowerToDBm" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function longRangeBeamPowerToDBm(power: number): number;
+
 // Warning: (ae-missing-release-tag) "LongRangeChannel" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2158,6 +2491,88 @@ export enum LongRangeChannel {
     // (undocumented)
     B = 2,
     Unsupported = 0
+}
+
+// Warning: (ae-missing-release-tag) "LongRangeMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class LongRangeMPDU extends MPDU {
+    constructor(options: LongRangeMPDUOptions);
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    static from(raw: LongRangeMPDURaw, _ctx: MPDUParsingContext): LongRangeMPDU;
+    // (undocumented)
+    noiseFloor: RSSI;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+    // (undocumented)
+    txPower: number;
+}
+
+// Warning: (ae-missing-release-tag) "LongRangeMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface LongRangeMPDUOptions extends MPDUOptions {
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    noiseFloor: RSSI;
+    // (undocumented)
+    txPower: number;
+}
+
+// Warning: (ae-missing-release-tag) "LongRangeMPDURaw" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class LongRangeMPDURaw {
+    constructor(options: LongRangeMPDURawOptions);
+    // (undocumented)
+    ackRequested: boolean;
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    headerType: MPDUHeaderType;
+    // (undocumented)
+    homeId: number;
+    // (undocumented)
+    noiseFloor: RSSI;
+    // (undocumented)
+    static parse(data: Bytes, _ctx: MPDUParsingContext): LongRangeMPDURaw;
+    // (undocumented)
+    payload: Bytes;
+    // (undocumented)
+    sequenceNumber: number;
+    // (undocumented)
+    sourceNodeId: number;
+    // (undocumented)
+    txPower: number;
+}
+
+// Warning: (ae-missing-release-tag) "LongRangeMPDURawOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface LongRangeMPDURawOptions {
+    // (undocumented)
+    ackRequested: boolean;
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    headerType: MPDUHeaderType;
+    // (undocumented)
+    homeId: number;
+    // (undocumented)
+    noiseFloor: RSSI;
+    // (undocumented)
+    payload: Bytes;
+    // (undocumented)
+    sequenceNumber: number;
+    // (undocumented)
+    sourceNodeId: number;
+    // (undocumented)
+    txPower: number;
 }
 
 // Warning: (ae-missing-release-tag) "managementCCs" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2205,6 +2620,11 @@ export type MaybeUnknown<T> = Either<T, UNKNOWN_STATE>;
 // @public
 export function maybeUnknownToString<T>(val: MaybeUnknown<T>, ifNotUnknown?: (val: NonNullable<T>) => string): string;
 
+// Warning: (ae-missing-release-tag) "mergeLogDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function mergeLogDict(...sources: (LogPayload | MessageRecord | undefined)[]): LogPayloadDict;
+
 // Warning: (ae-missing-release-tag) "mergeSupervisionResults" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -2222,7 +2642,7 @@ export function messageFitsIntoOneLine(info: ZWaveLogInfo, messageLength: number
 // @public (undocumented)
 export interface MessageOrCCLogEntry {
     // (undocumented)
-    message?: MessageRecord;
+    message?: LogPayload | MessageRecord;
     // (undocumented)
     tags: string[];
 }
@@ -2254,13 +2674,8 @@ export enum MessagePriority {
 
 // Warning: (ae-missing-release-tag) "MessageRecord" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public (undocumented)
-export type MessageRecord = Record<string, string | number | boolean>;
-
-// Warning: (ae-missing-release-tag) "messageRecordToLines" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
 // @public
-export function messageRecordToLines(message: MessageRecord): string[];
+export type MessageRecord = Record<string, LogPayloadDictValue | undefined>;
 
 // Warning: (ae-missing-release-tag) "messageToLines" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2356,6 +2771,36 @@ export type MPANTableEntry = {
     currentMPAN: BytesView;
 };
 
+// Warning: (ae-missing-release-tag) "MPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export abstract class MPDU {
+    protected constructor(options: MPDUOptions);
+    // (undocumented)
+    ackRequested: boolean;
+    // (undocumented)
+    headerType: MPDUHeaderType;
+    // (undocumented)
+    homeId: number;
+    // (undocumented)
+    static parse(data: Bytes, ctx: MPDUParsingContext): ZWaveMPDU | LongRangeMPDU;
+    // (undocumented)
+    payload: Bytes;
+    // (undocumented)
+    sequenceNumber: number;
+    // (undocumented)
+    serialize(_ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    sourceNodeId: number;
+    // (undocumented)
+    abstract toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "MPDUEncodingContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type MPDUEncodingContext = MPDUParsingContext;
+
 // Warning: (ae-missing-release-tag) "MPDUHeaderType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2370,6 +2815,46 @@ export enum MPDUHeaderType {
     Routed = 8,
     // (undocumented)
     Singlecast = 1
+}
+
+// Warning: (ae-missing-release-tag) "MPDULogContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MPDULogContext extends MPDUParsingContext {
+    // (undocumented)
+    rssi?: RSSI;
+    // (undocumented)
+    rssiRaw?: number;
+}
+
+// Warning: (ae-missing-release-tag) "MPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MPDUOptions {
+    // (undocumented)
+    ackRequested: boolean;
+    // (undocumented)
+    headerType: MPDUHeaderType;
+    // (undocumented)
+    homeId: number;
+    // (undocumented)
+    payload?: BytesView;
+    // (undocumented)
+    sequenceNumber: number;
+    // (undocumented)
+    sourceNodeId: number;
+}
+
+// Warning: (ae-missing-release-tag) "MPDUParsingContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MPDUParsingContext {
+    // (undocumented)
+    channel: number;
+    // (undocumented)
+    protocolDataRate: ProtocolDataRate;
+    // (undocumented)
+    region: RFRegion;
 }
 
 // Warning: (ae-missing-release-tag) "MulticastCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2394,6 +2879,29 @@ export interface MulticastGroup {
     securityClass: S2SecurityClass;
     // (undocumented)
     sequenceNumber: number;
+}
+
+// Warning: (ae-missing-release-tag) "MulticastZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class MulticastZWaveMPDU extends ZWaveMPDU {
+    constructor(options: MulticastZWaveMPDUOptions);
+    // (undocumented)
+    destinationNodeIds: number[];
+    // (undocumented)
+    static from(raw: ZWaveMPDURaw, _ctx: MPDUParsingContext): MulticastZWaveMPDU;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "MulticastZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MulticastZWaveMPDUOptions extends ZWaveMPDUOptions {
+    // (undocumented)
+    destinationNodeIds: number[];
 }
 
 // Warning: (ae-missing-release-tag) "NamedScaleGroup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2548,6 +3056,14 @@ export const nonApplicationCCs: readonly CommandClasses[];
 // @internal (undocumented)
 export const nonUndefinedLogConfigKeys: readonly ["enabled", "level", "transports", "logToFile", "maxFiles", "filename", "forceConsole"];
 
+// Warning: (ae-missing-release-tag) "NormalExplorerZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class NormalExplorerZWaveMPDU extends ExplorerZWaveMPDU {
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
 // Warning: (ae-missing-release-tag) "normalizeValueID" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -2692,6 +3208,11 @@ export const NUM_NODEMASK_BYTES: number;
 // @public (undocumented)
 export function nwiHomeIdFromDSK(dsk: BytesView): BytesView;
 
+// Warning: (ae-missing-release-tag) "padNodeId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function padNodeId(nodeId: number): string;
+
 // Warning: (ae-missing-release-tag) "parseApplicationNodeInformation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2814,6 +3335,11 @@ export function parsePartial(value: number, bitMask: number, signed: boolean): n
 // @public
 export function parseQRCodeString(qr: string): Promise<QRProvisioningInformation>;
 
+// Warning: (ae-missing-release-tag) "parseRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function parseRSSI(payload: BytesView, offset?: number): RSSI;
+
 // Warning: (ae-missing-release-tag) "parseTLV" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -2860,6 +3386,18 @@ export const protocolDataRateMask = 7;
 //
 // @public (undocumented)
 export function protocolDataRateToString(rate: ProtocolDataRate): string;
+
+// Warning: (ae-missing-release-tag) "ProtocolHeaderFormat" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum ProtocolHeaderFormat {
+    // (undocumented)
+    Classic2Channel = 0,
+    // (undocumented)
+    Classic3Channel = 1,
+    // (undocumented)
+    LongRange = 2
+}
 
 // Warning: (ae-missing-release-tag) "Protocols" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3019,6 +3557,20 @@ export interface QuerySecurityClasses {
     readonly isSecure: MaybeNotKnown<boolean>;
 }
 
+// Warning: (ae-missing-release-tag) "RadioProtocolMode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum RadioProtocolMode {
+    // (undocumented)
+    Classic2Channel = 0,
+    // (undocumented)
+    Classic2ChannelPlusLongRange = 2,
+    // (undocumented)
+    Classic3Channel = 1,
+    // (undocumented)
+    LongRange2Channel = 3
+}
+
 // Warning: (ae-missing-release-tag) "randomBytes" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -3112,6 +3664,11 @@ export interface RFRegionInfo {
     supportsZWave: boolean;
 }
 
+// Warning: (ae-missing-release-tag) "rfRegionToRadioProtocolMode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function rfRegionToRadioProtocolMode(region: RFRegion): RadioProtocolMode;
+
 // Warning: (ae-missing-release-tag) "Route" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -3120,6 +3677,65 @@ export interface Route {
     repeaters: number[];
     // (undocumented)
     routeSpeed: ZWaveDataRate;
+}
+
+// Warning: (ae-missing-release-tag) "RoutedZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class RoutedZWaveMPDU extends ZWaveMPDU {
+    constructor(options: RoutedZWaveMPDUOptions);
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    destinationWakeup?: boolean;
+    // (undocumented)
+    destinationWakeupType?: "250ms" | "1000ms";
+    // (undocumented)
+    direction: "outbound" | "inbound";
+    // (undocumented)
+    failedHop?: number;
+    // (undocumented)
+    static from(raw: ZWaveMPDURaw, ctx: MPDUParsingContext): RoutedZWaveMPDU;
+    // (undocumented)
+    hop: number;
+    // (undocumented)
+    repeaterRSSI?: readonly RSSI[];
+    // (undocumented)
+    repeaters: readonly number[];
+    // (undocumented)
+    routedAck: boolean;
+    // (undocumented)
+    routedError: boolean;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "RoutedZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RoutedZWaveMPDUOptions extends ZWaveMPDUOptions {
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    destinationWakeup?: boolean;
+    // (undocumented)
+    destinationWakeupType?: "250ms" | "1000ms";
+    // (undocumented)
+    direction: "outbound" | "inbound";
+    // (undocumented)
+    failedHop?: number;
+    // (undocumented)
+    hop: number;
+    // (undocumented)
+    repeaterRSSI?: readonly RSSI[];
+    // (undocumented)
+    repeaters: readonly number[];
+    // (undocumented)
+    routedAck: boolean;
+    // (undocumented)
+    routedError: boolean;
 }
 
 // Warning: (ae-missing-release-tag) "RouteKind" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3248,6 +3864,39 @@ export function sdkVersionLt(sdkVersion: MaybeNotKnown<string>, compareVersion: 
 // @public
 export function sdkVersionLte(sdkVersion: MaybeNotKnown<string>, compareVersion: string): MaybeNotKnown<boolean>;
 
+// Warning: (ae-missing-release-tag) "SearchResultExplorerZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
+    constructor(options: SearchResultExplorerZWaveMPDUOptions);
+    readonly frameHandle: number;
+    // (undocumented)
+    static from(raw: ExplorerZWaveMPDURaw, _ctx: MPDUParsingContext): SearchResultExplorerZWaveMPDU;
+    // (undocumented)
+    readonly resultRepeaters: number[];
+    // (undocumented)
+    readonly resultTTL: number;
+    readonly searchingNodeId: number;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SearchResultExplorerZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SearchResultExplorerZWaveMPDUOptions extends ExplorerZWaveMPDUOptions {
+    // (undocumented)
+    frameHandle: number;
+    // (undocumented)
+    resultRepeaters: number[];
+    // (undocumented)
+    resultTTL: number;
+    // (undocumented)
+    searchingNodeId: number;
+}
+
 // Warning: (ae-missing-release-tag) "SecurityClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -3334,6 +3983,7 @@ export class SecurityManager2 {
         key: BytesView;
         iv: BytesView;
     }>;
+    getNextPeerSequenceNumber(peerNodeId: number): number | undefined;
     getPeerMPAN(peerNodeId: number, groupId: number): MPANTableEntry | {
         type: MPANState.None;
     };
@@ -3396,6 +4046,7 @@ export type SendCommandOptions = SendMessageOptions & SupervisionOptions & SendC
     encapsulationFlags?: EncapsulationFlags;
     transmitOptions?: TransmitOptions;
     reportTimeoutMs?: number;
+    ignoreNodeUpdate?: boolean;
 };
 
 // Warning: (ae-missing-release-tag) "SendCommandReturnType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3539,6 +4190,44 @@ export interface SimpleReflectionDecorator<TBase extends abstract new (...args: 
 export type SinglecastCC<T extends CCId = CCId> = T & {
     nodeId: number;
 };
+
+// Warning: (ae-missing-release-tag) "SinglecastLongRangeMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SinglecastLongRangeMPDU extends LongRangeMPDU {
+    constructor(options: SinglecastLongRangeMPDUOptions);
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SinglecastLongRangeMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SinglecastLongRangeMPDUOptions extends Omit<LongRangeMPDUOptions, "headerType"> {
+}
+
+// Warning: (ae-missing-release-tag) "SinglecastZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SinglecastZWaveMPDU extends ZWaveMPDU {
+    constructor(options: SinglecastZWaveMPDUOptions);
+    // (undocumented)
+    readonly destinationNodeId: number;
+    // (undocumented)
+    static from(raw: ZWaveMPDURaw, _ctx: MPDUParsingContext): SinglecastZWaveMPDU;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SinglecastZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SinglecastZWaveMPDUOptions extends Omit<ZWaveMPDUOptions, "routed" | "headerType"> {
+    // (undocumented)
+    destinationNodeId: number;
+}
 
 // Warning: (ae-missing-release-tag) "SPANState" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3786,6 +4475,11 @@ export const timestampPadding: string;
 // @public (undocumented)
 export const timestampPaddingShort: string;
 
+// Warning: (ae-missing-release-tag) "toLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function toLogPayload(message: LogPayload | MessageRecord): LogPayload;
+
 // Warning: (ae-missing-release-tag) "topologicalSort" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -3878,6 +4572,11 @@ export function tryParseParamNumber(str: string): {
     parameter: number;
     valueBitMask?: number;
 } | undefined;
+
+// Warning: (ae-missing-release-tag) "tryParseRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function tryParseRSSI(payload: BytesView, offset?: number): RSSI | undefined;
 
 // Warning: (ae-missing-release-tag) "tryUnzipFirmwareFile" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4501,6 +5200,11 @@ export function wasControllerReset(e: unknown): e is ZWaveError & {
 // @public (undocumented)
 export type WithAddress<T extends object> = T & CCAddress;
 
+// Warning: (ae-missing-release-tag) "znifferLegacyRegionToZnifferRegion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function znifferLegacyRegionToZnifferRegion(region: number): ZnifferRegion;
+
 // Warning: (ae-missing-release-tag) "ZnifferLRChannelConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -4526,6 +5230,11 @@ export enum ZnifferProtocolDataRate {
     // (undocumented)
     ZWave_9k6 = 0
 }
+
+// Warning: (ae-missing-release-tag) "znifferProtocolDataRateToProtocolDataRate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function znifferProtocolDataRateToProtocolDataRate(rate: ZnifferProtocolDataRate): ProtocolDataRate;
 
 // Warning: (ae-missing-release-tag) "znifferProtocolDataRateToString" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4621,6 +5330,11 @@ export enum ZnifferRegionLegacy {
     // (undocumented)
     US = 1
 }
+
+// Warning: (ae-missing-release-tag) "znifferRegionToRFRegion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function znifferRegionToRFRegion(region: ZnifferRegion): RFRegion;
 
 // Warning: (ae-missing-release-tag) "ZWaveApiVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4864,6 +5578,94 @@ export interface ZWaveLogInfo<TContext extends LogContext = LogContext> extends 
     secondaryTags?: string;
     // (undocumented)
     timestamp?: string;
+}
+
+// Warning: (ae-missing-release-tag) "ZWaveMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZWaveMPDU extends MPDU {
+    constructor(options: ZWaveMPDUOptions);
+    // (undocumented)
+    beamingInfo: BeamingInfo;
+    // (undocumented)
+    lowPower: boolean;
+    // (undocumented)
+    routed: boolean;
+    // (undocumented)
+    serialize(ctx: MPDUEncodingContext): Bytes;
+    // (undocumented)
+    speedModified: boolean;
+    // (undocumented)
+    toLogEntry(ctx: MPDULogContext): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "ZWaveMPDUOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZWaveMPDUOptions extends MPDUOptions {
+    // (undocumented)
+    beamingInfo?: BeamingInfo;
+    // (undocumented)
+    lowPower?: boolean;
+    // (undocumented)
+    routed: boolean;
+    // (undocumented)
+    speedModified?: boolean;
+}
+
+// Warning: (ae-missing-release-tag) "ZWaveMPDURaw" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ZWaveMPDURaw {
+    constructor(options: ZWaveMPDURawOptions);
+    // (undocumented)
+    ackRequested: boolean;
+    // (undocumented)
+    beamingInfo: BeamingInfo;
+    // (undocumented)
+    headerType: MPDUHeaderType;
+    // (undocumented)
+    homeId: number;
+    // (undocumented)
+    lowPower: boolean;
+    // (undocumented)
+    static parse(data: Bytes, ctx: MPDUParsingContext): ZWaveMPDURaw;
+    // (undocumented)
+    payload: Bytes;
+    // (undocumented)
+    routed: boolean;
+    // (undocumented)
+    sequenceNumber: number;
+    // (undocumented)
+    sourceNodeId: number;
+    // (undocumented)
+    speedModified: boolean;
+}
+
+// Warning: (ae-missing-release-tag) "ZWaveMPDURawOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZWaveMPDURawOptions {
+    // (undocumented)
+    ackRequested: boolean;
+    // (undocumented)
+    beamingInfo: BeamingInfo;
+    // (undocumented)
+    headerType: MPDUHeaderType;
+    // (undocumented)
+    homeId: number;
+    // (undocumented)
+    lowPower: boolean;
+    // (undocumented)
+    payload: Bytes;
+    // (undocumented)
+    routed: boolean;
+    // (undocumented)
+    sequenceNumber: number;
+    // (undocumented)
+    sourceNodeId: number;
+    // (undocumented)
+    speedModified: boolean;
 }
 
 // Warnings were encountered during analysis:

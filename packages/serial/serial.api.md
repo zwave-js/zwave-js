@@ -9,6 +9,7 @@ import { BasicDeviceClass } from '@zwave-js/core';
 import { Bytes } from '@zwave-js/shared';
 import { BytesView } from '@zwave-js/shared';
 import type { CCEncodingContext } from '@zwave-js/cc';
+import { ChannelConfiguration } from '@zwave-js/core';
 import { CommandClass } from '@zwave-js/cc';
 import { CommandClasses } from '@zwave-js/core';
 import { DataDirection } from '@zwave-js/core';
@@ -47,6 +48,7 @@ import { NodeProtocolInfoAndDeviceClass } from '@zwave-js/core';
 import { NodeType } from '@zwave-js/core';
 import { NodeUpdatePayload } from '@zwave-js/core';
 import { Powerlevel } from '@zwave-js/cc';
+import { ProtocolDataRate } from '@zwave-js/core';
 import { Protocols } from '@zwave-js/core';
 import { ProtocolType } from '@zwave-js/core';
 import { ProtocolVersion } from '@zwave-js/core';
@@ -923,6 +925,18 @@ export type BridgeApplicationCommandRequestOptions = ({
     rssi?: number;
 };
 
+// Warning: (ae-missing-release-tag) "ChannelInfo" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ChannelInfo {
+    // (undocumented)
+    channel: number;
+    // (undocumented)
+    dataRate: ProtocolDataRate;
+    // (undocumented)
+    frequency: number;
+}
+
 // Warning: (ae-missing-release-tag) "CLIChunk" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -952,6 +966,11 @@ export enum CLIChunkType {
 //
 // @public (undocumented)
 export type CommandRequest = ApplicationCommandRequest | BridgeApplicationCommandRequest;
+
+// Warning: (ae-missing-release-tag) "computeChecksumXOR" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function computeChecksumXOR(data: BytesView): number;
 
 // Warning: (ae-missing-release-tag) "computeNeighborDiscoveryTimeout" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1186,6 +1205,16 @@ export type EnumeratedPort = {
 //
 // @public
 export function expectedCallback<TSent extends typeof Message>(typeOrPredicate: FunctionType | typeof Message | ResponsePredicate<InstanceType<TSent>>): TypedClassDecorator<TSent>;
+
+// Warning: (ae-missing-release-tag) "expectedRCPCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function expectedRCPCallback<TSent extends typeof RCPMessage>(typeOrPredicate: RCPFunctionType | typeof RCPMessage | RCPResponsePredicate<InstanceType<TSent>>): TypedClassDecorator<TSent>;
+
+// Warning: (ae-missing-release-tag) "expectedRCPResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const expectedRCPResponse: <TTarget extends typeof RCPMessage>(typeOrPredicate: RCPResponsePredicate<RCPMessage> | typeof RCPMessage | RCPFunctionType) => TypedClassDecorator<TTarget>;
 
 // Warning: (ae-missing-release-tag) "expectedResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2281,42 +2310,103 @@ export interface GetControllerVersionResponseOptions {
 // Warning: (ae-missing-release-tag) "getDefaultPriority" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getDefaultPriority<T extends Message>(messageClass: T): MessagePriority | undefined;
+export function getDefaultPriority(messageClass: Message): MessagePriority | undefined;
 
 // Warning: (ae-missing-release-tag) "getDefaultPriorityStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getDefaultPriorityStatic<T extends MessageConstructor<Message>>(classConstructor: T): MessagePriority | undefined;
+export function getDefaultPriorityStatic(classConstructor: MessageConstructor<Message>): MessagePriority | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedCallback<T extends Message>(messageClass: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedCallback(messageClass: Message): FunctionType | typeof Message | ResponsePredicate | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedCallbackStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedCallbackStatic<T extends MessageConstructor<Message>>(classConstructor: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedCallbackStatic(classConstructor: MessageConstructor<Message>): FunctionType | typeof Message | ResponsePredicate | undefined;
+
+// Warning: (ae-missing-release-tag) "getExpectedRCPCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getExpectedRCPCallback<T extends RCPMessage>(messageClass: T): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined;
+
+// Warning: (ae-missing-release-tag) "getExpectedRCPCallbackStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getExpectedRCPCallbackStatic<T extends RCPMessageConstructor<RCPMessage>>(classConstructor: T): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined;
+
+// Warning: (ae-missing-release-tag) "getExpectedRCPResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getExpectedRCPResponse<T extends RCPMessage>(messageClass: T): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined;
+
+// Warning: (ae-missing-release-tag) "getExpectedRCPResponseStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getExpectedRCPResponseStatic<T extends RCPMessageConstructor<RCPMessage>>(classConstructor: T): RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedResponse<T extends Message>(messageClass: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedResponse(messageClass: Message): FunctionType | typeof Message | ResponsePredicate | undefined;
 
 // Warning: (ae-missing-release-tag) "getExpectedResponseStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getExpectedResponseStatic<T extends MessageConstructor<Message>>(classConstructor: T): FunctionType | typeof Message | ResponsePredicate | undefined;
+export function getExpectedResponseStatic(classConstructor: MessageConstructor<Message>): FunctionType | typeof Message | ResponsePredicate | undefined;
+
+// Warning: (ae-missing-release-tag) "GetFirmwareInfoRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class GetFirmwareInfoRequest extends RCPMessage {
+}
+
+// Warning: (ae-missing-release-tag) "GetFirmwareInfoResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class GetFirmwareInfoResponse extends RCPMessage {
+    constructor(options: GetFirmwareInfoResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): GetFirmwareInfoResponse;
+    // (undocumented)
+    radioLibrary: RadioLibrary;
+    // (undocumented)
+    radioLibraryVersion: string;
+    // (undocumented)
+    rcpFirmwareVersion: string;
+    // (undocumented)
+    serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    supportedFunctionTypes: RCPFunctionType[];
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "GetFirmwareInfoResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface GetFirmwareInfoResponseOptions {
+    // (undocumented)
+    radioLibrary: RadioLibrary;
+    // (undocumented)
+    radioLibraryVersion: string;
+    // (undocumented)
+    rcpFirmwareVersion: string;
+    // (undocumented)
+    supportedFunctionTypes: RCPFunctionType[];
+}
 
 // Warning: (ae-missing-release-tag) "getFunctionType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getFunctionType<T extends Message>(messageClass: T): FunctionType | undefined;
+export function getFunctionType(messageClass: Message): FunctionType | undefined;
 
 // Warning: (ae-missing-release-tag) "getFunctionTypeStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getFunctionTypeStatic<T extends MessageConstructor<Message>>(classConstructor: T): FunctionType | undefined;
+export function getFunctionTypeStatic(classConstructor: MessageConstructor<Message>): FunctionType | undefined;
 
 // Warning: (ae-missing-release-tag) "GetLongRangeChannelRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2404,12 +2494,12 @@ export interface GetLongRangeNodesResponseOptions {
 // Warning: (ae-missing-release-tag) "getMessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getMessageType<T extends Message>(messageClass: T): MessageType | undefined;
+export function getMessageType(messageClass: Message): MessageType | undefined;
 
 // Warning: (ae-missing-release-tag) "getMessageTypeStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getMessageTypeStatic<T extends MessageConstructor<Message>>(classConstructor: T): MessageType | undefined;
+export function getMessageTypeStatic(classConstructor: MessageConstructor<Message>): MessageType | undefined;
 
 // Warning: (ae-missing-release-tag) "GetNodeProtocolInfoRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2593,6 +2683,26 @@ export interface GetProtocolVersionResponseOptions {
     // (undocumented)
     protocolVersion: string;
 }
+
+// Warning: (ae-missing-release-tag) "getRCPFunctionType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getRCPFunctionType<T extends RCPMessage>(messageClass: T): RCPFunctionType | undefined;
+
+// Warning: (ae-missing-release-tag) "getRCPFunctionTypeStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getRCPFunctionTypeStatic<T extends RCPMessageConstructor<RCPMessage>>(classConstructor: T): RCPFunctionType | undefined;
+
+// Warning: (ae-missing-release-tag) "getRCPMessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getRCPMessageType<T extends RCPMessage>(messageClass: T): RCPMessageType | undefined;
+
+// Warning: (ae-missing-release-tag) "getRCPMessageTypeStatic" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getRCPMessageTypeStatic<T extends RCPMessageConstructor<RCPMessage>>(classConstructor: T): RCPMessageType | undefined;
 
 // Warning: (ae-missing-release-tag) "GetRoutingInfoRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2854,7 +2964,7 @@ export function isMessageWithCC(msg: Message_2): msg is SendDataMessage | Comman
 // Warning: (ae-missing-release-tag) "isMultiStageCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function isMultiStageCallback<T extends Message>(msg: T): msg is T & MultiStageCallback;
+export function isMultiStageCallback<T>(msg: T): msg is T & MultiStageCallback;
 
 // Warning: (ae-missing-release-tag) "isSendData" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2879,7 +2989,7 @@ export function isSendDataTransmitReport(msg: unknown): msg is SendDataTransmitR
 // Warning: (ae-missing-release-tag) "isSuccessIndicator" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function isSuccessIndicator<T extends Message>(msg: T): msg is T & SuccessIndicator;
+export function isSuccessIndicator<T>(msg: T): msg is T & SuccessIndicator;
 
 // Warning: (ae-missing-release-tag) "isTransmitReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2976,6 +3086,7 @@ export class Message {
     hasCallbackId(): this is this & {
         callbackId: number;
     };
+    ignoreNodeUpdate: boolean;
     isExpectedCallback(msg: Message): boolean;
     isExpectedNodeUpdate(ctx: GetNode<NodeId & SupportsCC>, msg: Message): boolean;
     isExpectedResponse(msg: Message): boolean;
@@ -3333,11 +3444,6 @@ export enum NVMType {
     Flash = 128
 }
 
-// Warning: (ae-missing-release-tag) "parseRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export function parseRSSI(payload: BytesView, offset?: number): RSSI;
-
 // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // Warning: (ae-missing-release-tag) "parseTXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3348,6 +3454,256 @@ export function parseTXReport(includeACK: boolean, payload: BytesView): TXReport
 //
 // @public
 export const priority: <TTarget extends typeof Message>(prio: MessagePriority) => TypedClassDecorator<TTarget>;
+
+// Warning: (ae-missing-release-tag) "RadioLibrary" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum RadioLibrary {
+    // (undocumented)
+    RAIL = 0
+}
+
+// Warning: (ae-missing-release-tag) "RCPChunk" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type RCPChunk = Bytes | MessageHeaders.ACK | MessageHeaders.NAK;
+
+// Warning: (ae-missing-release-tag) "RCPFunctionType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum RCPFunctionType {
+    // (undocumented)
+    GetFirmwareInfo = 1,
+    // (undocumented)
+    Receive = 4,
+    // (undocumented)
+    SetupRadio = 2,
+    // (undocumented)
+    Transmit = 3
+}
+
+// Warning: (ae-missing-release-tag) "RCPMessage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class RCPMessage {
+    constructor(options?: RCPMessageOptions);
+    // (undocumented)
+    protected assertCallbackId(): asserts this is this & {
+        callbackId: number;
+    };
+    callbackId: number | undefined;
+    // (undocumented)
+    get completedTimestamp(): number | undefined;
+    // (undocumented)
+    expectedCallback: RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined;
+    // (undocumented)
+    expectedResponse: RCPFunctionType | typeof RCPMessage | RCPResponsePredicate | undefined;
+    expectsAck(): boolean;
+    expectsCallback(): boolean;
+    expectsResponse(): boolean;
+    static from(raw: RCPMessageRaw, ctx: RCPMessageParsingContext): RCPMessage;
+    // (undocumented)
+    functionType: RCPFunctionType;
+    getCallbackTimeout(): number | undefined;
+    getResponseTimeout(): number | undefined;
+    hasCallbackId(): this is this & {
+        callbackId: number;
+    };
+    isExpectedCallback(msg: RCPMessage): boolean;
+    isExpectedResponse(msg: RCPMessage): boolean;
+    markAsCompleted(): void;
+    markAsSent(): void;
+    needsCallbackId(): boolean;
+    // (undocumented)
+    static parse(data: BytesView, ctx: RCPMessageParsingContext): RCPMessage;
+    // (undocumented)
+    payload: Bytes;
+    get rtt(): number | undefined;
+    serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
+    toLogEntry(): MessageOrCCLogEntry;
+    get transmissionTimestamp(): number | undefined;
+    // (undocumented)
+    type: RCPMessageType;
+}
+
+// Warning: (ae-missing-release-tag) "RCPMessageBaseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RCPMessageBaseOptions {
+    // (undocumented)
+    callbackId?: number;
+}
+
+// Warning: (ae-missing-release-tag) "RCPMessageConstructor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type RCPMessageConstructor<T extends RCPMessage> = typeof RCPMessage & {
+    new (options: RCPMessageOptions): T;
+};
+
+// Warning: (ae-missing-release-tag) "RCPMessageEncodingContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RCPMessageEncodingContext {
+}
+
+// Warning: (ae-missing-release-tag) "RCPMessageOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RCPMessageOptions extends RCPMessageBaseOptions {
+    // (undocumented)
+    expectedCallback?: RCPFunctionType | typeof RCPMessage | RCPResponsePredicate;
+    // (undocumented)
+    expectedResponse?: RCPFunctionType | typeof RCPMessage | RCPResponsePredicate;
+    // (undocumented)
+    functionType?: RCPFunctionType;
+    // (undocumented)
+    payload?: Bytes;
+    // (undocumented)
+    type?: RCPMessageType;
+}
+
+// Warning: (ae-missing-release-tag) "RCPMessageParsingContext" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface RCPMessageParsingContext {
+}
+
+// Warning: (ae-missing-release-tag) "RCPMessageRaw" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class RCPMessageRaw {
+    constructor(type: RCPMessageType, functionType: RCPFunctionType, payload: Bytes);
+    // (undocumented)
+    readonly functionType: RCPFunctionType;
+    // (undocumented)
+    static parse(data: BytesView): RCPMessageRaw;
+    // (undocumented)
+    readonly payload: Bytes;
+    // (undocumented)
+    readonly type: RCPMessageType;
+    // (undocumented)
+    withPayload(payload: Bytes): RCPMessageRaw;
+}
+
+// Warning: (ae-missing-release-tag) "RCPMessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum RCPMessageType {
+    // (undocumented)
+    Callback = 2,
+    // (undocumented)
+    Request = 0,
+    // (undocumented)
+    Response = 1
+}
+
+// Warning: (ae-missing-release-tag) "rcpMessageTypes" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const rcpMessageTypes: <TTarget extends typeof RCPMessage>(messageType: RCPMessageType, functionType: RCPFunctionType) => TypedClassDecorator<TTarget>;
+
+// Warning: (ae-forgotten-export) The symbol "RCPParserTransformerOutput" needs to be exported by the entry point index.d.ts
+// Warning: (ae-missing-release-tag) "RCPParser" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class RCPParser extends TransformStream<BytesView, RCPParserTransformerOutput> {
+    constructor(logger?: SerialLogger);
+}
+
+// Warning: (ae-missing-release-tag) "RCPResponsePredicate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export type RCPResponsePredicate<TSent extends RCPMessage = RCPMessage> = (sentMessage: TSent, receivedMessage: RCPMessage) => boolean;
+
+// Warning: (ae-missing-release-tag) "RCPResponseRole" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type RCPResponseRole = "unexpected" | "confirmation" | "final" | "fatal";
+
+// Warning: (ae-missing-release-tag) "RCPSerialFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type RCPSerialFrame = {
+    type: RCPSerialFrameType.RCP;
+    data: RCPChunk;
+} | {
+    type: RCPSerialFrameType.Discarded;
+    data: BytesView;
+};
+
+// Warning: (ae-missing-release-tag) "RCPSerialFrameType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum RCPSerialFrameType {
+    // (undocumented)
+    Discarded = 255,
+    // (undocumented)
+    RCP = 0
+}
+
+// Warning: (ae-missing-release-tag) "RCPSerialStream" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class RCPSerialStream implements ReadableWritablePair<RCPSerialFrame, BytesView> {
+    constructor(source: UnderlyingSource<BytesView>, sink: UnderlyingSink<BytesView>, logger: SerialLogger);
+    // (undocumented)
+    close(): Promise<void>;
+    // (undocumented)
+    get isOpen(): boolean;
+    // (undocumented)
+    protected logger: SerialLogger;
+    // (undocumented)
+    readonly readable: ReadableStream<RCPSerialFrame>;
+    // (undocumented)
+    readonly writable: WritableStream<BytesView>;
+    // (undocumented)
+    writeAsync(data: BytesView): Promise<void>;
+}
+
+// Warning: (ae-missing-release-tag) "RCPSerialStreamFactory" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class RCPSerialStreamFactory {
+    constructor(binding: ZWaveSerialBindingFactory, loggers: LogContainer);
+    // (undocumented)
+    createStream(): Promise<RCPSerialStream>;
+    // (undocumented)
+    protected logger: SerialLogger;
+}
+
+// Warning: (ae-missing-release-tag) "ReceiveCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ReceiveCallback extends RCPMessage {
+    constructor(options: ReceiveCallbackOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    channel: number;
+    // (undocumented)
+    data: BytesView;
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): ReceiveCallback;
+    // (undocumented)
+    lqi: number;
+    // (undocumented)
+    rssi: RSSI;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "ReceiveCallbackOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ReceiveCallbackOptions {
+    // (undocumented)
+    channel: number;
+    // (undocumented)
+    data: BytesView;
+    // (undocumented)
+    lqi: number;
+    // (undocumented)
+    rssi: RSSI;
+}
 
 // Warning: (ae-missing-release-tag) "RemoveFailedNodeRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -4250,7 +4606,7 @@ export interface SendTestFrameTransmitReportOptions {
 //
 // @public
 export interface Serial {
-    createFactoryByPath?: (path: string) => Promise<ZWaveSerialBindingFactory>;
+    createFactoryByPath?: (path: string, options?: SerialBindingFactoryOptions) => Promise<ZWaveSerialBindingFactory>;
     list?: () => Promise<EnumeratedPort[]>;
 }
 
@@ -4991,6 +5347,14 @@ export enum SerialAPIWakeUpReason {
     WatchdogReset = 3
 }
 
+// Warning: (ae-missing-release-tag) "SerialBindingFactoryOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface SerialBindingFactoryOptions {
+    // (undocumented)
+    baudrate?: number;
+}
+
 // Warning: (ae-missing-release-tag) "serializableTXReportToTXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -5450,6 +5814,150 @@ export enum SetSUCNodeIdStatus {
     Succeeded = 5
 }
 
+// Warning: (ae-missing-release-tag) "SetupRadio_GetRegionRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_GetRegionRequest extends SetupRadioRequest {
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_GetRegionResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_GetRegionResponse extends SetupRadioResponse {
+    constructor(options: SetupRadio_GetRegionResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    channelConfig: ChannelConfiguration;
+    // (undocumented)
+    channels: ChannelInfo[];
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): SetupRadio_GetRegionResponse;
+    // (undocumented)
+    region: RFRegion;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_GetRegionResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SetupRadio_GetRegionResponseOptions {
+    // (undocumented)
+    channelConfig: ChannelConfiguration;
+    // (undocumented)
+    channels: ChannelInfo[];
+    // (undocumented)
+    region: RFRegion;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_SetRegionOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SetupRadio_SetRegionOptions {
+    // (undocumented)
+    channelConfig: ChannelConfiguration;
+    // (undocumented)
+    region: RFRegion;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_SetRegionRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_SetRegionRequest extends SetupRadioRequest {
+    constructor(options: SetupRadio_SetRegionOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    channelConfig: ChannelConfiguration;
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): SetupRadio_SetRegionRequest;
+    // (undocumented)
+    region: RFRegion;
+    // (undocumented)
+    serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_SetRegionResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_SetRegionResponse extends SetupRadioResponse implements SuccessIndicator {
+    constructor(options: SetupRadio_SetRegionResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    channels: MaybeNotKnown<ChannelInfo[]>;
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): SetupRadio_SetRegionResponse;
+    // (undocumented)
+    isOK(): boolean;
+    // (undocumented)
+    success: boolean;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_SetRegionResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type SetupRadio_SetRegionResponseOptions = {
+    success: false;
+    channels?: undefined;
+} | {
+    success: true;
+    channels: ChannelInfo[];
+};
+
+// Warning: (ae-missing-release-tag) "SetupRadioCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum SetupRadioCommand {
+    // (undocumented)
+    GetRegion = 2,
+    // (undocumented)
+    SetRegion = 1
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadioRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadioRequest extends RCPMessage {
+    constructor(options?: SetupRadioRequestOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    command: SetupRadioCommand;
+    // (undocumented)
+    static from(raw: RCPMessageRaw, ctx: RCPMessageParsingContext): SetupRadioRequest;
+    // (undocumented)
+    serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadioRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SetupRadioRequestOptions {
+    // (undocumented)
+    command?: SetupRadioCommand;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadioResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadioResponse extends RCPMessage {
+    constructor(options: SetupRadioResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    command: SetupRadioCommand;
+    // (undocumented)
+    static from(raw: RCPMessageRaw, ctx: RCPMessageParsingContext): SetupRadioResponse;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadioResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SetupRadioResponseOptions {
+    // (undocumented)
+    command?: SetupRadioCommand;
+}
+
 // Warning: (ae-missing-release-tag) "ShutdownRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -5514,20 +6022,120 @@ export interface SuccessIndicator {
     isOK(): boolean;
 }
 
+// Warning: (ae-missing-release-tag) "TransmitCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class TransmitCallback extends RCPMessage implements SuccessIndicator {
+    constructor(options: TransmitCallbackOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): TransmitCallback;
+    // (undocumented)
+    isOK(): boolean;
+    // (undocumented)
+    status: TransmitCallbackStatus;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitCallbackOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface TransmitCallbackOptions {
+    // (undocumented)
+    status: TransmitCallbackStatus;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitCallbackStatus" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum TransmitCallbackStatus {
+    // (undocumented)
+    Aborted = 240,
+    // (undocumented)
+    Blocked = 241,
+    // (undocumented)
+    ChannelBusy = 243,
+    // (undocumented)
+    Completed = 255,
+    // (undocumented)
+    Underflow = 242,
+    // (undocumented)
+    UnknownError = 254
+}
+
 // Warning: (ae-missing-release-tag) "TransmitReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
 export type TransmitReport = SendDataTransmitReport | AssignReturnRouteRequestTransmitReport | AssignSUCReturnRouteRequestTransmitReport | AssignPriorityReturnRouteRequestTransmitReport | AssignPrioritySUCReturnRouteRequestTransmitReport | DeleteReturnRouteRequestTransmitReport | DeleteSUCReturnRouteRequestTransmitReport;
 
-// Warning: (ae-missing-release-tag) "tryParseRSSI" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+// Warning: (ae-missing-release-tag) "TransmitRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function tryParseRSSI(payload: BytesView, offset?: number): RSSI | undefined;
+export class TransmitRequest extends RCPMessage {
+    constructor(options: TransmitRequestOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    channel: number;
+    // (undocumented)
+    data: BytesView;
+    // (undocumented)
+    serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
 
-// Warning: (ae-missing-release-tag) "txReportToMessageRecord" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+// Warning: (ae-missing-release-tag) "TransmitRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function txReportToMessageRecord(report: TXReport): MessageRecord;
+export interface TransmitRequestOptions {
+    // (undocumented)
+    channel: number;
+    // (undocumented)
+    data: BytesView;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class TransmitResponse extends RCPMessage implements SuccessIndicator {
+    constructor(options: TransmitResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): TransmitResponse;
+    // (undocumented)
+    isOK(): boolean;
+    // (undocumented)
+    status: TransmitResponseStatus;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface TransmitResponseOptions {
+    // (undocumented)
+    status: TransmitResponseStatus;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitResponseStatus" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum TransmitResponseStatus {
+    // (undocumented)
+    Busy = 1,
+    // (undocumented)
+    InvalidChannel = 3,
+    // (undocumented)
+    InvalidParam = 4,
+    // (undocumented)
+    Overflow = 2,
+    // (undocumented)
+    Queued = 0
+}
+
+// Warning: (ae-missing-release-tag) "txReportToLogDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function txReportToLogDict(report: TXReport): MessageRecord;
 
 // Warning: (ae-missing-release-tag) "wrapLegacySerialBinding" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5570,6 +6178,8 @@ export class ZnifferDataMessage extends ZnifferMessage implements ZnifferFrameIn
     // (undocumented)
     readonly region: number;
     // (undocumented)
+    rssi?: RSSI;
+    // (undocumented)
     readonly rssiRaw: number;
 }
 
@@ -5589,6 +6199,8 @@ export interface ZnifferDataMessageOptions {
     protocolDataRate: ZnifferProtocolDataRate;
     // (undocumented)
     region: number;
+    // (undocumented)
+    rssi?: RSSI;
     // (undocumented)
     rssiRaw: number;
 }
