@@ -3,6 +3,7 @@ import {
 	IndicatorCCDescriptionReport,
 	IndicatorCCGet,
 	IndicatorCCReport,
+	IndicatorCCSet,
 	IndicatorCCSupportedGet,
 	IndicatorCCSupportedReport,
 	type IndicatorObject,
@@ -17,11 +18,11 @@ const defaultCapabilities: IndicatorCCCapabilities = {
 	indicators: {},
 };
 
-// const STATE_KEY_PREFIX = "Indicator_";
-// const StateKeys = {
-// 	value: (indicatorId: number, propertyId: number) =>
-// 		`${STATE_KEY_PREFIX}value_${indicatorId}_${propertyId}`,
-// } as const;
+const STATE_KEY_PREFIX = "Indicator_";
+const StateKeys = {
+	value: (indicatorId: number, propertyId: number) =>
+		`${STATE_KEY_PREFIX}value_${indicatorId}_${propertyId}`,
+} as const;
 
 const respondToIndicatorGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
@@ -44,9 +45,11 @@ const respondToIndicatorGet: MockNodeBehavior = {
 
 				const indicatorObjects: IndicatorObject[] = supportedProperties
 					.map((propertyId) => {
-						const value =
-							capabilities.getValue?.(indicatorId, propertyId)
-								?? 0;
+						const value = self.state.get(
+							StateKeys.value(indicatorId, propertyId),
+						) as number
+							?? capabilities.getValue?.(indicatorId, propertyId)
+							?? 0;
 						return {
 							indicatorId,
 							propertyId,
@@ -60,7 +63,9 @@ const respondToIndicatorGet: MockNodeBehavior = {
 				});
 			} else {
 				// V1
-				const value = capabilities.getValue?.(0, 0) ?? 0;
+				const value = self.state.get(StateKeys.value(0, 0)) as number
+					?? capabilities.getValue?.(0, 0)
+					?? 0;
 				cc = new IndicatorCCReport({
 					nodeId: controller.ownNodeId,
 					value,
@@ -72,45 +77,65 @@ const respondToIndicatorGet: MockNodeBehavior = {
 	},
 };
 
-// const respondToIndicatorSet: MockNodeBehavior = {
-// 	handleCC(controller, self, receivedCC) {
-// 		if (receivedCC instanceof IndicatorCCSet) {
-// 			const capabilities = {
-// 				...defaultCapabilities,
-// 				...self.getCCCapabilities(
-// 					CommandClasses.Indicator,
-// 					receivedCC.endpointIndex,
-// 				),
-// 			};
-// 			const parameter = receivedCC.parameter;
-// 			const paramInfo = capabilities.parameters.find(
-// 				(p) => p["#"] === parameter,
-// 			);
-// 			// Do nothing if the parameter is not supported
-// 			if (!paramInfo) return { action: "fail" };
+const respondToIndicatorSet: MockNodeBehavior = {
+	handleCC(controller, self, receivedCC) {
+		if (receivedCC instanceof IndicatorCCSet) {
+			const capabilities = {
+				...defaultCapabilities,
+				...self.getCCCapabilities(
+					CommandClasses.Indicator,
+					receivedCC.endpointIndex,
+				),
+			};
 
-// 			if (receivedCC.resetToDefault) {
-// 				self.state.delete(StateKeys.value(parameter));
-// 				return { action: "ok" };
-// 			}
+			if (receivedCC.values) {
+				// V2+
+				const affectedIndicatorIds = new Set(
+					receivedCC.values
+						.map((v) => v.indicatorId)
+						.filter((id) => id in capabilities.indicators),
+				);
 
-// 			const value = receivedCC.value!;
+				// Properties not included in the command are assumed to be 0
+				for (const indicatorId of affectedIndicatorIds) {
+					const supportedProperties =
+						capabilities.indicators[indicatorId]?.properties ?? [];
+					for (const propertyId of supportedProperties) {
+						self.state.set(
+							StateKeys.value(indicatorId, propertyId),
+							0,
+						);
+					}
+				}
 
-// 			// Do nothing if the value is out of range
-// 			if (paramInfo.minValue != undefined && value < paramInfo.minValue) {
-// 				return { action: "fail" };
-// 			} else if (
-// 				paramInfo.maxValue != undefined
-// 				&& value > paramInfo.maxValue
-// 			) {
-// 				return { action: "fail" };
-// 			}
+				// Then apply the received values, ignoring unsupported objects
+				for (const value of receivedCC.values) {
+					const supportedProperties = capabilities
+						.indicators[value.indicatorId]?.properties;
+					if (!supportedProperties?.includes(value.propertyId)) {
+						continue;
+					}
+					self.state.set(
+						StateKeys.value(value.indicatorId, value.propertyId),
+						value.value === true
+							? 0xff
+							: value.value === false
+							? 0x00
+							: value.value,
+					);
+				}
+			} else if (receivedCC.indicator0Value != undefined) {
+				// V1
+				self.state.set(
+					StateKeys.value(0, 0),
+					receivedCC.indicator0Value,
+				);
+			}
 
-// 			self.state.set(StateKeys.value(parameter), value);
-// 			return { action: "ok" };
-// 		}
-// 	},
-// };
+			return { action: "ok" };
+		}
+	},
+};
 
 const respondToIndicatorSupportedGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
@@ -209,7 +234,7 @@ const respondToIndicatorDescriptionGet: MockNodeBehavior = {
 
 export const IndicatorCCBehaviors = [
 	respondToIndicatorGet,
-	// respondToIndicatorSet,
+	respondToIndicatorSet,
 	respondToIndicatorSupportedGet,
 	respondToIndicatorDescriptionGet,
 ];
