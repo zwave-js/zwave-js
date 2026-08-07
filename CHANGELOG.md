@@ -4,6 +4,29 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Added support for opening Zniffer traces that were captured by a PTI Zniffer (#9053)
+
+### Bugfixes
+* Updated a few instances where env variables were read directly instead of through `getenv` (#9015)
+* Keep the DRBG key and counter in separate buffers (#9014)
+* Fixed an issue where zero-valued enums were not deserialized from the network cache correctly (#9013)
+* Fixed a race condition where the driver could attempt to persist CC values after the value DB was closed (#9038)
+* Supervised Notification Reports with unparsable event parameters are now answered with supervision status `Fail` instead of being silently dropped (#9049)
+* Proceed with User Code CC interview when User Credential CC capabilities are unknown (#9068)
+
+### Config file changes
+* Add Heatit Z-TRM7 and standardize Heatit config parameters across devices (#8995, #8997)
+* Add productId 0x5600 for YRM276 with ZW3 module (700 series) (#9002)
+* Remove Multi Channel CC support for Vero Duco CO2 sensor (#9036)
+* Update manual URL for Lamp-ZW2 (#9070)
+
+### Changes under the hood
+* Fixed several problems with the local development workflow (#8983, #8984)
+* Fix flaky Transport Service SegmentComplete test (#9023)
+* Low-level protocol primitives have been moved from the Zniffer into `@zwave-js/core`, enabling custom driver implementations that do not use the Serial API (#9055, #9056)
+
 ## 15.26.0 (2026-07-17)
 ### Features
 * Added support for proprietary controller commands on Aeotec and Z-Wave.me controllers (#8949)
