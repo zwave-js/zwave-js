@@ -48,6 +48,21 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
     remove(item: T): boolean;
 }
 
+// Warning: (ae-missing-release-tag) "AwaitedThing" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface AwaitedThing<T> {
+    consume?: boolean;
+    // (undocumented)
+    handler: (thing: T) => void;
+    // (undocumented)
+    predicate: (msg: T) => boolean;
+    // (undocumented)
+    refreshPredicate?: (msg: T) => boolean;
+    // (undocumented)
+    timeout?: Timer;
+}
+
 // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // Warning: (ae-missing-release-tag) "buffer2hex" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -674,7 +689,7 @@ export class TypedEventTarget<TEvents extends Record<keyof TEvents, EventListene
     // (undocumented)
     once<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
     // (undocumented)
-    removeAllListeners<TEvent extends keyof TEvents>(event?: TEvent): this;
+    removeAllListeners(event?: keyof TEvents): this;
     // (undocumented)
     removeListener<TEvent extends keyof TEvents>(event: TEvent, callback: TEvents[TEvent]): this;
 }
