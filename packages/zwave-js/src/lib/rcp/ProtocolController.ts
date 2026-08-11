@@ -154,13 +154,23 @@ function assertInt8(value: number | undefined, name: string): void {
 	}
 }
 
-/** Reject a radio TX power the firmware cannot encode, before any frame goes out */
+/**
+ * Radio TX powers the API accepts, in dBm. RAIL clamps the requested power to
+ * what the PA supports, so this only rejects values that cannot be a power level
+ */
+const RADIO_TX_POWER_MIN = -200;
+const RADIO_TX_POWER_MAX = 200;
+
+/** Reject a radio TX power outside the range the API accepts, before any frame goes out */
 function assertRadioTXPower(txPower: number | undefined): void {
 	if (txPower == undefined) return;
-	// 127 is the sentinel that tells the firmware to keep its current power
-	if (!Number.isInteger(txPower) || txPower < INT8_MIN || txPower > 126) {
+	if (
+		!Number.isFinite(txPower)
+		|| txPower < RADIO_TX_POWER_MIN
+		|| txPower > RADIO_TX_POWER_MAX
+	) {
 		throw new ZWaveError(
-			`The TX power must be an integer between ${INT8_MIN} and 126 dBm`,
+			`The TX power must be between ${RADIO_TX_POWER_MIN} and ${RADIO_TX_POWER_MAX} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
