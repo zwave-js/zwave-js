@@ -27,7 +27,11 @@ export enum MACTransmitResult {
 
 export interface MACTransmitReport {
 	result: MACTransmitResult;
-	/** Repeater that failed to reach the next hop, from a routed error */
+	/**
+	 * The hop at which the route failed, taken from a routed error.
+	 * This is the raw hop field, so the repeater that could not reach the next
+	 * hop is `repeaters[failedHop - 1]`.
+	 */
 	failedHop?: number;
 	/** Per-repeater RSSI from the routed ack's extension */
 	repeaterRSSI?: readonly RSSI[];
