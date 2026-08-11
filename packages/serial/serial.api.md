@@ -1200,6 +1200,11 @@ export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
     toLogEntry(): MessageOrCCLogEntry;
 }
 
+// Warning: (ae-missing-release-tag) "encodeTxPower" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function encodeTxPower(txPower: number | undefined): number;
+
 // Warning: (ae-missing-release-tag) "encodeTXReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -6092,13 +6097,15 @@ export class TransmitBeamRequest extends RCPMessage {
     // (undocumented)
     fragmentPeriodMs: number;
     // (undocumented)
+    getCallbackTimeout(): number | undefined;
+    // (undocumented)
     numFragments: number;
     // (undocumented)
     serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
-    txPower: number;
+    txPower: number | undefined;
 }
 
 // Warning: (ae-missing-release-tag) "TransmitBeamRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6114,7 +6121,7 @@ export interface TransmitBeamRequestOptions {
     fragmentPeriodMs: number;
     // (undocumented)
     numFragments: number;
-    txPower: number;
+    txPower?: number;
 }
 
 // Warning: (ae-missing-release-tag) "TransmitBeamResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6200,7 +6207,7 @@ export class TransmitRequest extends RCPMessage {
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
     // (undocumented)
-    txPower: number;
+    txPower: number | undefined;
     // (undocumented)
     withCCA: boolean;
 }
@@ -6213,7 +6220,7 @@ export interface TransmitRequestOptions {
     channel: number;
     // (undocumented)
     data: BytesView;
-    txPower: number;
+    txPower?: number;
     withCCA: boolean;
 }
 
@@ -6255,6 +6262,11 @@ export enum TransmitResponseStatus {
     // (undocumented)
     Queued = 0
 }
+
+// Warning: (ae-missing-release-tag) "TX_POWER_KEEP_CURRENT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const TX_POWER_KEEP_CURRENT = 127;
 
 // Warning: (ae-missing-release-tag) "txReportToLogDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

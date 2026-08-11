@@ -186,7 +186,7 @@ export class RCPMessage {
 		| typeof RCPMessage
 		| RCPResponsePredicate
 		| undefined;
-	public payload: Bytes; // TODO: Length limit 255
+	public payload: Bytes;
 
 	/** Used to map requests to callbacks */
 	public callbackId: number | undefined;
@@ -231,6 +231,14 @@ export class RCPMessage {
 	 */
 	// oxlint-disable-next-line no-unused-vars, @typescript-eslint/require-await
 	public async serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
+		// The length byte covers the payload, the type, the function type and the checksum
+		if (this.payload.length > 0xff - 3) {
+			throw new ZWaveError(
+				`The message payload must not be longer than ${0xff - 3} bytes`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
 		const ret = new Bytes(this.payload.length + 5);
 		ret[0] = MessageHeaders.SOF;
 		// length of the following data, including the checksum

@@ -1,4 +1,8 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
+import {
+	type MessageOrCCLogEntry,
+	ZWaveError,
+	ZWaveErrorCodes,
+} from "@zwave-js/core";
 import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
@@ -15,11 +19,12 @@ import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
 import {
 	TransmitCallbackStatus,
 	TransmitResponseStatus,
+	encodeTxPower,
 } from "./TransmitMessages.js";
 
 export interface TransmitBeamRequestOptions {
-	/** The transmit power in dBm */
-	txPower: number;
+	/** The transmit power in dBm. If omitted, the firmware keeps its current setting. */
+	txPower?: number;
 	numFragments: number;
 	fragmentDurationMs: number;
 	fragmentPeriodMs: number;
@@ -45,16 +50,63 @@ export class TransmitBeamRequest extends RCPMessage {
 		this.data = options.data;
 	}
 
-	public txPower: number;
+	public txPower: number | undefined;
 	public numFragments: number;
 	public fragmentDurationMs: number;
 	public fragmentPeriodMs: number;
 	public channels: number[];
 	public data: BytesView;
 
+	public getCallbackTimeout(): number | undefined {
+		// The firmware only reports back when the entire beam is done
+		return this.numFragments * this.fragmentPeriodMs + 1000;
+	}
+
+	private assertValidOptions(): void {
+		if (
+			!Number.isInteger(this.numFragments)
+			|| this.numFragments < 1
+			|| this.numFragments > 0xff
+		) {
+			throw new ZWaveError(
+				`The number of beam fragments must be an integer between 1 and 255`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		for (
+			const [name, value] of [
+				["fragment duration", this.fragmentDurationMs],
+				["fragment period", this.fragmentPeriodMs],
+			] as const
+		) {
+			if (!Number.isInteger(value) || value < 0 || value > 0xffff) {
+				throw new ZWaveError(
+					`The ${name} must be an integer between 0 and 65535 ms`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+		}
+		if (this.channels.length < 1 || this.channels.length > 0xff) {
+			throw new ZWaveError(
+				`A beam must be transmitted on 1 to 255 channels`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		if (
+			this.channels.some((c) => !Number.isInteger(c) || c < 0 || c > 0xff)
+		) {
+			throw new ZWaveError(
+				`Each channel must be an integer between 0 and 255`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+	}
+
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
+		this.assertValidOptions();
+
 		const header = new Bytes(7 + this.channels.length);
-		header.writeInt8(this.txPower, 0);
+		header.writeInt8(encodeTxPower(this.txPower), 0);
 		header[1] = this.numFragments;
 		header.writeUInt16BE(this.fragmentDurationMs, 2);
 		header.writeUInt16BE(this.fragmentPeriodMs, 4);
@@ -73,7 +125,9 @@ export class TransmitBeamRequest extends RCPMessage {
 		return {
 			...super.toLogEntry(),
 			message: {
-				"TX power": `${this.txPower} dBm`,
+				"TX power": this.txPower != undefined
+					? `${this.txPower} dBm`
+					: "unchanged",
 				"no. of fragments": this.numFragments,
 				"fragment duration": `${this.fragmentDurationMs} ms`,
 				"fragment period": `${this.fragmentPeriodMs} ms`,

@@ -1,4 +1,8 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
+import {
+	type MessageOrCCLogEntry,
+	ZWaveError,
+	ZWaveErrorCodes,
+} from "@zwave-js/core";
 import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
@@ -38,10 +42,25 @@ export enum TransmitCallbackStatus {
 	Completed = 0xff,
 }
 
+/** TX power value that tells the firmware to keep its current setting */
+export const TX_POWER_KEEP_CURRENT = 0x7f;
+
+/** Converts a TX power in dBm to the value to transmit, using the sentinel if none is given */
+export function encodeTxPower(txPower: number | undefined): number {
+	if (txPower == undefined) return TX_POWER_KEEP_CURRENT;
+	if (!Number.isInteger(txPower) || txPower < -128 || txPower > 126) {
+		throw new ZWaveError(
+			`The TX power must be an integer between -128 and 126 dBm`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+	return txPower;
+}
+
 export interface TransmitRequestOptions {
 	channel: number;
-	/** The transmit power in dBm */
-	txPower: number;
+	/** The transmit power in dBm. If omitted, the firmware keeps its current setting. */
+	txPower?: number;
 	/** Whether to perform clear channel assessment before transmitting */
 	withCCA: boolean;
 	data: BytesView;
@@ -67,14 +86,25 @@ export class TransmitRequest extends RCPMessage {
 	}
 
 	public channel: number;
-	public txPower: number;
+	public txPower: number | undefined;
 	public withCCA: boolean;
 	public data: BytesView;
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
+		if (
+			!Number.isInteger(this.channel)
+			|| this.channel < 0
+			|| this.channel > 0xff
+		) {
+			throw new ZWaveError(
+				`The channel must be an integer between 0 and 255`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
 		const header = new Bytes(3);
 		header[0] = this.channel;
-		header.writeInt8(this.txPower, 1);
+		header.writeInt8(encodeTxPower(this.txPower), 1);
 		header[2] = this.withCCA ? TransmitFlags.CCA : 0;
 
 		this.payload = Bytes.concat([
@@ -90,7 +120,9 @@ export class TransmitRequest extends RCPMessage {
 			...super.toLogEntry(),
 			message: {
 				channel: this.channel,
-				"TX power": `${this.txPower} dBm`,
+				"TX power": this.txPower != undefined
+					? `${this.txPower} dBm`
+					: "unchanged",
 				CCA: this.withCCA,
 				data: `(${this.data.length} bytes)`,
 			},
