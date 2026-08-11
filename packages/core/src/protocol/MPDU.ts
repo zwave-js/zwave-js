@@ -5,9 +5,8 @@ import { BeamingInfo, MPDUHeaderType } from "../definitions/Frame.js";
 import {
 	ProtocolDataRate,
 	ProtocolHeaderFormat,
-	getProtocolHeaderFormat,
+	getProtocolHeaderFormatForDataRate,
 	protocolDataRateToString,
-	rfRegionToRadioProtocolMode,
 } from "../definitions/Protocol.js";
 import type { RFRegion } from "../definitions/RFRegion.js";
 import {
@@ -61,8 +60,9 @@ export abstract class MPDU {
 		data: Bytes,
 		ctx: MPDUParsingContext,
 	): ZWaveMPDU | LongRangeMPDU {
-		if (ctx.channel <= 2) {
-			// Channels 0-2 are Z-Wave classic
+		// The channels Long Range occupies depend on the channel configuration,
+		// e.g. the end device configurations put Long Range on channels 0 and 1
+		if (ctx.protocolDataRate !== ProtocolDataRate.LongRange_100k) {
 			const raw = ZWaveMPDURaw.parse(data, ctx);
 			switch (raw.headerType) {
 				case MPDUHeaderType.Singlecast:
@@ -113,26 +113,17 @@ export abstract class MPDU {
 			);
 		}
 
-		if (ctx.channel <= 4) {
-			// Channels 3-4 are Long Range
-			const raw = LongRangeMPDURaw.parse(data, ctx);
-			switch (raw.headerType) {
-				case MPDUHeaderType.Singlecast:
-					return SinglecastLongRangeMPDU.from(raw, ctx);
-				case MPDUHeaderType.Acknowledgement:
-					return AckLongRangeMPDU.from(raw, ctx);
-				default:
-					validatePayload.fail(
-						`Unsupported Long Range MPDU header type ${raw.headerType}`,
-					);
-			}
+		const raw = LongRangeMPDURaw.parse(data, ctx);
+		switch (raw.headerType) {
+			case MPDUHeaderType.Singlecast:
+				return SinglecastLongRangeMPDU.from(raw, ctx);
+			case MPDUHeaderType.Acknowledgement:
+				return AckLongRangeMPDU.from(raw, ctx);
+			default:
+				validatePayload.fail(
+					`Unsupported Long Range MPDU header type ${raw.headerType}`,
+				);
 		}
-
-		validatePayload.fail(
-			`Unsupported channel ${ctx.channel}. MPDU payload: ${
-				buffer2hex(data)
-			}`,
-		);
 	}
 
 	public serialize(_ctx: MPDUEncodingContext): Bytes {
@@ -200,9 +191,9 @@ export class ZWaveMPDURaw {
 		let speedModified: boolean;
 		let beamingInfo: BeamingInfo;
 
-		const headerFormat = getProtocolHeaderFormat(
-			rfRegionToRadioProtocolMode(ctx.region),
-			ctx.channel,
+		const headerFormat = getProtocolHeaderFormatForDataRate(
+			ctx.region,
+			ctx.protocolDataRate,
 		);
 		switch (headerFormat) {
 			case ProtocolHeaderFormat.Classic2Channel: {
@@ -227,7 +218,7 @@ export class ZWaveMPDURaw {
 			}
 			default: {
 				validatePayload.fail(
-					`Unsupported combination of region (${ctx.region}) and channel (${ctx.channel}) for ZWaveMPDU.`,
+					`Unsupported combination of region (${ctx.region}) and data rate (${ctx.protocolDataRate}) for ZWaveMPDU.`,
 				);
 			}
 		}
@@ -283,9 +274,9 @@ export class ZWaveMPDU extends MPDU {
 	public serialize(ctx: MPDUEncodingContext): Bytes {
 		let header: Bytes;
 
-		const headerFormat = getProtocolHeaderFormat(
-			rfRegionToRadioProtocolMode(ctx.region),
-			ctx.channel,
+		const headerFormat = getProtocolHeaderFormatForDataRate(
+			ctx.region,
+			ctx.protocolDataRate,
 		);
 		switch (headerFormat) {
 			case ProtocolHeaderFormat.Classic2Channel: {
@@ -318,7 +309,7 @@ export class ZWaveMPDU extends MPDU {
 			}
 			default: {
 				throw new ZWaveError(
-					`Unsupported combination of region (${ctx.region}) and channel (${ctx.channel}) for ZWaveMPDU.`,
+					`Unsupported combination of region (${ctx.region}) and data rate (${ctx.protocolDataRate}) for ZWaveMPDU.`,
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
@@ -513,9 +504,9 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		raw: ZWaveMPDURaw,
 		ctx: MPDUParsingContext,
 	): RoutedZWaveMPDU {
-		const headerFormat = getProtocolHeaderFormat(
-			rfRegionToRadioProtocolMode(ctx.region),
-			ctx.channel,
+		const headerFormat = getProtocolHeaderFormatForDataRate(
+			ctx.region,
+			ctx.protocolDataRate,
 		);
 
 		// The destination is technically part of the MAC header, but it makes much
@@ -620,13 +611,13 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 	public repeaterRSSI?: readonly RSSI[];
 
 	public serialize(ctx: MPDUEncodingContext): Bytes {
-		const headerFormat = getProtocolHeaderFormat(
-			rfRegionToRadioProtocolMode(ctx.region),
-			ctx.channel,
+		const headerFormat = getProtocolHeaderFormatForDataRate(
+			ctx.region,
+			ctx.protocolDataRate,
 		);
 
 		const hasExtendedHeader = this.destinationWakeupType != undefined
-			|| this.repeaterRSSI?.length;
+			|| !!this.repeaterRSSI?.length;
 
 		// Until the end of the repeater list, all channel configurations
 		// are identical. Z-Wave and Z-Wave Long Range Network Layer
@@ -639,8 +630,8 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			| (this.routedAck ? 0b10 : 0)
 			| (this.routedError ? 0b100 : 0)
 			| (hasExtendedHeader ? 0b1000 : 0);
-		if (this.routedError && this.failedHop) {
-			header[1] |= this.failedHop << 4;
+		if (this.routedError && this.failedHop != undefined) {
+			header[1] |= (this.failedHop & 0xf) << 4;
 		} else if (headerFormat === ProtocolHeaderFormat.Classic2Channel) {
 			// Z-Wave and Z-Wave Long Range Network Layer Specification
 			// (2023.05.26), NWK:000D.1: "The 'Speed Modified' subfield from the
@@ -656,7 +647,10 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		// to 0x0f when the frame returns to the source node.
 		//
 		// When parsing, we normalize this, so hop = 0 always means the frame is transmitted between the source node and repeater 0.
-		// This means we need to undo the normalization here
+		// This means we need to undo the normalization here. Z-Wave and Z-Wave
+		// Long Range Network Layer Specification (2023.05.26), NWK:001E.1:
+		// "When a routed frame returns to the source NodeID (e.g. a Routed Ack /
+		// Error), the Repeater 0 node shall set this field to 0x0F."
 		const hop = this.direction === "inbound"
 			? (this.hop - 1)
 			: this.hop;
@@ -665,7 +659,12 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			header[3 + i] = this.repeaters[i];
 		}
 
-		// Add destination wakeup byte for channel configuration 3
+		// Add the mandatory Destination Wake Up byte for channel configuration 3.
+		// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
+		// NWK:0024.1: "The value 0x00 shall indicate that the destination is an
+		// AL node and can be forwarded the frame immediately." NWK:0025.1: "The
+		// value 0x02 shall indicate that the destination requires a Fragmented
+		// Beam prior to deliver a frame."
 		if (headerFormat === ProtocolHeaderFormat.Classic3Channel) {
 			header = Bytes.concat([
 				header,
@@ -688,14 +687,16 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 				],
 			]);
 		} else if (this.repeaterRSSI?.length) {
-			// Add repeater RSSI header
+			// Add repeater RSSI header. Z-Wave and Z-Wave Long Range Network
+			// Layer Specification (2023.05.26), NWK:0030.1: "The length of this
+			// extension shall always be 4 bytes, even if fewer repeaters are
+			// involved in routing the frame."
 			const headerLength = 4;
 			const headerType = 0x01;
-			const headerBody = new Bytes(4);
+			const headerBody = new Bytes(headerLength);
 			for (let i = 0; i < headerBody.length; i++) {
-				// Z-Wave and Z-Wave Long Range Network Layer Specification
-				// (2023.05.26), NWK:0031.1: "A node returning a Routed
-				// Acknowledgement MUST set these fields to 0x7F." (unused hops)
+				// NWK:0031.1: "A node returning a Routed Acknowledgement shall
+				// set these fields to 0x7F." (unused hops)
 				headerBody[i] = this.repeaterRSSI[i] ?? RssiError.NotAvailable;
 			}
 			header = Bytes.concat([

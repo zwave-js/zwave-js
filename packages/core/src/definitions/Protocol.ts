@@ -239,3 +239,22 @@ export function getProtocolHeaderFormat(
 		? ProtocolHeaderFormat.Classic3Channel
 		: ProtocolHeaderFormat.Classic2Channel;
 }
+
+/**
+ * Determines the MPDU header format from the data rate a frame was sent with.
+ * Prefer this over {@link getProtocolHeaderFormat} where the data rate is
+ * known, since the channel numbers Long Range occupies depend on the channel
+ * configuration.
+ */
+export function getProtocolHeaderFormatForDataRate(
+	region: RFRegion,
+	protocolDataRate: ProtocolDataRate,
+): ProtocolHeaderFormat {
+	if (protocolDataRate === ProtocolDataRate.LongRange_100k) {
+		return ProtocolHeaderFormat.LongRange;
+	}
+	return rfRegionToRadioProtocolMode(region)
+			=== RadioProtocolMode.Classic3Channel
+		? ProtocolHeaderFormat.Classic3Channel
+		: ProtocolHeaderFormat.Classic2Channel;
+}
