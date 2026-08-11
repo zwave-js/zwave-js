@@ -57,14 +57,13 @@ export function encodeTxPower(txPower: number | undefined): number {
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
-	const deciDBm = Math.round(txPower * 10);
-	if (deciDBm < -0x8000 || deciDBm >= TX_POWER_KEEP_CURRENT) {
+	if (txPower < -10 || txPower > 30) {
 		throw new ZWaveError(
-			`The TX power must be between -3276.8 and 3276.6 dBm`,
+			`The TX power must be between -10 and 30 dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
-	return deciDBm;
+	return Math.round(txPower * 10);
 }
 
 /** Formats a TX power in dBm for logging, with one decimal for fractional values */

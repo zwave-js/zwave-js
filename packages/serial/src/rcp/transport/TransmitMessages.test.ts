@@ -54,22 +54,24 @@ describe("TransmitRequest", () => {
 		expect(serialized[7]).toBe(0x00);
 	});
 
-	test("accepts a TX power of 127 dBm", async () => {
+	test.each([
+		["the lower bound", -10, -100],
+		["the upper bound", 30, 300],
+	])("accepts a TX power at %s", async (_name, txPower, expected) => {
 		const msg = new TransmitRequest({
 			channel: 0,
-			txPower: 127,
+			txPower,
 			withCCA: false,
 			data: Bytes.from([]),
 		});
 
 		const serialized = await msg.serialize({});
-		expect(serialized.readInt16BE(5)).toBe(1270);
+		expect(serialized.readInt16BE(5)).toBe(expected);
 	});
 
 	test.each([
-		["collides with the sentinel", 3276.7],
-		["exceeds the int16 range", 3300],
-		["falls below the int16 range", -3300],
+		["falls below the radio range", -10.1],
+		["exceeds the radio range", 30.1],
 		["is not finite", Number.POSITIVE_INFINITY],
 		["is not a number", Number.NaN],
 	])("throws when the TX power %s", async (_name, txPower) => {

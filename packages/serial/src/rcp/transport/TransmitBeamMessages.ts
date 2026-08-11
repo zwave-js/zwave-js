@@ -77,30 +77,35 @@ export class TransmitBeamRequest extends RCPMessage {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		for (
-			const [name, value] of [
-				["fragment duration", this.fragmentDurationMs],
-				["fragment period", this.fragmentPeriodMs],
-			] as const
+		if (
+			!Number.isInteger(this.fragmentDurationMs)
+			|| this.fragmentDurationMs < 0
+			|| this.fragmentDurationMs > 0xffff
 		) {
-			if (!Number.isInteger(value) || value < 0 || value > 0xffff) {
-				throw new ZWaveError(
-					`The ${name} must be an integer between 0 and 65535 ms`,
-					ZWaveErrorCodes.Argument_Invalid,
-				);
-			}
-		}
-		if (this.channels.length < 1 || this.channels.length > 0xff) {
 			throw new ZWaveError(
-				`A beam must be transmitted on 1 to 255 channels`,
+				`The fragment duration must be an integer between 0 and 65535 ms`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
 		if (
-			this.channels.some((c) => !Number.isInteger(c) || c < 0 || c > 0xff)
+			!Number.isInteger(this.fragmentPeriodMs)
+			|| this.fragmentPeriodMs < 0
+			|| this.fragmentPeriodMs > 0xffff
 		) {
 			throw new ZWaveError(
-				`Each channel must be an integer between 0 and 255`,
+				`The fragment period must be an integer between 0 and 65535 ms`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		if (this.channels.length < 1 || this.channels.length > 5) {
+			throw new ZWaveError(
+				`A beam must be transmitted on 1 to 5 channels`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		if (this.channels.some((c) => !Number.isInteger(c) || c < 0 || c > 4)) {
+			throw new ZWaveError(
+				`Each channel must be an integer between 0 and 4`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}

@@ -85,12 +85,13 @@ describe("TransmitBeamRequest", () => {
 	});
 
 	test.each([
-		["TX power", { txPower: 3276.7 }],
+		["TX power", { txPower: 30.1 }],
 		["number of fragments", { numFragments: 0 }],
 		["fragment duration", { fragmentDurationMs: 70000 }],
 		["fragment period", { fragmentPeriodMs: -1 }],
 		["channel list length", { channels: [] }],
-		["channel", { channels: [300] }],
+		["channel list length", { channels: [0, 1, 2, 3, 4, 0] }],
+		["channel", { channels: [5] }],
 	])("throws when the %s is out of range", async (_name, options) => {
 		const msg = createBeamRequest(options);
 		await assertZWaveError(expect, () => msg.serialize({}), {
