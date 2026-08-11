@@ -160,11 +160,11 @@ function assertInt8(value: number | undefined, name: string): void {
 }
 
 /**
- * Radio TX powers the API accepts, in dBm. RAIL clamps the requested power to
- * what the PA supports, so this only rejects values that cannot be a power level
+ * Radio TX powers the API accepts, in dBm. The bounds match the range the serial
+ * layer accepts, so an invalid power is rejected before any frame goes out
  */
-const RADIO_TX_POWER_MIN = -200;
-const RADIO_TX_POWER_MAX = 200;
+const RADIO_TX_POWER_MIN = -10;
+const RADIO_TX_POWER_MAX = 30;
 
 /** Reject a radio TX power outside the range the API accepts, before any frame goes out */
 function assertRadioTXPower(txPower: number | undefined): void {
