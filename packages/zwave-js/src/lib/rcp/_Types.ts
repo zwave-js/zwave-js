@@ -1,4 +1,4 @@
-import type { Protocols } from "@zwave-js/core";
+import type { Protocols, RSSI } from "@zwave-js/core";
 
 export enum MACTransmitResult {
 	/** The frame was successfully sent. If an ACK was requested, it was received. */
@@ -9,6 +9,10 @@ export enum MACTransmitResult {
 	NoAck = 0x01,
 	/** The frame could not be sent because the chosen channel was busy */
 	ChannelBusy = 0x02,
+	/** The routed frame was sent, but the destination returned no routed acknowledgement */
+	NoRoutedAck = 0x03,
+	/** A repeater on the route could not reach the next hop */
+	RoutedError = 0x04,
 
 	// Low-level radio errors:
 	/** The frame could not be queued for transmission */
@@ -19,6 +23,14 @@ export enum MACTransmitResult {
 	Error_Aborted = 0xf3,
 	/** An unknown radio error has occured */
 	Error_Unknown = 0xfe,
+}
+
+export interface MACTransmitReport {
+	result: MACTransmitResult;
+	/** Repeater that failed to reach the next hop, from a routed error */
+	failedHop?: number;
+	/** Per-repeater RSSI from the routed ack's extension */
+	repeaterRSSI?: readonly RSSI[];
 }
 
 export interface MACTransmitOptions {
@@ -33,6 +45,13 @@ export interface MACTransmitOptions {
 	 * G.9959 requires CCA before transmitting a data frame, but it can be disabled for testing.
 	 */
 	withCCA?: boolean;
+	/**
+	 * The source route to send the frame over, classic Z-Wave only.
+	 * The repeater list must contain between 1 and 4 node IDs.
+	 */
+	route?: {
+		repeaters: number[];
+	};
 }
 
 export type MACTransmitAckOptions =
