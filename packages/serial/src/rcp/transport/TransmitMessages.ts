@@ -51,13 +51,7 @@ export const TX_POWER_KEEP_CURRENT = 0x7fff;
  */
 export function encodeTxPower(txPower: number | undefined): number {
 	if (txPower == undefined) return TX_POWER_KEEP_CURRENT;
-	if (!Number.isFinite(txPower)) {
-		throw new ZWaveError(
-			`The TX power must be a finite number of dBm`,
-			ZWaveErrorCodes.Argument_Invalid,
-		);
-	}
-	if (txPower < -10 || txPower > 30) {
+	if (!Number.isFinite(txPower) || txPower < -10 || txPower > 30) {
 		throw new ZWaveError(
 			`The TX power must be between -10 and 30 dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
