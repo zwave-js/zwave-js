@@ -238,6 +238,43 @@ test("RoutedZWaveMPDU rejects both extensions at once", () => {
 	);
 });
 
+test("RoutedZWaveMPDU rejects the RSSI extension on an outbound routed frame", () => {
+	assertZWaveError(
+		expect,
+		() =>
+			new RoutedZWaveMPDU({
+				...baseOptions,
+				destinationNodeId: 42,
+				direction: "outbound",
+				routedAck: false,
+				routedError: false,
+				hop: 0,
+				repeaters: [2],
+				repeaterRSSI: [-50],
+			}).serialize(ctx2Channel),
+		{ errorCode: ZWaveErrorCodes.Argument_Invalid },
+	);
+});
+
+test("RoutedZWaveMPDU rejects the wakeup extension on a routed ack", () => {
+	assertZWaveError(
+		expect,
+		() =>
+			new RoutedZWaveMPDU({
+				...baseOptions,
+				ackRequested: false,
+				destinationNodeId: 1,
+				direction: "inbound",
+				routedAck: true,
+				routedError: false,
+				hop: 0,
+				repeaters: [2],
+				destinationWakeupType: "250ms",
+			}).serialize(ctx2Channel),
+		{ errorCode: ZWaveErrorCodes.Argument_Invalid },
+	);
+});
+
 test("RoutedZWaveMPDU rejects a repeater count outside 1..4", () => {
 	for (const repeaters of [[], [1, 2, 3, 4, 5]]) {
 		assertZWaveError(
@@ -274,6 +311,25 @@ test("RoutedZWaveMPDU pads the RSSI extension to 4 bytes with 0x7F", () => {
 	// repeater 0, extension preamble
 	const extensionOffset = 8 + 3 + 1;
 	expect(serialized[extensionOffset]).toBe(0x41);
+	expect([
+		...serialized.subarray(extensionOffset + 1, extensionOffset + 5),
+	]).toStrictEqual([0xce, 0x7f, 0x7f, 0x7f]);
+});
+
+test("RoutedZWaveMPDU ignores RSSI entries beyond the repeater count", () => {
+	const serialized = new RoutedZWaveMPDU({
+		...baseOptions,
+		ackRequested: false,
+		destinationNodeId: 1,
+		direction: "inbound",
+		routedAck: true,
+		routedError: false,
+		hop: 0,
+		repeaters: [2],
+		repeaterRSSI: [-50, -60],
+	}).serialize(ctx2Channel);
+
+	const extensionOffset = 8 + 3 + 1;
 	expect([
 		...serialized.subarray(extensionOffset + 1, extensionOffset + 5),
 	]).toStrictEqual([0xce, 0x7f, 0x7f, 0x7f]);
@@ -418,6 +474,19 @@ test("MPDU.parse() rejects an unknown protocol data rate", () => {
 				channel: 0,
 				region: RFRegion.Europe,
 				protocolDataRate: 0x7f as ProtocolDataRate,
+			}),
+		{ errorCode: ZWaveErrorCodes.PacketFormat_InvalidPayload },
+	);
+});
+
+test("MPDU.parse() rejects an enum key as the protocol data rate", () => {
+	assertZWaveError(
+		expect,
+		() =>
+			MPDU.parse(Bytes.from([0xde, 0xad, 0xbe, 0xef, 0x01, 0x41, 0x07]), {
+				channel: 0,
+				region: RFRegion.Europe,
+				protocolDataRate: "ZWave_9k6" as unknown as ProtocolDataRate,
 			}),
 		{ errorCode: ZWaveErrorCodes.PacketFormat_InvalidPayload },
 	);

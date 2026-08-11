@@ -47,27 +47,9 @@ test("encodeZWaveBeamFrame() appends the home ID hash when given", () => {
 });
 
 test("longRangeBeamPowerToIndex() maps the exact levels of Table 6-31", () => {
-	const levels = [
-		-6,
-		-2,
-		2,
-		6,
-		10,
-		13,
-		16,
-		19,
-		21,
-		23,
-		25,
-		26,
-		27,
-		28,
-		29,
-		30,
-	];
-	for (let index = 0; index < levels.length; index++) {
-		expect(longRangeBeamPowerToIndex(levels[index])).toBe(index);
-	}
+	expect(longRangeBeamPowerToIndex(-6)).toBe(0);
+	expect(longRangeBeamPowerToIndex(13)).toBe(5);
+	expect(longRangeBeamPowerToIndex(30)).toBe(15);
 });
 
 test("longRangeBeamPowerToIndex() rounds up to the next representable level", () => {

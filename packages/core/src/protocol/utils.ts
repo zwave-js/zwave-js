@@ -7,7 +7,7 @@ import { ChannelConfiguration } from "./_Types.js";
  * Specification (2023.07.03), Table 6-31.
  */
 // dprint-ignore
-export const longRangeBeamPowers = [
+export const longRangeBeamPowers: readonly number[] = [
 	-6, -2,  2,  6,
 	10, 13, 16, 19,
 	21, 23, 25, 26,
