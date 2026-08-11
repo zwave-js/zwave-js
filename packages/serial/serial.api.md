@@ -76,6 +76,35 @@ import { ZWaveDataRate } from '@zwave-js/core';
 import { ZWaveLibraryTypes } from '@zwave-js/core';
 import { ZWaveLoggerBase } from '@zwave-js/core';
 
+// Warning: (ae-missing-release-tag) "AbortBeamRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class AbortBeamRequest extends RCPMessage {
+}
+
+// Warning: (ae-missing-release-tag) "AbortBeamResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class AbortBeamResponse extends RCPMessage implements SuccessIndicator {
+    constructor(options: AbortBeamResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): AbortBeamResponse;
+    // (undocumented)
+    isOK(): boolean;
+    // (undocumented)
+    success: boolean;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "AbortBeamResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface AbortBeamResponseOptions {
+    // (undocumented)
+    success: boolean;
+}
+
 // Warning: (ae-missing-release-tag) "AddNodeDSKToNetworkRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -3473,13 +3502,17 @@ export type RCPChunk = Bytes | MessageHeaders.ACK | MessageHeaders.NAK;
 // @public (undocumented)
 export enum RCPFunctionType {
     // (undocumented)
+    AbortBeam = 6,
+    // (undocumented)
     GetFirmwareInfo = 1,
     // (undocumented)
     Receive = 4,
     // (undocumented)
     SetupRadio = 2,
     // (undocumented)
-    Transmit = 3
+    Transmit = 3,
+    // (undocumented)
+    TransmitBeam = 5
 }
 
 // Warning: (ae-missing-release-tag) "RCPMessage" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6022,6 +6055,91 @@ export interface SuccessIndicator {
     isOK(): boolean;
 }
 
+// Warning: (ae-missing-release-tag) "TransmitBeamCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class TransmitBeamCallback extends RCPMessage implements SuccessIndicator {
+    constructor(options: TransmitBeamCallbackOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): TransmitBeamCallback;
+    // (undocumented)
+    isOK(): boolean;
+    // (undocumented)
+    status: TransmitCallbackStatus;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitBeamCallbackOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface TransmitBeamCallbackOptions {
+    // (undocumented)
+    status: TransmitCallbackStatus;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitBeamRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class TransmitBeamRequest extends RCPMessage {
+    constructor(options: TransmitBeamRequestOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    channels: number[];
+    // (undocumented)
+    data: BytesView;
+    // (undocumented)
+    fragmentDurationMs: number;
+    // (undocumented)
+    fragmentPeriodMs: number;
+    // (undocumented)
+    numFragments: number;
+    // (undocumented)
+    serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+    // (undocumented)
+    txPower: number;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitBeamRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface TransmitBeamRequestOptions {
+    channels: number[];
+    // (undocumented)
+    data: BytesView;
+    // (undocumented)
+    fragmentDurationMs: number;
+    // (undocumented)
+    fragmentPeriodMs: number;
+    // (undocumented)
+    numFragments: number;
+    txPower: number;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitBeamResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class TransmitBeamResponse extends RCPMessage implements SuccessIndicator {
+    constructor(options: TransmitBeamResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): TransmitBeamResponse;
+    // (undocumented)
+    isOK(): boolean;
+    // (undocumented)
+    status: TransmitResponseStatus;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitBeamResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface TransmitBeamResponseOptions {
+    // (undocumented)
+    status: TransmitResponseStatus;
+}
+
 // Warning: (ae-missing-release-tag) "TransmitCallback" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -6081,6 +6199,10 @@ export class TransmitRequest extends RCPMessage {
     serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
+    // (undocumented)
+    txPower: number;
+    // (undocumented)
+    withCCA: boolean;
 }
 
 // Warning: (ae-missing-release-tag) "TransmitRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -6091,6 +6213,8 @@ export interface TransmitRequestOptions {
     channel: number;
     // (undocumented)
     data: BytesView;
+    txPower: number;
+    withCCA: boolean;
 }
 
 // Warning: (ae-missing-release-tag) "TransmitResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

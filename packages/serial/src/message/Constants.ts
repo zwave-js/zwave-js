@@ -253,4 +253,6 @@ export enum RCPFunctionType {
 	SetupRadio = 0x02,
 	Transmit = 0x03,
 	Receive = 0x04,
+	TransmitBeam = 0x05,
+	AbortBeam = 0x06,
 }

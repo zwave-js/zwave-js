@@ -40,7 +40,15 @@ export enum TransmitCallbackStatus {
 
 export interface TransmitRequestOptions {
 	channel: number;
+	/** The transmit power in dBm */
+	txPower: number;
+	/** Whether to perform clear channel assessment before transmitting */
+	withCCA: boolean;
 	data: BytesView;
+}
+
+enum TransmitFlags {
+	CCA = 0b1,
 }
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.Transmit)
@@ -53,15 +61,24 @@ export class TransmitRequest extends RCPMessage {
 		super(options);
 
 		this.channel = options.channel;
+		this.txPower = options.txPower;
+		this.withCCA = options.withCCA;
 		this.data = options.data;
 	}
 
 	public channel: number;
+	public txPower: number;
+	public withCCA: boolean;
 	public data: BytesView;
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
+		const header = new Bytes(3);
+		header[0] = this.channel;
+		header.writeInt8(this.txPower, 1);
+		header[2] = this.withCCA ? TransmitFlags.CCA : 0;
+
 		this.payload = Bytes.concat([
-			[this.channel],
+			header,
 			this.data,
 		]);
 
@@ -73,6 +90,8 @@ export class TransmitRequest extends RCPMessage {
 			...super.toLogEntry(),
 			message: {
 				channel: this.channel,
+				"TX power": `${this.txPower} dBm`,
+				CCA: this.withCCA,
 				data: `(${this.data.length} bytes)`,
 			},
 		};
