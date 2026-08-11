@@ -13,6 +13,7 @@ import {
 	convertRawRSSI,
 	isZWaveError,
 	protocolDataRateToString,
+	sdkVersionLt,
 } from "@zwave-js/core";
 import {
 	MessageHeaders,
@@ -29,6 +30,8 @@ import {
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
+	AbortBeamRequest,
+	type AbortBeamResponse,
 	type ChannelInfo,
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
@@ -38,11 +41,13 @@ import {
 	type SetupRadio_GetRegionResponse,
 	SetupRadio_SetRegionRequest,
 	type SetupRadio_SetRegionResponse,
+	TransmitBeamCallback,
+	TransmitBeamRequest,
+	TransmitBeamResponse,
 	TransmitCallback,
-	type TransmitCallbackStatus,
 	TransmitRequest,
 	TransmitResponse,
-	type TransmitResponseStatus,
+	TransmitResponseStatus,
 } from "@zwave-js/serial/rcp";
 import {
 	AsyncQueue,
@@ -74,7 +79,14 @@ import {
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
-import type { MpduRxInfo, PHYLayer, RegionConfig } from "./PHYLayer.js";
+import type {
+	MpduRxInfo,
+	PHYLayer,
+	RegionConfig,
+	TransmitBeamOptions,
+	TransmitOptions,
+	TransmitResult,
+} from "./PHYLayer.js";
 import { RCPTransaction } from "./RCPTransaction.js";
 
 const logo: string = `
@@ -168,6 +180,9 @@ function checkOptions(options: RCPHostOptions): void {
 		);
 	}
 }
+
+/** The oldest RCP firmware version this host can talk to */
+const minimumRCPFirmwareVersion = "1.1.0";
 
 // FIXME: Split out MAC layer functionality
 
@@ -364,6 +379,13 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			}`,
 		);
 
+		if (sdkVersionLt(this.rcpFirmwareVersion, minimumRCPFirmwareVersion)) {
+			throw new ZWaveError(
+				`The RCP firmware version ${this.rcpFirmwareVersion} is not supported. Update the firmware to at least v${minimumRCPFirmwareVersion}.`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+
 		this.rcpLog.print(`Querying region info...`);
 		const regionInfo = await this.queryRegion();
 		this.rfRegion = regionInfo.region;
@@ -538,6 +560,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				const ret = await this.executeSerialAPICommand(
 					transaction.message,
 					transaction.stack,
+					transaction.responseOnly,
 				);
 				transaction.promise.resolve(ret);
 			} catch (e) {
@@ -553,8 +576,9 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private async executeSerialAPICommand(
 		msg: RCPMessage,
 		transactionSource?: string,
+		responseOnly?: boolean,
 	): Promise<RCPMessage | undefined> {
-		const machine = createSerialAPICommandMachine(msg);
+		const machine = createSerialAPICommandMachine(msg, { responseOnly });
 		const abortController = new AbortController();
 
 		let nextInput: SerialAPICommandMachineInput<RCPMessage> | undefined = {
@@ -703,6 +727,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		TResponse extends RCPMessage = RCPMessage,
 	>(
 		msg: RCPMessage,
+		options: { responseOnly?: boolean } = {},
 	): Promise<TResponse> {
 		const resultPromise = createDeferredPromise<TResponse>();
 
@@ -710,6 +735,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		const transaction = new RCPTransaction({
 			message: msg,
 			promise: resultPromise,
+			responseOnly: options.responseOnly,
 		});
 
 		// And queue it
@@ -812,12 +838,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	 */
 	public async transmit(
 		data: BytesView,
-		channel: number,
-	): Promise<TransmitResponseStatus | TransmitCallbackStatus> {
+		options: TransmitOptions,
+	): Promise<TransmitResult> {
 		const msg = new TransmitRequest({
-			// TODO: Expose TX power and CCA control in the RCP host API
-			channel,
-			withCCA: false,
+			channel: options.channel,
+			txPower: options.txPower,
+			withCCA: options.withCCA ?? false,
 			data,
 		});
 		try {
@@ -839,6 +865,69 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			// Unexpected error
 			throw e;
 		}
+	}
+
+	private assertFunctionSupported(functionType: RCPFunctionType): void {
+		if (!this.supportedFunctionTypes?.includes(functionType)) {
+			throw new ZWaveError(
+				`The command ${
+					getEnumMemberName(RCPFunctionType, functionType)
+				} is not supported by this firmware`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+	}
+
+	/**
+	 * Transmits a beam and returns whether it was executed successfully.
+	 * The firmware executes the beam on its own and reports back when it is done or was aborted.
+	 */
+	public async transmitBeam(
+		options: TransmitBeamOptions,
+	): Promise<TransmitResult> {
+		this.assertFunctionSupported(RCPFunctionType.TransmitBeam);
+
+		const msg = new TransmitBeamRequest(options);
+
+		// A beam runs for seconds. Await its callback outside of the transaction queue,
+		// so an abort command can still be sent while the beam is ongoing.
+		const abortWait = new AbortController();
+		const callbackPromise = this.waitForMessage<TransmitBeamCallback>(
+			(resp) => msg.isExpectedCallback(resp),
+			msg.getCallbackTimeout() ?? this._options.timeouts.callback,
+			undefined,
+			abortWait.signal,
+		);
+		// Attach a no-op handler, so a timeout while the request is still queued
+		// does not surface as an unhandled rejection
+		void callbackPromise.catch(() => {});
+
+		try {
+			const response = await this.queueSerialApiCommand<
+				TransmitBeamResponse
+			>(msg, { responseOnly: true });
+			if (response.status !== TransmitResponseStatus.Queued) {
+				abortWait.abort();
+				return response.status;
+			}
+		} catch (e) {
+			abortWait.abort();
+			if (isZWaveError(e) && e.context instanceof TransmitBeamResponse) {
+				return e.context.status;
+			}
+			throw e;
+		}
+
+		const callback = await callbackPromise;
+		return callback.status;
+	}
+
+	/** Stops an ongoing beam transmission */
+	public async abortBeam(): Promise<void> {
+		this.assertFunctionSupported(RCPFunctionType.AbortBeam);
+
+		const msg = new AbortBeamRequest();
+		await this.queueSerialApiCommand<AbortBeamResponse>(msg);
 	}
 
 	// #region RCPMessage handling

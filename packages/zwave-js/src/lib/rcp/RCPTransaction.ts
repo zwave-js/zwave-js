@@ -16,6 +16,11 @@ export interface RCPTransactionOptions {
 	message: RCPMessage;
 	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
 	promise: DeferredPromise<RCPMessage | void>;
+	/**
+	 * Complete this transaction when the response is received, even if the message expects a callback.
+	 * The caller is responsible for awaiting the callback.
+	 */
+	responseOnly?: boolean;
 }
 
 /**
@@ -27,6 +32,7 @@ export class RCPTransaction implements Comparable<RCPTransaction> {
 	) {
 		this.promise = options.promise;
 		this.message = options.message;
+		this.responseOnly = options.responseOnly ?? false;
 
 		// We need create the stack on a temporary object or the Error
 		// class will try to print the message
@@ -54,6 +60,9 @@ export class RCPTransaction implements Comparable<RCPTransaction> {
 
 	/** The "primary" message this transaction contains */
 	public readonly message: RCPMessage;
+
+	/** Whether this transaction is complete once the response is received */
+	public readonly responseOnly: boolean;
 
 	/**
 	 * Forcefully aborts the message generator by throwing the given result.
