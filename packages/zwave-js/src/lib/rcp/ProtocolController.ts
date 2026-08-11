@@ -359,6 +359,8 @@ export class ProtocolController
 				throw new Error(`Unsupported header format ${headerFormat}`);
 		}
 
+		let busyAttempts = 0;
+
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
 			// Serializing an MPDU changes its payload property, so we set it here
 			// to the original data
@@ -395,8 +397,9 @@ export class ProtocolController
 					break;
 
 				case TransmitCallbackStatus.ChannelBusy:
-					// TODO: Wait for channel to be free, try again
-					return MACTransmitResult.ChannelBusy;
+					// TODO: Wait for channel to be free before retrying
+					busyAttempts++;
+					continue;
 
 				case TransmitResponseStatus.Busy:
 					return MACTransmitResult.Error_QueueBusy;
@@ -444,6 +447,8 @@ export class ProtocolController
 
 			if (ack) return MACTransmitResult.OK;
 		}
+
+		if (busyAttempts === maxAttempts) return MACTransmitResult.ChannelBusy;
 
 		return MACTransmitResult.NoAck;
 	}

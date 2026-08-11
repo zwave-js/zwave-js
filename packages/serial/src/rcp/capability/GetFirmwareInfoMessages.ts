@@ -3,6 +3,7 @@ import {
 	encodeBitMask,
 	logList,
 	parseBitMask,
+	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
@@ -47,6 +48,9 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 		raw: RCPMessageRaw,
 		_ctx: RCPMessageParsingContext,
 	): GetFirmwareInfoResponse {
+		// 2 versions with 3 bytes each, the radio library, and the bitmask length
+		validatePayload(raw.payload.length >= 8);
+
 		let offset = 0;
 		const majorVersion = raw.payload[offset++];
 		const minorVersion = raw.payload[offset++];
@@ -63,6 +67,9 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 			`${radioMajorVersion}.${radioMinorVersion}.${radioPatchVersion}`;
 
 		const functionTypeBitmaskLength = raw.payload[offset++];
+		validatePayload(
+			raw.payload.length >= offset + functionTypeBitmaskLength,
+		);
 		const supportedFunctionTypes: RCPFunctionType[] = parseBitMask(
 			raw.payload.slice(offset, offset + functionTypeBitmaskLength),
 		);
@@ -82,10 +89,10 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
 		const rcpVersionBytes = this.rcpFirmwareVersion
-			.split(".", 2)
+			.split(".", 3)
 			.map((str) => parseInt(str));
 		const radioVersionBytes = this.radioLibraryVersion
-			.split(".", 2)
+			.split(".", 3)
 			.map((str) => parseInt(str));
 
 		const functionTypeBitmask = encodeBitMask(this.supportedFunctionTypes);

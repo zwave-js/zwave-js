@@ -45,6 +45,7 @@ import {
 	TransmitBeamRequest,
 	TransmitBeamResponse,
 	TransmitCallback,
+	TransmitCallbackStatus,
 	TransmitRequest,
 	TransmitResponse,
 	TransmitResponseStatus,
@@ -259,6 +260,9 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private rcpFirmwareVersion: MaybeNotKnown<string>;
 	private radioLibraryVersion: MaybeNotKnown<string>;
 	private radioLibrary: MaybeNotKnown<RadioLibrary>;
+
+	/** Whether a beam transmission is currently being executed by the firmware */
+	private beamActive: boolean = false;
 
 	private rfRegion: MaybeNotKnown<RFRegion>;
 	private channelConfig: MaybeNotKnown<ChannelConfiguration>;
@@ -887,39 +891,48 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	): Promise<TransmitResult> {
 		this.assertFunctionSupported(RCPFunctionType.TransmitBeam);
 
+		// The firmware can only execute one beam at a time
+		if (this.beamActive) return TransmitResponseStatus.Busy;
+
 		const msg = new TransmitBeamRequest(options);
 
-		// A beam runs for seconds. Await its callback outside of the transaction queue,
-		// so an abort command can still be sent while the beam is ongoing.
-		const abortWait = new AbortController();
-		const callbackPromise = this.waitForMessage<TransmitBeamCallback>(
-			(resp) => msg.isExpectedCallback(resp),
-			msg.getCallbackTimeout() ?? this._options.timeouts.callback,
-			undefined,
-			abortWait.signal,
-		);
-		// Attach a no-op handler, so a timeout while the request is still queued
-		// does not surface as an unhandled rejection
-		void callbackPromise.catch(() => {});
-
 		try {
-			const response = await this.queueSerialApiCommand<
-				TransmitBeamResponse
-			>(msg, { responseOnly: true });
-			if (response.status !== TransmitResponseStatus.Queued) {
-				abortWait.abort();
-				return response.status;
-			}
+			await this.queueSerialApiCommand<TransmitBeamResponse>(
+				msg,
+				{ responseOnly: true },
+			);
 		} catch (e) {
-			abortWait.abort();
 			if (isZWaveError(e) && e.context instanceof TransmitBeamResponse) {
 				return e.context.status;
 			}
 			throw e;
 		}
 
-		const callback = await callbackPromise;
-		return callback.status;
+		// The beam only starts after the firmware has sent the response, and serial frames
+		// are processed in order, so the callback cannot arrive before this wait is registered.
+		// Awaiting it outside of the transaction queue keeps the queue free for an abort command.
+		this.beamActive = true;
+		try {
+			const callback = await this.waitForMessage<TransmitBeamCallback>(
+				(resp) => msg.isExpectedCallback(resp),
+				msg.getCallbackTimeout() ?? this._options.timeouts.callback,
+			);
+			return callback.status;
+		} catch (e) {
+			if (
+				isZWaveError(e)
+				&& e.code === ZWaveErrorCodes.Controller_Timeout
+			) {
+				this.rcpLog.print(
+					`Received no callback for the beam transmission within ${msg.getCallbackTimeout()} ms`,
+					"error",
+				);
+				return TransmitCallbackStatus.UnknownError;
+			}
+			throw e;
+		} finally {
+			this.beamActive = false;
+		}
 	}
 
 	/** Stops an ongoing beam transmission */

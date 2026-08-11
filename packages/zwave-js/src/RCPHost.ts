@@ -10,7 +10,12 @@ export {
 	GetFirmwareInfoResponse,
 } from "@zwave-js/serial/rcp";
 export type { RCPLogContext } from "./lib/log/RCP.js";
-export type { PHYLayer } from "./lib/rcp/PHYLayer.js";
+export type {
+	PHYLayer,
+	TransmitBeamOptions,
+	TransmitOptions,
+	TransmitResult,
+} from "./lib/rcp/PHYLayer.js";
 export { ProtocolController } from "./lib/rcp/ProtocolController.js";
 export type {
 	PartialRCPHostOptions,

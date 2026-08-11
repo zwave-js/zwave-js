@@ -62,8 +62,13 @@ export class TransmitBeamRequest extends RCPMessage {
 	public data: BytesView;
 
 	public getCallbackTimeout(): number | undefined {
-		// The firmware only reports back when the entire beam is done
-		return this.numFragments * this.fragmentPeriodMs + 1000;
+		// The firmware only reports back when the entire beam is done.
+		// A single fragment has no period, so its duration determines the runtime.
+		const fragmentTime = Math.max(
+			this.fragmentPeriodMs,
+			this.fragmentDurationMs,
+		);
+		return this.numFragments * fragmentTime + 1000;
 	}
 
 	private assertValidOptions(): void {
@@ -94,6 +99,16 @@ export class TransmitBeamRequest extends RCPMessage {
 		) {
 			throw new ZWaveError(
 				`The fragment period must be an integer between 0 and 65535 ms`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		// Back-to-back fragments must not overlap
+		if (
+			this.numFragments > 1
+			&& this.fragmentPeriodMs < this.fragmentDurationMs
+		) {
+			throw new ZWaveError(
+				`The fragment period must be at least as long as the fragment duration`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
