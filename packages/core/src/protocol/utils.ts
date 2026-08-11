@@ -1,8 +1,13 @@
 import { type RSSI } from "../definitions/RSSI.js";
 import { ChannelConfiguration } from "./_Types.js";
 
+/**
+ * The TX power levels in dBm a Z-Wave Long Range beam frame can advertise,
+ * indexed by its 4-bit Tx Power field. Z-Wave Long Range PHY and MAC Layer
+ * Specification (2023.07.03), Table 6-31.
+ */
 // dprint-ignore
-const longRangeBeamPowers = [
+export const longRangeBeamPowers = [
 	-6, -2,  2,  6,
 	10, 13, 16, 19,
 	21, 23, 25, 26,

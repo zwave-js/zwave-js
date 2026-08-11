@@ -1069,6 +1069,11 @@ export function encodeFloatWithScale(value: number, scale: number, override?: {
     precision?: number;
 }): Bytes;
 
+// Warning: (ae-missing-release-tag) "encodeLongRangeBeamFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function encodeLongRangeBeamFrame(options: LongRangeBeamFrameOptions): Bytes;
+
 // Warning: (ae-missing-release-tag) "encodeLongRangeNodeBitMask" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1117,6 +1122,11 @@ export function encodeNodeUpdatePayload(nif: NodeUpdatePayload, nodeIdType?: Nod
 //
 // @public
 export function encodePartial(fullValue: number, partialValue: number, bitMask: number): number;
+
+// Warning: (ae-missing-release-tag) "encodeZWaveBeamFrame" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function encodeZWaveBeamFrame(options: ZWaveBeamFrameOptions): Bytes;
 
 // Warning: (ae-missing-release-tag) "encryptAES128CBC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1670,6 +1680,11 @@ export function getNumericEnumValues(enumeration: Record<string, any>): readonly
 //
 // @public (undocumented)
 export function getProtocolHeaderFormat(mode: RadioProtocolMode, channel: number): ProtocolHeaderFormat;
+
+// Warning: (ae-missing-release-tag) "getProtocolHeaderFormatForDataRate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getProtocolHeaderFormatForDataRate(region: RFRegion, protocolDataRate: ProtocolDataRate): ProtocolHeaderFormat;
 
 // Warning: (ae-missing-release-tag) "getRouteTag" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2476,10 +2491,31 @@ export interface LogVisibility {
     isNodeLoggingVisible(nodeId: number): boolean;
 }
 
+// Warning: (ae-missing-release-tag) "LongRangeBeamFrameOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface LongRangeBeamFrameOptions {
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    homeIdHash: number;
+    txPower: number;
+}
+
+// Warning: (ae-missing-release-tag) "longRangeBeamPowers" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const longRangeBeamPowers: number[];
+
 // Warning: (ae-missing-release-tag) "longRangeBeamPowerToDBm" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export function longRangeBeamPowerToDBm(power: number): number;
+
+// Warning: (ae-missing-release-tag) "longRangeBeamPowerToIndex" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function longRangeBeamPowerToIndex(dBm: number): number;
 
 // Warning: (ae-missing-release-tag) "LongRangeChannel" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2492,6 +2528,11 @@ export enum LongRangeChannel {
     B = 2,
     Unsupported = 0
 }
+
+// Warning: (ae-missing-release-tag) "longRangeHomeIdHash" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function longRangeHomeIdHash(homeId: number): number;
 
 // Warning: (ae-missing-release-tag) "LongRangeMPDU" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5346,6 +5387,16 @@ export interface ZWaveApiVersion {
     version: number;
 }
 
+// Warning: (ae-missing-release-tag) "ZWaveBeamFrameOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface ZWaveBeamFrameOptions {
+    // (undocumented)
+    destinationNodeId: number;
+    // (undocumented)
+    homeIdHash?: number;
+}
+
 // Warning: (ae-missing-release-tag) "ZWaveDataRate" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -5508,6 +5559,11 @@ export enum ZWaveErrorCodes {
     SupervisionCC_CommandFailed = 1100,
     Unsupported_Firmware_Format = 1507
 }
+
+// Warning: (ae-missing-release-tag) "zwaveHomeIdHash" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function zwaveHomeIdHash(homeId: number): number;
 
 // Warning: (ae-missing-release-tag) "ZWaveLibraryTypes" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

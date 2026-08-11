@@ -1,32 +1,9 @@
 import { Bytes } from "@zwave-js/shared";
+import { longRangeBeamPowers } from "./utils.js";
 
 // ITU-T G.9959 (01/2015), Table 8-17: "The Beam Tag value 0x55 shall advertise
 // the presence of a NodeID field and an optional HomeID Hash field"
 const BEAM_TAG = 0x55;
-
-/**
- * The TX power levels in dBm a Z-Wave Long Range beam frame can advertise,
- * indexed by its 4-bit Tx Power field. Z-Wave Long Range PHY and MAC Layer
- * Specification (2023.07.03), Table 6-31.
- */
-const LONG_RANGE_BEAM_POWER_LEVELS = [
-	-6,
-	-2,
-	2,
-	6,
-	10,
-	13,
-	16,
-	19,
-	21,
-	23,
-	25,
-	26,
-	27,
-	28,
-	29,
-	30,
-] as const;
 
 function xorHomeIdBytes(homeId: number): number {
 	let hash = 0xff;
@@ -65,10 +42,8 @@ export function longRangeHomeIdHash(homeId: number): number {
  * beam frame, rounding up to the nearest representable level.
  */
 export function longRangeBeamPowerToIndex(dBm: number): number {
-	const index = LONG_RANGE_BEAM_POWER_LEVELS.findIndex((level) =>
-		level >= dBm
-	);
-	return index === -1 ? LONG_RANGE_BEAM_POWER_LEVELS.length - 1 : index;
+	const index = longRangeBeamPowers.findIndex((level) => level >= dBm);
+	return index === -1 ? longRangeBeamPowers.length - 1 : index;
 }
 
 export interface ZWaveBeamFrameOptions {

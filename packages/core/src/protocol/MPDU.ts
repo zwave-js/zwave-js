@@ -60,6 +60,12 @@ export abstract class MPDU {
 		data: Bytes,
 		ctx: MPDUParsingContext,
 	): ZWaveMPDU | LongRangeMPDU {
+		validatePayload.withReason(
+			`Unsupported protocol/data rate ${ctx.protocolDataRate}. MPDU payload: ${
+				buffer2hex(data)
+			}`,
+		)(ctx.protocolDataRate in ProtocolDataRate);
+
 		// The channels Long Range occupies depend on the channel configuration,
 		// e.g. the end device configurations put Long Range on channels 0 and 1
 		if (ctx.protocolDataRate !== ProtocolDataRate.LongRange_100k) {
@@ -616,6 +622,29 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			ctx.protocolDataRate,
 		);
 
+		// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
+		// NWK:0019.1: "This field shall be in the range 1…4."
+		if (this.repeaters.length < 1 || this.repeaters.length > 4) {
+			throw new ZWaveError(
+				`Invalid number of repeaters ${this.repeaters.length} for RoutedZWaveMPDU.`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		// The routing header has room for a single extension. Z-Wave and Z-Wave
+		// Long Range Network Layer Specification (2023.05.26), NWK:0036.1: "A
+		// node sending a Routed frame shall not include the Incoming Routed
+		// RSSI Extension." NWK:0038.1: "A node returning a Routed
+		// Acknowledgement shall not include the Destination Wake Up Extension."
+		if (
+			this.destinationWakeupType != undefined && this.repeaterRSSI?.length
+		) {
+			throw new ZWaveError(
+				`A RoutedZWaveMPDU must not carry both the destination wakeup and the repeater RSSI extension.`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
 		const hasExtendedHeader = this.destinationWakeupType != undefined
 			|| !!this.repeaterRSSI?.length;
 
@@ -630,8 +659,12 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			| (this.routedAck ? 0b10 : 0)
 			| (this.routedError ? 0b100 : 0)
 			| (hasExtendedHeader ? 0b1000 : 0);
-		if (this.routedError && this.failedHop != undefined) {
-			header[1] |= (this.failedHop & 0xf) << 4;
+		// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
+		// NWK:000F.1: "If the R-Err field is set to 1: This field shall be
+		// parsed as Failed Hop (4 bits)." The speed modified bit must stay clear
+		// in that case, so a receiver does not read it as failed hop 1
+		if (this.routedError) {
+			header[1] |= ((this.failedHop ?? 0) & 0xf) << 4;
 		} else if (headerFormat === ProtocolHeaderFormat.Classic2Channel) {
 			// Z-Wave and Z-Wave Long Range Network Layer Specification
 			// (2023.05.26), NWK:000D.1: "The 'Speed Modified' subfield from the
