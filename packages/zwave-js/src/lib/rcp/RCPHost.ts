@@ -41,7 +41,7 @@ import {
 	type SetupRadio_GetRegionResponse,
 	SetupRadio_SetRegionRequest,
 	type SetupRadio_SetRegionResponse,
-	TransmitBeamCallback,
+	type TransmitBeamCallback,
 	TransmitBeamRequest,
 	TransmitBeamResponse,
 	TransmitCallback,

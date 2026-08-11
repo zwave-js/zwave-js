@@ -27,14 +27,20 @@ export type TransmitResult = TransmitResponseStatus | TransmitCallbackStatus;
 
 export interface TransmitOptions {
 	channel: number;
-	/** The transmit power in dBm. If omitted, the firmware keeps its current setting. */
+	/**
+	 * The transmit power in dBm, in steps of 0.1 dBm.
+	 * If omitted, the firmware keeps its current setting.
+	 */
 	txPower?: number;
 	/** Whether to perform clear channel assessment before transmitting */
 	withCCA?: boolean;
 }
 
 export interface TransmitBeamOptions {
-	/** The transmit power in dBm. If omitted, the firmware keeps its current setting. */
+	/**
+	 * The transmit power in dBm, in steps of 0.1 dBm.
+	 * If omitted, the firmware keeps its current setting.
+	 */
 	txPower?: number;
 	numFragments: number;
 	fragmentDurationMs: number;
