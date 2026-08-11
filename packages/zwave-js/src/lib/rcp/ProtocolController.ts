@@ -1,6 +1,7 @@
 import {
 	AckLongRangeMPDU,
 	AckZWaveMPDU,
+	BeamingInfo,
 	type LogConfig,
 	type LogContainer,
 	LongRangeMPDU,
@@ -21,8 +22,12 @@ import {
 	SinglecastZWaveMPDU,
 	ZWaveError,
 	ZWaveErrorCodes,
+	encodeLongRangeBeamFrame,
+	encodeZWaveBeamFrame,
 	getProtocolHeaderFormatForDataRate,
 	isRssiError,
+	longRangeHomeIdHash,
+	zwaveHomeIdHash,
 } from "@zwave-js/core";
 import {
 	type ChannelInfo,
@@ -53,6 +58,7 @@ import {
 	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
 import {
+	type MACDestinationWakeup,
 	type MACTransmitAckOptions,
 	MACTransmitKind,
 	type MACTransmitOptions,
@@ -317,6 +323,98 @@ export function isFinalHopOfRoutedFrame(mpdu: MPDU): mpdu is RoutedZWaveMPDU {
 		&& mpdu.hop === mpdu.repeaters.length;
 }
 
+/**
+ * ITU-T G.9959 (01/2015), §8.1.3.12: "A long continuous beam may last for a
+ * maximum of 1 160 ms, and a short one may last for a maximum of 300 ms. The
+ * recommended duration is 1 100 ms for a long continuous beam and 275 ms for a
+ * short continuous beam."
+ */
+const SHORT_CONTINUOUS_BEAM_DURATION = 275;
+const LONG_CONTINUOUS_BEAM_DURATION = 1100;
+
+/**
+ * ITU-T G.9959 (01/2015), §8.1.3.11: "The beam fragment duration shall be in the
+ * range 110-115 ms." The LR spec repeats this in §6.3.7
+ */
+const BEAM_FRAGMENT_DURATION = 112;
+
+/**
+ * ITU-T G.9959 (01/2015), §8.1.3.11: "The next beam fragment shall begin in the
+ * range 190-200 ms measured from the beginning of the previous beam fragment."
+ * The LR spec repeats this in §6.3.7
+ */
+const BEAM_FRAGMENT_PERIOD = 195;
+
+/**
+ * ITU-T G.9959 (01/2015), §8.1.3.11: "A full fragmented beam shall span
+ * 3 000 ms." The LR spec repeats this in §6.3.7. The last of 16 fragments starts
+ * at 15 × 195 ms and ends 112 ms later, which spans 3 037 ms
+ */
+const NUM_BEAM_FRAGMENTS = 16;
+
+export interface BeamParameters {
+	numFragments: number;
+	fragmentDurationMs: number;
+	fragmentPeriodMs: number;
+	/** The beaming information to advertise on the frame following the beam */
+	beamingInfo: BeamingInfo;
+}
+
+/**
+ * Translate a destination's wakeup interval into the beam the header format
+ * demands, throwing if the two do not go together.
+ */
+export function getBeamParameters(
+	wakeup: MACDestinationWakeup,
+	headerFormat: ProtocolHeaderFormat,
+): BeamParameters {
+	// G.9959 §8.1.3.14: "FL nodes operating in channel configuration 3 shall be
+	// able to receive and transmit the fragmented beam format at data rate 3."
+	// The LR MAC knows the fragmented beam only
+	const fragmentedOnly =
+		headerFormat !== ProtocolHeaderFormat.Classic2Channel;
+
+	if (wakeup === "fragmented") {
+		if (!fragmentedOnly) {
+			throw new ZWaveError(
+				`Fragmented beams are not supported in channel configurations 1 and 2`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		return {
+			numFragments: NUM_BEAM_FRAGMENTS,
+			fragmentDurationMs: BEAM_FRAGMENT_DURATION,
+			fragmentPeriodMs: BEAM_FRAGMENT_PERIOD,
+			// Table 8-14b: Frame Control[6..4] = "100" advertises a fragmented beam
+			beamingInfo: BeamingInfo.Fragmented,
+		};
+	}
+
+	if (fragmentedOnly) {
+		throw new ZWaveError(
+			`Continuous beams are only supported in channel configurations 1 and 2`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+
+	// G.9959 §8.1.3.12: "The beam frames shall be sent back to back to prevent
+	// other TXs from interrupting the continuous beam", so the firmware runs a
+	// continuous beam as a single fragment
+	const duration = wakeup === "250ms"
+		? SHORT_CONTINUOUS_BEAM_DURATION
+		: LONG_CONTINUOUS_BEAM_DURATION;
+	return {
+		numFragments: 1,
+		fragmentDurationMs: duration,
+		fragmentPeriodMs: duration,
+		// Table 8-14a: Frame Control[6..5] = "01" advertises a short continuous
+		// beam, "10" a long one
+		beamingInfo: wakeup === "250ms"
+			? BeamingInfo.ShortContinuous
+			: BeamingInfo.LongContinuous,
+	};
+}
+
 export interface ProtocolControllerOptions {
 	/**
 	 * Optional log configuration
@@ -567,6 +665,132 @@ export class ProtocolController
 		}
 	}
 
+	/**
+	 * Beam a sleeping FLiRS destination awake, so the frame that follows reaches
+	 * it. Returns the channel the destination is awake on, if the beam pins one.
+	 */
+	private async wakeDestination(
+		phy: PHYLayer,
+		options: MACTransmitOptions,
+		beam: BeamParameters,
+		protocol: Protocols,
+		headerFormat: ProtocolHeaderFormat,
+		radioTXPower: number | undefined,
+	): Promise<
+		{ pinnedChannel?: ChannelInfo } | { result: MACTransmitResult }
+	> {
+		const isBroadcast =
+			options.destination.kind === MACTransmitKind.Broadcast;
+		const destinationNodeId =
+			options.destination.kind === MACTransmitKind.Singlecast
+				? options.destination.nodeId
+				: protocol === Protocols.ZWaveLongRange
+				? NODE_ID_BROADCAST_LR
+				: NODE_ID_BROADCAST;
+
+		let channels: number[];
+		let data: BytesView;
+		let pinnedChannel: ChannelInfo | undefined;
+
+		if (headerFormat === ProtocolHeaderFormat.LongRange) {
+			channels = [this.getPrimaryLongRangeChannel().channel];
+			data = encodeLongRangeBeamFrame({
+				destinationNodeId,
+				txPower: radioTXPower ?? LR_DEFAULT_TX_POWER,
+				homeIdHash: longRangeHomeIdHash(options.homeId),
+			});
+		} else {
+			data = encodeZWaveBeamFrame({
+				destinationNodeId,
+				homeIdHash: zwaveHomeIdHash(options.homeId),
+			});
+			const classic = this.getChannelsForProtocolOrThrow(Protocols.ZWave);
+			if (headerFormat === ProtocolHeaderFormat.Classic3Channel) {
+				// §8.1.3.11: "A receiver shall be able to monitor multiple channels
+				// for beam frames", so the firmware cycles the fragments through all
+				// three channels
+				channels = classic.map((ch) => ch.channel);
+			} else {
+				// §8.1.3.12: "The continuous beam shall be sent at data rate R2."
+				const r2 = classic.find((ch) =>
+					ch.dataRate === ProtocolDataRate.ZWave_40k
+				);
+				if (r2 == undefined) {
+					throw new ZWaveError(
+						`The current region has no R2 channel to beam on`,
+						ZWaveErrorCodes.Driver_NotSupported,
+					);
+				}
+				channels = [r2.channel];
+				// The destination stays awake on the channel it heard the beam on
+				pinnedChannel = r2;
+			}
+		}
+
+		this.protocolLog.print(
+			`Beaming node ${destinationNodeId} awake on channel${
+				channels.length > 1 ? "s" : ""
+			} ${channels.join(", ")}`,
+			"verbose",
+		);
+
+		const beamPromise = phy.transmitBeam({
+			txPower: radioTXPower,
+			numFragments: beam.numFragments,
+			fragmentDurationMs: beam.fragmentDurationMs,
+			fragmentPeriodMs: beam.fragmentPeriodMs,
+			channels,
+			data,
+		});
+
+		// §8.1.3.11: "A receiving node may interrupt the transmission of a
+		// fragmented beam by acknowledging a singlecast beam fragment. A receiving
+		// node shall not acknowledge a broadcast beam fragment." A broadcast beam in
+		// LR is acked by every receiver, and we do not know how many to expect, so
+		// it runs to completion as well
+		let acked = false;
+		if (beam.numFragments > 1 && !isBroadcast) {
+			const AckMPDU = headerFormat === ProtocolHeaderFormat.LongRange
+				? AckLongRangeMPDU
+				: AckZWaveMPDU;
+			const isBeamAck = (m: MPDU) =>
+				m instanceof AckMPDU
+				&& m.homeId === options.homeId
+				&& m.sourceNodeId === destinationNodeId;
+
+			const ackPromise = this.waitForMPDU(
+				isBeamAck,
+				beam.numFragments * beam.fragmentPeriodMs,
+			).then(() => true, () => false);
+
+			acked = await Promise.race([
+				ackPromise,
+				beamPromise.then(() => false),
+			]);
+
+			if (acked) await phy.abortBeam();
+		}
+
+		const result = await beamPromise;
+		switch (result) {
+			case TransmitCallbackStatus.Completed:
+				break;
+
+			case TransmitCallbackStatus.Aborted:
+				// Our own abort after the destination acked leaves the beam aborted
+				if (acked) break;
+				return { result: MACTransmitResult.Error_Aborted };
+
+			case TransmitResponseStatus.Busy:
+				return { result: MACTransmitResult.Error_QueueBusy };
+
+			default:
+				return { result: MACTransmitResult.Error_Unknown };
+		}
+
+		return { pinnedChannel };
+	}
+
 	public async transmitData(
 		data: BytesView,
 		options: MACTransmitOptions,
@@ -664,7 +888,25 @@ export class ProtocolController
 			this.phyLayer.regionConfig.region,
 			initialChannel.dataRate,
 		);
-		const attempts = this.getAttemptSchedule(protocol, headerFormat);
+		let attempts = this.getAttemptSchedule(protocol, headerFormat);
+
+		const wakeup = options.destinationWakeup;
+		let beam: BeamParameters | undefined;
+		if (wakeup != undefined) {
+			if (route) {
+				throw new ZWaveError(
+					`Beaming a FLiRS destination over a route is not implemented yet`,
+					ZWaveErrorCodes.Driver_NotSupported,
+				);
+			}
+			if (options.destination.kind === MACTransmitKind.Multicast) {
+				throw new ZWaveError(
+					`Beaming is only supported for singlecast and broadcast transmissions`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			beam = getBeamParameters(wakeup, headerFormat);
+		}
 
 		const sequenceNumber = this.nextSequenceNumber(headerFormat);
 
@@ -786,6 +1028,32 @@ export class ProtocolController
 			m.sequenceNumber === mpdu.sequenceNumber
 			|| (m.sequenceNumber === 0
 				&& headerFormat === ProtocolHeaderFormat.Classic2Channel);
+
+		if (beam) {
+			const outcome = await this.wakeDestination(
+				this.phyLayer,
+				options,
+				beam,
+				protocol,
+				headerFormat,
+				radioTXPower,
+			);
+			if ("result" in outcome) return { result: outcome.result };
+
+			if (mpdu instanceof SinglecastZWaveMPDU) {
+				mpdu.beamingInfo = beam.beamingInfo;
+			}
+
+			if (outcome.pinnedChannel) {
+				// The destination is only awake on the channel it heard the beam on,
+				// so the fallback to a slower channel must not happen here
+				const channel = outcome.pinnedChannel;
+				attempts = Array.from(
+					{ length: 1 + MAC_MAX_FRAME_RETRIES },
+					() => ({ channel: () => channel, speedModified: false }),
+				);
+			}
+		}
 
 		let busyAttempts = 0;
 		let sawSilentAck = false;

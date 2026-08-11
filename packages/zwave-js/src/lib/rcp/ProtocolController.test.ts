@@ -1,8 +1,11 @@
 import {
+	BeamingInfo,
 	ProtocolDataRate,
 	ProtocolHeaderFormat,
 	RoutedZWaveMPDU,
 	SinglecastZWaveMPDU,
+	ZWaveErrorCodes,
+	assertZWaveError,
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
@@ -10,6 +13,7 @@ import {
 	ackWaitDuration,
 	classic2ChannelAttemptSchedule,
 	frameDuration,
+	getBeamParameters,
 	isFinalHopOfRoutedFrame,
 	randomRetransmitDelay,
 	routedAckTimeout,
@@ -269,5 +273,94 @@ describe("isFinalHopOfRoutedFrame()", () => {
 			payload: Bytes.from([]),
 		});
 		expect(isFinalHopOfRoutedFrame(singlecast)).toBe(false);
+	});
+});
+
+describe("getBeamParameters()", () => {
+	// G.9959 §8.1.3.12: "The recommended duration is 1 100 ms for a long
+	// continuous beam and 275 ms for a short continuous beam."
+	test("a 250ms destination is beamed with a short continuous beam", () => {
+		expect(
+			getBeamParameters("250ms", ProtocolHeaderFormat.Classic2Channel),
+		).toStrictEqual({
+			numFragments: 1,
+			fragmentDurationMs: 275,
+			fragmentPeriodMs: 275,
+			beamingInfo: BeamingInfo.ShortContinuous,
+		});
+	});
+
+	test("a 1000ms destination is beamed with a long continuous beam", () => {
+		expect(
+			getBeamParameters("1000ms", ProtocolHeaderFormat.Classic2Channel),
+		).toStrictEqual({
+			numFragments: 1,
+			fragmentDurationMs: 1100,
+			fragmentPeriodMs: 1100,
+			beamingInfo: BeamingInfo.LongContinuous,
+		});
+	});
+
+	test.each([
+		[ProtocolHeaderFormat.Classic3Channel],
+		[ProtocolHeaderFormat.LongRange],
+	])("header format %i uses the fragmented beam", (headerFormat) => {
+		expect(getBeamParameters("fragmented", headerFormat)).toStrictEqual({
+			numFragments: 16,
+			fragmentDurationMs: 112,
+			fragmentPeriodMs: 195,
+			beamingInfo: BeamingInfo.Fragmented,
+		});
+	});
+
+	// The literals above are the contract. These bounds are what the spec
+	// requires of them, so a future retune cannot silently leave the window
+	test("the fragmented beam parameters stay inside the spec bounds", () => {
+		const beam = getBeamParameters(
+			"fragmented",
+			ProtocolHeaderFormat.LongRange,
+		);
+
+		// §8.1.3.11: "The beam fragment duration shall be in the range 110-115 ms."
+		expect(beam.fragmentDurationMs).toBeGreaterThanOrEqual(110);
+		expect(beam.fragmentDurationMs).toBeLessThanOrEqual(115);
+
+		// §8.1.3.11: "The next beam fragment shall begin in the range 190-200 ms
+		// measured from the beginning of the previous beam fragment."
+		expect(beam.fragmentPeriodMs).toBeGreaterThanOrEqual(190);
+		expect(beam.fragmentPeriodMs).toBeLessThanOrEqual(200);
+
+		// §8.1.3.11: "A full fragmented beam shall span 3 000 ms." An integer
+		// number of fragments cannot land on exactly 3000 ms, so the beam covers
+		// the window and overshoots by less than one period
+		const span = (beam.numFragments - 1) * beam.fragmentPeriodMs
+			+ beam.fragmentDurationMs;
+		expect(span).toBeGreaterThanOrEqual(3000);
+		expect(span).toBeLessThan(3000 + beam.fragmentPeriodMs);
+	});
+
+	test.each([
+		[ProtocolHeaderFormat.Classic3Channel],
+		[ProtocolHeaderFormat.LongRange],
+	])("continuous beams are rejected in header format %i", (headerFormat) => {
+		for (const wakeup of ["250ms", "1000ms"] as const) {
+			assertZWaveError(
+				expect,
+				() => getBeamParameters(wakeup, headerFormat),
+				{ errorCode: ZWaveErrorCodes.Argument_Invalid },
+			);
+		}
+	});
+
+	test("fragmented beams are rejected in channel configurations 1 and 2", () => {
+		assertZWaveError(
+			expect,
+			() =>
+				getBeamParameters(
+					"fragmented",
+					ProtocolHeaderFormat.Classic2Channel,
+				),
+			{ errorCode: ZWaveErrorCodes.Argument_Invalid },
+		);
 	});
 });

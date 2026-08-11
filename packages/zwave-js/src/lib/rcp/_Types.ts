@@ -35,6 +35,9 @@ export interface MACTransmitReport {
 	repeaterRSSI?: readonly RSSI[];
 }
 
+/** The wakeup interval a FLiRS destination listens with */
+export type MACDestinationWakeup = "250ms" | "1000ms" | "fragmented";
+
 export interface MACTransmitOptions {
 	// TODO: Make home id and node id optional
 	homeId: number;
@@ -52,6 +55,12 @@ export interface MACTransmitOptions {
 	 * The repeater list must contain between 1 and 4 node IDs.
 	 */
 	route?: readonly number[];
+	/**
+	 * Destination FLiRS wakeup interval. When set and no route is given, a wakeup
+	 * beam precedes the transmission. With a route, it is carried in the routing
+	 * header for the last repeater (not implemented yet).
+	 */
+	destinationWakeup?: MACDestinationWakeup;
 	/**
 	 * Radio TX power in dBm. Default: keep the radio's current power for classic
 	 * Z-Wave, or the default LR TX power for Long Range.
