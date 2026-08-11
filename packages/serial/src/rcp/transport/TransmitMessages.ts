@@ -43,23 +43,43 @@ export enum TransmitCallbackStatus {
 }
 
 /** TX power value that tells the firmware to keep its current setting */
-export const TX_POWER_KEEP_CURRENT = 0x7f;
+export const TX_POWER_KEEP_CURRENT = 0x7fff;
 
-/** Converts a TX power in dBm to the value to transmit, using the sentinel if none is given */
+/**
+ * Converts a TX power in dBm to the deci-dBm value to transmit, using the sentinel if none is given.
+ * The firmware expects an int16 BE in deci-dBm, which matches the units of `RAIL_SetTxPowerDbm`.
+ */
 export function encodeTxPower(txPower: number | undefined): number {
 	if (txPower == undefined) return TX_POWER_KEEP_CURRENT;
-	if (!Number.isInteger(txPower) || txPower < -128 || txPower > 126) {
+	if (!Number.isFinite(txPower)) {
 		throw new ZWaveError(
-			`The TX power must be an integer between -128 and 126 dBm`,
+			`The TX power must be a finite number of dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
-	return txPower;
+	const deciDBm = Math.round(txPower * 10);
+	if (deciDBm < -0x8000 || deciDBm >= TX_POWER_KEEP_CURRENT) {
+		throw new ZWaveError(
+			`The TX power must be between -3276.8 and 3276.6 dBm`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+	return deciDBm;
+}
+
+/** Formats a TX power in dBm for logging, with one decimal for fractional values */
+export function formatTxPower(txPower: number | undefined): string {
+	if (txPower == undefined) return "unchanged";
+	const rounded = Math.round(txPower * 10) / 10;
+	return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} dBm`;
 }
 
 export interface TransmitRequestOptions {
 	channel: number;
-	/** The transmit power in dBm. If omitted, the firmware keeps its current setting. */
+	/**
+	 * The transmit power in dBm, in steps of 0.1 dBm.
+	 * If omitted, the firmware keeps its current setting.
+	 */
 	txPower?: number;
 	/** Whether to perform clear channel assessment before transmitting */
 	withCCA: boolean;
@@ -102,10 +122,11 @@ export class TransmitRequest extends RCPMessage {
 			);
 		}
 
-		const header = new Bytes(3);
+		// CHANNEL | TX_POWER (int16 BE, deci-dBm) | FLAGS | ...DATA
+		const header = new Bytes(4);
 		header[0] = this.channel;
-		header.writeInt8(encodeTxPower(this.txPower), 1);
-		header[2] = this.withCCA ? TransmitFlags.CCA : 0;
+		header.writeInt16BE(encodeTxPower(this.txPower), 1);
+		header[3] = this.withCCA ? TransmitFlags.CCA : 0;
 
 		this.payload = Bytes.concat([
 			header,
@@ -120,9 +141,7 @@ export class TransmitRequest extends RCPMessage {
 			...super.toLogEntry(),
 			message: {
 				channel: this.channel,
-				"TX power": this.txPower != undefined
-					? `${this.txPower} dBm`
-					: "unchanged",
+				"TX power": formatTxPower(this.txPower),
 				CCA: this.withCCA,
 				data: `(${this.data.length} bytes)`,
 			},

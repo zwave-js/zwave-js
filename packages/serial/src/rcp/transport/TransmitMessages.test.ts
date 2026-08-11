@@ -15,17 +15,30 @@ describe("TransmitRequest", () => {
 		await expect(msg.serialize({})).resolves.toStrictEqual(
 			Bytes.from([
 				0x01, // SOF
-				0x08, // length
+				0x09, // length
 				0x00, // Request
 				0x03, // Transmit
 				0x02, // channel
-				0xf6, // TX power
+				0xff,
+				0x9c, // TX power: -100 deci-dBm
 				0x01, // flags: CCA
 				0xaa,
 				0xbb,
-				0x10, // checksum
+				0x84, // checksum
 			]),
 		);
+	});
+
+	test("encodes fractional TX power in steps of 0.1 dBm", async () => {
+		const msg = new TransmitRequest({
+			channel: 0,
+			txPower: 12.5,
+			withCCA: false,
+			data: Bytes.from([]),
+		});
+
+		const serialized = await msg.serialize({});
+		expect(serialized.readInt16BE(5)).toBe(125);
 	});
 
 	test("uses the sentinel TX power when none is given", async () => {
@@ -37,13 +50,32 @@ describe("TransmitRequest", () => {
 
 		const serialized = await msg.serialize({});
 		expect(serialized[5]).toBe(0x7f);
-		expect(serialized[6]).toBe(0x00);
+		expect(serialized[6]).toBe(0xff);
+		expect(serialized[7]).toBe(0x00);
 	});
 
-	test("throws when the TX power is out of range", async () => {
+	test("accepts a TX power of 127 dBm", async () => {
 		const msg = new TransmitRequest({
 			channel: 0,
-			txPower: 200,
+			txPower: 127,
+			withCCA: false,
+			data: Bytes.from([]),
+		});
+
+		const serialized = await msg.serialize({});
+		expect(serialized.readInt16BE(5)).toBe(1270);
+	});
+
+	test.each([
+		["collides with the sentinel", 3276.7],
+		["exceeds the int16 range", 3300],
+		["falls below the int16 range", -3300],
+		["is not finite", Number.POSITIVE_INFINITY],
+		["is not a number", Number.NaN],
+	])("throws when the TX power %s", async (_name, txPower) => {
+		const msg = new TransmitRequest({
+			channel: 0,
+			txPower,
 			withCCA: false,
 			data: Bytes.from([]),
 		});

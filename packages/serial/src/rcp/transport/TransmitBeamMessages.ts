@@ -20,10 +20,14 @@ import {
 	TransmitCallbackStatus,
 	TransmitResponseStatus,
 	encodeTxPower,
+	formatTxPower,
 } from "./TransmitMessages.js";
 
 export interface TransmitBeamRequestOptions {
-	/** The transmit power in dBm. If omitted, the firmware keeps its current setting. */
+	/**
+	 * The transmit power in dBm, in steps of 0.1 dBm.
+	 * If omitted, the firmware keeps its current setting.
+	 */
 	txPower?: number;
 	numFragments: number;
 	fragmentDurationMs: number;
@@ -105,13 +109,15 @@ export class TransmitBeamRequest extends RCPMessage {
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
 		this.assertValidOptions();
 
-		const header = new Bytes(7 + this.channels.length);
-		header.writeInt8(encodeTxPower(this.txPower), 0);
-		header[1] = this.numFragments;
-		header.writeUInt16BE(this.fragmentDurationMs, 2);
-		header.writeUInt16BE(this.fragmentPeriodMs, 4);
-		header[6] = this.channels.length;
-		header.set(this.channels, 7);
+		// TX_POWER (int16 BE, deci-dBm) | NUM_FRAGMENTS | FRAGMENT_DURATION_MS (u16 BE)
+		// | FRAGMENT_PERIOD_MS (u16 BE) | NUM_CHANNELS | ...CHANNELS | ...DATA
+		const header = new Bytes(8 + this.channels.length);
+		header.writeInt16BE(encodeTxPower(this.txPower), 0);
+		header[2] = this.numFragments;
+		header.writeUInt16BE(this.fragmentDurationMs, 3);
+		header.writeUInt16BE(this.fragmentPeriodMs, 5);
+		header[7] = this.channels.length;
+		header.set(this.channels, 8);
 
 		this.payload = Bytes.concat([
 			header,
@@ -125,9 +131,7 @@ export class TransmitBeamRequest extends RCPMessage {
 		return {
 			...super.toLogEntry(),
 			message: {
-				"TX power": this.txPower != undefined
-					? `${this.txPower} dBm`
-					: "unchanged",
+				"TX power": formatTxPower(this.txPower),
 				"no. of fragments": this.numFragments,
 				"fragment duration": `${this.fragmentDurationMs} ms`,
 				"fragment period": `${this.fragmentPeriodMs} ms`,

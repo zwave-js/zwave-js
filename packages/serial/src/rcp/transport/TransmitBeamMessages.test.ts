@@ -46,10 +46,11 @@ describe("TransmitBeamRequest", () => {
 		await expect(createBeamRequest().serialize({})).resolves.toStrictEqual(
 			Bytes.from([
 				0x01, // SOF
-				0x0f, // length
+				0x10, // length
 				0x00, // Request
 				0x05, // TransmitBeam
-				0xfd, // TX power
+				0xff,
+				0xe2, // TX power: -30 deci-dBm
 				0x05, // no. of fragments
 				0x03,
 				0xe8, // fragment duration
@@ -61,7 +62,7 @@ describe("TransmitBeamRequest", () => {
 				0x02,
 				0x55,
 				0x66,
-				0x9d, // checksum
+				0x62, // checksum
 			]),
 		);
 	});
@@ -70,6 +71,13 @@ describe("TransmitBeamRequest", () => {
 		const serialized = await createBeamRequest({ txPower: undefined })
 			.serialize({});
 		expect(serialized[4]).toBe(0x7f);
+		expect(serialized[5]).toBe(0xff);
+	});
+
+	test("encodes fractional TX power in steps of 0.1 dBm", async () => {
+		const serialized = await createBeamRequest({ txPower: -3.5 })
+			.serialize({});
+		expect(serialized.readInt16BE(4)).toBe(-35);
 	});
 
 	test("the callback timeout covers the entire beam", () => {
@@ -77,7 +85,7 @@ describe("TransmitBeamRequest", () => {
 	});
 
 	test.each([
-		["TX power", { txPower: 200 }],
+		["TX power", { txPower: 3276.7 }],
 		["number of fragments", { numFragments: 0 }],
 		["fragment duration", { fragmentDurationMs: 70000 }],
 		["fragment period", { fragmentPeriodMs: -1 }],
