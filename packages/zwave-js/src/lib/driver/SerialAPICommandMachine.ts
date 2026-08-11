@@ -66,21 +66,9 @@ function callbackIsFinal(callback: unknown): boolean {
 	);
 }
 
-export interface SerialAPICommandMachineOptions {
-	/**
-	 * Complete the command when the response is received, even if the message expects a callback.
-	 * The caller is responsible for awaiting the callback.
-	 */
-	responseOnly?: boolean;
-}
-
 export function createSerialAPICommandMachine<T extends SerialAPICommand>(
 	message: T,
-	options: SerialAPICommandMachineOptions = {},
 ): SerialAPICommandMachine<T> {
-	const expectsCallback = () =>
-		!options.responseOnly && message.expectsCallback();
-
 	const initialState: SerialAPICommandState<T> = {
 		value: "initial",
 	};
@@ -118,7 +106,7 @@ export function createSerialAPICommandMachine<T extends SerialAPICommand>(
 					case "ACK":
 						if (message.expectsResponse()) {
 							return to({ value: "waitingForResponse" });
-						} else if (expectsCallback()) {
+						} else if (message.expectsCallback()) {
 							return to({ value: "waitingForCallback" });
 						} else {
 							return to({
@@ -141,7 +129,7 @@ export function createSerialAPICommandMachine<T extends SerialAPICommand>(
 			case "waitingForResponse":
 				switch (input.value) {
 					case "response":
-						if (expectsCallback()) {
+						if (message.expectsCallback()) {
 							return to({ value: "waitingForCallback" });
 						} else {
 							return to({

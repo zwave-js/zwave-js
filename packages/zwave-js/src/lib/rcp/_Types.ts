@@ -28,6 +28,11 @@ export interface MACTransmitOptions {
 	destination: MACTransmitDestination;
 	protocol?: Protocols;
 	ackRequested?: boolean;
+	/**
+	 * Whether to perform clear channel assessment before transmitting. Default: `true`.
+	 * G.9959 requires CCA before transmitting a data frame, but it can be disabled for testing.
+	 */
+	withCCA?: boolean;
 }
 
 export type MACTransmitAckOptions =
@@ -38,6 +43,11 @@ export type MACTransmitAckOptions =
 		destinationNodeId: number;
 		channel: number;
 		sequenceNumber: number;
+		/**
+		 * Whether to perform clear channel assessment before transmitting. Default: `false`.
+		 * Acks are exempt from CCA to meet the turnaround timing, but it can be enabled for testing.
+		 */
+		withCCA?: boolean;
 	}
 	& (
 		| {

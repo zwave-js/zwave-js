@@ -13,7 +13,6 @@ import {
 	convertRawRSSI,
 	isZWaveError,
 	protocolDataRateToString,
-	sdkVersionLt,
 } from "@zwave-js/core";
 import {
 	MessageHeaders,
@@ -181,9 +180,6 @@ function checkOptions(options: RCPHostOptions): void {
 		);
 	}
 }
-
-/** The oldest RCP firmware version this host can talk to */
-const minimumRCPFirmwareVersion = "1.1.0";
 
 // FIXME: Split out MAC layer functionality
 
@@ -383,13 +379,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			}`,
 		);
 
-		if (sdkVersionLt(this.rcpFirmwareVersion, minimumRCPFirmwareVersion)) {
-			throw new ZWaveError(
-				`The RCP firmware version ${this.rcpFirmwareVersion} is not supported. Update the firmware to at least v${minimumRCPFirmwareVersion}.`,
-				ZWaveErrorCodes.Driver_NotSupported,
-			);
-		}
-
 		this.rcpLog.print(`Querying region info...`);
 		const regionInfo = await this.queryRegion();
 		this.rfRegion = regionInfo.region;
@@ -564,7 +553,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				const ret = await this.executeSerialAPICommand(
 					transaction.message,
 					transaction.stack,
-					transaction.responseOnly,
 				);
 				transaction.promise.resolve(ret);
 			} catch (e) {
@@ -580,9 +568,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private async executeSerialAPICommand(
 		msg: RCPMessage,
 		transactionSource?: string,
-		responseOnly?: boolean,
 	): Promise<RCPMessage | undefined> {
-		const machine = createSerialAPICommandMachine(msg, { responseOnly });
+		const machine = createSerialAPICommandMachine(msg);
 		const abortController = new AbortController();
 
 		let nextInput: SerialAPICommandMachineInput<RCPMessage> | undefined = {
@@ -731,7 +718,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		TResponse extends RCPMessage = RCPMessage,
 	>(
 		msg: RCPMessage,
-		options: { responseOnly?: boolean } = {},
 	): Promise<TResponse> {
 		const resultPromise = createDeferredPromise<TResponse>();
 
@@ -739,7 +725,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		const transaction = new RCPTransaction({
 			message: msg,
 			promise: resultPromise,
-			responseOnly: options.responseOnly,
 		});
 
 		// And queue it
@@ -891,45 +876,51 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	): Promise<TransmitResult> {
 		this.assertFunctionSupported(RCPFunctionType.TransmitBeam);
 
-		// The firmware can only execute one beam at a time
+		// The firmware can only execute one beam at a time. The slot must be reserved
+		// synchronously, or concurrent calls would all pass this check.
 		if (this.beamActive) return TransmitResponseStatus.Busy;
+		this.beamActive = true;
 
 		const msg = new TransmitBeamRequest(options);
 
 		try {
-			await this.queueSerialApiCommand<TransmitBeamResponse>(
-				msg,
-				{ responseOnly: true },
-			);
-		} catch (e) {
-			if (isZWaveError(e) && e.context instanceof TransmitBeamResponse) {
-				return e.context.status;
+			try {
+				await this.queueSerialApiCommand<TransmitBeamResponse>(msg);
+			} catch (e) {
+				if (
+					isZWaveError(e) && e.context instanceof TransmitBeamResponse
+				) {
+					return e.context.status;
+				}
+				throw e;
 			}
-			throw e;
-		}
 
-		// The beam only starts after the firmware has sent the response, and serial frames
-		// are processed in order, so the callback cannot arrive before this wait is registered.
-		// Awaiting it outside of the transaction queue keeps the queue free for an abort command.
-		this.beamActive = true;
-		try {
-			const callback = await this.waitForMessage<TransmitBeamCallback>(
-				(resp) => msg.isExpectedCallback(resp),
-				msg.getCallbackTimeout() ?? this._options.timeouts.callback,
-			);
-			return callback.status;
-		} catch (e) {
-			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Controller_Timeout
-			) {
-				this.rcpLog.print(
-					`Received no callback for the beam transmission within ${msg.getCallbackTimeout()} ms`,
-					"error",
+			// The beam only starts after the firmware has sent the response, and serial frames
+			// are processed in order, so the callback cannot arrive before this wait is registered.
+			// Awaiting it outside of the transaction queue keeps the queue free for an abort command.
+			try {
+				const callback = await this.waitForMessage<
+					TransmitBeamCallback
+				>(
+					(resp) =>
+						resp.type === RCPMessageType.Callback
+						&& resp.functionType === RCPFunctionType.TransmitBeam,
+					msg.getCallbackTimeout() ?? this._options.timeouts.callback,
 				);
-				return TransmitCallbackStatus.UnknownError;
+				return callback.status;
+			} catch (e) {
+				if (
+					isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.Controller_Timeout
+				) {
+					this.rcpLog.print(
+						`Received no callback for the beam transmission within ${msg.getCallbackTimeout()} ms`,
+						"error",
+					);
+					return TransmitCallbackStatus.UnknownError;
+				}
+				throw e;
 			}
-			throw e;
 		} finally {
 			this.beamActive = false;
 		}

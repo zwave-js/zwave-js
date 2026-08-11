@@ -388,7 +388,7 @@ export class ProtocolController
 			const result = await this.phyLayer.transmit(
 				serializedMPDU,
 				// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
-				{ channel, withCCA: true },
+				{ channel, withCCA: options.withCCA ?? true },
 			);
 
 			switch (result) {
@@ -511,7 +511,7 @@ export class ProtocolController
 			serializedMPDU,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
-			{ channel, withCCA: false },
+			{ channel, withCCA: options.withCCA ?? false },
 		);
 
 		switch (result) {

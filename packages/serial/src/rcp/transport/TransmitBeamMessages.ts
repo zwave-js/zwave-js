@@ -11,7 +11,6 @@ import {
 	type RCPMessageEncodingContext,
 	type RCPMessageParsingContext,
 	type RCPMessageRaw,
-	expectedRCPCallback,
 	expectedRCPResponse,
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
@@ -39,7 +38,6 @@ export interface TransmitBeamRequestOptions {
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.TransmitBeam)
 @expectedRCPResponse(RCPFunctionType.TransmitBeam)
-@expectedRCPCallback(RCPFunctionType.TransmitBeam)
 export class TransmitBeamRequest extends RCPMessage {
 	public constructor(
 		options: TransmitBeamRequestOptions & RCPMessageBaseOptions,
