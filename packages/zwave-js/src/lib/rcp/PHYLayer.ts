@@ -1,10 +1,12 @@
-import type {
-	ChannelConfiguration,
-	MPDU,
-	MaybeNotKnown,
-	ProtocolDataRate,
-	RFRegion,
-	RSSI,
+import {
+	type ChannelConfiguration,
+	type MPDU,
+	type MaybeNotKnown,
+	type ProtocolDataRate,
+	type RFRegion,
+	type RSSI,
+	ZWaveError,
+	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import type {
 	ChannelInfo,
@@ -24,6 +26,22 @@ export interface RegionConfig {
 }
 
 export type TransmitResult = TransmitResponseStatus | TransmitCallbackStatus;
+
+/** Look up the data rate of a channel, throwing if the current region does not have it */
+export function getProtocolDataRateOrThrow(
+	channels: MaybeNotKnown<readonly ChannelInfo[]>,
+	channel: number,
+): ProtocolDataRate {
+	const protocolDataRate = channels?.find((ch) => ch.channel === channel)
+		?.dataRate;
+	if (protocolDataRate == undefined) {
+		throw new ZWaveError(
+			`The channel ${channel} is not supported in the current region`,
+			ZWaveErrorCodes.Driver_NotSupported,
+		);
+	}
+	return protocolDataRate;
+}
 
 export interface TransmitOptions {
 	channel: number;

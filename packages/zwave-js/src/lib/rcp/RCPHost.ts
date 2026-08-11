@@ -79,13 +79,14 @@ import {
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
-import type {
-	MpduRxInfo,
-	PHYLayer,
-	RegionConfig,
-	TransmitBeamOptions,
-	TransmitOptions,
-	TransmitResult,
+import {
+	type MpduRxInfo,
+	type PHYLayer,
+	type RegionConfig,
+	type TransmitBeamOptions,
+	type TransmitOptions,
+	type TransmitResult,
+	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
 import { RCPTransaction } from "./RCPTransaction.js";
 
@@ -808,19 +809,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		}
 	}
 
-	private getProtocolDataRateOrThrow(channel: number): ProtocolDataRate {
-		const protocolDataRate = this.channels?.find((ch) =>
-			ch.channel === channel
-		)?.dataRate;
-		if (protocolDataRate == undefined) {
-			throw new ZWaveError(
-				`The channel ${channel} is not supported in the current region`,
-				ZWaveErrorCodes.Driver_NotSupported,
-			);
-		}
-		return protocolDataRate;
-	}
-
 	/**
 	 * Transmits an MPDU on the given channel and returns whether the transmit has successfully been executed.
 	 * Does not wait for an ACK or anything else.
@@ -1056,7 +1044,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		let protocolDataRate: ProtocolDataRate;
 		try {
-			protocolDataRate = this.getProtocolDataRateOrThrow(msg.channel);
+			protocolDataRate = getProtocolDataRateOrThrow(
+				this.channels,
+				msg.channel,
+			);
 		} catch {
 			this.rcpLog.print(
 				`Cannot parse received frame: The channel ${msg.channel} is not supported in the current region.`,

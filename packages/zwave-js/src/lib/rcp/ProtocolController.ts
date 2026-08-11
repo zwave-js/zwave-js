@@ -20,10 +20,11 @@ import {
 	SinglecastZWaveMPDU,
 	ZWaveError,
 	ZWaveErrorCodes,
-	getProtocolHeaderFormat,
-	rfRegionToRadioProtocolMode,
+	getProtocolHeaderFormatForDataRate,
+	isRssiError,
 } from "@zwave-js/core";
 import {
+	type ChannelInfo,
 	TransmitCallbackStatus,
 	TransmitResponseStatus,
 } from "@zwave-js/serial";
@@ -36,6 +37,7 @@ import {
 	getErrorMessage,
 	setTimer,
 } from "@zwave-js/shared";
+import { wait } from "alcalzone-shared/async";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
@@ -43,7 +45,12 @@ import {
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { ProtocolLogger } from "../log/Protocol.js";
 import type { MACLayer } from "./MACLayer.js";
-import type { MpduRxInfo, PHYLayer, PHYLayerFactory } from "./PHYLayer.js";
+import {
+	type MpduRxInfo,
+	type PHYLayer,
+	type PHYLayerFactory,
+	getProtocolDataRateOrThrow,
+} from "./PHYLayer.js";
 import {
 	type MACTransmitAckOptions,
 	MACTransmitKind,
@@ -54,6 +61,11 @@ import {
 
 type AwaitedMPDUEntry = AwaitedThing<MPDU>;
 
+interface TransmitAttempt {
+	channel: ChannelInfo;
+	speedModified: boolean;
+}
+
 /** ITU-T G.9959 (01/2015), Table 8-19: aMacMinRetransmitDelay, "Random backoff shall be higher than this value" */
 const MAC_MIN_RETRANSMIT_DELAY = 10;
 
@@ -62,6 +74,92 @@ const MAC_MAX_RETRANSMIT_DELAY = 40;
 
 /** Extra time each hop gets on top of the frame duration, covering repeater processing and turnaround */
 const ROUTED_HOP_MARGIN = 10;
+
+/** ITU-T G.9959 (01/2015), Table 7-27: aPhyTurnaroundTimerRXTX, "RX-to-TX minimum turnaround time" */
+const PHY_TURNAROUND_TIME_RX_TX = 1;
+
+/**
+ * Extra time the host grants an ack on top of the MAC ack wait duration. The
+ * spec assumes the radio itself decides, while an ack seen by the RCP firmware
+ * still has to travel over the serial connection before we can match it
+ */
+const ACK_HOST_TRANSPORT_ALLOWANCE = 10;
+
+/** TX power advertised in LR MPDUs when the caller does not specify one */
+const LR_DEFAULT_TX_POWER = 14;
+
+/** Noise floor advertised in LR MPDUs. Placeholder until the firmware can measure it */
+const LR_DEFAULT_NOISE_FLOOR = -110;
+
+/** Incoming RSSI advertised in LR ack MPDUs when the frame arrived without a usable measurement */
+const LR_DEFAULT_INCOMING_RSSI = -80;
+
+/** ITU-T G.9959 (01/2015), Table 8-18: aMacMaxFrameRetries, "The number of retries after a transmission failure" */
+const MAC_MAX_FRAME_RETRIES = 2;
+
+/**
+ * Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-32:
+ * aMacLRMaxFrameRetries, "The number of retries after a transmission failure"
+ */
+const MAC_LR_MAX_FRAME_RETRIES = 2;
+
+/**
+ * Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-32:
+ * aMacLRMaxFrameRetriesSecondary, "The number of retries on the secondary
+ * channel when running channel configuration 3"
+ */
+const MAC_LR_MAX_FRAME_RETRIES_SECONDARY = 1;
+
+/** How long to wait for an ack after a transmission, in milliseconds */
+function ackWaitDuration(
+	dataRate: ProtocolDataRate,
+	headerFormat: ProtocolHeaderFormat,
+): number {
+	// ITU-T G.9959 (01/2015), Table 8-19 and Z-Wave Long Range PHY and MAC Layer
+	// Specification (2023.07.03), Table 6-33: "The number of symbols of an ACK
+	// MPDU; including preamble"
+	let ackBits: number;
+	let bitrate: number;
+	switch (dataRate) {
+		case ProtocolDataRate.ZWave_9k6:
+			ackBits = 168;
+			bitrate = 9600;
+			break;
+		case ProtocolDataRate.ZWave_40k:
+			ackBits = 248;
+			bitrate = 40000;
+			break;
+		case ProtocolDataRate.LongRange_100k:
+			ackBits = 448;
+			bitrate = 100000;
+			break;
+		default:
+			ackBits = headerFormat === ProtocolHeaderFormat.Classic3Channel
+				? 296
+				: 416;
+			bitrate = 100000;
+			break;
+	}
+
+	// ITU-T G.9959 (01/2015), Table 8-18: aMacMinAckWaitDuration is
+	// "aPhyTurnaroundTimeRxTx + (aMacTransferAckTimeTX * (1/data rate))".
+	// The LR spec defines aMacLRMinAckWaitDuration the same way in Table 6-32
+	return PHY_TURNAROUND_TIME_RX_TX
+		+ ackBits * 1000 / bitrate
+		+ ACK_HOST_TRANSPORT_ALLOWANCE;
+}
+
+/**
+ * ITU-T G.9959 (01/2015), §8.1.5.1.4.4: "The random delay shall be calculated as
+ * a period in the interval aMacMinRetransmitDelay .. aMacMaxRetransmitDelay"
+ */
+function randomRetransmitDelay(): number {
+	return MAC_MIN_RETRANSMIT_DELAY
+		+ Math.round(
+			Math.random()
+				* (MAC_MAX_RETRANSMIT_DELAY - MAC_MIN_RETRANSMIT_DELAY),
+		);
+}
 
 /** How long a frame of the given length occupies the channel, in milliseconds */
 export function frameDuration(
@@ -187,6 +285,14 @@ export class ProtocolController
 
 	private sequenceNumber: number | undefined;
 
+	/**
+	 * The LR channel this node transmits on, per Z-Wave Long Range PHY and MAC
+	 * Layer Specification (2023.07.03), §6.5.1.4: "When a node receives a frame
+	 * on channel X and the MAC layer has validated the frame, and has a match on
+	 * HomeID and NodeID then the node shall set its Primary channel to channel X."
+	 */
+	private primaryLongRangeChannel: number | undefined;
+
 	private _destroyPromise: DeferredPromise<void> | undefined;
 	private get wasDestroyed(): boolean {
 		return !!this._destroyPromise;
@@ -244,16 +350,142 @@ export class ProtocolController
 	}
 
 	private getProtocolDataRateOrThrow(channel: number): ProtocolDataRate {
-		const protocolDataRate = this.phyLayer?.regionConfig?.channels?.find((
-			ch,
-		) => ch.channel === channel)?.dataRate;
-		if (protocolDataRate == undefined) {
+		return getProtocolDataRateOrThrow(
+			this.phyLayer?.regionConfig?.channels,
+			channel,
+		);
+	}
+
+	/** Split the channels of the current region into the protocols they carry */
+	private classifyChannels(): {
+		classic: ChannelInfo[];
+		longRange: ChannelInfo[];
+	} {
+		const channels = this.phyLayer?.regionConfig?.channels ?? [];
+		return {
+			classic: channels.filter((ch) =>
+				ch.dataRate === ProtocolDataRate.ZWave_9k6
+				|| ch.dataRate === ProtocolDataRate.ZWave_40k
+				|| ch.dataRate === ProtocolDataRate.ZWave_100k
+			),
+			longRange: channels.filter((ch) =>
+				ch.dataRate === ProtocolDataRate.LongRange_100k
+			),
+		};
+	}
+
+	private getChannelsForProtocolOrThrow(protocol: Protocols): ChannelInfo[] {
+		const { classic, longRange } = this.classifyChannels();
+		const channels = protocol === Protocols.ZWave ? classic : longRange;
+		if (channels.length === 0) {
 			throw new ZWaveError(
-				`The channel ${channel} is not supported in the current region`,
+				`The current region has no ${
+					protocol === Protocols.ZWave
+						? "classic Z-Wave"
+						: "Z-Wave Long Range"
+				} channels`,
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
-		return protocolDataRate;
+		return channels;
+	}
+
+	private getPrimaryLongRangeChannel(): ChannelInfo {
+		const channels = this.getChannelsForProtocolOrThrow(
+			Protocols.ZWaveLongRange,
+		);
+		return channels.find((ch) =>
+			ch.channel === this.primaryLongRangeChannel
+		)
+			?? channels[0];
+	}
+
+	/** The channel the first transmit attempt of a frame goes out on */
+	private getInitialChannel(protocol: Protocols): ChannelInfo {
+		if (protocol === Protocols.ZWaveLongRange) {
+			return this.getPrimaryLongRangeChannel();
+		}
+		const channels = this.getChannelsForProtocolOrThrow(protocol);
+		return channels.find((ch) =>
+			ch.dataRate === ProtocolDataRate.ZWave_100k
+		) ?? channels[0];
+	}
+
+	/**
+	 * Plan the transmit attempts of a frame, in order. G.9959 mandates the number
+	 * of attempts, the channel each retry uses is left to the implementation
+	 */
+	private getAttemptSchedule(
+		protocol: Protocols,
+		headerFormat: ProtocolHeaderFormat,
+	): TransmitAttempt[] {
+		const channels = this.getChannelsForProtocolOrThrow(protocol);
+
+		switch (headerFormat) {
+			case ProtocolHeaderFormat.LongRange: {
+				const primary = this.getPrimaryLongRangeChannel();
+				const attempts: TransmitAttempt[] = Array.from(
+					{ length: 1 + MAC_LR_MAX_FRAME_RETRIES },
+					() => ({ channel: primary, speedModified: false }),
+				);
+
+				// The two-LR-channel end device configuration is LR channel
+				// configuration 3. §6.5.1.5.4: "If an Ack MPDU is still not received
+				// after aMacLRMaxFrameRetries retransmissions, the MAC layer shall
+				// switch to the Secondary channel and and repeat the process of
+				// transmitting the MPDU and waiting for the Ack MPDU up to
+				// aMacLRMaxFrameRetriesSecondary times."
+				const secondary = channels.find((ch) => ch !== primary);
+				if (secondary) {
+					for (
+						let i = 0;
+						i < MAC_LR_MAX_FRAME_RETRIES_SECONDARY;
+						i++
+					) {
+						attempts.push({
+							channel: secondary,
+							speedModified: false,
+						});
+					}
+				}
+				return attempts;
+			}
+
+			case ProtocolHeaderFormat.Classic3Channel:
+				// All three channels of channel configuration 3 run at R3, so there is
+				// no speed to fall back to. G.9959 leaves the channel of each retry to
+				// the implementation, and we rotate through the channels
+				return Array.from(
+					{ length: 1 + MAC_MAX_FRAME_RETRIES },
+					(_, i) => ({
+						channel: channels[i % channels.length],
+						speedModified: false,
+					}),
+				);
+
+			case ProtocolHeaderFormat.Classic2Channel: {
+				const byDataRate = (dataRate: ProtocolDataRate) =>
+					channels.find((ch) => ch.dataRate === dataRate);
+				const r3 = byDataRate(ProtocolDataRate.ZWave_100k);
+				const r2 = byDataRate(ProtocolDataRate.ZWave_40k);
+				const r1 = byDataRate(ProtocolDataRate.ZWave_9k6);
+
+				// Channel configurations 1 and 2 pair each channel with a data rate, so
+				// a retry can fall back to a slower and more robust one. Trying the
+				// fastest channel twice before falling back is Z-Wave practice layered
+				// over the 1 + aMacMaxFrameRetries attempts G.9959 mandates
+				return [
+					{ channel: r3, speedModified: false },
+					{ channel: r3, speedModified: false },
+					{ channel: r2, speedModified: true },
+					{ channel: r1, speedModified: true },
+				].filter((a): a is TransmitAttempt => a.channel != undefined);
+			}
+
+			default:
+				// oxlint-disable-next-line typescript/restrict-template-expressions
+				throw new Error(`Unsupported header format ${headerFormat}`);
+		}
 	}
 
 	public async transmitData(
@@ -341,20 +573,20 @@ export class ProtocolController
 			}
 		}
 
-		let initialChannel: number;
-		if (protocol === Protocols.ZWave) {
-			initialChannel = 0;
-		} else {
-			// TODO: Figure out if this is correct for LR-only configurations
-			initialChannel = 3;
-		}
-
-		const headerFormat = getProtocolHeaderFormat(
-			rfRegionToRadioProtocolMode(this.phyLayer.regionConfig.region),
-			initialChannel,
+		const initialChannel = this.getInitialChannel(protocol);
+		const headerFormat = getProtocolHeaderFormatForDataRate(
+			this.phyLayer.regionConfig.region,
+			initialChannel.dataRate,
 		);
+		const attempts = this.getAttemptSchedule(protocol, headerFormat);
 
 		const sequenceNumber = this.nextSequenceNumber(headerFormat);
+
+		const advertisedTXPower = options.advertised?.txPower
+			?? options.txPower
+			?? LR_DEFAULT_TX_POWER;
+		const advertisedNoiseFloor = options.advertised?.noiseFloor
+			?? LR_DEFAULT_NOISE_FLOOR;
 
 		let mpdu: MPDU;
 		if (protocol == Protocols.ZWave) {
@@ -431,10 +663,8 @@ export class ProtocolController
 						sourceNodeId: options.sourceNodeId,
 						destinationNodeId: options.destination.nodeId,
 						sequenceNumber,
-
-						// FIXME: Measure those:
-						txPower: -6,
-						noiseFloor: -110,
+						txPower: advertisedTXPower,
+						noiseFloor: advertisedNoiseFloor,
 					});
 					break;
 				}
@@ -448,58 +678,12 @@ export class ProtocolController
 						sourceNodeId: options.sourceNodeId,
 						destinationNodeId: NODE_ID_BROADCAST_LR,
 						sequenceNumber,
-
-						// FIXME: Measure those:
-						txPower: -6,
-						noiseFloor: -110,
+						txPower: advertisedTXPower,
+						noiseFloor: advertisedNoiseFloor,
 					});
 					break;
 				}
 			}
-		}
-
-		// FIXME: Find a good heuristic
-		let maxAttempts: number;
-		let settingsForAttempt: {
-			channel: number;
-			speedModified: boolean;
-		}[] | undefined;
-		switch (headerFormat) {
-			case ProtocolHeaderFormat.Classic2Channel:
-				// FIXME: aMacMaxFrameRetries = 2, we retry 3x
-				// Try twice on channel 0,
-				// once with speed modified (ch. 1)
-				// once with speed modified (ch. 2)
-				// FIXME: Skip attempts if we start on another channel
-				maxAttempts = 4;
-				settingsForAttempt = [
-					{
-						channel: 0,
-						speedModified: false,
-					},
-					{
-						channel: 0,
-						speedModified: false,
-					},
-					{
-						channel: 1,
-						speedModified: true,
-					},
-					{
-						channel: 2,
-						speedModified: true,
-					},
-				];
-				break;
-			case ProtocolHeaderFormat.Classic3Channel:
-				throw new Error("3-channel regions are not supported yet");
-			case ProtocolHeaderFormat.LongRange:
-				// Try 3 times on the same channel
-				maxAttempts = 3;
-				break;
-			default:
-				// oxlint-disable-next-line typescript/restrict-template-expressions
-				throw new Error(`Unsupported header format ${headerFormat}`);
 		}
 
 		// ITU-T G.9959 (01/2015): a transmitting node which receives an ACK MPDU shall
@@ -513,26 +697,26 @@ export class ProtocolController
 		let busyAttempts = 0;
 		let sawSilentAck = false;
 
-		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		for (let attempt = 0; attempt < attempts.length; attempt++) {
 			sawSilentAck = false;
+
+			// G.9959 §8.1.5.1.4.3: "Before retransmitting, the node shall wait for a
+			// random backoff period"
+			if (attempt > 0) await wait(randomRetransmitDelay());
 
 			// Serializing an MPDU changes its payload property, so we set it here
 			// to the original data
 			mpdu.payload = Bytes.view(data);
 
 			// Update MPDU settings if necessary
-			const { speedModified, channel } = settingsForAttempt?.[attempt]
-				?? {
-					channel: initialChannel,
-					speedModified: false,
-				};
+			const { speedModified, channel } = attempts[attempt];
 			if ("speedModified" in mpdu) {
 				mpdu.speedModified = speedModified;
 			}
 
 			const ctx: MPDUEncodingContext = {
-				channel,
-				protocolDataRate: this.getProtocolDataRateOrThrow(channel),
+				channel: channel.channel,
+				protocolDataRate: channel.dataRate,
 				region: this.phyLayer.regionConfig.region,
 			};
 			const serializedMPDU = mpdu.serialize(ctx);
@@ -542,7 +726,11 @@ export class ProtocolController
 			const result = await this.phyLayer.transmit(
 				serializedMPDU,
 				// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
-				{ channel, withCCA: options.withCCA ?? true },
+				{
+					channel: channel.channel,
+					txPower: options.txPower,
+					withCCA: options.withCCA ?? true,
+				},
 			);
 
 			switch (result) {
@@ -577,12 +765,11 @@ export class ProtocolController
 
 			// Transmit was successful
 
-			// An Ack MPDU is expected within the random backoff period
-			const ackTimeout = MAC_MIN_RETRANSMIT_DELAY
-				+ Math.round(
-					Math.random()
-						* (MAC_MAX_RETRANSMIT_DELAY - MAC_MIN_RETRANSMIT_DELAY),
-				);
+			// G.9959 §8.1.5.1.4.3: "A node that sends a singlecast MPDU with its ACK
+			// request subfield set to 1 shall wait for a minimum of
+			// aMacMinAckWaitDuration symbols for the corresponding ACK MPDU to be
+			// received."
+			const ackTimeout = ackWaitDuration(channel.dataRate, headerFormat);
 
 			if (mpdu instanceof RoutedZWaveMPDU) {
 				const routedMPDU = mpdu;
@@ -622,7 +809,7 @@ export class ProtocolController
 					headerFormat,
 				);
 				// The silent ack is a full repeat of the frame, so it needs the air time of
-				// one frame on top of the backoff period
+				// one frame on top of the ack wait duration
 				const silentAckTimeout = ackTimeout + duration;
 				// A routed ack can arrive without us having seen the silent ack, so both are
 				// awaited together until the entire route budget has elapsed
@@ -664,9 +851,9 @@ export class ProtocolController
 
 			if (!mpdu.ackRequested) return { result: MACTransmitResult.OK };
 
-			// If an Ack MPDU is received within the backoff period and contains the correct
-			// HomeID, source NodeID and a matching sequence number, the transmission is
-			// considered successful.
+			// §8.1.5.1.4.3: "If an ACK MPDU is received within aMacMinAckWaitDuration
+			// symbols and contains the correct HomeID and source NodeID, the
+			// transmission is considered successful"
 			const ack = await this.waitForMPDU(
 				(m) =>
 					m.headerType === MPDUHeaderType.Acknowledgement
@@ -681,7 +868,7 @@ export class ProtocolController
 			if (ack) return { result: MACTransmitResult.OK };
 		}
 
-		if (busyAttempts === maxAttempts) {
+		if (busyAttempts === attempts.length) {
 			return { result: MACTransmitResult.ChannelBusy };
 		}
 
@@ -718,22 +905,24 @@ export class ProtocolController
 				sequenceNumber: options.sequenceNumber,
 			});
 		} else {
-			// FIXME: Measure these:
-			const incomingRSSI = -80;
-			const noiseFloor = -110;
-
 			mpdu = new AckLongRangeMPDU({
 				homeId: options.homeId,
 				sourceNodeId: options.sourceNodeId,
 				destinationNodeId: options.destinationNodeId,
 				sequenceNumber: options.sequenceNumber,
-
-				// FIXME: Dynamically decide on the TX power and actually use it in firmware
-				txPower: options.senderTXPower,
-				incomingRSSI,
-				noiseFloor,
+				txPower: options.advertised?.txPower
+					?? options.txPower
+					?? LR_DEFAULT_TX_POWER,
+				incomingRSSI: options.advertised?.incomingRSSI
+					?? LR_DEFAULT_INCOMING_RSSI,
+				noiseFloor: options.advertised?.noiseFloor
+					?? LR_DEFAULT_NOISE_FLOOR,
 			});
 		}
+
+		const txPower = options.protocol === Protocols.ZWaveLongRange
+			? options.txPower
+			: undefined;
 
 		const channel = options.channel;
 		const ctx: MPDUEncodingContext = {
@@ -750,7 +939,7 @@ export class ProtocolController
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
 			// Acks are exempt from CCA to meet the turnaround timing
-			{ channel, withCCA: false },
+			{ channel, txPower, withCCA: false },
 		);
 
 		switch (result) {
@@ -808,8 +997,14 @@ export class ProtocolController
 				...(mpdu instanceof LongRangeMPDU
 					? {
 						protocol: Protocols.ZWaveLongRange,
-						senderTXPower: mpdu.txPower,
-						senderNoiseFloor: mpdu.noiseFloor,
+						advertised: {
+							// The sender's own power is the best estimate we have until
+							// the firmware reports the power it transmitted with
+							txPower: mpdu.txPower,
+							incomingRSSI: isRssiError(info.rssi)
+								? LR_DEFAULT_INCOMING_RSSI
+								: info.rssi,
+						},
 					}
 					: {
 						protocol: Protocols.ZWave,
@@ -860,9 +1055,10 @@ export class ProtocolController
 		}
 
 		const region = this.phyLayer.regionConfig.region;
-		const headerFormat = getProtocolHeaderFormat(
-			rfRegionToRadioProtocolMode(region),
-			channel,
+		const protocolDataRate = this.getProtocolDataRateOrThrow(channel);
+		const headerFormat = getProtocolHeaderFormatForDataRate(
+			region,
+			protocolDataRate,
 		);
 
 		// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
@@ -912,7 +1108,7 @@ export class ProtocolController
 
 		const ctx: MPDUEncodingContext = {
 			channel,
-			protocolDataRate: this.getProtocolDataRateOrThrow(channel),
+			protocolDataRate,
 			region,
 		};
 		const serializedMPDU = mpdu.serialize(ctx);
@@ -982,6 +1178,10 @@ export class ProtocolController
 				&& mpdu.destinationNodeId === this.ownNodeId
 			) {
 				// This is a frame addressed to us
+				if (info.protocolDataRate === ProtocolDataRate.LongRange_100k) {
+					this.primaryLongRangeChannel = info.channel;
+				}
+
 				if (
 					this.autoAck
 					&& (mpdu.ackRequested || isFinalHopOfRoutedFrame(mpdu))
