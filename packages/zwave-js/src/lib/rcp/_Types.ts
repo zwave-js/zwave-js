@@ -54,7 +54,7 @@ export interface MACTransmitOptions {
 	route?: readonly number[];
 	/**
 	 * Radio TX power in dBm. Default: keep the radio's current power for classic
-	 * Z-Wave, 14 dBm for Long Range.
+	 * Z-Wave, 13 dBm for Long Range.
 	 */
 	txPower?: number;
 	/**
@@ -85,7 +85,7 @@ export type MACTransmitAckOptions =
 		}
 		| {
 			protocol: Protocols.ZWaveLongRange;
-			/** Radio TX power in dBm. Default: 14 dBm. */
+			/** Radio TX power in dBm. Default: 13 dBm. */
 			txPower?: number;
 			/**
 			 * Values to put into the ack MPDU. The auto-ack path fills in the RSSI it

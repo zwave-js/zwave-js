@@ -101,8 +101,13 @@ const PHY_TURNAROUND_TIME_RX_TX = 1;
  */
 const ACK_HOST_TRANSPORT_ALLOWANCE = 20;
 
-/** TX power used for LR transmissions when the caller does not specify one, in dBm */
-const LR_DEFAULT_TX_POWER = 14;
+/**
+ * TX power used for LR transmissions when the caller does not specify one, in
+ * dBm. Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table
+ * 6-31 lists +13 dBm as a beam Tx Power value, so a beam can advertise this
+ * power without rounding up to the next level
+ */
+const LR_DEFAULT_TX_POWER = 13;
 
 /**
  * Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-23
