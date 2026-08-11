@@ -17,6 +17,10 @@
 		{
 			"productType": "0x0003",
 			"productId": "0x001a"
+		},
+		{
+			"productType": "0x0003",
+			"productId": "0x001b"
 		}
 	],
 	"firmwareVersion": {
