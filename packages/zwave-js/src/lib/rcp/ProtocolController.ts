@@ -71,66 +71,61 @@ interface TransmitAttempt {
 	speedModified: boolean;
 }
 
-// ITU-T G.9959 (01/2015), Table 8-19: aMacMinRetransmitDelay, "Random backoff
-// shall be higher than this value"
-const MAC_MIN_RETRANSMIT_DELAY = 10;
+// ITU-T G.9959 (01/2015), Table 8-19
+// Lower bound of the random backoff before a retransmission (exclusive)
+const MAC_MIN_RETRANSMIT_DELAY_MS = 10;
+// Upper bound of the random backoff before a retransmission (exclusive)
+const MAC_MAX_RETRANSMIT_DELAY_MS = 40;
 
-// ITU-T G.9959 (01/2015), Table 8-19: aMacMaxRetransmitDelay, "Random backoff
-// shall be lower than this value"
-const MAC_MAX_RETRANSMIT_DELAY = 40;
+// ITU-T G.9959 (01/2015), Table 7-27
+// aPhyTurnaroundTimerRXTX, "RX-to-TX minimum turnaround time"
+const PHY_TURNAROUND_TIME_RX_TX_MS = 1;
 
-// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-33:
-// aMacLRMinRetransmitDelay, "Random backoff shall be higher than this value"
-const LR_MIN_RETRANSMIT_DELAY = 10;
+// ITU-T G.9959 (01/2015), Table 8-18
+// Number of retries after a failed transmission
+const MAC_MAX_FRAME_RETRIES = 2;
 
-// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-33:
-// aMacLRMaxRetransmitDelay, "Random backoff shall be lower than this value"
-const LR_MAX_RETRANSMIT_DELAY = 40;
+// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-33
+// Lower bound of the random backoff before a retransmission (exclusive)
+const LR_MIN_RETRANSMIT_DELAY_MS = 10;
+// Upper bound of the random backoff before a retransmission (exclusive)
+const LR_MAX_RETRANSMIT_DELAY_MS = 40;
 
-/** Extra time each hop gets on top of the frame duration, covering repeater processing and turnaround */
-const ROUTED_HOP_MARGIN = 10;
+// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-32
+// Number of retries after a failed transmission
+const MAC_LR_MAX_FRAME_RETRIES = 2;
+// Number of retries on the secondary channel in channel configuration 3
+const MAC_LR_MAX_FRAME_RETRIES_SECONDARY = 1;
 
-// ITU-T G.9959 (01/2015), Table 7-27: aPhyTurnaroundTimerRXTX, "RX-to-TX minimum turnaround time"
-const PHY_TURNAROUND_TIME_RX_TX = 1;
+// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-27
+// Bounds of the RSSI an MPDU field can carry
+const LR_RSSI_MIN_DBM = -120;
+const LR_RSSI_MAX_DBM = 30;
 
-/**
- * Extra time the host grants an ack on top of the MAC ack wait duration. The
- * MAC timings assume the radio itself decides, while our transmit command and
- * the ack each have to cross the serial connection. This covers both round
- * trips and is tuned empirically
- */
-const ACK_HOST_TRANSPORT_ALLOWANCE = 20;
+// Extra time each hop gets on top of the frame duration, covering repeater
+// processing and turnaround
+const ROUTED_HOP_MARGIN_MS = 10;
 
-/** TX power used for LR transmissions when the caller does not specify one, in dBm */
-const LR_DEFAULT_TX_POWER = 14;
+// Extra time the host grants an ack on top of the MAC ack wait duration. The
+// MAC timings assume the radio itself decides, while our transmit command and
+// the ack each have to cross the serial connection. This covers both round
+// trips and is tuned empirically
+const ACK_HOST_TRANSPORT_ALLOWANCE_MS = 20;
 
-// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-27:
-// an RSSI field carries an "RSSI value in dBm" between these bounds
-const LR_RSSI_MIN = -120;
-const LR_RSSI_MAX = 30;
+// TX power used for LR transmissions when the caller does not specify one
+const LR_DEFAULT_TX_POWER_DBM = 14;
 
-/** An int8 field takes these values */
+// Bounds of an int8 field
 const INT8_MIN = -128;
 const INT8_MAX = 127;
 
-// ITU-T G.9959 (01/2015), Table 8-18: aMacMaxFrameRetries, "The number of retries after a transmission failure"
-const MAC_MAX_FRAME_RETRIES = 2;
-
-// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-32:
-// aMacLRMaxFrameRetries, "The number of retries after a transmission failure"
-const MAC_LR_MAX_FRAME_RETRIES = 2;
-
-// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-32:
-// aMacLRMaxFrameRetriesSecondary, "The number of retries on the secondary
-// channel when running channel configuration 3"
-const MAC_LR_MAX_FRAME_RETRIES_SECONDARY = 1;
-
 /** The RSSI to advertise for a received frame, clamped into the range the MPDU field allows */
 function advertisedRSSI(rssi: RSSI): number {
-	// Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-23
-	// and Table 6-27 both define 127 as "RSSI not available"
 	if (isRssiError(rssi)) return RssiError.NotAvailable;
-	return Math.max(LR_RSSI_MIN, Math.min(LR_RSSI_MAX, Math.round(rssi)));
+	return Math.max(
+		LR_RSSI_MIN_DBM,
+		Math.min(LR_RSSI_MAX_DBM, Math.round(rssi)),
+	);
 }
 
 function assertInt8(value: number | undefined, name: string): void {
@@ -143,23 +138,21 @@ function assertInt8(value: number | undefined, name: string): void {
 	}
 }
 
-/**
- * Radio TX powers the API accepts, in dBm. The bounds match the range the serial
- * layer accepts, so an invalid power is rejected before any frame goes out
- */
-const RADIO_TX_POWER_MIN = -10;
-const RADIO_TX_POWER_MAX = 30;
+// Bounds of the radio TX power the API accepts. They match the range the serial
+// layer accepts
+const RADIO_TX_POWER_MIN_DBM = -10;
+const RADIO_TX_POWER_MAX_DBM = 30;
 
 /** Reject a radio TX power outside the range the API accepts, before any frame goes out */
 function assertRadioTXPower(txPower: number | undefined): void {
 	if (txPower == undefined) return;
 	if (
 		!Number.isFinite(txPower)
-		|| txPower < RADIO_TX_POWER_MIN
-		|| txPower > RADIO_TX_POWER_MAX
+		|| txPower < RADIO_TX_POWER_MIN_DBM
+		|| txPower > RADIO_TX_POWER_MAX_DBM
 	) {
 		throw new ZWaveError(
-			`The TX power must be between ${RADIO_TX_POWER_MIN} and ${RADIO_TX_POWER_MAX} dBm`,
+			`The TX power must be between ${RADIO_TX_POWER_MIN_DBM} and ${RADIO_TX_POWER_MAX_DBM} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
@@ -213,9 +206,9 @@ function ackWaitDuration(
 	// ITU-T G.9959 (01/2015), Table 8-18: aMacMinAckWaitDuration is
 	// "aPhyTurnaroundTimeRxTx + (aMacTransferAckTimeTX * (1/data rate))".
 	// The LR spec defines aMacLRMinAckWaitDuration the same way in Table 6-32
-	return PHY_TURNAROUND_TIME_RX_TX
+	return PHY_TURNAROUND_TIME_RX_TX_MS
 		+ ackBits * 1000 / bitsPerSecond(dataRate)
-		+ ACK_HOST_TRANSPORT_ALLOWANCE;
+		+ ACK_HOST_TRANSPORT_ALLOWANCE_MS;
 }
 
 /** The random backoff to wait before a retransmission, in milliseconds */
@@ -225,11 +218,11 @@ function randomRetransmitDelay(isLongRange: boolean): number {
 	// Both bounds are exclusive, since the tables call for a backoff higher than
 	// the minimum and lower than the maximum
 	const min = isLongRange
-		? LR_MIN_RETRANSMIT_DELAY
-		: MAC_MIN_RETRANSMIT_DELAY;
+		? LR_MIN_RETRANSMIT_DELAY_MS
+		: MAC_MIN_RETRANSMIT_DELAY_MS;
 	const max = isLongRange
-		? LR_MAX_RETRANSMIT_DELAY
-		: MAC_MAX_RETRANSMIT_DELAY;
+		? LR_MAX_RETRANSMIT_DELAY_MS
+		: MAC_MAX_RETRANSMIT_DELAY_MS;
 	return min + 1 + Math.floor(Math.random() * (max - min - 1));
 }
 
@@ -269,7 +262,7 @@ export function routedAckTimeout(
 	// it reaches the destination, and numRepeaters + 1 hops bring the routed ack back.
 	// Routed frames go out with Ack Req = 0, so no hop is retransmitted by the MAC layer
 	const numHops = 2 * numRepeaters;
-	const timeout = numHops * (frameDurationMs + ROUTED_HOP_MARGIN);
+	const timeout = numHops * (frameDurationMs + ROUTED_HOP_MARGIN_MS);
 
 	// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
 	// Table 4.28: aNwkRoutedAckTimeout is the "Timeout for considering that a
@@ -534,17 +527,16 @@ export class ProtocolController
 				// G.9959 Table 7-3: configuration 1 carries R1 and R2 on its single
 				// channel, configuration 2 adds R3 on channel A. A retry can therefore
 				// fall back to a slower and more robust rate
-				const byDescendingRate = [r3, r2, r1].filter((ch) =>
+				const availableChannels = [r3, r2, r1].filter((ch) =>
 					ch != undefined
 				);
 
-				// Trying the fastest rate twice before falling back is Z-Wave practice
-				// layered over the 1 + aMacMaxFrameRetries attempts G.9959 mandates.
-				// Repeating it further keeps the mandated number of attempts in a
-				// region that offers fewer rates
-				const scheduled = [byDescendingRate[0], ...byDescendingRate];
+				// Send the fastest rate twice, then fall back to the slower rates.
+				// G.9959 asks for 1 + aMacMaxFrameRetries attempts, so repeat the
+				// fastest rate again if the region has fewer rates
+				const scheduled = [availableChannels[0], ...availableChannels];
 				while (scheduled.length < 1 + MAC_MAX_FRAME_RETRIES) {
-					scheduled.unshift(byDescendingRate[0]);
+					scheduled.unshift(availableChannels[0]);
 				}
 
 				const initialBitrate = bitsPerSecond(scheduled[0].dataRate);
@@ -668,11 +660,11 @@ export class ProtocolController
 		// a known power. Classic frames carry no such field and leave the radio's
 		// setting alone
 		const radioTXPower = protocol === Protocols.ZWaveLongRange
-			? options.txPower ?? LR_DEFAULT_TX_POWER
+			? options.txPower ?? LR_DEFAULT_TX_POWER_DBM
 			: options.txPower;
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
-			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER);
+			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
 		const advertisedNoiseFloor = options.lrMpduOverrides?.noiseFloor
 			?? RssiError.NotAvailable;
 
@@ -785,9 +777,9 @@ export class ProtocolController
 		let busyAttempts = 0;
 		let sawSilentAck = false;
 		const isLongRange = headerFormat === ProtocolHeaderFormat.LongRange;
-		// The backoff owed before the next transmit attempt. Classic waits it out
-		// before that attempt. LR keeps listening for the ack while the backoff
-		// runs, so nothing is left to wait for here
+		// How long to back off before the next transmit attempt. Classic Z-Wave
+		// waits this long between attempts. Long Range continues the ack wait
+		// during the backoff
 		let backoff = 0;
 
 		for (let attempt = 0; attempt < attempts.length; attempt++) {
@@ -1017,7 +1009,7 @@ export class ProtocolController
 				options.lrMpduOverrides?.noiseFloor,
 				"The advertised noise floor",
 			);
-			txPower = options.txPower ?? LR_DEFAULT_TX_POWER;
+			txPower = options.txPower ?? LR_DEFAULT_TX_POWER_DBM;
 		}
 
 		let mpdu: MPDU;
@@ -1037,7 +1029,7 @@ export class ProtocolController
 				// The MPDU TX Power field is an int8, while the radio accepts
 				// 0.1 dBm steps
 				txPower: options.lrMpduOverrides?.txPower
-					?? Math.round(txPower ?? LR_DEFAULT_TX_POWER),
+					?? Math.round(txPower ?? LR_DEFAULT_TX_POWER_DBM),
 				incomingRSSI: options.incomingRSSI ?? RssiError.NotAvailable,
 				noiseFloor: options.lrMpduOverrides?.noiseFloor
 					?? RssiError.NotAvailable,
