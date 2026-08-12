@@ -327,34 +327,19 @@ export function isFinalHopOfRoutedFrame(mpdu: MPDU): mpdu is RoutedZWaveMPDU {
 		&& mpdu.hop === mpdu.repeaters.length;
 }
 
-/**
- * ITU-T G.9959 (01/2015), §8.1.3.12: "A long continuous beam may last for a
- * maximum of 1 160 ms, and a short one may last for a maximum of 300 ms. The
- * recommended duration is 1 100 ms for a long continuous beam and 275 ms for a
- * short continuous beam."
- */
+// ITU-T G.9959 (01/2015), §8.1.3.12
+// Recommended duration of a short continuous beam (at most 300 ms)
 const SHORT_CONTINUOUS_BEAM_DURATION_MS = 275;
+// Recommended duration of a long continuous beam (at most 1160 ms)
 const LONG_CONTINUOUS_BEAM_DURATION_MS = 1100;
 
-/**
- * ITU-T G.9959 (01/2015), §8.1.3.11: "The beam fragment duration shall be in the
- * range 110-115 ms." The LR spec repeats this in §6.3.7
- */
+// ITU-T G.9959 (01/2015), §8.1.3.11, repeated in the LR spec §6.3.7
+// Duration of one beam fragment (allowed range 110..115 ms)
 const BEAM_FRAGMENT_DURATION_MS = 112;
-
-/**
- * ITU-T G.9959 (01/2015), §8.1.3.11: "The next beam fragment shall begin in the
- * range 190-200 ms measured from the beginning of the previous beam fragment."
- * The LR spec repeats this in §6.3.7
- */
+// Time between the starts of consecutive fragments (allowed range 190..200 ms)
 const BEAM_FRAGMENT_PERIOD_MS = 200;
-
-/**
- * ITU-T G.9959 (01/2015), §8.1.3.11: "A full fragmented beam shall span
- * 3 000 ms." The LR spec repeats this in §6.3.7. 16 fragments at the maximum
- * period hit that span exactly, measured from the start of the first fragment to
- * the start of the last
- */
+// "A full fragmented beam shall span 3 000 ms." 16 fragments at the maximum
+// period hit that span exactly, first fragment start to last fragment start
 const NUM_BEAM_FRAGMENTS = 16;
 
 export interface BeamParameters {
