@@ -54,18 +54,18 @@ export interface MACTransmitOptions {
 	route?: readonly number[];
 	/**
 	 * Radio TX power in dBm. Default: keep the radio's current power for classic
-	 * Z-Wave, 13 dBm for Long Range.
+	 * Z-Wave, or the default LR TX power for Long Range.
 	 */
 	txPower?: number;
 	/**
-	 * Values to put into the MPDU. Anything left out is derived from the radio
-	 * settings, so setting one here also serves to advertise a value that does not
+	 * Values to put into the Long Range MPDU. Anything left out is derived from
+	 * the radio settings, so setting one here advertises a value that does not
 	 * match reality, for testing spec violations.
 	 */
-	advertised?: {
+	lrMpduOverrides?: {
 		/** LR MPDU TX Power field. Default: the radio TX power. */
 		txPower?: number;
-		/** LR MPDU Noise Floor field. Default: 127, "RSSI not available". */
+		/** LR MPDU Noise Floor field. Default: "RSSI not available". */
 		noiseFloor?: number;
 	};
 }
@@ -85,20 +85,22 @@ export type MACTransmitAckOptions =
 		}
 		| {
 			protocol: Protocols.ZWaveLongRange;
-			/** Radio TX power in dBm. Default: 13 dBm. */
+			/** Radio TX power in dBm. Default: the default LR TX power. */
 			txPower?: number;
 			/**
-			 * Values to put into the ack MPDU. The auto-ack path fills in the RSSI it
-			 * measured, and anything left out falls back to a placeholder. Setting a
-			 * value here also serves to advertise one that does not match reality, for
-			 * testing spec violations.
+			 * The RSSI measured while receiving the frame this acknowledges.
+			 * Default: "RSSI not available".
 			 */
-			advertised?: {
+			incomingRSSI?: number;
+			/**
+			 * Values to put into the ack MPDU. Anything left out is derived from the
+			 * radio settings, so setting one here advertises a value that does not
+			 * match reality, for testing spec violations.
+			 */
+			lrMpduOverrides?: {
 				/** LR MPDU TX Power field. Default: the radio TX power. */
 				txPower?: number;
-				/** LR MPDU Incoming RSSI field. Default: 127, "RSSI not available". */
-				incomingRSSI?: number;
-				/** LR MPDU Noise Floor field. Default: 127, "RSSI not available". */
+				/** LR MPDU Noise Floor field. Default: "RSSI not available". */
 				noiseFloor?: number;
 			};
 		}
