@@ -1,11 +1,27 @@
 import { Bytes } from "@zwave-js/shared";
-import { longRangeBeamPowers } from "./utils.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
+import { longRangeBeamPowerToIndex } from "./utils.js";
 
 // ITU-T G.9959 (01/2015), Table 8-17: "The Beam Tag value 0x55 shall advertise
 // the presence of a NodeID field and an optional HomeID Hash field"
 const BEAM_TAG = 0x55;
 
+function assertNodeIdFits(
+	nodeId: number,
+	max: number,
+	protocol: string,
+): void {
+	if (!Number.isInteger(nodeId) || nodeId < 1 || nodeId > max) {
+		throw new ZWaveError(
+			`${nodeId} is not a valid ${protocol} node ID for a beam frame`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+}
+
 function xorHomeIdBytes(homeId: number): number {
+	// Both specs seed GenerateHomeIdHash with 0xFF before XORing the four home
+	// ID bytes, so the result is not a bare XOR
 	let hash = 0xff;
 	for (let shift = 24; shift >= 0; shift -= 8) {
 		hash ^= (homeId >>> shift) & 0xff;
@@ -30,20 +46,10 @@ export function zwaveHomeIdHash(homeId: number): number {
 
 /** Computes the 8-bit home ID hash carried in Z-Wave Long Range beam frames */
 export function longRangeHomeIdHash(homeId: number): number {
-	// GenerateHomeIdHash in the Z-Wave Long Range PHY and MAC Layer
-	// Specification (2023.07.03), §6.3.6.4 must stay a plain XOR of the four
-	// home ID bytes. The wildcard adjustment of ITU-T G.9959 applies to Z-Wave
-	// classic only
+	// The wildcard adjustment of ITU-T G.9959 applies to Z-Wave classic only.
+	// GenerateHomeIdHash of the Z-Wave Long Range PHY and MAC Layer
+	// Specification (2023.07.03), §6.3.6.4 is the bare seeded XOR
 	return xorHomeIdBytes(homeId);
-}
-
-/**
- * Converts a TX power in dBm to the 4-bit Tx Power field of a Z-Wave Long Range
- * beam frame, rounding up to the nearest representable level.
- */
-export function longRangeBeamPowerToIndex(dBm: number): number {
-	const index = longRangeBeamPowers.findIndex((level) => level >= dBm);
-	return index === -1 ? longRangeBeamPowers.length - 1 : index;
 }
 
 export interface ZWaveBeamFrameOptions {
@@ -57,10 +63,12 @@ export interface ZWaveBeamFrameOptions {
  * beam. A beam frame carries no length field and no FCS.
  */
 export function encodeZWaveBeamFrame(options: ZWaveBeamFrameOptions): Bytes {
+	assertNodeIdFits(options.destinationNodeId, 0xff, "Z-Wave classic");
+
 	// ITU-T G.9959 (01/2015), §8.1.3.10: "Each beam frame shall carry the Beam
 	// Tag and NodeID fields. The NodeID field should be followed by the
 	// optional HomeID Hash field."
-	const bytes = [BEAM_TAG, options.destinationNodeId & 0xff];
+	const bytes = [BEAM_TAG, options.destinationNodeId];
 	if (options.homeIdHash != undefined) {
 		bytes.push(options.homeIdHash & 0xff);
 	}
@@ -88,7 +96,8 @@ export function encodeLongRangeBeamFrame(
 	const txPowerIndex = longRangeBeamPowerToIndex(options.txPower);
 	// §6.3.6.3: "The Destination NodeID is a 12 bit field identifying the
 	// destination of the beam frame."
-	const destinationNodeId = options.destinationNodeId & 0xfff;
+	assertNodeIdFits(options.destinationNodeId, 0xfff, "Z-Wave Long Range");
+	const destinationNodeId = options.destinationNodeId;
 
 	return Bytes.from([
 		BEAM_TAG,

@@ -2,10 +2,10 @@ import { expect, test } from "vitest";
 import {
 	encodeLongRangeBeamFrame,
 	encodeZWaveBeamFrame,
-	longRangeBeamPowerToIndex,
 	longRangeHomeIdHash,
 	zwaveHomeIdHash,
 } from "./Beam.js";
+import { longRangeBeamPowerToIndex } from "./utils.js";
 
 test("zwaveHomeIdHash() XORs all home ID bytes into 0xFF", () => {
 	// 0xFF ^ 0xDE ^ 0xAD ^ 0xBE ^ 0xEF
@@ -44,6 +44,23 @@ test("encodeZWaveBeamFrame() appends the home ID hash when given", () => {
 			homeIdHash: 0xdd,
 		}),
 	]).toStrictEqual([0x55, 0xff, 0xdd]);
+});
+
+test("encodeZWaveBeamFrame() rejects node IDs that do not fit 8 bits", () => {
+	expect(() => encodeZWaveBeamFrame({ destinationNodeId: 0x100 }))
+		.toThrow(/not a valid Z-Wave classic node ID/);
+	expect(() => encodeZWaveBeamFrame({ destinationNodeId: 0 }))
+		.toThrow(/not a valid Z-Wave classic node ID/);
+});
+
+test("encodeLongRangeBeamFrame() rejects node IDs that do not fit 12 bits", () => {
+	expect(() =>
+		encodeLongRangeBeamFrame({
+			destinationNodeId: 0x1000,
+			txPower: 14,
+			homeIdHash: 0xdd,
+		})
+	).toThrow(/not a valid Z-Wave Long Range node ID/);
 });
 
 test("longRangeBeamPowerToIndex() maps the exact levels of Table 6-31", () => {

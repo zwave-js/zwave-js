@@ -531,7 +531,9 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		const routedError = !!(raw.payload[1] & 0b100);
 		const hasExtendedHeader = !!(raw.payload[1] & 0b1000);
 		let failedHop: number | undefined;
-		let speedModified = raw.speedModified;
+		// NWK:000D.1: the Routed Speed Modified bit of the MAC header carries no
+		// meaning on a routed error, where the same bits hold the failed hop
+		let speedModified = routedError ? false : raw.speedModified;
 		if (routedError) {
 			failedHop = raw.payload[1] >>> 4;
 		} else if (headerFormat === ProtocolHeaderFormat.Classic2Channel) {

@@ -2502,15 +2502,10 @@ export interface LongRangeBeamFrameOptions {
     txPower: number;
 }
 
-// Warning: (ae-missing-release-tag) "longRangeBeamPowers" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public
-export const longRangeBeamPowers: number[];
-
 // Warning: (ae-missing-release-tag) "longRangeBeamPowerToDBm" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export function longRangeBeamPowerToDBm(power: number): number;
+export function longRangeBeamPowerToDBm(index: number): number;
 
 // Warning: (ae-missing-release-tag) "longRangeBeamPowerToIndex" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
