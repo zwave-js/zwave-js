@@ -121,7 +121,8 @@ const INT8_MAX = 127;
 
 /** The RSSI to advertise for a received frame, clamped into the range the MPDU field allows */
 function advertisedRSSI(rssi: RSSI): number {
-	if (isRssiError(rssi)) return RssiError.NotAvailable;
+	// The int8 field carries each error code of its own, so pass them through
+	if (isRssiError(rssi)) return rssi;
 	return Math.max(
 		LR_RSSI_MIN_DBM,
 		Math.min(LR_RSSI_MAX_DBM, Math.round(rssi)),
@@ -174,7 +175,7 @@ function bitsPerSecond(dataRate: ProtocolDataRate): number {
  * How long to wait for an ack after a transmission, in milliseconds. The result
  * includes the host transport allowance on top of the duration the MAC mandates
  */
-function ackWaitDuration(
+export function ackWaitDuration(
 	dataRate: ProtocolDataRate,
 	headerFormat: ProtocolHeaderFormat,
 ): number {
@@ -211,8 +212,48 @@ function ackWaitDuration(
 		+ ACK_HOST_TRANSPORT_ALLOWANCE_MS;
 }
 
+/**
+ * Plan the transmit attempts of a classic frame in a 2-channel region, fastest
+ * rate first
+ */
+export function classic2ChannelAttemptSchedule(
+	channels: readonly ChannelInfo[],
+): TransmitAttempt[] {
+	const byDataRate = (dataRate: ProtocolDataRate) =>
+		channels.find((ch) => ch.dataRate === dataRate);
+	const r3 = byDataRate(ProtocolDataRate.ZWave_100k);
+	const r2 = byDataRate(ProtocolDataRate.ZWave_40k);
+	const r1 = byDataRate(ProtocolDataRate.ZWave_9k6);
+
+	// G.9959 Table 7-3: configuration 1 carries R1 and R2 on its single
+	// channel, configuration 2 adds R3 on channel A. A retry can therefore
+	// fall back to a slower and more robust rate
+	const availableChannels = [r3, r2, r1].filter((ch) => ch != undefined);
+
+	// Send the fastest rate twice, then fall back to the slower rates.
+	// §8.1.5.2: "If transmissions fail a total of (1 + aMacMaxFrameRetries)
+	// times, the originating MAC layer issues a failure confirmation", so the
+	// schedule must hold exactly that many attempts. Repeat the fastest rate
+	// when the region has fewer rates, and drop the slowest when it has more
+	const numAttempts = 1 + MAC_MAX_FRAME_RETRIES;
+	const scheduled = [availableChannels[0], ...availableChannels];
+	while (scheduled.length < numAttempts) {
+		scheduled.unshift(availableChannels[0]);
+	}
+	scheduled.length = numAttempts;
+
+	const initialBitrate = bitsPerSecond(scheduled[0].dataRate);
+
+	return scheduled.map((ch) => ({
+		channel: () => ch,
+		// The flag tells the receiver that the frame goes out slower than
+		// the rate this transmission started at
+		speedModified: bitsPerSecond(ch.dataRate) < initialBitrate,
+	}));
+}
+
 /** The random backoff to wait before a retransmission, in milliseconds */
-function randomRetransmitDelay(isLongRange: boolean): number {
+export function randomRetransmitDelay(isLongRange: boolean): number {
 	// ITU-T G.9959 (01/2015), §8.1.5.1.4.4: "The random delay shall be calculated
 	// as a period in the interval aMacMinRetransmitDelay .. aMacMaxRetransmitDelay".
 	// Both bounds are exclusive, since the tables call for a backoff higher than
@@ -447,7 +488,9 @@ export class ProtocolController
 			Protocols.ZWaveLongRange,
 		);
 		const primary = this.getPrimaryLongRangeChannel();
-		return channels.find((ch) => ch !== primary) ?? primary;
+		// Compare by channel number, since each lookup re-filters the region's
+		// channel list and a setRegion in between replaces the objects
+		return channels.find((ch) => ch.channel !== primary.channel) ?? primary;
 	}
 
 	/** The channel the first transmit attempt of a frame goes out on */
@@ -517,37 +560,8 @@ export class ProtocolController
 					},
 				);
 
-			case ProtocolHeaderFormat.Classic2Channel: {
-				const byDataRate = (dataRate: ProtocolDataRate) =>
-					channels.find((ch) => ch.dataRate === dataRate);
-				const r3 = byDataRate(ProtocolDataRate.ZWave_100k);
-				const r2 = byDataRate(ProtocolDataRate.ZWave_40k);
-				const r1 = byDataRate(ProtocolDataRate.ZWave_9k6);
-
-				// G.9959 Table 7-3: configuration 1 carries R1 and R2 on its single
-				// channel, configuration 2 adds R3 on channel A. A retry can therefore
-				// fall back to a slower and more robust rate
-				const availableChannels = [r3, r2, r1].filter((ch) =>
-					ch != undefined
-				);
-
-				// Send the fastest rate twice, then fall back to the slower rates.
-				// G.9959 asks for 1 + aMacMaxFrameRetries attempts, so repeat the
-				// fastest rate again if the region has fewer rates
-				const scheduled = [availableChannels[0], ...availableChannels];
-				while (scheduled.length < 1 + MAC_MAX_FRAME_RETRIES) {
-					scheduled.unshift(availableChannels[0]);
-				}
-
-				const initialBitrate = bitsPerSecond(scheduled[0].dataRate);
-
-				return scheduled.map((ch) => ({
-					channel: () => ch,
-					// The flag tells the receiver that the frame goes out slower than
-					// the rate this transmission started at
-					speedModified: bitsPerSecond(ch.dataRate) < initialBitrate,
-				}));
-			}
+			case ProtocolHeaderFormat.Classic2Channel:
+				return classic2ChannelAttemptSchedule(channels);
 
 			default:
 				// oxlint-disable-next-line typescript/restrict-template-expressions
@@ -658,7 +672,8 @@ export class ProtocolController
 
 		// LR frames advertise the power they were sent with, so the radio has to use
 		// a known power. Classic frames carry no such field and leave the radio's
-		// setting alone
+		// setting alone, which in a mixed region is whatever the last LR frame
+		// set. A caller that needs a specific classic power must pass one
 		const radioTXPower = protocol === Protocols.ZWaveLongRange
 			? options.txPower ?? LR_DEFAULT_TX_POWER_DBM
 			: options.txPower;

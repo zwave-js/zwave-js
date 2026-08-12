@@ -7,8 +7,11 @@ import {
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
 import {
+	ackWaitDuration,
+	classic2ChannelAttemptSchedule,
 	frameDuration,
 	isFinalHopOfRoutedFrame,
+	randomRetransmitDelay,
 	routedAckTimeout,
 } from "./ProtocolController.js";
 
@@ -86,6 +89,125 @@ describe("frameDuration()", () => {
 		);
 		expect(long - short).toBeCloseTo(10 * 8 * 1000 / 100000, 10);
 	});
+});
+
+describe("classic2ChannelAttemptSchedule()", () => {
+	const r1 = { channel: 2, dataRate: ProtocolDataRate.ZWave_9k6 };
+	const r2 = { channel: 1, dataRate: ProtocolDataRate.ZWave_40k };
+	const r3 = { channel: 0, dataRate: ProtocolDataRate.ZWave_100k };
+
+	// G.9959 §8.1.5.2: a frame gets 1 + aMacMaxFrameRetries (2) attempts
+	test.each([
+		["all three rates", [r3, r2, r1]],
+		["two rates", [r2, r1]],
+		["a single rate", [r2]],
+	])("plans exactly 3 attempts with %s", (_name, channels) => {
+		expect(classic2ChannelAttemptSchedule(channels)).toHaveLength(3);
+	});
+
+	test("sends the fastest rate twice, then falls back", () => {
+		const schedule = classic2ChannelAttemptSchedule([r3, r2, r1]);
+		expect(schedule.map((a) => a.channel().dataRate)).toStrictEqual([
+			ProtocolDataRate.ZWave_100k,
+			ProtocolDataRate.ZWave_100k,
+			ProtocolDataRate.ZWave_40k,
+		]);
+	});
+
+	test("flags only the attempts slower than the first one", () => {
+		const schedule = classic2ChannelAttemptSchedule([r3, r2, r1]);
+		expect(schedule.map((a) => a.speedModified)).toStrictEqual([
+			false,
+			false,
+			true,
+		]);
+	});
+
+	test("repeats the only rate a single-rate region has", () => {
+		const schedule = classic2ChannelAttemptSchedule([r2]);
+		expect(schedule.map((a) => a.channel().dataRate)).toStrictEqual([
+			ProtocolDataRate.ZWave_40k,
+			ProtocolDataRate.ZWave_40k,
+			ProtocolDataRate.ZWave_40k,
+		]);
+		expect(schedule.every((a) => !a.speedModified)).toBe(true);
+	});
+});
+
+describe("ackWaitDuration()", () => {
+	// aPhyTurnaroundTimeRxTx (1 ms) + aMacTransferAckTimeTX / data rate,
+	// plus the 20 ms host transport allowance
+	test.each([
+		[
+			ProtocolDataRate.ZWave_9k6,
+			ProtocolHeaderFormat.Classic2Channel,
+			168,
+			9600,
+		],
+		[
+			ProtocolDataRate.ZWave_40k,
+			ProtocolHeaderFormat.Classic2Channel,
+			248,
+			40000,
+		],
+		[
+			ProtocolDataRate.ZWave_100k,
+			ProtocolHeaderFormat.Classic2Channel,
+			416,
+			100000,
+		],
+		[
+			ProtocolDataRate.ZWave_100k,
+			ProtocolHeaderFormat.Classic3Channel,
+			296,
+			100000,
+		],
+		[
+			ProtocolDataRate.LongRange_100k,
+			ProtocolHeaderFormat.LongRange,
+			448,
+			100000,
+		],
+	])(
+		"data rate %i with header format %i waits for %i ack bits",
+		(dataRate, headerFormat, ackBits, bitrate) => {
+			expect(ackWaitDuration(dataRate, headerFormat)).toBeCloseTo(
+				1 + ackBits * 1000 / bitrate + 20,
+				10,
+			);
+		},
+	);
+
+	// R3 needs fewer ack bits in channel configuration 3 than in 1 and 2
+	test("100k waits longer in a 2-channel region than in a 3-channel one", () => {
+		expect(
+			ackWaitDuration(
+				ProtocolDataRate.ZWave_100k,
+				ProtocolHeaderFormat.Classic2Channel,
+			),
+		).toBeGreaterThan(
+			ackWaitDuration(
+				ProtocolDataRate.ZWave_100k,
+				ProtocolHeaderFormat.Classic3Channel,
+			),
+		);
+	});
+});
+
+describe("randomRetransmitDelay()", () => {
+	// G.9959 Table 8-19: the backoff must be higher than aMacMinRetransmitDelay
+	// (10 ms) and lower than aMacMaxRetransmitDelay (40 ms)
+	test.each([[false], [true]])(
+		"stays strictly inside the spec bounds (long range: %s)",
+		(isLongRange) => {
+			for (let i = 0; i < 1000; i++) {
+				const delay = randomRetransmitDelay(isLongRange);
+				expect(delay).toBeGreaterThan(10);
+				expect(delay).toBeLessThan(40);
+				expect(Number.isInteger(delay)).toBe(true);
+			}
+		},
+	);
 });
 
 describe("routedAckTimeout()", () => {
