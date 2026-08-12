@@ -681,12 +681,6 @@ export class ProtocolController
 		// receiver acks an LR broadcast beam. We do not know how many acks to
 		// expect, so that beam runs to completion too
 		const canBeInterrupted = !beam.continuous && !isBroadcast;
-		if (canBeInterrupted && !phy.supportsAbortBeam) {
-			throw new ZWaveError(
-				`Beaming a singlecast destination requires firmware support for aborting a beam`,
-				ZWaveErrorCodes.Driver_NotSupported,
-			);
-		}
 
 		let channels: number[];
 		let data: BytesView;
@@ -785,6 +779,24 @@ export class ProtocolController
 		}
 
 		const result = await beamPromise;
+		if (
+			result !== TransmitCallbackStatus.Completed
+			&& !(result === TransmitCallbackStatus.Aborted && acked)
+		) {
+			// Without this the frame just fails, with the beam log line above
+			// showing a beam that looked like it went out
+			this.protocolLog.print(
+				`Beaming node ${destinationNodeId} failed: ${
+					getEnumMemberName(
+						result >= TransmitCallbackStatus.Aborted
+							? TransmitCallbackStatus
+							: TransmitResponseStatus,
+						result,
+					)
+				}`,
+				"warn",
+			);
+		}
 		switch (result) {
 			case TransmitCallbackStatus.Completed:
 				break;
@@ -926,6 +938,19 @@ export class ProtocolController
 				);
 			}
 			beam = getBeamParameters(wakeup, headerFormat);
+
+			// Checked here rather than in wakeDestination, so a rejected transmit
+			// does not consume a sequence number
+			if (
+				!beam.continuous
+				&& options.destination.kind !== MACTransmitKind.Broadcast
+				&& !this.phyLayer.supportsAbortBeam
+			) {
+				throw new ZWaveError(
+					`Beaming a singlecast destination requires firmware support for aborting a beam`,
+					ZWaveErrorCodes.Driver_NotSupported,
+				);
+			}
 		}
 
 		const sequenceNumber = this.nextSequenceNumber(headerFormat);
@@ -1064,23 +1089,24 @@ export class ProtocolController
 			);
 			if ("result" in outcome) return { result: outcome.result };
 
+			// A beam blocks for up to three seconds, long enough for destroy() to
+			// clear the PHY layer underneath us
+			if (this.wasDestroyed) {
+				return { result: MACTransmitResult.Error_Aborted };
+			}
+
 			if (outcome.pinnedChannel) {
 				// The destination listens only on the channel the beam went out on,
-				// so every attempt must stay there
+				// so every attempt must stay there. The attempt count stays the one
+				// the schedule planned, including the LR secondary-channel retries
+				// that §6.5.1.5.4 requires before a failure is declared
 				const channel = outcome.pinnedChannel;
-				const numAttempts =
-					headerFormat === ProtocolHeaderFormat.LongRange
-						? 1 + MAC_LR_MAX_FRAME_RETRIES
-						: 1 + MAC_MAX_FRAME_RETRIES;
-				attempts = Array.from(
-					{ length: numAttempts },
-					() => ({
-						channel: () => channel,
-						// Every attempt goes out at the rate the destination
-						// listens with
-						speedModified: false,
-					}),
-				);
+				attempts = attempts.map(() => ({
+					channel: () => channel,
+					// Every attempt goes out at the rate the destination
+					// listens with
+					speedModified: false,
+				}));
 			}
 		}
 
@@ -1119,6 +1145,9 @@ export class ProtocolController
 					radioTXPower,
 				);
 				if ("result" in outcome) return { result: outcome.result };
+				if (this.wasDestroyed) {
+					return { result: MACTransmitResult.Error_Aborted };
+				}
 			}
 
 			// Serializing an MPDU changes its payload property, so we set it here

@@ -1,5 +1,4 @@
 import {
-	BeamingInfo,
 	ProtocolDataRate,
 	ProtocolHeaderFormat,
 	RoutedZWaveMPDU,
@@ -283,10 +282,10 @@ describe("getBeamParameters()", () => {
 		expect(
 			getBeamParameters("250ms", ProtocolHeaderFormat.Classic2Channel),
 		).toStrictEqual({
+			continuous: true,
 			numFragments: 1,
 			fragmentDurationMs: 275,
 			fragmentPeriodMs: 275,
-			beamingInfo: BeamingInfo.ShortContinuous,
 		});
 	});
 
@@ -294,10 +293,10 @@ describe("getBeamParameters()", () => {
 		expect(
 			getBeamParameters("1000ms", ProtocolHeaderFormat.Classic2Channel),
 		).toStrictEqual({
+			continuous: true,
 			numFragments: 1,
 			fragmentDurationMs: 1100,
 			fragmentPeriodMs: 1100,
-			beamingInfo: BeamingInfo.LongContinuous,
 		});
 	});
 
@@ -306,10 +305,10 @@ describe("getBeamParameters()", () => {
 		[ProtocolHeaderFormat.LongRange],
 	])("header format %i uses the fragmented beam", (headerFormat) => {
 		expect(getBeamParameters("fragmented", headerFormat)).toStrictEqual({
+			continuous: false,
 			numFragments: 16,
 			fragmentDurationMs: 112,
-			fragmentPeriodMs: 195,
-			beamingInfo: BeamingInfo.Fragmented,
+			fragmentPeriodMs: 200,
 		});
 	});
 

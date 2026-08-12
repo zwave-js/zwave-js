@@ -1394,6 +1394,19 @@ export enum LongRangeFrameType {
 
 export { LongRangeMPDU }
 
+// Warning: (ae-missing-release-tag) "MACDestinationWakeup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export type MACDestinationWakeup = "250ms" | "1000ms" | "fragmented";
+
+// Warning: (ae-missing-release-tag) "MACRoute" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MACRoute {
+    // (undocumented)
+    repeaters: readonly number[];
+}
+
 // Warning: (ae-missing-release-tag) "MACTransmitAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1448,6 +1461,7 @@ export interface MACTransmitOptions {
     ackRequested?: boolean;
     // (undocumented)
     destination: MACTransmitDestination;
+    destinationWakeup?: MACDestinationWakeup;
     // (undocumented)
     homeId: number;
     lrMpduOverrides?: {
@@ -1456,7 +1470,7 @@ export interface MACTransmitOptions {
     };
     // (undocumented)
     protocol?: Protocols;
-    route?: readonly number[];
+    route?: MACRoute;
     // (undocumented)
     sourceNodeId: number;
     txPower?: number;
@@ -1726,6 +1740,7 @@ export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
     queryRegion(): Promise<RegionConfig>;
     get regionConfig(): MaybeNotKnown<RegionConfig>;
     setRegion(region: RFRegion, channelConfig: ChannelConfiguration): Promise<ChannelInfo[]>;
+    get supportsAbortBeam(): boolean;
     transmit(mpdu: BytesView, options: TransmitOptions): Promise<TransmitResult>;
     transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
 }
@@ -1819,6 +1834,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> implements 
     setRegion(region: RFRegion, channelConfig: ChannelConfiguration): Promise<ChannelInfo_2[]>;
     // (undocumented)
     start(): Promise<void>;
+    // (undocumented)
+    get supportsAbortBeam(): boolean;
     transmit(data: BytesView, options: TransmitOptions): Promise<TransmitResult>;
     transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen

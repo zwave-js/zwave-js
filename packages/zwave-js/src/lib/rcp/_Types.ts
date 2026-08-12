@@ -35,7 +35,11 @@ export interface MACTransmitReport {
 	repeaterRSSI?: readonly RSSI[];
 }
 
-/** The wakeup interval a FLiRS destination listens with */
+/**
+ * How a FLiRS destination has to be woken. `"250ms"` and `"1000ms"` name the
+ * wakeup interval it listens with, `"fragmented"` the beam format that channel
+ * configuration 3 and Long Range use instead.
+ */
 export type MACDestinationWakeup = "250ms" | "1000ms" | "fragmented";
 
 export interface MACTransmitOptions {
