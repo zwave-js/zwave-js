@@ -120,6 +120,11 @@ const ACK_HOST_TRANSPORT_ALLOWANCE_MS = 20;
 // TX power used for LR transmissions when the caller does not specify one
 const LR_DEFAULT_TX_POWER_DBM = 14;
 
+// TX power used for LR beams when the caller does not specify one. Table 6-31 of
+// the LR spec lists this as an exact beam Tx Power level, so a beam advertises it
+// without rounding to the next level
+const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
+
 // Bounds of an int8 field
 const INT8_MIN = -128;
 const INT8_MAX = 127;
@@ -328,21 +333,21 @@ export function isFinalHopOfRoutedFrame(mpdu: MPDU): mpdu is RoutedZWaveMPDU {
  * recommended duration is 1 100 ms for a long continuous beam and 275 ms for a
  * short continuous beam."
  */
-const SHORT_CONTINUOUS_BEAM_DURATION = 275;
-const LONG_CONTINUOUS_BEAM_DURATION = 1100;
+const SHORT_CONTINUOUS_BEAM_DURATION_MS = 275;
+const LONG_CONTINUOUS_BEAM_DURATION_MS = 1100;
 
 /**
  * ITU-T G.9959 (01/2015), §8.1.3.11: "The beam fragment duration shall be in the
  * range 110-115 ms." The LR spec repeats this in §6.3.7
  */
-const BEAM_FRAGMENT_DURATION = 112;
+const BEAM_FRAGMENT_DURATION_MS = 112;
 
 /**
  * ITU-T G.9959 (01/2015), §8.1.3.11: "The next beam fragment shall begin in the
  * range 190-200 ms measured from the beginning of the previous beam fragment."
  * The LR spec repeats this in §6.3.7
  */
-const BEAM_FRAGMENT_PERIOD = 200;
+const BEAM_FRAGMENT_PERIOD_MS = 200;
 
 /**
  * ITU-T G.9959 (01/2015), §8.1.3.11: "A full fragmented beam shall span
@@ -387,8 +392,8 @@ export function getBeamParameters(
 		return {
 			continuous: false,
 			numFragments: NUM_BEAM_FRAGMENTS,
-			fragmentDurationMs: BEAM_FRAGMENT_DURATION,
-			fragmentPeriodMs: BEAM_FRAGMENT_PERIOD,
+			fragmentDurationMs: BEAM_FRAGMENT_DURATION_MS,
+			fragmentPeriodMs: BEAM_FRAGMENT_PERIOD_MS,
 		};
 	}
 
@@ -402,8 +407,8 @@ export function getBeamParameters(
 	// G.9959 §8.1.3.12: "A continuous beam is a series of beam frames spanning a
 	// fixed period of time", which the firmware executes as a single fragment
 	const duration = wakeup === "250ms"
-		? SHORT_CONTINUOUS_BEAM_DURATION
-		: LONG_CONTINUOUS_BEAM_DURATION;
+		? SHORT_CONTINUOUS_BEAM_DURATION_MS
+		: LONG_CONTINUOUS_BEAM_DURATION_MS;
 	return {
 		continuous: true,
 		numFragments: 1,
@@ -716,7 +721,7 @@ export class ProtocolController
 				: [primary.channel, secondary.channel];
 			data = encodeLongRangeBeamFrame({
 				destinationNodeId,
-				txPower: radioTXPower ?? LR_DEFAULT_TX_POWER,
+				txPower: radioTXPower ?? LR_DEFAULT_BEAM_TX_POWER_DBM,
 				homeIdHash: longRangeHomeIdHash(options.homeId),
 			});
 		} else {
