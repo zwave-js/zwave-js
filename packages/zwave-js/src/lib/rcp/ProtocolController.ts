@@ -343,11 +343,7 @@ const BEAM_FRAGMENT_PERIOD_MS = 200;
 const NUM_BEAM_FRAGMENTS = 16;
 
 export interface BeamParameters {
-	/**
-	 * Whether this is a continuous beam. No acknowledgement interrupts a
-	 * continuous beam, because G.9959 §8.1.3.11 defines the ack interrupt only
-	 * for fragmented beams
-	 */
+	/** Whether this is a continuous beam */
 	continuous: boolean;
 	numFragments: number;
 	fragmentDurationMs: number;
