@@ -2491,6 +2491,11 @@ export interface LogVisibility {
     isNodeLoggingVisible(nodeId: number): boolean;
 }
 
+// Warning: (ae-missing-release-tag) "LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET = 10;
+
 // Warning: (ae-missing-release-tag) "LongRangeBeamFrameOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)

@@ -29,6 +29,13 @@ import { getRouteTag, padNodeId } from "./utils.js";
 
 const EXPLORER_MAX_TTL = 4;
 
+/**
+ * Byte offset of the Noise Floor field in a serialized Long Range MPDU header.
+ * Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Table 6-22.
+ * The RCP firmware patches this byte in place, so it must follow the serializer
+ */
+export const LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET = 10;
+
 const supportedProtocolDataRates = new Set<ProtocolDataRate>([
 	ProtocolDataRate.ZWave_9k6,
 	ProtocolDataRate.ZWave_40k,
@@ -1304,7 +1311,7 @@ export class LongRangeMPDU extends MPDU {
 			| (this.headerType & 0b0000_0111);
 		header[8] = frameControl;
 		header[9] = this.sequenceNumber;
-		header.writeUInt8(this.noiseFloor, 10);
+		header.writeUInt8(this.noiseFloor, LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET);
 		header.writeInt8(this.txPower, 11);
 		// TODO: Once extensions are defined, add them here
 

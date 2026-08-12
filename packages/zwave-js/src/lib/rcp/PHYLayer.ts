@@ -131,9 +131,6 @@ export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
 	/** Whether the firmware can stop an ongoing beam transmission */
 	get supportsAbortBeam(): boolean;
 
-	/** Measure the noise floor on the given channel, in dBm */
-	measureNoiseFloor(channel: number): Promise<RSSI>;
-
 	/** Whether the firmware can patch measurements into a frame right before transmitting */
 	get supportsTransmitReplacements(): boolean;
 

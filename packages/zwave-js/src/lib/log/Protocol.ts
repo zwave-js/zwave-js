@@ -59,6 +59,8 @@ export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 		mpdu: MPDU,
 		logContext: MPDULogContext,
 		direction: DataDirection,
+		/** Fields the firmware overwrites after serialization */
+		firmwareFields?: readonly string[],
 	): void {
 		if (!this.isMPDULogVisible()) return;
 
@@ -67,6 +69,15 @@ export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 		const nested: LogPayload[] = [];
 		if (logEntry.message) {
 			nested.push(toLogPayload(logEntry.message));
+		}
+		if (firmwareFields?.length) {
+			// The serialized frame carries a placeholder here, so the logged
+			// value is not what goes on air
+			nested.push(
+				toLogPayload({
+					"measured by the firmware": firmwareFields.join(", "),
+				}),
+			);
 		}
 
 		try {

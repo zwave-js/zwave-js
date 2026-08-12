@@ -472,6 +472,14 @@ export class SetupRadio_GetCapabilitiesResponse extends SetupRadioResponse {
 		raw: RCPMessageRaw,
 		_ctx: RCPMessageParsingContext,
 	): SetupRadio_GetCapabilitiesResponse {
+		// Reading the length byte out of an empty payload yields undefined, which
+		// turns the check below into a NaN comparison that never fails
+		if (raw.payload.length < 1) {
+			throw new ZWaveError(
+				"Invalid GetCapabilities response: payload too short",
+				ZWaveErrorCodes.PacketFormat_Truncated,
+			);
+		}
 		const bitmaskLength = raw.payload[0];
 		if (raw.payload.length < 1 + bitmaskLength) {
 			throw new ZWaveError(

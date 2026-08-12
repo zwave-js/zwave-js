@@ -1,6 +1,7 @@
 import {
 	AckLongRangeMPDU,
 	AckZWaveMPDU,
+	LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET,
 	type LogConfig,
 	type LogContainer,
 	LongRangeMPDU,
@@ -132,14 +133,6 @@ const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
 // Bounds of an int8 field
 const INT8_MIN = -128;
 const INT8_MAX = 127;
-
-/**
- * Byte offset of the Noise Floor field within a serialized LR MPDU.
- * Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Figure 6-4
- * places it at byte 10 of the MHR. It must match the offset
- * `LongRangeMPDU.serialize` writes the field at
- */
-const LR_NOISE_FLOOR_OFFSET = 10;
 
 /** The RSSI to advertise for a received frame, clamped into the range the MPDU field allows */
 function advertisedRSSI(rssi: RSSI): number {
@@ -539,6 +532,24 @@ export class ProtocolController
 			this.phyLayer?.regionConfig?.channels,
 			channel,
 		);
+	}
+
+	/**
+	 * Ask the firmware to patch a freshly measured noise floor into an outgoing
+	 * Long Range frame, where the serialized frame carries the "not available"
+	 * placeholder. A caller-supplied noise floor is left alone.
+	 */
+	private getNoiseFloorReplacements(
+		protocol: Protocols | undefined,
+		noiseFloorOverride: number | undefined,
+	): TransmitReplacement[] | undefined {
+		if (protocol !== Protocols.ZWaveLongRange) return undefined;
+		if (noiseFloorOverride != undefined) return undefined;
+		if (!this.phyLayer?.supportsTransmitReplacements) return undefined;
+		return [{
+			offset: LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET,
+			source: TransmitReplacementSource.NoiseFloor,
+		}];
 	}
 
 	private getChannelsForProtocolOrThrow(protocol: Protocols): ChannelInfo[] {
@@ -977,18 +988,10 @@ export class ProtocolController
 			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
 		const advertisedNoiseFloor = options.lrMpduOverrides?.noiseFloor
 			?? RssiError.NotAvailable;
-		// Without an override, the "not available" placeholder goes into the
-		// serialized frame and the firmware patches a noise floor it measures on
-		// the TX channel right before transmitting
-		const replacements: TransmitReplacement[] | undefined =
-			protocol === Protocols.ZWaveLongRange
-				&& options.lrMpduOverrides?.noiseFloor == undefined
-				&& this.phyLayer.supportsTransmitReplacements
-				? [{
-					offset: LR_NOISE_FLOOR_OFFSET,
-					source: TransmitReplacementSource.NoiseFloor,
-				}]
-				: undefined;
+		const replacements = this.getNoiseFloorReplacements(
+			protocol,
+			options.lrMpduOverrides?.noiseFloor,
+		);
 
 		let mpdu: MPDU;
 		if (protocol == Protocols.ZWave) {
@@ -1190,7 +1193,12 @@ export class ProtocolController
 			};
 			const serializedMPDU = mpdu.serialize(ctx);
 
-			this.protocolLog.mpdu(mpdu, ctx, "outbound");
+			this.protocolLog.mpdu(
+				mpdu,
+				ctx,
+				"outbound",
+				replacements?.length ? ["noise floor"] : undefined,
+			);
 
 			const result = await this.phyLayer.transmit(
 				serializedMPDU,
@@ -1415,18 +1423,12 @@ export class ProtocolController
 			});
 		}
 
-		// Without an override, the "not available" placeholder goes into the
-		// serialized frame and the firmware patches a noise floor it measures on
-		// the TX channel right before transmitting
-		const replacements: TransmitReplacement[] | undefined =
+		const replacements = this.getNoiseFloorReplacements(
+			options.protocol,
 			options.protocol === Protocols.ZWaveLongRange
-				&& options.lrMpduOverrides?.noiseFloor == undefined
-				&& this.phyLayer.supportsTransmitReplacements
-				? [{
-					offset: LR_NOISE_FLOOR_OFFSET,
-					source: TransmitReplacementSource.NoiseFloor,
-				}]
-				: undefined;
+				? options.lrMpduOverrides?.noiseFloor
+				: undefined,
+		);
 
 		const channel = options.channel;
 		const ctx: MPDUEncodingContext = {
@@ -1436,7 +1438,12 @@ export class ProtocolController
 		};
 		const serializedMPDU = mpdu.serialize(ctx);
 
-		this.protocolLog.mpdu(mpdu, ctx, "outbound");
+		this.protocolLog.mpdu(
+			mpdu,
+			ctx,
+			"outbound",
+			replacements?.length ? ["noise floor"] : undefined,
+		);
 
 		const result = await this.phyLayer.transmit(
 			serializedMPDU,
@@ -1609,6 +1616,7 @@ export class ProtocolController
 		};
 		const serializedMPDU = mpdu.serialize(ctx);
 
+		// A routed ack is classic only, so it carries no noise floor
 		this.protocolLog.mpdu(mpdu, ctx, "outbound");
 
 		const result = await this.phyLayer.transmit(

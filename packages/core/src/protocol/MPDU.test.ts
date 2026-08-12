@@ -7,6 +7,7 @@ import { RssiError } from "../definitions/RSSI.js";
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
 import {
+	LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET,
 	MPDU,
 	type MPDUEncodingContext,
 	RoutedZWaveMPDU,
@@ -528,4 +529,24 @@ test("MPDU.parse() uses the data rate to detect Long Range frames", () => {
 	expect(parsed.sourceNodeId).toBe(1);
 	expect(parsed.sequenceNumber).toBe(5);
 	expect([...parsed.payload]).toStrictEqual([0x01]);
+});
+
+test("LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET points at the noise floor the serializer writes", () => {
+	// The RCP firmware patches this byte in a serialized frame, so the constant
+	// has to track the serializer
+	const noiseFloor = -96;
+	const serialized = new SinglecastLongRangeMPDU({
+		homeId: 0xdeadbeef,
+		sourceNodeId: 1,
+		destinationNodeId: 0x123,
+		ackRequested: true,
+		sequenceNumber: 5,
+		noiseFloor,
+		txPower: 14,
+		payload: Bytes.from([0x01]),
+	}).serialize(ctxLongRange);
+
+	expect(serialized.readInt8(LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET)).toBe(
+		noiseFloor,
+	);
 });
