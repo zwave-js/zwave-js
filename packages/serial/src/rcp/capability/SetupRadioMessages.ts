@@ -4,10 +4,13 @@ import {
 	type MessageOrCCLogEntry,
 	type ProtocolDataRate,
 	RFRegion,
+	ZWaveError,
+	ZWaveErrorCodes,
 	createSimpleReflectionDecorator,
 	logBuffer,
 	logList,
 	mergeLogDict,
+	parseBitMask,
 	protocolDataRateToString,
 	znifferProtocolDataRateToProtocolDataRate,
 } from "@zwave-js/core";
@@ -29,6 +32,13 @@ export enum SetupRadioCommand {
 	SetRegion = 1,
 	GetRegion = 2,
 	GetTxPowerRange = 3,
+	GetCapabilities = 4,
+}
+
+/** Optional firmware features that no function ID of its own covers */
+export enum RadioCapability {
+	/** Transmits honor the replacement arguments that patch measurements into the frame */
+	TransmitReplacements = 1,
 }
 
 export interface ChannelInfo {
@@ -431,6 +441,65 @@ export class SetupRadio_GetTxPowerRangeResponse extends SetupRadioResponse {
 			message: mergeLogDict(ret.message, {
 				"min. TX power": `${this.minTxPower.toFixed(1)} dBm`,
 				"max. TX power": `${this.maxTxPower.toFixed(1)} dBm`,
+				// The parsed fields supersede the raw payload
+				payload: undefined,
+			}),
+		};
+	}
+}
+
+// =============================================================================
+
+@subCommandRequest(SetupRadioCommand.GetCapabilities)
+export class SetupRadio_GetCapabilitiesRequest extends SetupRadioRequest {}
+
+export interface SetupRadio_GetCapabilitiesResponseOptions {
+	capabilities: RadioCapability[];
+}
+
+@subCommandResponse(SetupRadioCommand.GetCapabilities)
+export class SetupRadio_GetCapabilitiesResponse extends SetupRadioResponse {
+	public constructor(
+		options:
+			& SetupRadio_GetCapabilitiesResponseOptions
+			& RCPMessageBaseOptions,
+	) {
+		super(options);
+		this.capabilities = options.capabilities;
+	}
+
+	public static from(
+		raw: RCPMessageRaw,
+		_ctx: RCPMessageParsingContext,
+	): SetupRadio_GetCapabilitiesResponse {
+		const bitmaskLength = raw.payload[0];
+		if (raw.payload.length < 1 + bitmaskLength) {
+			throw new ZWaveError(
+				"Invalid GetCapabilities response: capability bitmask incomplete",
+				ZWaveErrorCodes.PacketFormat_Truncated,
+			);
+		}
+		const capabilities: RadioCapability[] = parseBitMask(
+			raw.payload.subarray(1, 1 + bitmaskLength),
+		);
+
+		return new this({
+			capabilities,
+		});
+	}
+
+	public capabilities: RadioCapability[];
+
+	public toLogEntry(): MessageOrCCLogEntry {
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				capabilities: logList(
+					this.capabilities.map((c) =>
+						getEnumMemberName(RadioCapability, c)
+					),
+				),
 				// The parsed fields supersede the raw payload
 				payload: undefined,
 			}),

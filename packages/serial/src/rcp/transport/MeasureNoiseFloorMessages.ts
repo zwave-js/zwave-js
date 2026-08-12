@@ -37,10 +37,10 @@ export class MeasureNoiseFloorRequest extends RCPMessage {
 		if (
 			!Number.isInteger(this.channel)
 			|| this.channel < 0
-			|| this.channel > 0xff
+			|| this.channel > 4
 		) {
 			throw new ZWaveError(
-				`The channel must be an integer between 0 and 255`,
+				`The channel must be an integer between 0 and 4`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}

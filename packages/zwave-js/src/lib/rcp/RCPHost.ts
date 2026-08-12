@@ -37,8 +37,11 @@ import {
 	type GetFirmwareInfoResponse,
 	MeasureNoiseFloorRequest,
 	type MeasureNoiseFloorResponse,
+	RadioCapability,
 	RadioLibrary,
 	ReceiveCallback,
+	SetupRadio_GetCapabilitiesRequest,
+	type SetupRadio_GetCapabilitiesResponse,
 	SetupRadio_GetRegionRequest,
 	type SetupRadio_GetRegionResponse,
 	SetupRadio_GetTxPowerRangeRequest,
@@ -276,6 +279,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		return this._txPowerRange;
 	}
 
+	private _radioCapabilities: MaybeNotKnown<RadioCapability[]>;
+
+	public get radioCapabilities(): MaybeNotKnown<RadioCapability[]> {
+		return this._radioCapabilities;
+	}
+
 	public get regionConfig(): MaybeNotKnown<RegionConfig> {
 		if (this.rfRegion == NOT_KNOWN) return NOT_KNOWN;
 		if (this.channelConfig == NOT_KNOWN) return NOT_KNOWN;
@@ -378,11 +387,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		this.rcpLog.print(
 			`Received firmware information:
-  RCP firmware:  v${this.rcpFirmwareVersion}
-  radio library: ${
+	  RCP firmware:  v${this.rcpFirmwareVersion}
+	  radio library: ${
 				getEnumMemberName(RadioLibrary, this.radioLibrary)
 			} v${this.radioLibraryVersion}
-  supported commands: ${
+	  supported commands: ${
 				this.supportedFunctionTypes.map((ft) =>
 					`\n  · ${(RCPFunctionType as any)[ft] ?? "unknown"} (${
 						num2hex(ft)
@@ -399,14 +408,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		this.rcpLog.print(
 			`Received region information:
-  region:         ${getEnumMemberName(RFRegion, this.rfRegion)}
-  channel config: ${
+	  region:         ${getEnumMemberName(RFRegion, this.rfRegion)}
+	  channel config: ${
 				getEnumMemberName(
 					ChannelConfiguration,
 					this.channelConfig,
 				)
 			}
-  channels: ${
+	  channels: ${
 				this.channels
 					.map((ch) =>
 						`\n    · ${ch.channel} (${
@@ -423,6 +432,25 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				this._txPowerRange.min.toFixed(1)
 			} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
 		);
+
+		this.rcpLog.print(`Querying radio capabilities...`);
+		// Older firmwares do not answer this sub-command
+		this._radioCapabilities = await this.queryRadioCapabilities()
+			.catch(() => NOT_KNOWN);
+		if (this._radioCapabilities != NOT_KNOWN) {
+			this.rcpLog.print(
+				`Received radio capabilities: ${
+					this._radioCapabilities
+						.map((c) => getEnumMemberName(RadioCapability, c))
+						.join(", ") || "(none)"
+				}`,
+			);
+		} else {
+			this.rcpLog.print(
+				`The firmware does not report its radio capabilities`,
+				"warn",
+			);
+		}
 	}
 
 	// #region Serialport interaction
@@ -993,11 +1021,18 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	public get supportsTransmitReplacements(): boolean {
-		// The replacement scheme shipped in the same firmware release as the
-		// measurement command, so its presence is the capability signal
-		return !!this.supportedFunctionTypes?.includes(
-			RCPFunctionType.MeasureNoiseFloor,
+		return !!this._radioCapabilities?.includes(
+			RadioCapability.TransmitReplacements,
 		);
+	}
+
+	/** Queries the optional features the firmware implements */
+	public async queryRadioCapabilities(): Promise<RadioCapability[]> {
+		const msg = new SetupRadio_GetCapabilitiesRequest();
+		const result = await this.queueSerialApiCommand<
+			SetupRadio_GetCapabilitiesResponse
+		>(msg);
+		return result.capabilities;
 	}
 
 	/**

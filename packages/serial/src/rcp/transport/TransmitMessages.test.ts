@@ -137,14 +137,14 @@ describe("TransmitRequest", () => {
 				0x00, // Request
 				0x03, // Transmit
 				0x02, // channel
-				0xff,
-				0x9c, // TX power: -100 deci-dBm
+				0xff, // TX power: -100 deci-dBm (high byte)
+				0x9c, // TX power: -100 deci-dBm (low byte)
 				0x03, // flags: CCA | Replacements
 				0x01, // 1 replacement
 				0x01, // offset 1
 				0x00, // source: noise floor
-				0xaa,
-				0xbb,
+				0xaa, // MPDU begins
+				0xbb, // MPDU ends
 				0x83, // checksum
 			]),
 		);
