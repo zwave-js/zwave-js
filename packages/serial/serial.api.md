@@ -1891,6 +1891,11 @@ export interface FirmwareUpdateNVMResponseOptions {
     command?: FirmwareUpdateNVMCommand;
 }
 
+// Warning: (ae-missing-release-tag) "formatTxPower" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function formatTxPower(txPower: number | undefined): string;
+
 // Warning: (ae-missing-release-tag) "FunctionType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -6266,7 +6271,7 @@ export enum TransmitResponseStatus {
 // Warning: (ae-missing-release-tag) "TX_POWER_KEEP_CURRENT" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export const TX_POWER_KEEP_CURRENT = 127;
+export const TX_POWER_KEEP_CURRENT = 32767;
 
 // Warning: (ae-missing-release-tag) "txReportToLogDict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
