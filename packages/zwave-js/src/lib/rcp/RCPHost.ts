@@ -414,7 +414,21 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		);
 
 		this.rcpLog.print(`Querying TX power range...`);
-		this._txPowerRange = await this.queryTxPowerRange();
+		try {
+			this._txPowerRange = await this.queryTxPowerRange();
+		} catch (e) {
+			// Firmware without this sub-command never answers, which otherwise
+			// surfaces as a bare response timeout
+			if (
+				isZWaveError(e) && e.code === ZWaveErrorCodes.Controller_Timeout
+			) {
+				throw new ZWaveError(
+					`The RCP firmware did not report its TX power range. Update the firmware to at least version 1.1.0.`,
+					ZWaveErrorCodes.Driver_NotSupported,
+				);
+			}
+			throw e;
+		}
 		this.rcpLog.print(
 			`Received TX power range: ${
 				this._txPowerRange.min.toFixed(1)
@@ -806,6 +820,15 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		const result = await this.queueSerialApiCommand<
 			SetupRadio_GetTxPowerRangeResponse
 		>(msg);
+
+		// An unsatisfiable range would reject every TX power later, far from
+		// the answer that caused it
+		if (result.minTxPower > result.maxTxPower) {
+			throw new ZWaveError(
+				`The firmware reported an invalid TX power range: ${result.minTxPower} ... ${result.maxTxPower} dBm`,
+				ZWaveErrorCodes.Driver_InvalidOptions,
+			);
+		}
 
 		return {
 			min: result.minTxPower,

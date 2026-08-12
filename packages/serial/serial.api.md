@@ -5849,6 +5849,35 @@ export interface SetupRadio_GetRegionResponseOptions {
     region: RFRegion;
 }
 
+// Warning: (ae-missing-release-tag) "SetupRadio_GetTxPowerRangeRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_GetTxPowerRangeRequest extends SetupRadioRequest {
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_GetTxPowerRangeResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_GetTxPowerRangeResponse extends SetupRadioResponse {
+    constructor(options: SetupRadio_GetTxPowerRangeResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): SetupRadio_GetTxPowerRangeResponse;
+    maxTxPower: number;
+    minTxPower: number;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_GetTxPowerRangeResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SetupRadio_GetTxPowerRangeResponseOptions {
+    // (undocumented)
+    maxTxPower: number;
+    // (undocumented)
+    minTxPower: number;
+}
+
 // Warning: (ae-missing-release-tag) "SetupRadio_SetRegionOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -5910,6 +5939,8 @@ export type SetupRadio_SetRegionResponseOptions = {
 export enum SetupRadioCommand {
     // (undocumented)
     GetRegion = 2,
+    // (undocumented)
+    GetTxPowerRange = 3,
     // (undocumented)
     SetRegion = 1
 }

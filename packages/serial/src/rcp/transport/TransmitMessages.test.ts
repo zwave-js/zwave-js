@@ -54,10 +54,14 @@ describe("TransmitRequest", () => {
 		expect(serialized[7]).toBe(0x00);
 	});
 
+	// The encoding carries the full int16 deci-dBm range. Which powers the radio
+	// supports is the firmware's business, checked against its reported range
 	test.each([
-		["the lower bound", -10, -100],
-		["the upper bound", 30, 300],
-	])("accepts a TX power at %s", async (_name, txPower, expected) => {
+		["the lowest encodable power", -3276.8, -32768],
+		["the highest encodable power", 3276.6, 32766],
+		["a negative power", -10, -100],
+		["a positive power", 30, 300],
+	])("accepts %s", async (_name, txPower, expected) => {
 		const msg = new TransmitRequest({
 			channel: 0,
 			txPower,

@@ -65,9 +65,9 @@ export function encodeTxPower(txPower: number | undefined): number {
 		|| deciDbm > TX_POWER_MAX_DECI_DBM
 	) {
 		throw new ZWaveError(
-			`The TX power must be between ${TX_POWER_MIN_DECI_DBM / 10} and ${
-				TX_POWER_MAX_DECI_DBM / 10
-			} dBm`,
+			`The TX power ${txPower} dBm does not fit the int16 deci-dBm encoding (${
+				TX_POWER_MIN_DECI_DBM / 10
+			} ... ${TX_POWER_MAX_DECI_DBM / 10} dBm)`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}

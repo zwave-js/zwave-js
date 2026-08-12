@@ -153,8 +153,7 @@ function assertInt8(value: number | undefined, name: string): void {
 
 /**
  * Reject a radio TX power outside the range the firmware reported, before any
- * frame goes out. A firmware that does not report its range only has to accept
- * what the serial encoding can carry
+ * frame goes out. The range is unknown only before the interview has run
  */
 function assertRadioTXPower(
 	txPower: number | undefined,
@@ -163,7 +162,7 @@ function assertRadioTXPower(
 	if (txPower == undefined || range == undefined) return;
 	if (txPower < range.min || txPower > range.max) {
 		throw new ZWaveError(
-			`The TX power must be between ${range.min} and ${range.max} dBm`,
+			`The TX power ${txPower} dBm is outside the range the firmware supports (${range.min} ... ${range.max} dBm)`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
@@ -841,7 +840,6 @@ export class ProtocolController
 			);
 		}
 
-		assertRadioTXPower(options.txPower, this.phyLayer.txPowerRange);
 		assertInt8(options.lrMpduOverrides?.txPower, "The advertised TX power");
 		assertInt8(
 			options.lrMpduOverrides?.noiseFloor,
@@ -961,6 +959,8 @@ export class ProtocolController
 		const radioTXPower = protocol === Protocols.ZWaveLongRange
 			? options.txPower ?? LR_DEFAULT_TX_POWER_DBM
 			: options.txPower;
+		// Check the power that reaches the radio, so the LR default is covered too
+		assertRadioTXPower(radioTXPower, this.phyLayer.txPowerRange);
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
 			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
@@ -1353,7 +1353,6 @@ export class ProtocolController
 		// Classic acks carry no radio information, so the radio keeps its power there
 		let txPower: number | undefined;
 		if (options.protocol === Protocols.ZWaveLongRange) {
-			assertRadioTXPower(options.txPower, this.phyLayer.txPowerRange);
 			assertInt8(
 				options.lrMpduOverrides?.txPower,
 				"The advertised TX power",
@@ -1364,6 +1363,8 @@ export class ProtocolController
 				"The advertised noise floor",
 			);
 			txPower = options.txPower ?? LR_DEFAULT_TX_POWER_DBM;
+			// Check the power that reaches the radio, so the default is covered too
+			assertRadioTXPower(txPower, this.phyLayer.txPowerRange);
 		}
 
 		let mpdu: MPDU;
