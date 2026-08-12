@@ -56,9 +56,9 @@ export interface MACTransmitOptions {
 	 */
 	route?: readonly number[];
 	/**
-	 * Destination FLiRS wakeup interval. When set and no route is given, a wakeup
-	 * beam precedes the transmission. With a route, it is carried in the routing
-	 * header for the last repeater (not implemented yet).
+	 * Destination FLiRS wakeup interval. Without a route, a wakeup beam precedes
+	 * the transmission. With a route, it is carried in the routing header for the
+	 * last repeater (not implemented yet).
 	 */
 	destinationWakeup?: MACDestinationWakeup;
 	/**

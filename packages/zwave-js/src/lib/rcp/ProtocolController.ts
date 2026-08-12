@@ -344,8 +344,9 @@ const NUM_BEAM_FRAGMENTS = 16;
 
 export interface BeamParameters {
 	/**
-	 * Whether this is a continuous beam. No acknowledgement interrupts one, since
-	 * G.9959 §8.1.3.11 grants that only to the fragmented beam
+	 * Whether this is a continuous beam. No acknowledgement interrupts a
+	 * continuous beam, because G.9959 §8.1.3.11 defines the ack interrupt only
+	 * for fragmented beams
 	 */
 	continuous: boolean;
 	numFragments: number;
@@ -355,7 +356,7 @@ export interface BeamParameters {
 
 /**
  * Translate a destination's wakeup interval into the beam the header format
- * demands, throwing if the two do not go together.
+ * demands. Throws when the wakeup type does not match the header format.
  */
 export function getBeamParameters(
 	wakeup: MACDestinationWakeup,
@@ -363,7 +364,7 @@ export function getBeamParameters(
 ): BeamParameters {
 	// G.9959 §8.1.3.14: "FL nodes operating in channel configuration 3 shall be
 	// able to receive and transmit the fragmented beam format at data rate 3."
-	// The LR MAC knows the fragmented beam only
+	// The LR MAC defines only the fragmented beam
 	const fragmentedOnly =
 		headerFormat !== ProtocolHeaderFormat.Classic2Channel;
 
@@ -390,7 +391,7 @@ export function getBeamParameters(
 	}
 
 	// G.9959 §8.1.3.12: "A continuous beam is a series of beam frames spanning a
-	// fixed period of time", which the firmware executes as a single fragment
+	// fixed period of time". The firmware executes it as a single fragment
 	const duration = wakeup === "250ms"
 		? SHORT_CONTINUOUS_BEAM_DURATION_MS
 		: LONG_CONTINUOUS_BEAM_DURATION_MS;
@@ -653,8 +654,8 @@ export class ProtocolController
 	}
 
 	/**
-	 * Beam a sleeping FLiRS destination awake, so the frame that follows reaches
-	 * it. Returns the channel the destination listens on, if the beam pins one.
+	 * Beam a sleeping FLiRS destination awake. Returns the channel the
+	 * destination listens on, if the beam pins one.
 	 */
 	private async wakeDestination(
 		phy: PHYLayer,
@@ -680,9 +681,9 @@ export class ProtocolController
 		// fragmented beam by acknowledging a singlecast beam fragment. A receiving
 		// node shall not acknowledge a broadcast beam fragment." The LR spec §6.3.7
 		// requires the interrupt: "A receiving node shall interrupt the transmission
-		// of a fragmented beam by acknowledging a singlecast beam fragment." An LR
-		// broadcast beam is acked by every receiver, and we do not know how many to
-		// expect, so it runs to completion too
+		// of a fragmented beam by acknowledging a singlecast beam fragment." Every
+		// receiver acks an LR broadcast beam. We do not know how many acks to
+		// expect, so that beam runs to completion too
 		const canBeInterrupted = !beam.continuous && !isBroadcast;
 		if (canBeInterrupted && !phy.supportsAbortBeam) {
 			throw new ZWaveError(
@@ -722,8 +723,8 @@ export class ProtocolController
 				channels = classic.map((ch) => ch.channel);
 			} else {
 				// §8.1.3.12: "The continuous beam shall be sent at data rate R2."
-				// Table 7-1 marks FL mode as available on the R2 profiles only, which
-				// Table 7-3 places on channel B, so that is where a FLiRS node listens
+				// Table 7-1 marks FL mode as available on the R2 profiles only, and
+				// Table 7-3 places those on channel B. A FLiRS node listens there
 				const r2 = classic.find((ch) =>
 					ch.dataRate === ProtocolDataRate.ZWave_40k
 				);
@@ -807,7 +808,7 @@ export class ProtocolController
 		if (isLongRange) {
 			// An ack from the destination has already moved the primary channel to
 			// the one the destination answered on, per §6.5.1.4. The frame must go
-			// out there, so the channel is captured now instead of per attempt
+			// out there, so the channel is captured now
 			pinnedChannel = this.getPrimaryLongRangeChannel();
 		}
 
@@ -1068,9 +1069,8 @@ export class ProtocolController
 			if ("result" in outcome) return { result: outcome.result };
 
 			if (outcome.pinnedChannel) {
-				// The destination only listens on the channel the beam went out on,
-				// so the fallback to another channel or a slower rate must not happen
-				// here
+				// The destination listens only on the channel the beam went out on,
+				// so every attempt must stay there
 				const channel = outcome.pinnedChannel;
 				const numAttempts =
 					headerFormat === ProtocolHeaderFormat.LongRange
@@ -1080,8 +1080,8 @@ export class ProtocolController
 					{ length: numAttempts },
 					() => ({
 						channel: () => channel,
-						// Every attempt goes out at the rate the destination listens
-						// with, so none of them is a fallback to a slower rate
+						// Every attempt goes out at the rate the destination
+						// listens with
 						speedModified: false,
 					}),
 				);
@@ -1111,8 +1111,8 @@ export class ProtocolController
 
 			// Z-Wave MAC Layer Test Specification (2022/11/11), §3.51.3: "The
 			// Controller sends Continuous Beam followed by the singlecast until it
-			// times out." A node woken by a fragmented beam stays awake instead, so
-			// that one is beamed once
+			// times out." A node woken by a fragmented beam stays awake, so one
+			// beam is enough there
 			if (beam?.continuous && attempt > 0) {
 				const outcome = await this.wakeDestination(
 					this.phyLayer,
