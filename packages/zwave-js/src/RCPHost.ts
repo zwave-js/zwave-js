@@ -24,3 +24,10 @@ export type {
 	RCPHostOptions,
 } from "./lib/rcp/RCPHost.js";
 export { RCPHost } from "./lib/rcp/RCPHost.js";
+export type {
+	MACTransmitAckOptions,
+	MACTransmitDestination,
+	MACTransmitOptions,
+	MACTransmitReport,
+} from "./lib/rcp/_Types.js";
+export { MACTransmitKind, MACTransmitResult } from "./lib/rcp/_Types.js";

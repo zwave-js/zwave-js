@@ -1394,6 +1394,94 @@ export enum LongRangeFrameType {
 
 export { LongRangeMPDU }
 
+// Warning: (ae-missing-release-tag) "MACTransmitAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type MACTransmitAckOptions = {
+    homeId: number;
+    sourceNodeId: number;
+    destinationNodeId: number;
+    channel: number;
+    sequenceNumber: number;
+    withCCA?: boolean;
+} & ({
+    protocol: Protocols.ZWave;
+} | {
+    protocol: Protocols.ZWaveLongRange;
+    senderTXPower: number;
+    senderNoiseFloor: number;
+});
+
+// Warning: (ae-missing-release-tag) "MACTransmitDestination" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type MACTransmitDestination = {
+    kind: MACTransmitKind.Singlecast;
+    nodeId: number;
+} | {
+    kind: MACTransmitKind.Multicast;
+    nodeIds: number[];
+} | {
+    kind: MACTransmitKind.Broadcast;
+};
+
+// Warning: (ae-missing-release-tag) "MACTransmitKind" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum MACTransmitKind {
+    // (undocumented)
+    Broadcast = 2,
+    // (undocumented)
+    Multicast = 1,
+    // (undocumented)
+    Singlecast = 0
+}
+
+// Warning: (ae-missing-release-tag) "MACTransmitOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MACTransmitOptions {
+    // (undocumented)
+    ackRequested?: boolean;
+    // (undocumented)
+    destination: MACTransmitDestination;
+    // (undocumented)
+    homeId: number;
+    // (undocumented)
+    protocol?: Protocols;
+    route?: {
+        repeaters: number[];
+    };
+    // (undocumented)
+    sourceNodeId: number;
+    withCCA?: boolean;
+}
+
+// Warning: (ae-missing-release-tag) "MACTransmitReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MACTransmitReport {
+    failedHop?: number;
+    repeaterRSSI?: readonly RSSI[];
+    // (undocumented)
+    result: MACTransmitResult;
+}
+
+// Warning: (ae-missing-release-tag) "MACTransmitResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum MACTransmitResult {
+    ChannelBusy = 2,
+    Error_Aborted = 243,
+    Error_FrameLength = 242,
+    Error_QueueBusy = 241,
+    Error_Unknown = 254,
+    NoAck = 1,
+    NoRoutedAck = 3,
+    OK = 0,
+    RoutedError = 4
+}
+
 export { Message }
 
 export { MessageOptions }
@@ -1672,15 +1760,10 @@ export class ProtocolController extends TypedEventTarget<ProtocolControllerEvent
     ownNodeId: number | undefined;
     // (undocumented)
     start(): Promise<void>;
-    // Warning: (ae-forgotten-export) The symbol "MACTransmitAckOptions" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     transmitACK(options: MACTransmitAckOptions): Promise<MACTransmitResult>;
-    // Warning: (ae-forgotten-export) The symbol "MACTransmitOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "MACTransmitResult" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    transmitData(data: BytesView, options: MACTransmitOptions): Promise<MACTransmitResult>;
+    transmitData(data: BytesView, options: MACTransmitOptions): Promise<MACTransmitReport>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen

@@ -325,6 +325,19 @@ export class ProtocolController
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
+			for (const repeater of route.repeaters) {
+				// The routing header encodes each repeater in a single byte
+				if (
+					!Number.isInteger(repeater)
+					|| repeater < 1
+					|| repeater > MAX_NODES
+				) {
+					throw new ZWaveError(
+						`A repeater must be a node ID between 1 and ${MAX_NODES}, got ${repeater}`,
+						ZWaveErrorCodes.Argument_Invalid,
+					);
+				}
+			}
 		}
 
 		let initialChannel: number;
@@ -487,9 +500,11 @@ export class ProtocolController
 				throw new Error(`Unsupported header format ${headerFormat}`);
 		}
 
-		const sequenceNumberMatches = (m: MPDU) =>
+		// ITU-T G.9959 (01/2015): a transmitting node which receives an ACK MPDU shall
+		// accept the sequence number value zero in 2-channel configurations. This
+		// exception covers ACK MPDUs, so other frames must match the exact number
+		const ackSequenceNumberMatches = (m: MPDU) =>
 			m.sequenceNumber === mpdu.sequenceNumber
-			// For 2-channel configurations, seq-no 0 must also be accepted
 			|| (m.sequenceNumber === 0
 				&& headerFormat === ProtocolHeaderFormat.Classic2Channel);
 
@@ -497,6 +512,8 @@ export class ProtocolController
 		let sawSilentAck = false;
 
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+			sawSilentAck = false;
+
 			// Serializing an MPDU changes its payload property, so we set it here
 			// to the original data
 			mpdu.payload = Bytes.view(data);
@@ -567,7 +584,6 @@ export class ProtocolController
 
 			if (mpdu instanceof RoutedZWaveMPDU) {
 				const routedMPDU = mpdu;
-				sawSilentAck = false;
 
 				// NWK:0180.1: repeater 0 repeating the frame is the silent acknowledgement
 				// of our transmission. Its repeat carries our source and destination, and
@@ -583,7 +599,7 @@ export class ProtocolController
 					&& m.repeaters.every((r, i) =>
 						r === routedMPDU.repeaters[i]
 					)
-					&& sequenceNumberMatches(m);
+					&& m.sequenceNumber === routedMPDU.sequenceNumber;
 
 				const isRouteOutcome = (m: MPDU) =>
 					m instanceof RoutedZWaveMPDU
@@ -594,7 +610,7 @@ export class ProtocolController
 					// set the Source NodeID of the frame as the value of the Destination
 					// NodeID of the Routed Frame which delivery failed."
 					&& m.sourceNodeId === routedMPDU.destinationNodeId
-					&& sequenceNumberMatches(m);
+					&& m.sequenceNumber === routedMPDU.sequenceNumber;
 
 				const duration = frameDuration(
 					serializedMPDU.length,
@@ -654,7 +670,7 @@ export class ProtocolController
 					// TODO: This cast is not sound
 					&& m.sourceNodeId
 						=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
-					&& sequenceNumberMatches(m),
+					&& ackSequenceNumberMatches(m),
 				ackTimeout,
 			).then(() => true, () => false);
 
