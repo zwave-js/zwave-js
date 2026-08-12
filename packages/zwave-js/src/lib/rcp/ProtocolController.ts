@@ -32,6 +32,8 @@ import {
 import {
 	type ChannelInfo,
 	TransmitCallbackStatus,
+	type TransmitReplacement,
+	TransmitReplacementSource,
 	TransmitResponseStatus,
 } from "@zwave-js/serial";
 import {
@@ -130,6 +132,14 @@ const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
 // Bounds of an int8 field
 const INT8_MIN = -128;
 const INT8_MAX = 127;
+
+/**
+ * Byte offset of the Noise Floor field within a serialized LR MPDU.
+ * Z-Wave Long Range PHY and MAC Layer Specification (2023.07.03), Figure 6-4
+ * places it at byte 10 of the MHR. It must match the offset
+ * `LongRangeMPDU.serialize` writes the field at
+ */
+const LR_NOISE_FLOOR_OFFSET = 10;
 
 /** The RSSI to advertise for a received frame, clamped into the range the MPDU field allows */
 function advertisedRSSI(rssi: RSSI): number {
@@ -967,6 +977,18 @@ export class ProtocolController
 			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
 		const advertisedNoiseFloor = options.lrMpduOverrides?.noiseFloor
 			?? RssiError.NotAvailable;
+		// Without an override, the "not available" placeholder goes into the
+		// serialized frame and the firmware patches a noise floor it measures on
+		// the TX channel right before transmitting
+		const replacements: TransmitReplacement[] | undefined =
+			protocol === Protocols.ZWaveLongRange
+				&& options.lrMpduOverrides?.noiseFloor == undefined
+				&& this.phyLayer.supportsTransmitReplacements
+				? [{
+					offset: LR_NOISE_FLOOR_OFFSET,
+					source: TransmitReplacementSource.NoiseFloor,
+				}]
+				: undefined;
 
 		let mpdu: MPDU;
 		if (protocol == Protocols.ZWave) {
@@ -1177,6 +1199,7 @@ export class ProtocolController
 					channel: channel.channel,
 					txPower: radioTXPower,
 					withCCA: options.withCCA ?? true,
+					replacements,
 				},
 			);
 
@@ -1392,6 +1415,19 @@ export class ProtocolController
 			});
 		}
 
+		// Without an override, the "not available" placeholder goes into the
+		// serialized frame and the firmware patches a noise floor it measures on
+		// the TX channel right before transmitting
+		const replacements: TransmitReplacement[] | undefined =
+			options.protocol === Protocols.ZWaveLongRange
+				&& options.lrMpduOverrides?.noiseFloor == undefined
+				&& this.phyLayer.supportsTransmitReplacements
+				? [{
+					offset: LR_NOISE_FLOOR_OFFSET,
+					source: TransmitReplacementSource.NoiseFloor,
+				}]
+				: undefined;
+
 		const channel = options.channel;
 		const ctx: MPDUEncodingContext = {
 			channel,
@@ -1406,7 +1442,7 @@ export class ProtocolController
 			serializedMPDU,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
-			{ channel, txPower, withCCA: false },
+			{ channel, txPower, withCCA: false, replacements },
 		);
 
 		switch (result) {

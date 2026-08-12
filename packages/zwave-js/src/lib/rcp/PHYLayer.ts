@@ -11,6 +11,7 @@ import {
 import type {
 	ChannelInfo,
 	TransmitCallbackStatus,
+	TransmitReplacement,
 	TransmitResponseStatus,
 } from "@zwave-js/serial";
 import type {
@@ -61,6 +62,11 @@ export interface TransmitOptions {
 	 * Required, so that omitting it cannot silently skip CCA
 	 */
 	withCCA: boolean;
+	/**
+	 * Byte positions the firmware patches with fresh measurements right before
+	 * the transmit. Only the listed bytes are replaced.
+	 */
+	replacements?: TransmitReplacement[];
 }
 
 export interface TransmitBeamOptions {
@@ -124,6 +130,12 @@ export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
 
 	/** Whether the firmware can stop an ongoing beam transmission */
 	get supportsAbortBeam(): boolean;
+
+	/** Measure the noise floor on the given channel, in dBm */
+	measureNoiseFloor(channel: number): Promise<RSSI>;
+
+	/** Whether the firmware can patch measurements into a frame right before transmitting */
+	get supportsTransmitReplacements(): boolean;
 
 	/** Destroys this PHY layer instance */
 	destroy(): Promise<void>;

@@ -8,6 +8,7 @@ import {
 	NOT_KNOWN,
 	type ProtocolDataRate,
 	RFRegion,
+	type RSSI,
 	ZWaveError,
 	ZWaveErrorCodes,
 	convertRawRSSI,
@@ -34,6 +35,8 @@ import {
 	type ChannelInfo,
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
+	MeasureNoiseFloorRequest,
+	type MeasureNoiseFloorResponse,
 	RadioLibrary,
 	ReceiveCallback,
 	SetupRadio_GetRegionRequest,
@@ -860,6 +863,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			channel: options.channel,
 			txPower: options.txPower,
 			withCCA: options.withCCA,
+			replacements: options.replacements,
 			data,
 		});
 		try {
@@ -974,6 +978,25 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	public get supportsAbortBeam(): boolean {
 		return !!this.supportedFunctionTypes?.includes(
 			RCPFunctionType.AbortBeam,
+		);
+	}
+
+	/** Measures the noise floor on the given channel, in dBm */
+	public async measureNoiseFloor(channel: number): Promise<RSSI> {
+		this.assertFunctionSupported(RCPFunctionType.MeasureNoiseFloor);
+
+		const msg = new MeasureNoiseFloorRequest({ channel });
+		const result = await this.queueSerialApiCommand<
+			MeasureNoiseFloorResponse
+		>(msg);
+		return result.noiseFloor;
+	}
+
+	public get supportsTransmitReplacements(): boolean {
+		// The replacement scheme shipped in the same firmware release as the
+		// measurement command, so its presence is the capability signal
+		return !!this.supportedFunctionTypes?.includes(
+			RCPFunctionType.MeasureNoiseFloor,
 		);
 	}
 
