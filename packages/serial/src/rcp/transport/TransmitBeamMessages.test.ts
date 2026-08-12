@@ -94,7 +94,7 @@ describe("TransmitBeamRequest", () => {
 	});
 
 	test.each([
-		["TX power", { txPower: 30.1 }],
+		["TX power", { txPower: 3276.7 }],
 		["number of fragments", { numFragments: 0 }],
 		["fragment duration", { fragmentDurationMs: 70000 }],
 		["fragment period", { fragmentPeriodMs: -1 }],

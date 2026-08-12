@@ -70,8 +70,8 @@ describe("TransmitRequest", () => {
 	});
 
 	test.each([
-		["falls below the radio range", -10.1],
-		["exceeds the radio range", 30.1],
+		["falls below the wire encoding", -3276.9],
+		["exceeds the wire encoding", 3276.7],
 		["is not finite", Number.POSITIVE_INFINITY],
 		["is not a number", Number.NaN],
 	])("throws when the TX power %s", async (_name, txPower) => {
