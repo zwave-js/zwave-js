@@ -414,21 +414,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		);
 
 		this.rcpLog.print(`Querying TX power range...`);
-		// Older firmwares do not answer this sub-command
-		this._txPowerRange = await this.queryTxPowerRange()
-			.catch(() => NOT_KNOWN);
-		if (this._txPowerRange != NOT_KNOWN) {
-			this.rcpLog.print(
-				`Received TX power range: ${
-					this._txPowerRange.min.toFixed(1)
-				} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
-			);
-		} else {
-			this.rcpLog.print(
-				`The firmware does not report its TX power range`,
-				"warn",
-			);
-		}
+		this._txPowerRange = await this.queryTxPowerRange();
+		this.rcpLog.print(
+			`Received TX power range: ${
+				this._txPowerRange.min.toFixed(1)
+			} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
+		);
 	}
 
 	// #region Serialport interaction
