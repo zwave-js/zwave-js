@@ -511,7 +511,8 @@ export class ProtocolController
 			serializedMPDU,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
-			{ channel, withCCA: options.withCCA ?? false },
+			// Acks are exempt from CCA to meet the turnaround timing
+			{ channel, withCCA: false },
 		);
 
 		switch (result) {
