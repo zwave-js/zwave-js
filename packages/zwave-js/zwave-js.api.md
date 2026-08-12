@@ -1394,6 +1394,14 @@ export enum LongRangeFrameType {
 
 export { LongRangeMPDU }
 
+// Warning: (ae-missing-release-tag) "MACRoute" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MACRoute {
+    // (undocumented)
+    repeaters: readonly number[];
+}
+
 // Warning: (ae-missing-release-tag) "MACTransmitAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1403,7 +1411,6 @@ export type MACTransmitAckOptions = {
     destinationNodeId: number;
     channel: number;
     sequenceNumber: number;
-    withCCA?: boolean;
 } & ({
     protocol: Protocols.ZWave;
 } | {
@@ -1449,9 +1456,7 @@ export interface MACTransmitOptions {
     homeId: number;
     // (undocumented)
     protocol?: Protocols;
-    route?: {
-        repeaters: number[];
-    };
+    route?: MACRoute;
     // (undocumented)
     sourceNodeId: number;
     withCCA?: boolean;

@@ -32,6 +32,7 @@ import {
 	Bytes,
 	type BytesView,
 	TypedEventTarget,
+	getEnumMemberName,
 	getErrorMessage,
 	setTimer,
 } from "@zwave-js/shared";
@@ -63,7 +64,7 @@ const MAC_MAX_RETRANSMIT_DELAY = 40;
 const ROUTED_HOP_MARGIN = 10;
 
 /** How long a frame of the given length occupies the channel, in milliseconds */
-function frameDuration(
+export function frameDuration(
 	frameLength: number,
 	dataRate: ProtocolDataRate,
 	headerFormat: ProtocolHeaderFormat,
@@ -96,7 +97,7 @@ function frameDuration(
  * Time to wait for a routed acknowledgement or routed error, measured from the moment
  * repeater 0 has repeated the frame.
  */
-function routedAckTimeout(
+export function routedAckTimeout(
 	numRepeaters: number,
 	frameDurationMs: number,
 ): number {
@@ -114,7 +115,7 @@ function routedAckTimeout(
 }
 
 /** Whether the frame is a routed frame that its last repeater has delivered to the destination */
-function isFinalHopOfRoutedFrame(mpdu: MPDU): mpdu is RoutedZWaveMPDU {
+export function isFinalHopOfRoutedFrame(mpdu: MPDU): mpdu is RoutedZWaveMPDU {
 	return mpdu instanceof RoutedZWaveMPDU
 		&& mpdu.direction === "outbound"
 		&& mpdu.hop === mpdu.repeaters.length;
@@ -377,7 +378,8 @@ export class ProtocolController
 							// Req subfield set to 0 in the MPDU Frame Control). The sending
 							// node should instead listen for the next repeater repeat frame
 							// and use this as a silent acknowledgement."
-							ackRequested: false,
+							// This is a should, so a caller may still ask for one
+							ackRequested: options.ackRequested ?? false,
 							sourceNodeId: options.sourceNodeId,
 							destinationNodeId: options.destination.nodeId,
 							sequenceNumber,
@@ -605,6 +607,11 @@ export class ProtocolController
 					m instanceof RoutedZWaveMPDU
 					&& m.homeId === routedMPDU.homeId
 					&& (m.routedAck || m.routedError)
+					// NWK:001E.1 counts the hop down on the way back, so only hop 0
+					// is the leg that reaches us. Matching earlier repeats would end
+					// the wait before the frame has arrived, and before the repeaters
+					// have filled their RSSI slots
+					&& m.hop === 0
 					&& m.destinationNodeId === routedMPDU.sourceNodeId
 					// NWK:0190.1: "The repeater node sending the Routed Error Frame shall
 					// set the Source NodeID of the frame as the value of the Destination
@@ -819,7 +826,17 @@ export class ProtocolController
 				"verbose",
 			);
 
-			await this.transmitRoutedAck(mpdu, info.channel);
+			const result = await this.transmitRoutedAck(mpdu, info.channel);
+			if (result !== MACTransmitResult.OK) {
+				// The originator sees only a missing routed ack, so without this
+				// the two sides disagree on what happened
+				this.protocolLog.print(
+					`Failed to acknowledge incoming routed frame: ${
+						getEnumMemberName(MACTransmitResult, result)
+					}`,
+					"warn",
+				);
+			}
 		}
 	}
 
