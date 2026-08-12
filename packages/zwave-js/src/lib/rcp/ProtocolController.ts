@@ -151,26 +151,19 @@ function assertInt8(value: number | undefined, name: string): void {
 	}
 }
 
-// Fallback bounds of the radio TX power, used when the firmware does not
-// report the range its radio supports
-const RADIO_TX_POWER_MIN_DBM = -10;
-const RADIO_TX_POWER_MAX_DBM = 30;
-
-/** Reject a radio TX power the radio does not support, before any frame goes out */
+/**
+ * Reject a radio TX power outside the range the firmware reported, before any
+ * frame goes out. A firmware that does not report its range only has to accept
+ * what the serial encoding can carry
+ */
 function assertRadioTXPower(
 	txPower: number | undefined,
 	range: MaybeNotKnown<TxPowerRange>,
 ): void {
-	if (txPower == undefined) return;
-	const min = range?.min ?? RADIO_TX_POWER_MIN_DBM;
-	const max = range?.max ?? RADIO_TX_POWER_MAX_DBM;
-	if (
-		!Number.isFinite(txPower)
-		|| txPower < min
-		|| txPower > max
-	) {
+	if (txPower == undefined || range == undefined) return;
+	if (txPower < range.min || txPower > range.max) {
 		throw new ZWaveError(
-			`The TX power must be between ${min} and ${max} dBm`,
+			`The TX power must be between ${range.min} and ${range.max} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}

@@ -269,7 +269,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private channels: MaybeNotKnown<ChannelInfo[]>;
 
 	private _txPowerRange: MaybeNotKnown<TxPowerRange>;
-
 	public get txPowerRange(): MaybeNotKnown<TxPowerRange> {
 		return this._txPowerRange;
 	}
