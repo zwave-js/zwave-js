@@ -30,7 +30,7 @@ import {
 } from "@zwave-js/serial";
 import {
 	AbortBeamRequest,
-	type AbortBeamResponse,
+	AbortBeamResponse,
 	type ChannelInfo,
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
@@ -829,10 +829,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		data: BytesView,
 		options: TransmitOptions,
 	): Promise<TransmitResult> {
+		this.assertFunctionSupported(RCPFunctionType.Transmit);
+
 		const msg = new TransmitRequest({
 			channel: options.channel,
 			txPower: options.txPower,
-			withCCA: options.withCCA ?? false,
+			withCCA: options.withCCA,
 			data,
 		});
 		try {
@@ -857,7 +859,13 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	private assertFunctionSupported(functionType: RCPFunctionType): void {
-		if (!this.supportedFunctionTypes?.includes(functionType)) {
+		if (this.supportedFunctionTypes == undefined) {
+			throw new ZWaveError(
+				`The supported commands are not known before the interview`,
+				ZWaveErrorCodes.Driver_NotReady,
+			);
+		}
+		if (!this.supportedFunctionTypes.includes(functionType)) {
 			throw new ZWaveError(
 				`The command ${
 					getEnumMemberName(RCPFunctionType, functionType)
@@ -917,6 +925,18 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 						`Received no callback for the beam transmission within ${msg.getCallbackTimeout()} ms`,
 						"error",
 					);
+					// The firmware may still be beaming. Leaving it running would
+					// block the radio and let the late callback resolve the next beam
+					try {
+						await this.abortBeam();
+					} catch (abortError) {
+						this.rcpLog.print(
+							`Could not abort the timed out beam: ${
+								getErrorMessage(abortError)
+							}`,
+							"error",
+						);
+					}
 					return TransmitCallbackStatus.UnknownError;
 				}
 				throw e;
@@ -926,12 +946,24 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		}
 	}
 
-	/** Stops an ongoing beam transmission */
+	/**
+	 * Stops an ongoing beam transmission. Resolves when no beam is running,
+	 * either because the firmware stopped one or because there was none.
+	 */
 	public async abortBeam(): Promise<void> {
 		this.assertFunctionSupported(RCPFunctionType.AbortBeam);
 
 		const msg = new AbortBeamRequest();
-		await this.queueSerialApiCommand<AbortBeamResponse>(msg);
+		try {
+			await this.queueSerialApiCommand<AbortBeamResponse>(msg);
+		} catch (e) {
+			// The firmware answers NOK when there is no beam to abort, which
+			// leaves the radio in the state the caller asked for
+			if (isZWaveError(e) && e.context instanceof AbortBeamResponse) {
+				return;
+			}
+			throw e;
+		}
 	}
 
 	// #region RCPMessage handling

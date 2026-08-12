@@ -32,8 +32,11 @@ export interface TransmitOptions {
 	 * If omitted, the firmware keeps its current setting.
 	 */
 	txPower?: number;
-	/** Whether to perform clear channel assessment before transmitting */
-	withCCA?: boolean;
+	/**
+	 * Whether to perform clear channel assessment before transmitting.
+	 * Required, so that omitting it cannot silently skip CCA
+	 */
+	withCCA: boolean;
 }
 
 export interface TransmitBeamOptions {

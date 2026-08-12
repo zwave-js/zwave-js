@@ -122,6 +122,14 @@ export class TransmitBeamRequest extends RCPMessage {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
+		// The header and the beam body share the payload length byte
+		const maxDataLength = 0xff - 3 - (8 + this.channels.length);
+		if (this.data.length > maxDataLength) {
+			throw new ZWaveError(
+				`The beam frame must not be longer than ${maxDataLength} bytes`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
 	}
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
