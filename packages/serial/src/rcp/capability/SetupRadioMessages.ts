@@ -28,6 +28,7 @@ import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
 export enum SetupRadioCommand {
 	SetRegion = 1,
 	GetRegion = 2,
+	GetTxPowerRange = 3,
 }
 
 export interface ChannelInfo {
@@ -375,6 +376,61 @@ export class SetupRadio_SetRegionResponse extends SetupRadioResponse
 				success: this.success,
 				channels: this.channels
 					&& logList(this.channels.map(formatChannelInfo)),
+				// The parsed fields supersede the raw payload
+				payload: undefined,
+			}),
+		};
+	}
+}
+
+// =============================================================================
+
+@subCommandRequest(SetupRadioCommand.GetTxPowerRange)
+export class SetupRadio_GetTxPowerRangeRequest extends SetupRadioRequest {}
+
+export interface SetupRadio_GetTxPowerRangeResponseOptions {
+	minTxPower: number;
+	maxTxPower: number;
+}
+
+@subCommandResponse(SetupRadioCommand.GetTxPowerRange)
+export class SetupRadio_GetTxPowerRangeResponse extends SetupRadioResponse {
+	public constructor(
+		options:
+			& SetupRadio_GetTxPowerRangeResponseOptions
+			& RCPMessageBaseOptions,
+	) {
+		super(options);
+		this.minTxPower = options.minTxPower;
+		this.maxTxPower = options.maxTxPower;
+	}
+
+	public static from(
+		raw: RCPMessageRaw,
+		_ctx: RCPMessageParsingContext,
+	): SetupRadio_GetTxPowerRangeResponse {
+		// The firmware reports the range in deci-dBm
+		const minTxPower = raw.payload.readInt16BE(0) / 10;
+		const maxTxPower = raw.payload.readInt16BE(2) / 10;
+
+		return new this({
+			minTxPower,
+			maxTxPower,
+		});
+	}
+
+	/** The lowest supported TX power in dBm */
+	public minTxPower: number;
+	/** The highest supported TX power in dBm */
+	public maxTxPower: number;
+
+	public toLogEntry(): MessageOrCCLogEntry {
+		const ret = super.toLogEntry();
+		return {
+			...ret,
+			message: mergeLogDict(ret.message, {
+				"min. TX power": `${this.minTxPower.toFixed(1)} dBm`,
+				"max. TX power": `${this.maxTxPower.toFixed(1)} dBm`,
 				// The parsed fields supersede the raw payload
 				payload: undefined,
 			}),

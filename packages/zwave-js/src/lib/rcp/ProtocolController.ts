@@ -9,6 +9,7 @@ import {
 	type MPDUEncodingContext,
 	MPDUHeaderType,
 	type MPDULogContext,
+	type MaybeNotKnown,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	ProtocolDataRate,
@@ -54,6 +55,7 @@ import {
 	type MpduRxInfo,
 	type PHYLayer,
 	type PHYLayerFactory,
+	type TxPowerRange,
 	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
 import {
@@ -149,21 +151,26 @@ function assertInt8(value: number | undefined, name: string): void {
 	}
 }
 
-// Bounds of the radio TX power the API accepts. They match the range the serial
-// layer accepts
+// Fallback bounds of the radio TX power, used when the firmware does not
+// report the range its radio supports
 const RADIO_TX_POWER_MIN_DBM = -10;
 const RADIO_TX_POWER_MAX_DBM = 30;
 
-/** Reject a radio TX power outside the range the API accepts, before any frame goes out */
-function assertRadioTXPower(txPower: number | undefined): void {
+/** Reject a radio TX power the radio does not support, before any frame goes out */
+function assertRadioTXPower(
+	txPower: number | undefined,
+	range: MaybeNotKnown<TxPowerRange>,
+): void {
 	if (txPower == undefined) return;
+	const min = range?.min ?? RADIO_TX_POWER_MIN_DBM;
+	const max = range?.max ?? RADIO_TX_POWER_MAX_DBM;
 	if (
 		!Number.isFinite(txPower)
-		|| txPower < RADIO_TX_POWER_MIN_DBM
-		|| txPower > RADIO_TX_POWER_MAX_DBM
+		|| txPower < min
+		|| txPower > max
 	) {
 		throw new ZWaveError(
-			`The TX power must be between ${RADIO_TX_POWER_MIN_DBM} and ${RADIO_TX_POWER_MAX_DBM} dBm`,
+			`The TX power must be between ${min} and ${max} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
@@ -841,7 +848,7 @@ export class ProtocolController
 			);
 		}
 
-		assertRadioTXPower(options.txPower);
+		assertRadioTXPower(options.txPower, this.phyLayer.txPowerRange);
 		assertInt8(options.lrMpduOverrides?.txPower, "The advertised TX power");
 		assertInt8(
 			options.lrMpduOverrides?.noiseFloor,
@@ -1353,7 +1360,7 @@ export class ProtocolController
 		// Classic acks carry no radio information, so the radio keeps its power there
 		let txPower: number | undefined;
 		if (options.protocol === Protocols.ZWaveLongRange) {
-			assertRadioTXPower(options.txPower);
+			assertRadioTXPower(options.txPower, this.phyLayer.txPowerRange);
 			assertInt8(
 				options.lrMpduOverrides?.txPower,
 				"The advertised TX power",

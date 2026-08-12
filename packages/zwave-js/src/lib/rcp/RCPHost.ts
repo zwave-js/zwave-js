@@ -38,6 +38,8 @@ import {
 	ReceiveCallback,
 	SetupRadio_GetRegionRequest,
 	type SetupRadio_GetRegionResponse,
+	SetupRadio_GetTxPowerRangeRequest,
+	type SetupRadio_GetTxPowerRangeResponse,
 	SetupRadio_SetRegionRequest,
 	type SetupRadio_SetRegionResponse,
 	type TransmitBeamCallback,
@@ -86,6 +88,7 @@ import {
 	type TransmitBeamOptions,
 	type TransmitOptions,
 	type TransmitResult,
+	type TxPowerRange,
 	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
 import { RCPTransaction } from "./RCPTransaction.js";
@@ -265,6 +268,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private channelConfig: MaybeNotKnown<ChannelConfiguration>;
 	private channels: MaybeNotKnown<ChannelInfo[]>;
 
+	private _txPowerRange: MaybeNotKnown<TxPowerRange>;
+
+	public get txPowerRange(): MaybeNotKnown<TxPowerRange> {
+		return this._txPowerRange;
+	}
+
 	public get regionConfig(): MaybeNotKnown<RegionConfig> {
 		if (this.rfRegion == NOT_KNOWN) return NOT_KNOWN;
 		if (this.channelConfig == NOT_KNOWN) return NOT_KNOWN;
@@ -404,6 +413,23 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 					).join("")
 			}`,
 		);
+
+		this.rcpLog.print(`Querying TX power range...`);
+		// Older firmwares do not answer this sub-command
+		this._txPowerRange = await this.queryTxPowerRange()
+			.catch(() => NOT_KNOWN);
+		if (this._txPowerRange != NOT_KNOWN) {
+			this.rcpLog.print(
+				`Received TX power range: ${
+					this._txPowerRange.min.toFixed(1)
+				} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
+			);
+		} else {
+			this.rcpLog.print(
+				`The firmware does not report its TX power range`,
+				"warn",
+			);
+		}
 	}
 
 	// #region Serialport interaction
@@ -783,6 +809,18 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			"channelConfig",
 			"channels",
 		]);
+	}
+
+	public async queryTxPowerRange(): Promise<TxPowerRange> {
+		const msg = new SetupRadio_GetTxPowerRangeRequest();
+		const result = await this.queueSerialApiCommand<
+			SetupRadio_GetTxPowerRangeResponse
+		>(msg);
+
+		return {
+			min: result.minTxPower,
+			max: result.maxTxPower,
+		};
 	}
 
 	public async setRegion(

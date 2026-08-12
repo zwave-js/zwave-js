@@ -27,6 +27,12 @@ export interface RegionConfig {
 
 export type TransmitResult = TransmitResponseStatus | TransmitCallbackStatus;
 
+/** The TX power range the radio supports, in dBm */
+export interface TxPowerRange {
+	min: number;
+	max: number;
+}
+
 /** Look up the data rate of a channel, throwing if the current region does not have it */
 export function getProtocolDataRateOrThrow(
 	channels: MaybeNotKnown<readonly ChannelInfo[]>,
@@ -91,6 +97,9 @@ export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
 
 	/** Return cached information about the current region settings */
 	get regionConfig(): MaybeNotKnown<RegionConfig>;
+
+	/** Return the TX power range the radio supports, if the firmware reports it */
+	get txPowerRange(): MaybeNotKnown<TxPowerRange>;
 
 	/** Configure the region and channel config, returning the capabilities of the newly configured region */
 	setRegion(
