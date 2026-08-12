@@ -929,6 +929,23 @@ readonly lastSeen: MaybeNotKnown<Date>
 
 This property tracks when the node was last seen, meaning a command was either received from the node or successfully sent to it.
 
+### `isOverdue`
+
+```ts
+readonly isOverdue: boolean
+```
+
+This property indicates that a sleeping node has failed to report in for significantly longer than its configured wake up interval, which usually means its battery is dead or it is out of range. The threshold is twice the wake up interval plus 10%, as recommended for Reporting Sleeping Slaves in Silicon Labs' gateway documentation.
+
+The detection is entirely passive - nodes are never polled to determine this - and it does not affect a node's [`status`](#status). A node stops being overdue as soon as anything is received from it again.
+
+This is always `false` for nodes whose liveness cannot be predicted this way:
+
+- always listening nodes and FLiRS nodes, which can be reached on demand and whose failure is detected by other means
+- nodes with a wake up interval of `0`, which only wake up on local events and therefore have no expected reporting pattern
+
+> [!NOTE] A node restored from cache is evaluated during driver startup, before the `"driver ready"` event. If it was already overdue at that point, the `"overdue"` event fires before an application can attach listeners, so read this property for the initial state rather than relying on the event alone.
+
 ### `isControllerNode`
 
 ```ts
@@ -1290,6 +1307,14 @@ A sleeping node has woken up or gone back to sleep. The node is passed as the si
 ### `"dead"` / `"alive"`
 
 A non-sleeping node has stopped responding or just started responding again. The node is passed as the single argument to the callback:
+
+```ts
+(node: ZWaveNode) => void
+```
+
+### `"overdue"` / `"no longer overdue"`
+
+A sleeping node has missed its expected wake ups for significantly longer than its wake up interval, or has been heard from again after doing so. See [`isOverdue`](#isOverdue) for which nodes this applies to. The node is passed as the single argument to the callback:
 
 ```ts
 (node: ZWaveNode) => void

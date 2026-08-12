@@ -11,7 +11,7 @@ import { isArray, isObject } from "alcalzone-shared/typeguards";
 import { DeviceClass } from "../DeviceClass.js";
 import { Endpoint } from "../Endpoint.js";
 import * as nodeUtils from "../utils.js";
-import { NodeCapabilityValuesMixin } from "./41_CapabilityValues.js";
+import { NodeLivenessMixin } from "./45_Liveness.js";
 
 /** Defines functionality of Z-Wave nodes related to accessing endpoints and their capabilities */
 export interface Endpoints {
@@ -40,7 +40,7 @@ export interface Endpoints {
 	getAllEndpoints(): Endpoint[];
 }
 
-export abstract class EndpointsMixin extends NodeCapabilityValuesMixin
+export abstract class EndpointsMixin extends NodeLivenessMixin
 	implements Endpoints, GetEndpoint<Endpoint>, GetAllEndpoints<Endpoint>
 {
 	public get endpointCountIsDynamic(): MaybeNotKnown<boolean> {
