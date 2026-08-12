@@ -280,7 +280,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	private _radioCapabilities: MaybeNotKnown<RadioCapability[]>;
-
 	public get radioCapabilities(): MaybeNotKnown<RadioCapability[]> {
 		return this._radioCapabilities;
 	}
@@ -434,23 +433,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		);
 
 		this.rcpLog.print(`Querying radio capabilities...`);
-		// Older firmwares do not answer this sub-command
-		this._radioCapabilities = await this.queryRadioCapabilities()
-			.catch(() => NOT_KNOWN);
-		if (this._radioCapabilities != NOT_KNOWN) {
-			this.rcpLog.print(
-				`Received radio capabilities: ${
-					this._radioCapabilities
-						.map((c) => getEnumMemberName(RadioCapability, c))
-						.join(", ") || "(none)"
-				}`,
-			);
-		} else {
-			this.rcpLog.print(
-				`The firmware does not report its radio capabilities`,
-				"warn",
-			);
-		}
+		this._radioCapabilities = await this.queryRadioCapabilities();
+		this.rcpLog.print(
+			`Received radio capabilities: ${
+				this._radioCapabilities
+					.map((c) => getEnumMemberName(RadioCapability, c))
+					.join(", ") || "(none)"
+			}`,
+		);
 	}
 
 	// #region Serialport interaction
