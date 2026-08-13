@@ -573,6 +573,42 @@ export class ProtocolController
 	 * Serialize an MPDU, log it, and hand it to the radio. Returns what the
 	 * radio reported and the on-air length, which the ack timing depends on.
 	 */
+	private serializeOutbound(
+		mpdu: MPDU,
+		ctx: MPDUEncodingContext,
+		replacements?: TransmitReplacement[],
+	): Bytes {
+		const frame = mpdu.serialize(ctx);
+
+		this.protocolLog.mpdu(
+			mpdu,
+			ctx,
+			"outbound",
+			replacements?.length ? ["noise floor"] : undefined,
+		);
+
+		return frame;
+	}
+
+	private sendFrame(
+		phy: PHYLayer,
+		frame: BytesView,
+		ctx: MPDUEncodingContext,
+		options: {
+			txPower?: number;
+			withCCA: boolean;
+			replacements?: TransmitReplacement[];
+		},
+	): Promise<TransmitResult> {
+		return phy.transmit(frame, {
+			channel: ctx.channel,
+			txPower: options.txPower,
+			withCCA: options.withCCA,
+			replacements: options.replacements,
+		});
+	}
+
+	/** Serialize, log and transmit an MPDU that needs no wait registered first */
 	private async sendMPDU(
 		phy: PHYLayer,
 		mpdu: MPDU,
@@ -582,24 +618,9 @@ export class ProtocolController
 			withCCA: boolean;
 			replacements?: TransmitReplacement[];
 		},
-	): Promise<{ result: TransmitResult; length: number }> {
-		const serializedMPDU = mpdu.serialize(ctx);
-
-		this.protocolLog.mpdu(
-			mpdu,
-			ctx,
-			"outbound",
-			options.replacements?.length ? ["noise floor"] : undefined,
-		);
-
-		const result = await phy.transmit(serializedMPDU, {
-			channel: ctx.channel,
-			txPower: options.txPower,
-			withCCA: options.withCCA,
-			replacements: options.replacements,
-		});
-
-		return { result, length: serializedMPDU.length };
+	): Promise<TransmitResult> {
+		const frame = this.serializeOutbound(mpdu, ctx, options.replacements);
+		return this.sendFrame(phy, frame, ctx, options);
 	}
 
 	/**
@@ -1299,29 +1320,7 @@ export class ProtocolController
 				protocolDataRate: channel.dataRate,
 				region: this.phyLayer.regionConfig.region,
 			};
-			const { result, length: serializedLength } = await this.sendMPDU(
-				this.phyLayer,
-				mpdu,
-				ctx,
-				{
-					txPower: radioTXPower,
-					// G.9959 §8.1.5.1.2 requires clear channel assessment before
-					// transmitting a data frame
-					withCCA: options.withCCA ?? true,
-					replacements,
-				},
-			);
-
-			if (result === TransmitCallbackStatus.ChannelBusy) {
-				// TODO: Wait for channel to be free before retrying
-				busyAttempts++;
-				continue;
-			}
-			if (result !== TransmitCallbackStatus.Completed) {
-				return { result: macResultFromTransmit(result) };
-			}
-
-			// Transmit was successful
+			const frame = this.serializeOutbound(mpdu, ctx, replacements);
 
 			// G.9959 §8.1.5.1.4.3: "A node that sends a singlecast MPDU with its ACK
 			// request subfield set to 1 shall wait for a minimum of
@@ -1329,6 +1328,39 @@ export class ProtocolController
 			// received." The LR spec requires the same in §6.5.1.5.3 with
 			// aMacLRMinAckWaitDuration
 			const ackTimeout = ackWaitDuration(channel.dataRate, headerFormat);
+
+			// Everything the answer is matched against is known before the frame
+			// goes out, and the answer crosses the same serial connection as the
+			// transmit callback. Registering the wait first is what keeps an ack
+			// that arrives while the transmit promise unwinds from being dropped
+			const answerAbort = new AbortController();
+			const sendAndCheck = async (): Promise<
+				MACTransmitReport | "retry" | undefined
+			> => {
+				const result = await this.sendFrame(
+					this.phyLayer!,
+					frame,
+					ctx,
+					{
+						txPower: radioTXPower,
+						// G.9959 §8.1.5.1.2 requires clear channel assessment before
+						// transmitting a data frame
+						withCCA: options.withCCA ?? true,
+						replacements,
+					},
+				);
+				if (result === TransmitCallbackStatus.Completed) {
+					return undefined;
+				}
+
+				answerAbort.abort();
+				if (result === TransmitCallbackStatus.ChannelBusy) {
+					// TODO: Wait for channel to be free before retrying
+					busyAttempts++;
+					return "retry";
+				}
+				return { result: macResultFromTransmit(result) };
+			};
 
 			if (mpdu instanceof RoutedZWaveMPDU) {
 				const routedMPDU = mpdu;
@@ -1363,7 +1395,7 @@ export class ProtocolController
 					&& m.sequenceNumber === routedMPDU.sequenceNumber;
 
 				const duration = frameDuration(
-					serializedLength,
+					frame.length,
 					ctx.protocolDataRate,
 					headerFormat,
 				);
@@ -1372,14 +1404,21 @@ export class ProtocolController
 				const silentAckTimeout = ackTimeout + duration;
 				// A routed ack can arrive without us having seen the silent ack, so both are
 				// awaited together until the entire route budget has elapsed
-				const deadline = Date.now()
-					+ silentAckTimeout
+				const budget = silentAckTimeout
 					+ routedAckTimeout(routedMPDU.repeaters.length, duration);
+				const deadline = Date.now() + budget;
 
-				let outcome = await this.waitForMPDU<RoutedZWaveMPDU>(
+				const firstAnswer = this.waitForMPDU<RoutedZWaveMPDU>(
 					(m) => isSilentAck(m) || isRouteOutcome(m),
-					deadline - Date.now(),
+					budget,
+					answerAbort.signal,
 				).then((m) => m, () => undefined);
+
+				const failure = await sendAndCheck();
+				if (failure === "retry") continue;
+				if (failure) return failure;
+
+				let outcome = await firstAnswer;
 
 				if (outcome && isSilentAck(outcome)) {
 					sawSilentAck = true;
@@ -1408,8 +1447,6 @@ export class ProtocolController
 				};
 			}
 
-			if (!mpdu.ackRequested) return { result: MACTransmitResult.OK };
-
 			// LR §6.5.1.5.5: "If an Ack MPDU is received within the random backoff
 			// period and contains the correct HomeID, source NodeID and a matching
 			// sequence number, the transmission is considered successful." So LR keeps
@@ -1420,18 +1457,28 @@ export class ProtocolController
 			// G.9959 §8.1.5.1.4.3: "If an ACK MPDU is received within
 			// aMacMinAckWaitDuration symbols and contains the correct HomeID and
 			// source NodeID, the transmission is considered successful"
-			const ack = await this.waitForMPDU(
-				(m) =>
-					m.headerType === MPDUHeaderType.Acknowledgement
-					&& m.homeId === mpdu.homeId
-					// TODO: This cast is not sound
-					&& m.sourceNodeId
-						=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
-					&& ackSequenceNumberMatches(m),
-				ackWindow,
-			).then(() => true, () => false);
+			const ackPromise = mpdu.ackRequested
+				? this.waitForMPDU(
+					(m) =>
+						m.headerType === MPDUHeaderType.Acknowledgement
+						&& m.homeId === mpdu.homeId
+						// TODO: This cast is not sound
+						&& m.sourceNodeId
+							=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
+						&& ackSequenceNumberMatches(m),
+					ackWindow,
+					answerAbort.signal,
+				).then(() => true, () => false)
+				: undefined;
 
-			if (ack) return { result: MACTransmitResult.OK };
+			const failure = await sendAndCheck();
+			if (failure === "retry") continue;
+			if (failure) return failure;
+
+			if (ackPromise == undefined) {
+				return { result: MACTransmitResult.OK };
+			}
+			if (await ackPromise) return { result: MACTransmitResult.OK };
 		}
 
 		if (busyAttempts === attempts.length) {
@@ -1520,7 +1567,7 @@ export class ProtocolController
 			region: this.phyLayer.regionConfig.region,
 		};
 
-		const { result } = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
+		const result = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
 			txPower,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
@@ -1666,7 +1713,7 @@ export class ProtocolController
 		};
 
 		// A routed ack is classic only, so it carries no noise floor
-		const { result } = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
+		const result = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
 			// G.9959 §8.1.5.1.2 requires clear channel assessment before
 			// transmitting a data frame
 			withCCA: true,
