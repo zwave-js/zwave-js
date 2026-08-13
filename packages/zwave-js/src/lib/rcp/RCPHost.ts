@@ -256,6 +256,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private rcpLog!: RCPLogger;
 
 	private queue: AsyncQueue<RCPTransaction> = new AsyncQueue();
+	/**
+	 * Transactions that have been queued but not settled yet. The queue itself
+	 * discards its backlog on abort, so destroy() needs its own handle on them
+	 */
+	private pendingTransactions: Set<RCPTransaction> = new Set();
 
 	/** A list of awaited message headers */
 	private awaitedMessageHeaders: AwaitedMessageHeader[] = [];
@@ -757,6 +762,13 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	>(
 		msg: RCPMessage,
 	): Promise<TResponse> {
+		if (this.wasDestroyed) {
+			throw new ZWaveError(
+				`The RCP host was destroyed`,
+				ZWaveErrorCodes.Driver_Destroyed,
+			);
+		}
+
 		const resultPromise = createDeferredPromise<TResponse>();
 
 		// Create the transaction
@@ -766,6 +778,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		});
 
 		// And queue it
+		this.pendingTransactions.add(transaction);
 		this.queue.add(transaction);
 
 		try {
@@ -783,6 +796,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				}
 			}
 			throw e;
+		} finally {
+			this.pendingTransactions.delete(transaction);
 		}
 	}
 
@@ -1330,6 +1345,19 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			if (this.serial.isOpen) await this.serial.close();
 			this.serial = undefined;
 		}
+
+		// Stop the drain loop, then fail everything it will never run. Without
+		// this, callers awaiting a queued command wait forever
+		this.queue.abort();
+		for (const transaction of this.pendingTransactions) {
+			transaction.promise.reject(
+				new ZWaveError(
+					`The RCP host was destroyed`,
+					ZWaveErrorCodes.Driver_Destroyed,
+				),
+			);
+		}
+		this.pendingTransactions.clear();
 
 		// Remove all timeouts
 		for (
