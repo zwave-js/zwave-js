@@ -1782,7 +1782,6 @@ export class ProtocolController extends TypedEventTarget<ProtocolControllerEvent
     start(): Promise<void>;
     // (undocumented)
     transmitACK(options: MACTransmitAckOptions): Promise<MACTransmitResult>;
-    // (undocumented)
     transmitData(data: BytesView, options: MACTransmitOptions): Promise<MACTransmitReport>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen

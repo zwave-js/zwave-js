@@ -501,6 +501,9 @@ export class ProtocolController
 	/** A list of awaited MPDUs */
 	private awaitedMPDUs: AwaitedMPDUEntry[] = [];
 
+	/** Resolves once the frame exchange currently holding the radio is done */
+	private radioIdle: Promise<void> = Promise.resolve();
+
 	private sequenceNumber: number | undefined;
 
 	/** The LR channel this node transmits on */
@@ -970,10 +973,45 @@ export class ProtocolController
 		return { pinnedChannel };
 	}
 
-	public async transmitData(
+	/**
+	 * Send a frame and report what came back. Concurrent calls are serialized,
+	 * so their attempts and backoffs do not interleave on air.
+	 */
+	public transmitData(
 		data: BytesView,
 		options: MACTransmitOptions,
 	): Promise<MACTransmitReport> {
+		return this.withRadio(() => this.transmitDataExclusive(data, options));
+	}
+
+	/**
+	 * Hold the radio for one frame exchange. Acknowledgements deliberately do not
+	 * take this, since G.9959 §8.1.5.1.4.2 requires them inside the turnaround
+	 * time, and a transmit waiting for its own ack would hold it far longer.
+	 */
+	private async withRadio<T>(exchange: () => Promise<T>): Promise<T> {
+		const predecessor = this.radioIdle;
+		let release!: () => void;
+		this.radioIdle = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+
+		await predecessor;
+		try {
+			return await exchange();
+		} finally {
+			release();
+		}
+	}
+
+	private async transmitDataExclusive(
+		data: BytesView,
+		options: MACTransmitOptions,
+	): Promise<MACTransmitReport> {
+		if (this.wasDestroyed) {
+			return { result: MACTransmitResult.Error_Aborted };
+		}
+
 		if (this.phyLayer == undefined) {
 			throw new ZWaveError(
 				`The PHY layer has not been initialized yet!`,
