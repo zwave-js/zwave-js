@@ -552,6 +552,43 @@ export class ProtocolController
 		}];
 	}
 
+	/**
+	 * The noise floor to serialize into a Long Range frame. Firmware that can
+	 * patch the frame gets the placeholder and fills it in itself, older
+	 * firmware is asked to measure the channel first.
+	 */
+	private async getAdvertisedNoiseFloor(
+		protocol: Protocols | undefined,
+		noiseFloorOverride: number | undefined,
+		channel: number,
+	): Promise<number> {
+		if (noiseFloorOverride != undefined) return noiseFloorOverride;
+		if (protocol !== Protocols.ZWaveLongRange) {
+			return RssiError.NotAvailable;
+		}
+		if (this.phyLayer?.supportsTransmitReplacements) {
+			return RssiError.NotAvailable;
+		}
+		if (!this.phyLayer?.supportsMeasureNoiseFloor) {
+			return RssiError.NotAvailable;
+		}
+
+		try {
+			return advertisedRSSI(
+				await this.phyLayer.measureNoiseFloor(channel),
+			);
+		} catch (e) {
+			// A frame advertising no noise floor still reaches the destination
+			this.protocolLog.print(
+				`Could not measure the noise floor on channel ${channel}: ${
+					getErrorMessage(e)
+				}`,
+				"warn",
+			);
+			return RssiError.NotAvailable;
+		}
+	}
+
 	private getChannelsForProtocolOrThrow(protocol: Protocols): ChannelInfo[] {
 		const allChannels = this.phyLayer?.regionConfig?.channels ?? [];
 		const channels = allChannels.filter((ch) =>
@@ -986,8 +1023,11 @@ export class ProtocolController
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
 			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
-		const advertisedNoiseFloor = options.lrMpduOverrides?.noiseFloor
-			?? RssiError.NotAvailable;
+		const advertisedNoiseFloor = await this.getAdvertisedNoiseFloor(
+			protocol,
+			options.lrMpduOverrides?.noiseFloor,
+			initialChannel.channel,
+		);
 		const replacements = this.getNoiseFloorReplacements(
 			protocol,
 			options.lrMpduOverrides?.noiseFloor,
@@ -1418,8 +1458,11 @@ export class ProtocolController
 				txPower: options.lrMpduOverrides?.txPower
 					?? Math.round(txPower ?? LR_DEFAULT_TX_POWER_DBM),
 				incomingRSSI: options.incomingRSSI ?? RssiError.NotAvailable,
-				noiseFloor: options.lrMpduOverrides?.noiseFloor
-					?? RssiError.NotAvailable,
+				noiseFloor: await this.getAdvertisedNoiseFloor(
+					options.protocol,
+					options.lrMpduOverrides?.noiseFloor,
+					options.channel,
+				),
 			});
 		}
 

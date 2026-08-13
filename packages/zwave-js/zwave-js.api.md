@@ -1738,11 +1738,13 @@ export type PartialZWaveOptions = Expand<DeepPartial<Omit<ZWaveOptions, "inclusi
 export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
     abortBeam(): Promise<void>;
     destroy(): Promise<void>;
+    measureNoiseFloor(channel: number): Promise<RSSI>;
     // Warning: (ae-forgotten-export) The symbol "RegionConfig" needs to be exported by the entry point index.d.ts
     queryRegion(): Promise<RegionConfig>;
     get regionConfig(): MaybeNotKnown<RegionConfig>;
     setRegion(region: RFRegion, channelConfig: ChannelConfiguration): Promise<ChannelInfo[]>;
     get supportsAbortBeam(): boolean;
+    get supportsMeasureNoiseFloor(): boolean;
     get supportsTransmitReplacements(): boolean;
     transmit(mpdu: BytesView, options: TransmitOptions): Promise<TransmitResult>;
     transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
@@ -1847,6 +1849,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> implements 
     start(): Promise<void>;
     // (undocumented)
     get supportsAbortBeam(): boolean;
+    // (undocumented)
+    get supportsMeasureNoiseFloor(): boolean;
     // (undocumented)
     get supportsTransmitReplacements(): boolean;
     transmit(data: BytesView, options: TransmitOptions): Promise<TransmitResult>;

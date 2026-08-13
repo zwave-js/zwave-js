@@ -1024,6 +1024,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		return result.noiseFloor;
 	}
 
+	public get supportsMeasureNoiseFloor(): boolean {
+		return !!this.supportedFunctionTypes?.includes(
+			RCPFunctionType.MeasureNoiseFloor,
+		);
+	}
+
 	public get supportsTransmitReplacements(): boolean {
 		return !!this._radioCapabilities?.includes(
 			RadioCapability.TransmitReplacements,
