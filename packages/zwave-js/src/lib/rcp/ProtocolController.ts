@@ -58,6 +58,7 @@ import {
 	type MpduRxInfo,
 	type PHYLayer,
 	type PHYLayerFactory,
+	type TransmitResult,
 	type TxPowerRange,
 	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
@@ -169,6 +170,40 @@ function assertRadioTXPower(
 			`The TX power must be between ${range.min} and ${range.max} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
+	}
+}
+
+/**
+ * Translate what the radio reported into a MAC result. Only for operations that
+ * do not retry, since a retrying one treats a busy channel as another attempt.
+ */
+function macResultFromTransmit(result: TransmitResult): MACTransmitResult {
+	switch (result) {
+		case TransmitCallbackStatus.Completed:
+			return MACTransmitResult.OK;
+
+		case TransmitCallbackStatus.ChannelBusy:
+			// TODO: Wait for the channel to be free, try again
+			return MACTransmitResult.ChannelBusy;
+
+		case TransmitResponseStatus.Busy:
+			return MACTransmitResult.Error_QueueBusy;
+
+		case TransmitResponseStatus.Overflow:
+		case TransmitCallbackStatus.Underflow:
+			return MACTransmitResult.Error_FrameLength;
+
+		case TransmitCallbackStatus.Aborted:
+			return MACTransmitResult.Error_Aborted;
+
+		case TransmitCallbackStatus.Blocked:
+			// Should not happen, since we never block TX
+		case TransmitResponseStatus.InvalidChannel:
+		case TransmitResponseStatus.InvalidParam:
+			// Should not happen, since everything is checked beforehand
+		case TransmitCallbackStatus.UnknownError:
+		default:
+			return MACTransmitResult.Error_Unknown;
 	}
 }
 
@@ -532,6 +567,39 @@ export class ProtocolController
 			this.phyLayer?.regionConfig?.channels,
 			channel,
 		);
+	}
+
+	/**
+	 * Serialize an MPDU, log it, and hand it to the radio. Returns what the
+	 * radio reported and the on-air length, which the ack timing depends on.
+	 */
+	private async sendMPDU(
+		phy: PHYLayer,
+		mpdu: MPDU,
+		ctx: MPDUEncodingContext,
+		options: {
+			txPower?: number;
+			withCCA: boolean;
+			replacements?: TransmitReplacement[];
+		},
+	): Promise<{ result: TransmitResult; length: number }> {
+		const serializedMPDU = mpdu.serialize(ctx);
+
+		this.protocolLog.mpdu(
+			mpdu,
+			ctx,
+			"outbound",
+			options.replacements?.length ? ["noise floor"] : undefined,
+		);
+
+		const result = await phy.transmit(serializedMPDU, {
+			channel: ctx.channel,
+			txPower: options.txPower,
+			withCCA: options.withCCA,
+			replacements: options.replacements,
+		});
+
+		return { result, length: serializedMPDU.length };
 	}
 
 	/**
@@ -1231,54 +1299,26 @@ export class ProtocolController
 				protocolDataRate: channel.dataRate,
 				region: this.phyLayer.regionConfig.region,
 			};
-			const serializedMPDU = mpdu.serialize(ctx);
-
-			this.protocolLog.mpdu(
+			const { result, length: serializedLength } = await this.sendMPDU(
+				this.phyLayer,
 				mpdu,
 				ctx,
-				"outbound",
-				replacements?.length ? ["noise floor"] : undefined,
-			);
-
-			const result = await this.phyLayer.transmit(
-				serializedMPDU,
-				// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
 				{
-					channel: channel.channel,
 					txPower: radioTXPower,
+					// G.9959 §8.1.5.1.2 requires clear channel assessment before
+					// transmitting a data frame
 					withCCA: options.withCCA ?? true,
 					replacements,
 				},
 			);
 
-			switch (result) {
-				case TransmitCallbackStatus.Completed:
-					// Wait for ACK
-					break;
-
-				case TransmitCallbackStatus.ChannelBusy:
-					// TODO: Wait for channel to be free before retrying
-					busyAttempts++;
-					continue;
-
-				case TransmitResponseStatus.Busy:
-					return { result: MACTransmitResult.Error_QueueBusy };
-
-				case TransmitResponseStatus.Overflow:
-				case TransmitCallbackStatus.Underflow:
-					return { result: MACTransmitResult.Error_FrameLength };
-
-				case TransmitCallbackStatus.Aborted:
-					return { result: MACTransmitResult.Error_Aborted };
-
-				case TransmitCallbackStatus.Blocked:
-					// This one should not happen, since we're not blocking TX
-				case TransmitResponseStatus.InvalidChannel:
-				case TransmitResponseStatus.InvalidParam:
-					// These two should not happen, since we're checking it all beforehand
-				case TransmitCallbackStatus.UnknownError:
-				default:
-					return { result: MACTransmitResult.Error_Unknown };
+			if (result === TransmitCallbackStatus.ChannelBusy) {
+				// TODO: Wait for channel to be free before retrying
+				busyAttempts++;
+				continue;
+			}
+			if (result !== TransmitCallbackStatus.Completed) {
+				return { result: macResultFromTransmit(result) };
 			}
 
 			// Transmit was successful
@@ -1323,7 +1363,7 @@ export class ProtocolController
 					&& m.sequenceNumber === routedMPDU.sequenceNumber;
 
 				const duration = frameDuration(
-					serializedMPDU.length,
+					serializedLength,
 					ctx.protocolDataRate,
 					headerFormat,
 				);
@@ -1479,49 +1519,16 @@ export class ProtocolController
 			protocolDataRate: this.getProtocolDataRateOrThrow(channel),
 			region: this.phyLayer.regionConfig.region,
 		};
-		const serializedMPDU = mpdu.serialize(ctx);
 
-		this.protocolLog.mpdu(
-			mpdu,
-			ctx,
-			"outbound",
-			replacements?.length ? ["noise floor"] : undefined,
-		);
-
-		const result = await this.phyLayer.transmit(
-			serializedMPDU,
+		const { result } = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
+			txPower,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
-			{ channel, txPower, withCCA: false, replacements },
-		);
+			withCCA: false,
+			replacements,
+		});
 
-		switch (result) {
-			case TransmitCallbackStatus.Completed:
-				return MACTransmitResult.OK;
-
-			case TransmitCallbackStatus.ChannelBusy:
-				// TODO: Wait for channel to be free, try again
-				return MACTransmitResult.ChannelBusy;
-
-			case TransmitResponseStatus.Busy:
-				return MACTransmitResult.Error_QueueBusy;
-
-			case TransmitResponseStatus.Overflow:
-			case TransmitCallbackStatus.Underflow:
-				return MACTransmitResult.Error_FrameLength;
-
-			case TransmitCallbackStatus.Aborted:
-				return MACTransmitResult.Error_Aborted;
-
-			case TransmitCallbackStatus.Blocked:
-				// This one should not happen, since we're not blocking TX
-			case TransmitResponseStatus.InvalidChannel:
-			case TransmitResponseStatus.InvalidParam:
-				// These two should not happen, since we're checking it all beforehand
-			case TransmitCallbackStatus.UnknownError:
-			default:
-				return MACTransmitResult.Error_Unknown;
-		}
+		return macResultFromTransmit(result);
 	}
 
 	/** Send the acknowledgements a received frame asks for, in the order they have to go out */
@@ -1657,36 +1664,15 @@ export class ProtocolController
 			protocolDataRate,
 			region,
 		};
-		const serializedMPDU = mpdu.serialize(ctx);
 
-		this.protocolLog.mpdu(mpdu, ctx, "outbound");
+		// A routed ack is classic only, so it carries no noise floor
+		const { result } = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
+			// G.9959 §8.1.5.1.2 requires clear channel assessment before
+			// transmitting a data frame
+			withCCA: true,
+		});
 
-		const result = await this.phyLayer.transmit(
-			serializedMPDU,
-			// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
-			{ channel, withCCA: true },
-		);
-
-		switch (result) {
-			case TransmitCallbackStatus.Completed:
-				return MACTransmitResult.OK;
-
-			case TransmitCallbackStatus.ChannelBusy:
-				return MACTransmitResult.ChannelBusy;
-
-			case TransmitResponseStatus.Busy:
-				return MACTransmitResult.Error_QueueBusy;
-
-			case TransmitResponseStatus.Overflow:
-			case TransmitCallbackStatus.Underflow:
-				return MACTransmitResult.Error_FrameLength;
-
-			case TransmitCallbackStatus.Aborted:
-				return MACTransmitResult.Error_Aborted;
-
-			default:
-				return MACTransmitResult.Error_Unknown;
-		}
+		return macResultFromTransmit(result);
 	}
 
 	private handleReceivedMPDU(mpdu: MPDU, info: MpduRxInfo): void {

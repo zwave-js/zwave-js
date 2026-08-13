@@ -907,10 +907,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			return result.status;
 		} catch (e) {
 			if (isZWaveError(e)) {
-				if (e.context instanceof TransmitResponse) {
+				if (
+					e.context instanceof TransmitResponse
+					|| e.context instanceof TransmitCallback
+				) {
 					// The transmission failed
-					return e.context.status;
-				} else if (e.context instanceof TransmitCallback) {
 					return e.context.status;
 				}
 			}
