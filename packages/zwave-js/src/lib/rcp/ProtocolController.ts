@@ -123,15 +123,8 @@ const ROUTED_HOP_MARGIN_MS = 10;
 // trips and is tuned empirically
 const ACK_HOST_TRANSPORT_ALLOWANCE_MS = 20;
 
-/** The TX power Long Range transmissions are expected to use, in dBm */
-export const LR_DEFAULT_TX_POWER_DBM = 14;
-
-/**
- * The TX power Long Range beams are expected to use, in dBm. Table 6-31 of the
- * LR spec lists this as an exact beam Tx Power level, so a beam advertises it
- * without rounding up to the next level.
- */
-export const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
+// The TX power the controller acknowledges with until it is told otherwise
+const DEFAULT_AUTO_ACK_TX_POWER_DBM = 14;
 
 // Bounds of an int8 field
 const INT8_MIN = -128;
@@ -500,7 +493,7 @@ export class ProtocolController
 	public ownNodeId: number | undefined;
 	public autoAck: boolean = true;
 	/** The TX power in dBm for the acknowledgements the controller sends by itself */
-	public autoAckTXPower: number = LR_DEFAULT_TX_POWER_DBM;
+	public autoAckTXPower: number = DEFAULT_AUTO_ACK_TX_POWER_DBM;
 
 	/** A list of awaited MPDUs */
 	private awaitedMPDUs: AwaitedMPDUEntry[] = [];

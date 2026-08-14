@@ -66,10 +66,7 @@ export interface MACTransmitOptions {
 	 */
 	destinationWakeup?: MACDestinationWakeup;
 	/**
-	 * Radio TX power in dBm. `LR_DEFAULT_TX_POWER_DBM` and
-	 * `LR_DEFAULT_BEAM_TX_POWER_DBM` are the defaults Long Range expects.
-	 * Required, so that a transmission cannot implicitly use the TX power of the
-	 * previous transmission, even across protocols.
+	 * Radio TX power in dBm
 	 */
 	txPower: number;
 	/**
@@ -94,9 +91,7 @@ export type MACTransmitAckOptions =
 		channel: number;
 		sequenceNumber: number;
 		/**
-		 * Radio TX power in dBm. `LR_DEFAULT_TX_POWER_DBM` is the default Long
-		 * Range expects. Required, so that an acknowledgement cannot implicitly
-		 * use the TX power of the previous transmission, even across protocols.
+		 * Radio TX power in dBm
 		 */
 		txPower: number;
 	}
