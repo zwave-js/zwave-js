@@ -1,3 +1,4 @@
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import type { RCPMessage } from "@zwave-js/serial";
 import type { DeferredPromise } from "alcalzone-shared/deferred-promise";
 
@@ -33,5 +34,17 @@ export class RCPTransaction {
 	private _stack: string;
 	public get stack(): string {
 		return this._stack;
+	}
+
+	/** Is called when the queue discards this transaction before it ran */
+	public [Symbol.dispose](): void {
+		this.promise.reject(
+			new ZWaveError(
+				"The message has been removed from the queue",
+				ZWaveErrorCodes.Controller_MessageDropped,
+				undefined,
+				this._stack,
+			),
+		);
 	}
 }
