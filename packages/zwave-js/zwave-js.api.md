@@ -195,8 +195,8 @@ import { TaskScheduler as TaskScheduler_2 } from '@zwave-js/waddle';
 import { TransactionProgress } from '@zwave-js/core';
 import { TransactionProgressListener } from '@zwave-js/core';
 import { TranslatedValueID } from '@zwave-js/core';
-import type { TransmitCallbackStatus } from '@zwave-js/serial';
-import type { TransmitResponseStatus } from '@zwave-js/serial';
+import { TransmitCallbackStatus } from '@zwave-js/serial/rcp';
+import { TransmitResponseStatus } from '@zwave-js/serial/rcp';
 import { TransmitStatus } from '@zwave-js/core';
 import { tryUnzipFirmwareFile } from '@zwave-js/core';
 import { TXReport } from '@zwave-js/core';
@@ -1394,114 +1394,6 @@ export enum LongRangeFrameType {
 
 export { LongRangeMPDU }
 
-// Warning: (ae-missing-release-tag) "MACDestinationWakeup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public
-export type MACDestinationWakeup = "250ms" | "1000ms" | "fragmented";
-
-// Warning: (ae-missing-release-tag) "MACRoute" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface MACRoute {
-    // (undocumented)
-    repeaters: readonly number[];
-}
-
-// Warning: (ae-missing-release-tag) "MACTransmitAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export type MACTransmitAckOptions = {
-    homeId: number;
-    sourceNodeId: number;
-    destinationNodeId: number;
-    channel: number;
-    sequenceNumber: number;
-} & ({
-    protocol: Protocols.ZWave;
-} | {
-    protocol: Protocols.ZWaveLongRange;
-    txPower?: number;
-    incomingRSSI?: number;
-    lrMpduOverrides?: {
-        txPower?: number;
-        noiseFloor?: number;
-    };
-});
-
-// Warning: (ae-missing-release-tag) "MACTransmitDestination" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export type MACTransmitDestination = {
-    kind: MACTransmitKind.Singlecast;
-    nodeId: number;
-} | {
-    kind: MACTransmitKind.Multicast;
-    nodeIds: number[];
-} | {
-    kind: MACTransmitKind.Broadcast;
-};
-
-// Warning: (ae-missing-release-tag) "MACTransmitKind" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export enum MACTransmitKind {
-    // (undocumented)
-    Broadcast = 2,
-    // (undocumented)
-    Multicast = 1,
-    // (undocumented)
-    Singlecast = 0
-}
-
-// Warning: (ae-missing-release-tag) "MACTransmitOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface MACTransmitOptions {
-    // (undocumented)
-    ackRequested?: boolean;
-    // (undocumented)
-    destination: MACTransmitDestination;
-    destinationWakeup?: MACDestinationWakeup;
-    // (undocumented)
-    homeId: number;
-    lrMpduOverrides?: {
-        txPower?: number;
-        noiseFloor?: number;
-    };
-    // (undocumented)
-    protocol?: Protocols;
-    route?: MACRoute;
-    // (undocumented)
-    sourceNodeId: number;
-    txPower?: number;
-    withCCA?: boolean;
-}
-
-// Warning: (ae-missing-release-tag) "MACTransmitReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface MACTransmitReport {
-    failedHop?: number;
-    repeaterRSSI?: readonly RSSI[];
-    // (undocumented)
-    result: MACTransmitResult;
-}
-
-// Warning: (ae-missing-release-tag) "MACTransmitResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export enum MACTransmitResult {
-    ChannelBusy = 2,
-    Error_Aborted = 243,
-    Error_FrameLength = 242,
-    Error_QueueBusy = 241,
-    Error_Unknown = 254,
-    NoAck = 1,
-    NoRoutedAck = 3,
-    OK = 0,
-    RoutedError = 4
-}
-
 export { Message }
 
 export { MessageOptions }
@@ -1734,15 +1626,13 @@ export type PartialZWaveOptions = Expand<DeepPartial<Omit<ZWaveOptions, "inclusi
 //
 // @public
 export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
-    abortBeam(): Promise<void>;
     destroy(): Promise<void>;
     // Warning: (ae-forgotten-export) The symbol "RegionConfig" needs to be exported by the entry point index.d.ts
     queryRegion(): Promise<RegionConfig>;
     get regionConfig(): MaybeNotKnown<RegionConfig>;
     setRegion(region: RFRegion, channelConfig: ChannelConfiguration): Promise<ChannelInfo[]>;
-    get supportsAbortBeam(): boolean;
-    transmit(mpdu: BytesView, options: TransmitOptions): Promise<TransmitResult>;
-    transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
+    // Warning: (ae-forgotten-export) The symbol "TransmitResult" needs to be exported by the entry point index.d.ts
+    transmit(mpdu: BytesView, channel: number): Promise<TransmitResult>;
 }
 
 // Warning: (ae-missing-release-tag) "PlannedProvisioningEntry" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1781,10 +1671,15 @@ export class ProtocolController extends TypedEventTarget<ProtocolControllerEvent
     ownNodeId: number | undefined;
     // (undocumented)
     start(): Promise<void>;
+    // Warning: (ae-forgotten-export) The symbol "MACTransmitAckOptions" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     transmitACK(options: MACTransmitAckOptions): Promise<MACTransmitResult>;
+    // Warning: (ae-forgotten-export) The symbol "MACTransmitOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "MACTransmitResult" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    transmitData(data: BytesView, options: MACTransmitOptions): Promise<MACTransmitReport>;
+    transmitData(data: BytesView, options: MACTransmitOptions): Promise<MACTransmitResult>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
@@ -1822,7 +1717,6 @@ export { RCPFunctionType }
 // @public (undocumented)
 export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> implements PHYLayer {
     constructor(port: string | ZWaveSerialPortImplementation | ZWaveSerialBindingFactory, options?: PartialRCPHostOptions);
-    abortBeam(): Promise<void>;
     destroy(): Promise<void>;
     // (undocumented)
     queryRegion(): Promise<RegionConfig>;
@@ -1834,10 +1728,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> implements 
     setRegion(region: RFRegion, channelConfig: ChannelConfiguration): Promise<ChannelInfo_2[]>;
     // (undocumented)
     start(): Promise<void>;
-    // (undocumented)
-    get supportsAbortBeam(): boolean;
-    transmit(data: BytesView, options: TransmitOptions): Promise<TransmitResult>;
-    transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
+    transmit(data: BytesView, channel: number): Promise<TransmitResponseStatus | TransmitCallbackStatus>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
@@ -2101,37 +1992,6 @@ export type SmartStartProvisioningEntry = PlannedProvisioningEntry | IncludedPro
 export { Switchpoint }
 
 export { TranslatedValueID }
-
-// Warning: (ae-missing-release-tag) "TransmitBeamOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface TransmitBeamOptions {
-    channels: number[];
-    // (undocumented)
-    data: BytesView;
-    // (undocumented)
-    fragmentDurationMs: number;
-    // (undocumented)
-    fragmentPeriodMs: number;
-    // (undocumented)
-    numFragments: number;
-    txPower?: number;
-}
-
-// Warning: (ae-missing-release-tag) "TransmitOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface TransmitOptions {
-    // (undocumented)
-    channel: number;
-    txPower?: number;
-    withCCA: boolean;
-}
-
-// Warning: (ae-missing-release-tag) "TransmitResult" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export type TransmitResult = TransmitResponseStatus | TransmitCallbackStatus;
 
 export { tryUnzipFirmwareFile }
 
@@ -3309,7 +3169,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:7822:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:382:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2674:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/rcp/RCPHost.ts:537:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/rcp/RCPHost.ts:521:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:742:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 

@@ -783,8 +783,8 @@ export class ProtocolController
 			result !== TransmitCallbackStatus.Completed
 			&& !(result === TransmitCallbackStatus.Aborted && acked)
 		) {
-			// Without this the frame just fails, with the beam log line above
-			// showing a beam that looked like it went out
+			// Say why the beam did not complete. The "Beaming node ..." line
+			// above only says one was started
 			this.protocolLog.print(
 				`Beaming node ${destinationNodeId} failed: ${
 					getEnumMemberName(
@@ -939,8 +939,7 @@ export class ProtocolController
 			}
 			beam = getBeamParameters(wakeup, headerFormat);
 
-			// Checked here rather than in wakeDestination, so a rejected transmit
-			// does not consume a sequence number
+			// Only beam if we can stop it again
 			if (
 				!beam.continuous
 				&& options.destination.kind !== MACTransmitKind.Broadcast
@@ -1096,10 +1095,9 @@ export class ProtocolController
 			}
 
 			if (outcome.pinnedChannel) {
-				// The destination listens only on the channel the beam went out on,
-				// so every attempt must stay there. The attempt count stays the one
-				// the schedule planned, including the LR secondary-channel retries
-				// that §6.5.1.5.4 requires before a failure is declared
+				// The destination listens only on the channel the beam went out
+				// on. Keep the planned number of attempts, so Long Range still
+				// gets its secondary-channel retries from §6.5.1.5.4
 				const channel = outcome.pinnedChannel;
 				attempts = attempts.map(() => ({
 					channel: () => channel,
@@ -1131,10 +1129,11 @@ export class ProtocolController
 			}
 			backoff = randomRetransmitDelay(isLongRange);
 
-			// Z-Wave MAC Layer Test Specification (2022/11/11), §3.51.3: "The
-			// Controller sends Continuous Beam followed by the singlecast until it
-			// times out." A node woken by a fragmented beam stays awake, so one
-			// beam is enough there
+			// Beam again before each retry, because a continuous beam only keeps
+			// the destination awake for its own duration. Z-Wave MAC Layer Test
+			// Specification (2022/11/11), §3.51.3: "The Controller sends
+			// Continuous Beam followed by the singlecast until it times out."
+			// A node woken by a fragmented beam stays awake on its own
 			if (beam?.continuous && attempt > 0) {
 				const outcome = await this.wakeDestination(
 					this.phyLayer,
