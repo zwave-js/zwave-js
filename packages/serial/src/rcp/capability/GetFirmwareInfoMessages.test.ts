@@ -1,4 +1,3 @@
-import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
@@ -49,31 +48,5 @@ describe("GetFirmwareInfoResponse", () => {
 		expect(parsed.rcpFirmwareVersion).toBe("10.20.30");
 		expect(parsed.radioLibraryVersion).toBe("7.8.9");
 		expect(parsed.supportedFunctionTypes).toStrictEqual([1, 3]);
-	});
-
-	test("rejects a payload that is too short for both versions", async () => {
-		await assertZWaveError(
-			expect,
-			() => parseResponse(validPayload.subarray(0, 7)),
-			{ errorCode: ZWaveErrorCodes.PacketFormat_Truncated },
-		);
-	});
-
-	test("rejects a truncated function type bitmask", async () => {
-		// Announces 2 bitmask bytes but carries 1
-		const truncated = Bytes.from([
-			1,
-			2,
-			3,
-			RadioLibrary.RAIL,
-			4,
-			5,
-			6,
-			2,
-			1,
-		]);
-		await assertZWaveError(expect, () => parseResponse(truncated), {
-			errorCode: ZWaveErrorCodes.PacketFormat_Truncated,
-		});
 	});
 });

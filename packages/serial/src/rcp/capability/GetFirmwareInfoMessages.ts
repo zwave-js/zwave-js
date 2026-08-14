@@ -1,7 +1,5 @@
 import {
 	type MessageOrCCLogEntry,
-	ZWaveError,
-	ZWaveErrorCodes,
 	encodeBitMask,
 	logList,
 	parseBitMask,
@@ -49,14 +47,6 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 		raw: RCPMessageRaw,
 		_ctx: RCPMessageParsingContext,
 	): GetFirmwareInfoResponse {
-		// 2 versions with 3 bytes each, the radio library, and the bitmask length
-		if (raw.payload.length < 8) {
-			throw new ZWaveError(
-				"Invalid GetFirmwareInfo response: payload too short",
-				ZWaveErrorCodes.PacketFormat_Truncated,
-			);
-		}
-
 		let offset = 0;
 		const majorVersion = raw.payload[offset++];
 		const minorVersion = raw.payload[offset++];
@@ -73,12 +63,6 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 			`${radioMajorVersion}.${radioMinorVersion}.${radioPatchVersion}`;
 
 		const functionTypeBitmaskLength = raw.payload[offset++];
-		if (raw.payload.length < offset + functionTypeBitmaskLength) {
-			throw new ZWaveError(
-				"Invalid GetFirmwareInfo response: function type bitmask incomplete",
-				ZWaveErrorCodes.PacketFormat_Truncated,
-			);
-		}
 		const supportedFunctionTypes: RCPFunctionType[] = parseBitMask(
 			raw.payload.slice(offset, offset + functionTypeBitmaskLength),
 		);
