@@ -7,11 +7,7 @@ import {
 	RFRegion,
 	RssiError,
 } from "@zwave-js/core";
-import {
-	type ChannelInfo,
-	TransmitCallbackStatus,
-	type TransmitResult,
-} from "@zwave-js/serial";
+import { type ChannelInfo, TransmitCallbackStatus } from "@zwave-js/serial";
 import { type BytesView, TypedEventTarget } from "@zwave-js/shared";
 import { afterEach, expect, test, vi } from "vitest";
 import type {
@@ -21,6 +17,7 @@ import type {
 	RegionConfig,
 	TransmitBeamOptions,
 	TransmitOptions,
+	TransmitResult,
 	TxPowerRange,
 } from "./PHYLayer.js";
 import { ProtocolController } from "./ProtocolController.js";
