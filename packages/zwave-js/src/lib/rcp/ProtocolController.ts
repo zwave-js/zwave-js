@@ -320,13 +320,13 @@ export class ProtocolController
 			}
 			// Z-Wave and Z-Wave Long Range Network Layer Specification
 			// (2023.05.26), NWK:0019.1: "This field shall be in the range 1…4."
-			if (route.repeaters.length < 1 || route.repeaters.length > 4) {
+			if (route.length < 1 || route.length > 4) {
 				throw new ZWaveError(
-					`A route must contain between 1 and 4 repeaters, got ${route.repeaters.length}`,
+					`A route must contain between 1 and 4 repeaters, got ${route.length}`,
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
-			for (const repeater of route.repeaters) {
+			for (const repeater of route) {
 				// The routing header encodes each repeater in a single byte
 				if (
 					!Number.isInteger(repeater)
@@ -388,7 +388,7 @@ export class ProtocolController
 							routedAck: false,
 							routedError: false,
 							hop: 0,
-							repeaters: route.repeaters,
+							repeaters: [...route],
 							// NWK:018E.1: "A node using Channel Configuration 3 shall set the
 							// Destination Wake Up field to 0 when transmitting to an AL node."
 							// Beaming to FLiRS destinations is not implemented yet
@@ -607,10 +607,7 @@ export class ProtocolController
 					m instanceof RoutedZWaveMPDU
 					&& m.homeId === routedMPDU.homeId
 					&& (m.routedAck || m.routedError)
-					// NWK:001E.1 counts the hop down on the way back, so only hop 0
-					// is the leg that reaches us. Matching earlier repeats would end
-					// the wait before the frame has arrived, and before the repeaters
-					// have filled their RSSI slots
+					// Any hop > 0 is meant for a repeater
 					&& m.hop === 0
 					&& m.destinationNodeId === routedMPDU.sourceNodeId
 					// NWK:0190.1: "The repeater node sending the Routed Error Frame shall
@@ -828,8 +825,8 @@ export class ProtocolController
 
 			const result = await this.transmitRoutedAck(mpdu, info.channel);
 			if (result !== MACTransmitResult.OK) {
-				// The originator sees only a missing routed ack, so without this
-				// the two sides disagree on what happened
+				// The originator reports NoRoutedAck when this does not go out,
+				// so log why it failed on this end
 				this.protocolLog.print(
 					`Failed to acknowledge incoming routed frame: ${
 						getEnumMemberName(MACTransmitResult, result)

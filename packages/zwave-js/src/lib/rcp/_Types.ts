@@ -28,9 +28,7 @@ export enum MACTransmitResult {
 export interface MACTransmitReport {
 	result: MACTransmitResult;
 	/**
-	 * The hop at which the route failed, taken from a routed error.
-	 * NWK:0010.1 numbers the repeater that got no acknowledgement, so the
-	 * repeater that could not reach the next hop is `repeaters[failedHop]`.
+	 * The index of the repeater before the failed hop.
 	 */
 	failedHop?: number;
 	/** Per-repeater RSSI from the routed ack's extension */
@@ -53,11 +51,7 @@ export interface MACTransmitOptions {
 	 * The source route to send the frame over, classic Z-Wave only.
 	 * The repeater list must contain between 1 and 4 node IDs.
 	 */
-	route?: MACRoute;
-}
-
-export interface MACRoute {
-	repeaters: readonly number[];
+	route?: readonly number[];
 }
 
 export type MACTransmitAckOptions =

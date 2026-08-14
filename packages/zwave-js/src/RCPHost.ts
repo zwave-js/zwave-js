@@ -25,7 +25,6 @@ export type {
 } from "./lib/rcp/RCPHost.js";
 export { RCPHost } from "./lib/rcp/RCPHost.js";
 export type {
-	MACRoute,
 	MACTransmitAckOptions,
 	MACTransmitDestination,
 	MACTransmitOptions,
