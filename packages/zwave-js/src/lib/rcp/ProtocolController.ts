@@ -1365,10 +1365,10 @@ export class ProtocolController
 			// aMacLRMinAckWaitDuration
 			const ackTimeout = ackWaitDuration(channel.dataRate, headerFormat);
 
-			// Everything the answer is matched against is known before the frame
-			// goes out, and the answer crosses the same serial connection as the
-			// transmit callback. Registering the wait first is what keeps an ack
-			// that arrives while the transmit promise unwinds from being dropped
+			// Each branch below must register its wait before calling
+			// `sendAndCheck`. The answer crosses the same serial connection as the
+			// transmit callback, so it can arrive before the transmit promise
+			// resolves
 			const answerAbort = new AbortController();
 			const sendAndCheck = async (): Promise<
 				MACTransmitReport | "retry" | undefined
