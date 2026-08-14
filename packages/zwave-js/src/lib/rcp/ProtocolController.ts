@@ -988,16 +988,14 @@ export class ProtocolController
 	 */
 	private async withRadio<T>(exchange: () => Promise<T>): Promise<T> {
 		const predecessor = this.radioIdle;
-		let release!: () => void;
-		this.radioIdle = new Promise<void>((resolve) => {
-			release = resolve;
-		});
+		const release = createDeferredPromise<void>();
+		this.radioIdle = release;
 
 		await predecessor;
 		try {
 			return await exchange();
 		} finally {
-			release();
+			release.resolve();
 		}
 	}
 
