@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.27.1 (2026-08-14)
 ### Bugfixes
 * Limit Z-Wave.me proprietary `GetRegion` command to firmware 5.3+ (#9093)
 
