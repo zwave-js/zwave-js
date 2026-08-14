@@ -4,6 +4,13 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Limit Z-Wave.me proprietary `GetRegion` command to firmware 5.3+ (#9093)
+
+### Config file changes
+* Add fingerprint to Climax SDCO (#9075)
+
 ## 15.27.0 (2026-08-07)
 ### Features
 * Added support for opening Zniffer traces that were captured by a PTI Zniffer (#9053)
