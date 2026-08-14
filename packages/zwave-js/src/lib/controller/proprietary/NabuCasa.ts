@@ -35,6 +35,16 @@ export enum NabuCasaCommand {
 	SetConfig = 0x06,
 	GetLEDBinary = 0x07,
 	SetLEDBinary = 0x08,
+	GetBootloaderInfo = 0x09,
+}
+
+export interface NabuCasaBootloaderInfo {
+	/** Bootloader version, formatted as `major.minor.customer` */
+	version: string;
+	/** CRC-32 over the bootloader image, identifying the exact build */
+	crc32: number;
+	/** Capability bitmask, as defined by the Gecko Bootloader */
+	capabilities: number;
 }
 
 export interface RGB {
@@ -123,12 +133,29 @@ export class ControllerProprietary_NabuCasa
 	private driver: Driver;
 	private controller: ZWaveController;
 	private supportedCommands?: NabuCasaCommand[];
+	private _bootloaderInfo?: NabuCasaBootloaderInfo;
+
+	/** Information about the bootloader, read during the interview */
+	public get bootloaderInfo(): NabuCasaBootloaderInfo | undefined {
+		return this._bootloaderInfo;
+	}
 
 	public async interview(): Promise<void> {
 		const valueDB = this.controller.valueDB;
 
 		const supported = await this.getSupportedCommands();
 		this.supportedCommands = supported;
+
+		if (supported.includes(NabuCasaCommand.GetBootloaderInfo)) {
+			this._bootloaderInfo = await this.getBootloaderInfo();
+			if (this._bootloaderInfo) {
+				this.driver.controllerLog.print(
+					`Bootloader version: ${this._bootloaderInfo.version} (CRC-32 0x${
+						this._bootloaderInfo.crc32.toString(16).padStart(8, "0")
+					})`,
+				);
+			}
+		}
 
 		if (
 			supported.includes(NabuCasaCommand.GetLEDBinary)
@@ -535,6 +562,46 @@ export class ControllerProprietary_NabuCasa
 		const success = !!result.payload[1];
 
 		return success;
+	}
+
+	public async getBootloaderInfo(): Promise<
+		NabuCasaBootloaderInfo | undefined
+	> {
+		// HOST->ZW (REQ): NABU_CASA_BOOTLOADER_INFO
+		// ZW->HOST (RES): NABU_CASA_BOOTLOADER_INFO | version[4] | crc32[4] | capabilities[4]
+
+		const getBootloaderInfoCmd = new Message({
+			type: MessageType.Request,
+			functionType: FUNC_ID_NABUCASA,
+			payload: Bytes.from([NabuCasaCommand.GetBootloaderInfo]),
+			expectedResponse: (self, msg) => {
+				return (
+					msg.functionType === FUNC_ID_NABUCASA
+					&& msg.type === MessageType.Response
+					&& msg.payload[0] === NabuCasaCommand.GetBootloaderInfo
+				);
+			},
+		});
+
+		const { payload: result } = await this.driver.sendMessage(
+			getBootloaderInfoCmd,
+			{
+				priority: MessagePriority.Controller,
+				supportCheck: false,
+			},
+		);
+
+		// When the firmware finds no valid bootloader table, it answers with a
+		// single false byte instead of the three words
+		if (result.length < 13) return;
+
+		return {
+			// The version is major | minor | customer, where the customer
+			// portion is 16 bits wide
+			version: `${result[1]}.${result[2]}.${result.readUInt16BE(3)}`,
+			crc32: result.readUInt32BE(5),
+			capabilities: result.readUInt32BE(9),
+		};
 	}
 
 	public getDefinedValueIDs(): TranslatedValueID[] {
