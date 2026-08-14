@@ -20,8 +20,6 @@ function assertNodeIdFits(
 }
 
 function xorHomeIdBytes(homeId: number): number {
-	// Both specs seed GenerateHomeIdHash with 0xFF before XORing the four home
-	// ID bytes, so the result is not a bare XOR
 	let hash = 0xff;
 	for (let shift = 24; shift >= 0; shift -= 8) {
 		hash ^= (homeId >>> shift) & 0xff;
@@ -33,10 +31,7 @@ function xorHomeIdBytes(homeId: number): number {
 export function zwaveHomeIdHash(homeId: number): number {
 	const hash = xorHomeIdBytes(homeId);
 
-	// ITU-T G.9959 (01/2015), §8.1.3.10: "A FL node receiving one of the HomeID
-	// hash values 0x0A, 0x4A or 0x55 shall accept the value as a potential
-	// match to the actual HomeID". GenerateHomeIdHash increments past these
-	// three wildcards, so the emitted hash identifies exactly one domain
+	// Hash computation according to ITU-T G.9959 (01/2015), §8.1.3.10:
 	if (hash === 0x0a || hash === 0x4a || hash === 0x55) {
 		return hash + 1;
 	}
@@ -46,9 +41,8 @@ export function zwaveHomeIdHash(homeId: number): number {
 
 /** Computes the 8-bit home ID hash carried in Z-Wave Long Range beam frames */
 export function longRangeHomeIdHash(homeId: number): number {
-	// The wildcard adjustment of ITU-T G.9959 applies to Z-Wave classic only.
-	// GenerateHomeIdHash of the Z-Wave Long Range PHY and MAC Layer
-	// Specification (2023.07.03), §6.3.6.4 is the bare seeded XOR
+	// Hash computation according to Z-Wave Long Range PHY and MAC Layer
+	// Specification (2023.07.03), §6.3.6.4
 	return xorHomeIdBytes(homeId);
 }
 
@@ -65,9 +59,6 @@ export interface ZWaveBeamFrameOptions {
 export function encodeZWaveBeamFrame(options: ZWaveBeamFrameOptions): Bytes {
 	assertNodeIdFits(options.destinationNodeId, 0xff, "Z-Wave classic");
 
-	// ITU-T G.9959 (01/2015), §8.1.3.10: "Each beam frame shall carry the Beam
-	// Tag and NodeID fields. The NodeID field should be followed by the
-	// optional HomeID Hash field."
 	const bytes = [BEAM_TAG, options.destinationNodeId];
 	if (options.homeIdHash != undefined) {
 		bytes.push(options.homeIdHash & 0xff);

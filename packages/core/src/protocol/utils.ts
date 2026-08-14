@@ -14,7 +14,7 @@ const longRangeBeamPowers: readonly number[] = [
 	27, 28, 29, 30,
 ];
 
-export function longRangeBeamPowerToDBm(index: number): number {
+export function longRangeBeamPowerIndexToDBm(index: number): number {
 	return longRangeBeamPowers[index];
 }
 

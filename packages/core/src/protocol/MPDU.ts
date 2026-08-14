@@ -709,10 +709,6 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		}
 
 		// Add the mandatory Destination Wake Up byte for channel configuration 3.
-		// NWK:0024.1: the value 0x00 indicates "the destination is an AL node
-		// and can be forwarded the frame immediately". NWK:0025.1: the value
-		// 0x02 indicates "the destination requires a Fragmented Beam prior to
-		// deliver a frame"
 		if (headerFormat === ProtocolHeaderFormat.Classic3Channel) {
 			header = Bytes.concat([
 				header,
