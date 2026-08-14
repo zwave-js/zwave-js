@@ -1,11 +1,13 @@
 import { type SetValueResult, SetValueStatus } from "@zwave-js/cc";
 import {
+	type MaybeNotKnown,
 	MessagePriority,
 	RFRegion,
 	type TranslatedValueID,
 	type ValueID,
 	ZWaveError,
 	ZWaveErrorCodes,
+	sdkVersionGte,
 } from "@zwave-js/core";
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
@@ -18,7 +20,10 @@ import type { ControllerProprietaryCommon } from "../../Proprietary.js";
 const FUNC_ID_ZWAVEME_REGION = FunctionType.Proprietary_F2;
 
 // Passing 0xFF as the region reads the current value instead of setting one
-const REGION_READ_SENTINEL = 0xff;
+const REGION_GET_SENTINEL = 0xff;
+// Prior to this version, sending a Region Get causes the controller to
+// become unresponsive until it is power cycled.
+const REGION_GET_MIN_VERSION = "5.3";
 const SERIAL_API_STARTED_TIMEOUT = 20_000;
 
 export enum ZWaveMeRegion {
@@ -67,6 +72,13 @@ export function rfRegionToZWaveMeRegion(
 	return rfRegionToZWaveMe.get(region);
 }
 
+/** Whether the Serial API firmware supports reading the configured RF region */
+function supportsGetRegion(
+	firmwareVersion: MaybeNotKnown<string>,
+): boolean {
+	return sdkVersionGte(firmwareVersion, REGION_GET_MIN_VERSION) ?? false;
+}
+
 /**
  * Proprietary Serial API support for Z-Wave.me controllers (UZB / Razberry up to Gen 5).
  */
@@ -85,6 +97,8 @@ export class ControllerProprietary_ZWaveMe
 	protected controller: ZWaveController;
 
 	public async interview(): Promise<void> {
+		if (!supportsGetRegion(this.controller.firmwareVersion)) return;
+
 		try {
 			const region = await this.getRegionProprietary();
 			const rfRegion = zwaveMeRegionToRFRegion(region);
@@ -106,10 +120,17 @@ export class ControllerProprietary_ZWaveMe
 
 	/** Reads the currently configured RF region */
 	public async getRegionProprietary(): Promise<ZWaveMeRegion> {
+		if (!supportsGetRegion(this.controller.firmwareVersion)) {
+			throw new ZWaveError(
+				`Getting the RF region is not supported on this firmware version!`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+
 		const cmd = new Message({
 			type: MessageType.Request,
 			functionType: FUNC_ID_ZWAVEME_REGION,
-			payload: Bytes.from([REGION_READ_SENTINEL]),
+			payload: Bytes.from([REGION_GET_SENTINEL]),
 			expectedResponse: (self, msg) =>
 				msg.functionType === FUNC_ID_ZWAVEME_REGION
 				&& msg.type === MessageType.Response,
