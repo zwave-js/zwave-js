@@ -121,7 +121,7 @@ const INT8_MAX = 127;
 
 /** The RSSI to advertise for a received frame, clamped into the range the MPDU field allows */
 function advertisedRSSI(rssi: RSSI): number {
-	// The int8 field carries each error code of its own, so pass them through
+	// Pass errors through
 	if (isRssiError(rssi)) return rssi;
 	return Math.max(
 		LR_RSSI_MIN_DBM,
@@ -246,8 +246,6 @@ export function classic2ChannelAttemptSchedule(
 
 	return scheduled.map((ch) => ({
 		channel: () => ch,
-		// The flag tells the receiver that the frame goes out slower than
-		// the rate this transmission started at
 		speedModified: bitsPerSecond(ch.dataRate) < initialBitrate,
 	}));
 }
