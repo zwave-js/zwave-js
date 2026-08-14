@@ -97,19 +97,15 @@ export class TransmitBeamRequest extends RCPMessage {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		// The channel count occupies one byte on the wire. Which channels a
-		// region actually has is the caller's business, same as for Transmit
-		if (this.channels.length < 1 || this.channels.length > 0xff) {
+		if (this.channels.length < 1 || this.channels.length > 5) {
 			throw new ZWaveError(
-				`A beam must be transmitted on 1 to 255 channels`,
+				`A beam must be transmitted on 1 to 5 channels`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		if (
-			this.channels.some((c) => !Number.isInteger(c) || c < 0 || c > 0xff)
-		) {
+		if (this.channels.some((c) => !Number.isInteger(c) || c < 0 || c > 4)) {
 			throw new ZWaveError(
-				`Each channel must be an integer between 0 and 255`,
+				`Each channel must be an integer between 0 and 4`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
