@@ -16,7 +16,11 @@ export type {
 	TransmitOptions,
 	TransmitResult,
 } from "./lib/rcp/PHYLayer.js";
-export { ProtocolController } from "./lib/rcp/ProtocolController.js";
+export {
+	LR_DEFAULT_BEAM_TX_POWER_DBM,
+	LR_DEFAULT_TX_POWER_DBM,
+	ProtocolController,
+} from "./lib/rcp/ProtocolController.js";
 export type {
 	PartialRCPHostOptions,
 	RCPHostEventCallbacks,

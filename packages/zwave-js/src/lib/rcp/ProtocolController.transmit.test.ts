@@ -174,6 +174,7 @@ const singlecast = {
 		kind: MACTransmitKind.Singlecast as const,
 		nodeId: DESTINATION,
 	},
+	txPower: 0,
 } as const;
 
 test("an ack that arrives during the transmit is not missed", async () => {

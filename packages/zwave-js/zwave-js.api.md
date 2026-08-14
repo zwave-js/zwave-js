@@ -1396,6 +1396,16 @@ export enum LongRangeFrameType {
 
 export { LongRangeMPDU }
 
+// Warning: (ae-missing-release-tag) "LR_DEFAULT_BEAM_TX_POWER_DBM" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
+
+// Warning: (ae-missing-release-tag) "LR_DEFAULT_TX_POWER_DBM" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const LR_DEFAULT_TX_POWER_DBM = 14;
+
 // Warning: (ae-missing-release-tag) "MACDestinationWakeup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -1410,11 +1420,11 @@ export type MACTransmitAckOptions = {
     destinationNodeId: number;
     channel: number;
     sequenceNumber: number;
+    txPower: number;
 } & ({
     protocol: Protocols.ZWave;
 } | {
     protocol: Protocols.ZWaveLongRange;
-    txPower?: number;
     incomingRSSI?: number;
     lrMpduOverrides?: {
         txPower?: number;
@@ -1467,7 +1477,7 @@ export interface MACTransmitOptions {
     route?: readonly number[];
     // (undocumented)
     sourceNodeId: number;
-    txPower?: number;
+    txPower: number;
     withCCA?: boolean;
 }
 
@@ -1772,6 +1782,7 @@ export class ProtocolController extends TypedEventTarget<ProtocolControllerEvent
     constructor(options: ProtocolControllerOptions);
     // (undocumented)
     autoAck: boolean;
+    autoAckTXPower: number;
     // (undocumented)
     destroy(): Promise<void>;
     // (undocumented)

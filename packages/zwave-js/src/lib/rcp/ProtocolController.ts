@@ -123,13 +123,15 @@ const ROUTED_HOP_MARGIN_MS = 10;
 // trips and is tuned empirically
 const ACK_HOST_TRANSPORT_ALLOWANCE_MS = 20;
 
-// TX power used for LR transmissions when the caller does not specify one
-const LR_DEFAULT_TX_POWER_DBM = 14;
+/** The TX power Long Range transmissions are expected to use, in dBm */
+export const LR_DEFAULT_TX_POWER_DBM = 14;
 
-// TX power used for LR beams when the caller does not specify one. Table 6-31 of
-// the LR spec lists this as an exact beam Tx Power level, so a beam advertises it
-// without rounding to the next level
-const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
+/**
+ * The TX power Long Range beams are expected to use, in dBm. Table 6-31 of the
+ * LR spec lists this as an exact beam Tx Power level, so a beam advertises it
+ * without rounding up to the next level.
+ */
+export const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
 
 // Bounds of an int8 field
 const INT8_MIN = -128;
@@ -161,10 +163,10 @@ function assertInt8(value: number | undefined, name: string): void {
  * what the serial encoding can carry
  */
 function assertRadioTXPower(
-	txPower: number | undefined,
+	txPower: number,
 	range: MaybeNotKnown<TxPowerRange>,
 ): void {
-	if (txPower == undefined || range == undefined) return;
+	if (range == undefined) return;
 	if (txPower < range.min || txPower > range.max) {
 		throw new ZWaveError(
 			`The TX power must be between ${range.min} and ${range.max} dBm`,
@@ -497,6 +499,8 @@ export class ProtocolController
 	public ownHomeId: number | undefined;
 	public ownNodeId: number | undefined;
 	public autoAck: boolean = true;
+	/** The TX power in dBm for the acknowledgements the controller sends by itself */
+	public autoAckTXPower: number = LR_DEFAULT_TX_POWER_DBM;
 
 	/** A list of awaited MPDUs */
 	private awaitedMPDUs: AwaitedMPDUEntry[] = [];
@@ -598,7 +602,7 @@ export class ProtocolController
 		frame: BytesView,
 		ctx: MPDUEncodingContext,
 		options: {
-			txPower?: number;
+			txPower: number;
 			withCCA: boolean;
 			replacements?: TransmitReplacement[];
 		},
@@ -617,7 +621,7 @@ export class ProtocolController
 		mpdu: MPDU,
 		ctx: MPDUEncodingContext,
 		options: {
-			txPower?: number;
+			txPower: number;
 			withCCA: boolean;
 			replacements?: TransmitReplacement[];
 		},
@@ -809,7 +813,7 @@ export class ProtocolController
 		beam: BeamParameters,
 		protocol: Protocols,
 		headerFormat: ProtocolHeaderFormat,
-		radioTXPower: number | undefined,
+		radioTXPower: number,
 	): Promise<
 		{ pinnedChannel?: ChannelInfo } | { result: MACTransmitResult }
 	> {
@@ -847,7 +851,7 @@ export class ProtocolController
 				: [primary.channel, secondary.channel];
 			data = encodeLongRangeBeamFrame({
 				destinationNodeId,
-				txPower: radioTXPower ?? LR_DEFAULT_BEAM_TX_POWER_DBM,
+				txPower: radioTXPower,
 				homeIdHash: longRangeHomeIdHash(options.homeId),
 			});
 		} else {
@@ -1138,12 +1142,7 @@ export class ProtocolController
 
 		const sequenceNumber = this.nextSequenceNumber(headerFormat);
 
-		// Long Range has a default, since the frame advertises the power it was
-		// sent with. Classic carries no such field, so leaving the power to the
-		// radio would inherit whatever the last Long Range frame set in a mixed
-		// region. Make the caller say what it wants
-		const radioTXPower = options.txPower ?? LR_DEFAULT_TX_POWER_DBM;
-		// Check the power that reaches the radio, so the LR default is covered too
+		const radioTXPower = options.txPower;
 		assertRadioTXPower(radioTXPower, this.phyLayer.txPowerRange);
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
@@ -1545,8 +1544,8 @@ export class ProtocolController
 			);
 		}
 
-		// Classic acks carry no radio information, so the radio keeps its power there
-		let txPower: number | undefined;
+		const txPower = options.txPower;
+		assertRadioTXPower(txPower, this.phyLayer.txPowerRange);
 		if (options.protocol === Protocols.ZWaveLongRange) {
 			assertInt8(
 				options.lrMpduOverrides?.txPower,
@@ -1557,9 +1556,6 @@ export class ProtocolController
 				options.lrMpduOverrides?.noiseFloor,
 				"The advertised noise floor",
 			);
-			txPower = options.txPower ?? LR_DEFAULT_TX_POWER_DBM;
-			// Check the power that reaches the radio, so the default is covered too
-			assertRadioTXPower(txPower, this.phyLayer.txPowerRange);
 		}
 
 		let mpdu: MPDU;
@@ -1579,7 +1575,7 @@ export class ProtocolController
 				// The MPDU TX Power field is an int8, while the radio accepts
 				// 0.1 dBm steps
 				txPower: options.lrMpduOverrides?.txPower
-					?? Math.round(txPower ?? LR_DEFAULT_TX_POWER_DBM),
+					?? Math.round(txPower),
 				incomingRSSI: options.incomingRSSI ?? RssiError.NotAvailable,
 				noiseFloor: await this.getAdvertisedNoiseFloor(
 					options.protocol,
@@ -1637,6 +1633,7 @@ export class ProtocolController
 				sourceNodeId: ownNodeId,
 				channel: info.channel,
 				sequenceNumber: mpdu.sequenceNumber,
+				txPower: this.autoAckTXPower,
 				...(mpdu instanceof LongRangeMPDU
 					? {
 						protocol: Protocols.ZWaveLongRange,
@@ -1750,6 +1747,7 @@ export class ProtocolController
 
 		// A routed ack is classic only, so it carries no noise floor
 		const result = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
+			txPower: this.autoAckTXPower,
 			// G.9959 §8.1.5.1.2 requires clear channel assessment before
 			// transmitting a data frame
 			withCCA: true,
