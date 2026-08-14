@@ -1138,18 +1138,16 @@ export class ProtocolController
 
 		const sequenceNumber = this.nextSequenceNumber(headerFormat);
 
-		// LR frames advertise the power they were sent with, so the radio has to use
-		// a known power. Classic frames carry no such field and leave the radio's
-		// setting alone, which in a mixed region is whatever the last LR frame
-		// set. A caller that needs a specific classic power must pass one
-		const radioTXPower = protocol === Protocols.ZWaveLongRange
-			? options.txPower ?? LR_DEFAULT_TX_POWER_DBM
-			: options.txPower;
+		// Long Range has a default, since the frame advertises the power it was
+		// sent with. Classic carries no such field, so leaving the power to the
+		// radio would inherit whatever the last Long Range frame set in a mixed
+		// region. Make the caller say what it wants
+		const radioTXPower = options.txPower ?? LR_DEFAULT_TX_POWER_DBM;
 		// Check the power that reaches the radio, so the LR default is covered too
 		assertRadioTXPower(radioTXPower, this.phyLayer.txPowerRange);
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
-			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
+			?? Math.round(radioTXPower);
 		const advertisedNoiseFloor = await this.getAdvertisedNoiseFloor(
 			protocol,
 			options.lrMpduOverrides?.noiseFloor,
