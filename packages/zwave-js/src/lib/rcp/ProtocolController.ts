@@ -1659,7 +1659,6 @@ export class ProtocolController
 		};
 		const serializedMPDU = mpdu.serialize(ctx);
 
-		// A routed ack is classic only, so it carries no noise floor
 		this.protocolLog.mpdu(mpdu, ctx, "outbound");
 
 		const result = await this.phyLayer.transmit(

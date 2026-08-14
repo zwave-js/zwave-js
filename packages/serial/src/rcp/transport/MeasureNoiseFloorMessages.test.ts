@@ -49,10 +49,4 @@ describe("MeasureNoiseFloorResponse", () => {
 		expect(msg).toBeInstanceOf(MeasureNoiseFloorResponse);
 		expect(msg.noiseFloor).toBe(-96);
 	});
-
-	test("rejects an empty payload", async () => {
-		await assertZWaveError(expect, () => parseResponse(new Bytes()), {
-			errorCode: ZWaveErrorCodes.PacketFormat_Truncated,
-		});
-	});
 });

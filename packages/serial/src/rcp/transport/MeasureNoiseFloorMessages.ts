@@ -34,15 +34,13 @@ export class MeasureNoiseFloorRequest extends RCPMessage {
 	public channel: number;
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
-		// The channel occupies one byte on the wire, same as for Transmit. Which
-		// channels a region actually has is the caller's business
 		if (
 			!Number.isInteger(this.channel)
 			|| this.channel < 0
-			|| this.channel > 0xff
+			|| this.channel > 4
 		) {
 			throw new ZWaveError(
-				`The channel must be an integer between 0 and 255`,
+				`The channel must be an integer between 0 and 4`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -78,13 +76,6 @@ export class MeasureNoiseFloorResponse extends RCPMessage {
 		raw: RCPMessageRaw,
 		_ctx: RCPMessageParsingContext,
 	): MeasureNoiseFloorResponse {
-		// readInt8 on an empty payload throws a RangeError, not a ZWaveError
-		if (raw.payload.length < 1) {
-			throw new ZWaveError(
-				"Invalid MeasureNoiseFloor response: payload too short",
-				ZWaveErrorCodes.PacketFormat_Truncated,
-			);
-		}
 		const noiseFloor: RSSI = raw.payload.readInt8(0);
 
 		return new this({

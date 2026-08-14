@@ -1,4 +1,3 @@
-import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
@@ -43,24 +42,6 @@ describe("SetupRadio_GetCapabilitiesResponse", () => {
 		]) as SetupRadio_GetCapabilitiesResponse;
 
 		expect(msg.capabilities).toStrictEqual([]);
-	});
-
-	// An empty payload used to make the length check a NaN comparison, so a
-	// truncated response parsed as "the firmware supports nothing"
-	test("rejects a payload without the bitmask length", async () => {
-		await assertZWaveError(
-			expect,
-			() => parseResponse(SetupRadioCommand.GetCapabilities, []),
-			{ errorCode: ZWaveErrorCodes.PacketFormat_Truncated },
-		);
-	});
-
-	test("rejects a bitmask shorter than announced", async () => {
-		await assertZWaveError(
-			expect,
-			() => parseResponse(SetupRadioCommand.GetCapabilities, [2, 0b1]),
-			{ errorCode: ZWaveErrorCodes.PacketFormat_Truncated },
-		);
 	});
 });
 

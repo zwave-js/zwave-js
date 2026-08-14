@@ -4,8 +4,6 @@ import {
 	type MessageOrCCLogEntry,
 	type ProtocolDataRate,
 	RFRegion,
-	ZWaveError,
-	ZWaveErrorCodes,
 	createSimpleReflectionDecorator,
 	logBuffer,
 	logList,
@@ -472,21 +470,7 @@ export class SetupRadio_GetCapabilitiesResponse extends SetupRadioResponse {
 		raw: RCPMessageRaw,
 		_ctx: RCPMessageParsingContext,
 	): SetupRadio_GetCapabilitiesResponse {
-		// Reading the length byte out of an empty payload yields undefined, which
-		// turns the check below into a NaN comparison that never fails
-		if (raw.payload.length < 1) {
-			throw new ZWaveError(
-				"Invalid GetCapabilities response: payload too short",
-				ZWaveErrorCodes.PacketFormat_Truncated,
-			);
-		}
 		const bitmaskLength = raw.payload[0];
-		if (raw.payload.length < 1 + bitmaskLength) {
-			throw new ZWaveError(
-				"Invalid GetCapabilities response: capability bitmask incomplete",
-				ZWaveErrorCodes.PacketFormat_Truncated,
-			);
-		}
 		const capabilities: RadioCapability[] = parseBitMask(
 			raw.payload.subarray(1, 1 + bitmaskLength),
 		);

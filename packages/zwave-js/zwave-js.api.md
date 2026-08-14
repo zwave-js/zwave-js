@@ -1401,14 +1401,6 @@ export { LongRangeMPDU }
 // @public
 export type MACDestinationWakeup = "250ms" | "1000ms" | "fragmented";
 
-// Warning: (ae-missing-release-tag) "MACRoute" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface MACRoute {
-    // (undocumented)
-    repeaters: readonly number[];
-}
-
 // Warning: (ae-missing-release-tag) "MACTransmitAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1472,7 +1464,7 @@ export interface MACTransmitOptions {
     };
     // (undocumented)
     protocol?: Protocols;
-    route?: MACRoute;
+    route?: readonly number[];
     // (undocumented)
     sourceNodeId: number;
     txPower?: number;
@@ -3329,7 +3321,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:7822:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:382:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2674:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/rcp/RCPHost.ts:602:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/rcp/RCPHost.ts:574:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:742:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
