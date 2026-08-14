@@ -41,8 +41,6 @@ export enum NabuCasaCommand {
 export interface NabuCasaBootloaderInfo {
 	/** Bootloader version, formatted as `major.minor.customer` */
 	version: string;
-	/** CRC-32 over the bootloader image, identifying the exact build */
-	crc32: number;
 	/** Capability bitmask, as defined by the Gecko Bootloader */
 	capabilities: number;
 }
@@ -148,13 +146,9 @@ export class ControllerProprietary_NabuCasa
 
 		if (supported.includes(NabuCasaCommand.GetBootloaderInfo)) {
 			this._bootloaderInfo = await this.getBootloaderInfo();
-			if (this._bootloaderInfo) {
-				this.driver.controllerLog.print(
-					`Bootloader version: ${this._bootloaderInfo.version} (CRC-32 0x${
-						this._bootloaderInfo.crc32.toString(16).padStart(8, "0")
-					})`,
-				);
-			}
+			this.driver.controllerLog.print(
+				`Bootloader version: ${this._bootloaderInfo.version}`,
+			);
 		}
 
 		if (
@@ -564,11 +558,9 @@ export class ControllerProprietary_NabuCasa
 		return success;
 	}
 
-	public async getBootloaderInfo(): Promise<
-		NabuCasaBootloaderInfo | undefined
-	> {
+	public async getBootloaderInfo(): Promise<NabuCasaBootloaderInfo> {
 		// HOST->ZW (REQ): NABU_CASA_BOOTLOADER_INFO
-		// ZW->HOST (RES): NABU_CASA_BOOTLOADER_INFO | version[4] | crc32[4] | capabilities[4]
+		// ZW->HOST (RES): NABU_CASA_BOOTLOADER_INFO | version[4] | capabilities[4]
 
 		const getBootloaderInfoCmd = new Message({
 			type: MessageType.Request,
@@ -591,16 +583,11 @@ export class ControllerProprietary_NabuCasa
 			},
 		);
 
-		// When the firmware finds no valid bootloader table, it answers with a
-		// single false byte instead of the three words
-		if (result.length < 13) return;
-
 		return {
 			// The version is major | minor | customer, where the customer
 			// portion is 16 bits wide
 			version: `${result[1]}.${result[2]}.${result.readUInt16BE(3)}`,
-			crc32: result.readUInt32BE(5),
-			capabilities: result.readUInt32BE(9),
+			capabilities: result.readUInt32BE(5),
 		};
 	}
 
