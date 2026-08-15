@@ -13,6 +13,14 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Total" },
+		"2": { "label": "Phase 1" },
+		"3": { "label": "Phase 2" },
+		"4": { "label": "Phase 3" },
+		"5": { "label": "External Relay" },
+		"6": { "label": "External IR Relay" }
+	},
 	"paramInformation": [
 		{
 			"#": "7",

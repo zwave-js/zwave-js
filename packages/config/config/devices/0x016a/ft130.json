@@ -13,6 +13,12 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Button 1" },
+		"2": { "label": "Button 2" },
+		"3": { "label": "Button 3" },
+		"4": { "label": "Button 4" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",
