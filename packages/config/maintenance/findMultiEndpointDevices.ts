@@ -16,7 +16,7 @@
  */
 
 import { formatId } from "@zwave-js/shared";
-import * as JSON5 from "json5";
+import JSON5 from "json5";
 import fs from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
