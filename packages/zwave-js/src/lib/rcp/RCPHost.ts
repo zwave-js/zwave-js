@@ -71,6 +71,7 @@ import {
 	getErrorMessage,
 	isAbortError,
 	mergeDeep,
+	noop,
 	num2hex,
 	pick,
 	setTimer,
@@ -610,11 +611,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		transactionSource?: string,
 	): Promise<RCPMessage | undefined> {
 		const machine = createSerialAPICommandMachine(msg);
-		this.abortSerialAPICommand = createDeferredPromise();
-		// This no-op handler must stay. Only the waiting states below race the
-		// abort, so a destroy() in any other state would leave the rejection
-		// unhandled
-		this.abortSerialAPICommand.catch(() => {});
+		const abort = this.abortSerialAPICommand = createDeferredPromise<
+			Error
+		>();
+		// Avoid an unhandled rejection when destroying the host while not actively waiting
+		abort.catch(noop);
 		const abortController = new AbortController();
 
 		let nextInput: SerialAPICommandMachineInput<RCPMessage> | undefined = {
@@ -665,10 +666,21 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 					}
 
 					case "waitingForACK": {
-						const controlFlow = await this.waitForMessageHeader(
-							() => true,
-							this._options.timeouts.ack,
-						).catch(() => "timeout" as const);
+						const controlFlow = await Promise.race([
+							abort.catch((e) => e as Error),
+							this.waitForMessageHeader(
+								() => true,
+								this._options.timeouts.ack,
+								abortController.signal,
+							).catch(() => "timeout" as const),
+						]);
+
+						if (controlFlow instanceof Error) {
+							// The command was aborted from the outside
+							// Remove the pending wait entry
+							abortController.abort();
+							throw controlFlow;
+						}
 
 						if (controlFlow === "timeout") {
 							nextInput = { value: "timeout" };
@@ -683,9 +695,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 					case "waitingForResponse": {
 						const response = await Promise.race([
-							this.abortSerialAPICommand?.catch((e) =>
-								e as Error
-							),
+							abort.catch((e) => e as Error),
 							this.waitForMessage(
 								(resp) => msg.isExpectedResponse(resp),
 								msg.getResponseTimeout()
@@ -717,9 +727,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 					case "waitingForCallback": {
 						const callback = await Promise.race([
-							this.abortSerialAPICommand?.catch((e) =>
-								e as Error
-							),
+							abort.catch((e) => e as Error),
 							this.waitForMessage(
 								(resp) => msg.isExpectedCallback(resp),
 								msg.getCallbackTimeout()
@@ -1241,14 +1249,15 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	/**
-	 * Waits until a matching message header is received or a timeout has elapsed. Returns the received message.
+	 * Waits until a matching message header is received or an optional timeout has elapsed. Returns the received message.
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming message headers.
 	 */
 	public waitForMessageHeader(
 		predicate: (header: MessageHeaders) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<MessageHeaders> {
 		return new Promise<MessageHeaders>((resolve, reject) => {
 			const promise = createDeferredPromise<MessageHeaders>();
@@ -1260,36 +1269,41 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			this.awaitedMessageHeaders.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessageHeaders.indexOf(entry);
 				if (index !== -1) this.awaitedMessageHeaders.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching serial frame within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching serial frame within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
 	/**
-	 * Waits until an unsolicited serial message is received or a timeout has elapsed. Returns the received message.
+	 * Waits until an unsolicited serial message is received or an optional timeout has elapsed. Returns the received message.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming messages.
 	 * @param refreshPredicate A predicate function to test partial messages. If this returns `true` for a message, the timer will be restarted.
 	 */
 	public waitForMessage<T extends RCPMessage>(
 		predicate: (msg: RCPMessage) => boolean,
-		timeout: number,
+		timeout?: number,
 		refreshPredicate?: (msg: RCPMessage) => boolean,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
@@ -1304,28 +1318,29 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			this.awaitedMessages.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessages.indexOf(entry);
 				if (index !== -1) this.awaitedMessages.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching message within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching message within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 

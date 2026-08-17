@@ -1787,7 +1787,7 @@ export class ProtocolController extends TypedEventTarget<ProtocolControllerEvent
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    waitForMPDU<T extends MPDU>(predicate: (mpdu: MPDU) => boolean, timeout: number, abortSignal?: AbortSignal): Promise<T>;
+    waitForMPDU<T extends MPDU>(predicate: (mpdu: MPDU) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<T>;
 }
 
 export { ProtocolDataRate }
@@ -1852,10 +1852,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> implements 
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    waitForMessage<T extends RCPMessage>(predicate: (msg: RCPMessage) => boolean, timeout: number, refreshPredicate?: (msg: RCPMessage) => boolean, abortSignal?: AbortSignal): Promise<T>;
+    waitForMessage<T extends RCPMessage>(predicate: (msg: RCPMessage) => boolean, timeout?: number, refreshPredicate?: (msg: RCPMessage) => boolean, abortSignal?: AbortSignal): Promise<T>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    waitForMessageHeader(predicate: (header: MessageHeaders) => boolean, timeout: number): Promise<MessageHeaders>;
+    waitForMessageHeader(predicate: (header: MessageHeaders) => boolean, timeout?: number, abortSignal?: AbortSignal): Promise<MessageHeaders>;
 }
 
 // Warning: (ae-missing-release-tag) "RCPHostEventCallbacks" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3321,7 +3321,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:7822:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:382:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2674:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/rcp/RCPHost.ts:574:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/rcp/RCPHost.ts:577:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:742:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
