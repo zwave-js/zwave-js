@@ -7001,8 +7001,12 @@ ${handlers.length} left`,
 							throw e;
 						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
+							|| e.code === ZWaveErrorCodes.Driver_TaskRemoved
+							|| e.code === ZWaveErrorCodes.Driver_Destroyed
 						) {
-							// We gave up on this command, so don't retry it
+							// We gave up on this command, so don't retry it.
+							// The driver error codes mean the Serial API queue was
+							// aborted, so a retry would never be executed.
 							throw e;
 						}
 
@@ -7098,11 +7102,13 @@ ${handlers.length} left`,
 			transactionSource,
 			result,
 			[Symbol.dispose]: () => {
-				// Is called when the queue is aborted
+				// Is called when the queue is aborted. Must not use a code that
+				// isTransmissionError() accepts, or callers will retry against a
+				// queue that no longer accepts commands.
 				result.reject(
 					new ZWaveError(
 						"The message has been removed from the queue",
-						ZWaveErrorCodes.Controller_MessageDropped,
+						ZWaveErrorCodes.Driver_TaskRemoved,
 						undefined,
 						transactionSource,
 					),
