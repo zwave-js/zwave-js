@@ -569,10 +569,7 @@ export class ProtocolController
 		);
 	}
 
-	/**
-	 * Serialize an MPDU, log it, and hand it to the radio. Returns what the
-	 * radio reported and the on-air length, which the ack timing depends on.
-	 */
+	/** Serialize an MPDU and log it */
 	private serializeOutbound(
 		mpdu: MPDU,
 		ctx: MPDUEncodingContext,
@@ -590,8 +587,8 @@ export class ProtocolController
 		return frame;
 	}
 
+	/** Must only be called once the PHY layer is initialized */
 	private sendFrame(
-		phy: PHYLayer,
 		frame: BytesView,
 		ctx: MPDUEncodingContext,
 		options: {
@@ -600,7 +597,7 @@ export class ProtocolController
 			replacements?: TransmitReplacement[];
 		},
 	): Promise<TransmitResult> {
-		return phy.transmit(frame, {
+		return this.phyLayer!.transmit(frame, {
 			channel: ctx.channel,
 			txPower: options.txPower,
 			withCCA: options.withCCA,
@@ -610,7 +607,6 @@ export class ProtocolController
 
 	/** Serialize, log and transmit an MPDU that needs no wait registered first */
 	private async sendMPDU(
-		phy: PHYLayer,
 		mpdu: MPDU,
 		ctx: MPDUEncodingContext,
 		options: {
@@ -620,7 +616,7 @@ export class ProtocolController
 		},
 	): Promise<TransmitResult> {
 		const frame = this.serializeOutbound(mpdu, ctx, options.replacements);
-		return this.sendFrame(phy, frame, ctx, options);
+		return this.sendFrame(frame, ctx, options);
 	}
 
 	/**
@@ -1363,18 +1359,13 @@ export class ProtocolController
 			const sendAndCheck = async (): Promise<
 				MACTransmitReport | "retry" | undefined
 			> => {
-				const result = await this.sendFrame(
-					this.phyLayer!,
-					frame,
-					ctx,
-					{
-						txPower: radioTXPower,
-						// G.9959 §8.1.5.1.2 requires clear channel assessment before
-						// transmitting a data frame
-						withCCA: options.withCCA ?? true,
-						replacements,
-					},
-				);
+				const result = await this.sendFrame(frame, ctx, {
+					txPower: radioTXPower,
+					// G.9959 §8.1.5.1.2 requires clear channel assessment before
+					// transmitting a data frame
+					withCCA: options.withCCA ?? true,
+					replacements,
+				});
 				if (result === TransmitCallbackStatus.Completed) {
 					return undefined;
 				}
@@ -1590,7 +1581,7 @@ export class ProtocolController
 			region: this.phyLayer.regionConfig.region,
 		};
 
-		const result = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
+		const result = await this.sendMPDU(mpdu, ctx, {
 			txPower,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
@@ -1737,7 +1728,7 @@ export class ProtocolController
 		};
 
 		// A routed ack is classic only, so it carries no noise floor
-		const result = await this.sendMPDU(this.phyLayer, mpdu, ctx, {
+		const result = await this.sendMPDU(mpdu, ctx, {
 			txPower: this.autoAckTXPower,
 			// G.9959 §8.1.5.1.2 requires clear channel assessment before
 			// transmitting a data frame
