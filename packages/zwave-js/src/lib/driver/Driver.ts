@@ -7166,9 +7166,7 @@ ${handlers.length} left`,
 
 		const machine = createSerialAPICommandMachine(msg);
 		this.abortSerialAPICommand = createDeferredPromise();
-		// This no-op handler must stay. Only the waiting states below race the
-		// abort, so a destroy() in any other state would leave the rejection
-		// unhandled
+		// Avoid an unhandled rejection when destroying the driver while not actively waiting
 		this.abortSerialAPICommand.catch(() => {});
 		const abortController = new AbortController();
 

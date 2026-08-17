@@ -1,14 +1,19 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { FunctionType } from "@zwave-js/serial";
 import { GetControllerVersionRequest } from "@zwave-js/serial/serialapi";
 import type { BytesView } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import { test } from "vitest";
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
 
-async function createDriverWithoutHostACKs(): Promise<Driver> {
+async function createDriverWithoutHostACKs(): Promise<{
+	driver: Driver;
+	mockController: MockController;
+}> {
 	let mockController!: MockController;
 	const { driver } = await createAndStartTestingDriver({
 		loadConfiguration: false,
@@ -26,18 +31,23 @@ async function createDriverWithoutHostACKs(): Promise<Driver> {
 
 	// Keep the controller from ACKing, so the next command gets stuck
 	mockController.autoAckHostMessages = false;
-	return driver;
+	return { driver, mockController };
 }
 
 test.sequential(
 	"destroying the driver while a Serial API command waits for its ACK aborts the command",
 	async (t) => {
-		const driver = await createDriverWithoutHostACKs();
+		const { driver, mockController } = await createDriverWithoutHostACKs();
 
 		const command = driver.sendMessage(new GetControllerVersionRequest(), {
 			supportCheck: false,
 		}).then(() => undefined, (e) => e as Error);
-		await wait(50);
+
+		// Once the controller has received the command, the driver is waiting for the ACK
+		await mockController.expectHostMessage(
+			(msg) => msg.functionType === FunctionType.GetControllerVersion,
+			{ preventDefault: true },
+		);
 
 		await driver.destroy();
 
@@ -58,12 +68,20 @@ test.sequential(
 test.sequential(
 	"destroying the driver while a Serial API command is being written does not cause an unhandled rejection",
 	async (t) => {
-		const driver = await createDriverWithoutHostACKs();
+		const { driver } = await createDriverWithoutHostACKs();
 
-		// Stretch the sending state, which does not race the abort promise
+		// Hold the command in the sending state, which does not race the abort promise
+		const sending = createDeferredPromise<void>();
+		const release = createDeferredPromise<void>();
 		const writeSerial = driver["writeSerial"].bind(driver);
+		let holding = false;
 		driver["writeSerial"] = async (data: BytesView) => {
-			await wait(100);
+			// Only the command itself must be held, or destroying would deadlock
+			if (!holding) {
+				holding = true;
+				sending.resolve();
+				await release;
+			}
 			return writeSerial(data);
 		};
 
@@ -77,10 +95,11 @@ test.sequential(
 			void driver.sendMessage(new GetControllerVersionRequest(), {
 				supportCheck: false,
 			}).catch(() => {});
-			await wait(50);
+			await sending;
 
 			t.expect(driver["abortSerialAPICommand"]).toBeDefined();
 			await driver.destroy();
+			release.resolve();
 
 			// Give Node a chance to report a rejection without a handler
 			await wait(100);
