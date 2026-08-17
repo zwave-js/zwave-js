@@ -1331,6 +1331,23 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 	// #region destroy()
 
+	private destroySerialAPIQueue(
+		reason: string,
+		errorCode?: ZWaveErrorCodes,
+	): void {
+		// Aborting rejects the transactions the drain loop will never run, so
+		// their callers do not wait forever
+		this.queue.abort();
+
+		// Abort the currently executed serial API command, so the queue does not lock up
+		this.abortSerialAPICommand?.reject(
+			new ZWaveError(
+				reason,
+				errorCode ?? ZWaveErrorCodes.Driver_Destroyed,
+			),
+		);
+	}
+
 	private async destroyWithMessage(message: string): Promise<void> {
 		this.rcpLog.print(message, "error");
 
@@ -1360,16 +1377,9 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			this.serial = undefined;
 		}
 
-		// Stop the drain loop. Aborting rejects the queued transactions the loop
-		// will never run, so their callers do not wait forever
-		this.queue.abort();
-
-		// Abort the currently executed serial API command, so the queue does not lock up
-		this.abortSerialAPICommand?.reject(
-			new ZWaveError(
-				`The RCP host was destroyed`,
-				ZWaveErrorCodes.Driver_Destroyed,
-			),
+		this.destroySerialAPIQueue(
+			"The RCP host was destroyed",
+			ZWaveErrorCodes.Driver_Destroyed,
 		);
 
 		// Remove all timeouts
