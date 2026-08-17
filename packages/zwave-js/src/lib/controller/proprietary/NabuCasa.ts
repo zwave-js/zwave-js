@@ -38,11 +38,30 @@ export enum NabuCasaCommand {
 	GetBootloaderInfo = 0x09,
 }
 
+/**
+ * Capabilities of the Gecko Bootloader, mirroring the `BOOTLOADER_CAPABILITY_*`
+ * definitions in the Simplicity SDK. The unlisted bits are unassigned.
+ */
+export enum NabuCasaBootloaderCapability {
+	EnforceUpgradeSignature = 0,
+	EnforceUpgradeEncryption = 1,
+	EnforceSecureBoot = 2,
+	BootloaderUpgrade = 4,
+	GBL = 5,
+	GBLSignature = 6,
+	GBLEncryption = 7,
+	EnforceCertificateSecureBoot = 8,
+	RollbackProtection = 9,
+	PeripheralList = 10,
+	Storage = 16,
+	Communication = 20,
+	EM4GPIORetention = 21,
+}
+
 export interface NabuCasaBootloaderInfo {
 	/** Bootloader version, formatted as `major.minor.customer` */
 	version: string;
-	/** Capability bitmask, as defined by the Gecko Bootloader */
-	capabilities: number;
+	capabilities: NabuCasaBootloaderCapability[];
 }
 
 export interface RGB {
@@ -583,11 +602,18 @@ export class ControllerProprietary_NabuCasa
 			},
 		);
 
+		// The capabilities are transferred MSB first, but parseBitMask expects
+		// the least significant byte first
+		const capabilities = result.subarray(5, 9).toReversed();
+
 		return {
 			// The version is major | minor | customer, where the customer
 			// portion is 16 bits wide
 			version: `${result[1]}.${result[2]}.${result.readUInt16BE(3)}`,
-			capabilities: result.readUInt32BE(5),
+			capabilities: parseBitMask(
+				capabilities,
+				0,
+			) as NabuCasaBootloaderCapability[],
 		};
 	}
 

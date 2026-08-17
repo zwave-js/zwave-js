@@ -43,6 +43,7 @@ export type {
 export {
 	ControllerProprietary_NabuCasa,
 	FUNC_ID_NABUCASA,
+	NabuCasaBootloaderCapability,
 	NabuCasaCommand,
 	NabuCasaConfigKey,
 	NabuCasaIndicationSeverity,
