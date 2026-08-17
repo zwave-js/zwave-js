@@ -1437,11 +1437,10 @@ export class ProtocolController
 				// awaited together until the entire route budget has elapsed
 				const budget = silentAckTimeout
 					+ routedAckTimeout(routedMPDU.repeaters.length, duration);
-				const deadline = Date.now() + budget;
 
 				const firstAnswer = this.waitForMPDU<RoutedZWaveMPDU>(
 					(m) => isSilentAck(m) || isRouteOutcome(m),
-					budget,
+					undefined,
 					answerAbort.signal,
 				).then((m) => m, () => undefined);
 
@@ -1449,7 +1448,13 @@ export class ProtocolController
 				if (failure === "retry") continue;
 				if (failure) return failure;
 
-				let outcome = await firstAnswer;
+				// The budget starts when the radio reports the frame was sent,
+				// so the send does not eat into it
+				const deadline = Date.now() + budget;
+				let outcome = await Promise.race([
+					firstAnswer,
+					wait(budget).then(() => undefined),
+				]);
 
 				if (outcome && isSilentAck(outcome)) {
 					sawSilentAck = true;
@@ -1461,7 +1466,11 @@ export class ProtocolController
 					).then((m) => m, () => undefined);
 				}
 
-				if (!outcome) continue;
+				if (!outcome) {
+					// Drop the wait entry the race left behind
+					answerAbort.abort();
+					continue;
+				}
 
 				if (outcome.routedError) {
 					// Attempts on a route a repeater just reported as broken are unlikely to
@@ -1497,7 +1506,7 @@ export class ProtocolController
 						&& m.sourceNodeId
 							=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
 						&& ackSequenceNumberMatches(m),
-					ackWindow,
+					undefined,
 					answerAbort.signal,
 				).then(() => true, () => false)
 				: undefined;
@@ -1509,7 +1518,16 @@ export class ProtocolController
 			if (ackPromise == undefined) {
 				return { result: MACTransmitResult.OK };
 			}
-			if (await ackPromise) return { result: MACTransmitResult.OK };
+
+			// The ack window starts when the radio reports the frame was sent,
+			// so the send does not eat into it
+			const acked = await Promise.race([
+				ackPromise,
+				wait(ackWindow).then(() => false),
+			]);
+			if (acked) return { result: MACTransmitResult.OK };
+			// Drop the wait entry the race left behind
+			answerAbort.abort();
 		}
 
 		if (busyAttempts === attempts.length) {
@@ -1850,7 +1868,7 @@ export class ProtocolController
 	 */
 	public waitForMPDU<T extends MPDU>(
 		predicate: (mpdu: MPDU) => boolean,
-		timeout: number,
+		timeout?: number,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
@@ -1863,28 +1881,29 @@ export class ProtocolController
 			this.awaitedMPDUs.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMPDUs.indexOf(entry);
 				if (index !== -1) this.awaitedMPDUs.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching message within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching message within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
