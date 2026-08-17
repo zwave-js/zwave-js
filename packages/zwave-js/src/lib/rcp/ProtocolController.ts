@@ -495,6 +495,20 @@ export class ProtocolController
 	/** The TX power in dBm for the acknowledgements the controller sends by itself */
 	public autoAckTXPower: number = DEFAULT_AUTO_ACK_TX_POWER_DBM;
 
+	/**
+	 * The TX power the controller acknowledges with, clamped into the range the
+	 * radio reported. An out-of-range power would make `transmitACK` throw for
+	 * every auto-ack, and the caller of an auto-ack only logs.
+	 */
+	private get clampedAutoAckTXPower(): number {
+		const range = this.phyLayer?.txPowerRange;
+		if (range == undefined) return this.autoAckTXPower;
+		return Math.max(
+			range.min,
+			Math.min(range.max, this.autoAckTXPower),
+		);
+	}
+
 	/** A list of awaited MPDUs */
 	private awaitedMPDUs: AwaitedMPDUEntry[] = [];
 
@@ -1615,7 +1629,7 @@ export class ProtocolController
 				sourceNodeId: ownNodeId,
 				channel: info.channel,
 				sequenceNumber: mpdu.sequenceNumber,
-				txPower: this.autoAckTXPower,
+				txPower: this.clampedAutoAckTXPower,
 				...(mpdu instanceof LongRangeMPDU
 					? {
 						protocol: Protocols.ZWaveLongRange,
@@ -1729,7 +1743,7 @@ export class ProtocolController
 
 		// A routed ack is classic only, so it carries no noise floor
 		const result = await this.sendMPDU(mpdu, ctx, {
-			txPower: this.autoAckTXPower,
+			txPower: this.clampedAutoAckTXPower,
 			// G.9959 §8.1.5.1.2 requires clear channel assessment before
 			// transmitting a data frame
 			withCCA: true,
