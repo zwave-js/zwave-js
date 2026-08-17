@@ -81,6 +81,21 @@ export function formatTxPower(txPower: number | undefined): string {
 	return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} dBm`;
 }
 
+/** Measurements the firmware can patch into the frame right before transmitting */
+export enum TransmitReplacementSource {
+	/** Noise floor on the TX channel, encoded like the LR MPDU RSSI fields */
+	NoiseFloor = 0x00,
+}
+
+export interface TransmitReplacement {
+	/** Position within the frame data to patch with the measurement */
+	offset: number;
+	source: TransmitReplacementSource;
+}
+
+/** Most replacements a single transmit may carry */
+export const MAX_TRANSMIT_REPLACEMENTS = 4;
+
 export interface TransmitRequestOptions {
 	channel: number;
 	/**
@@ -90,11 +105,17 @@ export interface TransmitRequestOptions {
 	txPower?: number;
 	/** Whether to perform clear channel assessment before transmitting */
 	withCCA: boolean;
+	/**
+	 * Byte positions the firmware patches with fresh measurements right before
+	 * the transmit. Only the listed bytes are replaced.
+	 */
+	replacements?: TransmitReplacement[];
 	data: BytesView;
 }
 
 enum TransmitFlags {
 	CCA = 0b1,
+	Replacements = 0b10,
 }
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.Transmit)
@@ -109,12 +130,14 @@ export class TransmitRequest extends RCPMessage {
 		this.channel = options.channel;
 		this.txPower = options.txPower;
 		this.withCCA = options.withCCA;
+		this.replacements = options.replacements;
 		this.data = options.data;
 	}
 
 	public channel: number;
 	public txPower: number | undefined;
 	public withCCA: boolean;
+	public replacements: TransmitReplacement[] | undefined;
 	public data: BytesView;
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
@@ -129,11 +152,41 @@ export class TransmitRequest extends RCPMessage {
 			);
 		}
 
-		// CHANNEL | TX_POWER (int16 BE, deci-dBm) | FLAGS | ...DATA
-		const header = new Bytes(4);
+		const replacements = this.replacements ?? [];
+		if (replacements.length > MAX_TRANSMIT_REPLACEMENTS) {
+			throw new ZWaveError(
+				`A transmit may carry at most ${MAX_TRANSMIT_REPLACEMENTS} replacements`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		for (const { offset } of replacements) {
+			if (
+				!Number.isInteger(offset)
+				|| offset < 0
+				|| offset >= this.data.length
+			) {
+				throw new ZWaveError(
+					`A replacement offset must be an integer within the frame data`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+		}
+
+		// CHANNEL | TX_POWER (int16 BE, deci-dBm) | FLAGS | [NUM_REPLACEMENTS | (OFFSET | SOURCE)*] | ...DATA
+		const header = new Bytes(
+			4 + (replacements.length > 0 ? 1 + 2 * replacements.length : 0),
+		);
 		header[0] = this.channel;
 		header.writeInt16BE(encodeTxPower(this.txPower), 1);
-		header[3] = this.withCCA ? TransmitFlags.CCA : 0;
+		header[3] = (this.withCCA ? TransmitFlags.CCA : 0)
+			| (replacements.length > 0 ? TransmitFlags.Replacements : 0);
+		if (replacements.length > 0) {
+			header[4] = replacements.length;
+			for (let i = 0; i < replacements.length; i++) {
+				header[5 + 2 * i] = replacements[i].offset;
+				header[6 + 2 * i] = replacements[i].source;
+			}
+		}
 
 		this.payload = Bytes.concat([
 			header,
@@ -144,14 +197,24 @@ export class TransmitRequest extends RCPMessage {
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
+		const message: MessageOrCCLogEntry["message"] = {
+			channel: this.channel,
+			"TX power": formatTxPower(this.txPower),
+			CCA: this.withCCA,
+		};
+		if (this.replacements?.length) {
+			message.replacements = this.replacements
+				.map(({ offset, source }) =>
+					`${
+						getEnumMemberName(TransmitReplacementSource, source)
+					} @ ${offset}`
+				)
+				.join(", ");
+		}
+		message.data = `(${this.data.length} bytes)`;
 		return {
 			...super.toLogEntry(),
-			message: {
-				channel: this.channel,
-				"TX power": formatTxPower(this.txPower),
-				CCA: this.withCCA,
-				data: `(${this.data.length} bytes)`,
-			},
+			message,
 		};
 	}
 }

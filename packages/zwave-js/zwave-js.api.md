@@ -144,6 +144,7 @@ import { ProtocolVersion } from '@zwave-js/core';
 import { QRCodeVersion } from '@zwave-js/core';
 import { QRProvisioningInformation } from '@zwave-js/core';
 import { QuerySecurityClasses } from '@zwave-js/core';
+import { RadioCapability } from '@zwave-js/serial/rcp';
 import { RCPFunctionType } from '@zwave-js/serial';
 import { RCPMessage } from '@zwave-js/serial';
 import { RCPMessageOptions } from '@zwave-js/serial';
@@ -196,6 +197,7 @@ import { TransactionProgress } from '@zwave-js/core';
 import { TransactionProgressListener } from '@zwave-js/core';
 import { TranslatedValueID } from '@zwave-js/core';
 import type { TransmitCallbackStatus } from '@zwave-js/serial';
+import type { TransmitReplacement } from '@zwave-js/serial';
 import type { TransmitResponseStatus } from '@zwave-js/serial';
 import { TransmitStatus } from '@zwave-js/core';
 import { tryUnzipFirmwareFile } from '@zwave-js/core';
@@ -1399,14 +1401,6 @@ export { LongRangeMPDU }
 // @public
 export type MACDestinationWakeup = "250ms" | "1000ms" | "fragmented";
 
-// Warning: (ae-missing-release-tag) "MACRoute" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface MACRoute {
-    // (undocumented)
-    repeaters: readonly number[];
-}
-
 // Warning: (ae-missing-release-tag) "MACTransmitAckOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1470,7 +1464,7 @@ export interface MACTransmitOptions {
     };
     // (undocumented)
     protocol?: Protocols;
-    route?: MACRoute;
+    route?: readonly number[];
     // (undocumented)
     sourceNodeId: number;
     txPower?: number;
@@ -1736,11 +1730,14 @@ export type PartialZWaveOptions = Expand<DeepPartial<Omit<ZWaveOptions, "inclusi
 export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
     abortBeam(): Promise<void>;
     destroy(): Promise<void>;
+    measureNoiseFloor(channel: number): Promise<RSSI>;
     // Warning: (ae-forgotten-export) The symbol "RegionConfig" needs to be exported by the entry point index.d.ts
     queryRegion(): Promise<RegionConfig>;
     get regionConfig(): MaybeNotKnown<RegionConfig>;
     setRegion(region: RFRegion, channelConfig: ChannelConfiguration): Promise<ChannelInfo[]>;
     get supportsAbortBeam(): boolean;
+    get supportsMeasureNoiseFloor(): boolean;
+    get supportsTransmitReplacements(): boolean;
     transmit(mpdu: BytesView, options: TransmitOptions): Promise<TransmitResult>;
     transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
     // Warning: (ae-forgotten-export) The symbol "TxPowerRange" needs to be exported by the entry point index.d.ts
@@ -1826,12 +1823,16 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> implements 
     constructor(port: string | ZWaveSerialPortImplementation | ZWaveSerialBindingFactory, options?: PartialRCPHostOptions);
     abortBeam(): Promise<void>;
     destroy(): Promise<void>;
+    measureNoiseFloor(channel: number): Promise<RSSI>;
+    queryRadioCapabilities(): Promise<RadioCapability[]>;
     // (undocumented)
     queryRegion(): Promise<RegionConfig>;
     // (undocumented)
     queryTxPowerRange(): Promise<TxPowerRange>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     queueSerialApiCommand<TResponse extends RCPMessage = RCPMessage>(msg: RCPMessage): Promise<TResponse>;
+    // (undocumented)
+    get radioCapabilities(): MaybeNotKnown<RadioCapability[]>;
     // (undocumented)
     get regionConfig(): MaybeNotKnown<RegionConfig>;
     // (undocumented)
@@ -1840,6 +1841,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks> implements 
     start(): Promise<void>;
     // (undocumented)
     get supportsAbortBeam(): boolean;
+    // (undocumented)
+    get supportsMeasureNoiseFloor(): boolean;
+    // (undocumented)
+    get supportsTransmitReplacements(): boolean;
     transmit(data: BytesView, options: TransmitOptions): Promise<TransmitResult>;
     transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
     // (undocumented)
@@ -2130,6 +2135,7 @@ export interface TransmitBeamOptions {
 export interface TransmitOptions {
     // (undocumented)
     channel: number;
+    replacements?: TransmitReplacement[];
     txPower?: number;
     withCCA: boolean;
 }
@@ -3315,7 +3321,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:7822:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:382:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2674:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/rcp/RCPHost.ts:567:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/rcp/RCPHost.ts:574:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:742:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 

@@ -8,6 +8,7 @@ import {
 	NOT_KNOWN,
 	type ProtocolDataRate,
 	RFRegion,
+	type RSSI,
 	ZWaveError,
 	ZWaveErrorCodes,
 	convertRawRSSI,
@@ -34,8 +35,13 @@ import {
 	type ChannelInfo,
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
+	MeasureNoiseFloorRequest,
+	type MeasureNoiseFloorResponse,
+	RadioCapability,
 	RadioLibrary,
 	ReceiveCallback,
+	SetupRadio_GetCapabilitiesRequest,
+	type SetupRadio_GetCapabilitiesResponse,
 	SetupRadio_GetRegionRequest,
 	type SetupRadio_GetRegionResponse,
 	SetupRadio_GetTxPowerRangeRequest,
@@ -273,6 +279,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		return this._txPowerRange;
 	}
 
+	private _radioCapabilities: MaybeNotKnown<RadioCapability[]>;
+	public get radioCapabilities(): MaybeNotKnown<RadioCapability[]> {
+		return this._radioCapabilities;
+	}
+
 	public get regionConfig(): MaybeNotKnown<RegionConfig> {
 		if (this.rfRegion == NOT_KNOWN) return NOT_KNOWN;
 		if (this.channelConfig == NOT_KNOWN) return NOT_KNOWN;
@@ -375,11 +386,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		this.rcpLog.print(
 			`Received firmware information:
-  RCP firmware:  v${this.rcpFirmwareVersion}
-  radio library: ${
+	  RCP firmware:  v${this.rcpFirmwareVersion}
+	  radio library: ${
 				getEnumMemberName(RadioLibrary, this.radioLibrary)
 			} v${this.radioLibraryVersion}
-  supported commands: ${
+	  supported commands: ${
 				this.supportedFunctionTypes.map((ft) =>
 					`\n  · ${(RCPFunctionType as any)[ft] ?? "unknown"} (${
 						num2hex(ft)
@@ -396,14 +407,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		this.rcpLog.print(
 			`Received region information:
-  region:         ${getEnumMemberName(RFRegion, this.rfRegion)}
-  channel config: ${
+	  region:         ${getEnumMemberName(RFRegion, this.rfRegion)}
+	  channel config: ${
 				getEnumMemberName(
 					ChannelConfiguration,
 					this.channelConfig,
 				)
 			}
-  channels: ${
+	  channels: ${
 				this.channels
 					.map((ch) =>
 						`\n    · ${ch.channel} (${
@@ -419,6 +430,16 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			`Received TX power range: ${
 				this._txPowerRange.min.toFixed(1)
 			} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
+		);
+
+		this.rcpLog.print(`Querying radio capabilities...`);
+		this._radioCapabilities = await this.queryRadioCapabilities();
+		this.rcpLog.print(
+			`Received radio capabilities: ${
+				this._radioCapabilities
+					.map((c) => getEnumMemberName(RadioCapability, c))
+					.join(", ") || "(none)"
+			}`,
 		);
 	}
 
@@ -860,6 +881,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			channel: options.channel,
 			txPower: options.txPower,
 			withCCA: options.withCCA,
+			replacements: options.replacements,
 			data,
 		});
 		try {
@@ -975,6 +997,38 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		return !!this.supportedFunctionTypes?.includes(
 			RCPFunctionType.AbortBeam,
 		);
+	}
+
+	/** Measures the noise floor on the given channel, in dBm */
+	public async measureNoiseFloor(channel: number): Promise<RSSI> {
+		this.assertFunctionSupported(RCPFunctionType.MeasureNoiseFloor);
+
+		const msg = new MeasureNoiseFloorRequest({ channel });
+		const result = await this.queueSerialApiCommand<
+			MeasureNoiseFloorResponse
+		>(msg);
+		return result.noiseFloor;
+	}
+
+	public get supportsMeasureNoiseFloor(): boolean {
+		return !!this.supportedFunctionTypes?.includes(
+			RCPFunctionType.MeasureNoiseFloor,
+		);
+	}
+
+	public get supportsTransmitReplacements(): boolean {
+		return !!this._radioCapabilities?.includes(
+			RadioCapability.TransmitReplacements,
+		);
+	}
+
+	/** Queries the optional features the firmware implements */
+	public async queryRadioCapabilities(): Promise<RadioCapability[]> {
+		const msg = new SetupRadio_GetCapabilitiesRequest();
+		const result = await this.queueSerialApiCommand<
+			SetupRadio_GetCapabilitiesResponse
+		>(msg);
+		return result.capabilities;
 	}
 
 	/**

@@ -255,4 +255,5 @@ export enum RCPFunctionType {
 	Receive = 0x04,
 	TransmitBeam = 0x05,
 	AbortBeam = 0x06,
+	MeasureNoiseFloor = 0x07,
 }

@@ -1,6 +1,7 @@
 import {
 	AckLongRangeMPDU,
 	AckZWaveMPDU,
+	LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET,
 	type LogConfig,
 	type LogContainer,
 	LongRangeMPDU,
@@ -32,6 +33,8 @@ import {
 import {
 	type ChannelInfo,
 	TransmitCallbackStatus,
+	type TransmitReplacement,
+	TransmitReplacementSource,
 	TransmitResponseStatus,
 } from "@zwave-js/serial";
 import {
@@ -531,6 +534,61 @@ export class ProtocolController
 		);
 	}
 
+	/**
+	 * Ask the firmware to patch a freshly measured noise floor into an outgoing
+	 * Long Range frame, where the serialized frame carries the "not available"
+	 * placeholder. A caller-supplied noise floor is left alone.
+	 */
+	private getNoiseFloorReplacements(
+		protocol: Protocols | undefined,
+		noiseFloorOverride: number | undefined,
+	): TransmitReplacement[] | undefined {
+		if (protocol !== Protocols.ZWaveLongRange) return undefined;
+		if (noiseFloorOverride != undefined) return undefined;
+		if (!this.phyLayer?.supportsTransmitReplacements) return undefined;
+		return [{
+			offset: LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET,
+			source: TransmitReplacementSource.NoiseFloor,
+		}];
+	}
+
+	/**
+	 * The noise floor to serialize into a Long Range frame. Firmware that can
+	 * patch the frame gets the placeholder and fills it in itself, older
+	 * firmware is asked to measure the channel first.
+	 */
+	private async getAdvertisedNoiseFloor(
+		protocol: Protocols | undefined,
+		noiseFloorOverride: number | undefined,
+		channel: number,
+	): Promise<number> {
+		if (noiseFloorOverride != undefined) return noiseFloorOverride;
+		if (protocol !== Protocols.ZWaveLongRange) {
+			return RssiError.NotAvailable;
+		}
+		if (this.phyLayer?.supportsTransmitReplacements) {
+			return RssiError.NotAvailable;
+		}
+		if (!this.phyLayer?.supportsMeasureNoiseFloor) {
+			return RssiError.NotAvailable;
+		}
+
+		try {
+			return advertisedRSSI(
+				await this.phyLayer.measureNoiseFloor(channel),
+			);
+		} catch (e) {
+			// A frame advertising no noise floor still reaches the destination
+			this.protocolLog.print(
+				`Could not measure the noise floor on channel ${channel}: ${
+					getErrorMessage(e)
+				}`,
+				"warn",
+			);
+			return RssiError.NotAvailable;
+		}
+	}
+
 	private getChannelsForProtocolOrThrow(protocol: Protocols): ChannelInfo[] {
 		const allChannels = this.phyLayer?.regionConfig?.channels ?? [];
 		const channels = allChannels.filter((ch) =>
@@ -965,8 +1023,15 @@ export class ProtocolController
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
 			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
-		const advertisedNoiseFloor = options.lrMpduOverrides?.noiseFloor
-			?? RssiError.NotAvailable;
+		const advertisedNoiseFloor = await this.getAdvertisedNoiseFloor(
+			protocol,
+			options.lrMpduOverrides?.noiseFloor,
+			initialChannel.channel,
+		);
+		const replacements = this.getNoiseFloorReplacements(
+			protocol,
+			options.lrMpduOverrides?.noiseFloor,
+		);
 
 		let mpdu: MPDU;
 		if (protocol == Protocols.ZWave) {
@@ -1168,7 +1233,12 @@ export class ProtocolController
 			};
 			const serializedMPDU = mpdu.serialize(ctx);
 
-			this.protocolLog.mpdu(mpdu, ctx, "outbound");
+			this.protocolLog.mpdu(
+				mpdu,
+				ctx,
+				"outbound",
+				replacements?.length ? ["noise floor"] : undefined,
+			);
 
 			const result = await this.phyLayer.transmit(
 				serializedMPDU,
@@ -1177,6 +1247,7 @@ export class ProtocolController
 					channel: channel.channel,
 					txPower: radioTXPower,
 					withCCA: options.withCCA ?? true,
+					replacements,
 				},
 			);
 
@@ -1387,10 +1458,20 @@ export class ProtocolController
 				txPower: options.lrMpduOverrides?.txPower
 					?? Math.round(txPower ?? LR_DEFAULT_TX_POWER_DBM),
 				incomingRSSI: options.incomingRSSI ?? RssiError.NotAvailable,
-				noiseFloor: options.lrMpduOverrides?.noiseFloor
-					?? RssiError.NotAvailable,
+				noiseFloor: await this.getAdvertisedNoiseFloor(
+					options.protocol,
+					options.lrMpduOverrides?.noiseFloor,
+					options.channel,
+				),
 			});
 		}
+
+		const replacements = this.getNoiseFloorReplacements(
+			options.protocol,
+			options.protocol === Protocols.ZWaveLongRange
+				? options.lrMpduOverrides?.noiseFloor
+				: undefined,
+		);
 
 		const channel = options.channel;
 		const ctx: MPDUEncodingContext = {
@@ -1400,13 +1481,18 @@ export class ProtocolController
 		};
 		const serializedMPDU = mpdu.serialize(ctx);
 
-		this.protocolLog.mpdu(mpdu, ctx, "outbound");
+		this.protocolLog.mpdu(
+			mpdu,
+			ctx,
+			"outbound",
+			replacements?.length ? ["noise floor"] : undefined,
+		);
 
 		const result = await this.phyLayer.transmit(
 			serializedMPDU,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
-			{ channel, txPower, withCCA: false },
+			{ channel, txPower, withCCA: false, replacements },
 		);
 
 		switch (result) {

@@ -3096,6 +3096,52 @@ export interface LongRangeShadowNodeIDsRequestOptions {
 // @public (undocumented)
 export const MAX_SEND_ATTEMPTS = 5;
 
+// Warning: (ae-missing-release-tag) "MAX_TRANSMIT_REPLACEMENTS" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const MAX_TRANSMIT_REPLACEMENTS = 4;
+
+// Warning: (ae-missing-release-tag) "MeasureNoiseFloorRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class MeasureNoiseFloorRequest extends RCPMessage {
+    constructor(options: MeasureNoiseFloorRequestOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    channel: number;
+    // (undocumented)
+    serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "MeasureNoiseFloorRequestOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MeasureNoiseFloorRequestOptions {
+    // (undocumented)
+    channel: number;
+}
+
+// Warning: (ae-missing-release-tag) "MeasureNoiseFloorResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class MeasureNoiseFloorResponse extends RCPMessage {
+    constructor(options: MeasureNoiseFloorResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): MeasureNoiseFloorResponse;
+    noiseFloor: RSSI;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "MeasureNoiseFloorResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface MeasureNoiseFloorResponseOptions {
+    // (undocumented)
+    noiseFloor: RSSI;
+}
+
 // Warning: (ae-missing-release-tag) "Message" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -3494,6 +3540,13 @@ export function parseTXReport(includeACK: boolean, payload: BytesView): TXReport
 // @public
 export const priority: <TTarget extends typeof Message>(prio: MessagePriority) => TypedClassDecorator<TTarget>;
 
+// Warning: (ae-missing-release-tag) "RadioCapability" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum RadioCapability {
+    TransmitReplacements = 1
+}
+
 // Warning: (ae-missing-release-tag) "RadioLibrary" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -3515,6 +3568,8 @@ export enum RCPFunctionType {
     AbortBeam = 6,
     // (undocumented)
     GetFirmwareInfo = 1,
+    // (undocumented)
+    MeasureNoiseFloor = 7,
     // (undocumented)
     Receive = 4,
     // (undocumented)
@@ -5857,6 +5912,33 @@ export enum SetSUCNodeIdStatus {
     Succeeded = 5
 }
 
+// Warning: (ae-missing-release-tag) "SetupRadio_GetCapabilitiesRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_GetCapabilitiesRequest extends SetupRadioRequest {
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_GetCapabilitiesResponse" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class SetupRadio_GetCapabilitiesResponse extends SetupRadioResponse {
+    constructor(options: SetupRadio_GetCapabilitiesResponseOptions & RCPMessageBaseOptions);
+    // (undocumented)
+    capabilities: RadioCapability[];
+    // (undocumented)
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): SetupRadio_GetCapabilitiesResponse;
+    // (undocumented)
+    toLogEntry(): MessageOrCCLogEntry;
+}
+
+// Warning: (ae-missing-release-tag) "SetupRadio_GetCapabilitiesResponseOptions" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface SetupRadio_GetCapabilitiesResponseOptions {
+    // (undocumented)
+    capabilities: RadioCapability[];
+}
+
 // Warning: (ae-missing-release-tag) "SetupRadio_GetRegionRequest" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -5980,6 +6062,8 @@ export type SetupRadio_SetRegionResponseOptions = {
 //
 // @public (undocumented)
 export enum SetupRadioCommand {
+    // (undocumented)
+    GetCapabilities = 4,
     // (undocumented)
     GetRegion = 2,
     // (undocumented)
@@ -6224,6 +6308,22 @@ export enum TransmitCallbackStatus {
     UnknownError = 254
 }
 
+// Warning: (ae-missing-release-tag) "TransmitReplacement" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface TransmitReplacement {
+    offset: number;
+    // (undocumented)
+    source: TransmitReplacementSource;
+}
+
+// Warning: (ae-missing-release-tag) "TransmitReplacementSource" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum TransmitReplacementSource {
+    NoiseFloor = 0
+}
+
 // Warning: (ae-missing-release-tag) "TransmitReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -6238,6 +6338,8 @@ export class TransmitRequest extends RCPMessage {
     channel: number;
     // (undocumented)
     data: BytesView;
+    // (undocumented)
+    replacements: TransmitReplacement[] | undefined;
     // (undocumented)
     serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
     // (undocumented)
@@ -6256,6 +6358,7 @@ export interface TransmitRequestOptions {
     channel: number;
     // (undocumented)
     data: BytesView;
+    replacements?: TransmitReplacement[];
     txPower?: number;
     withCCA: boolean;
 }

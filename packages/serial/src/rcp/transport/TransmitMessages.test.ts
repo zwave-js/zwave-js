@@ -1,7 +1,10 @@
 import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
-import { TransmitRequest } from "./TransmitMessages.js";
+import {
+	TransmitReplacementSource,
+	TransmitRequest,
+} from "./TransmitMessages.js";
 
 describe("TransmitRequest", () => {
 	test("serializes channel, TX power and flags before the data", async () => {
@@ -108,6 +111,67 @@ describe("TransmitRequest", () => {
 			channel: 0,
 			withCCA: false,
 			data: new Bytes(250),
+		});
+
+		await assertZWaveError(expect, () => msg.serialize({}), {
+			errorCode: ZWaveErrorCodes.Argument_Invalid,
+		});
+	});
+
+	test("serializes replacements between the flags and the data", async () => {
+		const msg = new TransmitRequest({
+			channel: 2,
+			txPower: -10,
+			withCCA: true,
+			replacements: [{
+				offset: 1,
+				source: TransmitReplacementSource.NoiseFloor,
+			}],
+			data: Bytes.from([0xaa, 0xbb]),
+		});
+
+		await expect(msg.serialize({})).resolves.toStrictEqual(
+			Bytes.from([
+				0x01, // SOF
+				0x0c, // length
+				0x00, // Request
+				0x03, // Transmit
+				0x02, // channel
+				0xff, // TX power: -100 deci-dBm (high byte)
+				0x9c, // TX power: -100 deci-dBm (low byte)
+				0x03, // flags: CCA | Replacements
+				0x01, // 1 replacement
+				0x01, // offset 1
+				0x00, // source: noise floor
+				0xaa, // MPDU begins
+				0xbb, // MPDU ends
+				0x83, // checksum
+			]),
+		);
+	});
+
+	test("an empty replacement list leaves the flag clear", async () => {
+		const msg = new TransmitRequest({
+			channel: 0,
+			withCCA: false,
+			replacements: [],
+			data: Bytes.from([0xaa]),
+		});
+
+		const serialized = await msg.serialize({});
+		expect(serialized[7]).toBe(0x00);
+		expect(serialized[8]).toBe(0xaa);
+	});
+
+	test("throws when a replacement offset is outside the frame data", async () => {
+		const msg = new TransmitRequest({
+			channel: 0,
+			withCCA: false,
+			replacements: [{
+				offset: 2,
+				source: TransmitReplacementSource.NoiseFloor,
+			}],
+			data: Bytes.from([0xaa, 0xbb]),
 		});
 
 		await assertZWaveError(expect, () => msg.serialize({}), {
