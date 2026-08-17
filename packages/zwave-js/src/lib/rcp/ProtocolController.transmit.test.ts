@@ -1,14 +1,17 @@
 import {
 	AckZWaveMPDU,
 	ChannelConfiguration,
-	type MPDU,
+	MPDU,
+	MPDUHeaderType,
 	ProtocolDataRate,
 	Protocols,
 	RFRegion,
+	RoutedZWaveMPDU,
 	RssiError,
 } from "@zwave-js/core";
 import { type ChannelInfo, TransmitCallbackStatus } from "@zwave-js/serial";
-import { type BytesView, TypedEventTarget } from "@zwave-js/shared";
+import { Bytes, type BytesView, TypedEventTarget } from "@zwave-js/shared";
+import { wait } from "alcalzone-shared/async";
 import { afterEach, expect, test, vi } from "vitest";
 import type {
 	MpduRxInfo,
@@ -37,6 +40,10 @@ const CHANNELS: ChannelInfo[] = [
 interface FakePHYOptions {
 	/** Called for each transmit, before the returned result is reported */
 	onTransmit?: (frame: BytesView, options: TransmitOptions) => void;
+	/** How long a transmit occupies the radio, standing in for the air time */
+	transmitDurationMs?: number;
+	/** One result per transmit. Anything past the end reports `Completed` */
+	results?: TransmitResult[];
 }
 
 /** A PHY layer that records transmits instead of driving a radio */
@@ -77,14 +84,20 @@ class FakePHY extends TypedEventTarget<PHYLayerEventCallbacks>
 		frame: BytesView,
 		options: TransmitOptions,
 	): Promise<TransmitResult> {
+		const attempt = this.transmits.length;
 		this.concurrent++;
 		this.maxConcurrent = Math.max(this.maxConcurrent, this.concurrent);
 		this.transmits.push(frame);
 		try {
-			// Stand in for the serial round trip
-			await Promise.resolve();
+			// Stand in for the serial round trip and the air time
+			if (this.options.transmitDurationMs) {
+				await wait(this.options.transmitDurationMs);
+			} else {
+				await Promise.resolve();
+			}
 			this.options.onTransmit?.(frame, options);
-			return TransmitCallbackStatus.Completed;
+			return this.options.results?.[attempt]
+				?? TransmitCallbackStatus.Completed;
 		} finally {
 			this.concurrent--;
 		}
@@ -141,6 +154,55 @@ function ack(): AckZWaveMPDU {
 		sourceNodeId: DESTINATION,
 		destinationNodeId: OWN_NODE_ID,
 		sequenceNumber: 0,
+	});
+}
+
+const ROUTE = [3];
+
+/** Read back a frame the fake radio recorded, to answer its sequence number */
+function parseOutbound(frame: BytesView): MPDU {
+	return MPDU.parse(Bytes.view(frame), {
+		channel: 0,
+		protocolDataRate: ProtocolDataRate.ZWave_100k,
+		region: RFRegion.USA,
+	});
+}
+
+/** Repeater 0 repeating our frame towards the next hop */
+function silentAck(sequenceNumber: number): RoutedZWaveMPDU {
+	return new RoutedZWaveMPDU({
+		homeId: HOME_ID,
+		headerType: MPDUHeaderType.Singlecast,
+		routed: true,
+		ackRequested: false,
+		sourceNodeId: OWN_NODE_ID,
+		destinationNodeId: DESTINATION,
+		sequenceNumber,
+		direction: "outbound",
+		routedAck: false,
+		routedError: false,
+		hop: 1,
+		repeaters: ROUTE,
+		speedModified: false,
+	});
+}
+
+/** The destination's routed acknowledgement, travelling back to us */
+function routedAck(sequenceNumber: number): RoutedZWaveMPDU {
+	return new RoutedZWaveMPDU({
+		homeId: HOME_ID,
+		headerType: MPDUHeaderType.Singlecast,
+		routed: true,
+		ackRequested: false,
+		sourceNodeId: DESTINATION,
+		destinationNodeId: OWN_NODE_ID,
+		sequenceNumber,
+		direction: "inbound",
+		routedAck: true,
+		routedError: false,
+		hop: 0,
+		repeaters: ROUTE,
+		speedModified: false,
 	});
 }
 
@@ -232,6 +294,126 @@ test("concurrent transmits do not interleave on air", async () => {
 	]);
 	expect(phy.transmits).toHaveLength(3);
 	expect(phy.maxConcurrent).toBe(1);
+	// A lock that serializes but reorders would pass the count check
+	expect(phy.transmits.map((f) => f.at(-1))).toStrictEqual([1, 2, 3]);
+});
+
+test("the radio is released when an exchange throws", async () => {
+	const phy = new FakePHY({
+		onTransmit: () => {
+			phy.receive(ack());
+		},
+	});
+	controller = await createController(phy);
+
+	const transmit = vi.spyOn(phy, "transmit");
+	transmit.mockRejectedValueOnce(new Error("the radio fell over"));
+
+	await expect(
+		controller.transmitData(Uint8Array.from([1]), singlecast),
+	).rejects.toThrow("the radio fell over");
+
+	// The lock is free again, so this does not hang
+	const report = await controller.transmitData(
+		Uint8Array.from([2]),
+		singlecast,
+	);
+	expect(report.result).toBe(MACTransmitResult.OK);
+});
+
+test("a busy channel is retried and reported", async () => {
+	const phy = new FakePHY({
+		results: [
+			TransmitCallbackStatus.ChannelBusy,
+			TransmitCallbackStatus.ChannelBusy,
+			TransmitCallbackStatus.ChannelBusy,
+		],
+	});
+	controller = await createController(phy);
+
+	const report = await controller.transmitData(
+		Uint8Array.from([1, 2, 3]),
+		singlecast,
+	);
+
+	expect(report.result).toBe(MACTransmitResult.ChannelBusy);
+	expect(phy.transmits).toHaveLength(3);
+});
+
+test("a channel that frees up before the last attempt still succeeds", async () => {
+	const phy = new FakePHY({
+		results: [TransmitCallbackStatus.ChannelBusy],
+		onTransmit: () => {
+			phy.receive(ack());
+		},
+	});
+	controller = await createController(phy);
+
+	const report = await controller.transmitData(
+		Uint8Array.from([1, 2, 3]),
+		singlecast,
+	);
+
+	// Only the busy attempt was wasted, so this is not reported as ChannelBusy
+	expect(report.result).toBe(MACTransmitResult.OK);
+	expect(phy.transmits).toHaveLength(2);
+});
+
+test("the ack window starts when the radio reports the frame was sent", async () => {
+	// R3's ack wait duration is ~25 ms, less than this frame occupies the radio
+	const phy = new FakePHY({
+		transmitDurationMs: 40,
+		onTransmit: () => {
+			void wait(5).then(() => phy.receive(ack()));
+		},
+	});
+	controller = await createController(phy);
+
+	const report = await controller.transmitData(
+		Uint8Array.from([1, 2, 3]),
+		singlecast,
+	);
+
+	expect(report.result).toBe(MACTransmitResult.OK);
+	// A window that started before the send would have expired mid-air and
+	// only matched this ack on the second attempt
+	expect(phy.transmits).toHaveLength(1);
+});
+
+test("a routed frame is acknowledged by the silent ack and the routed ack", async () => {
+	const phy = new FakePHY({
+		onTransmit: (frame) => {
+			const sent = parseOutbound(frame);
+			// NWK:0180.1: repeater 0 repeating the frame is the silent ack
+			phy.receive(silentAck(sent.sequenceNumber));
+			// The destination answers once the frame has travelled the route
+			void wait(5).then(() =>
+				phy.receive(routedAck(sent.sequenceNumber))
+			);
+		},
+	});
+	controller = await createController(phy);
+
+	const report = await controller.transmitData(Uint8Array.from([1, 2, 3]), {
+		...singlecast,
+		route: ROUTE,
+	});
+
+	expect(report.result).toBe(MACTransmitResult.OK);
+	expect(phy.transmits).toHaveLength(1);
+});
+
+test("a routed frame whose route stays silent is retried and reported", async () => {
+	const phy = new FakePHY();
+	controller = await createController(phy);
+
+	const report = await controller.transmitData(Uint8Array.from([1, 2, 3]), {
+		...singlecast,
+		route: ROUTE,
+	});
+
+	expect(report.result).toBe(MACTransmitResult.NoAck);
+	expect(phy.transmits).toHaveLength(3);
 });
 
 test("a transmit rejected by the radio does not wait out the ack window", async () => {
