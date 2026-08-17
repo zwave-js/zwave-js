@@ -123,7 +123,6 @@ const ROUTED_HOP_MARGIN_MS = 10;
 // trips and is tuned empirically
 const ACK_HOST_TRANSPORT_ALLOWANCE_MS = 20;
 
-// The TX power the controller acknowledges with until it is told otherwise
 const DEFAULT_AUTO_ACK_TX_POWER_DBM = 14;
 
 // Bounds of an int8 field
@@ -168,10 +167,7 @@ function assertRadioTXPower(
 	}
 }
 
-/**
- * Translate what the radio reported into a MAC result. Only for operations that
- * do not retry, since a retrying one treats a busy channel as another attempt.
- */
+/** Translate the radio's report into a MAC result */
 function macResultFromTransmit(result: TransmitResult): MACTransmitResult {
 	switch (result) {
 		case TransmitCallbackStatus.Completed:
@@ -497,8 +493,8 @@ export class ProtocolController
 
 	/**
 	 * The TX power the controller acknowledges with, clamped into the range the
-	 * radio reported. An out-of-range power would make `transmitACK` throw for
-	 * every auto-ack, and the caller of an auto-ack only logs.
+	 * radio reported. The clamp must stay, because an auto-ack that throws is
+	 * only logged.
 	 */
 	private get clampedAutoAckTXPower(): number {
 		const range = this.phyLayer?.txPowerRange;
@@ -619,7 +615,7 @@ export class ProtocolController
 		});
 	}
 
-	/** Serialize, log and transmit an MPDU that needs no wait registered first */
+	/** Transmit an MPDU that needs no wait registered before it goes out */
 	private async sendMPDU(
 		mpdu: MPDU,
 		ctx: MPDUEncodingContext,
@@ -992,9 +988,9 @@ export class ProtocolController
 	}
 
 	/**
-	 * Hold the radio for one frame exchange. Acknowledgements deliberately do not
-	 * take this, since G.9959 §8.1.5.1.4.2 requires them inside the turnaround
-	 * time, and a transmit waiting for its own ack would hold it far longer.
+	 * Hold the radio for one frame exchange. Acknowledgements must not take this
+	 * lock, because G.9959 §8.1.5.1.4.2 requires them inside the turnaround time.
+	 * A transmit waiting for its own ack holds the radio far longer than that.
 	 */
 	private async withRadio<T>(exchange: () => Promise<T>): Promise<T> {
 		const predecessor = this.radioIdle;
@@ -1448,8 +1444,7 @@ export class ProtocolController
 				if (failure === "retry") continue;
 				if (failure) return failure;
 
-				// The budget starts when the radio reports the frame was sent,
-				// so the send does not eat into it
+				// The budget starts when the radio reports the frame was sent
 				const deadline = Date.now() + budget;
 				let outcome = await Promise.race([
 					firstAnswer,
@@ -1519,8 +1514,7 @@ export class ProtocolController
 				return { result: MACTransmitResult.OK };
 			}
 
-			// The ack window starts when the radio reports the frame was sent,
-			// so the send does not eat into it
+			// The ack window starts when the radio reports the frame was sent
 			const acked = await Promise.race([
 				ackPromise,
 				wait(ackWindow).then(() => false),

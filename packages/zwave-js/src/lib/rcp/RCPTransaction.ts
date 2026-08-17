@@ -36,12 +36,7 @@ export class RCPTransaction {
 		return this._stack;
 	}
 
-	/**
-	 * Is called when the queue discards this transaction before it ran. Only
-	 * destroying the host does that, and `Driver_Destroyed` keeps the caller
-	 * out of `isTransmissionError`, which would have it retry against a dead
-	 * host.
-	 */
+	/** Is called when the queue discards this transaction before it ran */
 	public [Symbol.dispose](): void {
 		this.promise.reject(
 			new ZWaveError(

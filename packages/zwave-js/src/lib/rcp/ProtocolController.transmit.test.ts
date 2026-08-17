@@ -46,7 +46,7 @@ interface FakePHYOptions {
 	results?: TransmitResult[];
 }
 
-/** A PHY layer that records transmits instead of driving a radio */
+/** A PHY layer that records transmits for the test to inspect */
 class FakePHY extends TypedEventTarget<PHYLayerEventCallbacks>
 	implements PHYLayer
 {
@@ -216,7 +216,7 @@ async function createController(
 	await controller.start();
 	controller.ownHomeId = HOME_ID;
 	controller.ownNodeId = OWN_NODE_ID;
-	// Auto-acking would answer our own frames in these tests
+	// The controller must not answer the frames these tests send
 	controller.autoAck = false;
 	return controller;
 }
@@ -294,7 +294,7 @@ test("concurrent transmits do not interleave on air", async () => {
 	]);
 	expect(phy.transmits).toHaveLength(3);
 	expect(phy.maxConcurrent).toBe(1);
-	// A lock that serializes but reorders would pass the count check
+	// The frames must go out in the order they were queued
 	expect(phy.transmits.map((f) => f.at(-1))).toStrictEqual([1, 2, 3]);
 });
 
@@ -354,7 +354,7 @@ test("a channel that frees up before the last attempt still succeeds", async () 
 		singlecast,
 	);
 
-	// Only the busy attempt was wasted, so this is not reported as ChannelBusy
+	// ChannelBusy is only reported when every attempt found the channel busy
 	expect(report.result).toBe(MACTransmitResult.OK);
 	expect(phy.transmits).toHaveLength(2);
 });
@@ -375,8 +375,7 @@ test("the ack window starts when the radio reports the frame was sent", async ()
 	);
 
 	expect(report.result).toBe(MACTransmitResult.OK);
-	// A window that started before the send would have expired mid-air and
-	// only matched this ack on the second attempt
+	// The window covered the ack, so one attempt was enough
 	expect(phy.transmits).toHaveLength(1);
 });
 

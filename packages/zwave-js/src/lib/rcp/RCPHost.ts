@@ -1350,8 +1350,6 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): void {
-		// Aborting rejects the transactions the drain loop will never run, so
-		// their callers do not wait forever
 		this.queue.abort();
 
 		// Abort the currently executed serial API command, so the queue does not lock up

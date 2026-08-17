@@ -65,9 +65,7 @@ export interface MACTransmitOptions {
 	 * last repeater (not implemented yet).
 	 */
 	destinationWakeup?: MACDestinationWakeup;
-	/**
-	 * Radio TX power in dBm
-	 */
+	/** Radio TX power in dBm */
 	txPower: number;
 	/**
 	 * Values to put into the Long Range MPDU. Anything left out is derived from
@@ -90,9 +88,7 @@ export type MACTransmitAckOptions =
 		destinationNodeId: number;
 		channel: number;
 		sequenceNumber: number;
-		/**
-		 * Radio TX power in dBm
-		 */
+		/** Radio TX power in dBm */
 		txPower: number;
 	}
 	& (
