@@ -1,4 +1,8 @@
-import type { MessageOrCCLogEntry } from "@zwave-js/core";
+import {
+	type MessageOrCCLogEntry,
+	ZWaveError,
+	ZWaveErrorCodes,
+} from "@zwave-js/core";
 import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
@@ -38,9 +42,45 @@ export enum TransmitCallbackStatus {
 	Completed = 0xff,
 }
 
+/** TX power value that tells the firmware to keep its current setting */
+export const TX_POWER_KEEP_CURRENT = 0x7fff;
+
+/**
+ * Converts a TX power in dBm to the deci-dBm value to transmit, using the sentinel if none is given.
+ * The firmware expects an int16 BE in deci-dBm, which matches the units of `RAIL_SetTxPowerDbm`.
+ */
+export function encodeTxPower(txPower: number | undefined): number {
+	if (txPower == undefined) return TX_POWER_KEEP_CURRENT;
+	if (!Number.isFinite(txPower) || txPower < -10 || txPower > 30) {
+		throw new ZWaveError(
+			`The TX power must be between -10 and 30 dBm`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+	return Math.round(txPower * 10);
+}
+
+/** Formats a TX power in dBm for logging, with one decimal for fractional values */
+export function formatTxPower(txPower: number | undefined): string {
+	if (txPower == undefined) return "unchanged";
+	const rounded = Math.round(txPower * 10) / 10;
+	return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)} dBm`;
+}
+
 export interface TransmitRequestOptions {
 	channel: number;
+	/**
+	 * The transmit power in dBm, in steps of 0.1 dBm.
+	 * If omitted, the firmware keeps its current setting.
+	 */
+	txPower?: number;
+	/** Whether to perform clear channel assessment before transmitting */
+	withCCA: boolean;
 	data: BytesView;
+}
+
+enum TransmitFlags {
+	CCA = 0b1,
 }
 
 @rcpMessageTypes(RCPMessageType.Request, RCPFunctionType.Transmit)
@@ -53,15 +93,36 @@ export class TransmitRequest extends RCPMessage {
 		super(options);
 
 		this.channel = options.channel;
+		this.txPower = options.txPower;
+		this.withCCA = options.withCCA;
 		this.data = options.data;
 	}
 
 	public channel: number;
+	public txPower: number | undefined;
+	public withCCA: boolean;
 	public data: BytesView;
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
+		if (
+			!Number.isInteger(this.channel)
+			|| this.channel < 0
+			|| this.channel > 0xff
+		) {
+			throw new ZWaveError(
+				`The channel must be an integer between 0 and 255`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+
+		// CHANNEL | TX_POWER (int16 BE, deci-dBm) | FLAGS | ...DATA
+		const header = new Bytes(4);
+		header[0] = this.channel;
+		header.writeInt16BE(encodeTxPower(this.txPower), 1);
+		header[3] = this.withCCA ? TransmitFlags.CCA : 0;
+
 		this.payload = Bytes.concat([
-			[this.channel],
+			header,
 			this.data,
 		]);
 
@@ -73,6 +134,8 @@ export class TransmitRequest extends RCPMessage {
 			...super.toLogEntry(),
 			message: {
 				channel: this.channel,
+				"TX power": formatTxPower(this.txPower),
+				CCA: this.withCCA,
 				data: `(${this.data.length} bytes)`,
 			},
 		};

@@ -815,7 +815,9 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		channel: number,
 	): Promise<TransmitResponseStatus | TransmitCallbackStatus> {
 		const msg = new TransmitRequest({
+			// TODO: Expose TX power and CCA control in the RCP host API
 			channel,
+			withCCA: false,
 			data,
 		});
 		try {
