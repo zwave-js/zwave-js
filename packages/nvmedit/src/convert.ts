@@ -2056,6 +2056,18 @@ export async function migrateNVM(
 		&& preserveNeighbors
 		&& preserveRoutes
 		&& preserveSUCUpdateEntries;
+	let sourceApplicationNodeIsListening = true;
+	if (source.type === 700) {
+		sourceApplicationNodeIsListening = source.json.controller.isListening;
+		source.json.controller.isListening = true;
+	} else if (source.type === 500) {
+		const controllerNode =
+			source.json.nodes[source.json.controller.nodeId || 1];
+		if (controllerNode && "isListening" in controllerNode) {
+			sourceApplicationNodeIsListening = controllerNode.isListening;
+			controllerNode.isListening = true;
+		}
+	}
 
 	// Short circuit if...
 	if (
@@ -2071,6 +2083,12 @@ export async function migrateNVM(
 		// ...both the source and the target are 700 series, but at least the target uses an unsupported protocol version.
 		// We can be sure however that the target can upgrade any 700 series NVM to its protocol version, as long as the
 		// source protocol version is not higher than the target's
+		if (source.type === 700 && !sourceApplicationNodeIsListening) {
+			return jsonToNVM(
+				source.json,
+				source.json.controller.applicationVersion,
+			);
+		}
 		return sourceNVM;
 	} else if (
 		source.type === 700
@@ -2081,6 +2099,8 @@ export async function migrateNVM(
 			=== target.json.meta.sharedFileSystem
 		// ...everything should be preserved,...
 		&& preserveAll
+		// ...and the application node is configured as always listening
+		&& sourceApplicationNodeIsListening
 	) {
 		// ... the source and target protocol versions are compatible without conversion
 		const sourceProtocolVersion = source.json.controller.protocolVersion;
@@ -2190,6 +2210,7 @@ export async function migrateNVM(
 			...json500To700(source.json, true),
 			meta: target.json.meta,
 		};
+		json.controller.isListening = true;
 		// The target is a different series, try to preserve the RF config of the target stick
 		json.controller.rfConfig = target.json.controller.rfConfig;
 		// 700 series distinguishes the NVM format by the application version
