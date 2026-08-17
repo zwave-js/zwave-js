@@ -58,6 +58,7 @@ import {
 	type MpduRxInfo,
 	type PHYLayer,
 	type PHYLayerFactory,
+	type TransmitResult,
 	type TxPowerRange,
 	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
@@ -122,13 +123,7 @@ const ROUTED_HOP_MARGIN_MS = 10;
 // trips and is tuned empirically
 const ACK_HOST_TRANSPORT_ALLOWANCE_MS = 20;
 
-// TX power used for LR transmissions when the caller does not specify one
-const LR_DEFAULT_TX_POWER_DBM = 14;
-
-// TX power used for LR beams when the caller does not specify one. Table 6-31 of
-// the LR spec lists this as an exact beam Tx Power level, so a beam advertises it
-// without rounding to the next level
-const LR_DEFAULT_BEAM_TX_POWER_DBM = 13;
+const DEFAULT_AUTO_ACK_TX_POWER_DBM = 14;
 
 // Bounds of an int8 field
 const INT8_MIN = -128;
@@ -160,15 +155,46 @@ function assertInt8(value: number | undefined, name: string): void {
  * what the serial encoding can carry
  */
 function assertRadioTXPower(
-	txPower: number | undefined,
+	txPower: number,
 	range: MaybeNotKnown<TxPowerRange>,
 ): void {
-	if (txPower == undefined || range == undefined) return;
+	if (range == undefined) return;
 	if (txPower < range.min || txPower > range.max) {
 		throw new ZWaveError(
 			`The TX power must be between ${range.min} and ${range.max} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
+	}
+}
+
+/** Translate the radio's report into a MAC result */
+function macResultFromTransmit(result: TransmitResult): MACTransmitResult {
+	switch (result) {
+		case TransmitCallbackStatus.Completed:
+			return MACTransmitResult.OK;
+
+		case TransmitCallbackStatus.ChannelBusy:
+			// TODO: Wait for the channel to be free, try again
+			return MACTransmitResult.ChannelBusy;
+
+		case TransmitResponseStatus.Busy:
+			return MACTransmitResult.Error_QueueBusy;
+
+		case TransmitResponseStatus.Overflow:
+		case TransmitCallbackStatus.Underflow:
+			return MACTransmitResult.Error_FrameLength;
+
+		case TransmitCallbackStatus.Aborted:
+			return MACTransmitResult.Error_Aborted;
+
+		case TransmitCallbackStatus.Blocked:
+			// Should not happen, since we never block TX
+		case TransmitResponseStatus.InvalidChannel:
+		case TransmitResponseStatus.InvalidParam:
+			// Should not happen, since everything is checked beforehand
+		case TransmitCallbackStatus.UnknownError:
+		default:
+			return MACTransmitResult.Error_Unknown;
 	}
 }
 
@@ -462,9 +488,26 @@ export class ProtocolController
 	public ownHomeId: number | undefined;
 	public ownNodeId: number | undefined;
 	public autoAck: boolean = true;
+	/** The TX power in dBm for the acknowledgements the controller sends by itself */
+	public autoAckTXPower: number = DEFAULT_AUTO_ACK_TX_POWER_DBM;
+
+	/**
+	 * The TX power the controller acknowledges with, clamped into the range the radio reported.
+	 */
+	private getSafeAutoAckTXPower(): number {
+		const range = this.phyLayer?.txPowerRange;
+		if (range == undefined) return this.autoAckTXPower;
+		return Math.max(
+			range.min,
+			Math.min(range.max, this.autoAckTXPower),
+		);
+	}
 
 	/** A list of awaited MPDUs */
 	private awaitedMPDUs: AwaitedMPDUEntry[] = [];
+
+	/** Resolves once the frame exchange currently holding the radio is done */
+	private radioIdle: Promise<void> = Promise.resolve();
 
 	private sequenceNumber: number | undefined;
 
@@ -532,6 +575,54 @@ export class ProtocolController
 			this.phyLayer?.regionConfig?.channels,
 			channel,
 		);
+	}
+
+	/** Serialize an MPDU and log it */
+	private serializeOutbound(
+		mpdu: MPDU,
+		ctx: MPDUEncodingContext,
+		replacements?: TransmitReplacement[],
+	): Bytes {
+		const frame = mpdu.serialize(ctx);
+
+		this.protocolLog.mpdu(
+			mpdu,
+			ctx,
+			"outbound",
+			replacements?.length ? ["noise floor"] : undefined,
+		);
+
+		return frame;
+	}
+
+	private sendFrame(
+		frame: BytesView,
+		ctx: MPDUEncodingContext,
+		options: {
+			txPower: number;
+			withCCA: boolean;
+			replacements?: TransmitReplacement[];
+		},
+	): Promise<TransmitResult> {
+		return this.phyLayer!.transmit(frame, {
+			channel: ctx.channel,
+			txPower: options.txPower,
+			withCCA: options.withCCA,
+			replacements: options.replacements,
+		});
+	}
+
+	private async sendMPDU(
+		mpdu: MPDU,
+		ctx: MPDUEncodingContext,
+		options: {
+			txPower: number;
+			withCCA: boolean;
+			replacements?: TransmitReplacement[];
+		},
+	): Promise<TransmitResult> {
+		const frame = this.serializeOutbound(mpdu, ctx, options.replacements);
+		return this.sendFrame(frame, ctx, options);
 	}
 
 	/**
@@ -717,7 +808,7 @@ export class ProtocolController
 		beam: BeamParameters,
 		protocol: Protocols,
 		headerFormat: ProtocolHeaderFormat,
-		radioTXPower: number | undefined,
+		radioTXPower: number,
 	): Promise<
 		{ pinnedChannel?: ChannelInfo } | { result: MACTransmitResult }
 	> {
@@ -755,7 +846,7 @@ export class ProtocolController
 				: [primary.channel, secondary.channel];
 			data = encodeLongRangeBeamFrame({
 				destinationNodeId,
-				txPower: radioTXPower ?? LR_DEFAULT_BEAM_TX_POWER_DBM,
+				txPower: radioTXPower,
 				homeIdHash: longRangeHomeIdHash(options.homeId),
 			});
 		} else {
@@ -881,10 +972,43 @@ export class ProtocolController
 		return { pinnedChannel };
 	}
 
-	public async transmitData(
+	/**
+	 * Send a frame and report what came back. Concurrent calls are serialized,
+	 * so their attempts and backoffs do not interleave on air.
+	 */
+	public transmitData(
 		data: BytesView,
 		options: MACTransmitOptions,
 	): Promise<MACTransmitReport> {
+		return this.withRadio(() => this.transmitDataExclusive(data, options));
+	}
+
+	/**
+	 * Hold the radio for one frame exchange. Acknowledgements must not take this
+	 * lock, because G.9959 §8.1.5.1.4.2 requires them inside the turnaround time.
+	 * A transmit waiting for its own ack holds the radio far longer than that.
+	 */
+	private async withRadio<T>(exchange: () => Promise<T>): Promise<T> {
+		const predecessor = this.radioIdle;
+		const release = createDeferredPromise<void>();
+		this.radioIdle = release;
+
+		await predecessor;
+		try {
+			return await exchange();
+		} finally {
+			release.resolve();
+		}
+	}
+
+	private async transmitDataExclusive(
+		data: BytesView,
+		options: MACTransmitOptions,
+	): Promise<MACTransmitReport> {
+		if (this.wasDestroyed) {
+			return { result: MACTransmitResult.Error_Aborted };
+		}
+
 		if (this.phyLayer == undefined) {
 			throw new ZWaveError(
 				`The PHY layer has not been initialized yet!`,
@@ -1011,18 +1135,11 @@ export class ProtocolController
 
 		const sequenceNumber = this.nextSequenceNumber(headerFormat);
 
-		// LR frames advertise the power they were sent with, so the radio has to use
-		// a known power. Classic frames carry no such field and leave the radio's
-		// setting alone, which in a mixed region is whatever the last LR frame
-		// set. A caller that needs a specific classic power must pass one
-		const radioTXPower = protocol === Protocols.ZWaveLongRange
-			? options.txPower ?? LR_DEFAULT_TX_POWER_DBM
-			: options.txPower;
-		// Check the power that reaches the radio, so the LR default is covered too
+		const radioTXPower = options.txPower;
 		assertRadioTXPower(radioTXPower, this.phyLayer.txPowerRange);
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
-			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
+			?? Math.round(radioTXPower);
 		const advertisedNoiseFloor = await this.getAdvertisedNoiseFloor(
 			protocol,
 			options.lrMpduOverrides?.noiseFloor,
@@ -1231,57 +1348,7 @@ export class ProtocolController
 				protocolDataRate: channel.dataRate,
 				region: this.phyLayer.regionConfig.region,
 			};
-			const serializedMPDU = mpdu.serialize(ctx);
-
-			this.protocolLog.mpdu(
-				mpdu,
-				ctx,
-				"outbound",
-				replacements?.length ? ["noise floor"] : undefined,
-			);
-
-			const result = await this.phyLayer.transmit(
-				serializedMPDU,
-				// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
-				{
-					channel: channel.channel,
-					txPower: radioTXPower,
-					withCCA: options.withCCA ?? true,
-					replacements,
-				},
-			);
-
-			switch (result) {
-				case TransmitCallbackStatus.Completed:
-					// Wait for ACK
-					break;
-
-				case TransmitCallbackStatus.ChannelBusy:
-					// TODO: Wait for channel to be free before retrying
-					busyAttempts++;
-					continue;
-
-				case TransmitResponseStatus.Busy:
-					return { result: MACTransmitResult.Error_QueueBusy };
-
-				case TransmitResponseStatus.Overflow:
-				case TransmitCallbackStatus.Underflow:
-					return { result: MACTransmitResult.Error_FrameLength };
-
-				case TransmitCallbackStatus.Aborted:
-					return { result: MACTransmitResult.Error_Aborted };
-
-				case TransmitCallbackStatus.Blocked:
-					// This one should not happen, since we're not blocking TX
-				case TransmitResponseStatus.InvalidChannel:
-				case TransmitResponseStatus.InvalidParam:
-					// These two should not happen, since we're checking it all beforehand
-				case TransmitCallbackStatus.UnknownError:
-				default:
-					return { result: MACTransmitResult.Error_Unknown };
-			}
-
-			// Transmit was successful
+			const frame = this.serializeOutbound(mpdu, ctx, replacements);
 
 			// G.9959 §8.1.5.1.4.3: "A node that sends a singlecast MPDU with its ACK
 			// request subfield set to 1 shall wait for a minimum of
@@ -1289,6 +1356,34 @@ export class ProtocolController
 			// received." The LR spec requires the same in §6.5.1.5.3 with
 			// aMacLRMinAckWaitDuration
 			const ackTimeout = ackWaitDuration(channel.dataRate, headerFormat);
+
+			// Each branch below must register its wait before calling
+			// `sendAndCheck`. The answer crosses the same serial connection as the
+			// transmit callback, so it can arrive before the transmit promise
+			// resolves
+			const answerAbort = new AbortController();
+			const sendAndCheck = async (): Promise<
+				MACTransmitReport | "retry" | undefined
+			> => {
+				const result = await this.sendFrame(frame, ctx, {
+					txPower: radioTXPower,
+					// G.9959 §8.1.5.1.2 requires clear channel assessment before
+					// transmitting a data frame
+					withCCA: options.withCCA ?? true,
+					replacements,
+				});
+				if (result === TransmitCallbackStatus.Completed) {
+					return undefined;
+				}
+
+				answerAbort.abort();
+				if (result === TransmitCallbackStatus.ChannelBusy) {
+					// TODO: Wait for channel to be free before retrying
+					busyAttempts++;
+					return "retry";
+				}
+				return { result: macResultFromTransmit(result) };
+			};
 
 			if (mpdu instanceof RoutedZWaveMPDU) {
 				const routedMPDU = mpdu;
@@ -1323,7 +1418,7 @@ export class ProtocolController
 					&& m.sequenceNumber === routedMPDU.sequenceNumber;
 
 				const duration = frameDuration(
-					serializedMPDU.length,
+					frame.length,
 					ctx.protocolDataRate,
 					headerFormat,
 				);
@@ -1332,14 +1427,25 @@ export class ProtocolController
 				const silentAckTimeout = ackTimeout + duration;
 				// A routed ack can arrive without us having seen the silent ack, so both are
 				// awaited together until the entire route budget has elapsed
-				const deadline = Date.now()
-					+ silentAckTimeout
+				const budget = silentAckTimeout
 					+ routedAckTimeout(routedMPDU.repeaters.length, duration);
 
-				let outcome = await this.waitForMPDU<RoutedZWaveMPDU>(
+				const firstAnswer = this.waitForMPDU<RoutedZWaveMPDU>(
 					(m) => isSilentAck(m) || isRouteOutcome(m),
-					deadline - Date.now(),
+					undefined,
+					answerAbort.signal,
 				).then((m) => m, () => undefined);
+
+				const failure = await sendAndCheck();
+				if (failure === "retry") continue;
+				if (failure) return failure;
+
+				// The budget starts when the radio reports the frame was sent
+				const deadline = Date.now() + budget;
+				let outcome = await Promise.race([
+					firstAnswer,
+					wait(budget).then(() => undefined),
+				]);
 
 				if (outcome && isSilentAck(outcome)) {
 					sawSilentAck = true;
@@ -1351,7 +1457,11 @@ export class ProtocolController
 					).then((m) => m, () => undefined);
 				}
 
-				if (!outcome) continue;
+				if (!outcome) {
+					// Drop the wait entry the race left behind
+					answerAbort.abort();
+					continue;
+				}
 
 				if (outcome.routedError) {
 					// Attempts on a route a repeater just reported as broken are unlikely to
@@ -1368,8 +1478,6 @@ export class ProtocolController
 				};
 			}
 
-			if (!mpdu.ackRequested) return { result: MACTransmitResult.OK };
-
 			// LR §6.5.1.5.5: "If an Ack MPDU is received within the random backoff
 			// period and contains the correct HomeID, source NodeID and a matching
 			// sequence number, the transmission is considered successful." So LR keeps
@@ -1380,18 +1488,36 @@ export class ProtocolController
 			// G.9959 §8.1.5.1.4.3: "If an ACK MPDU is received within
 			// aMacMinAckWaitDuration symbols and contains the correct HomeID and
 			// source NodeID, the transmission is considered successful"
-			const ack = await this.waitForMPDU(
-				(m) =>
-					m.headerType === MPDUHeaderType.Acknowledgement
-					&& m.homeId === mpdu.homeId
-					// TODO: This cast is not sound
-					&& m.sourceNodeId
-						=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
-					&& ackSequenceNumberMatches(m),
-				ackWindow,
-			).then(() => true, () => false);
+			const ackPromise = mpdu.ackRequested
+				? this.waitForMPDU(
+					(m) =>
+						m.headerType === MPDUHeaderType.Acknowledgement
+						&& m.homeId === mpdu.homeId
+						// TODO: This cast is not sound
+						&& m.sourceNodeId
+							=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
+						&& ackSequenceNumberMatches(m),
+					undefined,
+					answerAbort.signal,
+				).then(() => true, () => false)
+				: undefined;
 
-			if (ack) return { result: MACTransmitResult.OK };
+			const failure = await sendAndCheck();
+			if (failure === "retry") continue;
+			if (failure) return failure;
+
+			if (ackPromise == undefined) {
+				return { result: MACTransmitResult.OK };
+			}
+
+			// The ack window starts when the radio reports the frame was sent
+			const acked = await Promise.race([
+				ackPromise,
+				wait(ackWindow).then(() => false),
+			]);
+			if (acked) return { result: MACTransmitResult.OK };
+			// Drop the wait entry the race left behind
+			answerAbort.abort();
 		}
 
 		if (busyAttempts === attempts.length) {
@@ -1422,8 +1548,8 @@ export class ProtocolController
 			);
 		}
 
-		// Classic acks carry no radio information, so the radio keeps its power there
-		let txPower: number | undefined;
+		const txPower = options.txPower;
+		assertRadioTXPower(txPower, this.phyLayer.txPowerRange);
 		if (options.protocol === Protocols.ZWaveLongRange) {
 			assertInt8(
 				options.lrMpduOverrides?.txPower,
@@ -1434,9 +1560,6 @@ export class ProtocolController
 				options.lrMpduOverrides?.noiseFloor,
 				"The advertised noise floor",
 			);
-			txPower = options.txPower ?? LR_DEFAULT_TX_POWER_DBM;
-			// Check the power that reaches the radio, so the default is covered too
-			assertRadioTXPower(txPower, this.phyLayer.txPowerRange);
 		}
 
 		let mpdu: MPDU;
@@ -1456,7 +1579,7 @@ export class ProtocolController
 				// The MPDU TX Power field is an int8, while the radio accepts
 				// 0.1 dBm steps
 				txPower: options.lrMpduOverrides?.txPower
-					?? Math.round(txPower ?? LR_DEFAULT_TX_POWER_DBM),
+					?? Math.round(txPower),
 				incomingRSSI: options.incomingRSSI ?? RssiError.NotAvailable,
 				noiseFloor: await this.getAdvertisedNoiseFloor(
 					options.protocol,
@@ -1479,49 +1602,16 @@ export class ProtocolController
 			protocolDataRate: this.getProtocolDataRateOrThrow(channel),
 			region: this.phyLayer.regionConfig.region,
 		};
-		const serializedMPDU = mpdu.serialize(ctx);
 
-		this.protocolLog.mpdu(
-			mpdu,
-			ctx,
-			"outbound",
-			replacements?.length ? ["noise floor"] : undefined,
-		);
-
-		const result = await this.phyLayer.transmit(
-			serializedMPDU,
+		const result = await this.sendMPDU(mpdu, ctx, {
+			txPower,
 			// Acks are exempt from clear channel assessment, so they can be sent
 			// within the turnaround time
-			{ channel, txPower, withCCA: false, replacements },
-		);
+			withCCA: false,
+			replacements,
+		});
 
-		switch (result) {
-			case TransmitCallbackStatus.Completed:
-				return MACTransmitResult.OK;
-
-			case TransmitCallbackStatus.ChannelBusy:
-				// TODO: Wait for channel to be free, try again
-				return MACTransmitResult.ChannelBusy;
-
-			case TransmitResponseStatus.Busy:
-				return MACTransmitResult.Error_QueueBusy;
-
-			case TransmitResponseStatus.Overflow:
-			case TransmitCallbackStatus.Underflow:
-				return MACTransmitResult.Error_FrameLength;
-
-			case TransmitCallbackStatus.Aborted:
-				return MACTransmitResult.Error_Aborted;
-
-			case TransmitCallbackStatus.Blocked:
-				// This one should not happen, since we're not blocking TX
-			case TransmitResponseStatus.InvalidChannel:
-			case TransmitResponseStatus.InvalidParam:
-				// These two should not happen, since we're checking it all beforehand
-			case TransmitCallbackStatus.UnknownError:
-			default:
-				return MACTransmitResult.Error_Unknown;
-		}
+		return macResultFromTransmit(result);
 	}
 
 	/** Send the acknowledgements a received frame asks for, in the order they have to go out */
@@ -1547,6 +1637,7 @@ export class ProtocolController
 				sourceNodeId: ownNodeId,
 				channel: info.channel,
 				sequenceNumber: mpdu.sequenceNumber,
+				txPower: this.getSafeAutoAckTXPower(),
 				...(mpdu instanceof LongRangeMPDU
 					? {
 						protocol: Protocols.ZWaveLongRange,
@@ -1657,36 +1748,15 @@ export class ProtocolController
 			protocolDataRate,
 			region,
 		};
-		const serializedMPDU = mpdu.serialize(ctx);
 
-		this.protocolLog.mpdu(mpdu, ctx, "outbound");
+		const result = await this.sendMPDU(mpdu, ctx, {
+			txPower: this.getSafeAutoAckTXPower(),
+			// G.9959 §8.1.5.1.2 requires clear channel assessment before
+			// transmitting a data frame
+			withCCA: true,
+		});
 
-		const result = await this.phyLayer.transmit(
-			serializedMPDU,
-			// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
-			{ channel, withCCA: true },
-		);
-
-		switch (result) {
-			case TransmitCallbackStatus.Completed:
-				return MACTransmitResult.OK;
-
-			case TransmitCallbackStatus.ChannelBusy:
-				return MACTransmitResult.ChannelBusy;
-
-			case TransmitResponseStatus.Busy:
-				return MACTransmitResult.Error_QueueBusy;
-
-			case TransmitResponseStatus.Overflow:
-			case TransmitCallbackStatus.Underflow:
-				return MACTransmitResult.Error_FrameLength;
-
-			case TransmitCallbackStatus.Aborted:
-				return MACTransmitResult.Error_Aborted;
-
-			default:
-				return MACTransmitResult.Error_Unknown;
-		}
+		return macResultFromTransmit(result);
 	}
 
 	private handleReceivedMPDU(mpdu: MPDU, info: MpduRxInfo): void {
@@ -1787,7 +1857,7 @@ export class ProtocolController
 	 */
 	public waitForMPDU<T extends MPDU>(
 		predicate: (mpdu: MPDU) => boolean,
-		timeout: number,
+		timeout?: number,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
@@ -1800,28 +1870,29 @@ export class ProtocolController
 			this.awaitedMPDUs.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMPDUs.indexOf(entry);
 				if (index !== -1) this.awaitedMPDUs.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching message within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching message within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 

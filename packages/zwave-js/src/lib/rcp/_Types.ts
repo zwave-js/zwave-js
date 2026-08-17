@@ -65,11 +65,8 @@ export interface MACTransmitOptions {
 	 * last repeater (not implemented yet).
 	 */
 	destinationWakeup?: MACDestinationWakeup;
-	/**
-	 * Radio TX power in dBm. Default: keep the radio's current power for classic
-	 * Z-Wave, or the default LR TX power for Long Range.
-	 */
-	txPower?: number;
+	/** Radio TX power in dBm */
+	txPower: number;
 	/**
 	 * Values to put into the Long Range MPDU. Anything left out is derived from
 	 * the radio settings, so setting one here advertises a value that does not
@@ -91,6 +88,8 @@ export type MACTransmitAckOptions =
 		destinationNodeId: number;
 		channel: number;
 		sequenceNumber: number;
+		/** Radio TX power in dBm */
+		txPower: number;
 	}
 	& (
 		| {
@@ -98,8 +97,6 @@ export type MACTransmitAckOptions =
 		}
 		| {
 			protocol: Protocols.ZWaveLongRange;
-			/** Radio TX power in dBm. Default: the default LR TX power. */
-			txPower?: number;
 			/**
 			 * The RSSI measured while receiving the frame this acknowledges.
 			 * Default: "RSSI not available".

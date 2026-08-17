@@ -71,6 +71,7 @@ import {
 	getErrorMessage,
 	isAbortError,
 	mergeDeep,
+	noop,
 	num2hex,
 	pick,
 	setTimer,
@@ -256,6 +257,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private rcpLog!: RCPLogger;
 
 	private queue: AsyncQueue<RCPTransaction> = new AsyncQueue();
+	/** Used to immediately abort the ongoing Serial API command */
+	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
 
 	/** A list of awaited message headers */
 	private awaitedMessageHeaders: AwaitedMessageHeader[] = [];
@@ -608,143 +611,169 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		transactionSource?: string,
 	): Promise<RCPMessage | undefined> {
 		const machine = createSerialAPICommandMachine(msg);
+		const abort = this.abortSerialAPICommand = createDeferredPromise<
+			Error
+		>();
+		// Avoid an unhandled rejection when destroying the host while not actively waiting
+		abort.catch(noop);
 		const abortController = new AbortController();
 
 		let nextInput: SerialAPICommandMachineInput<RCPMessage> | undefined = {
 			value: "start",
 		};
 
-		while (!machine.done) {
-			if (nextInput == undefined) {
-				// We should not be in a situation where we have no input for the state machine
-				throw new Error(
-					"Serial API Command machine is in an invalid state: no input provided",
-				);
-			}
-			const transition = machine.next(nextInput);
-			if (transition == undefined) {
-				// We should not be in a situation where the state machine does not transition
-				throw new Error(
-					"Serial API Command machine is in an invalid state: no transition taken",
-				);
-			}
-
-			// The input was used
-			nextInput = undefined;
-
-			// Transition to the new state
-			machine.transition(transition.newState);
-
-			// Now check what needs to be done in the new state
-			switch (machine.state.value) {
-				case "initial":
-					// This should never happen
+		try {
+			while (!machine.done) {
+				if (nextInput == undefined) {
+					// We should not be in a situation where we have no input for the state machine
 					throw new Error(
-						"Serial API Command machine is in an invalid state: transitioned to initial state",
+						"Serial API Command machine is in an invalid state: no input provided",
 					);
-
-				case "sending": {
-					this.rcpLog.logMessage(msg, {
-						direction: "outbound",
-					});
-
-					// Mark the message as sent immediately before actually sending
-					msg.markAsSent();
-					const data = await msg.serialize({});
-					await this.writeSerial(data);
-					nextInput = { value: "message sent" };
-					break;
 				}
-
-				case "waitingForACK": {
-					const controlFlow = await this.waitForMessageHeader(
-						() => true,
-						this._options.timeouts.ack,
-					).catch(() => "timeout" as const);
-
-					if (controlFlow === "timeout") {
-						nextInput = { value: "timeout" };
-					} else if (controlFlow === MessageHeaders.ACK) {
-						nextInput = { value: "ACK" };
-					} else if (controlFlow === MessageHeaders.NAK) {
-						nextInput = { value: "NAK" };
-					}
-
-					break;
-				}
-
-				case "waitingForResponse": {
-					const response = await this.waitForMessage(
-						(resp) => msg.isExpectedResponse(resp),
-						msg.getResponseTimeout()
-							?? this._options.timeouts.response,
-						undefined,
-						abortController.signal,
-					).catch(() => "timeout" as const);
-
-					if (response instanceof Error) {
-						// The command was aborted from the outside
-						// Remove the pending wait entry
-						abortController.abort();
-						throw response;
-					}
-
-					if (response === "timeout") {
-						nextInput = { value: "timeout" };
-					} else if (
-						isSuccessIndicator(response) && !response.isOK()
-					) {
-						nextInput = { value: "response NOK", response };
-					} else {
-						nextInput = { value: "response", response };
-					}
-
-					break;
-				}
-
-				case "waitingForCallback": {
-					const callback = await this.waitForMessage(
-						(resp) => msg.isExpectedCallback(resp),
-						msg.getCallbackTimeout()
-							?? this._options.timeouts.callback,
-						undefined,
-						abortController.signal,
-					).catch(() => "timeout" as const);
-
-					if (callback instanceof Error) {
-						// The command was aborted from the outside
-						// Remove the pending wait entry
-						abortController.abort();
-						throw callback;
-					}
-
-					if (callback === "timeout") {
-						nextInput = { value: "timeout" };
-					} else if (
-						isSuccessIndicator(callback) && !callback.isOK()
-					) {
-						nextInput = { value: "callback NOK", callback };
-					} else {
-						nextInput = { value: "callback", callback };
-					}
-
-					break;
-				}
-
-				case "success": {
-					return machine.state.result;
-				}
-
-				case "failure": {
-					const { reason, result } = machine.state;
-					throw serialAPICommandErrorToZWaveError(
-						reason,
-						msg,
-						result,
-						transactionSource,
+				const transition = machine.next(nextInput);
+				if (transition == undefined) {
+					// We should not be in a situation where the state machine does not transition
+					throw new Error(
+						"Serial API Command machine is in an invalid state: no transition taken",
 					);
+				}
+
+				// The input was used
+				nextInput = undefined;
+
+				// Transition to the new state
+				machine.transition(transition.newState);
+
+				// Now check what needs to be done in the new state
+				switch (machine.state.value) {
+					case "initial":
+						// This should never happen
+						throw new Error(
+							"Serial API Command machine is in an invalid state: transitioned to initial state",
+						);
+
+					case "sending": {
+						this.rcpLog.logMessage(msg, {
+							direction: "outbound",
+						});
+
+						// Mark the message as sent immediately before actually sending
+						msg.markAsSent();
+						const data = await msg.serialize({});
+						await this.writeSerial(data);
+						nextInput = { value: "message sent" };
+						break;
+					}
+
+					case "waitingForACK": {
+						const controlFlow = await Promise.race([
+							abort.catch((e) => e as Error),
+							this.waitForMessageHeader(
+								() => true,
+								this._options.timeouts.ack,
+								abortController.signal,
+							).catch(() => "timeout" as const),
+						]);
+
+						if (controlFlow instanceof Error) {
+							// The command was aborted from the outside
+							// Remove the pending wait entry
+							abortController.abort();
+							throw controlFlow;
+						}
+
+						if (controlFlow === "timeout") {
+							nextInput = { value: "timeout" };
+						} else if (controlFlow === MessageHeaders.ACK) {
+							nextInput = { value: "ACK" };
+						} else if (controlFlow === MessageHeaders.NAK) {
+							nextInput = { value: "NAK" };
+						}
+
+						break;
+					}
+
+					case "waitingForResponse": {
+						const response = await Promise.race([
+							abort.catch((e) => e as Error),
+							this.waitForMessage(
+								(resp) => msg.isExpectedResponse(resp),
+								msg.getResponseTimeout()
+									?? this._options.timeouts.response,
+								undefined,
+								abortController.signal,
+							).catch(() => "timeout" as const),
+						]);
+
+						if (response instanceof Error) {
+							// The command was aborted from the outside
+							// Remove the pending wait entry
+							abortController.abort();
+							throw response;
+						}
+
+						if (response === "timeout") {
+							nextInput = { value: "timeout" };
+						} else if (
+							isSuccessIndicator(response) && !response.isOK()
+						) {
+							nextInput = { value: "response NOK", response };
+						} else {
+							nextInput = { value: "response", response };
+						}
+
+						break;
+					}
+
+					case "waitingForCallback": {
+						const callback = await Promise.race([
+							abort.catch((e) => e as Error),
+							this.waitForMessage(
+								(resp) => msg.isExpectedCallback(resp),
+								msg.getCallbackTimeout()
+									?? this._options.timeouts.callback,
+								undefined,
+								abortController.signal,
+							).catch(() => "timeout" as const),
+						]);
+
+						if (callback instanceof Error) {
+							// The command was aborted from the outside
+							// Remove the pending wait entry
+							abortController.abort();
+							throw callback;
+						}
+
+						if (callback === "timeout") {
+							nextInput = { value: "timeout" };
+						} else if (
+							isSuccessIndicator(callback) && !callback.isOK()
+						) {
+							nextInput = { value: "callback NOK", callback };
+						} else {
+							nextInput = { value: "callback", callback };
+						}
+
+						break;
+					}
+
+					case "success": {
+						return machine.state.result;
+					}
+
+					case "failure": {
+						const { reason, result } = machine.state;
+						throw serialAPICommandErrorToZWaveError(
+							reason,
+							msg,
+							result,
+							transactionSource,
+						);
+					}
 				}
 			}
+		} finally {
+			this.abortSerialAPICommand = undefined;
 		}
 	}
 
@@ -757,6 +786,13 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	>(
 		msg: RCPMessage,
 	): Promise<TResponse> {
+		if (this.wasDestroyed) {
+			throw new ZWaveError(
+				`The RCP host was destroyed`,
+				ZWaveErrorCodes.Driver_Destroyed,
+			);
+		}
+
 		const resultPromise = createDeferredPromise<TResponse>();
 
 		// Create the transaction
@@ -892,10 +928,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			return result.status;
 		} catch (e) {
 			if (isZWaveError(e)) {
-				if (e.context instanceof TransmitResponse) {
+				if (
+					e.context instanceof TransmitResponse
+					|| e.context instanceof TransmitCallback
+				) {
 					// The transmission failed
-					return e.context.status;
-				} else if (e.context instanceof TransmitCallback) {
 					return e.context.status;
 				}
 			}
@@ -1212,14 +1249,15 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	/**
-	 * Waits until a matching message header is received or a timeout has elapsed. Returns the received message.
+	 * Waits until a matching message header is received or an optional timeout has elapsed. Returns the received message.
 	 *
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming message headers.
 	 */
 	public waitForMessageHeader(
 		predicate: (header: MessageHeaders) => boolean,
-		timeout: number,
+		timeout?: number,
+		abortSignal?: AbortSignal,
 	): Promise<MessageHeaders> {
 		return new Promise<MessageHeaders>((resolve, reject) => {
 			const promise = createDeferredPromise<MessageHeaders>();
@@ -1231,36 +1269,41 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			this.awaitedMessageHeaders.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessageHeaders.indexOf(entry);
 				if (index !== -1) this.awaitedMessageHeaders.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching serial frame within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching serial frame within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc);
 			});
+			// When the abort signal is used, silently remove the wait entry
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
 	/**
-	 * Waits until an unsolicited serial message is received or a timeout has elapsed. Returns the received message.
+	 * Waits until an unsolicited serial message is received or an optional timeout has elapsed. Returns the received message.
 	 * @param timeout The number of milliseconds to wait. If the timeout elapses, the returned promise will be rejected
 	 * @param predicate A predicate function to test all incoming messages.
 	 * @param refreshPredicate A predicate function to test partial messages. If this returns `true` for a message, the timer will be restarted.
 	 */
 	public waitForMessage<T extends RCPMessage>(
 		predicate: (msg: RCPMessage) => boolean,
-		timeout: number,
+		timeout?: number,
 		refreshPredicate?: (msg: RCPMessage) => boolean,
 		abortSignal?: AbortSignal,
 	): Promise<T> {
@@ -1275,32 +1318,48 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			this.awaitedMessages.push(entry);
 			const removeEntry = () => {
 				entry.timeout?.clear();
+				abortSignal?.removeEventListener("abort", removeEntry);
 				const index = this.awaitedMessages.indexOf(entry);
 				if (index !== -1) this.awaitedMessages.splice(index, 1);
 			};
 			// When the timeout elapses, remove the wait entry and reject the returned Promise
-			entry.timeout = setTimer(() => {
-				removeEntry();
-				reject(
-					new ZWaveError(
-						`Received no matching message within the provided timeout!`,
-						ZWaveErrorCodes.Controller_Timeout,
-					),
-				);
-			}, timeout);
+			if (timeout) {
+				entry.timeout = setTimer(() => {
+					removeEntry();
+					reject(
+						new ZWaveError(
+							`Received no matching message within the provided timeout!`,
+							ZWaveErrorCodes.Controller_Timeout,
+						),
+					);
+				}, timeout);
+			}
 			// When the promise is resolved, remove the wait entry and resolve the returned Promise
 			void promise.then((cc) => {
 				removeEntry();
 				resolve(cc as T);
 			});
 			// When the abort signal is used, silently remove the wait entry
-			abortSignal?.addEventListener("abort", () => {
-				removeEntry();
-			});
+			abortSignal?.addEventListener("abort", removeEntry);
 		});
 	}
 
 	// #region destroy()
+
+	private destroySerialAPIQueue(
+		reason: string,
+		errorCode?: ZWaveErrorCodes,
+	): void {
+		this.queue.abort();
+
+		// Abort the currently executed serial API command, so the queue does not lock up
+		this.abortSerialAPICommand?.reject(
+			new ZWaveError(
+				reason,
+				errorCode ?? ZWaveErrorCodes.Driver_Destroyed,
+			),
+		);
+	}
 
 	private async destroyWithMessage(message: string): Promise<void> {
 		this.rcpLog.print(message, "error");
@@ -1330,6 +1389,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			if (this.serial.isOpen) await this.serial.close();
 			this.serial = undefined;
 		}
+
+		this.destroySerialAPIQueue(
+			"The RCP host was destroyed",
+			ZWaveErrorCodes.Driver_Destroyed,
+		);
 
 		// Remove all timeouts
 		for (
