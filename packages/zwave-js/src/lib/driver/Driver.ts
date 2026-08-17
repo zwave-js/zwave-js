@@ -7166,6 +7166,8 @@ ${handlers.length} left`,
 
 		const machine = createSerialAPICommandMachine(msg);
 		this.abortSerialAPICommand = createDeferredPromise();
+		// Avoid an unhandled rejection when destroying the driver while not actively waiting
+		this.abortSerialAPICommand.catch(() => {});
 		const abortController = new AbortController();
 
 		let nextInput: SerialAPICommandMachineInput<Message> | undefined = {
@@ -7218,10 +7220,23 @@ ${handlers.length} left`,
 					}
 
 					case "waitingForACK": {
-						const controlFlow = await this.waitForMessageHeader(
-							() => true,
-							this.options.timeouts.ack,
-						).catch(() => "timeout" as const);
+						const controlFlow = await Promise.race([
+							this.abortSerialAPICommand?.catch((e) =>
+								e as Error
+							),
+							this.waitForMessageHeader(
+								() => true,
+								this.options.timeouts.ack,
+								abortController.signal,
+							).catch(() => "timeout" as const),
+						]);
+
+						if (controlFlow instanceof Error) {
+							// The command was aborted from the outside
+							// Remove the pending wait entry
+							abortController.abort();
+							throw controlFlow;
+						}
 
 						if (controlFlow === "timeout") {
 							nextInput = { value: "timeout" };
