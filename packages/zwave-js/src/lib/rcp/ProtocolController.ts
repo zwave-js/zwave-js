@@ -11,10 +11,11 @@ import {
 	type MPDULogContext,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
-	type ProtocolDataRate,
+	ProtocolDataRate,
 	ProtocolHeaderFormat,
 	Protocols,
 	RoutedZWaveMPDU,
+	RssiError,
 	SinglecastLongRangeMPDU,
 	SinglecastZWaveMPDU,
 	ZWaveError,
@@ -31,6 +32,7 @@ import {
 	Bytes,
 	type BytesView,
 	TypedEventTarget,
+	getEnumMemberName,
 	getErrorMessage,
 	setTimer,
 } from "@zwave-js/shared";
@@ -46,10 +48,78 @@ import {
 	type MACTransmitAckOptions,
 	MACTransmitKind,
 	type MACTransmitOptions,
+	type MACTransmitReport,
 	MACTransmitResult,
 } from "./_Types.js";
 
 type AwaitedMPDUEntry = AwaitedThing<MPDU>;
+
+/** ITU-T G.9959 (01/2015), Table 8-19: aMacMinRetransmitDelay, "Random backoff shall be higher than this value" */
+const MAC_MIN_RETRANSMIT_DELAY = 10;
+
+/** ITU-T G.9959 (01/2015), Table 8-19: aMacMaxRetransmitDelay, "Random backoff shall be lower than this value" */
+const MAC_MAX_RETRANSMIT_DELAY = 40;
+
+/** Extra time each hop gets on top of the frame duration, covering repeater processing and turnaround */
+const ROUTED_HOP_MARGIN = 10;
+
+/** How long a frame of the given length occupies the channel, in milliseconds */
+export function frameDuration(
+	frameLength: number,
+	dataRate: ProtocolDataRate,
+	headerFormat: ProtocolHeaderFormat,
+): number {
+	let bitrate: number;
+	// ITU-T G.9959 (01/2015), Table 7-10: the minimum singlecast preamble is 10 bytes
+	// for R1 and R2. R3 uses 40 bytes in channel configuration 2 and 24 bytes in
+	// channel configuration 3
+	let preambleLength: number;
+	switch (dataRate) {
+		case ProtocolDataRate.ZWave_9k6:
+			bitrate = 9600;
+			preambleLength = 10;
+			break;
+		case ProtocolDataRate.ZWave_40k:
+			bitrate = 40000;
+			preambleLength = 10;
+			break;
+		default:
+			bitrate = 100000;
+			preambleLength =
+				headerFormat === ProtocolHeaderFormat.Classic3Channel ? 24 : 40;
+			break;
+	}
+
+	return (frameLength + preambleLength) * 8 * 1000 / bitrate;
+}
+
+/**
+ * Time to wait for a routed acknowledgement or routed error, measured from the moment
+ * repeater 0 has repeated the frame.
+ */
+export function routedAckTimeout(
+	numRepeaters: number,
+	frameDurationMs: number,
+): number {
+	// Repeater 0 has already repeated the frame, so numRepeaters - 1 hops remain until
+	// it reaches the destination, and numRepeaters + 1 hops bring the routed ack back.
+	// Routed frames go out with Ack Req = 0, so no hop is retransmitted by the MAC layer
+	const numHops = 2 * numRepeaters;
+	const timeout = numHops * (frameDurationMs + ROUTED_HOP_MARGIN);
+
+	// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
+	// Table 4.28: aNwkRoutedAckTimeout is the "Timeout for considering that a
+	// particular Routed Frame has been lost and will not return any Routed
+	// Acknowledgement or Routed Error." with a range of 18ms..1000ms
+	return Math.min(1000, Math.max(18, Math.ceil(timeout)));
+}
+
+/** Whether the frame is a routed frame that its last repeater has delivered to the destination */
+export function isFinalHopOfRoutedFrame(mpdu: MPDU): mpdu is RoutedZWaveMPDU {
+	return mpdu instanceof RoutedZWaveMPDU
+		&& mpdu.direction === "outbound"
+		&& mpdu.hop === mpdu.repeaters.length;
+}
 
 export interface ProtocolControllerOptions {
 	/**
@@ -189,7 +259,7 @@ export class ProtocolController
 	public async transmitData(
 		data: BytesView,
 		options: MACTransmitOptions,
-	): Promise<MACTransmitResult> {
+	): Promise<MACTransmitReport> {
 		if (this.phyLayer == undefined) {
 			throw new ZWaveError(
 				`The PHY layer has not been initialized yet!`,
@@ -234,6 +304,43 @@ export class ProtocolController
 			}
 		}
 
+		const route = options.route;
+		if (route) {
+			if (protocol !== Protocols.ZWave) {
+				throw new ZWaveError(
+					`Source routing is only supported for classic Z-Wave`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			if (options.destination.kind !== MACTransmitKind.Singlecast) {
+				throw new ZWaveError(
+					`Source routing is only supported for singlecast transmissions`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			// Z-Wave and Z-Wave Long Range Network Layer Specification
+			// (2023.05.26), NWK:0019.1: "This field shall be in the range 1…4."
+			if (route.length < 1 || route.length > 4) {
+				throw new ZWaveError(
+					`A route must contain between 1 and 4 repeaters, got ${route.length}`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			for (const repeater of route) {
+				// The routing header encodes each repeater in a single byte
+				if (
+					!Number.isInteger(repeater)
+					|| repeater < 1
+					|| repeater > MAX_NODES
+				) {
+					throw new ZWaveError(
+						`A repeater must be a node ID between 1 and ${MAX_NODES}, got ${repeater}`,
+						ZWaveErrorCodes.Argument_Invalid,
+					);
+				}
+			}
+		}
+
 		let initialChannel: number;
 		if (protocol === Protocols.ZWave) {
 			initialChannel = 0;
@@ -253,14 +360,50 @@ export class ProtocolController
 		if (protocol == Protocols.ZWave) {
 			switch (options.destination.kind) {
 				case MACTransmitKind.Singlecast: {
-					mpdu = new SinglecastZWaveMPDU({
-						homeId: options.homeId,
-						ackRequested: options.ackRequested ?? true,
-						sourceNodeId: options.sourceNodeId,
-						destinationNodeId: options.destination.nodeId,
-						sequenceNumber,
-						speedModified: false,
-					});
+					if (route) {
+						mpdu = new RoutedZWaveMPDU({
+							homeId: options.homeId,
+							// ITU-T G.9959 (01/2015), §9.3: "MPDUs may carry mesh routing
+							// information when the "Routed" flag of the frame control field
+							// is set or if the "Routed Frame" header type is used."
+							// The 3-channel frame control has no routed flag
+							headerType: headerFormat
+									=== ProtocolHeaderFormat.Classic3Channel
+								? MPDUHeaderType.Routed
+								: MPDUHeaderType.Singlecast,
+							routed: true,
+							// Z-Wave and Z-Wave Long Range Network Layer Specification
+							// (2023.05.26), NWK:0180.1: "A node sending or repeating a
+							// routing frame should not request a MPDU Acknowledgement (ACK
+							// Req subfield set to 0 in the MPDU Frame Control). The sending
+							// node should instead listen for the next repeater repeat frame
+							// and use this as a silent acknowledgement."
+							// This is a should, so a caller may still ask for one
+							ackRequested: options.ackRequested ?? false,
+							sourceNodeId: options.sourceNodeId,
+							destinationNodeId: options.destination.nodeId,
+							sequenceNumber,
+							speedModified: false,
+							direction: "outbound",
+							routedAck: false,
+							routedError: false,
+							hop: 0,
+							repeaters: [...route],
+							// NWK:018E.1: "A node using Channel Configuration 3 shall set the
+							// Destination Wake Up field to 0 when transmitting to an AL node."
+							// Beaming to FLiRS destinations is not implemented yet
+							destinationWakeup: false,
+						});
+					} else {
+						mpdu = new SinglecastZWaveMPDU({
+							homeId: options.homeId,
+							ackRequested: options.ackRequested ?? true,
+							sourceNodeId: options.sourceNodeId,
+							destinationNodeId: options.destination.nodeId,
+							sequenceNumber,
+							speedModified: false,
+						});
+					}
 					break;
 				}
 				case MACTransmitKind.Multicast: {
@@ -359,9 +502,20 @@ export class ProtocolController
 				throw new Error(`Unsupported header format ${headerFormat}`);
 		}
 
+		// ITU-T G.9959 (01/2015): a transmitting node which receives an ACK MPDU shall
+		// accept the sequence number value zero in 2-channel configurations. This
+		// exception covers ACK MPDUs, so other frames must match the exact number
+		const ackSequenceNumberMatches = (m: MPDU) =>
+			m.sequenceNumber === mpdu.sequenceNumber
+			|| (m.sequenceNumber === 0
+				&& headerFormat === ProtocolHeaderFormat.Classic2Channel);
+
 		let busyAttempts = 0;
+		let sawSilentAck = false;
 
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+			sawSilentAck = false;
+
 			// Serializing an MPDU changes its payload property, so we set it here
 			// to the original data
 			mpdu.payload = Bytes.view(data);
@@ -402,14 +556,14 @@ export class ProtocolController
 					continue;
 
 				case TransmitResponseStatus.Busy:
-					return MACTransmitResult.Error_QueueBusy;
+					return { result: MACTransmitResult.Error_QueueBusy };
 
 				case TransmitResponseStatus.Overflow:
 				case TransmitCallbackStatus.Underflow:
-					return MACTransmitResult.Error_FrameLength;
+					return { result: MACTransmitResult.Error_FrameLength };
 
 				case TransmitCallbackStatus.Aborted:
-					return MACTransmitResult.Error_Aborted;
+					return { result: MACTransmitResult.Error_Aborted };
 
 				case TransmitCallbackStatus.Blocked:
 					// This one should not happen, since we're not blocking TX
@@ -418,18 +572,101 @@ export class ProtocolController
 					// These two should not happen, since we're checking it all beforehand
 				case TransmitCallbackStatus.UnknownError:
 				default:
-					return MACTransmitResult.Error_Unknown;
+					return { result: MACTransmitResult.Error_Unknown };
 			}
 
 			// Transmit was successful
-			if (!mpdu.ackRequested) return MACTransmitResult.OK;
 
-			// Wait for the ACK.
-			// If an Ack MPDU is received within the random backoff period (10..40ms)
-			// and contains the correct HomeID, source NodeID and a matching sequence number,
-			// the transmission is considered successful.
-			const ackTimeout = 10 + Math.round(Math.random() * 30);
+			// An Ack MPDU is expected within the random backoff period
+			const ackTimeout = MAC_MIN_RETRANSMIT_DELAY
+				+ Math.round(
+					Math.random()
+						* (MAC_MAX_RETRANSMIT_DELAY - MAC_MIN_RETRANSMIT_DELAY),
+				);
 
+			if (mpdu instanceof RoutedZWaveMPDU) {
+				const routedMPDU = mpdu;
+
+				// NWK:0180.1: repeater 0 repeating the frame is the silent acknowledgement
+				// of our transmission. Its repeat carries our source and destination, and
+				// travels between repeater 0 and the next hop
+				const isSilentAck = (m: MPDU) =>
+					m instanceof RoutedZWaveMPDU
+					&& m.homeId === routedMPDU.homeId
+					&& m.direction === "outbound"
+					&& m.sourceNodeId === routedMPDU.sourceNodeId
+					&& m.destinationNodeId === routedMPDU.destinationNodeId
+					&& m.hop === 1
+					&& m.repeaters.length === routedMPDU.repeaters.length
+					&& m.repeaters.every((r, i) =>
+						r === routedMPDU.repeaters[i]
+					)
+					&& m.sequenceNumber === routedMPDU.sequenceNumber;
+
+				const isRouteOutcome = (m: MPDU) =>
+					m instanceof RoutedZWaveMPDU
+					&& m.homeId === routedMPDU.homeId
+					&& (m.routedAck || m.routedError)
+					// Any hop > 0 is meant for a repeater
+					&& m.hop === 0
+					&& m.destinationNodeId === routedMPDU.sourceNodeId
+					// NWK:0190.1: "The repeater node sending the Routed Error Frame shall
+					// set the Source NodeID of the frame as the value of the Destination
+					// NodeID of the Routed Frame which delivery failed."
+					&& m.sourceNodeId === routedMPDU.destinationNodeId
+					&& m.sequenceNumber === routedMPDU.sequenceNumber;
+
+				const duration = frameDuration(
+					serializedMPDU.length,
+					ctx.protocolDataRate,
+					headerFormat,
+				);
+				// The silent ack is a full repeat of the frame, so it needs the air time of
+				// one frame on top of the backoff period
+				const silentAckTimeout = ackTimeout + duration;
+				// A routed ack can arrive without us having seen the silent ack, so both are
+				// awaited together until the entire route budget has elapsed
+				const deadline = Date.now()
+					+ silentAckTimeout
+					+ routedAckTimeout(routedMPDU.repeaters.length, duration);
+
+				let outcome = await this.waitForMPDU<RoutedZWaveMPDU>(
+					(m) => isSilentAck(m) || isRouteOutcome(m),
+					deadline - Date.now(),
+				).then((m) => m, () => undefined);
+
+				if (outcome && isSilentAck(outcome)) {
+					sawSilentAck = true;
+					// The frame is on its way. Wait for the destination to answer with a routed
+					// acknowledgement, or for a repeater to report that the route is broken
+					outcome = await this.waitForMPDU<RoutedZWaveMPDU>(
+						isRouteOutcome,
+						Math.max(0, deadline - Date.now()),
+					).then((m) => m, () => undefined);
+				}
+
+				if (!outcome) continue;
+
+				if (outcome.routedError) {
+					// Attempts on a route a repeater just reported as broken are unlikely to
+					// succeed, so we let the caller pick a different route
+					return {
+						result: MACTransmitResult.RoutedError,
+						failedHop: outcome.failedHop,
+					};
+				}
+
+				return {
+					result: MACTransmitResult.OK,
+					repeaterRSSI: outcome.repeaterRSSI,
+				};
+			}
+
+			if (!mpdu.ackRequested) return { result: MACTransmitResult.OK };
+
+			// If an Ack MPDU is received within the backoff period and contains the correct
+			// HomeID, source NodeID and a matching sequence number, the transmission is
+			// considered successful.
 			const ack = await this.waitForMPDU(
 				(m) =>
 					m.headerType === MPDUHeaderType.Acknowledgement
@@ -437,20 +674,21 @@ export class ProtocolController
 					// TODO: This cast is not sound
 					&& m.sourceNodeId
 						=== (mpdu as SinglecastZWaveMPDU).destinationNodeId
-					&& (m.sequenceNumber === mpdu.sequenceNumber
-						// For 2-channel configurations, seq-no 0 must also be accepted
-						|| (m.sequenceNumber === 0
-							&& headerFormat
-								=== ProtocolHeaderFormat.Classic2Channel)),
+					&& ackSequenceNumberMatches(m),
 				ackTimeout,
 			).then(() => true, () => false);
 
-			if (ack) return MACTransmitResult.OK;
+			if (ack) return { result: MACTransmitResult.OK };
 		}
 
-		if (busyAttempts === maxAttempts) return MACTransmitResult.ChannelBusy;
+		if (busyAttempts === maxAttempts) {
+			return { result: MACTransmitResult.ChannelBusy };
+		}
 
-		return MACTransmitResult.NoAck;
+		// The last attempt reached the route, so the destination or a repeater dropped it
+		if (sawSilentAck) return { result: MACTransmitResult.NoRoutedAck };
+
+		return { result: MACTransmitResult.NoAck };
 	}
 
 	// FIXME: Merge logic with transmit()
@@ -544,6 +782,171 @@ export class ProtocolController
 		}
 	}
 
+	/** Send the acknowledgements a received frame asks for, in the order they have to go out */
+	private async acknowledgeReceivedFrame(
+		mpdu: SinglecastZWaveMPDU | RoutedZWaveMPDU | SinglecastLongRangeMPDU,
+		info: MpduRxInfo,
+		ownNodeId: number,
+	): Promise<void> {
+		// ITU-T G.9959 (01/2015), §8.1.3.3.2: "A receiving node shall return an ACK MPDU
+		// in response to the ACK request." This includes the last hop of a routed frame,
+		// where NWK:0180.1 only recommends that the repeater leaves ACK Req clear.
+		// NWK:0182.1: "The repeater 0 node shall request an ACK MPDU to the destination
+		// NodeID when it repeats a Routed NPDU with the Direction field set to 1 (Routed
+		// Error or Routed Acknowledgement frame)."
+		if (mpdu.ackRequested) {
+			this.protocolLog.print("Acknowledging incoming frame", "verbose");
+
+			await this.transmitACK({
+				homeId: mpdu.homeId,
+				// For a routed ack or error, this is the spoofed source of the frame,
+				// which repeater 0 accepts as the address of its own repeat
+				destinationNodeId: mpdu.sourceNodeId,
+				sourceNodeId: ownNodeId,
+				channel: info.channel,
+				sequenceNumber: mpdu.sequenceNumber,
+				...(mpdu instanceof LongRangeMPDU
+					? {
+						protocol: Protocols.ZWaveLongRange,
+						senderTXPower: mpdu.txPower,
+						senderNoiseFloor: mpdu.noiseFloor,
+					}
+					: {
+						protocol: Protocols.ZWave,
+					}),
+			});
+		}
+
+		if (isFinalHopOfRoutedFrame(mpdu)) {
+			this.protocolLog.print(
+				"Acknowledging incoming routed frame",
+				"verbose",
+			);
+
+			const result = await this.transmitRoutedAck(mpdu, info.channel);
+			if (result !== MACTransmitResult.OK) {
+				// The originator reports NoRoutedAck when this does not go out,
+				// so log why it failed on this end
+				this.protocolLog.print(
+					`Failed to acknowledge incoming routed frame: ${
+						getEnumMemberName(MACTransmitResult, result)
+					}`,
+					"warn",
+				);
+			}
+		}
+	}
+
+	/**
+	 * Answer a routed frame that has reached us with a routed acknowledgement.
+	 * Must only be called for a frame whose last repeater has transmitted to us.
+	 */
+	private async transmitRoutedAck(
+		frame: RoutedZWaveMPDU,
+		channel: number,
+	): Promise<MACTransmitResult> {
+		if (this.phyLayer?.regionConfig == undefined) {
+			throw new ZWaveError(
+				`The current region is not known yet`,
+				ZWaveErrorCodes.Driver_NotReady,
+			);
+		}
+
+		if (this.ownNodeId == undefined) {
+			throw new ZWaveError(
+				`The own node ID is not known yet`,
+				ZWaveErrorCodes.Driver_NotReady,
+			);
+		}
+
+		const region = this.phyLayer.regionConfig.region;
+		const headerFormat = getProtocolHeaderFormat(
+			rfRegionToRadioProtocolMode(region),
+			channel,
+		);
+
+		// Z-Wave and Z-Wave Long Range Network Layer Specification (2023.05.26),
+		// NWK:0183.1: "A node receiving a Routed Frame shall return a Routed
+		// Acknowledgement using the same route as in the received Routed Frame."
+		const mpdu = new RoutedZWaveMPDU({
+			homeId: frame.homeId,
+			headerType: headerFormat === ProtocolHeaderFormat.Classic3Channel
+				? MPDUHeaderType.Routed
+				: MPDUHeaderType.Singlecast,
+			routed: true,
+			// NWK:0180.1 applies to the routed ack too, the last repeater's repeat
+			// serves as the silent acknowledgement
+			ackRequested: false,
+			sourceNodeId: this.ownNodeId,
+			destinationNodeId: frame.sourceNodeId,
+			sequenceNumber: frame.sequenceNumber,
+			// NWK:000D.1: "The 'Speed Modified' subfield from the MPDU Frame Control
+			// [G.9959] shall be ignored and this field shall be used instead when a
+			// routing header is present." The return path runs at the speed the frame
+			// arrived with
+			speedModified: frame.speedModified,
+			direction: "inbound",
+			routedAck: true,
+			routedError: false,
+			repeaters: frame.repeaters,
+			// The ack travels back over the hop the frame just arrived on
+			hop: frame.repeaters.length,
+			// NWK:0037.1: "A Routed Acknowledgement frame shall not comprise a DLPDU
+			// data payload."
+			payload: undefined,
+			// NWK:018E.1: "A node using Channel Configuration 3 shall set the
+			// Destination Wake Up field to 0 when transmitting to an AL node."
+			// NWK:0038.1: "A node returning a Routed Acknowledgement shall not include
+			// the Destination Wake Up Extension."
+			destinationWakeup: false,
+			// NWK:0039.1: "A node returning a Routed Acknowledgement should include the
+			// Incoming Routed RSSI Extension. If using the Incoming Routed RSSI
+			// Extension, a sending node shall set the repeater 0..4 values to 0x7F."
+			repeaterRSSI: [
+				RssiError.NotAvailable,
+				RssiError.NotAvailable,
+				RssiError.NotAvailable,
+				RssiError.NotAvailable,
+			],
+		});
+
+		const ctx: MPDUEncodingContext = {
+			channel,
+			protocolDataRate: this.getProtocolDataRateOrThrow(channel),
+			region,
+		};
+		const serializedMPDU = mpdu.serialize(ctx);
+
+		this.protocolLog.mpdu(mpdu, ctx, "outbound");
+
+		const result = await this.phyLayer.transmit(
+			serializedMPDU,
+			// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
+			{ channel, withCCA: true },
+		);
+
+		switch (result) {
+			case TransmitCallbackStatus.Completed:
+				return MACTransmitResult.OK;
+
+			case TransmitCallbackStatus.ChannelBusy:
+				return MACTransmitResult.ChannelBusy;
+
+			case TransmitResponseStatus.Busy:
+				return MACTransmitResult.Error_QueueBusy;
+
+			case TransmitResponseStatus.Overflow:
+			case TransmitCallbackStatus.Underflow:
+				return MACTransmitResult.Error_FrameLength;
+
+			case TransmitCallbackStatus.Aborted:
+				return MACTransmitResult.Error_Aborted;
+
+			default:
+				return MACTransmitResult.Error_Unknown;
+		}
+	}
+
 	private handleReceivedMPDU(mpdu: MPDU, info: MpduRxInfo): void {
 		if (this.phyLayer == undefined) {
 			throw new ZWaveError(
@@ -579,29 +982,16 @@ export class ProtocolController
 				&& mpdu.destinationNodeId === this.ownNodeId
 			) {
 				// This is a frame addressed to us
-				if (mpdu.ackRequested) {
-					// We need to send an ACK
-					this.protocolLog.print(
-						"Acknowledging incoming frame",
-						"verbose",
-					);
+				if (
+					this.autoAck
+					&& (mpdu.ackRequested || isFinalHopOfRoutedFrame(mpdu))
+				) {
 					// A failed ACK behaves like a lost ACK, so it only needs to be logged
-					this.transmitACK({
-						homeId: mpdu.homeId,
-						destinationNodeId: mpdu.sourceNodeId,
-						sourceNodeId: this.ownNodeId,
-						channel: info.channel,
-						sequenceNumber: mpdu.sequenceNumber,
-						...(mpdu instanceof LongRangeMPDU
-							? {
-								protocol: Protocols.ZWaveLongRange,
-								senderTXPower: mpdu.txPower,
-								senderNoiseFloor: mpdu.noiseFloor,
-							}
-							: {
-								protocol: Protocols.ZWave,
-							}),
-					}).catch((e) => {
+					this.acknowledgeReceivedFrame(
+						mpdu,
+						info,
+						this.ownNodeId,
+					).catch((e) => {
 						this.protocolLog.print(
 							`Failed to acknowledge incoming frame: ${
 								getErrorMessage(e)
