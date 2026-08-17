@@ -52,6 +52,22 @@ export interface MACTransmitOptions {
 	 * The repeater list must contain between 1 and 4 node IDs.
 	 */
 	route?: readonly number[];
+	/**
+	 * Radio TX power in dBm. Default: keep the radio's current power for classic
+	 * Z-Wave, or the default LR TX power for Long Range.
+	 */
+	txPower?: number;
+	/**
+	 * Values to put into the Long Range MPDU. Anything left out is derived from
+	 * the radio settings, so setting one here advertises a value that does not
+	 * match reality, for testing spec violations.
+	 */
+	lrMpduOverrides?: {
+		/** LR MPDU TX Power field. Default: the radio TX power. */
+		txPower?: number;
+		/** LR MPDU Noise Floor field. Default: "RSSI not available". */
+		noiseFloor?: number;
+	};
 }
 
 export type MACTransmitAckOptions =
@@ -69,8 +85,24 @@ export type MACTransmitAckOptions =
 		}
 		| {
 			protocol: Protocols.ZWaveLongRange;
-			senderTXPower: number;
-			senderNoiseFloor: number;
+			/** Radio TX power in dBm. Default: the default LR TX power. */
+			txPower?: number;
+			/**
+			 * The RSSI measured while receiving the frame this acknowledges.
+			 * Default: "RSSI not available".
+			 */
+			incomingRSSI?: number;
+			/**
+			 * Values to put into the ack MPDU. Anything left out is derived from the
+			 * radio settings, so setting one here advertises a value that does not
+			 * match reality, for testing spec violations.
+			 */
+			lrMpduOverrides?: {
+				/** LR MPDU TX Power field. Default: the radio TX power. */
+				txPower?: number;
+				/** LR MPDU Noise Floor field. Default: "RSSI not available". */
+				noiseFloor?: number;
+			};
 		}
 	);
 

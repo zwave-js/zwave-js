@@ -1407,8 +1407,12 @@ export type MACTransmitAckOptions = {
     protocol: Protocols.ZWave;
 } | {
     protocol: Protocols.ZWaveLongRange;
-    senderTXPower: number;
-    senderNoiseFloor: number;
+    txPower?: number;
+    incomingRSSI?: number;
+    lrMpduOverrides?: {
+        txPower?: number;
+        noiseFloor?: number;
+    };
 });
 
 // Warning: (ae-missing-release-tag) "MACTransmitDestination" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1446,11 +1450,16 @@ export interface MACTransmitOptions {
     destination: MACTransmitDestination;
     // (undocumented)
     homeId: number;
+    lrMpduOverrides?: {
+        txPower?: number;
+        noiseFloor?: number;
+    };
     // (undocumented)
     protocol?: Protocols;
     route?: readonly number[];
     // (undocumented)
     sourceNodeId: number;
+    txPower?: number;
     withCCA?: boolean;
 }
 
@@ -3283,7 +3292,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:7822:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:382:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2674:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-// src/lib/rcp/RCPHost.ts:536:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/rcp/RCPHost.ts:537:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:742:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
