@@ -217,6 +217,17 @@ type ParsedNVM =
 		type: "unknown";
 	};
 
+function setControllerIsListening(json: NVMJSON | NVM500JSON): void {
+	if ("isListening" in json.controller) {
+		json.controller.isListening = true;
+	}
+
+	const controllerNode = json.nodes[json.controller.nodeId || 1];
+	if (controllerNode && "isListening" in controllerNode) {
+		controllerNode.isListening = true;
+	}
+}
+
 /**
  * Options influencing how NVM contents should be migrated.
  * By default, all data will be preserved.
@@ -2056,18 +2067,6 @@ export async function migrateNVM(
 		&& preserveNeighbors
 		&& preserveRoutes
 		&& preserveSUCUpdateEntries;
-	let sourceApplicationNodeIsListening = true;
-	if (source.type === 700) {
-		sourceApplicationNodeIsListening = source.json.controller.isListening;
-		source.json.controller.isListening = true;
-	} else if (source.type === 500) {
-		const controllerNode =
-			source.json.nodes[source.json.controller.nodeId || 1];
-		if (controllerNode && "isListening" in controllerNode) {
-			sourceApplicationNodeIsListening = controllerNode.isListening;
-			controllerNode.isListening = true;
-		}
-	}
 
 	// Short circuit if...
 	if (
@@ -2083,7 +2082,8 @@ export async function migrateNVM(
 		// ...both the source and the target are 700 series, but at least the target uses an unsupported protocol version.
 		// We can be sure however that the target can upgrade any 700 series NVM to its protocol version, as long as the
 		// source protocol version is not higher than the target's
-		if (source.type === 700 && !sourceApplicationNodeIsListening) {
+		if (source.type === 700 && !source.json.controller.isListening) {
+			setControllerIsListening(source.json);
 			return jsonToNVM(
 				source.json,
 				source.json.controller.applicationVersion,
@@ -2100,7 +2100,7 @@ export async function migrateNVM(
 		// ...everything should be preserved,...
 		&& preserveAll
 		// ...and the application node is configured as always listening
-		&& sourceApplicationNodeIsListening
+		&& source.json.controller.isListening
 	) {
 		// ... the source and target protocol versions are compatible without conversion
 		const sourceProtocolVersion = source.json.controller.protocolVersion;
@@ -2202,6 +2202,7 @@ export async function migrateNVM(
 		};
 		// If the target is a 500 series stick, preserve the RF config
 		json.controller.rfConfig = target.json.controller.rfConfig;
+		setControllerIsListening(json);
 		return jsonToNVM500(json, target.json.controller.protocolVersion);
 	} else if (source.type === 500 && target.type === 700) {
 		// We need to upgrade the source to 700 series
@@ -2210,9 +2211,9 @@ export async function migrateNVM(
 			...json500To700(source.json, true),
 			meta: target.json.meta,
 		};
-		json.controller.isListening = true;
 		// The target is a different series, try to preserve the RF config of the target stick
 		json.controller.rfConfig = target.json.controller.rfConfig;
+		setControllerIsListening(json);
 		// 700 series distinguishes the NVM format by the application version
 		return jsonToNVM(json, target.json.controller.applicationVersion);
 	} else if (source.type === 700 && target.type === 500) {
@@ -2223,6 +2224,7 @@ export async function migrateNVM(
 		};
 		// The target is a different series, try to preserve the RF config of the target stick
 		json.controller.rfConfig = target.json.controller.rfConfig;
+		setControllerIsListening(json);
 		return jsonToNVM500(json, target.json.controller.protocolVersion);
 	} else {
 		// Both are 700, so we just need to update the metadata to match the target
@@ -2230,6 +2232,7 @@ export async function migrateNVM(
 			...(source.json as NVMJSONWithMeta),
 			meta: (target.json as NVMJSONWithMeta).meta,
 		};
+		setControllerIsListening(json);
 		// 700 series distinguishes the NVM format by the application version
 		return jsonToNVM(json, target.json.controller.applicationVersion);
 	}

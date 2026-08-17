@@ -298,6 +298,38 @@ test("500 to 700 migration repairs the application node listening flag", async (
 	).toBe(true);
 });
 
+test("700 to 500 migration repairs the application node listening flag", async (t) => {
+	const fixturesDir500 = path.join(
+		__dirname,
+		"../test/fixtures/nvm_500_binary",
+	);
+	const fixturesDir700 = path.join(
+		__dirname,
+		"../test/fixtures/nvm_700_binary",
+	);
+
+	const nvmSource = await fsp.readFile(
+		path.join(fixturesDir700, "ctrlr_backup_700_7.12.bin"),
+	);
+	const sourceJSON = await nvmToJSON(nvmSource);
+	sourceJSON.controller.isListening = false;
+	sourceJSON.nodes[sourceJSON.controller.nodeId].isListening = false;
+	const sourceWithInvalidNodeInfo = await jsonToNVM(
+		sourceJSON,
+		sourceJSON.controller.applicationVersion,
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir500, "ctrlr_backup_500_static_6.8x.bin"),
+	);
+
+	const converted = await migrateNVM(sourceWithInvalidNodeInfo, nvmTarget);
+	const convertedJSON = await nvm500ToJSON(converted);
+
+	t.expect(
+		convertedJSON.nodes[convertedJSON.controller.nodeId || 1].isListening,
+	).toBe(true);
+});
+
 test("strip application data during migration", async (t) => {
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
 
