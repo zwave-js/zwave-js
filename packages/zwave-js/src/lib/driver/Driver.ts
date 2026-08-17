@@ -7004,9 +7004,7 @@ ${handlers.length} left`,
 							|| e.code === ZWaveErrorCodes.Driver_TaskRemoved
 							|| e.code === ZWaveErrorCodes.Driver_Destroyed
 						) {
-							// We gave up on this command, so don't retry it.
-							// The driver error codes mean the Serial API queue was
-							// aborted, so a retry would never be executed.
+							// We gave up on this command, so don't retry it
 							throw e;
 						}
 
