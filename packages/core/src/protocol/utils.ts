@@ -1,16 +1,32 @@
 import { type RSSI } from "../definitions/RSSI.js";
 import { ChannelConfiguration } from "./_Types.js";
 
+/**
+ * The TX power levels in dBm a Z-Wave Long Range beam frame can advertise,
+ * indexed by its 4-bit Tx Power field. Z-Wave Long Range PHY and MAC Layer
+ * Specification (2023.07.03), Table 6-31.
+ */
 // dprint-ignore
-const longRangeBeamPowers = [
+const longRangeBeamPowers: readonly number[] = [
 	-6, -2,  2,  6,
 	10, 13, 16, 19,
 	21, 23, 25, 26,
 	27, 28, 29, 30,
 ];
 
-export function longRangeBeamPowerToDBm(power: number): number {
-	return longRangeBeamPowers[power];
+export function longRangeBeamPowerIndexToDBm(index: number): number {
+	return longRangeBeamPowers[index];
+}
+
+/**
+ * Converts a TX power in dBm to the 4-bit Tx Power field of a Z-Wave Long Range
+ * beam frame, rounding up to the nearest representable level. The spec defines
+ * no rounding direction, and rounding up never advertises less than the beam
+ * carries.
+ */
+export function longRangeBeamPowerToIndex(dBm: number): number {
+	const index = longRangeBeamPowers.findIndex((level) => level >= dBm);
+	return index === -1 ? longRangeBeamPowers.length - 1 : index;
 }
 
 export function padNodeId(nodeId: number): string {
@@ -35,7 +51,9 @@ export function getRouteTag(
 			: padNodeId(source),
 	].map((id, i) => {
 		if (i === 0) return id;
-		if (i - 1 === failedHop) return " × " + id;
+		// NWK:0010.1 numbers the repeater that got no acknowledgement, so the
+		// broken link is the one leaving `repeaters[failedHop]`
+		if (i - 2 === failedHop) return " × " + id;
 		if (i - 1 === currentHop) {
 			return (direction === "outbound" ? " » " : " « ") + id;
 		}

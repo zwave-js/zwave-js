@@ -14,6 +14,7 @@ import {
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	NormalExplorerZWaveMPDU,
+	ProtocolDataRate,
 	Protocols,
 	type RSSI,
 	RoutedZWaveMPDU,
@@ -25,7 +26,7 @@ import {
 	ZWaveMPDU,
 	type ZnifferProtocolDataRate,
 	type ZnifferRegion,
-	longRangeBeamPowerToDBm,
+	longRangeBeamPowerIndexToDBm,
 	padNodeId,
 	protocolDataRateToString,
 	rssiToString,
@@ -87,18 +88,23 @@ export function parseBeamFrame(
 		return new BeamStop();
 	}
 
-	// The specific type of `...BeamStart` depends on the channel
+	// The channels Long Range occupies depend on the channel configuration,
+	// e.g. the end device configurations put Long Range on channels 0 and 1
 	const ctx = znifferFrameInfoToMPDUParsingContext(frameInfo);
-	if (ctx.channel <= 2) {
-		return ZWaveBeamStart.parse(frame.payload, ctx);
-	}
-	if (ctx.channel <= 4) {
+	if (ctx.protocolDataRate === ProtocolDataRate.LongRange_100k) {
 		return LongRangeBeamStart.parse(frame.payload, ctx);
 	}
+	if (
+		ctx.protocolDataRate === ProtocolDataRate.ZWave_9k6
+		|| ctx.protocolDataRate === ProtocolDataRate.ZWave_40k
+		|| ctx.protocolDataRate === ProtocolDataRate.ZWave_100k
+	) {
+		return ZWaveBeamStart.parse(frame.payload, ctx);
+	}
 	validatePayload.fail(
-		`Unsupported channel ${ctx.channel}. Beam payload: ${
-			buffer2hex(frame.payload)
-		}`,
+		`Unsupported protocol/data rate ${
+			protocolDataRateToString(ctx.protocolDataRate)
+		}. Beam payload: ${buffer2hex(frame.payload)}`,
 	);
 }
 
@@ -188,7 +194,7 @@ export class LongRangeBeamStart {
 			);
 		}
 
-		const txPower = longRangeBeamPowerToDBm(data[1] >>> 4);
+		const txPower = longRangeBeamPowerIndexToDBm(data[1] >>> 4);
 		const destinationNodeId = data.readUInt16BE(1) & 0x0fff;
 		// Unlike classic beams, LR beams always include the home ID hash
 		const homeIdHash = data[3];
