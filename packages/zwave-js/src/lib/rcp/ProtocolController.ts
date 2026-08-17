@@ -492,11 +492,9 @@ export class ProtocolController
 	public autoAckTXPower: number = DEFAULT_AUTO_ACK_TX_POWER_DBM;
 
 	/**
-	 * The TX power the controller acknowledges with, clamped into the range the
-	 * radio reported. The clamp must stay, because an auto-ack that throws is
-	 * only logged.
+	 * The TX power the controller acknowledges with, clamped into the range the radio reported.
 	 */
-	private get clampedAutoAckTXPower(): number {
+	private getSafeAutoAckTXPower(): number {
 		const range = this.phyLayer?.txPowerRange;
 		if (range == undefined) return this.autoAckTXPower;
 		return Math.max(
@@ -597,7 +595,6 @@ export class ProtocolController
 		return frame;
 	}
 
-	/** Must only be called once the PHY layer is initialized */
 	private sendFrame(
 		frame: BytesView,
 		ctx: MPDUEncodingContext,
@@ -615,7 +612,6 @@ export class ProtocolController
 		});
 	}
 
-	/** Transmit an MPDU that needs no wait registered before it goes out */
 	private async sendMPDU(
 		mpdu: MPDU,
 		ctx: MPDUEncodingContext,
@@ -1641,7 +1637,7 @@ export class ProtocolController
 				sourceNodeId: ownNodeId,
 				channel: info.channel,
 				sequenceNumber: mpdu.sequenceNumber,
-				txPower: this.clampedAutoAckTXPower,
+				txPower: this.getSafeAutoAckTXPower(),
 				...(mpdu instanceof LongRangeMPDU
 					? {
 						protocol: Protocols.ZWaveLongRange,
@@ -1753,9 +1749,8 @@ export class ProtocolController
 			region,
 		};
 
-		// A routed ack is classic only, so it carries no noise floor
 		const result = await this.sendMPDU(mpdu, ctx, {
-			txPower: this.clampedAutoAckTXPower,
+			txPower: this.getSafeAutoAckTXPower(),
 			// G.9959 §8.1.5.1.2 requires clear channel assessment before
 			// transmitting a data frame
 			withCCA: true,
