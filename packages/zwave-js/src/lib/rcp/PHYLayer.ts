@@ -6,7 +6,11 @@ import type {
 	RFRegion,
 	RSSI,
 } from "@zwave-js/core";
-import type { ChannelInfo } from "@zwave-js/serial";
+import type {
+	ChannelInfo,
+	TransmitCallbackStatus,
+	TransmitResponseStatus,
+} from "@zwave-js/serial";
 import type {
 	BytesView,
 	EventListener,
@@ -19,7 +23,35 @@ export interface RegionConfig {
 	channels: ChannelInfo[];
 }
 
-export type TransmitResult = unknown;
+export type TransmitResult = TransmitResponseStatus | TransmitCallbackStatus;
+
+export interface TransmitOptions {
+	channel: number;
+	/**
+	 * The transmit power in dBm, in steps of 0.1 dBm.
+	 * If omitted, the firmware keeps its current setting.
+	 */
+	txPower?: number;
+	/**
+	 * Whether to perform clear channel assessment before transmitting.
+	 * Required, so that omitting it cannot silently skip CCA
+	 */
+	withCCA: boolean;
+}
+
+export interface TransmitBeamOptions {
+	/**
+	 * The transmit power in dBm, in steps of 0.1 dBm.
+	 * If omitted, the firmware keeps its current setting.
+	 */
+	txPower?: number;
+	numFragments: number;
+	fragmentDurationMs: number;
+	fragmentPeriodMs: number;
+	/** The channels the beam fragments are transmitted on, in order */
+	channels: number[];
+	data: BytesView;
+}
 
 export interface MpduRxInfo {
 	channel: number;
@@ -49,7 +81,19 @@ export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
 	): Promise<ChannelInfo[]>;
 
 	/** Transmit an MPDU on the given channel and return the result of this transmit attempt */
-	transmit(mpdu: BytesView, channel: number): Promise<TransmitResult>;
+	transmit(
+		mpdu: BytesView,
+		options: TransmitOptions,
+	): Promise<TransmitResult>;
+
+	/**
+	 * Transmit a beam and return the result of this transmit attempt.
+	 * The firmware executes the beam autonomously and only reports back when it is done or was aborted.
+	 */
+	transmitBeam(options: TransmitBeamOptions): Promise<TransmitResult>;
+
+	/** Stop an ongoing beam transmission */
+	abortBeam(): Promise<void>;
 
 	/** Destroys this PHY layer instance */
 	destroy(): Promise<void>;

@@ -359,6 +359,8 @@ export class ProtocolController
 				throw new Error(`Unsupported header format ${headerFormat}`);
 		}
 
+		let busyAttempts = 0;
+
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
 			// Serializing an MPDU changes its payload property, so we set it here
 			// to the original data
@@ -385,7 +387,8 @@ export class ProtocolController
 
 			const result = await this.phyLayer.transmit(
 				serializedMPDU,
-				channel,
+				// G.9959 §8.1.5.1.2 requires clear channel assessment before transmitting a data frame
+				{ channel, withCCA: options.withCCA ?? true },
 			);
 
 			switch (result) {
@@ -394,8 +397,9 @@ export class ProtocolController
 					break;
 
 				case TransmitCallbackStatus.ChannelBusy:
-					// TODO: Wait for channel to be free, try again
-					return MACTransmitResult.ChannelBusy;
+					// TODO: Wait for channel to be free before retrying
+					busyAttempts++;
+					continue;
 
 				case TransmitResponseStatus.Busy:
 					return MACTransmitResult.Error_QueueBusy;
@@ -443,6 +447,8 @@ export class ProtocolController
 
 			if (ack) return MACTransmitResult.OK;
 		}
+
+		if (busyAttempts === maxAttempts) return MACTransmitResult.ChannelBusy;
 
 		return MACTransmitResult.NoAck;
 	}
@@ -503,7 +509,10 @@ export class ProtocolController
 
 		const result = await this.phyLayer.transmit(
 			serializedMPDU,
-			channel,
+			// Acks are exempt from clear channel assessment, so they can be sent
+			// within the turnaround time
+			// Acks are exempt from CCA to meet the turnaround timing
+			{ channel, withCCA: false },
 		);
 
 		switch (result) {

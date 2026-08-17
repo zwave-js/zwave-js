@@ -29,6 +29,8 @@ import {
 	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
+	AbortBeamRequest,
+	AbortBeamResponse,
 	type ChannelInfo,
 	GetFirmwareInfoRequest,
 	type GetFirmwareInfoResponse,
@@ -38,11 +40,14 @@ import {
 	type SetupRadio_GetRegionResponse,
 	SetupRadio_SetRegionRequest,
 	type SetupRadio_SetRegionResponse,
+	type TransmitBeamCallback,
+	TransmitBeamRequest,
+	TransmitBeamResponse,
 	TransmitCallback,
-	type TransmitCallbackStatus,
+	TransmitCallbackStatus,
 	TransmitRequest,
 	TransmitResponse,
-	type TransmitResponseStatus,
+	TransmitResponseStatus,
 } from "@zwave-js/serial/rcp";
 import {
 	AsyncQueue,
@@ -74,7 +79,14 @@ import {
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
-import type { MpduRxInfo, PHYLayer, RegionConfig } from "./PHYLayer.js";
+import type {
+	MpduRxInfo,
+	PHYLayer,
+	RegionConfig,
+	TransmitBeamOptions,
+	TransmitOptions,
+	TransmitResult,
+} from "./PHYLayer.js";
 import { RCPTransaction } from "./RCPTransaction.js";
 
 const logo: string = `
@@ -244,6 +256,9 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private rcpFirmwareVersion: MaybeNotKnown<string>;
 	private radioLibraryVersion: MaybeNotKnown<string>;
 	private radioLibrary: MaybeNotKnown<RadioLibrary>;
+
+	/** Whether a beam transmission is currently being executed by the firmware */
+	private beamActive: boolean = false;
 
 	private rfRegion: MaybeNotKnown<RFRegion>;
 	private channelConfig: MaybeNotKnown<ChannelConfiguration>;
@@ -812,12 +827,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	 */
 	public async transmit(
 		data: BytesView,
-		channel: number,
-	): Promise<TransmitResponseStatus | TransmitCallbackStatus> {
+		options: TransmitOptions,
+	): Promise<TransmitResult> {
+		this.assertFunctionSupported(RCPFunctionType.Transmit);
+
 		const msg = new TransmitRequest({
-			// TODO: Expose TX power and CCA control in the RCP host API
-			channel,
-			withCCA: false,
+			channel: options.channel,
+			txPower: options.txPower,
+			withCCA: options.withCCA,
 			data,
 		});
 		try {
@@ -837,6 +854,114 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			}
 
 			// Unexpected error
+			throw e;
+		}
+	}
+
+	private assertFunctionSupported(functionType: RCPFunctionType): void {
+		if (this.supportedFunctionTypes == undefined) {
+			throw new ZWaveError(
+				`The supported commands are not known before the interview`,
+				ZWaveErrorCodes.Driver_NotReady,
+			);
+		}
+		if (!this.supportedFunctionTypes.includes(functionType)) {
+			throw new ZWaveError(
+				`The command ${
+					getEnumMemberName(RCPFunctionType, functionType)
+				} is not supported by this firmware`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+	}
+
+	/**
+	 * Transmits a beam and returns whether it was executed successfully.
+	 * The firmware executes the beam on its own and reports back when it is done or was aborted.
+	 */
+	public async transmitBeam(
+		options: TransmitBeamOptions,
+	): Promise<TransmitResult> {
+		this.assertFunctionSupported(RCPFunctionType.TransmitBeam);
+
+		// The firmware can only execute one beam at a time. The slot must be reserved
+		// synchronously, or concurrent calls would all pass this check.
+		if (this.beamActive) return TransmitResponseStatus.Busy;
+		this.beamActive = true;
+
+		const msg = new TransmitBeamRequest(options);
+
+		try {
+			try {
+				await this.queueSerialApiCommand<TransmitBeamResponse>(msg);
+			} catch (e) {
+				if (
+					isZWaveError(e) && e.context instanceof TransmitBeamResponse
+				) {
+					return e.context.status;
+				}
+				throw e;
+			}
+
+			// The beam only starts after the firmware has sent the response, and serial frames
+			// are processed in order, so the callback cannot arrive before this wait is registered.
+			// Awaiting it outside of the transaction queue keeps the queue free for an abort command.
+			try {
+				const callback = await this.waitForMessage<
+					TransmitBeamCallback
+				>(
+					(resp) =>
+						resp.type === RCPMessageType.Callback
+						&& resp.functionType === RCPFunctionType.TransmitBeam,
+					msg.getCallbackTimeout() ?? this._options.timeouts.callback,
+				);
+				return callback.status;
+			} catch (e) {
+				if (
+					isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.Controller_Timeout
+				) {
+					this.rcpLog.print(
+						`Received no callback for the beam transmission within ${msg.getCallbackTimeout()} ms`,
+						"error",
+					);
+					// The firmware may still be beaming. Leaving it running would
+					// block the radio and let the late callback resolve the next beam
+					try {
+						await this.abortBeam();
+					} catch (abortError) {
+						this.rcpLog.print(
+							`Could not abort the timed out beam: ${
+								getErrorMessage(abortError)
+							}`,
+							"error",
+						);
+					}
+					return TransmitCallbackStatus.UnknownError;
+				}
+				throw e;
+			}
+		} finally {
+			this.beamActive = false;
+		}
+	}
+
+	/**
+	 * Stops an ongoing beam transmission. Resolves when no beam is running,
+	 * either because the firmware stopped one or because there was none.
+	 */
+	public async abortBeam(): Promise<void> {
+		this.assertFunctionSupported(RCPFunctionType.AbortBeam);
+
+		const msg = new AbortBeamRequest();
+		try {
+			await this.queueSerialApiCommand<AbortBeamResponse>(msg);
+		} catch (e) {
+			// The firmware answers NOK when there is no beam to abort, which
+			// leaves the radio in the state the caller asked for
+			if (isZWaveError(e) && e.context instanceof AbortBeamResponse) {
+				return;
+			}
 			throw e;
 		}
 	}

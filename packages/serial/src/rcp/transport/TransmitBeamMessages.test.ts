@@ -84,6 +84,15 @@ describe("TransmitBeamRequest", () => {
 		expect(createBeamRequest().getCallbackTimeout()).toBe(5 * 1100 + 1000);
 	});
 
+	test("the callback timeout of a single fragment is based on its duration", () => {
+		const msg = createBeamRequest({
+			numFragments: 1,
+			fragmentDurationMs: 1000,
+			fragmentPeriodMs: 0,
+		});
+		expect(msg.getCallbackTimeout()).toBe(1000 + 1000);
+	});
+
 	test.each([
 		["TX power", { txPower: 30.1 }],
 		["number of fragments", { numFragments: 0 }],

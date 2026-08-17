@@ -82,10 +82,10 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
 		const rcpVersionBytes = this.rcpFirmwareVersion
-			.split(".", 2)
+			.split(".", 3)
 			.map((str) => parseInt(str));
 		const radioVersionBytes = this.radioLibraryVersion
-			.split(".", 2)
+			.split(".", 3)
 			.map((str) => parseInt(str));
 
 		const functionTypeBitmask = encodeBitMask(this.supportedFunctionTypes);
