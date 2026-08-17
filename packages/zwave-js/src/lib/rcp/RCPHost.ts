@@ -38,6 +38,8 @@ import {
 	ReceiveCallback,
 	SetupRadio_GetRegionRequest,
 	type SetupRadio_GetRegionResponse,
+	SetupRadio_GetTxPowerRangeRequest,
+	type SetupRadio_GetTxPowerRangeResponse,
 	SetupRadio_SetRegionRequest,
 	type SetupRadio_SetRegionResponse,
 	type TransmitBeamCallback,
@@ -86,6 +88,7 @@ import {
 	type TransmitBeamOptions,
 	type TransmitOptions,
 	type TransmitResult,
+	type TxPowerRange,
 	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
 import { RCPTransaction } from "./RCPTransaction.js";
@@ -265,6 +268,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private channelConfig: MaybeNotKnown<ChannelConfiguration>;
 	private channels: MaybeNotKnown<ChannelInfo[]>;
 
+	private _txPowerRange: MaybeNotKnown<TxPowerRange>;
+	public get txPowerRange(): MaybeNotKnown<TxPowerRange> {
+		return this._txPowerRange;
+	}
+
 	public get regionConfig(): MaybeNotKnown<RegionConfig> {
 		if (this.rfRegion == NOT_KNOWN) return NOT_KNOWN;
 		if (this.channelConfig == NOT_KNOWN) return NOT_KNOWN;
@@ -403,6 +411,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 						} MHz): ${protocolDataRateToString(ch.dataRate)}`
 					).join("")
 			}`,
+		);
+
+		this.rcpLog.print(`Querying TX power range...`);
+		this._txPowerRange = await this.queryTxPowerRange();
+		this.rcpLog.print(
+			`Received TX power range: ${
+				this._txPowerRange.min.toFixed(1)
+			} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
 		);
 	}
 
@@ -783,6 +799,27 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			"channelConfig",
 			"channels",
 		]);
+	}
+
+	public async queryTxPowerRange(): Promise<TxPowerRange> {
+		const msg = new SetupRadio_GetTxPowerRangeRequest();
+		const result = await this.queueSerialApiCommand<
+			SetupRadio_GetTxPowerRangeResponse
+		>(msg);
+
+		// An unsatisfiable range would reject every TX power later, far from
+		// the answer that caused it
+		if (result.minTxPower > result.maxTxPower) {
+			throw new ZWaveError(
+				`The firmware reported an invalid TX power range: ${result.minTxPower} ... ${result.maxTxPower} dBm`,
+				ZWaveErrorCodes.Driver_InvalidOptions,
+			);
+		}
+
+		return {
+			min: result.minTxPower,
+			max: result.maxTxPower,
+		};
 	}
 
 	public async setRegion(

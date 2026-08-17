@@ -9,6 +9,7 @@ import {
 	type MPDUEncodingContext,
 	MPDUHeaderType,
 	type MPDULogContext,
+	type MaybeNotKnown,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	ProtocolDataRate,
@@ -54,6 +55,7 @@ import {
 	type MpduRxInfo,
 	type PHYLayer,
 	type PHYLayerFactory,
+	type TxPowerRange,
 	getProtocolDataRateOrThrow,
 } from "./PHYLayer.js";
 import {
@@ -149,21 +151,19 @@ function assertInt8(value: number | undefined, name: string): void {
 	}
 }
 
-// Bounds of the radio TX power the API accepts. They match the range the serial
-// layer accepts
-const RADIO_TX_POWER_MIN_DBM = -10;
-const RADIO_TX_POWER_MAX_DBM = 30;
-
-/** Reject a radio TX power outside the range the API accepts, before any frame goes out */
-function assertRadioTXPower(txPower: number | undefined): void {
-	if (txPower == undefined) return;
-	if (
-		!Number.isFinite(txPower)
-		|| txPower < RADIO_TX_POWER_MIN_DBM
-		|| txPower > RADIO_TX_POWER_MAX_DBM
-	) {
+/**
+ * Reject a radio TX power outside the range the firmware reported, before any
+ * frame goes out. A firmware that does not report its range only has to accept
+ * what the serial encoding can carry
+ */
+function assertRadioTXPower(
+	txPower: number | undefined,
+	range: MaybeNotKnown<TxPowerRange>,
+): void {
+	if (txPower == undefined || range == undefined) return;
+	if (txPower < range.min || txPower > range.max) {
 		throw new ZWaveError(
-			`The TX power must be between ${RADIO_TX_POWER_MIN_DBM} and ${RADIO_TX_POWER_MAX_DBM} dBm`,
+			`The TX power must be between ${range.min} and ${range.max} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
@@ -841,7 +841,6 @@ export class ProtocolController
 			);
 		}
 
-		assertRadioTXPower(options.txPower);
 		assertInt8(options.lrMpduOverrides?.txPower, "The advertised TX power");
 		assertInt8(
 			options.lrMpduOverrides?.noiseFloor,
@@ -961,6 +960,8 @@ export class ProtocolController
 		const radioTXPower = protocol === Protocols.ZWaveLongRange
 			? options.txPower ?? LR_DEFAULT_TX_POWER_DBM
 			: options.txPower;
+		// Check the power that reaches the radio, so the LR default is covered too
+		assertRadioTXPower(radioTXPower, this.phyLayer.txPowerRange);
 		// The MPDU TX Power field is an int8, while the radio accepts 0.1 dBm steps
 		const advertisedTXPower = options.lrMpduOverrides?.txPower
 			?? Math.round(radioTXPower ?? LR_DEFAULT_TX_POWER_DBM);
@@ -1353,7 +1354,6 @@ export class ProtocolController
 		// Classic acks carry no radio information, so the radio keeps its power there
 		let txPower: number | undefined;
 		if (options.protocol === Protocols.ZWaveLongRange) {
-			assertRadioTXPower(options.txPower);
 			assertInt8(
 				options.lrMpduOverrides?.txPower,
 				"The advertised TX power",
@@ -1364,6 +1364,8 @@ export class ProtocolController
 				"The advertised noise floor",
 			);
 			txPower = options.txPower ?? LR_DEFAULT_TX_POWER_DBM;
+			// Check the power that reaches the radio, so the default is covered too
+			assertRadioTXPower(txPower, this.phyLayer.txPowerRange);
 		}
 
 		let mpdu: MPDU;

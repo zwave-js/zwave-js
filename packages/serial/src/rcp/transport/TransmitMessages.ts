@@ -45,19 +45,33 @@ export enum TransmitCallbackStatus {
 /** TX power value that tells the firmware to keep its current setting */
 export const TX_POWER_KEEP_CURRENT = 0x7fff;
 
+/** Lowest TX power the int16 deci-dBm encoding can carry */
+const TX_POWER_MIN_DECI_DBM = -0x8000;
+/** Highest TX power the encoding can carry, one below the TX_POWER_KEEP_CURRENT sentinel */
+const TX_POWER_MAX_DECI_DBM = TX_POWER_KEEP_CURRENT - 1;
+
 /**
  * Converts a TX power in dBm to the deci-dBm value to transmit, using the sentinel if none is given.
  * The firmware expects an int16 BE in deci-dBm, which matches the units of `RAIL_SetTxPowerDbm`.
+ * Which powers the radio actually supports is up to the firmware to report.
  */
 export function encodeTxPower(txPower: number | undefined): number {
 	if (txPower == undefined) return TX_POWER_KEEP_CURRENT;
-	if (!Number.isFinite(txPower) || txPower < -10 || txPower > 30) {
+	const deciDbm = Math.round(txPower * 10);
+	// Number.isInteger also rejects NaN and Infinity
+	if (
+		!Number.isInteger(deciDbm)
+		|| deciDbm < TX_POWER_MIN_DECI_DBM
+		|| deciDbm > TX_POWER_MAX_DECI_DBM
+	) {
 		throw new ZWaveError(
-			`The TX power must be between -10 and 30 dBm`,
+			`The TX power must be between ${TX_POWER_MIN_DECI_DBM / 10} and ${
+				TX_POWER_MAX_DECI_DBM / 10
+			} dBm`,
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
-	return Math.round(txPower * 10);
+	return deciDbm;
 }
 
 /** Formats a TX power in dBm for logging, with one decimal for fractional values */
