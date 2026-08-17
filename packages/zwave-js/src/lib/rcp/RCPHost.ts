@@ -934,6 +934,12 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		}
 	}
 
+	public get supportsAbortBeam(): boolean {
+		return !!this.supportedFunctionTypes?.includes(
+			RCPFunctionType.AbortBeam,
+		);
+	}
+
 	/**
 	 * Stops an ongoing beam transmission. Resolves when no beam is running,
 	 * either because the firmware stopped one or because there was none.

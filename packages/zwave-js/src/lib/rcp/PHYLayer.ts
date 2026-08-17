@@ -113,6 +113,9 @@ export interface PHYLayer extends TypedEventTarget<PHYLayerEventCallbacks> {
 	/** Stop an ongoing beam transmission */
 	abortBeam(): Promise<void>;
 
+	/** Whether the firmware can stop an ongoing beam transmission */
+	get supportsAbortBeam(): boolean;
+
 	/** Destroys this PHY layer instance */
 	destroy(): Promise<void>;
 }
