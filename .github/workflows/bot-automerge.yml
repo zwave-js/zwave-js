@@ -43,7 +43,7 @@ jobs:
           gh pr merge --auto --squash "$PR_URL"
 
   bot-reenable-automerge:
-    # Don't run in forks, don't run for drafts
+    # Don't run in forks, don't run for drafts, don't run for zwave-js-bot's PRs
     if: |
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
