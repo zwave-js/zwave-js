@@ -1933,19 +1933,13 @@ export class ZWaveController
 		);
 
 		// Set firmware version information for the controller node
-		await this.queryBootloaderVersion();
 		controllerValueDB.setMetadata(
 			VersionCCValues.firmwareVersions.id,
 			VersionCCValues.firmwareVersions.meta,
 		);
-		// The bootloader is reported as the second firmware target, the same way
-		// nodes report their secondary firmware versions
-		controllerValueDB.setValue(
-			VersionCCValues.firmwareVersions.id,
-			this._bootloaderVersion
-				? [this._firmwareVersion, this._bootloaderVersion]
-				: [this._firmwareVersion],
-		);
+		controllerValueDB.setValue(VersionCCValues.firmwareVersions.id, [
+			this._firmwareVersion,
+		]);
 		controllerValueDB.setMetadata(
 			VersionCCValues.zWaveProtocolVersion.id,
 			VersionCCValues.zWaveProtocolVersion.meta,
@@ -7218,14 +7212,17 @@ export class ZWaveController
 	}
 
 	/**
-	 * Reads the version of the bootloader installed on the Z-Wave module.
+	 * Reads the version of the bootloader installed on the Z-Wave module and adds
+	 * it to the controller's firmware versions.
 	 *
 	 * No standardized Serial API command for this exists yet, so the version can
 	 * only come from a proprietary query. Once a standard command is available,
 	 * query it here and keep the proprietary path as the fallback for controllers
 	 * that do not support the standard one.
+	 *
+	 * @internal
 	 */
-	private async queryBootloaderVersion(): Promise<void> {
+	public async queryBootloaderVersion(): Promise<void> {
 		const provider = Object.values(this.proprietary).find(
 			(impl) => typeof impl.getBootloaderVersion === "function",
 		);
@@ -7239,7 +7236,16 @@ export class ZWaveController
 				`Querying the bootloader version failed: ${getErrorMessage(e)}`,
 				"warn",
 			);
+			return;
 		}
+		if (!this._bootloaderVersion) return;
+
+		// Append the bootloader as the second firmware target, the same way nodes
+		// report their secondary firmware versions
+		this.valueDB.setValue(VersionCCValues.firmwareVersions.id, [
+			this._firmwareVersion,
+			this._bootloaderVersion,
+		]);
 	}
 
 	/**
