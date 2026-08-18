@@ -70,7 +70,6 @@ import {
 	SecurityManager,
 	SecurityManager2,
 	type SerialApiInitData,
-	type TranslatedValueID,
 	TransmitStatus,
 	UNKNOWN_STATE,
 	type UnknownZWaveChipType,
@@ -88,7 +87,6 @@ import {
 	dskFromString,
 	dskToString,
 	generateECDHKeyPair,
-	getCCName,
 	getChipTypeAndVersion,
 	getHighestSecurityClass,
 	getLegalPowerlevelLR,
@@ -7217,24 +7215,6 @@ export class ZWaveController
 
 		this.setInclusionState(InclusionState.Idle);
 		this.emit("node added", newNode, inclusionResult);
-	}
-
-	/** Returns the value IDs the controller node exposes on its own behalf */
-	public getDefinedValueIDs(): TranslatedValueID[] {
-		const ret: TranslatedValueID[] = [];
-
-		if (this._bootloaderVersion) {
-			// Without a bootloader version there is only the application version,
-			// which callers already read from `firmwareVersion`
-			const firmwareVersions = VersionCCValues.firmwareVersions.id;
-			ret.push({
-				...firmwareVersions,
-				commandClassName: getCCName(firmwareVersions.commandClass),
-				propertyName: "firmwareVersions",
-			});
-		}
-
-		return ret;
 	}
 
 	/**
