@@ -575,10 +575,8 @@ export class ControllerProprietary_NabuCasa
 	}
 
 	public async getBootloaderVersion(): Promise<string | undefined> {
-		// May be called before the interview has determined what is supported
-		this.supportedCommands ??= await this.getSupportedCommands();
 		if (
-			!this.supportedCommands.includes(NabuCasaCommand.GetBootloaderInfo)
+			!this.supportedCommands?.includes(NabuCasaCommand.GetBootloaderInfo)
 		) {
 			return undefined;
 		}
