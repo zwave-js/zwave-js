@@ -2084,6 +2084,10 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			// Configure the radio
 			await this.controller.queryAndConfigureRF();
 
+			// Ensure the controller NIF has the listening flag set and
+			// advertises the correct CCs
+			await this.controller.setControllerNIF();
+
 			// Soft-reset the stick if possible.
 			// On 700+ series, we'll also learn about whether the stick supports
 			// Z-Wave Long Range in the current region.
