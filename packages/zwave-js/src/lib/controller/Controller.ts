@@ -53,6 +53,7 @@ import {
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MaybeUnknown,
+	MessagePriority,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	NOT_KNOWN,
@@ -1989,16 +1990,19 @@ export class ZWaveController
 
 	/**
 	 * Sets the NIF of the controller to the Gateway device type and to include the CCs supported by Z-Wave JS.
-	 * Warning: This only works when followed up by a hard-reset, so don't call this directly
+	 * The updated node information takes effect after a soft reset.
 	 * @internal
 	 */
-	public async setControllerNIF(): Promise<void> {
+	public async setControllerNIF(
+		priority: MessagePriority = MessagePriority.Controller,
+	): Promise<void> {
 		this.driver.controllerLog.print("Updating the controller NIF...");
 		await this.driver.sendMessage(
 			new SetApplicationNodeInformationRequest({
 				isListening: true,
 				...determineNIF(),
 			}),
+			{ priority },
 		);
 	}
 

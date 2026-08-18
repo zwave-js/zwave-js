@@ -168,6 +168,7 @@ import {
 	SendTestFrameTransmitReport,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
+	SetApplicationNodeInformationRequest,
 	SoftResetRequest,
 	containsCC,
 	containsSerializedCC,
@@ -971,12 +972,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				// allow that too.
 				if (this.controller.status === ControllerStatus.Unresponsive) {
 					return t.message instanceof SoftResetRequest
-						|| t.message instanceof GetControllerVersionRequest;
+						|| t.message instanceof GetControllerVersionRequest
+						|| t.message
+							instanceof SetApplicationNodeInformationRequest;
 				}
 
 				// While the controller is jammed, only soft resetting is allowed
 				if (this.controller.status === ControllerStatus.Jammed) {
-					return t.message instanceof SoftResetRequest;
+					return t.message instanceof SoftResetRequest
+						|| t.message
+							instanceof SetApplicationNodeInformationRequest;
 				}
 
 				// All other messages on the immediate queue may always be sent as long as the controller is ready to send
@@ -1856,6 +1861,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	}
 
 	private _controllerInterviewed: boolean = false;
+	private _applicationNodeInformationNeedsRepair: boolean = false;
+	private _applicationNodeInformationRepairAttempted: boolean = false;
 	private _nodesReady = new Set<number>();
 	private _nodesReadyEventEmitted: boolean = false;
 	private _isOpeningSerialPort: boolean = false;
@@ -2380,6 +2387,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				}
 			}
 		}
+
+		await this.repairApplicationNodeInformationAndReset();
 
 		// in any case we need to emit the driver ready event here
 		this._controllerInterviewed = true;
@@ -3436,7 +3445,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 	private maySoftReset(): boolean {
 		// 700+ series controllers have no problems with soft reset and MUST even be soft reset in some cases
-		if (this._controller?.sdkVersionGt("7.0")) return true;
+		if (this._controller?.sdkVersionGte("7.0")) return true;
 
 		// Blacklist some sticks that are known to not support soft reset
 		const { manufacturerId, productType, productId } = this.controller;
@@ -3564,6 +3573,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 
 		this.isSoftResetting = false;
+		await this.repairApplicationNodeInformationAndReset();
 
 		// This is a bit hacky, but what the heck...
 		if (!this._enteringBootloader) {
@@ -3605,6 +3615,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		}
 
 		this.isSoftResetting = false;
+		await this.repairApplicationNodeInformationAndReset();
 
 		// Clean up and interview the controller again
 		await this.destroyController();
@@ -3636,6 +3647,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (waitResult) {
 			// Serial API did start
 			this.controllerLog.print("reconnected and restarted");
+			this.updateApplicationNodeInformationRepairState(waitResult);
 			if (this._controller) {
 				this._controller["_supportsLongRange"] =
 					waitResult.supportsLongRange;
@@ -3665,6 +3677,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		if (waitResult) {
 			// Serial API did start, maybe do something with the information?
 			this.controllerLog.print("Serial API started");
+			this.updateApplicationNodeInformationRepairState(waitResult);
 			if (this._controller) {
 				this._controller["_supportsLongRange"] =
 					waitResult.supportsLongRange;
@@ -3708,6 +3721,69 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			"error",
 		);
 		return false;
+	}
+
+	private updateApplicationNodeInformationRepairState(
+		msg: SerialAPIStartedRequest,
+	): void {
+		if (msg.isListening) {
+			this._applicationNodeInformationNeedsRepair = false;
+		} else if (this._applicationNodeInformationRepairAttempted) {
+			this._applicationNodeInformationNeedsRepair = false;
+			this.controllerLog.print(
+				"The application node still reports that it is not listening after the repair reset. Skipping another repair in this driver instance.",
+				"warn",
+			);
+		} else {
+			this._applicationNodeInformationNeedsRepair = true;
+		}
+	}
+
+	private async repairApplicationNodeInformationIfNeeded(): Promise<boolean> {
+		if (
+			!this._applicationNodeInformationNeedsRepair
+			|| !this._controller
+		) {
+			return false;
+		}
+		const is700Series = this._controller.sdkVersionGte("7.0");
+		if (is700Series == undefined) {
+			return false;
+		}
+		if (!is700Series) {
+			this._applicationNodeInformationNeedsRepair = false;
+			return false;
+		}
+
+		this._applicationNodeInformationNeedsRepair = false;
+		this._applicationNodeInformationRepairAttempted = true;
+		this.controllerLog.print(
+			"The application node reports that it is not listening. Repairing its node information...",
+			"warn",
+		);
+		await this._controller.setControllerNIF(
+			MessagePriority.ControllerImmediate,
+		);
+		return true;
+	}
+
+	private async repairApplicationNodeInformationAndReset(): Promise<boolean> {
+		const controllerWasUnavailable = this._controller?.status
+				=== ControllerStatus.Unresponsive
+			|| this._controller?.status === ControllerStatus.Jammed;
+		if (!await this.repairApplicationNodeInformationIfNeeded()) {
+			return false;
+		}
+
+		this.controllerLog.print(
+			"Restarting the controller to apply the repaired node information...",
+			"warn",
+		);
+		await this.softReset();
+		if (controllerWasUnavailable) {
+			this._controller?.setStatus(ControllerStatus.Ready);
+		}
+		return true;
 	}
 
 	private _ensureCLIReadyPromise: DeferredPromise<boolean> | undefined;
@@ -5476,6 +5552,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	): Promise<boolean> {
 		// Normally, the soft reset command includes waiting for this message.
 		// If we end up here, it is unexpected.
+		this.updateApplicationNodeInformationRepairState(msg);
 
 		switch (msg.wakeUpReason) {
 			// All wakeup reasons that indicate a reset of the Serial API
@@ -5507,6 +5584,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					);
 				}
 
+				const previousNodeIdType = this._controller?.nodeIdType;
+				if (await this.repairApplicationNodeInformationAndReset()) {
+					if (previousNodeIdType === NodeIDType.Long) {
+						await this._controller?.trySetNodeIDType(
+							NodeIDType.Long,
+						);
+					}
+					return true;
+				}
+
 				// Restart the watchdog unless disabled
 				if (this.options.features.watchdog) {
 					await this._controller?.startWatchdog();
@@ -5523,6 +5610,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			}
 		}
 
+		if (await this.repairApplicationNodeInformationAndReset()) {
+			return true;
+		}
 		return false; // Not handled
 	}
 
