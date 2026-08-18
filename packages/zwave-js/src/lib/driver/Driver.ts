@@ -3917,11 +3917,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 
 	/** Cleanly destroy the controller instance, but not the entire driver */
 	// FIXME: Too much overlap with destroy()
-	private async destroyController(): Promise<void> {
+	private async destroyController(
+		keepTask?: (task: { tag?: { id: string } }) => boolean,
+	): Promise<void> {
 		// Avoid re-transmissions etc. communicating with other applications
 		// or the bootloader
 		await this.scheduler.removeTasks(
-			() => true,
+			(task) => !keepTask?.(task),
 			new ZWaveError(
 				"The controller instance is being destroyed",
 				ZWaveErrorCodes.Driver_TaskRemoved,
@@ -9387,7 +9389,10 @@ ${handlers.length} left`,
 		// Get the encoding context before destroying the controller
 		const ctx = this.getEncodingContext();
 
-		await this.destroyController();
+		// Keep the OTW task alive — we're running inside it
+		await this.destroyController(
+			(task) => task.tag?.id === "firmware-update-otw",
+		);
 
 		// It would be nicer to not hardcode the command here, but since we're switching stream parsers
 		// mid-command - thus ignoring the ACK, we can't really use the existing communication machinery
