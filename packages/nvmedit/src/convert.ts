@@ -2082,13 +2082,6 @@ export async function migrateNVM(
 		// ...both the source and the target are 700 series, but at least the target uses an unsupported protocol version.
 		// We can be sure however that the target can upgrade any 700 series NVM to its protocol version, as long as the
 		// source protocol version is not higher than the target's
-		if (source.type === 700 && !source.json.controller.isListening) {
-			setControllerIsListening(source.json);
-			return jsonToNVM(
-				source.json,
-				source.json.controller.applicationVersion,
-			);
-		}
 		return sourceNVM;
 	} else if (
 		source.type === 700
@@ -2099,7 +2092,7 @@ export async function migrateNVM(
 			=== target.json.meta.sharedFileSystem
 		// ...everything should be preserved,...
 		&& preserveAll
-		// ...and the application node is configured as always listening
+		// ...and the application node is correctly configured as always listening
 		&& source.json.controller.isListening
 	) {
 		// ... the source and target protocol versions are compatible without conversion
