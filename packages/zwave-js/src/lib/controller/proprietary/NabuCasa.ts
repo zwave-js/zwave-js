@@ -5,6 +5,7 @@ import {
 	ConfigurationCCValues,
 	type SetValueResult,
 	SetValueStatus,
+	VersionCCValues,
 } from "@zwave-js/cc";
 import {
 	ConfigValueFormat,
@@ -99,6 +100,13 @@ const binarySwitchTargetValueTranslated = {
 	propertyName: "Target value",
 };
 
+const firmwareVersions = VersionCCValues.firmwareVersions.id;
+const firmwareVersionsTranslated = {
+	...firmwareVersions,
+	commandClassName: getCCName(firmwareVersions.commandClass),
+	propertyName: "firmwareVersions",
+};
+
 const configEnableTiltIndicator = ConfigurationCCValues.paramInformation(
 	NabuCasaConfigKey.EnableTiltIndicator,
 ).id;
@@ -168,6 +176,13 @@ export class ControllerProprietary_NabuCasa
 			this.driver.controllerLog.print(
 				`Bootloader version: ${this._bootloaderInfo.version}`,
 			);
+
+			// Expose the bootloader as the second firmware target, the same way
+			// nodes report their secondary firmware versions
+			valueDB.setValue(firmwareVersions, [
+				this.controller.firmwareVersion,
+				this._bootloaderInfo.version,
+			]);
 		}
 
 		if (
@@ -624,6 +639,8 @@ export class ControllerProprietary_NabuCasa
 			binarySwitchTargetValueTranslated,
 			// Configuration
 			configEnableTiltIndicatorTranslated,
+			// Application and bootloader firmware versions
+			firmwareVersionsTranslated,
 		];
 	}
 
