@@ -579,7 +579,7 @@ export class ControllerProprietary_NabuCasa
 
 	public async getBootloaderInfo(): Promise<NabuCasaBootloaderInfo> {
 		// HOST->ZW (REQ): NABU_CASA_BOOTLOADER_INFO
-		// ZW->HOST (RES): NABU_CASA_BOOTLOADER_INFO | version[4] | capabilities[4]
+		// ZW->HOST (RES): NABU_CASA_BOOTLOADER_INFO | major | minor | customer | capabilities[4]
 
 		const getBootloaderInfoCmd = new Message({
 			type: MessageType.Request,
@@ -604,12 +604,10 @@ export class ControllerProprietary_NabuCasa
 
 		// The capabilities are transferred MSB first, but parseBitMask expects
 		// the least significant byte first
-		const capabilities = result.subarray(5, 9).toReversed();
+		const capabilities = result.subarray(4, 8).toReversed();
 
 		return {
-			// The version is major | minor | customer, where the customer
-			// portion is 16 bits wide
-			version: `${result[1]}.${result[2]}.${result.readUInt16BE(3)}`,
+			version: `${result[1]}.${result[2]}.${result[3]}`,
 			capabilities: parseBitMask(
 				capabilities,
 				0,
