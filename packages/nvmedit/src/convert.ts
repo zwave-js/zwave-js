@@ -218,6 +218,19 @@ type ParsedNVM =
 	};
 
 /**
+ * Ensures that the controller node is marked as listening.
+ * Failure to do so causes the radio to stop after one RX event on SDK 8.0.0+.
+ */
+function setControllerIsListening(json: NVMJSON): void {
+	json.controller.isListening = true;
+
+	const controllerNode = json.nodes[json.controller.nodeId || 1];
+	if (controllerNode && "isListening" in controllerNode) {
+		controllerNode.isListening = true;
+	}
+}
+
+/**
  * Options influencing how NVM contents should be migrated.
  * By default, all data will be preserved.
  */
@@ -2081,6 +2094,8 @@ export async function migrateNVM(
 			=== target.json.meta.sharedFileSystem
 		// ...everything should be preserved,...
 		&& preserveAll
+		// ...and the application node is correctly configured as always listening
+		&& source.json.controller.isListening
 	) {
 		// ... the source and target protocol versions are compatible without conversion
 		const sourceProtocolVersion = source.json.controller.protocolVersion;
@@ -2192,6 +2207,7 @@ export async function migrateNVM(
 		};
 		// The target is a different series, try to preserve the RF config of the target stick
 		json.controller.rfConfig = target.json.controller.rfConfig;
+		setControllerIsListening(json);
 		// 700 series distinguishes the NVM format by the application version
 		return jsonToNVM(json, target.json.controller.applicationVersion);
 	} else if (source.type === 700 && target.type === 500) {
@@ -2209,6 +2225,7 @@ export async function migrateNVM(
 			...(source.json as NVMJSONWithMeta),
 			meta: (target.json as NVMJSONWithMeta).meta,
 		};
+		setControllerIsListening(json);
 		// 700 series distinguishes the NVM format by the application version
 		return jsonToNVM(json, target.json.controller.applicationVersion);
 	}

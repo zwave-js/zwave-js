@@ -215,6 +215,63 @@ test("700 to 700 migration shortcut", async (t) => {
 	bufferEquals(t.expect, converted, nvmSource);
 });
 
+test("700 to 700 migration repairs the application node listening flag", async (t) => {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+
+	const nvmSource = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
+	);
+	const sourceJSON = await nvmToJSON(nvmSource);
+	sourceJSON.controller.isListening = false;
+	const sourceWithInvalidNodeInfo = await jsonToNVM(
+		sourceJSON,
+		sourceJSON.controller.applicationVersion,
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.16_1.bin"),
+	);
+
+	const converted = await migrateNVM(sourceWithInvalidNodeInfo, nvmTarget);
+	const convertedJSON = await nvmToJSON(converted);
+
+	t.expect(convertedJSON.controller.isListening).toBe(true);
+	t.expect(
+		convertedJSON.nodes[convertedJSON.controller.nodeId].isListening,
+	).toBe(true);
+});
+
+test("500 to 700 migration repairs the application node listening flag", async (t) => {
+	const fixturesDir500 = path.join(
+		__dirname,
+		"../test/fixtures/nvm_500_binary",
+	);
+	const fixturesDir700 = path.join(
+		__dirname,
+		"../test/fixtures/nvm_700_binary",
+	);
+
+	const nvmSource = await fsp.readFile(
+		path.join(fixturesDir500, "ctrlr_backup_500_static_6.8x.bin"),
+	);
+	const sourceJSON = await nvm500ToJSON(nvmSource);
+	sourceJSON.nodes[sourceJSON.controller.nodeId || 1].isListening = false;
+	const sourceWithInvalidNodeInfo = await jsonToNVM500(
+		sourceJSON,
+		sourceJSON.controller.protocolVersion,
+	);
+	const nvmTarget = await fsp.readFile(
+		path.join(fixturesDir700, "ctrlr_backup_700_7.16_1.bin"),
+	);
+
+	const converted = await migrateNVM(sourceWithInvalidNodeInfo, nvmTarget);
+	const convertedJSON = await nvmToJSON(converted);
+
+	t.expect(convertedJSON.controller.isListening).toBe(true);
+	t.expect(
+		convertedJSON.nodes[convertedJSON.controller.nodeId].isListening,
+	).toBe(true);
+});
+
 test("strip application data during migration", async (t) => {
 	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
 
