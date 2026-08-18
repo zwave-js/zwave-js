@@ -9389,7 +9389,8 @@ ${handlers.length} left`,
 		// Get the encoding context before destroying the controller
 		const ctx = this.getEncodingContext();
 
-		// Keep the OTW task alive — we're running inside it
+		// If this was triggered by an OTW firmware update, we need to
+		// keep that task alive.
 		await this.destroyController(
 			(task) => task.tag?.id === "firmware-update-otw",
 		);
