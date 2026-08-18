@@ -221,10 +221,8 @@ type ParsedNVM =
  * Ensures that the controller node is marked as listening.
  * Failure to do so causes the radio to stop after one RX event on SDK 8.0.0+.
  */
-function setControllerIsListening(json: NVMJSON | NVM500JSON): void {
-	if ("isListening" in json.controller) {
-		json.controller.isListening = true;
-	}
+function setControllerIsListening(json: NVMJSON): void {
+	json.controller.isListening = true;
 
 	const controllerNode = json.nodes[json.controller.nodeId || 1];
 	if (controllerNode && "isListening" in controllerNode) {
@@ -2199,7 +2197,6 @@ export async function migrateNVM(
 		};
 		// If the target is a 500 series stick, preserve the RF config
 		json.controller.rfConfig = target.json.controller.rfConfig;
-		setControllerIsListening(json);
 		return jsonToNVM500(json, target.json.controller.protocolVersion);
 	} else if (source.type === 500 && target.type === 700) {
 		// We need to upgrade the source to 700 series
@@ -2221,7 +2218,6 @@ export async function migrateNVM(
 		};
 		// The target is a different series, try to preserve the RF config of the target stick
 		json.controller.rfConfig = target.json.controller.rfConfig;
-		setControllerIsListening(json);
 		return jsonToNVM500(json, target.json.controller.protocolVersion);
 	} else {
 		// Both are 700, so we just need to update the metadata to match the target
