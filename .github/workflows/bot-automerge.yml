@@ -14,7 +14,8 @@ jobs:
     if: |
       contains(github.event.issue.html_url, '/pull/') &&
       contains(github.event.comment.body, '@zwave-js-bot automerge') &&
-      github.event.comment.user.login == 'AlCalzone'
+      github.event.comment.user.login == 'AlCalzone' &&
+      github.event.issue.user.login != 'zwave-js-bot'
 
     runs-on: [ubuntu-latest]
 
@@ -47,6 +48,7 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'zwave-js-bot' &&
       github.event.pull_request.draft == false
 
     runs-on: [ubuntu-latest]
