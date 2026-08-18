@@ -477,14 +477,16 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 	/** Returns a list of all value names that are defined on all endpoints of this node */
 	public getDefinedValueIDs(): TranslatedValueID[] {
 		if (this.isControllerNode) {
-			// For the controller, look at proprietary implementations to get the value IDs
+			const ret = this.driver.controller.getDefinedValueIDs();
+			// Then look at proprietary implementations for controller-specific value IDs
 			const proprietary = this.driver.controller.proprietary;
 			for (const impl of Object.values(proprietary)) {
 				if (typeof impl.getDefinedValueIDs === "function") {
-					return impl.getDefinedValueIDs();
+					ret.push(...impl.getDefinedValueIDs());
+					break;
 				}
 			}
-			return [];
+			return ret;
 		} else {
 			return nodeUtils.getDefinedValueIDs(this.driver, this);
 		}

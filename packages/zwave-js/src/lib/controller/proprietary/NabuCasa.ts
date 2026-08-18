@@ -5,7 +5,6 @@ import {
 	ConfigurationCCValues,
 	type SetValueResult,
 	SetValueStatus,
-	VersionCCValues,
 } from "@zwave-js/cc";
 import {
 	ConfigValueFormat,
@@ -100,13 +99,6 @@ const binarySwitchTargetValueTranslated = {
 	propertyName: "Target value",
 };
 
-const firmwareVersions = VersionCCValues.firmwareVersions.id;
-const firmwareVersionsTranslated = {
-	...firmwareVersions,
-	commandClassName: getCCName(firmwareVersions.commandClass),
-	propertyName: "firmwareVersions",
-};
-
 const configEnableTiltIndicator = ConfigurationCCValues.paramInformation(
 	NabuCasaConfigKey.EnableTiltIndicator,
 ).id;
@@ -172,17 +164,7 @@ export class ControllerProprietary_NabuCasa
 		this.supportedCommands = supported;
 
 		if (supported.includes(NabuCasaCommand.GetBootloaderInfo)) {
-			this._bootloaderInfo = await this.getBootloaderInfo();
-			this.driver.controllerLog.print(
-				`Bootloader version: ${this._bootloaderInfo.version}`,
-			);
-
-			// Expose the bootloader as the second firmware target, the same way
-			// nodes report their secondary firmware versions
-			valueDB.setValue(firmwareVersions, [
-				this.controller.firmwareVersion,
-				this._bootloaderInfo.version,
-			]);
+			this._bootloaderInfo ??= await this.getBootloaderInfo();
 		}
 
 		if (
@@ -592,6 +574,20 @@ export class ControllerProprietary_NabuCasa
 		return success;
 	}
 
+	public async getBootloaderVersion(): Promise<string | undefined> {
+		// This is queried before the proprietary interview runs, so the supported
+		// commands may not be known yet
+		this.supportedCommands ??= await this.getSupportedCommands();
+		if (
+			!this.supportedCommands.includes(NabuCasaCommand.GetBootloaderInfo)
+		) {
+			return undefined;
+		}
+
+		this._bootloaderInfo ??= await this.getBootloaderInfo();
+		return this._bootloaderInfo.version;
+	}
+
 	public async getBootloaderInfo(): Promise<NabuCasaBootloaderInfo> {
 		// HOST->ZW (REQ): NABU_CASA_BOOTLOADER_INFO
 		// ZW->HOST (RES): NABU_CASA_BOOTLOADER_INFO | major | minor | customer | capabilities[4]
@@ -639,8 +635,6 @@ export class ControllerProprietary_NabuCasa
 			binarySwitchTargetValueTranslated,
 			// Configuration
 			configEnableTiltIndicatorTranslated,
-			// Application and bootloader firmware versions
-			firmwareVersionsTranslated,
 		];
 	}
 

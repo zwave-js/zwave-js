@@ -70,6 +70,7 @@ import {
 	SecurityManager,
 	SecurityManager2,
 	type SerialApiInitData,
+	type TranslatedValueID,
 	TransmitStatus,
 	UNKNOWN_STATE,
 	type UnknownZWaveChipType,
@@ -87,6 +88,7 @@ import {
 	dskFromString,
 	dskToString,
 	generateECDHKeyPair,
+	getCCName,
 	getChipTypeAndVersion,
 	getHighestSecurityClass,
 	getLegalPowerlevelLR,
@@ -582,6 +584,12 @@ export class ZWaveController
 	private _firmwareVersion: MaybeNotKnown<string>;
 	public get firmwareVersion(): MaybeNotKnown<string> {
 		return this._firmwareVersion;
+	}
+
+	private _bootloaderVersion: MaybeNotKnown<string>;
+	/** The version of the bootloader installed on the Z-Wave module */
+	public get bootloaderVersion(): MaybeNotKnown<string> {
+		return this._bootloaderVersion;
 	}
 
 	private _supportedFunctionTypes: MaybeNotKnown<FunctionType[]>;
@@ -1927,13 +1935,19 @@ export class ZWaveController
 		);
 
 		// Set firmware version information for the controller node
+		await this.queryBootloaderVersion();
 		controllerValueDB.setMetadata(
 			VersionCCValues.firmwareVersions.id,
 			VersionCCValues.firmwareVersions.meta,
 		);
-		controllerValueDB.setValue(VersionCCValues.firmwareVersions.id, [
-			this._firmwareVersion,
-		]);
+		// The bootloader is reported as the second firmware target, the same way
+		// nodes report their secondary firmware versions
+		controllerValueDB.setValue(
+			VersionCCValues.firmwareVersions.id,
+			this._bootloaderVersion
+				? [this._firmwareVersion, this._bootloaderVersion]
+				: [this._firmwareVersion],
+		);
 		controllerValueDB.setMetadata(
 			VersionCCValues.zWaveProtocolVersion.id,
 			VersionCCValues.zWaveProtocolVersion.meta,
@@ -7203,6 +7217,49 @@ export class ZWaveController
 
 		this.setInclusionState(InclusionState.Idle);
 		this.emit("node added", newNode, inclusionResult);
+	}
+
+	/** Returns the value IDs the controller node exposes on its own behalf */
+	public getDefinedValueIDs(): TranslatedValueID[] {
+		const ret: TranslatedValueID[] = [];
+
+		if (this._bootloaderVersion) {
+			// Without a bootloader version there is only the application version,
+			// which callers already read from `firmwareVersion`
+			const firmwareVersions = VersionCCValues.firmwareVersions.id;
+			ret.push({
+				...firmwareVersions,
+				commandClassName: getCCName(firmwareVersions.commandClass),
+				propertyName: "firmwareVersions",
+			});
+		}
+
+		return ret;
+	}
+
+	/**
+	 * Reads the version of the bootloader installed on the Z-Wave module.
+	 *
+	 * No standardized Serial API command for this exists yet, so the version can
+	 * only come from a proprietary query. Once a standard command is available,
+	 * query it here and keep the proprietary path as the fallback for controllers
+	 * that do not support the standard one.
+	 */
+	private async queryBootloaderVersion(): Promise<void> {
+		const provider = Object.values(this.proprietary).find(
+			(impl) => typeof impl.getBootloaderVersion === "function",
+		);
+		if (!provider) return;
+
+		try {
+			this._bootloaderVersion = await provider.getBootloaderVersion!();
+		} catch (e) {
+			// A misbehaving proprietary controller must not abort the interview
+			this.driver.controllerLog.print(
+				`Querying the bootloader version failed: ${getErrorMessage(e)}`,
+				"warn",
+			);
+		}
 	}
 
 	/**
