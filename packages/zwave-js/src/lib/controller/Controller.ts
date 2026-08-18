@@ -1987,11 +1987,7 @@ export class ZWaveController
 		return nodeIds;
 	}
 
-	/**
-	 * Sets the NIF of the controller to the Gateway device type and to include the CCs supported by Z-Wave JS.
-	 * Warning: This only works when followed up by a hard-reset, so don't call this directly
-	 * @internal
-	 */
+	/** Sets the NIF of the controller to the Gateway device type and to include the CCs supported by Z-Wave JS. */
 	public async setControllerNIF(): Promise<void> {
 		this.driver.controllerLog.print("Updating the controller NIF...");
 		await this.driver.sendMessage(
