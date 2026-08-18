@@ -1992,6 +1992,14 @@ export class ZWaveController
 	 * Note: This only takes effect after a soft-reset.
 	 */
 	public async setControllerNIF(): Promise<void> {
+		if (
+			!this.isFunctionSupported(
+				FunctionType.SetApplicationNodeInformation,
+			)
+		) {
+			return;
+		}
+
 		this.driver.controllerLog.print("Updating the controller NIF...");
 		await this.driver.sendMessage(
 			new SetApplicationNodeInformationRequest({
