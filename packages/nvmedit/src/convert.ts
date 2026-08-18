@@ -217,6 +217,10 @@ type ParsedNVM =
 		type: "unknown";
 	};
 
+/**
+ * Ensures that the controller node is marked as listening.
+ * Failure to do so causes the radio to stop after one RX event on SDK 8.0.0+.
+ */
 function setControllerIsListening(json: NVMJSON | NVM500JSON): void {
 	if ("isListening" in json.controller) {
 		json.controller.isListening = true;
