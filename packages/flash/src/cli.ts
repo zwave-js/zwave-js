@@ -56,7 +56,7 @@ const driver = new Driver(port, {
 	});
 
 function clearLastLine() {
-	if (verbose) return;
+	if (verbose || !process.stdout.isTTY) return;
 	process.stdout.moveCursor(0, -1);
 	process.stdout.clearLine(1);
 }
