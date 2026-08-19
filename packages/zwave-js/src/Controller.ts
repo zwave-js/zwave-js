@@ -35,10 +35,15 @@ export {
 	FUNC_ID_AEOTEC_CONFIG_GET,
 	FUNC_ID_AEOTEC_CONFIG_SET,
 } from "./lib/controller/proprietary/Aeotec.js";
-export type { RGB, Vector } from "./lib/controller/proprietary/NabuCasa.js";
+export type {
+	NabuCasaBootloaderInfo,
+	RGB,
+	Vector,
+} from "./lib/controller/proprietary/NabuCasa.js";
 export {
 	ControllerProprietary_NabuCasa,
 	FUNC_ID_NABUCASA,
+	NabuCasaBootloaderCapability,
 	NabuCasaCommand,
 	NabuCasaConfigKey,
 	NabuCasaIndicationSeverity,

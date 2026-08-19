@@ -35,6 +35,33 @@ export enum NabuCasaCommand {
 	SetConfig = 0x06,
 	GetLEDBinary = 0x07,
 	SetLEDBinary = 0x08,
+	GetBootloaderInfo = 0x09,
+}
+
+/**
+ * Capabilities of the Gecko Bootloader, mirroring the `BOOTLOADER_CAPABILITY_*`
+ * definitions in the Simplicity SDK. The unlisted bits are unassigned.
+ */
+export enum NabuCasaBootloaderCapability {
+	EnforceUpgradeSignature = 0,
+	EnforceUpgradeEncryption = 1,
+	EnforceSecureBoot = 2,
+	BootloaderUpgrade = 4,
+	GBL = 5,
+	GBLSignature = 6,
+	GBLEncryption = 7,
+	EnforceCertificateSecureBoot = 8,
+	RollbackProtection = 9,
+	PeripheralList = 10,
+	Storage = 16,
+	Communication = 20,
+	EM4GPIORetention = 21,
+}
+
+export interface NabuCasaBootloaderInfo {
+	/** Bootloader version, formatted as `major.minor.customer` */
+	version: string;
+	capabilities: NabuCasaBootloaderCapability[];
 }
 
 export interface RGB {
@@ -123,12 +150,22 @@ export class ControllerProprietary_NabuCasa
 	private driver: Driver;
 	private controller: ZWaveController;
 	private supportedCommands?: NabuCasaCommand[];
+	private _bootloaderInfo?: NabuCasaBootloaderInfo;
+
+	/** Information about the bootloader, read during the interview */
+	public get bootloaderInfo(): NabuCasaBootloaderInfo | undefined {
+		return this._bootloaderInfo;
+	}
 
 	public async interview(): Promise<void> {
 		const valueDB = this.controller.valueDB;
 
 		const supported = await this.getSupportedCommands();
 		this.supportedCommands = supported;
+
+		if (supported.includes(NabuCasaCommand.GetBootloaderInfo)) {
+			this._bootloaderInfo ??= await this.getBootloaderInfo();
+		}
 
 		if (
 			supported.includes(NabuCasaCommand.GetLEDBinary)
@@ -535,6 +572,55 @@ export class ControllerProprietary_NabuCasa
 		const success = !!result.payload[1];
 
 		return success;
+	}
+
+	public async getBootloaderVersion(): Promise<string | undefined> {
+		if (
+			!this.supportedCommands?.includes(NabuCasaCommand.GetBootloaderInfo)
+		) {
+			return undefined;
+		}
+
+		this._bootloaderInfo ??= await this.getBootloaderInfo();
+		return this._bootloaderInfo.version;
+	}
+
+	public async getBootloaderInfo(): Promise<NabuCasaBootloaderInfo> {
+		// HOST->ZW (REQ): NABU_CASA_BOOTLOADER_INFO
+		// ZW->HOST (RES): NABU_CASA_BOOTLOADER_INFO | major | minor | customer | capabilities[4]
+
+		const getBootloaderInfoCmd = new Message({
+			type: MessageType.Request,
+			functionType: FUNC_ID_NABUCASA,
+			payload: Bytes.from([NabuCasaCommand.GetBootloaderInfo]),
+			expectedResponse: (self, msg) => {
+				return (
+					msg.functionType === FUNC_ID_NABUCASA
+					&& msg.type === MessageType.Response
+					&& msg.payload[0] === NabuCasaCommand.GetBootloaderInfo
+				);
+			},
+		});
+
+		const { payload: result } = await this.driver.sendMessage(
+			getBootloaderInfoCmd,
+			{
+				priority: MessagePriority.Controller,
+				supportCheck: false,
+			},
+		);
+
+		// The capabilities are transferred MSB first, but parseBitMask expects
+		// the least significant byte first
+		const capabilities = result.subarray(4, 8).toReversed();
+
+		return {
+			version: `${result[1]}.${result[2]}.${result[3]}`,
+			capabilities: parseBitMask(
+				capabilities,
+				0,
+			) as NabuCasaBootloaderCapability[],
+		};
 	}
 
 	public getDefinedValueIDs(): TranslatedValueID[] {

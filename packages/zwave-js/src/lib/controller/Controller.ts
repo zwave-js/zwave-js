@@ -584,6 +584,12 @@ export class ZWaveController
 		return this._firmwareVersion;
 	}
 
+	private _bootloaderVersion: MaybeNotKnown<string>;
+	/** The version of the bootloader installed on the Z-Wave module */
+	public get bootloaderVersion(): MaybeNotKnown<string> {
+		return this._bootloaderVersion;
+	}
+
 	private _supportedFunctionTypes: MaybeNotKnown<FunctionType[]>;
 	public get supportedFunctionTypes(): MaybeNotKnown<
 		readonly FunctionType[]
@@ -7210,6 +7216,43 @@ export class ZWaveController
 
 		this.setInclusionState(InclusionState.Idle);
 		this.emit("node added", newNode, inclusionResult);
+	}
+
+	/**
+	 * Reads the version of the bootloader installed on the Z-Wave module and adds
+	 * it to the controller's firmware versions.
+	 *
+	 * No standardized Serial API command for this exists yet, so the version can
+	 * only come from a proprietary query. Once a standard command is available,
+	 * query it here and keep the proprietary path as the fallback for controllers
+	 * that do not support the standard one.
+	 *
+	 * @internal
+	 */
+	public async queryBootloaderVersion(): Promise<void> {
+		const provider = Object.values(this.proprietary).find(
+			(impl) => typeof impl.getBootloaderVersion === "function",
+		);
+		if (!provider) return;
+
+		try {
+			this._bootloaderVersion = await provider.getBootloaderVersion!();
+		} catch (e) {
+			// A misbehaving proprietary controller must not abort the interview
+			this.driver.controllerLog.print(
+				`Querying the bootloader version failed: ${getErrorMessage(e)}`,
+				"warn",
+			);
+			return;
+		}
+		if (!this._bootloaderVersion) return;
+
+		// Append the bootloader as the second firmware target, the same way nodes
+		// report their secondary firmware versions
+		this.valueDB.setValue(VersionCCValues.firmwareVersions.id, [
+			this._firmwareVersion,
+			this._bootloaderVersion,
+		]);
 	}
 
 	/**

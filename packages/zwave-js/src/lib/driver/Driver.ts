@@ -2147,6 +2147,9 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			// For controllers with proprietary implementations, interview them too
 			await this.controller.interviewProprietary();
 
+			// Reading the bootloader version currently depends on a proprietary command
+			await this.controller.queryBootloaderVersion();
+
 			this.controllerLog.print("Interview completed");
 
 			if (this.controller.role === ControllerRole.Primary) {
