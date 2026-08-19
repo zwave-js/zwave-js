@@ -740,6 +740,7 @@ export class ZWaveController
 		return this._powerlevelCalibration;
 	}
 
+	private _serialAPIStartedListening: MaybeNotKnown<boolean>;
 	private _supportsLongRange: MaybeNotKnown<boolean>;
 	/** Whether the controller supports the Z-Wave Long Range protocol */
 	public get supportsLongRange(): MaybeNotKnown<boolean> {
