@@ -9495,6 +9495,9 @@ ${handlers.length} left`,
 			// We just entered the bootloader
 			this._controller?.destroy();
 			this._controller = undefined;
+			this._controllerInterviewed = false;
+			this._nodesReady.clear();
+			this._nodesReadyEventEmitted = false;
 			this._cli = undefined;
 
 			this.controllerLog.print(
@@ -9644,6 +9647,9 @@ ${handlers.length} left`,
 			// We just detected the CLI
 			this._controller?.destroy();
 			this._controller = undefined;
+			this._controllerInterviewed = false;
+			this._nodesReady.clear();
+			this._nodesReadyEventEmitted = false;
 			this._bootloader = undefined;
 
 			this._cli = new EndDeviceCLI(
