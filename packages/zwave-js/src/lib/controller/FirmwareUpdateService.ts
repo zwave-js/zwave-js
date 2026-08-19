@@ -25,6 +25,18 @@ import type {
 	FirmwareUpdateInfo,
 } from "./_Types.js";
 
+function additionalFirmwareVersionsEqual(
+	a: Record<string, string> | undefined,
+	b: Record<string, string> | undefined,
+): boolean {
+	if (a === b) return true;
+	if (!a || !b) return false;
+	const keysA = Object.keys(a);
+	const keysB = Object.keys(b);
+	if (keysA.length !== keysB.length) return false;
+	return keysA.every((k) => a[k] === b[k]);
+}
+
 function serviceURL(): string {
 	return getenv("ZWAVEJS_FW_SERVICE_URL") || "https://firmware.zwave-js.io";
 }
@@ -180,8 +192,10 @@ export async function getAvailableFirmwareUpdatesBulk(
 					&& d.productType === device.productType
 					&& d.productId === device.productId
 					&& d.firmwareVersion === device.firmwareVersion
-					&& JSON.stringify(d.additionalFirmwareVersions)
-						=== JSON.stringify(device.additionalFirmwareVersions)
+					&& additionalFirmwareVersionsEqual(
+						d.additionalFirmwareVersions,
+						device.additionalFirmwareVersions,
+					)
 				),
 	);
 
@@ -248,10 +262,10 @@ export async function getAvailableFirmwareUpdatesBulk(
 					&& formatId(device.productId) === deviceResponse.productId
 					&& padVersion(device.firmwareVersion)
 						=== padVersion(deviceResponse.firmwareVersion)
-					&& JSON.stringify(device.additionalFirmwareVersions)
-						=== JSON.stringify(
-							deviceResponse.additionalFirmwareVersions,
-						),
+					&& additionalFirmwareVersionsEqual(
+						device.additionalFirmwareVersions,
+						deviceResponse.additionalFirmwareVersions,
+					),
 			);
 
 			if (originalDevice) {
