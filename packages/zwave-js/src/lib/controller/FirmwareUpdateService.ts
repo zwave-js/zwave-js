@@ -180,6 +180,8 @@ export async function getAvailableFirmwareUpdatesBulk(
 					&& d.productType === device.productType
 					&& d.productId === device.productId
 					&& d.firmwareVersion === device.firmwareVersion
+					&& JSON.stringify(d.additionalFirmwareVersions)
+						=== JSON.stringify(device.additionalFirmwareVersions)
 				),
 	);
 
@@ -202,12 +204,19 @@ export async function getAvailableFirmwareUpdatesBulk(
 		}
 
 		const body: Record<string, any> = {
-			devices: staleDevices.map((device) => ({
-				manufacturerId: formatId(device.manufacturerId),
-				productType: formatId(device.productType),
-				productId: formatId(device.productId),
-				firmwareVersion: device.firmwareVersion,
-			})),
+			devices: staleDevices.map((device) => {
+				const ret: Record<string, any> = {
+					manufacturerId: formatId(device.manufacturerId),
+					productType: formatId(device.productType),
+					productId: formatId(device.productId),
+					firmwareVersion: device.firmwareVersion,
+				};
+				if (device.additionalFirmwareVersions) {
+					ret.additionalFirmwareVersions =
+						device.additionalFirmwareVersions;
+				}
+				return ret;
+			}),
 		};
 
 		const rfRegion = rfRegionToUpdateServiceRegion(options.rfRegion);
@@ -230,7 +239,6 @@ export async function getAvailableFirmwareUpdatesBulk(
 		const foundDevices = new Set<FirmwareUpdateDeviceID>();
 
 		for (const deviceResponse of result) {
-			// Find the original device info to get the RF region
 			const originalDevice = staleDevices.find(
 				(device) =>
 					formatId(device.manufacturerId)
@@ -239,7 +247,11 @@ export async function getAvailableFirmwareUpdatesBulk(
 						=== deviceResponse.productType
 					&& formatId(device.productId) === deviceResponse.productId
 					&& padVersion(device.firmwareVersion)
-						=== padVersion(deviceResponse.firmwareVersion),
+						=== padVersion(deviceResponse.firmwareVersion)
+					&& JSON.stringify(device.additionalFirmwareVersions)
+						=== JSON.stringify(
+							deviceResponse.additionalFirmwareVersions,
+						),
 			);
 
 			if (originalDevice) {
