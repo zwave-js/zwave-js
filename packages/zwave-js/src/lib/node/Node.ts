@@ -1335,15 +1335,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				requestedNodeId: this.id,
 			}),
 		);
-		// For the controller node, prefer the value reported by SerialAPIStarted
-		// over the potentially stale cached value from GetNodeProtocolInfo
-		const serialAPIStartedListening: MaybeNotKnown<boolean> = this
-			.driver.controller["_serialAPIStartedListening"];
-		if (this.isControllerNode && serialAPIStartedListening != null) {
-			this.isListening = serialAPIStartedListening;
-		} else {
-			this.isListening = resp.isListening;
-		}
+		this.isListening = resp.isListening;
 		this.isFrequentListening = resp.isFrequentListening;
 		this.isRouting = resp.isRouting;
 		this.supportedDataRates = resp.supportedDataRates;

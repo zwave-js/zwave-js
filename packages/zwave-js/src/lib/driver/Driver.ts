@@ -2144,6 +2144,16 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				},
 			);
 
+			// Apply the isListening flag from SerialAPIStarted now that
+			// ownNodeId and the network cache are available
+			if (this._serialAPIStartedListening != null) {
+				this.cacheSet(
+					cacheKeys.node(this.controller.ownNodeId!).isListening,
+					this._serialAPIStartedListening,
+				);
+				this._serialAPIStartedListening = undefined;
+			}
+
 			// For controllers with proprietary implementations, interview them too
 			await this.controller.interviewProprietary();
 
@@ -3630,6 +3640,21 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return this._controllerInterviewed;
 	}
 
+	// Stored from SerialAPIStartedRequest for deferred application to the
+	// controller node's cache once ownNodeId and the network cache are available
+	private _serialAPIStartedListening: boolean | undefined;
+
+	private overrideControllerIsListening(isListening: boolean): void {
+		this._serialAPIStartedListening = isListening;
+		const ownNodeId = this._controller?.ownNodeId;
+		if (ownNodeId != null) {
+			this.cacheSet(
+				cacheKeys.node(ownNodeId).isListening,
+				isListening,
+			);
+		}
+	}
+
 	private async ensureSerialAPI(): Promise<boolean> {
 		// Wait 1.5 seconds after reset to ensure that the module is ready for communication again
 		// Z-Wave 700 sticks are relatively fast, so we also wait for the Serial API started command
@@ -3646,8 +3671,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			if (this._controller) {
 				this._controller["_supportsLongRange"] =
 					waitResult.supportsLongRange;
-				this._controller["_serialAPIStartedListening"] =
-					waitResult.isListening;
+				this.overrideControllerIsListening(waitResult.isListening);
 			}
 			return true;
 		}
@@ -3677,8 +3701,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			if (this._controller) {
 				this._controller["_supportsLongRange"] =
 					waitResult.supportsLongRange;
-				this._controller["_serialAPIStartedListening"] =
-					waitResult.isListening;
+				this.overrideControllerIsListening(waitResult.isListening);
 			}
 			return true;
 		}
@@ -5531,6 +5554,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 					this._controller.nodeIdType = NodeIDType.Short;
 					await this._controller.trySetNodeIDType(NodeIDType.Long);
 				}
+
+				this.overrideControllerIsListening(msg.isListening);
 
 				return true; // Don't invoke any more handlers
 			}
