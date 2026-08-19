@@ -3646,6 +3646,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			if (this._controller) {
 				this._controller["_supportsLongRange"] =
 					waitResult.supportsLongRange;
+				this._controller["_serialAPIStartedListening"] =
+					waitResult.isListening;
 			}
 			return true;
 		}
@@ -3675,6 +3677,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			if (this._controller) {
 				this._controller["_supportsLongRange"] =
 					waitResult.supportsLongRange;
+				this._controller["_serialAPIStartedListening"] =
+					waitResult.isListening;
 			}
 			return true;
 		}

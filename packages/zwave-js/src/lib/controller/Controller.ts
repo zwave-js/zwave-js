@@ -740,6 +740,9 @@ export class ZWaveController
 		return this._powerlevelCalibration;
 	}
 
+	/** The `isListening` flag reported by `SerialAPIStarted`, used to override stale cached protocol info for the controller node */
+	private _serialAPIStartedListening: MaybeNotKnown<boolean>;
+
 	private _supportsLongRange: MaybeNotKnown<boolean>;
 	/** Whether the controller supports the Z-Wave Long Range protocol */
 	public get supportsLongRange(): MaybeNotKnown<boolean> {
