@@ -25,6 +25,18 @@ import type {
 	FirmwareUpdateInfo,
 } from "./_Types.js";
 
+function additionalFirmwareVersionsEqual(
+	a: Record<string, string> | undefined,
+	b: Record<string, string> | undefined,
+): boolean {
+	if (a === b) return true;
+	if (!a || !b) return false;
+	const keysA = Object.keys(a);
+	const keysB = Object.keys(b);
+	if (keysA.length !== keysB.length) return false;
+	return keysA.every((k) => a[k] === b[k]);
+}
+
 function serviceURL(): string {
 	return getenv("ZWAVEJS_FW_SERVICE_URL") || "https://firmware.zwave-js.io";
 }
@@ -180,6 +192,10 @@ export async function getAvailableFirmwareUpdatesBulk(
 					&& d.productType === device.productType
 					&& d.productId === device.productId
 					&& d.firmwareVersion === device.firmwareVersion
+					&& additionalFirmwareVersionsEqual(
+						d.additionalFirmwareVersions,
+						device.additionalFirmwareVersions,
+					)
 				),
 	);
 
@@ -202,12 +218,19 @@ export async function getAvailableFirmwareUpdatesBulk(
 		}
 
 		const body: Record<string, any> = {
-			devices: staleDevices.map((device) => ({
-				manufacturerId: formatId(device.manufacturerId),
-				productType: formatId(device.productType),
-				productId: formatId(device.productId),
-				firmwareVersion: device.firmwareVersion,
-			})),
+			devices: staleDevices.map((device) => {
+				const ret: Record<string, any> = {
+					manufacturerId: formatId(device.manufacturerId),
+					productType: formatId(device.productType),
+					productId: formatId(device.productId),
+					firmwareVersion: device.firmwareVersion,
+				};
+				if (device.additionalFirmwareVersions) {
+					ret.additionalFirmwareVersions =
+						device.additionalFirmwareVersions;
+				}
+				return ret;
+			}),
 		};
 
 		const rfRegion = rfRegionToUpdateServiceRegion(options.rfRegion);
@@ -230,7 +253,6 @@ export async function getAvailableFirmwareUpdatesBulk(
 		const foundDevices = new Set<FirmwareUpdateDeviceID>();
 
 		for (const deviceResponse of result) {
-			// Find the original device info to get the RF region
 			const originalDevice = staleDevices.find(
 				(device) =>
 					formatId(device.manufacturerId)
@@ -239,7 +261,11 @@ export async function getAvailableFirmwareUpdatesBulk(
 						=== deviceResponse.productType
 					&& formatId(device.productId) === deviceResponse.productId
 					&& padVersion(device.firmwareVersion)
-						=== padVersion(deviceResponse.firmwareVersion),
+						=== padVersion(deviceResponse.firmwareVersion)
+					&& additionalFirmwareVersionsEqual(
+						device.additionalFirmwareVersions,
+						deviceResponse.additionalFirmwareVersions,
+					),
 			);
 
 			if (originalDevice) {

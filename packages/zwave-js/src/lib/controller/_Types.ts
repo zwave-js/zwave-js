@@ -26,6 +26,7 @@ export type FirmwareUpdateDeviceID = Expand<
 	// The firmware update service does not support SDK version
 	Omit<DeviceID, "sdkVersion"> & {
 		firmwareVersion: string;
+		additionalFirmwareVersions?: Record<string, string>;
 		rfRegion?: RFRegion;
 	}
 >;
@@ -46,6 +47,7 @@ export interface FirmwareUpdateBulkInfo {
 	productType: string;
 	productId: string;
 	firmwareVersion: string;
+	additionalFirmwareVersions?: Record<string, string>;
 	updates: FirmwareUpdateServiceResponse[];
 }
 

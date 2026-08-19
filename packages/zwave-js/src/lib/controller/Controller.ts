@@ -9345,11 +9345,28 @@ export class ZWaveController
 				continue;
 			}
 
+			// Pass all firmware targets' versions, not just upgradable ones.
+			// The update service uses them to filter applicable updates.
+			const allFirmwareVersions = node.getValue<string[]>(
+				VersionCCValues.firmwareVersions.id,
+			);
+			let additionalFirmwareVersions:
+				| Record<string, string>
+				| undefined;
+			if (allFirmwareVersions && allFirmwareVersions.length > 1) {
+				additionalFirmwareVersions = {};
+				for (let i = 1; i < allFirmwareVersions.length; i++) {
+					additionalFirmwareVersions[i.toString()] =
+						allFirmwareVersions[i];
+				}
+			}
+
 			const deviceId: FirmwareUpdateDeviceID = {
 				manufacturerId,
 				productType,
 				productId,
 				firmwareVersion,
+				additionalFirmwareVersions,
 			};
 
 			deviceIds.push(deviceId);
