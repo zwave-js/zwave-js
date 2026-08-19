@@ -9345,6 +9345,8 @@ export class ZWaveController
 				continue;
 			}
 
+			// Pass all firmware targets' versions, not just upgradable ones.
+			// The update service uses them to filter applicable updates.
 			const allFirmwareVersions = node.getValue<string[]>(
 				VersionCCValues.firmwareVersions.id,
 			);
