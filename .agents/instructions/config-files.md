@@ -216,6 +216,36 @@ Becomes four partial parameters:
 - All devices have a group for communication with the controller - this should be labeled "Lifeline"
 - Modern devices typically use Association group 1 as the lifeline, but older devices may use different numbers
 
+## Endpoint Labels
+
+The `endpoints` property (property order slot 8) can carry a `label` string for each Multi Channel endpoint, giving it a concise human-readable name ("Relay 1", "Floor Sensor"). These labels help home automation UIs display meaningful names instead of bare endpoint indices.
+
+### When to Add Endpoint Labels
+
+Only add a label when the device manual or manufacturer's product page **explicitly describes what that endpoint controls**. Never derive a label solely from the endpoint's device class or invent one. If an endpoint's purpose is undocumented, leave it unlabeled.
+
+### Label Style
+
+- Apply Title Case ("Circuit 1", "USB Port")
+- Keep labels short — 1–3 words is typical
+- Omit redundant words like "channel" or "endpoint" unless they are part of the documented name
+- When multiple endpoints share an undifferentiated type, disambiguate with an index that matches the documentation ("Relay 1", "Relay 2")
+- Do not label root endpoint `"0"` unless the documentation gives it a name distinct from the device itself
+
+### Root Association Migration
+
+If an `endpoints` block is added to a config that already has root-level `associations`, the spec requires those associations to move under `endpoints["0"]` (using `$import` self-references to avoid duplication). This migration is non-trivial — flag such files for human review rather than auto-migrating.
+
+### Example
+
+```json
+"endpoints": {
+    "1": { "label": "Circuit 1" },
+    "2": { "label": "Circuit 2" },
+    "3": { "label": "Circuit 3" }
+}
+```
+
 ## Central Scene Labels
 
 The `scenes` property allows defining custom labels and descriptions for Central Scenes instead of the default "Scene 001", "Scene 002" format.

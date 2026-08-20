@@ -14,6 +14,12 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"2": { "label": "SW1" },
+		"3": { "label": "SW2" },
+		"4": { "label": "SW3" },
+		"5": { "label": "SW4" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

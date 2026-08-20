@@ -12,5 +12,9 @@
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
+	},
+	"endpoints": {
+		"1": { "label": "Smart Outlet 1" },
+		"2": { "label": "Smart Outlet 2" }
 	}
 }

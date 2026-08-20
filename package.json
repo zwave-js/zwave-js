@@ -141,6 +141,7 @@
     "bootstrap": "./maintenance/bootstrap.sh",
     "postinstall": "husky",
     "config": "yarn ts packages/config/maintenance/importConfig.ts",
+    "config:find-multi-endpoints": "yarn ts packages/config/maintenance/findMultiEndpointDevices.ts",
     "docs": "docsify serve docs",
     "docs:generate": "yarn docs:generate-examples && yarn docs:generate-imports && yarn docs:generate-cc-apis",
     "docs:generate-cc-apis": "yarn ts packages/maintenance/src/docs/generateCCAPIs.ts",

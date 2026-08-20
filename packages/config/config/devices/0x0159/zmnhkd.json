@@ -13,6 +13,12 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Thermostat" },
+		"2": { "label": "I1" },
+		"3": { "label": "I2" },
+		"5": { "label": "Temperature Sensor" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

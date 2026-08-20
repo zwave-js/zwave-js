@@ -25,6 +25,10 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Relay 1" },
+		"2": { "label": "Relay 2" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",
