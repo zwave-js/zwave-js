@@ -3,12 +3,12 @@ import { ObjectKeyMap } from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
 import { evaluate } from "../Logic.js";
 import { throwInvalidConfig } from "../utils_safe.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 /** A conditional config item */
 export interface ConditionalItem<T> {
 	readonly condition?: string;
-	evaluateCondition(deviceId?: DeviceID): T | undefined;
+	evaluateCondition(context?: ConditionalConfigContext): T | undefined;
 }
 
 export function isConditionalItem<T>(val: any): val is ConditionalItem<T> {
@@ -26,18 +26,18 @@ export function isConditionalItem<T>(val: any): val is ConditionalItem<T> {
 	return true;
 }
 
-/** Checks if a given condition applies for the given device ID */
+/** Checks if a given condition applies in the given context */
 export function conditionApplies<T>(
 	self: ConditionalItem<T>,
-	deviceId: DeviceID | undefined,
+	context: ConditionalConfigContext | undefined,
 ): boolean {
 	// No condition? Always applies
 	if (!self.condition) return true;
-	// No device ID? Always applies
-	if (!deviceId) return true;
+	// No context? Always applies
+	if (!context) return true;
 
 	try {
-		return !!evaluate(self.condition, deviceId);
+		return !!evaluate(self.condition, context);
 	} catch {
 		throw new ZWaveError(
 			`Invalid condition "${self.condition}"!`,
@@ -79,7 +79,7 @@ export type EvaluateDeepReturnType<
 
 export function evaluateDeep<T, PA extends boolean>(
 	obj: T,
-	deviceId?: DeviceID,
+	context?: ConditionalConfigContext,
 	preserveArray?: PA,
 ): EvaluateDeepReturnType<T, PA>;
 
@@ -88,7 +88,7 @@ export function evaluateDeep<T, PA extends boolean>(
  */
 export function evaluateDeep(
 	obj: unknown,
-	deviceId?: DeviceID,
+	context?: ConditionalConfigContext,
 	preserveArray: boolean = false,
 ): unknown {
 	if (obj == undefined) {
@@ -97,12 +97,12 @@ export function evaluateDeep(
 		if (preserveArray) {
 			// Evaluate all array entries and return the ones that passed
 			return obj
-				.map((item) => evaluateDeep(item, deviceId, true))
+				.map((item) => evaluateDeep(item, context, true))
 				.filter((o) => o != undefined);
 		} else {
 			// Return the first matching array entry
 			for (const item of obj) {
-				const evaluated = evaluateDeep(item, deviceId, false);
+				const evaluated = evaluateDeep(item, context, false);
 				if (evaluated != undefined) return evaluated;
 			}
 		}
@@ -110,7 +110,7 @@ export function evaluateDeep(
 		const ret = new Map();
 		for (const [key, val] of obj) {
 			// In maps only take the first possible value for each entry
-			const evaluated = evaluateDeep(val, deviceId, false);
+			const evaluated = evaluateDeep(val, context, false);
 
 			if (evaluated != undefined) {
 				ret.set(key, evaluated);
@@ -122,7 +122,7 @@ export function evaluateDeep(
 		const ret = new ObjectKeyMap();
 		for (const [key, val] of obj) {
 			// In maps only take the first possible value for each entry
-			const evaluated = evaluateDeep(val, deviceId, false);
+			const evaluated = evaluateDeep(val, context, false);
 
 			if (evaluated != undefined) {
 				ret.set(key, evaluated);
@@ -132,7 +132,7 @@ export function evaluateDeep(
 		if (ret.size > 0) return ret;
 	} else if (isConditionalItem(obj)) {
 		// Evaluate the condition for simple items
-		return obj.evaluateCondition(deviceId);
+		return obj.evaluateCondition(context);
 	} else {
 		// Simply return non-conditional items
 		return obj;
