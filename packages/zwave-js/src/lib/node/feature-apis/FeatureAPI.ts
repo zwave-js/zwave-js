@@ -11,4 +11,9 @@ export abstract class FeatureAPI {
 	protected getValue<T = unknown>(valueId: ValueID): MaybeNotKnown<T> {
 		return this.endpoint.tryGetNode()?.getValue(valueId);
 	}
+
+	/** Releases resources held by this API, e.g. event subscriptions and timers */
+	public destroy(): void {
+		// Most feature APIs hold no resources
+	}
 }
