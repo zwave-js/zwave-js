@@ -801,28 +801,24 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Restore the mmwave module factory configuration",
+					"label": "Factory reset mmWave module",
 					"value": 0
 				},
 				{
-					"label": "The interference area is automatically generated",
+					"label": "Generate and store interference area",
 					"value": 1
 				},
 				{
-					"label": "Obtains the interference region and detection region",
+					"label": "Reserved for future use",
 					"value": 2
 				},
 				{
-					"label": "Clears the interference area",
+					"label": "Clear stored interference area",
 					"value": 3
 				},
 				{
-					"label": "Resets the detection area",
+					"label": "Reset detection area to defaults",
 					"value": 4
-				},
-				{
-					"label": "Clears the stay area",
-					"value": 5
 				}
 			]
 		},
