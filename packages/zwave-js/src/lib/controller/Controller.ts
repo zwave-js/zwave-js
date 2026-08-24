@@ -8243,7 +8243,7 @@ export class ZWaveController
 			setImmediate(() => restoreProgress(completed, plan.totalCommands));
 		};
 
-		// Set Default must clear existing device data before Network Restore
+		// The specification recommends Set Default to clear existing device data before Network Restore
 		await this.hardResetInternal(false);
 
 		await this.networkRestorePrepare();
