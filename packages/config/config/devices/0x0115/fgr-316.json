@@ -30,7 +30,7 @@
 		"6": { "label": "Output 6" },
 		"7": { "label": "Analog 1" },
 		"8": { "label": "Analog 2" },
-		"9": { "label": "Temperature" },
+		"9": { "label": "Temperature Sensor" },
 		"10": { "label": "Digital Input" }
 	}
 }

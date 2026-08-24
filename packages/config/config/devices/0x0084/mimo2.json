@@ -18,8 +18,8 @@
 		"max": "255.255"
 	},
 	"endpoints": {
-		"1": { "label": "SIG1" },
-		"2": { "label": "SIG2" },
+		"1": { "label": "Input 1" },
+		"2": { "label": "Input 2" },
 		"3": { "label": "Relay 1" },
 		"4": { "label": "Relay 2" }
 	},

@@ -15,8 +15,8 @@
 	},
 	"endpoints": {
 		"1": { "label": "Relay" },
-		"2": { "label": "Temperature 1" },
-		"3": { "label": "Temperature 2" },
+		"2": { "label": "Temperature Sensor 1" },
+		"3": { "label": "Temperature Sensor 2" },
 		"4": { "label": "Flood Sensor" }
 	},
 	"paramInformation": [

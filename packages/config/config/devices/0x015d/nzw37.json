@@ -14,7 +14,7 @@
 		"max": "255.255"
 	},
 	"endpoints": {
-		"1": { "label": "Smart Outlet 1" },
-		"2": { "label": "Smart Outlet 2" }
+		"1": { "label": "Outlet 1" },
+		"2": { "label": "Outlet 2" }
 	}
 }

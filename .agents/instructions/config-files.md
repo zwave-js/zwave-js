@@ -231,6 +231,9 @@ Only add a label when the device manual or manufacturer's product page **explici
 - Omit redundant words like "channel" or "endpoint" unless they are part of the documented name
 - When multiple endpoints share an undifferentiated type, disambiguate with an index that matches the documentation ("Relay 1", "Relay 2")
 - Do not label root endpoint `"0"` unless the documentation gives it a name distinct from the device itself
+- **Describe the device part, not the abstract feature** — prefer "Temperature Sensor" over "Temperature", "Motion Sensor" over "Motion". Naming the physical part is more concrete and more understandable to users who know what device they have.
+- **Normalize cryptic manufacturer-internal names** when normalization removes no information about what the endpoint does. A name is cryptic if a typical user would not understand it without consulting the manual — e.g. `SIG1` says nothing more than "Input 1", so normalize it: `SIG1` → `Input 1`. Apply the same logic to unexplained abbreviations like `OUT1` → `Output 1`.
+- **Keep informative original names verbatim** when the documented name conveys feature context that a generic label would lose. For example, `CT1` signals a current-transformer clamp input — normalizing it to `Input 1` would drop that context. In such cases keep the documented name exactly, without expanding or rewording it.
 
 ### Root Association Migration
 

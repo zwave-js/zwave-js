@@ -15,10 +15,10 @@
 		"max": "255.255"
 	},
 	"endpoints": {
-		"2": { "label": "SW1" },
-		"3": { "label": "SW2" },
-		"4": { "label": "SW3" },
-		"5": { "label": "SW4" }
+		"2": { "label": "Switch 1" },
+		"3": { "label": "Switch 2" },
+		"4": { "label": "Switch 3" },
+		"5": { "label": "Switch 4" }
 	},
 	"paramInformation": [
 		{

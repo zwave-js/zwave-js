@@ -43,11 +43,14 @@ Use the optional endpoint summary (from the discovery script) as a cross-check: 
 
 Label rules (see "Endpoint Labels" in `config-files.md` for the full rules):
 
-- Labels must come directly from the device documentation — never invent or guess
-- Use the exact name the documentation uses for the channel/output/zone, keeping it concise
+- Labels must come from the device documentation — never invent or guess
+- Start from the name the documentation uses, then apply the normalization rules below
 - Apply Title Case
 - If multiple endpoints share an undifferentiated type, disambiguate with an index matching the documentation ("Relay 1", "Relay 2"; "Circuit 1", "Circuit 2")
 - Keep labels short (1–3 words is typical); omit redundant words like "channel" or "endpoint" unless they are part of the documented name
+- **Describe the device part, not the abstract feature** — prefer "Temperature Sensor" over "Temperature", "Motion Sensor" over "Motion"
+- **Normalize cryptic manufacturer-internal names** when normalization loses no information about what the endpoint does. If a typical user would not understand the documented name without consulting the manual, replace it with a clear generic label — e.g. `SIG1` → `Input 1`, `OUT1` → `Output 1`.
+- **Keep informative original names verbatim** when the documented name carries feature context a generic label would lose — e.g. `CT1` (current-transformer clamp input) stays `CT1`, because `Input 1` would drop that context. Do not expand or reword such names.
 - Do not label root endpoint 0 unless the documentation gives it a specific name distinct from the device itself
 - If any endpoint's purpose is undocumented, **omit it** — do not assign a placeholder or device-class-derived label
 

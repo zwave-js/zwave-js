@@ -15,7 +15,7 @@
 	},
 	"endpoints": {
 		"1": { "label": "Relay" },
-		"2": { "label": "I2 Input" }
+		"2": { "label": "Input 2" }
 	},
 	"paramInformation": [
 		{

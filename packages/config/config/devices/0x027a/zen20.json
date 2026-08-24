@@ -14,11 +14,11 @@
 		"max": "255.255"
 	},
 	"endpoints": {
-		"1": { "label": "CH 1" },
-		"2": { "label": "CH 2" },
-		"3": { "label": "CH 3" },
-		"4": { "label": "CH 4" },
-		"5": { "label": "CH 5" },
+		"1": { "label": "Outlet 1" },
+		"2": { "label": "Outlet 2" },
+		"3": { "label": "Outlet 3" },
+		"4": { "label": "Outlet 4" },
+		"5": { "label": "Outlet 5" },
 		"6": { "label": "USB 1" },
 		"7": { "label": "USB 2" }
 	},
