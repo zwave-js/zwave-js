@@ -50,7 +50,7 @@ Label rules (see "Endpoint Labels" in `config-files.md` for the full rules):
 - Keep labels short (1–3 words is typical); omit redundant words like "channel" or "endpoint" unless they are part of the documented name
 - **Describe the device part, not the abstract feature** — prefer "Temperature Sensor" over "Temperature", "Motion Sensor" over "Motion"
 - **Normalize cryptic manufacturer-internal names** when normalization loses no information about what the endpoint does. If a typical user would not understand the documented name without consulting the manual, replace it with a clear generic label — e.g. `SIG1` → `Input 1`, `OUT1` → `Output 1`.
-- **Keep informative original names verbatim** when the documented name carries feature context a generic label would lose — e.g. `CT1` (current-transformer clamp input) stays `CT1`, because `Input 1` would drop that context. Do not expand or reword such names.
+- **Keep informative original names verbatim** when the documented name carries feature context a generic label would lose — e.g. `CT1` (current-transformer clamp input) stays `CT1`, because `Input 1` would drop that context. The same applies when documented names distinguish different input types on the same device — e.g. a module with both analog and digital inputs keeps `Analog 1` and `Digital Input` rather than collapsing them to `Input 1`, `Input 2`. Do not expand or reword such names.
 - Do not label root endpoint 0 unless the documentation gives it a specific name distinct from the device itself
 - If any endpoint's purpose is undocumented, **omit it** — do not assign a placeholder or device-class-derived label
 
