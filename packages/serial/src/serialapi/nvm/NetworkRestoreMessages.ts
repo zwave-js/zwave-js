@@ -1,22 +1,19 @@
 import {
 	type FLiRS,
-	MAX_NODES,
-	MAX_NODES_LR,
 	type MessageOrCCLogEntry,
 	MessagePriority,
 	type MessageRecord,
 	ZWaveDataRate,
-	ZWaveError,
-	ZWaveErrorCodes,
 	encodeNodeID,
 	logBuffer,
 	parseNodeID,
-	validatePayload,
 } from "@zwave-js/core";
+import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageConstructor,
 	type MessageEncodingContext,
 	MessageOrigin,
 	type MessageParsingContext,
@@ -64,91 +61,19 @@ export interface NetworkRestoreRoute {
 	hops: number[];
 }
 
-function isNetworkRestoreCommand(
-	command: number,
-): command is NetworkRestoreCommand {
-	return [
-		NetworkRestoreCommand.Prepare,
-		NetworkRestoreCommand.RestoreHomeID,
-		NetworkRestoreCommand.RestoreDevice,
-		NetworkRestoreCommand.RestoreNeighbors,
-		NetworkRestoreCommand.RestoreRoutes,
-		NetworkRestoreCommand.Finalize,
-	].includes(command);
-}
-
-function isNetworkRestoreStatus(
-	status: number,
-): status is NetworkRestoreStatus {
-	return [
-		NetworkRestoreStatus.OK,
-		NetworkRestoreStatus.Error,
-		NetworkRestoreStatus.Error_LongRangeNotSupported,
-		NetworkRestoreStatus.Error_SubcommandNotSupported,
-	].includes(status);
-}
-
-function throwInvalidArgument(message: string): never {
-	throw new ZWaveError(message, ZWaveErrorCodes.Argument_Invalid);
-}
-
-function validateNodeId(nodeId: number, max: number): void {
-	if (!Number.isInteger(nodeId) || nodeId < 1 || nodeId > max) {
-		throwInvalidArgument(`The node ID must be between 1 and ${max}`);
-	}
-}
-
-function validateCallbackId(
-	callbackId: number | undefined,
-): asserts callbackId is number {
-	if (
-		callbackId == undefined
-		|| !Number.isInteger(callbackId)
-		|| callbackId < 1
-		|| callbackId > 0xff
-	) {
-		throwInvalidArgument(
-			"The callback ID must be an 8-bit unsigned integer greater than zero",
-		);
-	}
-}
-
-function validateRoute(route: NetworkRestoreRoute): void {
-	if (
-		route.type !== NetworkRestoreRouteType.APR
-		&& route.type !== NetworkRestoreRouteType.LWR
-		&& route.type !== NetworkRestoreRouteType.NLWR
-	) {
-		throwInvalidArgument("The route type is invalid");
-	}
-	if (
-		route.beam !== false
-		&& route.beam !== "250ms"
-		&& route.beam !== "1000ms"
-	) {
-		throwInvalidArgument("The route beam type is invalid");
-	}
-	if (
-		route.speed !== ZWaveDataRate["9k6"]
-		&& route.speed !== ZWaveDataRate["40k"]
-		&& route.speed !== ZWaveDataRate["100k"]
-	) {
-		throwInvalidArgument("The route speed is invalid");
-	}
-	if (
-		route.hops.length > 4
-		|| route.hops.some((nodeId) =>
-			!Number.isInteger(nodeId) || nodeId < 1 || nodeId > MAX_NODES
-		)
-	) {
-		throwInvalidArgument(
-			`A route must contain at most four node IDs between 1 and ${MAX_NODES}`,
-		);
-	}
-}
+const {
+	decorator: subCommandRequest,
+	lookupConstructor: getSubCommandRequestConstructor,
+	lookupValue: getSubCommandForRequest,
+} = createSimpleReflectionDecorator<
+	typeof NetworkRestoreRequest,
+	[command: NetworkRestoreCommand],
+	MessageConstructor<NetworkRestoreRequest>
+>({
+	name: "subCommandRequest",
+});
 
 function encodeRoute(route: NetworkRestoreRoute): Bytes {
-	validateRoute(route);
 	const ret = new Bytes(6);
 	ret[0] = route.type;
 	const beam = route.beam === "1000ms"
@@ -167,24 +92,6 @@ function encodeRoute(route: NetworkRestoreRoute): Bytes {
 }
 
 function parseRoute(payload: BytesView): NetworkRestoreRoute {
-	validatePayload(
-		payload.length === 6,
-		payload[0] <= NetworkRestoreRouteType.NLWR,
-		(payload[1] & 0b0011_1100) === 0,
-		(payload[1] >>> 6) <= 0x02,
-		(payload[1] & 0b11) <= 0x02,
-	);
-
-	const allHops = [...payload.subarray(2)];
-	const firstEmptyHop = allHops.indexOf(0);
-	if (firstEmptyHop >= 0) {
-		validatePayload(
-			allHops.slice(firstEmptyHop).every((nodeId) => nodeId === 0),
-		);
-	}
-	const hops = allHops.filter((nodeId) => nodeId !== 0);
-	validatePayload(hops.every((nodeId) => nodeId <= MAX_NODES));
-
 	const beamBits = payload[1] >>> 6;
 	const beam: FLiRS = beamBits === 0x02
 		? "1000ms"
@@ -202,7 +109,7 @@ function parseRoute(payload: BytesView): NetworkRestoreRoute {
 		type: payload[0],
 		beam,
 		speed,
-		hops,
+		hops: [...payload.subarray(2)].filter((nodeId) => nodeId !== 0),
 	};
 }
 
@@ -232,49 +139,42 @@ export class NetworkRestoreRequestBase extends Message {
 }
 
 export interface NetworkRestoreRequestOptions {
-	command: NetworkRestoreCommand;
+	command?: NetworkRestoreCommand;
 }
 
 @expectedResponse(testResponseForNetworkRestoreRequest)
 @expectedCallback(FunctionType.NetworkRestore)
 export class NetworkRestoreRequest extends NetworkRestoreRequestBase {
 	public constructor(
-		options: NetworkRestoreRequestOptions & MessageBaseOptions,
+		options: NetworkRestoreRequestOptions & MessageBaseOptions = {},
 	) {
 		super(options);
-		this.command = options.command;
+		this.command = options.command ?? getSubCommandForRequest(this)!;
 	}
 
 	public static from(
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): NetworkRestoreRequest {
-		validatePayload(raw.payload.length >= 2);
-		const command = raw.payload[0];
-		validatePayload(isNetworkRestoreCommand(command));
-		const commandPayload = raw.withPayload(raw.payload.subarray(1));
-
-		switch (command) {
-			case NetworkRestoreCommand.Prepare:
-				return NetworkRestorePrepareRequest.from(commandPayload, ctx);
-			case NetworkRestoreCommand.RestoreHomeID:
-				return NetworkRestoreHomeIDRequest.from(commandPayload, ctx);
-			case NetworkRestoreCommand.RestoreDevice:
-				return NetworkRestoreDeviceRequest.from(commandPayload, ctx);
-			case NetworkRestoreCommand.RestoreNeighbors:
-				return NetworkRestoreNeighborsRequest.from(commandPayload, ctx);
-			case NetworkRestoreCommand.RestoreRoutes:
-				return NetworkRestoreRoutesRequest.from(commandPayload, ctx);
-			case NetworkRestoreCommand.Finalize:
-				return NetworkRestoreFinalizeRequest.from(commandPayload, ctx);
+		const command: NetworkRestoreCommand = raw.payload[0];
+		const payload = raw.payload.subarray(1);
+		const CommandConstructor = getSubCommandRequestConstructor(command);
+		if (CommandConstructor) {
+			return CommandConstructor.from(
+				raw.withPayload(payload),
+				ctx,
+			) as NetworkRestoreRequest;
 		}
-		return validatePayload.fail("Invalid Network Restore command");
+
+		const ret = new NetworkRestoreRequest({ command });
+		ret.payload = payload;
+		return ret;
 	}
 
 	public readonly command: NetworkRestoreCommand;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		validateCallbackId(this.callbackId);
+		this.assertCallbackId();
 		this.payload = Bytes.concat([
 			[this.command],
 			this.payload,
@@ -294,19 +194,16 @@ export class NetworkRestoreRequest extends NetworkRestoreRequestBase {
 	}
 }
 
+@subCommandRequest(NetworkRestoreCommand.Prepare)
 export class NetworkRestorePrepareRequest extends NetworkRestoreRequest {
 	public constructor(options: MessageBaseOptions = {}) {
-		super({
-			...options,
-			command: NetworkRestoreCommand.Prepare,
-		});
+		super(options);
 	}
 
 	public static from(
 		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): NetworkRestorePrepareRequest {
-		validatePayload(raw.payload.length === 1);
 		return new this({ callbackId: raw.payload[0] });
 	}
 }
@@ -316,24 +213,12 @@ export interface NetworkRestoreHomeIDRequestOptions {
 	controllerNodeId: number;
 }
 
+@subCommandRequest(NetworkRestoreCommand.RestoreHomeID)
 export class NetworkRestoreHomeIDRequest extends NetworkRestoreRequest {
 	public constructor(
 		options: NetworkRestoreHomeIDRequestOptions & MessageBaseOptions,
 	) {
-		super({
-			...options,
-			command: NetworkRestoreCommand.RestoreHomeID,
-		});
-		if (
-			!Number.isInteger(options.homeId)
-			|| options.homeId < 0
-			|| options.homeId > 0xffff_ffff
-		) {
-			throwInvalidArgument(
-				"The home ID must be a 32-bit unsigned integer",
-			);
-		}
-		validateNodeId(options.controllerNodeId, MAX_NODES);
+		super(options);
 
 		this.homeId = options.homeId;
 		this.controllerNodeId = options.controllerNodeId;
@@ -343,7 +228,6 @@ export class NetworkRestoreHomeIDRequest extends NetworkRestoreRequest {
 		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): NetworkRestoreHomeIDRequest {
-		validatePayload(raw.payload.length === 6);
 		return new this({
 			homeId: raw.payload.readUInt32BE(0),
 			controllerNodeId: raw.payload[4],
@@ -379,20 +263,12 @@ export interface NetworkRestoreDeviceRequestOptions {
 	protocolData: BytesView;
 }
 
+@subCommandRequest(NetworkRestoreCommand.RestoreDevice)
 export class NetworkRestoreDeviceRequest extends NetworkRestoreRequest {
 	public constructor(
 		options: NetworkRestoreDeviceRequestOptions & MessageBaseOptions,
 	) {
-		super({
-			...options,
-			command: NetworkRestoreCommand.RestoreDevice,
-		});
-		validateNodeId(options.nodeId, MAX_NODES_LR);
-		if (options.protocolData.length !== 5) {
-			throwInvalidArgument(
-				"The protocol data must be exactly five bytes",
-			);
-		}
+		super(options);
 
 		this.nodeId = options.nodeId;
 		this.protocolData = Bytes.from(options.protocolData);
@@ -402,7 +278,6 @@ export class NetworkRestoreDeviceRequest extends NetworkRestoreRequest {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): NetworkRestoreDeviceRequest {
-		validatePayload(raw.payload.length === ctx.nodeIdType + 6);
 		const { nodeId, bytesRead } = parseNodeID(
 			raw.payload,
 			ctx.nodeIdType,
@@ -418,10 +293,6 @@ export class NetworkRestoreDeviceRequest extends NetworkRestoreRequest {
 	public readonly protocolData: Bytes;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		validateNodeId(
-			this.nodeId,
-			ctx.nodeIdType === 1 ? MAX_NODES : MAX_NODES_LR,
-		);
 		this.payload = Bytes.concat([
 			encodeNodeID(this.nodeId, ctx.nodeIdType),
 			this.protocolData,
@@ -447,20 +318,12 @@ export interface NetworkRestoreNeighborsRequestOptions {
 	neighbors: BytesView;
 }
 
+@subCommandRequest(NetworkRestoreCommand.RestoreNeighbors)
 export class NetworkRestoreNeighborsRequest extends NetworkRestoreRequest {
 	public constructor(
 		options: NetworkRestoreNeighborsRequestOptions & MessageBaseOptions,
 	) {
-		super({
-			...options,
-			command: NetworkRestoreCommand.RestoreNeighbors,
-		});
-		validateNodeId(options.nodeId, MAX_NODES);
-		if (options.neighbors.length !== 29) {
-			throwInvalidArgument(
-				"The neighbors bit mask must be exactly 29 bytes",
-			);
-		}
+		super(options);
 
 		this.nodeId = options.nodeId;
 		this.neighbors = Bytes.from(options.neighbors);
@@ -470,7 +333,6 @@ export class NetworkRestoreNeighborsRequest extends NetworkRestoreRequest {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): NetworkRestoreNeighborsRequest {
-		validatePayload(raw.payload.length === ctx.nodeIdType + 30);
 		const { nodeId, bytesRead } = parseNodeID(
 			raw.payload,
 			ctx.nodeIdType,
@@ -511,27 +373,12 @@ export interface NetworkRestoreRoutesRequestOptions {
 	routes: NetworkRestoreRoute[];
 }
 
+@subCommandRequest(NetworkRestoreCommand.RestoreRoutes)
 export class NetworkRestoreRoutesRequest extends NetworkRestoreRequest {
 	public constructor(
 		options: NetworkRestoreRoutesRequestOptions & MessageBaseOptions,
 	) {
-		super({
-			...options,
-			command: NetworkRestoreCommand.RestoreRoutes,
-		});
-		validateNodeId(options.nodeId, MAX_NODES);
-		if (options.routes.length > 3) {
-			throwInvalidArgument(
-				"At most three routes can be restored per node",
-			);
-		}
-		if (
-			new Set(options.routes.map((route) => route.type)).size
-				!== options.routes.length
-		) {
-			throwInvalidArgument("Each route type may only be restored once");
-		}
-		options.routes.forEach(validateRoute);
+		super(options);
 
 		this.nodeId = options.nodeId;
 		this.routes = options.routes.map((route) => ({
@@ -544,16 +391,11 @@ export class NetworkRestoreRoutesRequest extends NetworkRestoreRequest {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): NetworkRestoreRoutesRequest {
-		validatePayload(raw.payload.length >= ctx.nodeIdType + 2);
 		const { nodeId, bytesRead } = parseNodeID(
 			raw.payload,
 			ctx.nodeIdType,
 		);
 		const routeCount = raw.payload[bytesRead];
-		validatePayload(
-			routeCount <= 3,
-			raw.payload.length === bytesRead + 2 + routeCount * 6,
-		);
 
 		const routes: NetworkRestoreRoute[] = [];
 		for (let i = 0; i < routeCount; i++) {
@@ -601,19 +443,16 @@ export class NetworkRestoreRoutesRequest extends NetworkRestoreRequest {
 	}
 }
 
+@subCommandRequest(NetworkRestoreCommand.Finalize)
 export class NetworkRestoreFinalizeRequest extends NetworkRestoreRequest {
 	public constructor(options: MessageBaseOptions = {}) {
-		super({
-			...options,
-			command: NetworkRestoreCommand.Finalize,
-		});
+		super(options);
 	}
 
 	public static from(
 		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): NetworkRestoreFinalizeRequest {
-		validatePayload(raw.payload.length === 1);
 		return new this({ callbackId: raw.payload[0] });
 	}
 }
@@ -631,9 +470,6 @@ export class NetworkRestoreResponse extends Message
 		options: NetworkRestoreResponseOptions & MessageBaseOptions,
 	) {
 		super(options);
-		if (!isNetworkRestoreCommand(options.command)) {
-			throwInvalidArgument("The network restore command is invalid");
-		}
 		this.command = options.command;
 		this.wasAccepted = options.wasAccepted;
 	}
@@ -642,10 +478,6 @@ export class NetworkRestoreResponse extends Message
 		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): NetworkRestoreResponse {
-		validatePayload(
-			raw.payload.length === 2,
-			isNetworkRestoreCommand(raw.payload[0]),
-		);
 		return new this({
 			command: raw.payload[0],
 			wasAccepted: raw.payload[1] !== 0,
@@ -689,10 +521,6 @@ export class NetworkRestoreCallback extends NetworkRestoreRequestBase
 		options: NetworkRestoreCallbackOptions & MessageBaseOptions,
 	) {
 		super(options);
-		validateCallbackId(options.callbackId);
-		if (!isNetworkRestoreStatus(options.status)) {
-			throwInvalidArgument("The network restore status is invalid");
-		}
 		this.callbackId = options.callbackId;
 		this.status = options.status;
 	}
@@ -701,10 +529,6 @@ export class NetworkRestoreCallback extends NetworkRestoreRequestBase
 		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): NetworkRestoreCallback {
-		validatePayload(
-			raw.payload.length === 2,
-			isNetworkRestoreStatus(raw.payload[1]),
-		);
 		return new this({
 			callbackId: raw.payload[0],
 			status: raw.payload[1],
