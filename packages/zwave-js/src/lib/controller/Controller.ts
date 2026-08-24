@@ -57,7 +57,6 @@ import {
 	NODE_ID_BROADCAST_LR,
 	NOT_KNOWN,
 	NodeIDType,
-	type NodeProtocolInfo,
 	NodeType,
 	type ProtocolDataRate,
 	ProtocolType,
@@ -67,7 +66,6 @@ import {
 	type RSSI,
 	type Route,
 	RouteKind,
-	RouteProtocolDataRate,
 	SecurityClass,
 	SecurityManager,
 	SecurityManager2,
@@ -77,7 +75,7 @@ import {
 	type UnknownZWaveChipType,
 	ValueDB,
 	type ZWaveApiVersion,
-	ZWaveDataRate,
+	type ZWaveDataRate,
 	ZWaveError,
 	ZWaveErrorCodes,
 	ZWaveLibraryTypes,
@@ -88,8 +86,6 @@ import {
 	deriveTempKeys,
 	dskFromString,
 	dskToString,
-	encodeNodeBitMask,
-	encodeNodeProtocolInfo,
 	generateECDHKeyPair,
 	getChipTypeAndVersion,
 	getHighestSecurityClass,
@@ -121,7 +117,6 @@ import {
 	NVM500Adapter,
 	type NVMAdapter,
 	type NVMJSON,
-	type NVMJSONNodeWithInfo,
 	migrateNVM,
 	normalizeNVM,
 } from "@zwave-js/nvmedit";
@@ -220,8 +215,6 @@ import {
 	NVMOperationsReadRequest,
 	type NVMOperationsResponse,
 	NVMOperationsWriteRequest,
-	NetworkRestoreCallback,
-	NetworkRestoreCommand,
 	NetworkRestoreDeviceRequest,
 	type NetworkRestoreDeviceRequestOptions,
 	NetworkRestoreFinalizeRequest,
@@ -230,13 +223,8 @@ import {
 	NetworkRestoreNeighborsRequest,
 	type NetworkRestoreNeighborsRequestOptions,
 	NetworkRestorePrepareRequest,
-	type NetworkRestoreRequest,
-	type NetworkRestoreResponse,
-	type NetworkRestoreRoute,
-	NetworkRestoreRouteType,
 	NetworkRestoreRoutesRequest,
 	type NetworkRestoreRoutesRequestOptions,
-	NetworkRestoreStatus,
 	NodeNeighborUpdateStatus,
 	RemoveFailedNodeRequest,
 	type RemoveFailedNodeRequestStatusReport,
@@ -380,6 +368,11 @@ import {
 	type SmartStartProvisioningEntry,
 } from "./Inclusion.js";
 import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
+import {
+	type NetworkRestorePlan,
+	canUseNetworkRestore,
+	createNetworkRestorePlan,
+} from "./NetworkRestore.js";
 import { determineNIF } from "./NodeInformationFrame.js";
 import {
 	type ControllerProprietary,
@@ -405,142 +398,6 @@ import {
 	getInitial500SeriesNVMBackupChunkSize,
 	isRebuildRoutesTask,
 } from "./utils.js";
-
-type NVMRoute = NonNullable<NVMJSONNodeWithInfo["lwr"]>;
-type NetworkRestoreProtocolNode =
-	& Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-	& {
-		genericDeviceClass: number;
-		specificDeviceClass?: number | null;
-	};
-
-interface NetworkRestoreClassicNodePlan {
-	nodeId: number;
-	protocolData: Bytes;
-	neighbors?: Bytes;
-	routes?: NetworkRestoreRoute[];
-}
-
-interface NetworkRestoreNodePlan {
-	nodeId: number;
-	protocolData: Bytes;
-}
-
-interface NetworkRestorePlan {
-	homeId: number;
-	controllerNodeId: number;
-	classicNodes: NetworkRestoreClassicNodePlan[];
-	longRangeNodes: NetworkRestoreNodePlan[];
-	totalCommands: number;
-}
-
-function encodeNetworkRestoreProtocolData(
-	node: NetworkRestoreProtocolNode,
-	isLongRange: boolean,
-): Bytes {
-	const hasSpecificDeviceClass = node.specificDeviceClass != null;
-	return Bytes.concat([
-		encodeNodeProtocolInfo(
-			{
-				...node,
-				hasSpecificDeviceClass,
-			},
-			isLongRange,
-		),
-		[node.genericDeviceClass, node.specificDeviceClass ?? 0],
-	]);
-}
-
-function mapNetworkRestoreRouteSpeed(
-	protocolRate: RouteProtocolDataRate,
-): ZWaveDataRate {
-	switch (protocolRate) {
-		case RouteProtocolDataRate.Unspecified:
-		case RouteProtocolDataRate.ZWave_9k6:
-			return ZWaveDataRate["9k6"];
-		case RouteProtocolDataRate.ZWave_40k:
-			return ZWaveDataRate["40k"];
-		case RouteProtocolDataRate.ZWave_100k:
-			return ZWaveDataRate["100k"];
-		default:
-			throw new ZWaveError(
-				`Cannot restore a Classic route with protocol data rate ${protocolRate}`,
-				ZWaveErrorCodes.NVM_NotSupported,
-			);
-	}
-}
-
-function mapNetworkRestoreRoute(
-	route: NVMRoute,
-	type: NetworkRestoreRouteType,
-): NetworkRestoreRoute {
-	return {
-		type,
-		beam: route.beaming,
-		speed: mapNetworkRestoreRouteSpeed(route.protocolRate),
-		hops: route.repeaterNodeIDs ?? [],
-	};
-}
-
-function createNetworkRestorePlan(
-	nvm: NVMJSON,
-	options: MigrateNVMOptions = {},
-): NetworkRestorePlan {
-	const preserveNeighbors = options.preserveNeighbors ?? true;
-	const preserveRoutes = options.preserveRoutes ?? true;
-
-	const classicNodes: NetworkRestoreClassicNodePlan[] = [];
-	for (const [nodeIdString, node] of Object.entries(nvm.nodes)) {
-		if (!("isListening" in node)) continue;
-
-		const routes: NetworkRestoreRoute[] = [];
-		if (preserveRoutes && node.lwr) {
-			routes.push(mapNetworkRestoreRoute(
-				node.lwr,
-				node.appRouteLock
-					? NetworkRestoreRouteType.APR
-					: NetworkRestoreRouteType.LWR,
-			));
-		}
-		if (preserveRoutes && node.nlwr) {
-			routes.push(mapNetworkRestoreRoute(
-				node.nlwr,
-				NetworkRestoreRouteType.NLWR,
-			));
-		}
-
-		classicNodes.push({
-			nodeId: Number(nodeIdString),
-			protocolData: encodeNetworkRestoreProtocolData(node, false),
-			neighbors: preserveNeighbors
-				? encodeNodeBitMask(node.neighbors)
-				: undefined,
-			routes: routes.length > 0 ? routes : undefined,
-		});
-	}
-	classicNodes.sort((a, b) => a.nodeId - b.nodeId);
-
-	const longRangeNodes: NetworkRestoreNodePlan[] = [];
-	for (const [nodeIdString, node] of Object.entries(nvm.lrNodes ?? {})) {
-		longRangeNodes.push({
-			nodeId: Number(nodeIdString),
-			protocolData: encodeNetworkRestoreProtocolData(node, true),
-		});
-	}
-	longRangeNodes.sort((a, b) => a.nodeId - b.nodeId);
-
-	return {
-		homeId: Number.parseInt(nvm.controller.homeId, 16),
-		controllerNodeId: nvm.controller.nodeId,
-		classicNodes,
-		longRangeNodes,
-		totalCommands: 4
-			+ classicNodes.length
-			+ longRangeNodes.length
-			+ classicNodes.filter((node) => node.neighbors).length
-			+ classicNodes.filter((node) => node.routes).length,
-	};
-}
 
 // Strongly type the event emitter events
 interface ControllerEventCallbacks
@@ -8322,31 +8179,9 @@ export class ZWaveController
 		return this._nvm;
 	}
 
-	private async sendNetworkRestoreCommand(
-		request: NetworkRestoreRequest,
-		pauseSendThread: boolean = false,
-	): Promise<void> {
-		const result = await this.driver.sendMessage<
-			NetworkRestoreCallback | NetworkRestoreResponse
-		>(request, { pauseSendThread });
-		if (result.isOK()) return;
-
-		const command = getEnumMemberName(
-			NetworkRestoreCommand,
-			request.command,
-		);
-		const reason = result instanceof NetworkRestoreCallback
-			? getEnumMemberName(NetworkRestoreStatus, result.status)
-			: "request rejected";
-		throw new ZWaveError(
-			`${command} Network Restore command failed: ${reason}`,
-			ZWaveErrorCodes.Controller_CommandError,
-		);
-	}
-
 	/** Prepares the controller for restoring network data. */
 	public async networkRestorePrepare(): Promise<void> {
-		await this.sendNetworkRestoreCommand(
+		await this.driver.sendMessage(
 			new NetworkRestorePrepareRequest(),
 		);
 	}
@@ -8355,7 +8190,7 @@ export class ZWaveController
 	public async networkRestoreSetController(
 		options: NetworkRestoreHomeIDRequestOptions,
 	): Promise<void> {
-		await this.sendNetworkRestoreCommand(
+		await this.driver.sendMessage(
 			new NetworkRestoreHomeIDRequest(options),
 		);
 	}
@@ -8364,7 +8199,7 @@ export class ZWaveController
 	public async networkRestoreNode(
 		options: NetworkRestoreDeviceRequestOptions,
 	): Promise<void> {
-		await this.sendNetworkRestoreCommand(
+		await this.driver.sendMessage(
 			new NetworkRestoreDeviceRequest(options),
 		);
 	}
@@ -8373,7 +8208,7 @@ export class ZWaveController
 	public async networkRestoreNeighbors(
 		options: NetworkRestoreNeighborsRequestOptions,
 	): Promise<void> {
-		await this.sendNetworkRestoreCommand(
+		await this.driver.sendMessage(
 			new NetworkRestoreNeighborsRequest(options),
 		);
 	}
@@ -8382,14 +8217,14 @@ export class ZWaveController
 	public async networkRestoreRoutes(
 		options: NetworkRestoreRoutesRequestOptions,
 	): Promise<void> {
-		await this.sendNetworkRestoreCommand(
+		await this.driver.sendMessage(
 			new NetworkRestoreRoutesRequest(options),
 		);
 	}
 
 	/** Finalizes the network data restore. */
 	public async networkRestoreFinalize(): Promise<void> {
-		await this.sendNetworkRestoreCommand(
+		await this.driver.sendMessage(
 			new NetworkRestoreFinalizeRequest(),
 		);
 	}
@@ -8408,8 +8243,8 @@ export class ZWaveController
 			setImmediate(() => restoreProgress(completed, plan.totalCommands));
 		};
 
+		// Set Default must clear existing device data before Network Restore
 		await this.hardResetInternal(false);
-		reportProgress();
 
 		await this.networkRestorePrepare();
 		reportProgress();
@@ -8446,9 +8281,9 @@ export class ZWaveController
 		}
 
 		await this.driver.restartAfterControllerReboot(async () => {
-			await this.sendNetworkRestoreCommand(
+			await this.driver.sendMessage(
 				new NetworkRestoreFinalizeRequest(),
-				true,
+				{ pauseSendThread: true },
 			);
 			reportProgress();
 			onFinalized();
@@ -9105,7 +8940,7 @@ export class ZWaveController
 	 * @param restoreProgress Can be used to monitor the progress of the restore operation. The operation may take several seconds to a few minutes. Network Restore reports command counts. Raw restore reports byte counts.
 	 * @param migrateOptions Influence which data should be preserved during a migration
 	 *
-	 * Network Restore cannot transfer application data or SUC update entries.
+	 * Network Restore cannot transfer application data or SUC update entries. Raw NVM migration is used when either must be preserved.
 	 */
 	public restoreNVM(
 		nvmData: BytesView,
@@ -9163,8 +8998,16 @@ export class ZWaveController
 						);
 					}
 
-					if (normalizedNVM) {
+					if (
+						normalizedNVM
+						&& canUseNetworkRestore(
+							normalizedNVM,
+							migrateOptions,
+							self.supportsLongRange,
+						)
+					) {
 						try {
+							// The entire plan must be validated before Set Default clears the target NVM
 							networkRestorePlan = createNetworkRestorePlan(
 								normalizedNVM,
 								migrateOptions,
