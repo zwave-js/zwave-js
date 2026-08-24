@@ -217,6 +217,44 @@ type ParsedNVM =
 		type: "unknown";
 	};
 
+interface ParsedNVMResult {
+	nvm: ParsedNVM;
+	protocolFileFormat?: number;
+}
+
+async function parseNVM(nvm: BytesView): Promise<ParsedNVMResult> {
+	try {
+		const json = await nvmToJSON(nvm);
+		return {
+			nvm: {
+				type: 700,
+				json,
+			},
+			protocolFileFormat: json.format,
+		};
+	} catch (e) {
+		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
+			return {
+				nvm: {
+					type: 500,
+					json: await nvm500ToJSON(nvm),
+				},
+			};
+		} else if (
+			isZWaveError(e)
+			&& e.code === ZWaveErrorCodes.NVM_NotSupported
+			&& isObject(e.context)
+			&& typeof e.context.protocolFileFormat === "number"
+		) {
+			return {
+				nvm: { type: "unknown" },
+				protocolFileFormat: e.context.protocolFileFormat,
+			};
+		}
+		return { nvm: { type: "unknown" } };
+	}
+}
+
 /**
  * Ensures that the controller node is marked as listening.
  * Failure to do so causes the radio to stop after one RX event on SDK 8.0.0+.
@@ -228,6 +266,23 @@ function setControllerIsListening(json: NVMJSON): void {
 	if (controllerNode && "isListening" in controllerNode) {
 		controllerNode.isListening = true;
 	}
+}
+
+/** Converts a supported NVM backup to the common 700-series JSON representation. */
+export async function normalizeNVM(nvm: BytesView): Promise<NVMJSON> {
+	const parsed = (await parseNVM(nvm)).nvm;
+	if (parsed.type === "unknown") {
+		throw new ZWaveError(
+			"The NVM has an unsupported format",
+			ZWaveErrorCodes.NVM_NotSupported,
+		);
+	}
+
+	const json = parsed.type === 700
+		? parsed.json
+		: json500To700(parsed.json, true);
+	setControllerIsListening(json);
+	return json;
 }
 
 /**
@@ -1998,65 +2053,12 @@ export async function migrateNVM(
 	targetNVM: BytesView,
 	options: MigrateNVMOptions = {},
 ): Promise<BytesView> {
-	let source: ParsedNVM;
-	let target: ParsedNVM;
-	let sourceProtocolFileFormat: number | undefined;
-	let targetProtocolFileFormat: number | undefined;
-
-	try {
-		source = {
-			type: 700,
-			json: await nvmToJSON(sourceNVM),
-		};
-		sourceProtocolFileFormat = source.json.format;
-	} catch (e) {
-		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
-			// This is not a 700 series NVM, maybe it is a 500 series one?
-			source = {
-				type: 500,
-				json: await nvm500ToJSON(sourceNVM),
-			};
-		} else if (
-			isZWaveError(e)
-			&& e.code === ZWaveErrorCodes.NVM_NotSupported
-			&& isObject(e.context)
-			&& typeof e.context.protocolFileFormat === "number"
-		) {
-			// This is a 700 series NVM, but the protocol version is not (yet) supported
-			source = { type: "unknown" };
-			sourceProtocolFileFormat = e.context.protocolFileFormat;
-		} else {
-			source = { type: "unknown" };
-		}
-	}
-
-	try {
-		target = {
-			type: 700,
-			json: await nvmToJSON(targetNVM),
-		};
-		targetProtocolFileFormat = target.json.format;
-	} catch (e) {
-		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
-			// This is not a 700 series NVM, maybe it is a 500 series one?
-			target = {
-				type: 500,
-				json: await nvm500ToJSON(targetNVM),
-			};
-		} else if (
-			isZWaveError(e)
-			&& e.code === ZWaveErrorCodes.NVM_NotSupported
-			&& source.type === 700
-			&& isObject(e.context)
-			&& typeof e.context.protocolFileFormat === "number"
-		) {
-			// This is a 700 series NVM, but the protocol version is not (yet) supported
-			target = { type: "unknown" };
-			targetProtocolFileFormat = e.context.protocolFileFormat;
-		} else {
-			target = { type: "unknown" };
-		}
-	}
+	const parsedSource = await parseNVM(sourceNVM);
+	let source = parsedSource.nvm;
+	const sourceProtocolFileFormat = parsedSource.protocolFileFormat;
+	const parsedTarget = await parseNVM(targetNVM);
+	let target = parsedTarget.nvm;
+	const targetProtocolFileFormat = parsedTarget.protocolFileFormat;
 
 	const {
 		preserveApplicationData = true,
