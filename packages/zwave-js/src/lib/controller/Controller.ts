@@ -9102,7 +9102,7 @@ export class ZWaveController
 	 *
 	 * @param nvmData The NVM backup to be restored
 	 * @param convertProgress Can be used to monitor the progress of the NVM conversion, which may take several seconds up to a few minutes depending on the NVM size
-	 * @param restoreProgress Can be used to monitor the progress of the restore operation. Network Restore reports command counts. Raw restore reports byte counts.
+	 * @param restoreProgress Can be used to monitor the progress of the restore operation. The operation may take several seconds to a few minutes. Network Restore reports command counts. Raw restore reports byte counts.
 	 * @param migrateOptions Influence which data should be preserved during a migration
 	 *
 	 * Network Restore cannot transfer application data or SUC update entries.
