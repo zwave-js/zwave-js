@@ -234,7 +234,7 @@ async function parseNVM(nvm: BytesView): Promise<ParsedNVMResult> {
 		};
 	} catch (e) {
 		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
-			// The 700-series parser rejects 500-series NVMs as invalid
+			// This is not a 700 series NVM, maybe it is a 500 series one?
 			return {
 				nvm: {
 					type: 500,
@@ -247,7 +247,7 @@ async function parseNVM(nvm: BytesView): Promise<ParsedNVMResult> {
 			&& isObject(e.context)
 			&& typeof e.context.protocolFileFormat === "number"
 		) {
-			// The protocol file format identifies an unsupported 700-series NVM
+			// This is a 700 series NVM, but the protocol version is not (yet) supported
 			return {
 				nvm: { type: "unknown" },
 				protocolFileFormat: e.context.protocolFileFormat,
