@@ -45,42 +45,7 @@
 		},
 		{
 			"#": "3",
-			"$import": "templates/heatit_template.json#sensor_resistance_ntc",
-			"defaultValue": 1,
-			"options": [
-				{
-					"label": "6.8 kΩ",
-					"value": 0
-				},
-				{
-					"label": "10 kΩ",
-					"value": 1
-				},
-				{
-					"label": "12 kΩ",
-					"value": 2
-				},
-				{
-					"label": "15 kΩ",
-					"value": 3
-				},
-				{
-					"label": "22 kΩ",
-					"value": 4
-				},
-				{
-					"label": "33 kΩ",
-					"value": 5
-				},
-				{
-					"label": "47 kΩ",
-					"value": 6
-				},
-				{
-					"label": "100 kΩ",
-					"value": 7
-				}
-			]
+			"$import": "templates/heatit_template.json#sensor_resistance_ntc_ordered"
 		},
 		{
 			"#": "4",
