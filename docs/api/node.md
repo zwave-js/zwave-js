@@ -655,7 +655,7 @@ interface LifelineHealthCheckResult {
 	failedPingsController?: number;
 
 	/**
-	 * An estimation of the Signal-to-Noise Ratio Margin in dBm.
+	 * An estimation of the Signal-to-Noise Ratio Margin in dB.
 	 *
 	 * Only available if the controller supports TX reports.
 	 */
@@ -670,9 +670,9 @@ The health rating is computed similar to Silabs' PC Controller IMA tool where 10
 
 | Rating | Failed pings |   Latency | No. of neighbors | min. powerlevel | SNR margin |
 | -----: | -----------: | --------: | ---------------: | --------------: | ---------: |
-|  ✅ 10 |            0 |   ≤ 50 ms |              > 2 |        ≤ −6 dBm |   ≥ 17 dBm |
-|   🟢 9 |            0 |  ≤ 100 ms |              > 2 |        ≤ −6 dBm |   ≥ 17 dBm |
-|   🟢 8 |            0 |  ≤ 100 ms |              ≤ 2 |        ≤ −6 dBm |   ≥ 17 dBm |
+|  ✅ 10 |            0 |   ≤ 50 ms |              > 2 |        ≤ −6 dBm |    ≥ 17 dB |
+|   🟢 9 |            0 |  ≤ 100 ms |              > 2 |        ≤ −6 dBm |    ≥ 17 dB |
+|   🟢 8 |            0 |  ≤ 100 ms |              ≤ 2 |        ≤ −6 dBm |    ≥ 17 dB |
 |   🟢 7 |            0 |  ≤ 100 ms |              > 2 |               - |          - |
 |   🟢 6 |            0 |  ≤ 100 ms |              ≤ 2 |               - |          - |
 |        |              |           |                  |                 |            |
