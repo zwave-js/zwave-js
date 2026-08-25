@@ -210,6 +210,47 @@
 			}
 		]
 	},
+	"sensor_resistance_ntc_ordered": {
+		"label": "Floor and External Sensor Resistance",
+		"description": "Both NTC sensors must have the same resistance value.",
+		"valueSize": 1,
+		"defaultValue": 1,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "6.8 kΩ",
+				"value": 0
+			},
+			{
+				"label": "10 kΩ",
+				"value": 1
+			},
+			{
+				"label": "12 kΩ",
+				"value": 2
+			},
+			{
+				"label": "15 kΩ",
+				"value": 3
+			},
+			{
+				"label": "22 kΩ",
+				"value": 4
+			},
+			{
+				"label": "33 kΩ",
+				"value": 5
+			},
+			{
+				"label": "47 kΩ",
+				"value": 6
+			},
+			{
+				"label": "100 kΩ",
+				"value": 7
+			}
+		]
+	},
 	"standby_display_brightness": {
 		"label": "Standby Display Brightness",
 		"valueSize": 1,

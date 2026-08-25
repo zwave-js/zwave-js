@@ -45,7 +45,7 @@
 		},
 		{
 			"#": "3",
-			"$import": "templates/heatit_template.json#sensor_resistance_ntc"
+			"$import": "templates/heatit_template.json#sensor_resistance_ntc_ordered"
 		},
 		{
 			"#": "4",
