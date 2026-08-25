@@ -70,7 +70,7 @@ Such a health check will ping a node several times, and (if the node supports it
 - **Failed pings (controller → node)**: How many pings from the controller were not acknowledged by the node. Should be 0, higher values indicate either a message loss between the controller and the node, or noise near the controller which causes the acknowledgements to get lost.
 - **Failed pings (node → controller)**: How many pings from the node were not acknowledged by the controller. Should be 0, higher values indicate either a message loss between the controller and the node, or noise near the node which causes the acknowledgements to get lost.
 - **Min. powerlevel without failures**: The minimum powerlevel where all pings from the node were acknowledged by the controller. Should be \< -6 dBm (or > +6 dBm if the application reports the _reduction_ in powerlevel). Ideally -9 dBm, "normal powerlevel" is bad (equals 0 dBm).
-- **SNR margin**: An estimation of the Signal-to-Noise Ratio Margin, the difference between the background RSSI and the measured RSSI of acknowledgements. Should be > 17 dBm, lower values indicate excessive noise.
+- **SNR margin**: An estimation of the Signal-to-Noise Ratio Margin, the difference between the background RSSI and the measured RSSI of acknowledgements. Should be > 17 dB, lower values indicate excessive noise.
 
 If the test results show high variance in some of these values or measurements that are far from the ideal, it may be necessary to:
 
