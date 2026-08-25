@@ -3473,14 +3473,14 @@ protocol version:      ${this.protocolVersion}`;
 							txReport.measuredNoiseFloor != undefined
 							&& !isRssiError(txReport.measuredNoiseFloor)
 						) {
-							const currentSnrMarginDb = txReport.ackRSSI
+							const currentSNRMargin = txReport.ackRSSI
 								- txReport.measuredNoiseFloor;
 							// And remember it if it's the lowest we've seen so far
 							if (
 								snrMargin == undefined
-								|| currentSnrMarginDb < snrMargin
+								|| currentSNRMargin < snrMargin
 							) {
-								snrMargin = currentSnrMarginDb;
+								snrMargin = currentSNRMargin;
 							}
 						}
 						// Also remember the worst RSSI and the channel it was received on
