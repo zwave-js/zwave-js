@@ -631,25 +631,22 @@ function clearNotificationIdleReset(
 	}
 }
 
-// Fallback for V2 notifications that don't allow us to predefine the metadata during the interview.
-// Instead of defining useless values for each possible notification event, we build the metadata on demand
+// Extend notification value metadata when the received event isn't already
+// in the states map. V2 devices never get interview-set metadata, and V3+
+// devices may report events they didn't declare during interview.
 function extendNotificationValueMetadata(
-	ctx: GetSupportedCCVersion,
+	_ctx: GetSupportedCCVersion,
 	node: NodeId & NodeValues,
 	valueId: ValueID,
 	notification: Notification,
 	valueConfig: NotificationState,
 ) {
-	const ccVersion = ctx.getSupportedCCVersion(
-		CommandClasses.Notification,
-		node.id,
-		node.index,
-	);
-	if (ccVersion === 2 || !node.valueDB.hasMetadata(valueId)) {
+	const existing = node.valueDB.getMetadata(valueId) as
+		| ValueMetadataNumeric
+		| undefined;
+	if (!existing || !(valueConfig.value in (existing.states ?? {}))) {
 		const metadata = getNotificationValueMetadata(
-			node.valueDB.getMetadata(valueId) as
-				| ValueMetadataNumeric
-				| undefined,
+			existing,
 			notification,
 			valueConfig,
 		);
