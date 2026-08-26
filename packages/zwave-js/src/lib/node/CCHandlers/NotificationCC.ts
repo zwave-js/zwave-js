@@ -467,7 +467,7 @@ function isOutdatedLockOperation(
 }
 
 function handleKnownNotification(
-	ctx: GetValueDB,
+	ctx: GetValueDB & LogNode,
 	node: ZWaveNode,
 	command: NotificationCCReport,
 ): void {
@@ -504,6 +504,13 @@ function handleKnownNotification(
 		// a duplicate of an operation that has already been superseded. Applying it
 		// would leave the lock in the wrong state until something polls it again.
 		if (isOutdatedLockOperation(node, command.endpointIndex, isLocked)) {
+			ctx.logNode(node.id, {
+				message: `Ignoring ${
+					isLocked ? "lock" : "unlock"
+				} notification because Door Lock CC reported a different mode more recently`,
+				direction: "inbound",
+				level: "verbose",
+			});
 			return;
 		}
 
