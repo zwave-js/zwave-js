@@ -429,6 +429,43 @@ export function handleNotificationReport(
 	}
 }
 
+/**
+ * How long a Door Lock CC report shadows contradicting (un)lock notifications.
+ * Chosen to cover the observed retransmission interval of locks that repeat their
+ * notifications, while staying within the time a device is expected to answer at all.
+ */
+const OUTDATED_LOCK_NOTIFICATION_TIMEOUT = 10000;
+
+/**
+ * Determines whether an (un)lock notification is contradicted by a more recent
+ * Door Lock CC report, which means the notification refers to an operation that
+ * is no longer current.
+ */
+function isOutdatedLockOperation(
+	node: ZWaveNode,
+	endpointIndex: number,
+	isLocked: boolean,
+): boolean {
+	const reportedAt = node.valueDB.getValue<number>(
+		DoorLockCCValues.currentModeReportedAt.endpoint(endpointIndex),
+	);
+	// Devices that never report through Door Lock CC are unaffected by this
+	if (reportedAt == undefined) return false;
+	if (Date.now() - reportedAt > OUTDATED_LOCK_NOTIFICATION_TIMEOUT) {
+		return false;
+	}
+
+	const currentMode = node.valueDB.getValue<DoorLockMode>(
+		DoorLockCCValues.currentMode.endpoint(endpointIndex),
+	);
+	if (currentMode == undefined) return false;
+
+	// Door Lock CC can distinguish more modes than a notification can express, so a
+	// mismatch also means the device knows more about its state than we would write
+	return currentMode
+		!== (isLocked ? DoorLockMode.Secured : DoorLockMode.Unsecured);
+}
+
 function handleKnownNotification(
 	ctx: GetValueDB,
 	node: ZWaveNode,
@@ -460,6 +497,15 @@ function handleKnownNotification(
 		const isLocked = lockEvents.has(
 			command.notificationEvent as number,
 		);
+
+		// Some locks repeat their notifications several seconds after the original.
+		// If the device has reported a contradicting mode through Door Lock CC in the
+		// meantime, that report is the more recent information and the notification is
+		// a duplicate of an operation that has already been superseded. Applying it
+		// would leave the lock in the wrong state until something polls it again.
+		if (isOutdatedLockOperation(node, command.endpointIndex, isLocked)) {
+			return;
+		}
 
 		// Update the current lock status
 		if (node.supportsCC(CommandClasses["Door Lock"])) {
