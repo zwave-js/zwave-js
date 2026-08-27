@@ -58,7 +58,10 @@ import {
 	FirmwareUpdateMetaDataCCRequestGet,
 } from "@zwave-js/cc/FirmwareUpdateMetaDataCC";
 import { HailCC } from "@zwave-js/cc/HailCC";
-import { ManufacturerSpecificCCGet } from "@zwave-js/cc/ManufacturerSpecificCC";
+import {
+	ManufacturerSpecificCCDeviceSpecificGet,
+	ManufacturerSpecificCCGet,
+} from "@zwave-js/cc/ManufacturerSpecificCC";
 import { MultilevelSwitchCC } from "@zwave-js/cc/MultilevelSwitchCC";
 import { NodeNamingAndLocationCCValues } from "@zwave-js/cc/NodeNamingCC";
 import { NotificationCCReport } from "@zwave-js/cc/NotificationCC";
@@ -219,7 +222,10 @@ import {
 	handleIndicatorSet,
 	handleIndicatorSupportedGet,
 } from "./CCHandlers/IndicatorCC.js";
-import { handleManufacturerSpecificGet } from "./CCHandlers/ManufacturerSpecificCC.js";
+import {
+	handleManufacturerSpecificDeviceSpecificGet,
+	handleManufacturerSpecificGet,
+} from "./CCHandlers/ManufacturerSpecificCC.js";
 import {
 	handleMultiChannelAssociationGet,
 	handleMultiChannelAssociationRemove,
@@ -2946,6 +2952,15 @@ protocol version:      ${this.protocolVersion}`;
 			);
 		} else if (command instanceof VersionCCCapabilitiesGet) {
 			return handleVersionCapabilitiesGet(this.driver, this, command);
+		} else if (
+			command instanceof ManufacturerSpecificCCDeviceSpecificGet
+		) {
+			return handleManufacturerSpecificDeviceSpecificGet(
+				this.driver,
+				this,
+				command,
+				this.driver.options.vendor,
+			);
 		} else if (command instanceof ManufacturerSpecificCCGet) {
 			return handleManufacturerSpecificGet(
 				this.driver,

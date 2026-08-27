@@ -459,6 +459,11 @@ export interface ZWaveOptions {
 		manufacturerId: number;
 		productType: number;
 		productId: number;
+		/**
+		 * A stable device identifier for Manufacturer Specific Device Specific Reports.
+		 * Prefix binary identifiers with "0x". The encoded identifier may be up to 31 bytes.
+		 */
+		deviceId?: string;
 
 		/** The version of the hardware the application is running on. Can be omitted if unknown. */
 		hardwareVersion?: number;

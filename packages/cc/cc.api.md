@@ -12024,7 +12024,7 @@ export class ManufacturerSpecificCCDeviceSpecificGet extends ManufacturerSpecifi
     // (undocumented)
     deviceIdType: DeviceIdType;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificGet;
     // (undocumented)
     serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
@@ -12048,6 +12048,8 @@ export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpec
     readonly deviceId: string;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificReport;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)

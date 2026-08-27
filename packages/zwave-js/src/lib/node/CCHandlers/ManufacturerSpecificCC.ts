@@ -1,6 +1,8 @@
-import type {
-	ManufacturerSpecificCCGet,
-	PersistValuesContext,
+import {
+	DeviceIdType,
+	type ManufacturerSpecificCCDeviceSpecificGet,
+	type ManufacturerSpecificCCGet,
+	type PersistValuesContext,
 } from "@zwave-js/cc";
 import {
 	CommandClasses,
@@ -32,5 +34,34 @@ export async function handleManufacturerSpecificGet(
 		manufacturerId: vendorInfo?.manufacturerId ?? 0xffff,
 		productType: vendorInfo?.productType ?? 0xffff,
 		productId: vendorInfo?.productId ?? 0xffff,
+	});
+}
+
+export async function handleManufacturerSpecificDeviceSpecificGet(
+	ctx: PersistValuesContext & LogNode,
+	node: ZWaveNode,
+	command: ManufacturerSpecificCCDeviceSpecificGet,
+	vendorInfo: ZWaveOptions["vendor"],
+): Promise<void> {
+	if (!vendorInfo?.deviceId) {
+		ctx.logNode(node.id, {
+			message:
+				"Cannot respond to Device Specific Get because no vendor device ID is configured",
+			direction: "none",
+			level: "warn",
+		});
+		return;
+	}
+
+	const api = node
+		.createAPI(CommandClasses["Manufacturer Specific"], false)
+		.withOptions({
+			encapsulationFlags: command.encapsulationFlags
+				& ~EncapsulationFlags.Supervision,
+		});
+
+	await api.sendDeviceSpecificReport({
+		type: DeviceIdType.SerialNumber,
+		deviceId: vendorInfo.deviceId,
 	});
 }
