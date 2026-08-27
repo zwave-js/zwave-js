@@ -4,8 +4,11 @@ import {
 	BasicCCSet,
 	type CommandClass,
 	CommandRelation,
+	SupervisionCC,
+	SupervisionCommand,
 } from "@zwave-js/cc";
 import {
+	CommandClasses,
 	EncapsulationFlags,
 	MessagePriority,
 	TransactionState,
@@ -52,6 +55,7 @@ interface CommandControl {
 	blockNextGet: boolean;
 	getCount: number;
 	setValues: number[];
+	supervisedSetCount: number;
 	started: ReturnType<typeof createDeferredPromise<void>>;
 	release: ReturnType<typeof createDeferredPromise<void>>;
 }
@@ -61,6 +65,7 @@ function createCommandControl(): CommandControl {
 		blockNextGet: false,
 		getCount: 0,
 		setValues: [],
+		supervisedSetCount: 0,
 		started: createDeferredPromise<void>(),
 		release: createDeferredPromise<void>(),
 	};
@@ -85,7 +90,10 @@ integrationTest.sequential(
 	"Command relations coalesce physical transmissions through the Driver",
 	{
 		nodeCapabilities: {
-			commandClasses: [],
+			commandClasses: [
+				CommandClasses.Basic,
+				CommandClasses.Supervision,
+			],
 		},
 		additionalDriverOptions: {
 			testingHooks: {
@@ -112,6 +120,14 @@ integrationTest.sequential(
 						};
 					} else if (receivedCC instanceof BasicCCSet) {
 						control.setValues.push(receivedCC.targetValue);
+						if (
+							receivedCC.isEncapsulatedWith(
+								CommandClasses.Supervision,
+								SupervisionCommand.Get,
+							)
+						) {
+							control.supervisedSetCount++;
+						}
 						return { action: "ok" };
 					}
 				},
@@ -372,6 +388,43 @@ integrationTest.sequential(
 			]);
 			t.expect(control.setValues).toEqual([4]);
 
+			control.setValues = [];
+			blockNextGet();
+			const priorityReplacementBlocker = driver.sendCommand(
+				new BasicCCGet({ nodeId: 2 }),
+				commandOptions,
+			);
+			await control.started;
+			const highPriorityOlder = driver.sendCommand(createSet(13), {
+				...commandOptions,
+				priority: MessagePriority.Controller,
+			});
+			const unrelatedAfterReplacement = driver.sendCommand(
+				new BasicCCSet({ nodeId: 2, targetValue: 14 }),
+				{
+					...commandOptions,
+					priority: MessagePriority.Normal,
+				},
+			);
+			const lowPriorityProtected = driver.sendCommand(createSet(13), {
+				...commandOptions,
+				preventDeduplication: true,
+				priority: MessagePriority.Poll,
+			});
+			t.expect(
+				driver["queue"].transactions.find(
+					(transaction) => transaction.preventDeduplication,
+				)?.priority,
+			).toBe(MessagePriority.Controller);
+			control.release.resolve();
+			await Promise.all([
+				priorityReplacementBlocker,
+				highPriorityOlder,
+				unrelatedAfterReplacement,
+				lowPriorityProtected,
+			]);
+			t.expect(control.setValues).toEqual([13, 14]);
+
 			blockNextGet();
 			const protectedInFlightCount = control.getCount;
 			const enabledInFlight = driver.sendCommand(
@@ -401,6 +454,36 @@ integrationTest.sequential(
 			control.release.resolve();
 			await Promise.all([firstProtected, secondProtected]);
 			t.expect(control.getCount).toBe(protectedPairCount + 2);
+
+			blockNextGet();
+			const supervisedCount = control.supervisedSetCount;
+			const supervisedBlocker = driver.sendCommand(
+				new BasicCCGet({ nodeId: 2 }),
+				commandOptions,
+			);
+			await control.started;
+			const supervisedOptions = {
+				autoEncapsulate: false,
+				maxSendAttempts: 1,
+				requestStatusUpdates: true,
+				supportCheck: false,
+				useSupervision: false,
+			} as const;
+			const supervisedFirst = driver.sendCommand(
+				SupervisionCC.encapsulate(createSet(15), 1, true),
+				supervisedOptions,
+			);
+			const supervisedSecond = driver.sendCommand(
+				SupervisionCC.encapsulate(createSet(15), 2, true),
+				supervisedOptions,
+			);
+			control.release.resolve();
+			await Promise.all([
+				supervisedBlocker,
+				supervisedFirst,
+				supervisedSecond,
+			]);
+			t.expect(control.supervisedSetCount).toBe(supervisedCount + 2);
 
 			control.setValues = [];
 			blockNextGet();
@@ -510,6 +593,26 @@ integrationTest.sequential(
 				unannotated,
 			]);
 			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12, 12]);
+
+			blockNextGet();
+			const settledCount = control.getCount;
+			let afterCompletion: Promise<unknown> | undefined;
+			const completed = driver.sendCommand(createGet(20), {
+				...commandOptions,
+				onProgress: ({ state }) => {
+					if (state === TransactionState.Completed) {
+						afterCompletion = driver.sendCommand(
+							createGet(20),
+							commandOptions,
+						);
+					}
+				},
+			});
+			await control.started;
+			control.release.resolve();
+			await completed;
+			await afterCompletion;
+			t.expect(control.getCount).toBe(settledCount + 2);
 		},
 	},
 );

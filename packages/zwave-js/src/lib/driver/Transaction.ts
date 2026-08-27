@@ -72,6 +72,7 @@ class TransactionAttachmentState {
 
 	public readonly attachments = new Set<TransactionAttachment>();
 	public settled: TransactionResult | undefined;
+	public progress: TransactionProgress | undefined;
 
 	private settle(result: TransactionResult): void {
 		if (this.settled) return;
@@ -127,13 +128,13 @@ export class Transaction implements Comparable<Transaction> {
 		for (
 			const prop of [
 				"_stack",
-				"_progress",
 				"creationTimestamp",
 				"changeNodeStatusOnTimeout",
 				"pauseSendThread",
 				"priority",
 				"tag",
 				"requestWakeUpOnDemand",
+				"requestStatusUpdates",
 			] as const
 		) {
 			(ret as any)[prop] = this[prop];
@@ -166,9 +167,9 @@ export class Transaction implements Comparable<Transaction> {
 			detached: false,
 		};
 
-		if (this._progress) {
-			attachment.lastProgressState = this._progress.state;
-			listener?.({ ...this._progress });
+		if (this.attachmentState.progress) {
+			attachment.lastProgressState = this.attachmentState.progress.state;
+			listener?.({ ...this.attachmentState.progress });
 		}
 		this.attachmentState.attachments.add(attachment);
 		const settled = this.attachmentState.settled;
@@ -204,6 +205,10 @@ export class Transaction implements Comparable<Transaction> {
 		return this.attachmentState.attachments.size > 0;
 	}
 
+	public get isSettled(): boolean {
+		return this.attachmentState.settled != undefined;
+	}
+
 	public transferAttachmentsFrom(other: Transaction): void {
 		if (other.attachmentState === this.attachmentState) return;
 		for (const attachment of other.attachmentState.attachments) {
@@ -211,11 +216,13 @@ export class Transaction implements Comparable<Transaction> {
 			attachment.state = this.attachmentState;
 			this.attachmentState.attachments.add(attachment);
 			if (
-				this._progress
-				&& attachment.lastProgressState !== this._progress.state
+				this.attachmentState.progress
+				&& attachment.lastProgressState
+					!== this.attachmentState.progress.state
 			) {
-				attachment.lastProgressState = this._progress.state;
-				attachment.listener?.({ ...this._progress });
+				attachment.lastProgressState =
+					this.attachmentState.progress.state;
+				attachment.listener?.({ ...this.attachmentState.progress });
 			}
 			const settled = this.attachmentState.settled;
 			if (settled?.status === "rejected") {
@@ -232,11 +239,17 @@ export class Transaction implements Comparable<Transaction> {
 		}
 	}
 
-	private _progress: TransactionProgress | undefined;
 	public setProgress(progress: TransactionProgress): void {
 		// Ignore duplicate updates
-		if (this._progress?.state === progress.state) return;
-		this._progress = progress;
+		const previousState = this.attachmentState.progress?.state;
+		if (
+			previousState === progress.state
+			|| previousState === TransactionState.Completed
+			|| previousState === TransactionState.Failed
+		) {
+			return;
+		}
+		this.attachmentState.progress = progress;
 		for (const attachment of this.attachmentState.attachments) {
 			attachment.lastProgressState = progress.state;
 			attachment.listener?.({ ...progress });
@@ -310,6 +323,9 @@ export class Transaction implements Comparable<Transaction> {
 
 	/** If a Wake Up On Demand should be requested for the target node. */
 	public requestWakeUpOnDemand: boolean = false;
+
+	/** Whether follow-up Supervision status updates are requested. */
+	public requestStatusUpdates: boolean = false;
 
 	/** Internal information used to identify or mark this transaction */
 	public tag?: any;

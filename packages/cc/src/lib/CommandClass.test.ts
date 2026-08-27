@@ -1,7 +1,9 @@
 import { EncapsulationFlags } from "@zwave-js/core";
 import { describe, expect, test } from "vitest";
 import { BasicCCSet } from "../cc/BasicCC.js";
+import { MultiChannelCC } from "../cc/MultiChannelCC.js";
 import { MultiCommandCC } from "../cc/MultiCommandCC.js";
+import { Security2CC } from "../cc/Security2CC.js";
 import { SupervisionCC } from "../cc/SupervisionCC.js";
 import { CommandRelation, getCommandRelation } from "./CommandClass.js";
 
@@ -95,6 +97,65 @@ describe("getCommandRelation", () => {
 		expect(getCommandRelation(newer, older)).toBe(
 			CommandRelation.Redundant,
 		);
+	});
+
+	test("preserves Multi Channel destinations while unwrapping", () => {
+		const newer = MultiChannelCC.encapsulate(
+			createSet(1, { endpointIndex: 2 }),
+		);
+		const older = MultiChannelCC.encapsulate(
+			createSet(1, { endpointIndex: 1 }),
+		);
+
+		expect(newer.endpointIndex).toBe(0);
+		expect(older.endpointIndex).toBe(0);
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
+	});
+
+	test("preserves S2 multicast targets and groups while unwrapping", () => {
+		const securityManagers = {} as Parameters<
+			typeof Security2CC.encapsulate
+		>[2];
+		const differentTargets = [
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 4] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+		];
+		const differentGroups = [
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 2 },
+			),
+		];
+
+		expect(differentTargets[0].nodeId).toBe(
+			differentTargets[1].nodeId,
+		);
+		expect(
+			getCommandRelation(differentTargets[0], differentTargets[1]),
+		).toBe(CommandRelation.Unrelated);
+		expect(
+			getCommandRelation(differentGroups[0], differentGroups[1]),
+		).toBe(CommandRelation.Unrelated);
 	});
 
 	test("returns unrelated for multi-command encapsulation", () => {

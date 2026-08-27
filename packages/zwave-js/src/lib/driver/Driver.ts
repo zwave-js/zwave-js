@@ -7413,7 +7413,9 @@ ${handlers.length} left`,
 		second: Transaction,
 	): boolean {
 		if (
-			first.message.constructor !== second.message.constructor
+			first.requestStatusUpdates
+			|| second.requestStatusUpdates
+			|| first.message.constructor !== second.message.constructor
 			|| first.changeNodeStatusOnTimeout
 				!== second.changeNodeStatusOnTimeout
 			|| first.pauseSendThread !== second.pauseSendThread
@@ -7463,6 +7465,7 @@ ${handlers.length} left`,
 				): void => {
 					if (
 						!older.hasAttachments
+						|| older.isSettled
 						|| !this.areTransactionsCompatible(transaction, older)
 						|| !isSendData(older.message)
 						|| !containsCC(older.message)
@@ -7532,6 +7535,14 @@ ${handlers.length} left`,
 		if (transaction.preventDeduplication) {
 			for (const redundant of queuedRedundant) {
 				if (redundant.transaction.preventDeduplication) continue;
+				transaction.priority = Math.min(
+					transaction.priority,
+					redundant.transaction.priority,
+				);
+				transaction.creationTimestamp = Math.min(
+					transaction.creationTimestamp,
+					redundant.transaction.creationTimestamp,
+				);
 				redundant.queue.removeWithoutTrigger(redundant.transaction);
 				transaction.transferAttachmentsFrom(redundant.transaction);
 			}
@@ -7672,6 +7683,8 @@ ${handlers.length} left`,
 			transaction.pauseSendThread = true;
 		}
 		transaction.requestWakeUpOnDemand = !!options.requestWakeUpOnDemand;
+		transaction.requestStatusUpdates = "requestStatusUpdates" in options
+			&& options.requestStatusUpdates === true;
 		transaction.tag = options.tag;
 
 		transaction.setProgress({ state: TransactionState.Queued });

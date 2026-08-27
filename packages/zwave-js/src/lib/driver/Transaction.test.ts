@@ -537,6 +537,42 @@ describe("attachments", () => {
 		]);
 	});
 
+	test("shares progress through requeue clones", async () => {
+		const { physicalPromise, transaction } = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		transaction.attach(caller, progress);
+		transaction.setProgress({ state: TransactionState.Queued });
+		transaction.setProgress({ state: TransactionState.Active });
+
+		const clone = transaction.clone();
+		clone.setProgress({ state: TransactionState.Queued });
+		clone.setProgress({ state: TransactionState.Active });
+		physicalPromise.resolve();
+		transaction.setProgress({ state: TransactionState.Completed });
+		clone.setProgress({
+			state: TransactionState.Failed,
+			reason: "stale clone",
+		});
+
+		await expect(caller).resolves.toBeUndefined();
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
+		]);
+	});
+
+	test("marks transactions unavailable after physical settlement", async () => {
+		const { physicalPromise, transaction } = createAttachedTransaction();
+		expect(transaction.isSettled).toBe(false);
+		physicalPromise.resolve();
+		await physicalPromise;
+		expect(transaction.isSettled).toBe(true);
+	});
+
 	test("reports terminal progress to attachments added after settlement", async () => {
 		const { physicalPromise, transaction } = createAttachedTransaction();
 		transaction.setProgress({ state: TransactionState.Active });
