@@ -39,6 +39,7 @@ import {
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
@@ -55,6 +56,7 @@ import {
 	implementedVersion,
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
+import { areDurationsEqual } from "../lib/CommandRelationUtils.js";
 import { V } from "../lib/Values.js";
 import { BasicCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
@@ -396,6 +398,15 @@ export class BasicCCSet extends BasicCC {
 
 	public targetValue: number;
 
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (!(other instanceof BasicCCSet)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.targetValue === other.targetValue
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.targetValue]);
 		return super.serialize(ctx);
@@ -462,6 +473,17 @@ export class BasicCCReport extends BasicCC {
 	public readonly targetValue: MaybeUnknown<number> | undefined;
 
 	public readonly duration: Duration | undefined;
+
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (!(other instanceof BasicCCReport)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.currentValue === other.currentValue
+				&& this.targetValue === other.targetValue
+				&& areDurationsEqual(this.duration, other.duration)
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		// Basic CC Report persists its values itself, since there are some
@@ -545,4 +567,10 @@ export class BasicCCReport extends BasicCC {
 
 @CCCommand(BasicCommand.Get)
 @expectedCCResponse(BasicCCReport)
-export class BasicCCGet extends BasicCC {}
+export class BasicCCGet extends BasicCC {
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		return other instanceof BasicCCGet
+			? CommandRelation.Redundant
+			: CommandRelation.Unrelated;
+	}
+}

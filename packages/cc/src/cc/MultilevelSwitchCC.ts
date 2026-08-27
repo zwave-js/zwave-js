@@ -36,6 +36,7 @@ import {
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
@@ -52,6 +53,7 @@ import {
 	implementedVersion,
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
+import { areDurationsEqual } from "../lib/CommandRelationUtils.js";
 import { V } from "../lib/Values.js";
 import {
 	LevelChangeDirection,
@@ -657,6 +659,26 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 	public targetValue: number;
 	public duration: Duration | undefined;
 
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (
+			!(other instanceof MultilevelSwitchCCSet)
+			&& !(other instanceof MultilevelSwitchCCStartLevelChange)
+		) {
+			return CommandRelation.Unrelated;
+		}
+		if (
+			other instanceof MultilevelSwitchCCSet
+			&& this.targetValue === other.targetValue
+			&& areDurationsEqual(
+				this.duration ?? Duration.default(),
+				other.duration ?? Duration.default(),
+			)
+		) {
+			return CommandRelation.Redundant;
+		}
+		return CommandRelation.Supersedes;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.targetValue,
@@ -743,6 +765,17 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public duration: Duration | undefined;
 
 	public currentValue: MaybeUnknown<number> | undefined;
+
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (!(other instanceof MultilevelSwitchCCReport)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.currentValue === other.currentValue
+				&& this.targetValue === other.targetValue
+				&& areDurationsEqual(this.duration, other.duration)
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		const node = this.getNode(ctx);
@@ -837,7 +870,13 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 
 @CCCommand(MultilevelSwitchCommand.Get)
 @expectedCCResponse(MultilevelSwitchCCReport)
-export class MultilevelSwitchCCGet extends MultilevelSwitchCC {}
+export class MultilevelSwitchCCGet extends MultilevelSwitchCC {
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		return other instanceof MultilevelSwitchCCGet
+			? CommandRelation.Redundant
+			: CommandRelation.Unrelated;
+	}
+}
 
 // @publicAPI
 export type MultilevelSwitchCCStartLevelChangeOptions =
@@ -900,6 +939,28 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	public startLevel: number;
 	public ignoreStartLevel: boolean;
 	public direction: keyof typeof LevelChangeDirection;
+
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (
+			!(other instanceof MultilevelSwitchCCSet)
+			&& !(other instanceof MultilevelSwitchCCStartLevelChange)
+		) {
+			return CommandRelation.Unrelated;
+		}
+		if (
+			other instanceof MultilevelSwitchCCStartLevelChange
+			&& this.direction === other.direction
+			&& this.ignoreStartLevel === other.ignoreStartLevel
+			&& this.startLevel === other.startLevel
+			&& areDurationsEqual(
+				this.duration ?? Duration.default(),
+				other.duration ?? Duration.default(),
+			)
+		) {
+			return CommandRelation.Redundant;
+		}
+		return CommandRelation.Supersedes;
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const controlByte = (LevelChangeDirection[this.direction] << 6)

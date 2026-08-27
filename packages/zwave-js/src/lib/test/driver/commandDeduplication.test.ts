@@ -192,12 +192,12 @@ integrationTest.sequential(
 			blockNextGet();
 			const successfulCount = control.getCount;
 			const successfulFirst = driver.sendCommand(
-				createGet(2),
+				new BasicCCGet({ nodeId: 2 }),
 				commandOptions,
 			);
 			await control.started;
 			const successfulSecond = driver.sendCommand(
-				createGet(2),
+				new BasicCCGet({ nodeId: 2 }),
 				commandOptions,
 			);
 			control.release.resolve();
@@ -586,12 +586,12 @@ integrationTest.sequential(
 			await driver.waitForIdle(1000);
 
 			blockNextGet();
-			const unannotatedBlocker = driver.sendCommand(
+			const concreteBlocker = driver.sendCommand(
 				new BasicCCGet({ nodeId: 2 }),
 				commandOptions,
 			);
 			await control.started;
-			const unannotated = Promise.all([
+			const concrete = Promise.all([
 				driver.sendCommand(
 					new BasicCCSet({ nodeId: 2, targetValue: 12 }),
 					commandOptions,
@@ -603,10 +603,10 @@ integrationTest.sequential(
 			]);
 			control.release.resolve();
 			await Promise.all([
-				unannotatedBlocker,
-				unannotated,
+				concreteBlocker,
+				concrete,
 			]);
-			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12, 12]);
+			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12]);
 
 			// Exclude completed transactions from synchronous deduplication
 			blockNextGet();

@@ -32,6 +32,7 @@ import {
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type RefreshValuesContext,
 	type RefreshValuesOptions,
@@ -47,6 +48,7 @@ import {
 	implementedVersion,
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
+import { areDurationsEqual } from "../lib/CommandRelationUtils.js";
 import { V } from "../lib/Values.js";
 import { BinarySwitchCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
@@ -341,6 +343,19 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 	public targetValue: boolean;
 	public duration: Duration | undefined;
 
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (!(other instanceof BinarySwitchCCSet)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.targetValue === other.targetValue
+				&& areDurationsEqual(
+					this.duration ?? Duration.default(),
+					other.duration ?? Duration.default(),
+				)
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.targetValue ? 0xff : 0x00,
@@ -427,6 +442,17 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 
 	public readonly duration: Duration | undefined;
 
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (!(other instanceof BinarySwitchCCReport)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.currentValue === other.currentValue
+				&& this.targetValue === other.targetValue
+				&& areDurationsEqual(this.duration, other.duration)
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			encodeMaybeBoolean(this.currentValue ?? UNKNOWN_STATE),
@@ -462,4 +488,10 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 
 @CCCommand(BinarySwitchCommand.Get)
 @expectedCCResponse(BinarySwitchCCReport)
-export class BinarySwitchCCGet extends BinarySwitchCC {}
+export class BinarySwitchCCGet extends BinarySwitchCC {
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		return other instanceof BinarySwitchCCGet
+			? CommandRelation.Redundant
+			: CommandRelation.Unrelated;
+	}
+}

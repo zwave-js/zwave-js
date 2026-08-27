@@ -36,6 +36,7 @@ import {
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
@@ -605,6 +606,18 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 	public value: number;
 	public scale: number;
 
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (
+			!(other instanceof ThermostatSetpointCCSet)
+			|| this.setpointType !== other.setpointType
+		) {
+			return CommandRelation.Unrelated;
+		}
+		return this.value === other.value && this.scale === other.scale
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// If a config file overwrites how the float should be encoded, use that information
 		const override = ctx.getDeviceConfig?.(this.nodeId as number)
@@ -713,6 +726,18 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 	public scale: number;
 	public value: number;
 
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (
+			!(other instanceof ThermostatSetpointCCReport)
+			|| this.type !== other.type
+		) {
+			return CommandRelation.Unrelated;
+		}
+		return this.value === other.value && this.scale === other.scale
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([
 			[this.type & 0b1111],
@@ -776,6 +801,15 @@ export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
 	}
 
 	public setpointType: ThermostatSetpointType;
+
+	public override getRelationTo(other: CommandClass): CommandRelation {
+		if (!(other instanceof ThermostatSetpointCCGet)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.setpointType === other.setpointType
+			? CommandRelation.Redundant
+			: CommandRelation.Unrelated;
+	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.setpointType & 0b1111]);
