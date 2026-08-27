@@ -613,6 +613,62 @@ integrationTest.sequential(
 			await completed;
 			await afterCompletion;
 			t.expect(control.getCount).toBe(settledCount + 2);
+
+			control.setValues = [];
+			blockNextGet();
+			const failedRetryBlocker = driver.sendCommand(
+				new BasicCCGet({ nodeId: 2 }),
+				commandOptions,
+			);
+			await control.started;
+			let failedRetry: Promise<unknown> | undefined;
+			const failedOriginal = driver.sendCommand(createSet(16), {
+				...commandOptions,
+				priority: MessagePriority.Poll,
+				onProgress: ({ state }) => {
+					if (state === TransactionState.Failed) {
+						failedRetry = driver.sendCommand(createSet(16), {
+							...commandOptions,
+							priority: MessagePriority.Normal,
+						});
+					}
+				},
+			});
+			const failedOriginalResult = failedOriginal.catch(
+				(error) => error,
+			);
+			await driver.rejectTransactions(
+				(transaction) => transaction.priority === MessagePriority.Poll,
+				"rejected for retry test",
+			);
+			t.expect(await failedOriginalResult).toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageDropped,
+			});
+			control.release.resolve();
+			await Promise.all([failedRetryBlocker, failedRetry]);
+			t.expect(control.setValues).toEqual([16]);
+
+			control.setValues = [];
+			blockNextGet();
+			const delayedBlocker = driver.sendCommand(
+				new BasicCCGet({ nodeId: 2 }),
+				commandOptions,
+			);
+			await control.started;
+			const delayedProgress: TransactionState[] = [];
+			const delayed = driver.sendCommand(createSet(17), {
+				...commandOptions,
+				onProgress: ({ state }) => delayedProgress.push(state),
+			});
+			await driver.delayTransactionsForNode(2, 0.02);
+			control.release.resolve();
+			await Promise.all([delayedBlocker, delayed]);
+			t.expect(control.setValues).toEqual([17]);
+			t.expect(delayedProgress).toEqual([
+				TransactionState.Queued,
+				TransactionState.Active,
+				TransactionState.Completed,
+			]);
 		},
 	},
 );

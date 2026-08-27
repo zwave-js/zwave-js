@@ -573,6 +573,24 @@ describe("attachments", () => {
 		expect(transaction.isSettled).toBe(true);
 	});
 
+	test("marks terminal progress before notifying attachments", () => {
+		const { transaction } = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const terminalStateSeen = vi.fn();
+		transaction.attach(caller, ({ state }) => {
+			if (state === TransactionState.Failed) {
+				terminalStateSeen(transaction.hasTerminalProgress);
+			}
+		});
+
+		transaction.setProgress({
+			state: TransactionState.Failed,
+			reason: "failed",
+		});
+
+		expect(terminalStateSeen).toHaveBeenCalledWith(true);
+	});
+
 	test("reports terminal progress to attachments added after settlement", async () => {
 		const { physicalPromise, transaction } = createAttachedTransaction();
 		transaction.setProgress({ state: TransactionState.Active });

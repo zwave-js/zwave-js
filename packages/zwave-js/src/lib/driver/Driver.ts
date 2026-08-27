@@ -7466,6 +7466,7 @@ ${handlers.length} left`,
 					if (
 						!older.hasAttachments
 						|| older.isSettled
+						|| older.hasTerminalProgress
 						|| !this.areTransactionsCompatible(transaction, older)
 						|| !isSendData(older.message)
 						|| !containsCC(older.message)
@@ -8488,7 +8489,7 @@ ${handlers.length} left`,
 				&& source === "queue"
 			) {
 				requeue.push(transaction);
-				return { type: "drop" };
+				return { type: "defer" };
 			}
 			return { type: "keep" };
 		});
@@ -8548,6 +8549,13 @@ ${handlers.length} left`,
 		) => void = (transaction, source) => {
 			const reducerResult = reducer(transaction, source);
 			switch (reducerResult.type) {
+				case "defer":
+					if (source === "queue") {
+						dropQueued.push(transaction);
+					} else {
+						stopActive = transaction;
+					}
+					break;
 				case "drop":
 					if (source === "queue") {
 						dropQueued.push(transaction);

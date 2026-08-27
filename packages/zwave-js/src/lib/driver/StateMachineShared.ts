@@ -163,6 +163,10 @@ export type TransactionReducerResult =
 		type: "drop";
 	}
 	| {
+		// Remove the transaction until the caller requeues it.
+		type: "defer";
+	}
+	| {
 		// Do nothing (useful especially for the current transaction)
 		type: "keep";
 	}

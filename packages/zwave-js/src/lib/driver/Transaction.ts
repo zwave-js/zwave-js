@@ -209,6 +209,13 @@ export class Transaction implements Comparable<Transaction> {
 		return this.attachmentState.settled != undefined;
 	}
 
+	public get hasTerminalProgress(): boolean {
+		return (
+			this.attachmentState.progress?.state === TransactionState.Completed
+			|| this.attachmentState.progress?.state === TransactionState.Failed
+		);
+	}
+
 	public transferAttachmentsFrom(other: Transaction): void {
 		if (other.attachmentState === this.attachmentState) return;
 		for (const attachment of other.attachmentState.attachments) {
