@@ -28,13 +28,21 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 	public currentTransaction: Transaction | undefined;
 
 	public add(...items: Transaction[]): void {
-		this.transactions.add(...items);
+		this.addWithoutTrigger(...items);
 		this.trigger();
 	}
 
+	public addWithoutTrigger(...items: Transaction[]): void {
+		this.transactions.add(...items);
+	}
+
 	public remove(...items: Transaction[]): void {
-		this.transactions.remove(...items);
+		this.removeWithoutTrigger(...items);
 		this.trigger();
+	}
+
+	public removeWithoutTrigger(...items: Transaction[]): void {
+		this.transactions.remove(...items);
 	}
 
 	public find(

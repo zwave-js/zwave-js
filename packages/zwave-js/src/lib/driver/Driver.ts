@@ -7,6 +7,7 @@ import {
 	CRC16CC,
 	CRC16CCCommandEncapsulation,
 	CommandClass,
+	CommandRelation,
 	type FirmwareUpdateResult,
 	InclusionControllerCCInitiate,
 	InclusionControllerStep,
@@ -50,6 +51,7 @@ import {
 	WakeUpCCNoMoreInformation,
 	WakeUpCCValues,
 	type ZWaveProtocolCC,
+	getCommandRelation,
 	getImplementedVersion,
 	getInnermostCommandClass,
 	isEncapsulatingCommandClass,
@@ -6705,7 +6707,6 @@ ${handlers.length} left`,
 
 				// Notify listeners about the status report if one was received
 				if (hasTXReport(result)) {
-					options.onTXReport?.(result.txReport);
 					node.updateRouteStatistics(result.txReport);
 				}
 			}
@@ -7407,6 +7408,159 @@ ${handlers.length} left`,
 		}
 	}
 
+	private areTransactionsCompatible(
+		first: Transaction,
+		second: Transaction,
+	): boolean {
+		if (
+			first.message.constructor !== second.message.constructor
+			|| first.changeNodeStatusOnTimeout
+				!== second.changeNodeStatusOnTimeout
+			|| first.pauseSendThread !== second.pauseSendThread
+			|| first.requestWakeUpOnDemand !== second.requestWakeUpOnDemand
+			|| first.tag !== second.tag
+		) {
+			return false;
+		}
+
+		if (!isSendData(first.message) || !isSendData(second.message)) {
+			return false;
+		}
+		return first.message.transmitOptions === second.message.transmitOptions
+			&& first.message.maxSendAttempts === second.message.maxSendAttempts
+			&& first.message.nodeUpdateTimeout
+				=== second.message.nodeUpdateTimeout
+			&& first.message.ignoreNodeUpdate
+				=== second.message.ignoreNodeUpdate
+			&& (
+				!(first.message instanceof SendDataBridgeRequest)
+				|| !(second.message instanceof SendDataBridgeRequest)
+				|| first.message.sourceNodeId === second.message.sourceNodeId
+			)
+			&& (
+				!(first.message instanceof SendDataMulticastBridgeRequest)
+				|| !(second.message instanceof SendDataMulticastBridgeRequest)
+				|| first.message.sourceNodeId === second.message.sourceNodeId
+			);
+	}
+
+	private enqueueTransaction(transaction: Transaction): void {
+		type QueuedTransaction = {
+			queue: TransactionQueue;
+			transaction: Transaction;
+		};
+
+		let activeRedundant: QueuedTransaction | undefined;
+		const queuedRedundant: QueuedTransaction[] = [];
+		const queuedSuperseded: QueuedTransaction[] = [];
+
+		const newerMessage = transaction.message;
+		if (isSendData(newerMessage) && containsCC(newerMessage)) {
+			for (const queue of this.queues) {
+				const inspect = (
+					older: Transaction,
+					source: "active" | "queue",
+				): void => {
+					if (
+						!older.hasAttachments
+						|| !this.areTransactionsCompatible(transaction, older)
+						|| !isSendData(older.message)
+						|| !containsCC(older.message)
+					) {
+						return;
+					}
+
+					const relation = getCommandRelation(
+						newerMessage.command,
+						older.message.command,
+					);
+					if (relation === CommandRelation.Supersedes) {
+						if (
+							source === "queue"
+							&& !older.preventDeduplication
+						) {
+							queuedSuperseded.push({
+								queue,
+								transaction: older,
+							});
+						}
+					} else if (relation === CommandRelation.Redundant) {
+						if (
+							transaction.preventDeduplication
+							&& older.preventDeduplication
+						) {
+							return;
+						}
+						if (source === "active") {
+							if (!transaction.preventDeduplication) {
+								activeRedundant ??= {
+									queue,
+									transaction: older,
+								};
+							}
+						} else {
+							queuedRedundant.push({
+								queue,
+								transaction: older,
+							});
+						}
+					}
+				};
+
+				if (queue.currentTransaction) {
+					inspect(queue.currentTransaction, "active");
+				}
+				for (const queued of queue.transactions) {
+					inspect(queued, "queue");
+				}
+			}
+		}
+
+		for (const superseded of queuedSuperseded) {
+			superseded.queue.removeWithoutTrigger(superseded.transaction);
+			this.rejectTransaction(
+				superseded.transaction,
+				new ZWaveError(
+					"The message was superseded by a newer command",
+					ZWaveErrorCodes.Controller_MessageSuperseded,
+					undefined,
+					superseded.transaction.stack,
+				),
+			);
+		}
+
+		if (transaction.preventDeduplication) {
+			for (const redundant of queuedRedundant) {
+				if (redundant.transaction.preventDeduplication) continue;
+				redundant.queue.removeWithoutTrigger(redundant.transaction);
+				transaction.transferAttachmentsFrom(redundant.transaction);
+			}
+			this.getQueueForTransaction(transaction).addWithoutTrigger(
+				transaction,
+			);
+		} else {
+			const redundant = activeRedundant ?? queuedRedundant[0];
+			if (redundant) {
+				redundant.transaction.transferAttachmentsFrom(transaction);
+				if (
+					!activeRedundant
+					&& transaction.priority < redundant.transaction.priority
+				) {
+					const oldQueue = redundant.queue;
+					oldQueue.removeWithoutTrigger(redundant.transaction);
+					redundant.transaction.priority = transaction.priority;
+					this.getQueueForTransaction(redundant.transaction)
+						.addWithoutTrigger(redundant.transaction);
+				}
+			} else {
+				this.getQueueForTransaction(transaction)
+					.addWithoutTrigger(transaction);
+			}
+		}
+
+		this.triggerQueues();
+	}
+
 	/**
 	 * Sends a message to the Z-Wave stick.
 	 * @param msg The message to send
@@ -7474,20 +7628,39 @@ ${handlers.length} left`,
 		}
 
 		// Create the transaction
+		let transaction: Transaction;
 		const { generator, resultPromise } = createMessageGenerator(
 			this,
 			this.getEncodingContext(),
 			msg,
 			(msg, _result) => {
 				this.handleSerialAPICommandResult(msg, options, _result);
+				if (hasTXReport(_result)) {
+					transaction.reportTXReport(_result.txReport);
+				}
 			},
 		);
-		const transaction = new Transaction(this, {
+		transaction = new Transaction(this, {
 			message: msg,
 			priority: options.priority,
 			parts: generator,
 			promise: resultPromise,
-			listener: options.onProgress,
+			preventDeduplication: "preventDeduplication" in options
+				&& options.preventDeduplication === true,
+		});
+		const callerPromise = createDeferredPromise<Message | void>();
+		const attachment = transaction.attach(
+			callerPromise,
+			options.onProgress,
+			options.onTXReport,
+		);
+		void resultPromise.catch((error) => {
+			if (
+				isZWaveError(error)
+				&& error.code === ZWaveErrorCodes.Controller_NodeTimeout
+			) {
+				node?.incrementStatistics("timeoutResponse");
+			}
 		});
 
 		// Configure its options
@@ -7501,29 +7674,37 @@ ${handlers.length} left`,
 		transaction.requestWakeUpOnDemand = !!options.requestWakeUpOnDemand;
 		transaction.tag = options.tag;
 
-		// And queue it
-		this.getQueueForTransaction(transaction).add(transaction);
 		transaction.setProgress({ state: TransactionState.Queued });
+		this.enqueueTransaction(transaction);
 
 		// If the transaction should expire, start the timeout
 		let expirationTimeout: Timer | undefined;
 		if (options.expire) {
 			expirationTimeout = setTimer(() => {
-				void this.reduceQueues((t, _source) => {
-					if (t === transaction) {
+				const error = new ZWaveError(
+					"The message has expired",
+					ZWaveErrorCodes.Controller_MessageExpired,
+					undefined,
+					transaction.stack,
+				);
+				attachment.detach(error);
+				if (!attachment.hasAttachments) {
+					void this.reduceQueues((t, _source) => {
+						if (!attachment.isAttachedTo(t)) {
+							return { type: "keep" };
+						}
 						return {
 							type: "reject",
-							message: `The message has expired`,
+							message: error.message,
 							code: ZWaveErrorCodes.Controller_MessageExpired,
 						};
-					}
-					return { type: "keep" };
-				});
+					});
+				}
 			}, options.expire).unref();
 		}
 
 		try {
-			const result = (await resultPromise) as TResponse;
+			const result = (await callerPromise) as TResponse;
 
 			// If this was a successful non-nonce message to a sleeping node, make sure it goes to sleep again
 			let maybeSendToSleep: boolean;
@@ -7572,9 +7753,6 @@ ${handlers.length} left`,
 				) {
 					this._controller?.incrementStatistics("messagesDroppedTX");
 					return e.context as TResponse;
-				} else if (e.code === ZWaveErrorCodes.Controller_NodeTimeout) {
-					// If the node failed to respond in time, remember this for the statistics
-					node?.incrementStatistics("timeoutResponse");
 				}
 				// Enrich errors with the transaction's stack instead of the internal stack
 				if (!e.transactionSource) {

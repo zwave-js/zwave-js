@@ -88,6 +88,65 @@ export interface CommandClassOptions extends CCAddress {
 	payload?: BytesView;
 }
 
+export enum CommandRelation {
+	Unrelated,
+	Redundant,
+	Supersedes,
+}
+
+function haveSameNodeTarget(
+	first: number | MulticastDestination,
+	second: number | MulticastDestination,
+): boolean {
+	if (typeof first === "number" || typeof second === "number") {
+		return first === second;
+	}
+	const firstTargets = new Set(first);
+	const secondTargets = new Set(second);
+	return firstTargets.size === secondTargets.size
+		&& [...firstTargets].every((nodeId) => secondTargets.has(nodeId));
+}
+
+export function getCommandRelation(
+	newer: CommandClass,
+	older: CommandClass,
+): CommandRelation {
+	if (
+		!haveSameNodeTarget(newer.nodeId, older.nodeId)
+		|| newer.endpointIndex !== older.endpointIndex
+		|| newer.encapsulationFlags !== older.encapsulationFlags
+	) {
+		return CommandRelation.Unrelated;
+	}
+
+	let newerCommand = newer;
+	let olderCommand = older;
+	while (true) {
+		if (
+			isMultiEncapsulatingCommandClass(newerCommand)
+			|| isMultiEncapsulatingCommandClass(olderCommand)
+		) {
+			return CommandRelation.Unrelated;
+		}
+		if (
+			!isEncapsulatingCommandClass(newerCommand)
+			|| !isEncapsulatingCommandClass(olderCommand)
+		) {
+			break;
+		}
+		newerCommand = newerCommand.encapsulated;
+		olderCommand = olderCommand.encapsulated;
+	}
+
+	if (
+		isEncapsulatingCommandClass(newerCommand)
+		|| isEncapsulatingCommandClass(olderCommand)
+	) {
+		return CommandRelation.Unrelated;
+	}
+	return newerCommand.getRelationTo(olderCommand);
+}
+
 // Defines the necessary traits an endpoint passed to a CC instance must have
 export type CCEndpoint =
 	& EndpointId
@@ -411,6 +470,10 @@ export class CommandClass implements CCId {
 
 	public prepareRetransmission(): void {
 		// Do nothing by default
+	}
+
+	public getRelationTo(_other: CommandClass): CommandRelation {
+		return CommandRelation.Unrelated;
 	}
 
 	/**

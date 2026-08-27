@@ -1,7 +1,9 @@
 import {
 	MessagePriority,
+	type TXReport,
 	type TransactionProgress,
 	type TransactionProgressListener,
+	TransactionState,
 	type ZWaveError,
 	highResTimestamp,
 	isZWaveError,
@@ -41,9 +43,53 @@ export interface TransactionOptions {
 	priority: MessagePriority;
 	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
 	promise: DeferredPromise<Message | void>;
+	/** Prevents this transaction from sharing another physical transmission. */
+	preventDeduplication?: boolean;
+	/** @internal */
+	attachmentState?: TransactionAttachmentState;
+}
 
-	/** Gets called with progress updates for a transaction */
+interface TransactionAttachment {
+	promise: DeferredPromise<Message | void>;
 	listener?: TransactionProgressListener;
+	onTXReport?: (report: TXReport) => void;
+	state: TransactionAttachmentState;
+	detached: boolean;
+	lastProgressState?: TransactionState;
+}
+
+type TransactionResult =
+	| { status: "fulfilled"; value: Message | void }
+	| { status: "rejected"; reason: unknown };
+
+class TransactionAttachmentState {
+	public constructor(physicalPromise: DeferredPromise<Message | void>) {
+		void physicalPromise.then(
+			(value) => this.settle({ status: "fulfilled", value }),
+			(reason) => this.settle({ status: "rejected", reason }),
+		);
+	}
+
+	public readonly attachments = new Set<TransactionAttachment>();
+	public settled: TransactionResult | undefined;
+
+	private settle(result: TransactionResult): void {
+		if (this.settled) return;
+		this.settled = result;
+		for (const attachment of this.attachments) {
+			if (result.status === "rejected") {
+				attachment.promise.reject(result.reason);
+			} else {
+				attachment.promise.resolve(result.value);
+			}
+		}
+	}
+}
+
+export interface TransactionAttachmentHandle {
+	detach(error: ZWaveError): void;
+	readonly hasAttachments: boolean;
+	isAttachedTo(transaction: Transaction): boolean;
 }
 
 /**
@@ -62,7 +108,9 @@ export class Transaction implements Comparable<Transaction> {
 		this.message = options.message;
 		this.priority = options.priority;
 		this.parts = options.parts;
-		this.listener = options.listener;
+		this.preventDeduplication = options.preventDeduplication ?? false;
+		this.attachmentState = options.attachmentState
+			?? new TransactionAttachmentState(options.promise);
 
 		// We need create the stack on a temporary object or the Error
 		// class will try to print the message
@@ -72,7 +120,10 @@ export class Transaction implements Comparable<Transaction> {
 	}
 
 	public clone(): Transaction {
-		const ret = new Transaction(this.driver, this.options);
+		const ret = new Transaction(this.driver, {
+			...this.options,
+			attachmentState: this.attachmentState,
+		});
 		for (
 			const prop of [
 				"_stack",
@@ -88,9 +139,6 @@ export class Transaction implements Comparable<Transaction> {
 			(ret as any)[prop] = this[prop];
 		}
 
-		// The listener callback now lives on the clone
-		this.listener = undefined;
-
 		return ret;
 	}
 
@@ -103,15 +151,96 @@ export class Transaction implements Comparable<Transaction> {
 	/** The message generator to create the actual messages for this transaction */
 	public readonly parts: MessageGenerator;
 
-	/** A callback which gets called with state updates of this transaction */
-	private listener?: TransactionProgressListener;
+	private readonly attachmentState: TransactionAttachmentState;
+
+	public attach(
+		promise: DeferredPromise<Message | void>,
+		listener?: TransactionProgressListener,
+		onTXReport?: (report: TXReport) => void,
+	): TransactionAttachmentHandle {
+		const attachment: TransactionAttachment = {
+			promise,
+			listener,
+			onTXReport,
+			state: this.attachmentState,
+			detached: false,
+		};
+
+		if (this._progress) {
+			attachment.lastProgressState = this._progress.state;
+			listener?.({ ...this._progress });
+		}
+		this.attachmentState.attachments.add(attachment);
+		const settled = this.attachmentState.settled;
+		if (settled) {
+			if (settled.status === "rejected") {
+				promise.reject(settled.reason);
+			} else {
+				promise.resolve(settled.value);
+			}
+		}
+
+		return {
+			detach: (error) => {
+				if (attachment.detached || attachment.state.settled) return;
+				attachment.detached = true;
+				attachment.state.attachments.delete(attachment);
+				attachment.listener?.({
+					state: TransactionState.Failed,
+					reason: error.message,
+				});
+				attachment.lastProgressState = TransactionState.Failed;
+				attachment.promise.reject(error);
+			},
+			get hasAttachments() {
+				return attachment.state.attachments.size > 0;
+			},
+			isAttachedTo: (transaction) =>
+				attachment.state === transaction.attachmentState,
+		};
+	}
+
+	public get hasAttachments(): boolean {
+		return this.attachmentState.attachments.size > 0;
+	}
+
+	public transferAttachmentsFrom(other: Transaction): void {
+		if (other.attachmentState === this.attachmentState) return;
+		for (const attachment of other.attachmentState.attachments) {
+			other.attachmentState.attachments.delete(attachment);
+			attachment.state = this.attachmentState;
+			this.attachmentState.attachments.add(attachment);
+			if (
+				this._progress
+				&& attachment.lastProgressState !== this._progress.state
+			) {
+				attachment.lastProgressState = this._progress.state;
+				attachment.listener?.({ ...this._progress });
+			}
+			const settled = this.attachmentState.settled;
+			if (settled?.status === "rejected") {
+				attachment.promise.reject(settled.reason);
+			} else if (settled?.status === "fulfilled") {
+				attachment.promise.resolve(settled.value);
+			}
+		}
+	}
+
+	public reportTXReport(report: TXReport): void {
+		for (const attachment of this.attachmentState.attachments) {
+			attachment.onTXReport?.(report);
+		}
+	}
 
 	private _progress: TransactionProgress | undefined;
 	public setProgress(progress: TransactionProgress): void {
 		// Ignore duplicate updates
 		if (this._progress?.state === progress.state) return;
 		this._progress = progress;
-		this.listener?.({ ...progress });
+		for (const attachment of this.attachmentState.attachments) {
+			attachment.lastProgressState = progress.state;
+			attachment.listener?.({ ...progress });
+		}
 	}
 
 	/**
@@ -166,6 +295,9 @@ export class Transaction implements Comparable<Transaction> {
 
 	/** The priority of this transaction */
 	public priority: MessagePriority;
+
+	/** Prevents this transaction from sharing another physical transmission. */
+	public readonly preventDeduplication: boolean;
 
 	/** The timestamp at which the transaction was created */
 	public creationTimestamp: number = highResTimestamp();
