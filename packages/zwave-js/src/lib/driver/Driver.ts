@@ -32,7 +32,6 @@ import {
 	SecurityCCCommandEncapsulation,
 	SecurityCCCommandEncapsulationNonceGet,
 	SecurityCCCommandsSupportedGet,
-	SecurityCCCommandsSupportedReport,
 	SecurityCCNonceGet,
 	SecurityCCNonceReport,
 	SecurityCommand,
@@ -5650,10 +5649,12 @@ ${handlers.length} left`,
 					// CommandsSupportedReport is always accepted to be able to learn security classes and interview nodes
 					// CommandsSupportedGet is always accepted, so others can learn our security classes
 					if (
-						cmd.encapsulated
-							instanceof SecurityCCCommandsSupportedReport
-						|| cmd.encapsulated
-							instanceof SecurityCCCommandsSupportedGet
+						cmd.isEncapsulatingSecurityCommand(
+							SecurityCommand.CommandsSupportedReport,
+						)
+						|| cmd.isEncapsulatingSecurityCommand(
+							SecurityCommand.CommandsSupportedGet,
+						)
 					) {
 						return true;
 					}
