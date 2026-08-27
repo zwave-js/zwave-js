@@ -804,6 +804,11 @@ export interface DriverEventCallbacks extends PrefixedNodeEvents {
 
 export type DriverEvents = Extract<keyof DriverEventCallbacks, string>;
 
+interface DeferredTransactionBatch {
+	timer: Timer;
+	transactions: Transaction[];
+}
+
 /**
  * The driver is the core of this library. It controls the serial interface,
  * handles transmission and receipt of messages and manages the network cache.
@@ -947,7 +952,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
 	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
 	// Timers for delayed transaction re-queuing
-	private requeueTimers: Map<number, Set<Timer>> = new Map();
+	private requeueTimers: Map<number, Set<DeferredTransactionBatch>> =
+		new Map();
 
 	// Poll timing state per the Z-Wave specification.
 	// After any transaction completes, we must wait at least pollTime
@@ -1003,13 +1009,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): Promise<void> {
-		// Clear all delayed requeue timers
-		for (const set of this.requeueTimers.values()) {
-			for (const timer of set) {
-				timer.clear();
-			}
-		}
-		this.requeueTimers.clear();
+		this.clearDeferredTransactions(
+			undefined,
+			reason,
+			errorCode ?? ZWaveErrorCodes.Driver_TaskRemoved,
+		);
 
 		// Clear the poll delay timer
 		this._pollDelayTimer?.clear();
@@ -3026,10 +3030,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			),
 		);
 		if (this.requeueTimers.has(node.id)) {
-			for (const timer of this.requeueTimers.get(node.id)!) {
-				timer.clear();
-			}
-			this.requeueTimers.delete(node.id);
+			this.clearDeferredTransactions(
+				node.id,
+				"The node was removed from the network",
+				ZWaveErrorCodes.Controller_NodeRemoved,
+			);
 		}
 
 		// purge node values from the DB
@@ -4016,7 +4021,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...this.awaitedBootloaderChunks.map((b) => b.timeout),
 				...this.awaitedCLIChunks.map((c) => c.timeout),
 				...[...this.requeueTimers.values()].flatMap(
-					(t) => [...t.values()],
+					(batches) => [...batches].map((batch) => batch.timer),
 				),
 				this._pollDelayTimer,
 			]
@@ -8502,14 +8507,47 @@ ${handlers.length} left`,
 				);
 			}
 			const timerSet = this.requeueTimers.get(nodeId)!;
+			let batch: DeferredTransactionBatch;
 			const timer = setTimer(() => {
-				timerSet.delete(timer);
+				timerSet.delete(batch);
+				if (timerSet.size === 0) {
+					this.requeueTimers.delete(nodeId);
+				}
 				const requeued = requeue.map((t) => t.clone());
 				for (const t of requeued) {
 					this.getQueueForTransaction(t).add(t);
 				}
 			}, delaySeconds * 1000).unref();
-			timerSet.add(timer);
+			batch = { timer, transactions: requeue };
+			timerSet.add(batch);
+		}
+	}
+
+	private clearDeferredTransactions(
+		nodeId: number | undefined,
+		reason: string,
+		errorCode: ZWaveErrorCodes,
+	): void {
+		const entries = nodeId == undefined
+			? [...this.requeueTimers.entries()]
+			: [[nodeId, this.requeueTimers.get(nodeId)] as const];
+		for (const [entryNodeId, batches] of entries) {
+			if (!batches) continue;
+			for (const batch of batches) {
+				batch.timer.clear();
+				for (const transaction of batch.transactions) {
+					this.rejectTransaction(
+						transaction,
+						new ZWaveError(
+							reason,
+							errorCode,
+							undefined,
+							transaction.stack,
+						),
+					);
+				}
+			}
+			this.requeueTimers.delete(entryNodeId);
 		}
 	}
 
