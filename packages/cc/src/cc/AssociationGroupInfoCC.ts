@@ -868,6 +868,7 @@ export class AssociationGroupInfoCCCommandListReport
 			}
 		}
 		this.payload[1] = offset - 2; // list length
+		this.payload = this.payload.subarray(0, offset);
 
 		return super.serialize(ctx);
 	}
