@@ -13,6 +13,10 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "IR External Relay" },
+		"2": { "label": "External Relay" }
+	},
 	"paramInformation": [
 		{
 			"#": "7",

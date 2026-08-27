@@ -13,6 +13,11 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Lamp" },
+		"2": { "label": "Motion Sensor" },
+		"3": { "label": "Ambient Light Sensor" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

@@ -20,5 +20,17 @@
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
+	},
+	"endpoints": {
+		"1": { "label": "Output 1" },
+		"2": { "label": "Output 2" },
+		"3": { "label": "Output 3" },
+		"4": { "label": "Output 4" },
+		"5": { "label": "Output 5" },
+		"6": { "label": "Output 6" },
+		"7": { "label": "Analog 1" },
+		"8": { "label": "Analog 2" },
+		"9": { "label": "Temperature Sensor" },
+		"10": { "label": "Digital Input" }
 	}
 }

@@ -13,6 +13,11 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Left Outlet" },
+		"2": { "label": "Right Outlet" },
+		"3": { "label": "USB" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",
