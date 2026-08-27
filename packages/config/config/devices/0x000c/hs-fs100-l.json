@@ -30,5 +30,28 @@
 			"#": "4",
 			"$import": "templates/homeseer_template.json#enable_notification_buzzer"
 		}
-	]
+	],
+	"compat": {
+		// This device signals that light is no longer detected by sending an "idle"
+		// notification (Light sensor, event 0x00) whose event parameter is 0x02
+		// ("Light color transition detected"). That event is not a state variable, so
+		// Z-Wave JS cannot tell which variable to reset and the "Light detection status"
+		// value stays stuck on "Light detected" forever.
+		// The parameter should have been 0x01 ("Light detected"), so we translate the
+		// idle notification into an explicit idle for that variable.
+		"remapNotifications": [
+			{
+				"from": {
+					"notificationType": 20,
+					"notificationEvent": 0
+				},
+				"idle": [
+					{
+						"notificationType": 20,
+						"notificationEvent": 1
+					}
+				]
+			}
+		]
+	}
 }
