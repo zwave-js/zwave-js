@@ -408,7 +408,10 @@ export class BinarySensorCCReport extends BinarySensorCC {
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 
 		// Workaround for devices reporting with sensor type Any -> find first supported sensor type and use that
-		let sensorType = ccVersion >= 2 ? this.type : BinarySensorType.Any;
+		let sensorType = BinarySensorType.Any;
+		if (ccVersion >= 2) {
+			sensorType = this.type;
+		}
 		if (sensorType === BinarySensorType.Any) {
 			const supportedSensorTypes = this.getValue<BinarySensorType[]>(
 				ctx,
