@@ -4269,8 +4269,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				msg = completeMsg;
 
 				// Now that the command is complete, the checks that depend on the actual payload can be done
-				if (this.shouldDiscardCC(completeMsg.command)) {
-					this.driverLog.logMessage(msg, {
+				if (
+					// This includes re-checking the security level, because
+					// S0 encapsulated frames are only decrypted in assemblePartialCCs
+					this.isSecurityLevelTooLow(completeMsg.command)
+					|| this.shouldDiscardCC(completeMsg.command)
+				) {
+					this.driverLog.logMessage(completeMsg, {
 						direction: "inbound",
 						secondaryTags: ["discarded"],
 					});
@@ -5654,6 +5659,21 @@ ${handlers.length} left`,
 							instanceof SecurityCCCommandsSupportedReport
 						|| cmd.encapsulated
 							instanceof SecurityCCCommandsSupportedGet
+					) {
+						return true;
+					}
+
+					// The same is true before the command has been assembled, when the encapsulated command
+					// is still only in binary form
+					if (
+						cmd.decryptedCCBytes
+						&& cmd.decryptedCCBytes[0] === CommandClasses.Security
+						&& [
+							SecurityCommand.CommandsSupportedGet,
+							SecurityCommand.CommandsSupportedReport,
+						].includes(
+							cmd.decryptedCCBytes[1],
+						)
 					) {
 						return true;
 					}
