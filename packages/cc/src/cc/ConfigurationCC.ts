@@ -3148,7 +3148,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 			// The option fields only exist in V4+ reports.
 			// Ignore them if the device advertises a lower version.
 			const ccVersion = getEffectiveCCVersion(ctx, this);
-			
+
 			let altersCapabilities: MaybeNotKnown<boolean>;
 			let isReadonly: MaybeNotKnown<boolean>;
 			let isAdvanced: MaybeNotKnown<boolean>;
