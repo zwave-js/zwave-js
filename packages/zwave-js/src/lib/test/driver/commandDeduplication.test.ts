@@ -410,7 +410,11 @@ integrationTest.sequential(
 				priority: MessagePriority.Controller,
 			});
 			const unrelatedAfterReplacement = driver.sendCommand(
-				new BasicCCSet({ nodeId: 2, targetValue: 14 }),
+				new BasicCCSet({
+					nodeId: 2,
+					endpointIndex: 1,
+					targetValue: 14,
+				}),
 				{
 					...commandOptions,
 					priority: MessagePriority.Normal,

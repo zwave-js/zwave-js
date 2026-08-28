@@ -343,7 +343,7 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 	public targetValue: boolean;
 	public duration: Duration | undefined;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof BinarySwitchCCSet)) {
 			return CommandRelation.Unrelated;
 		}
@@ -442,7 +442,7 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 
 	public readonly duration: Duration | undefined;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof BinarySwitchCCReport)) {
 			return CommandRelation.Unrelated;
 		}
@@ -489,7 +489,7 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 @CCCommand(BinarySwitchCommand.Get)
 @expectedCCResponse(BinarySwitchCCReport)
 export class BinarySwitchCCGet extends BinarySwitchCC {
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		return other instanceof BinarySwitchCCGet
 			? CommandRelation.Redundant
 			: CommandRelation.Unrelated;

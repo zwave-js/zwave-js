@@ -398,7 +398,7 @@ export class BasicCCSet extends BasicCC {
 
 	public targetValue: number;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof BasicCCSet)) {
 			return CommandRelation.Unrelated;
 		}
@@ -474,7 +474,7 @@ export class BasicCCReport extends BasicCC {
 
 	public readonly duration: Duration | undefined;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof BasicCCReport)) {
 			return CommandRelation.Unrelated;
 		}
@@ -568,7 +568,7 @@ export class BasicCCReport extends BasicCC {
 @CCCommand(BasicCommand.Get)
 @expectedCCResponse(BasicCCReport)
 export class BasicCCGet extends BasicCC {
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		return other instanceof BasicCCGet
 			? CommandRelation.Redundant
 			: CommandRelation.Unrelated;

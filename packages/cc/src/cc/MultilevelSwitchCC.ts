@@ -659,7 +659,7 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 	public targetValue: number;
 	public duration: Duration | undefined;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (
 			!(other instanceof MultilevelSwitchCCSet)
 			&& !(other instanceof MultilevelSwitchCCStartLevelChange)
@@ -766,7 +766,7 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 
 	public currentValue: MaybeUnknown<number> | undefined;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof MultilevelSwitchCCReport)) {
 			return CommandRelation.Unrelated;
 		}
@@ -871,7 +871,7 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 @CCCommand(MultilevelSwitchCommand.Get)
 @expectedCCResponse(MultilevelSwitchCCReport)
 export class MultilevelSwitchCCGet extends MultilevelSwitchCC {
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		return other instanceof MultilevelSwitchCCGet
 			? CommandRelation.Redundant
 			: CommandRelation.Unrelated;
@@ -940,7 +940,7 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	public ignoreStartLevel: boolean;
 	public direction: keyof typeof LevelChangeDirection;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (
 			!(other instanceof MultilevelSwitchCCSet)
 			&& !(other instanceof MultilevelSwitchCCStartLevelChange)

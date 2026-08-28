@@ -606,7 +606,7 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 	public value: number;
 	public scale: number;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (
 			!(other instanceof ThermostatSetpointCCSet)
 			|| this.setpointType !== other.setpointType
@@ -726,7 +726,7 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 	public scale: number;
 	public value: number;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (
 			!(other instanceof ThermostatSetpointCCReport)
 			|| this.type !== other.type
@@ -802,7 +802,7 @@ export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
 
 	public setpointType: ThermostatSetpointType;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof ThermostatSetpointCCGet)) {
 			return CommandRelation.Unrelated;
 		}

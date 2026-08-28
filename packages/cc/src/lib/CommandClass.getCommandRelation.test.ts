@@ -26,12 +26,6 @@ class CrossCommandBasicCCSet extends BasicCCSet {
 	}
 }
 
-class UnrelatedBasicCCSet extends BasicCCSet {
-	public override getRelationTo(_other: BasicCCSet): CommandRelation {
-		return CommandRelation.Unrelated;
-	}
-}
-
 function createSet(
 	targetValue: number,
 	options: {
@@ -66,10 +60,10 @@ describe("getCommandRelation", () => {
 		).toBe(CommandRelation.Redundant);
 		expect(
 			getCommandRelation(
-				new UnrelatedBasicCCSet({ nodeId: 2, targetValue: 1 }),
+				new BasicCCSet({ nodeId: 2, targetValue: 1 }),
 				createSet(1),
 			),
-		).toBe(CommandRelation.Unrelated);
+		).toBe(CommandRelation.Redundant);
 	});
 
 	test("allows same-CC cross-command opt-in", () => {
