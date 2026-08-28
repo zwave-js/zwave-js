@@ -30,7 +30,7 @@ class RelatedBasicCCGet extends BasicCCGet {
 
 	public readonly relationKey: number;
 
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof RelatedBasicCCGet)) {
 			return CommandRelation.Unrelated;
 		}
@@ -41,7 +41,7 @@ class RelatedBasicCCGet extends BasicCCGet {
 }
 
 class RelatedBasicCCSet extends BasicCCSet {
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof RelatedBasicCCSet)) {
 			return CommandRelation.Unrelated;
 		}

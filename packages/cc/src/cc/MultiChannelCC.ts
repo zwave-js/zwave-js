@@ -33,6 +33,7 @@ import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type PersistValuesContext,
 	getEffectiveCCVersion,
@@ -1374,6 +1375,18 @@ export class MultiChannelCCAggregatedMembersGet extends MultiChannelCC {
 // @publicAPI
 export type MultiChannelCCDestination = number | (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
 
+function haveSameDestination(
+	first: MultiChannelCCDestination,
+	second: MultiChannelCCDestination,
+): boolean {
+	if (typeof first === "number" || typeof second === "number") {
+		return first === second;
+	}
+	const secondEndpoints = new Set(second);
+	return new Set(first).size === secondEndpoints.size
+		&& first.every((endpoint) => secondEndpoints.has(endpoint));
+}
+
 // @publicAPI
 export interface MultiChannelCCCommandEncapsulationOptions {
 	encapsulated: CommandClass;
@@ -1491,6 +1504,18 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 	public encapsulated: CommandClass;
 	/** The destination end point (0-127) or an array of destination end points (1-7) */
 	public destination: MultiChannelCCDestination;
+
+	protected override determineRelation(
+		other: CommandClass,
+	): CommandRelation {
+		if (
+			!(other instanceof MultiChannelCCCommandEncapsulation)
+			|| !haveSameDestination(this.destination, other.destination)
+		) {
+			return CommandRelation.Unrelated;
+		}
+		return this.encapsulated.getRelationTo(other.encapsulated);
+	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
@@ -1719,6 +1744,15 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 	}
 
 	public encapsulated!: CommandClass;
+
+	protected override determineRelation(
+		other: CommandClass,
+	): CommandRelation {
+		if (!(other instanceof MultiChannelCCV1CommandEncapsulation)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.encapsulated.getRelationTo(other.encapsulated);
+	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([

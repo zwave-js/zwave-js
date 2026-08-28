@@ -24,7 +24,11 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { PhysicalCCAPI } from "../lib/API.js";
-import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
+import {
+	type CCRaw,
+	CommandClass,
+	CommandRelation,
+} from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -438,6 +442,15 @@ export class SupervisionCCGet extends SupervisionCC {
 	public requestStatusUpdates: boolean;
 	public sessionId: number;
 	public encapsulated: CommandClass;
+
+	protected override determineRelation(
+		other: CommandClass,
+	): CommandRelation {
+		if (!(other instanceof SupervisionCCGet)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.encapsulated.getRelationTo(other.encapsulated);
+	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const encapCC = await this.encapsulated.serialize(ctx);

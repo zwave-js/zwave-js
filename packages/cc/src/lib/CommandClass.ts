@@ -107,83 +107,11 @@ function haveSameNodeTarget(
 		&& [...firstTargets].every((nodeId) => secondTargets.has(nodeId));
 }
 
-function haveSameRelationValue(first: unknown, second: unknown): boolean {
-	if (Array.isArray(first) && Array.isArray(second)) {
-		if (first.length !== second.length) return false;
-		const secondValues = new Set(second);
-		return new Set(first).size === secondValues.size
-			&& first.every((value) => secondValues.has(value));
-	}
-	return first === second;
-}
-
-function getEncapsulationRelationValue(cc: CommandClass): unknown {
-	if (cc.ccId === CommandClasses["Multi Channel"] && "destination" in cc) {
-		return cc.destination;
-	}
-	if (
-		cc.ccId === CommandClasses["Security 2"]
-		&& "extensions" in cc
-		&& Array.isArray(cc.extensions)
-	) {
-		return cc.extensions
-			.filter(
-				(extension): extension is { groupId: unknown } =>
-					typeof extension === "object"
-					&& extension != undefined
-					&& "groupId" in extension,
-			)
-			.map((extension) => extension.groupId);
-	}
-}
-
-function haveSameRelationContext(
-	newer: CommandClass,
-	older: CommandClass,
-): boolean {
-	return newer.constructor === older.constructor
-		&& haveSameNodeTarget(newer.nodeId, older.nodeId)
-		&& newer.endpointIndex === older.endpointIndex
-		&& newer.encapsulationFlags === older.encapsulationFlags
-		&& haveSameRelationValue(
-			getEncapsulationRelationValue(newer),
-			getEncapsulationRelationValue(older),
-		);
-}
-
 export function getCommandRelation(
 	newer: CommandClass,
 	older: CommandClass,
 ): CommandRelation {
-	let newerCommand = newer;
-	let olderCommand = older;
-	while (true) {
-		if (!haveSameRelationContext(newerCommand, olderCommand)) {
-			return CommandRelation.Unrelated;
-		}
-		if (
-			isMultiEncapsulatingCommandClass(newerCommand)
-			|| isMultiEncapsulatingCommandClass(olderCommand)
-		) {
-			return CommandRelation.Unrelated;
-		}
-		if (
-			!isEncapsulatingCommandClass(newerCommand)
-			|| !isEncapsulatingCommandClass(olderCommand)
-		) {
-			break;
-		}
-		newerCommand = newerCommand.encapsulated;
-		olderCommand = olderCommand.encapsulated;
-	}
-
-	if (
-		isEncapsulatingCommandClass(newerCommand)
-		|| isEncapsulatingCommandClass(olderCommand)
-	) {
-		return CommandRelation.Unrelated;
-	}
-	return newerCommand.getRelationTo(olderCommand);
+	return newer.getRelationTo(older);
 }
 
 // Defines the necessary traits an endpoint passed to a CC instance must have
@@ -511,7 +439,19 @@ export class CommandClass implements CCId {
 		// Do nothing by default
 	}
 
-	public getRelationTo(_other: CommandClass): CommandRelation {
+	public getRelationTo(other: CommandClass): CommandRelation {
+		if (
+			this.ccId !== other.ccId
+			|| !haveSameNodeTarget(this.nodeId, other.nodeId)
+			|| this.endpointIndex !== other.endpointIndex
+			|| this.encapsulationFlags !== other.encapsulationFlags
+		) {
+			return CommandRelation.Unrelated;
+		}
+		return this.determineRelation(other);
+	}
+
+	protected determineRelation(_other: CommandClass): CommandRelation {
 		return CommandRelation.Unrelated;
 	}
 

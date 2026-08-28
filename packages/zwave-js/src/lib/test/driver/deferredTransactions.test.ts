@@ -5,7 +5,7 @@ import { RemoveNodeReason } from "../../controller/Inclusion.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
 class RelatedBasicCCGet extends BasicCCGet {
-	public override getRelationTo(other: CommandClass): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		return other instanceof RelatedBasicCCGet
 			? CommandRelation.Redundant
 			: CommandRelation.Unrelated;
