@@ -2039,6 +2039,9 @@ export class UserCodeCCKeypadModeReport extends UserCodeCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
+		// This command only exists in V2. Ignore it if the device advertises a lower version.
+		if (getEffectiveCCVersion(ctx, this) < 2) return true;
+
 		// Update the keypad modes metadata
 		const supportedKeypadModes: KeypadMode[] = this.getValue(
 			ctx,

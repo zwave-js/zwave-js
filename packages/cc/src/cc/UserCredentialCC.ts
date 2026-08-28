@@ -30,6 +30,7 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	type RefreshValuesOptions,
+	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -1881,6 +1882,9 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
+
+		// This command only exists in V2. Ignore it if the device advertises a lower version.
+		if (getEffectiveCCVersion(ctx, this) < 2) return true;
 
 		this.setValue(
 			ctx,
@@ -4231,6 +4235,9 @@ export class UserCredentialCCKeyLockerEntryReport extends UserCredentialCC {
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
+
+		// This command only exists in V2. Ignore it if the device advertises a lower version.
+		if (getEffectiveCCVersion(ctx, this) < 2) return true;
 
 		this.setValue(
 			ctx,
