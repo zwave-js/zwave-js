@@ -4,6 +4,37 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Significantly improved capabilities of the experimental RCP firmware driver (#9076, #9077, #9078, #9080, #9081, #9083, #9087, #9088, #9090)
+* Read bootloader version from Nabu Casa controllers during the interview (#9095)
+* When querying the firmware update service, additional chips' firmware versions are also passed (#9110)
+* Zniffer can now parse PTI captures from Z-Wave CTT (#9148)
+* The `Manufacturer Specific Device Specific Get` command is now answered correctly. If desired, you can pass a device ID in the driver options, which will be used in the response (#9151)
+
+### Bugfixes
+* When destroying the driver instance, abort Serial API commands that are waiting for an ACK (#9099)
+* Do not retry commands when destroying the driver instance (#9100)
+* The `listening` flag in the `SerialAPIStarted` command is now parsed correctly (#9102)
+* The controller NIF is now set on every startup, preventing controllers from incorrectly behaving like a sleeping node (#9105)
+* Prevent the OTW firmware update from aborting itself when entering the bootloader (#9108)
+* Fixed a bug where `Driver.ready` was not reset when entering bootloader or CLI mode (#9109)
+* Fixed an issue on Windows where SONOFF controllers could end up in the bootloader during Z-Wave JS's startup (#9118)
+* Correct signal-to-noise margin units from dBm to dB (#9131)
+* Association Group Information command list reports now serialize without trailing bytes (#9146)
+* Fixed an issue where nodes that were excluded by an inclusion controller would not be removed from Z-Wave JS's node list (#9149)
+* Fixed a regression where the `S0 Commands Supported Get` command was not answered on S2-capable nodes (#9150)
+* Fix: parsing a `Door Lock CC Configuration Report` could crash due to an incorrect length check (#9155)
+* Parsed `CommandClass` instances now preserve the frame type (singlecast/multicast/broadcast) of the incoming command (#9147)
+* Ignore report fields that are only valid on higher CC versions than the node advertised support for (#9154)
+
+### Config file changes
+* Fix malformed notifications sent by HomeSeer FS100 devices (#9140)
+* Add labels to several endpoints, add tools to discover them (#9096)
+* Correct external sensor resistance options on Heatit Z-TRM7 (#9129)
+* Add fingerprint `0x0c02:0x3002` to "Fibargroup FGSD-002" (#9114)
+* Update Zooz ZEN32 config for firmware 3.30 (#9097)
+
 ## 15.27.1 (2026-08-14)
 ### Bugfixes
 * Limit Z-Wave.me proprietary `GetRegion` command to firmware 5.3+ (#9093)
