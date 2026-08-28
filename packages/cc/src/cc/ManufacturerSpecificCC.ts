@@ -311,7 +311,7 @@ export class ManufacturerSpecificCCGet extends ManufacturerSpecificCC {}
 // @publicAPI
 export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
 	type: DeviceIdType;
-	deviceId: string;
+	deviceId: string | Uint8Array;
 }
 
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificReport)
@@ -329,7 +329,15 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 		super(options);
 
 		this.type = options.type;
-		this.deviceId = options.deviceId;
+		if (typeof options.deviceId === "string") {
+			this.deviceId = options.deviceId;
+			this.deviceIdData = Bytes.from(options.deviceId, "utf8");
+			this.deviceIdDataFormat = 0;
+		} else {
+			this.deviceId = "0x" + Bytes.view(options.deviceId).toString("hex");
+			this.deviceIdData = Bytes.from(options.deviceId);
+			this.deviceIdDataFormat = 1;
+		}
 	}
 
 	public static from(
@@ -348,9 +356,9 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			raw.payload.length >= 2 + dataLength,
 		);
 		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
-		const deviceId: string = dataFormat === 0
+		const deviceId: string | Uint8Array = dataFormat === 0
 			? deviceIdData.toString("utf8")
-			: "0x" + deviceIdData.toString("hex");
+			: deviceIdData;
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -362,6 +370,8 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 	public readonly type: DeviceIdType;
 
 	public readonly deviceId: string;
+	private readonly deviceIdData: Bytes;
+	private readonly deviceIdDataFormat: 0 | 1;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
@@ -374,31 +384,9 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			);
 		}
 
-		const isBinary = this.deviceId.startsWith("0x");
-		const encodedDeviceId = isBinary
-			? this.deviceId.slice(2)
-			: this.deviceId;
-
-		if (
-			isBinary
-			&& (
-				encodedDeviceId.length % 2 !== 0
-				|| !/^[0-9a-f]*$/i.test(encodedDeviceId)
-			)
-		) {
+		if (this.deviceIdData.length < 1 || this.deviceIdData.length > 31) {
 			throw new ZWaveError(
-				`deviceId must be a valid hexadecimal string, received "${this.deviceId}"`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
-		const deviceIdData = Bytes.from(
-			encodedDeviceId,
-			isBinary ? "hex" : "utf8",
-		);
-		if (deviceIdData.length < 1 || deviceIdData.length > 31) {
-			throw new ZWaveError(
-				`deviceId must encode to between 1 and 31 bytes, received ${deviceIdData.length}`,
+				`deviceId must encode to between 1 and 31 bytes, received ${this.deviceIdData.length}`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -406,9 +394,9 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 		this.payload = Bytes.concat([
 			[
 				this.type & 0b111,
-				(isBinary ? 0b001_00000 : 0) | deviceIdData.length,
+				(this.deviceIdDataFormat << 5) | this.deviceIdData.length,
 			],
-			deviceIdData,
+			this.deviceIdData,
 		]);
 		return super.serialize(ctx);
 	}

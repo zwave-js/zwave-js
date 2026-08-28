@@ -3303,7 +3303,7 @@ export interface ZWaveOptions {
         manufacturerId: number;
         productType: number;
         productId: number;
-        deviceId?: string;
+        deviceId?: string | Uint8Array;
         hardwareVersion?: number;
         installerIcon?: number;
         userIcon?: number;

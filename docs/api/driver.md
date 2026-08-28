@@ -1247,9 +1247,10 @@ interface ZWaveOptions {
 		productId: number;
 		/**
 		 * A stable device identifier for Manufacturer Specific Device Specific Reports.
-		 * Prefix binary identifiers with "0x". The encoded identifier may be up to 31 bytes.
+		 * Strings are encoded as UTF-8. Uint8Arrays are encoded as binary.
+		 * The encoded identifier may be up to 31 bytes.
 		 */
-		deviceId?: string;
+		deviceId?: string | Uint8Array;
 
 		/** The version of the hardware the application is running on. Can be omitted if unknown. */
 		hardwareVersion?: number;

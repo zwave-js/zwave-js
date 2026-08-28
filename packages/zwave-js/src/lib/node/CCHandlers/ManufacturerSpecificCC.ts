@@ -8,6 +8,7 @@ import {
 	CommandClasses,
 	EncapsulationFlags,
 	type LogNode,
+	randomBytes,
 } from "@zwave-js/core";
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../Node.js";
@@ -43,16 +44,6 @@ export async function handleManufacturerSpecificDeviceSpecificGet(
 	command: ManufacturerSpecificCCDeviceSpecificGet,
 	vendorInfo: ZWaveOptions["vendor"],
 ): Promise<void> {
-	if (!vendorInfo?.deviceId) {
-		ctx.logNode(node.id, {
-			message:
-				"Cannot respond to Device Specific Get because no vendor device ID is configured",
-			direction: "none",
-			level: "warn",
-		});
-		return;
-	}
-
 	const api = node
 		.createAPI(CommandClasses["Manufacturer Specific"], false)
 		.withOptions({
@@ -61,7 +52,9 @@ export async function handleManufacturerSpecificDeviceSpecificGet(
 		});
 
 	await api.sendDeviceSpecificReport({
-		type: DeviceIdType.SerialNumber,
-		deviceId: vendorInfo.deviceId,
+		type: vendorInfo?.deviceId
+			? DeviceIdType.SerialNumber
+			: DeviceIdType.PseudoRandom,
+		deviceId: vendorInfo?.deviceId ?? randomBytes(16),
 	});
 }

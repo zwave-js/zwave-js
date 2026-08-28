@@ -75,7 +75,7 @@ test("the Device Specific Report command should serialize a binary ID correctly"
 	const cc = new ManufacturerSpecificCCDeviceSpecificReport({
 		nodeId: 1,
 		type: DeviceIdType.SerialNumber,
-		deviceId: "0x12345678",
+		deviceId: Uint8Array.from([0x12, 0x34, 0x56, 0x78]),
 	});
 	const expected = buildCCBuffer(
 		Uint8Array.from([
@@ -86,6 +86,27 @@ test("the Device Specific Report command should serialize a binary ID correctly"
 			0x34,
 			0x56,
 			0x78,
+		]),
+	);
+
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
+});
+
+test("the Device Specific Report command should serialize a string ID as UTF-8", async (t) => {
+	const cc = new ManufacturerSpecificCCDeviceSpecificReport({
+		nodeId: 1,
+		type: DeviceIdType.SerialNumber,
+		deviceId: "0x12",
+	});
+	const expected = buildCCBuffer(
+		Uint8Array.from([
+			ManufacturerSpecificCommand.DeviceSpecificReport,
+			DeviceIdType.SerialNumber,
+			0b000_00100,
+			0x30,
+			0x78,
+			0x31,
+			0x32,
 		]),
 	);
 

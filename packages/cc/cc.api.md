@@ -12061,7 +12061,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpec
 // @public (undocumented)
 export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
     // (undocumented)
-    deviceId: string;
+    deviceId: string | Uint8Array;
     // (undocumented)
     type: DeviceIdType;
 }
