@@ -12045,7 +12045,7 @@ export interface ManufacturerSpecificCCDeviceSpecificGetOptions {
 export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpecificCC {
     constructor(options: WithAddress<ManufacturerSpecificCCDeviceSpecificReportOptions>);
     // (undocumented)
-    readonly deviceId: string;
+    readonly deviceId: string | Bytes;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificReport;
     // (undocumented)

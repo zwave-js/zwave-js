@@ -122,7 +122,7 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	public async deviceSpecificGet(
 		deviceIdType: DeviceIdType,
-	): Promise<MaybeNotKnown<string>> {
+	): Promise<MaybeNotKnown<string | Bytes>> {
 		this.assertSupportsCommand(
 			ManufacturerSpecificCommand,
 			ManufacturerSpecificCommand.DeviceSpecificGet,
@@ -331,12 +331,8 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 		this.type = options.type;
 		if (typeof options.deviceId === "string") {
 			this.deviceId = options.deviceId;
-			this.deviceIdData = Bytes.from(options.deviceId, "utf8");
-			this.deviceIdDataFormat = 0;
 		} else {
-			this.deviceId = "0x" + Bytes.view(options.deviceId).toString("hex");
-			this.deviceIdData = Bytes.from(options.deviceId);
-			this.deviceIdDataFormat = 1;
+			this.deviceId = Bytes.from(options.deviceId);
 		}
 	}
 
@@ -356,7 +352,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			raw.payload.length >= 2 + dataLength,
 		);
 		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
-		const deviceId: string | Uint8Array = dataFormat === 0
+		const deviceId: string | Bytes = dataFormat === 0
 			? deviceIdData.toString("utf8")
 			: deviceIdData;
 
@@ -369,9 +365,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 
 	public readonly type: DeviceIdType;
 
-	public readonly deviceId: string;
-	private readonly deviceIdData: Bytes;
-	private readonly deviceIdDataFormat: 0 | 1;
+	public readonly deviceId: string | Bytes;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
@@ -384,9 +378,12 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			);
 		}
 
-		if (this.deviceIdData.length < 1 || this.deviceIdData.length > 31) {
+		const deviceIdData = typeof this.deviceId === "string"
+			? Bytes.from(this.deviceId, "utf8")
+			: this.deviceId;
+		if (deviceIdData.length < 1 || deviceIdData.length > 31) {
 			throw new ZWaveError(
-				`deviceId must encode to between 1 and 31 bytes, received ${this.deviceIdData.length}`,
+				`deviceId must encode to between 1 and 31 bytes, received ${deviceIdData.length}`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -394,9 +391,10 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 		this.payload = Bytes.concat([
 			[
 				this.type & 0b111,
-				(this.deviceIdDataFormat << 5) | this.deviceIdData.length,
+				(typeof this.deviceId === "string" ? 0 : 0b001_00000)
+				| deviceIdData.length,
 			],
-			this.deviceIdData,
+			deviceIdData,
 		]);
 		return super.serialize(ctx);
 	}
@@ -406,7 +404,9 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			...super.toLogEntry(ctx),
 			message: {
 				"device id type": getEnumMemberName(DeviceIdType, this.type),
-				"device id": this.deviceId,
+				"device id": typeof this.deviceId === "string"
+					? this.deviceId
+					: "0x" + this.deviceId.toString("hex"),
 			},
 		};
 	}

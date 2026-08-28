@@ -3,6 +3,7 @@ import {
 	ManufacturerSpecificCCDeviceSpecificGet,
 	ManufacturerSpecificCCDeviceSpecificReport,
 } from "@zwave-js/cc";
+import { Bytes } from "@zwave-js/shared";
 import {
 	MockZWaveFrameType,
 	type MockZWaveRequestFrame,
@@ -86,7 +87,9 @@ integrationTest(
 			);
 
 			t.expect(response.type).toBe(DeviceIdType.SerialNumber);
-			t.expect(response.deviceId).toBe("0x12345678");
+			t.expect(response.deviceId).toStrictEqual(
+				Bytes.from([0x12, 0x34, 0x56, 0x78]),
+			);
 		},
 	},
 );
@@ -115,7 +118,8 @@ integrationTest(
 			);
 
 			t.expect(response.type).toBe(DeviceIdType.PseudoRandom);
-			t.expect(response.deviceId).toMatch(/^0x[0-9a-f]{32}$/);
+			t.expect(response.deviceId).toBeInstanceOf(Bytes);
+			t.expect(response.deviceId).toHaveLength(16);
 		},
 	},
 );
