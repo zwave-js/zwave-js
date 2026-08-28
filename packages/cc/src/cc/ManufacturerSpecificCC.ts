@@ -6,8 +6,7 @@ import {
 	MessagePriority,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
+	logBuffer,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
@@ -368,33 +367,18 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 	public readonly deviceId: string | Bytes;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		if (
-			this.type !== DeviceIdType.SerialNumber
-			&& this.type !== DeviceIdType.PseudoRandom
-		) {
-			throw new ZWaveError(
-				`type must be SerialNumber or PseudoRandom, received ${this.type}`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
 		const deviceIdData = typeof this.deviceId === "string"
 			? Bytes.from(this.deviceId, "utf8")
 			: this.deviceId;
-		if (deviceIdData.length < 1 || deviceIdData.length > 31) {
-			throw new ZWaveError(
-				`deviceId must encode to between 1 and 31 bytes, received ${deviceIdData.length}`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
 
+		const length = Math.min(deviceIdData.length, 0b11111);
 		this.payload = Bytes.concat([
 			[
 				this.type & 0b111,
 				(typeof this.deviceId === "string" ? 0 : 0b001_00000)
-				| deviceIdData.length,
+				| length,
 			],
-			deviceIdData,
+			deviceIdData.subarray(0, length),
 		]);
 		return super.serialize(ctx);
 	}
@@ -406,7 +390,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 				"device id type": getEnumMemberName(DeviceIdType, this.type),
 				"device id": typeof this.deviceId === "string"
 					? this.deviceId
-					: "0x" + this.deviceId.toString("hex"),
+					: logBuffer(this.deviceId),
 			},
 		};
 	}
