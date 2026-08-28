@@ -6,8 +6,7 @@ import {
 	MessagePriority,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
+	logBuffer,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
@@ -28,7 +27,11 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
-import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
+import {
+	DeviceIdDataFormat,
+	DeviceIdType,
+	ManufacturerSpecificCommand,
+} from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ManufacturerSpecificCCValues = V.defineCCValues(
@@ -122,7 +125,7 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 	@validateArgs()
 	public async deviceSpecificGet(
 		deviceIdType: DeviceIdType,
-	): Promise<MaybeNotKnown<string>> {
+	): Promise<MaybeNotKnown<string | Bytes>> {
 		this.assertSupportsCommand(
 			ManufacturerSpecificCommand,
 			ManufacturerSpecificCommand.DeviceSpecificGet,
@@ -152,6 +155,23 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 		);
 
 		const cc = new ManufacturerSpecificCCReport({
+			nodeId: this.endpoint.nodeId,
+			endpointIndex: this.endpoint.index,
+			...options,
+		});
+		await this.host.sendCommand(cc, this.commandOptions);
+	}
+
+	@validateArgs()
+	public async sendDeviceSpecificReport(
+		options: ManufacturerSpecificCCDeviceSpecificReportOptions,
+	): Promise<void> {
+		this.assertSupportsCommand(
+			ManufacturerSpecificCommand,
+			ManufacturerSpecificCommand.DeviceSpecificReport,
+		);
+
+		const cc = new ManufacturerSpecificCCDeviceSpecificReport({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 			...options,
@@ -294,7 +314,7 @@ export class ManufacturerSpecificCCGet extends ManufacturerSpecificCC {}
 // @publicAPI
 export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
 	type: DeviceIdType;
-	deviceId: string;
+	deviceId: string | Uint8Array;
 }
 
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificReport)
@@ -311,9 +331,12 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 	) {
 		super(options);
 
-		// TODO: Check implementation:
 		this.type = options.type;
-		this.deviceId = options.deviceId;
+		if (typeof options.deviceId === "string") {
+			this.deviceId = options.deviceId;
+		} else {
+			this.deviceId = Bytes.from(options.deviceId);
+		}
 	}
 
 	public static from(
@@ -322,13 +345,20 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 	): ManufacturerSpecificCCDeviceSpecificReport {
 		validatePayload(raw.payload.length >= 2);
 		const type: DeviceIdType = raw.payload[0] & 0b111;
-		const dataFormat = raw.payload[1] >>> 5;
+		const dataFormat: DeviceIdDataFormat = raw.payload[1] >>> 5;
 		const dataLength = raw.payload[1] & 0b11111;
-		validatePayload(dataLength > 0, raw.payload.length >= 2 + dataLength);
+		validatePayload(
+			type === DeviceIdType.SerialNumber
+				|| type === DeviceIdType.PseudoRandom,
+			dataFormat === DeviceIdDataFormat.UTF8
+				|| dataFormat === DeviceIdDataFormat.Binary,
+			dataLength > 0,
+			raw.payload.length >= 2 + dataLength,
+		);
 		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
-		const deviceId: string = dataFormat === 0
+		const deviceId: string | Bytes = dataFormat === DeviceIdDataFormat.UTF8
 			? deviceIdData.toString("utf8")
-			: "0x" + deviceIdData.toString("hex");
+			: deviceIdData;
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -339,14 +369,36 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 
 	public readonly type: DeviceIdType;
 
-	public readonly deviceId: string;
+	public readonly deviceId: string | Bytes;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const deviceIdData = typeof this.deviceId === "string"
+			? Bytes.from(this.deviceId, "utf8")
+			: this.deviceId;
+
+		const format = typeof this.deviceId === "string"
+			? DeviceIdDataFormat.UTF8
+			: DeviceIdDataFormat.Binary;
+		const length = Math.min(deviceIdData.length, 0b11111);
+		this.payload = Bytes.concat([
+			[
+				this.type & 0b111,
+				format << 5
+				| length,
+			],
+			deviceIdData.subarray(0, length),
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
 				"device id type": getEnumMemberName(DeviceIdType, this.type),
-				"device id": this.deviceId,
+				"device id": typeof this.deviceId === "string"
+					? this.deviceId
+					: logBuffer(this.deviceId),
 			},
 		};
 	}
@@ -370,17 +422,16 @@ export class ManufacturerSpecificCCDeviceSpecificGet
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ManufacturerSpecificCCDeviceSpecificGet {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		validatePayload(raw.payload.length >= 1);
+		const deviceIdType: DeviceIdType = raw.payload[0] & 0b111;
 
-		// return new ManufacturerSpecificCCDeviceSpecificGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			deviceIdType,
+		});
 	}
 
 	public deviceIdType: DeviceIdType;
