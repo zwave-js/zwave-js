@@ -1322,7 +1322,7 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
 		let holdAndReleaseTime: number | undefined;
 		let twistAssist: boolean | undefined;
 		let blockToBlock: boolean | undefined;
-		if (raw.payload.length >= 5) {
+		if (raw.payload.length >= 9) {
 			autoRelockTime = raw.payload.readUInt16BE(4);
 			holdAndReleaseTime = raw.payload.readUInt16BE(6);
 
