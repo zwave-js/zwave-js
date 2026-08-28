@@ -376,13 +376,14 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			? Bytes.from(this.deviceId, "utf8")
 			: this.deviceId;
 
+		const format = typeof this.deviceId === "string"
+			? DeviceIdDataFormat.UTF8
+			: DeviceIdDataFormat.Binary;
 		const length = Math.min(deviceIdData.length, 0b11111);
 		this.payload = Bytes.concat([
 			[
 				this.type & 0b111,
-				(typeof this.deviceId === "string"
-						? DeviceIdDataFormat.UTF8
-						: DeviceIdDataFormat.Binary) << 5
+				format << 5
 				| length,
 			],
 			deviceIdData.subarray(0, length),
