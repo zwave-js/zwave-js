@@ -94,6 +94,10 @@ export enum CommandRelation {
 	Supersedes,
 }
 
+/**
+ * Singlecast targets must match exactly. Multicast targets must contain the
+ * same node IDs regardless of order.
+ */
 function haveSameNodeTarget(
 	first: number | MulticastDestination,
 	second: number | MulticastDestination,
@@ -439,6 +443,10 @@ export class CommandClass implements CCId {
 		// Do nothing by default
 	}
 
+	/**
+	 * Determines this command's relation to an older command. Shared command
+	 * context must match before command-specific relation logic runs.
+	 */
 	public getRelationTo(other: CommandClass): CommandRelation {
 		if (
 			this.ccId !== other.ccId
@@ -451,6 +459,10 @@ export class CommandClass implements CCId {
 		return this.determineRelation(other);
 	}
 
+	/**
+	 * Subclasses override this to determine command-specific relations after
+	 * the shared context checks pass.
+	 */
 	protected determineRelation(_other: CommandClass): CommandRelation {
 		return CommandRelation.Unrelated;
 	}

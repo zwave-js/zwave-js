@@ -71,7 +71,7 @@ export enum ZWaveErrorCodes {
 	/** Tried to perform an action for a Long Range node that does not make sense for ZWLR */
 	Controller_NotSupportedForLongRange,
 
-	/** A newer command superseded the queued message */
+	/** A newer command superseded this one */
 	Controller_MessageSuperseded,
 
 	/** Could not fetch some information to determine firmware upgrades from a node */
