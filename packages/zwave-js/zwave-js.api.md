@@ -434,6 +434,11 @@ export class ControllerProprietary_Aeotec implements ControllerProprietaryCommon
 // @public (undocumented)
 export class ControllerProprietary_NabuCasa implements ControllerProprietaryCommon {
     constructor(driver: Driver, controller: ZWaveController);
+    get bootloaderInfo(): NabuCasaBootloaderInfo | undefined;
+    // (undocumented)
+    getBootloaderInfo(): Promise<NabuCasaBootloaderInfo>;
+    // (undocumented)
+    getBootloaderVersion(): Promise<string | undefined>;
     // (undocumented)
     getConfig(key: NabuCasaConfigKey): Promise<number>;
     // (undocumented)
@@ -1001,6 +1006,7 @@ export { FirmwareFileFormat }
 // @public
 export type FirmwareUpdateDeviceID = Expand<Omit<DeviceID, "sdkVersion"> & {
     firmwareVersion: string;
+    additionalFirmwareVersions?: Record<string, string>;
     rfRegion?: RFRegion;
 }>;
 
@@ -1514,10 +1520,53 @@ export { MPDUHeaderType }
 
 export { MultilevelSwitchCommand }
 
+// Warning: (ae-missing-release-tag) "NabuCasaBootloaderCapability" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export enum NabuCasaBootloaderCapability {
+    // (undocumented)
+    BootloaderUpgrade = 4,
+    // (undocumented)
+    Communication = 20,
+    // (undocumented)
+    EM4GPIORetention = 21,
+    // (undocumented)
+    EnforceCertificateSecureBoot = 8,
+    // (undocumented)
+    EnforceSecureBoot = 2,
+    // (undocumented)
+    EnforceUpgradeEncryption = 1,
+    // (undocumented)
+    EnforceUpgradeSignature = 0,
+    // (undocumented)
+    GBL = 5,
+    // (undocumented)
+    GBLEncryption = 7,
+    // (undocumented)
+    GBLSignature = 6,
+    // (undocumented)
+    PeripheralList = 10,
+    // (undocumented)
+    RollbackProtection = 9,
+    // (undocumented)
+    Storage = 16
+}
+
+// Warning: (ae-missing-release-tag) "NabuCasaBootloaderInfo" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface NabuCasaBootloaderInfo {
+    // (undocumented)
+    capabilities: NabuCasaBootloaderCapability[];
+    version: string;
+}
+
 // Warning: (ae-missing-release-tag) "NabuCasaCommand" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
 export enum NabuCasaCommand {
+    // (undocumented)
+    GetBootloaderInfo = 9,
     // (undocumented)
     GetConfig = 5,
     // (undocumented)
@@ -2374,6 +2423,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     // (undocumented)
     beginLeavingNetwork(): Promise<LeaveNetworkResult>;
     beginRebuildingRoutes(options?: RebuildRoutesOptions): boolean;
+    get bootloaderVersion(): MaybeNotKnown<string>;
     // (undocumented)
     cancelSecureBootstrapS2(reason: KEXFailType): void;
     checkAssociation(source: AssociationAddress, group: number, destination: AssociationAddress): AssociationCheckResult;
@@ -2556,6 +2606,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     sdkVersionGte(version: SDKVersion): MaybeNotKnown<boolean>;
     sdkVersionLt(version: SDKVersion): MaybeNotKnown<boolean>;
     sdkVersionLte(version: SDKVersion): MaybeNotKnown<boolean>;
+    setControllerNIF(): Promise<void>;
     setLongRangeChannel(channel: LongRangeChannel.A | LongRangeChannel.B | LongRangeChannel.Auto): Promise<boolean>;
     setMaxLongRangePowerlevel(limit: number): Promise<boolean>;
     setPowerlevel(powerlevel: number, measured0dBm: number): Promise<boolean>;
@@ -3317,11 +3368,11 @@ export * from "@zwave-js/cc";
 //
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:109:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
-// src/lib/controller/Controller.ts:927:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// src/lib/controller/Controller.ts:933:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
 // src/lib/driver/Driver.ts:1101:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:7822:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7870:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:382:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2674:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2680:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/rcp/RCPHost.ts:577:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:741:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:742:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen

@@ -4817,7 +4817,7 @@ export class CommandClass implements CCId {
     // Warning: (ae-forgotten-export) The symbol "CCValue" needs to be exported by the entry point index.d.ts
     protected ensureMetadata(ctx: GetValueDB, ccValue: CCValue, meta?: ValueMetadata): void;
     expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean;
-    readonly frameType?: FrameType;
+    get frameType(): FrameType | undefined;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): CommandClass | Promise<CommandClass>;
     protected getCCValue(valueId: ValueID): StaticCCValue | DynamicCCValue | undefined;
@@ -17752,6 +17752,8 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     // (undocumented)
     protected computeEncapsulationOverhead(): number;
     // (undocumented)
+    decryptedCCBytes: BytesView | undefined;
+    // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): Promise<SecurityCCCommandEncapsulation>;
@@ -19192,7 +19194,7 @@ export const ThermostatModeCCValues: Readonly<{
         };
         options: {
             readonly internal: false;
-            readonly minVersion: 1;
+            readonly minVersion: 3;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;

@@ -52,7 +52,7 @@ async getSupportedModes(): Promise<
 ```
 
 - **label:** Manufacturer data
-- **min. CC version:** 1
+- **min. CC version:** 3
 - **readable:** true
 - **writeable:** false
 - **stateful:** true
