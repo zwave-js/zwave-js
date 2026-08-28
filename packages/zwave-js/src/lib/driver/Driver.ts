@@ -32,6 +32,7 @@ import {
 	SecurityCCCommandEncapsulation,
 	SecurityCCCommandEncapsulationNonceGet,
 	SecurityCCCommandsSupportedGet,
+	SecurityCCCommandsSupportedReport,
 	SecurityCCNonceGet,
 	SecurityCCNonceReport,
 	SecurityCommand,
@@ -4268,8 +4269,13 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				msg = completeMsg;
 
 				// Now that the command is complete, the checks that depend on the actual payload can be done
-				if (this.shouldDiscardCC(completeMsg.command)) {
-					this.driverLog.logMessage(msg, {
+				if (
+					// This includes re-checking the security level, because
+					// S0 encapsulated frames are only decrypted in assemblePartialCCs
+					this.isSecurityLevelTooLow(completeMsg.command)
+					|| this.shouldDiscardCC(completeMsg.command)
+				) {
+					this.driverLog.logMessage(completeMsg, {
 						direction: "inbound",
 						secondaryTags: ["discarded"],
 					});
@@ -5649,12 +5655,10 @@ ${handlers.length} left`,
 					// CommandsSupportedReport is always accepted to be able to learn security classes and interview nodes
 					// CommandsSupportedGet is always accepted, so others can learn our security classes
 					if (
-						cmd.isEncapsulatingSecurityCommand(
-							SecurityCommand.CommandsSupportedReport,
-						)
-						|| cmd.isEncapsulatingSecurityCommand(
-							SecurityCommand.CommandsSupportedGet,
-						)
+						cmd.encapsulated
+							instanceof SecurityCCCommandsSupportedReport
+						|| cmd.encapsulated
+							instanceof SecurityCCCommandsSupportedGet
 					) {
 						return true;
 					}

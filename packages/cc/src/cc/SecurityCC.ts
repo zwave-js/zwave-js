@@ -739,17 +739,6 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 
 	private alternativeNetworkKey?: BytesView;
 
-	public isEncapsulatingSecurityCommand(command: SecurityCommand): boolean {
-		if (this.encapsulated) {
-			return this.encapsulated.ccId === CommandClasses.Security
-				&& this.encapsulated.ccCommand === command;
-		}
-
-		return !this.sequenced
-			&& this.decryptedCCBytes?.[0] === CommandClasses.Security
-			&& this.decryptedCCBytes[1] === command;
-	}
-
 	public get nonceId(): number | undefined {
 		return this.nonce?.[0];
 	}
