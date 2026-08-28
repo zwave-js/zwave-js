@@ -5526,6 +5526,16 @@ export const defaultCCValueOptions: {
     readonly autoCreate: true;
 };
 
+// Warning: (ae-missing-release-tag) "DeviceIdDataFormat" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum DeviceIdDataFormat {
+    // (undocumented)
+    Binary = 1,
+    // (undocumented)
+    UTF8 = 0
+}
+
 // Warning: (ae-missing-release-tag) "DeviceIdType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)

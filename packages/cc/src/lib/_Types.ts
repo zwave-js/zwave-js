@@ -1035,6 +1035,11 @@ export enum DeviceIdType {
 	PseudoRandom = 0x02,
 }
 
+export enum DeviceIdDataFormat {
+	UTF8 = 0x00,
+	Binary = 0x01,
+}
+
 export enum MeterCommand {
 	Get = 0x01,
 	Report = 0x02,

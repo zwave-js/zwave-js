@@ -27,7 +27,11 @@ import {
 	implementedVersion,
 } from "../lib/CommandClassDecorators.js";
 import { V } from "../lib/Values.js";
-import { DeviceIdType, ManufacturerSpecificCommand } from "../lib/_Types.js";
+import {
+	DeviceIdDataFormat,
+	DeviceIdType,
+	ManufacturerSpecificCommand,
+} from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ManufacturerSpecificCCValues = V.defineCCValues(
@@ -341,17 +345,18 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 	): ManufacturerSpecificCCDeviceSpecificReport {
 		validatePayload(raw.payload.length >= 2);
 		const type: DeviceIdType = raw.payload[0] & 0b111;
-		const dataFormat = raw.payload[1] >>> 5;
+		const dataFormat: DeviceIdDataFormat = raw.payload[1] >>> 5;
 		const dataLength = raw.payload[1] & 0b11111;
 		validatePayload(
 			type === DeviceIdType.SerialNumber
 				|| type === DeviceIdType.PseudoRandom,
-			dataFormat <= 1,
+			dataFormat === DeviceIdDataFormat.UTF8
+				|| dataFormat === DeviceIdDataFormat.Binary,
 			dataLength > 0,
 			raw.payload.length >= 2 + dataLength,
 		);
 		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
-		const deviceId: string | Bytes = dataFormat === 0
+		const deviceId: string | Bytes = dataFormat === DeviceIdDataFormat.UTF8
 			? deviceIdData.toString("utf8")
 			: deviceIdData;
 
@@ -375,7 +380,9 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 		this.payload = Bytes.concat([
 			[
 				this.type & 0b111,
-				(typeof this.deviceId === "string" ? 0 : 0b001_00000)
+				(typeof this.deviceId === "string"
+						? DeviceIdDataFormat.UTF8
+						: DeviceIdDataFormat.Binary) << 5
 				| length,
 			],
 			deviceIdData.subarray(0, length),
