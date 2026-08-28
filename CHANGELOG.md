@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.28.0 (2026-08-28)
 ### Features
 * Significantly improved capabilities of the experimental RCP firmware driver (#9076, #9077, #9078, #9080, #9081, #9083, #9087, #9088, #9090)
 * Read bootloader version from Nabu Casa controllers during the interview (#9095)
