@@ -137,7 +137,6 @@ export class MultiCommandCCCommandEncapsulation extends MultiCommandCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			encapsulated,
 		});
 	}

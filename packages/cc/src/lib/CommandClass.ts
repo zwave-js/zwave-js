@@ -219,7 +219,6 @@ export class CommandClass implements CCId {
 			ccId = getCommandClass(this),
 			ccCommand = getCCCommand(this),
 			payload = new Uint8Array(),
-			frameType,
 		} = options;
 
 		this.nodeId = nodeId;
@@ -227,7 +226,6 @@ export class CommandClass implements CCId {
 		this.ccId = ccId;
 		this.ccCommand = ccCommand;
 		this.payload = Bytes.view(payload);
-		this.frameType = frameType;
 	}
 
 	public static async parse(
@@ -240,7 +238,10 @@ export class CommandClass implements CCId {
 		const CCConstructor = getCCConstructor(raw.ccId);
 		if (!CCConstructor) {
 			// None -> fall back to the default constructor
-			return await CommandClass.from(raw, ctx);
+			return CommandClass.withFrameType(
+				await CommandClass.from(raw, ctx),
+				ctx.frameType,
+			);
 		}
 
 		let CommandConstructor: CCConstructor<CommandClass> | undefined;
@@ -253,7 +254,10 @@ export class CommandClass implements CCId {
 		// Not every CC has a constructor for its commands. In that case,
 		// call the CC constructor directly
 		try {
-			return await (CommandConstructor ?? CCConstructor).from(raw, ctx);
+			return CommandClass.withFrameType(
+				await (CommandConstructor ?? CCConstructor).from(raw, ctx),
+				ctx.frameType,
+			);
 		} catch (e) {
 			// Indicate invalid payloads with a special CC type
 			if (
@@ -275,17 +279,24 @@ export class CommandClass implements CCId {
 
 				const ret = new InvalidCC({
 					nodeId: ctx.sourceNodeId,
-					frameType: ctx.frameType,
 					ccId: raw.ccId,
 					ccCommand: raw.ccCommand,
 					ccName,
 					reason,
 				});
 
-				return ret;
+				return CommandClass.withFrameType(ret, ctx.frameType);
 			}
 			throw e;
 		}
+	}
+
+	private static withFrameType<T extends CommandClass>(
+		cc: T,
+		frameType: FrameType,
+	): T {
+		cc._frameType = frameType;
+		return cc;
 	}
 
 	public static from(
@@ -294,7 +305,6 @@ export class CommandClass implements CCId {
 	): CommandClass | Promise<CommandClass> {
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			ccId: raw.ccId,
 			ccCommand: raw.ccCommand,
 			payload: raw.payload,
@@ -338,8 +348,11 @@ export class CommandClass implements CCId {
 	/** Contains a reference to the encapsulating CC if this CC is encapsulated */
 	public encapsulatingCC?: EncapsulatingCommandClass;
 
+	private _frameType?: FrameType;
 	/** The type of Z-Wave frame this CC was sent with */
-	public readonly frameType?: FrameType;
+	public get frameType(): FrameType | undefined {
+		return this._frameType;
+	}
 
 	/** Returns true if this CC is an extended CC (0xF100..0xFFFF) */
 	public isExtended(): boolean {

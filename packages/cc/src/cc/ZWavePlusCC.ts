@@ -198,7 +198,6 @@ export class ZWavePlusCCReport extends ZWavePlusCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			zwavePlusVersion,
 			roleType,
 			nodeType,

@@ -279,7 +279,6 @@ export class LanguageCCReport extends LanguageCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			language,
 			country,
 		});

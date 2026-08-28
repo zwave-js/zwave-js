@@ -655,7 +655,6 @@ export class MultiChannelAssociationCCSet extends MultiChannelAssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 			nodeIds,
 			endpoints,
@@ -727,7 +726,6 @@ export class MultiChannelAssociationCCRemove extends MultiChannelAssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 			nodeIds,
 			endpoints,
@@ -820,7 +818,6 @@ export class MultiChannelAssociationCCReport extends MultiChannelAssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 			maxNodes,
 			nodeIds,
@@ -922,7 +919,6 @@ export class MultiChannelAssociationCCGet extends MultiChannelAssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 		});
 	}
@@ -971,7 +967,6 @@ export class MultiChannelAssociationCCSupportedGroupingsReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupCount,
 		});
 	}

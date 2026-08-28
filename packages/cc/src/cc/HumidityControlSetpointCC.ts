@@ -616,7 +616,6 @@ export class HumidityControlSetpointCCReport extends HumidityControlSetpointCC {
 			// Not supported
 			return new this({
 				nodeId: ctx.sourceNodeId,
-				frameType: ctx.frameType,
 				type,
 				value: 0,
 				scale: 0,
@@ -628,7 +627,6 @@ export class HumidityControlSetpointCCReport extends HumidityControlSetpointCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			type,
 			value,
 			scale,
@@ -781,7 +779,6 @@ export class HumidityControlSetpointCCSupportedReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedSetpointTypes,
 		});
 	}
@@ -844,7 +841,6 @@ export class HumidityControlSetpointCCScaleSupportedReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedScales,
 		});
 	}
@@ -966,7 +962,6 @@ export class HumidityControlSetpointCCCapabilitiesReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			type,
 			minValue,
 			minValueScale,

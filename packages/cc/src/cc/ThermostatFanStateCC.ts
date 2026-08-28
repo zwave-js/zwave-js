@@ -184,7 +184,6 @@ export class ThermostatFanStateCCReport extends ThermostatFanStateCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			state,
 		});
 	}

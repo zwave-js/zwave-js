@@ -183,7 +183,6 @@ export class BasicWindowCoveringCCStartLevelChange
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			direction,
 		});
 	}

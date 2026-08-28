@@ -595,7 +595,6 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			setpointType,
 			value,
 			scale,
@@ -662,7 +661,6 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 			// Not supported
 			return new this({
 				nodeId: ctx.sourceNodeId,
-				frameType: ctx.frameType,
 				type,
 				value: 0,
 				scale: 0,
@@ -676,7 +674,6 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			type,
 			value,
 			scale,
@@ -774,7 +771,6 @@ export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			setpointType,
 		});
 	}
@@ -842,7 +838,6 @@ export class ThermostatSetpointCCCapabilitiesReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			type,
 			minValue,
 			minValueScale,
@@ -921,7 +916,6 @@ export class ThermostatSetpointCCCapabilitiesGet extends ThermostatSetpointCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			setpointType,
 		});
 	}
@@ -989,7 +983,6 @@ export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedSetpointTypes,
 		});
 	}

@@ -556,7 +556,6 @@ export class ProtectionCCSet extends ProtectionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			local,
 			rf,
 		});
@@ -626,7 +625,6 @@ export class ProtectionCCReport extends ProtectionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			local,
 			rf,
 		});
@@ -709,7 +707,6 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportsTimeout,
 			supportsExclusiveControl,
 			supportedLocalStates,
@@ -821,7 +818,6 @@ export class ProtectionCCExclusiveControlReport extends ProtectionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			exclusiveControlNodeId,
 		});
 	}
@@ -870,7 +866,6 @@ export class ProtectionCCExclusiveControlSet extends ProtectionCC {
 		validatePayload(raw.payload.length >= 1);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			exclusiveControlNodeId: raw.payload[0],
 		});
 	}
@@ -916,7 +911,6 @@ export class ProtectionCCTimeoutReport extends ProtectionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			timeout,
 		});
 	}
@@ -963,7 +957,6 @@ export class ProtectionCCTimeoutSet extends ProtectionCC {
 		validatePayload(raw.payload.length >= 1);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			timeout: Timeout.parse(raw.payload[0]),
 		});
 	}

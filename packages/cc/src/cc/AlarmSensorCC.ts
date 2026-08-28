@@ -369,7 +369,6 @@ export class AlarmSensorCCReport extends AlarmSensorCC {
 
 		return new this({
 			// Alarm Sensor reports may be forwarded by a different node, in this case
-			frameType: ctx.frameType,
 			// (and only then!) the payload contains the original node ID
 			nodeId: sourceNodeId || ctx.sourceNodeId,
 			sensorType,
@@ -510,7 +509,6 @@ export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedSensorTypes,
 		});
 	}

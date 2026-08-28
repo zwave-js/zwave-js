@@ -259,7 +259,6 @@ export class TimeCCTimeReport extends TimeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			hour,
 			minute,
 			second,
@@ -328,7 +327,6 @@ export class TimeCCDateReport extends TimeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			year,
 			month,
 			day,
@@ -485,7 +483,6 @@ export class TimeCCTimeOffsetReport extends TimeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			standardOffset,
 			dstOffset,
 			dstStart: dstStartDate,

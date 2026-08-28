@@ -256,7 +256,6 @@ export class DoorLockLoggingCCRecordsSupportedReport extends DoorLockLoggingCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			recordsCount,
 		});
 	}
@@ -350,7 +349,6 @@ export class DoorLockLoggingCCRecordReport extends DoorLockLoggingCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			recordNumber,
 			record,
 		});

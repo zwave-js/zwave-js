@@ -649,7 +649,6 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			targetValue,
 			duration,
 		});
@@ -733,7 +732,6 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			currentValue,
 			targetValue,
 			duration,
@@ -891,7 +889,6 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			ignoreStartLevel,
 			direction,
 			startLevel,
@@ -972,7 +969,6 @@ export class MultilevelSwitchCCSupportedReport extends MultilevelSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			switchType,
 		});
 	}

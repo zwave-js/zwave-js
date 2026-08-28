@@ -666,7 +666,6 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			position,
 			currentState,
 		});
@@ -728,7 +727,6 @@ export class BarrierOperatorCCSignalingCapabilitiesReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedSubsystemTypes,
 		});
 	}
@@ -844,7 +842,6 @@ export class BarrierOperatorCCEventSignalingReport extends BarrierOperatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			subsystemType,
 			subsystemState,
 		});

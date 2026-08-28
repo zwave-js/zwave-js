@@ -243,7 +243,6 @@ export class FibaroCC extends ManufacturerProprietaryCC {
 
 		return new FibaroCC({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 		});
 	}
 
@@ -469,7 +468,6 @@ export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			position,
 			tilt,
 		});
@@ -539,7 +537,6 @@ export class FibaroVenetianBlindCCGet extends FibaroVenetianBlindCC {
 	): FibaroVenetianBlindCCGet {
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 		});
 	}
 }

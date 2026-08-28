@@ -321,7 +321,6 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			weekday,
 			schedule,
 		});
@@ -423,7 +422,6 @@ export class ClimateControlScheduleCCChangedReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			changeCounter,
 		});
 	}
@@ -478,7 +476,6 @@ export class ClimateControlScheduleCCOverrideReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			overrideType,
 			overrideState,
 		});

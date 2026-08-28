@@ -541,7 +541,6 @@ export class SoundSwitchCCTonesNumberReport extends SoundSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			toneCount,
 		});
 	}
@@ -599,7 +598,6 @@ export class SoundSwitchCCToneInfoReport extends SoundSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			toneId,
 			duration,
 			name,
@@ -665,7 +663,6 @@ export class SoundSwitchCCToneInfoGet extends SoundSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			toneId,
 		});
 	}
@@ -715,7 +712,6 @@ export class SoundSwitchCCConfigurationSet extends SoundSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			defaultVolume,
 			defaultToneId,
 		});
@@ -772,7 +768,6 @@ export class SoundSwitchCCConfigurationReport extends SoundSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			defaultVolume,
 			defaultToneId,
 		});
@@ -833,7 +828,6 @@ export class SoundSwitchCCTonePlaySet extends SoundSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			toneId,
 			volume,
 		});
@@ -894,7 +888,6 @@ export class SoundSwitchCCTonePlayReport extends SoundSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			toneId,
 			volume,
 		});

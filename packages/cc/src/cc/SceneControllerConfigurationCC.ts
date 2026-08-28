@@ -575,7 +575,6 @@ export class SceneControllerConfigurationCCReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 			sceneId,
 			dimmingDuration,

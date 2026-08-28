@@ -199,7 +199,6 @@ export class LockCCSet extends LockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			locked,
 		});
 	}
@@ -242,7 +241,6 @@ export class LockCCReport extends LockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			locked,
 		});
 	}

@@ -338,7 +338,6 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			sequenceNumber,
 			keyAttribute,
 			sceneNumber,
@@ -473,7 +472,6 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			sceneCount,
 			supportsSlowRefresh,
 			supportedKeyAttributes,
@@ -581,7 +579,6 @@ export class CentralSceneCCConfigurationReport extends CentralSceneCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			slowRefresh,
 		});
 	}

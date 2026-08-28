@@ -156,7 +156,6 @@ export class SceneActivationCCSet extends SceneActivationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			sceneId,
 			dimmingDuration,
 		});

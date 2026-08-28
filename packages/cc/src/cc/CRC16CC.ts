@@ -140,7 +140,6 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
 		const encapsulated = await CommandClass.parse(ccBuffer, ctx);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			encapsulated,
 		});
 	}

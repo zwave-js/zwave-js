@@ -586,7 +586,6 @@ export class SecurityCCNonceReport extends SecurityCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			nonce: raw.payload,
 		});
 	}
@@ -718,7 +717,6 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 
 		const ret = new SecurityCCCommandEncapsulation({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			sequenceCounter,
 			sequenced,
 			secondFrame,
@@ -913,7 +911,6 @@ export class SecurityCCSchemeReport extends SecurityCC {
 		// The including controller MUST NOT perform any validation of the Supported Security Schemes byte
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 		});
 	}
 
@@ -943,7 +940,6 @@ export class SecurityCCSchemeGet extends SecurityCC {
 		// The joining node MUST NOT perform any validation of the Supported Security Schemes byte
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 		});
 	}
 
@@ -973,7 +969,6 @@ export class SecurityCCSchemeInherit extends SecurityCC {
 		// The joining node MUST NOT perform any validation of the Supported Security Schemes byte
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 		});
 	}
 
@@ -1025,7 +1020,6 @@ export class SecurityCCNetworkKeySet extends SecurityCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			networkKey,
 		});
 	}
@@ -1076,7 +1070,6 @@ export class SecurityCCCommandsSupportedReport extends SecurityCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			reportsToFollow,
 			supportedCCs,
 			controlledCCs,

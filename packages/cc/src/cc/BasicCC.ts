@@ -390,7 +390,6 @@ export class BasicCCSet extends BasicCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			targetValue,
 		});
 	}
@@ -452,7 +451,6 @@ export class BasicCCReport extends BasicCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			currentValue,
 			targetValue,
 			duration,

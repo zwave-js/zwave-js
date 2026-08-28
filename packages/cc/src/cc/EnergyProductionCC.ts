@@ -219,7 +219,6 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			parameter,
 			value,
 			scale,
@@ -304,7 +303,6 @@ export class EnergyProductionCCGet extends EnergyProductionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			parameter,
 		});
 	}

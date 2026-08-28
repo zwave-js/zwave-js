@@ -191,7 +191,6 @@ export class HumidityControlOperatingStateCCReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			state,
 		});
 	}

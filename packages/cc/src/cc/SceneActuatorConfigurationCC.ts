@@ -451,7 +451,6 @@ export class SceneActuatorConfigurationCCReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			sceneId,
 			level,
 			dimmingDuration,

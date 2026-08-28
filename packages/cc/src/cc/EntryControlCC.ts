@@ -483,7 +483,6 @@ export class EntryControlCCNotification extends EntryControlCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			sequenceNumber,
 			dataType,
 			eventType,
@@ -554,7 +553,6 @@ export class EntryControlCCKeySupportedReport extends EntryControlCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedKeys,
 		});
 	}
@@ -641,7 +639,6 @@ export class EntryControlCCEventSupportedReport extends EntryControlCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedDataTypes,
 			supportedEventTypes,
 			minKeyCacheSize,
@@ -735,7 +732,6 @@ export class EntryControlCCConfigurationReport extends EntryControlCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			keyCacheSize,
 			keyCacheTimeout,
 		});

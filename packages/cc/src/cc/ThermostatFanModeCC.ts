@@ -423,7 +423,6 @@ export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			mode,
 			off,
 		});
@@ -479,7 +478,6 @@ export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			supportedModes,
 		});
 	}

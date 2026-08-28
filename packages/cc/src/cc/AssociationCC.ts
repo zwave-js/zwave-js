@@ -530,7 +530,6 @@ export class AssociationCCSet extends AssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 			nodeIds,
 		});
@@ -590,7 +589,6 @@ export class AssociationCCRemove extends AssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 			nodeIds,
 		});
@@ -661,7 +659,6 @@ export class AssociationCCReport extends AssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 			maxNodes,
 			reportsToFollow,
@@ -747,7 +744,6 @@ export class AssociationCCGet extends AssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupId,
 		});
 	}
@@ -792,7 +788,6 @@ export class AssociationCCSupportedGroupingsReport extends AssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			groupCount,
 		});
 	}
@@ -840,7 +835,6 @@ export class AssociationCCSpecificGroupReport extends AssociationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			frameType: ctx.frameType,
 			group,
 		});
 	}
