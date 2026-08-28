@@ -936,6 +936,7 @@ export class ScheduleEntryLockCCEnableSet extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			enabled,
 		});
@@ -984,6 +985,7 @@ export class ScheduleEntryLockCCEnableAllSet extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			enabled,
 		});
 	}
@@ -1043,6 +1045,7 @@ export class ScheduleEntryLockCCSupportedReport extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			numWeekDaySlots,
 			numYearDaySlots,
 			numDailyRepeatingSlots,
@@ -1132,6 +1135,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 		if (action !== ScheduleEntryLockSetAction.Set) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				action,
 				userId,
 				slotId,
@@ -1147,6 +1151,7 @@ export class ScheduleEntryLockCCWeekDayScheduleSet extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			action,
 			userId,
 			slotId,
@@ -1307,6 +1312,7 @@ export class ScheduleEntryLockCCWeekDayScheduleReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			...ccOptions,
 		});
 	}
@@ -1413,6 +1419,7 @@ export class ScheduleEntryLockCCWeekDayScheduleGet extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			slotId,
 		});
@@ -1490,6 +1497,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 		if (action !== ScheduleEntryLockSetAction.Set) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				action,
 				userId,
 				slotId,
@@ -1510,6 +1518,7 @@ export class ScheduleEntryLockCCYearDayScheduleSet extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			action,
 			userId,
 			slotId,
@@ -1725,6 +1734,7 @@ export class ScheduleEntryLockCCYearDayScheduleReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			...ccOptions,
 		});
 	}
@@ -1849,6 +1859,7 @@ export class ScheduleEntryLockCCYearDayScheduleGet extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			slotId,
 		});
@@ -1898,6 +1909,7 @@ export class ScheduleEntryLockCCTimeOffsetSet extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			standardOffset,
 			dstOffset,
 		});
@@ -1949,6 +1961,7 @@ export class ScheduleEntryLockCCTimeOffsetReport extends ScheduleEntryLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			standardOffset,
 			dstOffset,
 		});
@@ -2032,6 +2045,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 		if (action !== ScheduleEntryLockSetAction.Set) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				action,
 				userId,
 				slotId,
@@ -2050,6 +2064,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleSet
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			action,
 			userId,
 			slotId,
@@ -2182,6 +2197,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				userId,
 				slotId,
 				weekdays,
@@ -2193,6 +2209,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleReport
 		} else {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				userId,
 				slotId,
 			});
@@ -2318,6 +2335,7 @@ export class ScheduleEntryLockCCDailyRepeatingScheduleGet
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			slotId,
 		});

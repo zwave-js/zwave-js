@@ -1518,6 +1518,7 @@ export class UserCredentialCCUserCapabilitiesReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			numberOfSupportedUsers,
 			supportedCredentialRules,
 			maxUserNameLength,
@@ -1704,6 +1705,7 @@ export class UserCredentialCCCredentialCapabilitiesReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportsCredentialChecksum,
 			supportsAdminCode,
 			supportsAdminCodeDeactivation,
@@ -1870,6 +1872,7 @@ export class UserCredentialCCKeyLockerCapabilitiesReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			keyLockerCapabilities,
 		});
 	}
@@ -2059,6 +2062,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		if (operationType === UserCredentialOperationType.Delete) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				operationType,
 				userId,
 			});
@@ -2068,6 +2072,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		if (raw.payload.length < 10) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				operationType,
 				userId,
 			});
@@ -2094,6 +2099,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		if (userType === UserCredentialUserType.Expiring) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				operationType,
 				userId,
 				userType,
@@ -2107,6 +2113,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			operationType,
 			userId,
 			userType,
@@ -2303,6 +2310,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 
 		const common = {
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			modifierType,
 			modifierNodeId,
 			userId,
@@ -2633,6 +2641,7 @@ export class UserCredentialCCUserGet extends UserCredentialCC {
 		const userId = raw.payload.readUInt16BE(0);
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 		});
 	}
@@ -2746,6 +2755,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		if (operationType === UserCredentialOperationType.Delete) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				userId,
 				credentialType,
 				credentialSlot,
@@ -2764,6 +2774,7 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			credentialType,
 			credentialSlot,
@@ -2903,6 +2914,7 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 
 		const common = {
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			credentialType,
 			credentialSlot,
@@ -3232,6 +3244,7 @@ export class UserCredentialCCCredentialGet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			credentialType,
 			credentialSlot,
@@ -3310,6 +3323,7 @@ export class UserCredentialCCCredentialLearnStart extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			credentialType,
 			credentialSlot,
@@ -3389,6 +3403,7 @@ export class UserCredentialCCCredentialLearnReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			learnStatus,
 			userId,
 			credentialType,
@@ -3471,6 +3486,7 @@ export class UserCredentialCCAssociationReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			credentialType,
 			credentialSlot,
 			destinationUserId: destinationUserId,
@@ -3583,6 +3599,7 @@ export class UserCredentialCCAssociationSet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			credentialType,
 			credentialSlot,
 			destinationUserId,
@@ -3644,6 +3661,7 @@ export class UserCredentialCCAllUsersChecksumReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			checksum,
 		});
 	}
@@ -3694,6 +3712,7 @@ export class UserCredentialCCUserChecksumReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			checksum,
 		});
@@ -3756,6 +3775,7 @@ export class UserCredentialCCUserChecksumGet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 		});
 	}
@@ -3804,6 +3824,7 @@ export class UserCredentialCCCredentialChecksumReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			credentialType,
 			checksum,
 		});
@@ -3871,6 +3892,7 @@ export class UserCredentialCCCredentialChecksumGet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			credentialType,
 		});
 	}
@@ -3928,6 +3950,7 @@ export class UserCredentialCCAdminPinCodeSet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			pinCode,
 		});
 	}
@@ -3982,6 +4005,7 @@ export class UserCredentialCCAdminPinCodeReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			operationResult,
 			pinCode,
 		});
@@ -4109,6 +4133,7 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 		if (operationType === UserCredentialOperationType.Delete) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				entryType,
 				entrySlot,
 				operationType,
@@ -4126,6 +4151,7 @@ export class UserCredentialCCKeyLockerEntrySet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			entryType,
 			entrySlot,
 			operationType,
@@ -4211,6 +4237,7 @@ export class UserCredentialCCKeyLockerEntryReport extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			occupied,
 			entryType,
 			entrySlot,
@@ -4300,6 +4327,7 @@ export class UserCredentialCCKeyLockerEntryGet extends UserCredentialCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			entryType,
 			entrySlot,
 		});

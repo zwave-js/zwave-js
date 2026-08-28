@@ -255,6 +255,7 @@ export class ManufacturerSpecificCCReport extends ManufacturerSpecificCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			manufacturerId,
 			productType,
 			productId,
@@ -332,6 +333,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			type,
 			deviceId,
 		});

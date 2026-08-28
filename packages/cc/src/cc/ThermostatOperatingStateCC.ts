@@ -252,6 +252,7 @@ export class ThermostatOperatingStateCCReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			state,
 		});
 	}
@@ -309,6 +310,7 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedLoggingTypes,
 		});
 	}
@@ -397,6 +399,7 @@ export class ThermostatOperatingStateCCLoggingReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			reportsToFollow,
 			loggingData,
 		});
@@ -500,6 +503,7 @@ export class ThermostatOperatingStateCCLoggingGet
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestedStates,
 		});
 	}

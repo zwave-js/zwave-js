@@ -355,6 +355,7 @@ export class HumidityControlModeCCReport extends HumidityControlModeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			mode,
 		});
 	}
@@ -409,6 +410,7 @@ export class HumidityControlModeCCSupportedReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedModes,
 		});
 	}

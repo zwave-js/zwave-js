@@ -1041,6 +1041,7 @@ export class IndicatorCCSet extends IndicatorCC {
 
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				value: indicator0Value,
 			});
 		}
@@ -1060,6 +1061,7 @@ export class IndicatorCCSet extends IndicatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			values,
 		});
 	}
@@ -1154,6 +1156,7 @@ export class IndicatorCCReport extends IndicatorCC {
 			const indicator0Value = raw.payload[0];
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				value: indicator0Value,
 			});
 		}
@@ -1173,6 +1176,7 @@ export class IndicatorCCReport extends IndicatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			values,
 		});
 
@@ -1395,6 +1399,7 @@ export class IndicatorCCGet extends IndicatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			indicatorId,
 		});
 	}
@@ -1460,6 +1465,7 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			indicatorId,
 			nextIndicatorId,
 			supportedProperties,
@@ -1552,6 +1558,7 @@ export class IndicatorCCSupportedGet extends IndicatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			indicatorId,
 		});
 	}
@@ -1604,6 +1611,7 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			indicatorId,
 			description,
 		});
@@ -1680,6 +1688,7 @@ export class IndicatorCCDescriptionGet extends IndicatorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			indicatorId,
 		});
 	}

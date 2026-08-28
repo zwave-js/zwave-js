@@ -74,6 +74,7 @@ export class ApplicationStatusCCBusy extends ApplicationStatusCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			status,
 			waitTime,
 		});
@@ -121,6 +122,7 @@ export class ApplicationStatusCCRejectedRequest extends ApplicationStatusCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 		});
 	}
 

@@ -1742,6 +1742,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 
 		const ret = new Security2CCMessageEncapsulation({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sequenceNumber,
 			securityClass,
 			extensions,
@@ -2106,6 +2107,7 @@ export class Security2CCNonceReport extends Security2CC {
 
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				sequenceNumber,
 				MOS,
 				SOS,
@@ -2114,6 +2116,7 @@ export class Security2CCNonceReport extends Security2CC {
 		} else if (MOS) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				sequenceNumber,
 				MOS,
 				SOS: false,
@@ -2203,6 +2206,7 @@ export class Security2CCNonceGet extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sequenceNumber,
 		});
 	}
@@ -2289,6 +2293,7 @@ export class Security2CCKEXReport extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestCSA,
 			echo,
 			_reserved,
@@ -2434,6 +2439,7 @@ export class Security2CCKEXSet extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			_reserved,
 			permitCSA,
 			echo,
@@ -2517,6 +2523,7 @@ export class Security2CCKEXFail extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			failType,
 		});
 	}
@@ -2562,6 +2569,7 @@ export class Security2CCPublicKeyReport extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			includingNode,
 			publicKey,
 		});
@@ -2618,6 +2626,7 @@ export class Security2CCNetworkKeyReport extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			grantedKey,
 			networkKey,
 		});
@@ -2677,6 +2686,7 @@ export class Security2CCNetworkKeyGet extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestedKey,
 		});
 	}
@@ -2730,6 +2740,7 @@ export class Security2CCTransferEnd extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			keyVerified,
 			keyRequestComplete,
 		});
@@ -2783,6 +2794,7 @@ export class Security2CCCommandsSupportedReport extends Security2CC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedCCs,
 		});
 	}

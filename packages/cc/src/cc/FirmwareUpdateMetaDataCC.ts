@@ -478,6 +478,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			manufacturerId,
 			firmwareId,
 			checksum,
@@ -615,6 +616,7 @@ export class FirmwareUpdateMetaDataCCRequestReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			status,
 			resume,
 			nonSecureTransfer,
@@ -709,6 +711,7 @@ export class FirmwareUpdateMetaDataCCRequestGet
 		if (raw.payload.length < 9) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				manufacturerId,
 				firmwareId,
 				checksum,
@@ -737,6 +740,7 @@ export class FirmwareUpdateMetaDataCCRequestGet
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			manufacturerId,
 			firmwareId,
 			checksum,
@@ -841,6 +845,7 @@ export class FirmwareUpdateMetaDataCCGet extends FirmwareUpdateMetaDataCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			numReports,
 			reportNumber,
 		});
@@ -979,6 +984,7 @@ export class FirmwareUpdateMetaDataCCStatusReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			status,
 			waitTime,
 		});
@@ -1055,6 +1061,7 @@ export class FirmwareUpdateMetaDataCCActivationReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			manufacturerId,
 			firmwareId,
 			checksum,
@@ -1152,6 +1159,7 @@ export class FirmwareUpdateMetaDataCCActivationSet
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			manufacturerId,
 			firmwareId,
 			checksum,
@@ -1227,6 +1235,7 @@ export class FirmwareUpdateMetaDataCCPrepareReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			status,
 			checksum,
 		});
@@ -1292,6 +1301,7 @@ export class FirmwareUpdateMetaDataCCPrepareGet
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			manufacturerId,
 			firmwareId,
 			firmwareTarget,

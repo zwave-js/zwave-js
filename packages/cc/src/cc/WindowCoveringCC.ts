@@ -700,6 +700,7 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedParameters,
 		});
 	}
@@ -798,6 +799,7 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 			currentValue,
 			targetValue,
@@ -864,6 +866,7 @@ export class WindowCoveringCCGet extends WindowCoveringCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 		});
 	}
@@ -933,6 +936,7 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			targetValues,
 			duration,
 		});
@@ -1014,6 +1018,7 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			direction,
 			parameter,
 			duration,
@@ -1075,6 +1080,7 @@ export class WindowCoveringCCStopLevelChange extends WindowCoveringCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 		});
 	}

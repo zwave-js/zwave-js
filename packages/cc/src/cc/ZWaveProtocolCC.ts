@@ -103,6 +103,7 @@ export class ZWaveProtocolCCNodeInformationFrame extends ZWaveProtocolCC
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			...nif,
 		});
 	}
@@ -160,6 +161,7 @@ export class ZWaveProtocolCCAssignIDs extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			assignedNodeId,
 			homeId,
 		});
@@ -231,6 +233,7 @@ export class ZWaveProtocolCCFindNodesInRange extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			candidateNodeIds,
 			dataRate,
 			wakeUpTime,
@@ -290,6 +293,7 @@ export class ZWaveProtocolCCRangeInfo extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			neighborNodeIds,
 			wakeUpTime,
 		});
@@ -338,6 +342,7 @@ export class ZWaveProtocolCCCommandComplete extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sequenceNumber,
 		});
 	}
@@ -386,6 +391,7 @@ export class ZWaveProtocolCCTransferPresentation extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportsNWI,
 			excludeNode,
 			includeNode,
@@ -454,6 +460,7 @@ export class ZWaveProtocolCCTransferNodeInformation extends ZWaveProtocolCC
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sequenceNumber,
 			sourceNodeId,
 			...info,
@@ -518,6 +525,7 @@ export class ZWaveProtocolCCTransferRangeInformation extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sequenceNumber,
 			testedNodeId,
 			neighborNodeIds,
@@ -565,6 +573,7 @@ export class ZWaveProtocolCCTransferEnd extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			status,
 		});
 	}
@@ -623,6 +632,7 @@ export class ZWaveProtocolCCAssignReturnRoute extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			destinationNodeId,
 			routeIndex,
 			repeaters,
@@ -695,6 +705,7 @@ export class ZWaveProtocolCCNewNodeRegistered extends ZWaveProtocolCC
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			newNodeId,
 			...nif,
 		});
@@ -754,6 +765,7 @@ export class ZWaveProtocolCCNewRangeRegistered extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			testedNodeId,
 			neighborNodeIds,
 		});
@@ -799,6 +811,7 @@ export class ZWaveProtocolCCTransferNewPrimaryControllerComplete
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			genericDeviceClass,
 		});
 	}
@@ -843,6 +856,7 @@ export class ZWaveProtocolCCSUCNodeID extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sucNodeId,
 			isSIS,
 		});
@@ -882,6 +896,7 @@ export class ZWaveProtocolCCSetSUC extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			enableSIS,
 		});
 	}
@@ -921,6 +936,7 @@ export class ZWaveProtocolCCSetSUCAck extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			accepted,
 			isSIS,
 		});
@@ -974,6 +990,7 @@ export class ZWaveProtocolCCStaticRouteRequest extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			nodeIds,
 		});
 	}
@@ -1009,6 +1026,7 @@ export class ZWaveProtocolCCLost extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			lostNodeId,
 		});
 	}
@@ -1047,6 +1065,7 @@ export class ZWaveProtocolCCAcceptLost extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			accepted,
 		});
 	}
@@ -1113,6 +1132,7 @@ export class ZWaveProtocolCCNOPPower extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			powerDampening,
 		});
 	}
@@ -1153,6 +1173,7 @@ export class ZWaveProtocolCCReservedIDs extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			reservedNodeIDs,
 		});
 	}
@@ -1192,6 +1213,7 @@ export class ZWaveProtocolCCReserveNodeIDs extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			numNodeIDs,
 		});
 	}
@@ -1230,6 +1252,7 @@ export class ZWaveProtocolCCNodesExistReply extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			nodeMaskType,
 			nodeListUpdated,
 		});
@@ -1286,6 +1309,7 @@ export class ZWaveProtocolCCNodesExist extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			nodeMaskType,
 			nodeIDs,
 		});
@@ -1330,6 +1354,7 @@ export class ZWaveProtocolCCSetNWIMode extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			enabled,
 			timeoutMinutes,
 		});
@@ -1378,6 +1403,7 @@ export class ZWaveProtocolCCAssignReturnRoutePriority extends ZWaveProtocolCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			targetNodeId,
 			routeNumber,
 		});
@@ -1430,6 +1456,7 @@ export class ZWaveProtocolCCSmartStartIncludedNodeInformation
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			nwiHomeId,
 		});
 	}

@@ -198,6 +198,7 @@ export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			setbackType,
 			setbackState,
 		});
@@ -261,6 +262,7 @@ export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			setbackType,
 			setbackState,
 		});

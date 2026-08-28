@@ -720,6 +720,7 @@ export class VersionCCReport extends VersionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			libraryType,
 			protocolVersion,
 			firmwareVersions,
@@ -816,6 +817,7 @@ export class VersionCCCommandClassReport extends VersionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestedCC,
 			ccVersion,
 		});
@@ -875,6 +877,7 @@ export class VersionCCCommandClassGet extends VersionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestedCC,
 		});
 	}
@@ -923,6 +926,7 @@ export class VersionCCCapabilitiesReport extends VersionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportsZWaveSoftwareGet,
 		});
 	}
@@ -1051,6 +1055,7 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sdkVersion,
 			applicationFrameworkAPIVersion,
 			applicationFrameworkBuildNumber,

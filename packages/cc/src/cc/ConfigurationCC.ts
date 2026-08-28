@@ -1940,6 +1940,7 @@ export class ConfigurationCCReport extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 			valueSize,
 			value,
@@ -2122,6 +2123,7 @@ export class ConfigurationCCGet extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 		});
 	}
@@ -2196,6 +2198,7 @@ export class ConfigurationCCSet extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 			resetToDefault,
 			valueSize,
@@ -2501,6 +2504,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			reportsToFollow,
 			defaultValues,
 			isHandshakeResponse,
@@ -2694,6 +2698,7 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 			reportsToFollow,
 			name,
@@ -2801,6 +2806,7 @@ export class ConfigurationCCNameGet extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 		});
 	}
@@ -2857,6 +2863,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 			reportsToFollow,
 			info,
@@ -2977,6 +2984,7 @@ export class ConfigurationCCInfoGet extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 		});
 	}
@@ -3068,6 +3076,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 			nextParameter = 0;
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				parameter,
 				valueFormat,
 				valueSize,
@@ -3126,6 +3135,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 			valueFormat,
 			valueSize,
@@ -3339,6 +3349,7 @@ export class ConfigurationCCPropertiesGet extends ConfigurationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			parameter,
 		});
 	}

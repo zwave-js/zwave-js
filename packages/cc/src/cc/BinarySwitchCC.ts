@@ -333,6 +333,7 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			targetValue,
 			duration,
 		});
@@ -415,6 +416,7 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			currentValue,
 			targetValue,
 			duration,

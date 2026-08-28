@@ -324,6 +324,7 @@ export class NodeNamingAndLocationCCNameSet extends NodeNamingAndLocationCC {
 		const name = decodeNodeTextPayload(raw);
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			name,
 		});
 	}
@@ -366,6 +367,7 @@ export class NodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			name,
 		});
 	}
@@ -413,6 +415,7 @@ export class NodeNamingAndLocationCCLocationSet
 		const location = decodeNodeTextPayload(raw);
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			location,
 		});
 	}
@@ -457,6 +460,7 @@ export class NodeNamingAndLocationCCLocationReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			location,
 		});
 	}

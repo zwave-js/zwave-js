@@ -716,6 +716,7 @@ export class ColorSwitchCCSupportedReport extends ColorSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedColorComponents,
 		});
 	}
@@ -796,6 +797,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			colorComponent,
 			currentValue,
 			targetValue,
@@ -939,6 +941,7 @@ export class ColorSwitchCCGet extends ColorSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			colorComponent,
 		});
 	}
@@ -1032,6 +1035,7 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			...colorTable,
 			duration,
 		});
@@ -1141,6 +1145,7 @@ export class ColorSwitchCCStartLevelChange extends ColorSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			ignoreStartLevel,
 			direction,
 			colorComponent,
@@ -1223,6 +1228,7 @@ export class ColorSwitchCCStopLevelChange extends ColorSwitchCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			colorComponent,
 		});
 	}

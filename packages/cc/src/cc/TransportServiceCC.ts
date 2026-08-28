@@ -127,6 +127,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			datagramSize,
 			sessionId,
 			headerExtension,
@@ -262,6 +263,7 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			datagramSize,
 			sessionId,
 			datagramOffset,
@@ -367,6 +369,7 @@ export class TransportServiceCCSegmentRequest extends TransportServiceCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sessionId,
 			datagramOffset,
 		});
@@ -418,6 +421,7 @@ export class TransportServiceCCSegmentComplete extends TransportServiceCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sessionId,
 		});
 	}
@@ -460,6 +464,7 @@ export class TransportServiceCCSegmentWait extends TransportServiceCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			pendingSegments,
 		});
 	}

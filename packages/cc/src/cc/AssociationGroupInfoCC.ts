@@ -515,6 +515,7 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			groupId,
 			name,
 		});
@@ -580,6 +581,7 @@ export class AssociationGroupInfoCCNameGet extends AssociationGroupInfoCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			groupId,
 		});
 	}
@@ -651,6 +653,7 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			isListMode,
 			hasDynamicInfo,
 			groups,
@@ -762,6 +765,7 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			refreshCache,
 			listMode,
 			groupId,
@@ -845,6 +849,7 @@ export class AssociationGroupInfoCCCommandListReport
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			groupId,
 			commands,
 		});
@@ -920,6 +925,7 @@ export class AssociationGroupInfoCCCommandListGet
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			allowCache,
 			groupId,
 		});

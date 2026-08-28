@@ -298,6 +298,7 @@ export class TimeParametersCCReport extends TimeParametersCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			dateAndTime,
 		});
 	}
@@ -375,6 +376,7 @@ export class TimeParametersCCSet extends TimeParametersCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			dateAndTime,
 		});
 	}

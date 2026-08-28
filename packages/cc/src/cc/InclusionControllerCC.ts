@@ -113,6 +113,7 @@ export class InclusionControllerCCComplete extends InclusionControllerCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			step,
 			status,
 		});
@@ -170,6 +171,7 @@ export class InclusionControllerCCInitiate extends InclusionControllerCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			includedNodeId,
 			step,
 		});

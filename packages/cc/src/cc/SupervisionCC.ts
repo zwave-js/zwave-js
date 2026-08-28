@@ -315,6 +315,7 @@ export class SupervisionCCReport extends SupervisionCC {
 				?? new Duration(0, "seconds");
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				moreUpdatesFollow,
 				requestWakeUpOnDemand,
 				sessionId,
@@ -324,6 +325,7 @@ export class SupervisionCCReport extends SupervisionCC {
 		} else {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				moreUpdatesFollow,
 				requestWakeUpOnDemand,
 				sessionId,
@@ -429,6 +431,7 @@ export class SupervisionCCGet extends SupervisionCC {
 		);
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestStatusUpdates,
 			sessionId,
 			encapsulated,

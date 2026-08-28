@@ -2,6 +2,7 @@ import type {
 	CommandClassInfo,
 	CommandClasses,
 } from "../definitions/CommandClasses.js";
+import type { FrameType } from "../definitions/Frame.js";
 import type {
 	MulticastDestination,
 	NODE_ID_BROADCAST,
@@ -12,6 +13,7 @@ import type {
 export interface CCAddress {
 	nodeId: number | MulticastDestination;
 	endpointIndex?: number;
+	frameType?: FrameType;
 }
 
 export type WithAddress<T extends object> = T & CCAddress;

@@ -942,6 +942,7 @@ export class MeterCCReport extends MeterCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			type,
 			rateType,
 			value,
@@ -1145,6 +1146,7 @@ export class MeterCCGet extends MeterCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			rateType,
 			scale,
 		});
@@ -1276,6 +1278,7 @@ export class MeterCCSupportedReport extends MeterCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			type,
 			supportsReset,
 			supportedScales,
@@ -1413,6 +1416,7 @@ export class MeterCCReset extends MeterCC {
 		if (raw.payload.length === 0) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 			});
 		}
 
@@ -1427,6 +1431,7 @@ export class MeterCCReset extends MeterCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			type,
 			rateType,
 			targetValue,

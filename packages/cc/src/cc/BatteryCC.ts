@@ -496,6 +496,7 @@ export class BatteryCCReport extends BatteryCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			...ccOptions,
 		});
 	}
@@ -717,6 +718,7 @@ export class BatteryCCHealthReport extends BatteryCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			maximumCapacity,
 			temperature,
 			temperatureScale,

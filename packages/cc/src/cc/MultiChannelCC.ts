@@ -896,6 +896,7 @@ export class MultiChannelCCEndPointReport extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			countIsDynamic,
 			identicalCapabilities,
 			individualCount,
@@ -992,6 +993,7 @@ export class MultiChannelCCCapabilityReport extends MultiChannelCC
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			endpointIndex,
 			isDynamic,
 			genericDeviceClass,
@@ -1093,6 +1095,7 @@ export class MultiChannelCCCapabilityGet extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestedEndpoint,
 		});
 	}
@@ -1150,6 +1153,7 @@ export class MultiChannelCCEndPointFindReport extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			reportsToFollow,
 			genericClass,
 			specificClass,
@@ -1242,6 +1246,7 @@ export class MultiChannelCCEndPointFind extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			genericClass,
 			specificClass,
 		});
@@ -1306,6 +1311,7 @@ export class MultiChannelCCAggregatedMembersReport extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			aggregatedEndpointIndex,
 			members,
 		});
@@ -1482,6 +1488,7 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 		);
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			endpointIndex,
 			destination,
 			encapsulated,
@@ -1562,6 +1569,7 @@ export class MultiChannelCCV1Report extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestedCC,
 			endpointCount,
 		});
@@ -1621,6 +1629,7 @@ export class MultiChannelCCV1Get extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			requestedCC,
 		});
 	}
@@ -1713,6 +1722,7 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			endpointIndex,
 			encapsulated,
 		});

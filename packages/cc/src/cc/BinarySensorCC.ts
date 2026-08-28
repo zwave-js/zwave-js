@@ -394,6 +394,7 @@ export class BinarySensorCCReport extends BinarySensorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			value,
 			type,
 		});
@@ -478,6 +479,7 @@ export class BinarySensorCCGet extends BinarySensorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			sensorType,
 		});
 	}
@@ -538,6 +540,7 @@ export class BinarySensorCCSupportedReport extends BinarySensorCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedSensorTypes,
 		});
 	}

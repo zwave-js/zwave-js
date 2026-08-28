@@ -1164,6 +1164,7 @@ export class NotificationCCSet extends NotificationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			notificationType,
 			notificationStatus,
 		});
@@ -1237,6 +1238,7 @@ export class NotificationCCReport extends NotificationCC {
 		if (raw.payload.length < 7) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				alarmType,
 				alarmLevel,
 			});
@@ -1267,6 +1269,7 @@ export class NotificationCCReport extends NotificationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			alarmType,
 			alarmLevel,
 			notificationStatus,
@@ -1760,6 +1763,7 @@ export class NotificationCCGet extends NotificationCC {
 			}
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				notificationType,
 				notificationEvent,
 			});
@@ -1767,6 +1771,7 @@ export class NotificationCCGet extends NotificationCC {
 			const alarmType = raw.payload[0];
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				alarmType,
 			});
 		}
@@ -1858,6 +1863,7 @@ export class NotificationCCSupportedReport extends NotificationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportsV1Alarm,
 			supportedNotificationTypes,
 		});
@@ -1930,6 +1936,7 @@ export class NotificationCCEventSupportedReport extends NotificationCC {
 			// Notification type is not supported
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				notificationType,
 				supportedEvents: [],
 			});
@@ -1945,6 +1952,7 @@ export class NotificationCCEventSupportedReport extends NotificationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			notificationType,
 			supportedEvents,
 		});
@@ -2066,6 +2074,7 @@ export class NotificationCCEventSupportedGet extends NotificationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			notificationType,
 		});
 	}

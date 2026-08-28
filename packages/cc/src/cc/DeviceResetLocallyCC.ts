@@ -83,6 +83,7 @@ export class DeviceResetLocallyCCNotification extends DeviceResetLocallyCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 		});
 	}
 }

@@ -1354,6 +1354,7 @@ export class IrrigationCCSystemInfoReport extends IrrigationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportsMasterValve,
 			numValves,
 			numValveTables,
@@ -1500,6 +1501,7 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			systemVoltage,
 			flowSensorActive,
 			pressureSensorActive,
@@ -1765,6 +1767,7 @@ export class IrrigationCCSystemConfigReport extends IrrigationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			masterValveDelay,
 			highPressureThreshold,
 			lowPressureThreshold,
@@ -1872,6 +1875,7 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			valveId,
 			connected,
 			nominalCurrent,
@@ -2224,6 +2228,7 @@ export class IrrigationCCValveConfigReport extends IrrigationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			valveId,
 			nominalCurrentHighThreshold,
 			nominalCurrentLowThreshold,
@@ -2538,6 +2543,7 @@ export class IrrigationCCValveTableReport extends IrrigationCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			tableId,
 			entries,
 		});

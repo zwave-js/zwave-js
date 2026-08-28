@@ -1500,6 +1500,7 @@ export class UserCodeCCSet extends UserCodeCC {
 		if (userIdStatus === UserIDStatus.Available) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				userId,
 				userIdStatus,
 			});
@@ -1509,6 +1510,7 @@ export class UserCodeCCSet extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			userIdStatus,
 			userCode,
@@ -1599,6 +1601,7 @@ export class UserCodeCCReport extends UserCodeCC
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 			userIdStatus,
 			userCode,
@@ -1675,6 +1678,7 @@ export class UserCodeCCGet extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userId,
 		});
 	}
@@ -1728,6 +1732,7 @@ export class UserCodeCCUsersNumberReport extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedUsers,
 		});
 	}
@@ -1869,6 +1874,7 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportsAdminCode,
 			supportsAdminCodeDeactivation,
 			supportedUserIDStatuses,
@@ -1989,6 +1995,7 @@ export class UserCodeCCKeypadModeSet extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			keypadMode,
 		});
 	}
@@ -2032,6 +2039,7 @@ export class UserCodeCCKeypadModeReport extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			keypadMode,
 		});
 	}
@@ -2106,6 +2114,7 @@ export class UserCodeCCAdminCodeSet extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			adminCode,
 		});
 	}
@@ -2156,6 +2165,7 @@ export class UserCodeCCAdminCodeReport extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			adminCode,
 		});
 	}
@@ -2206,6 +2216,7 @@ export class UserCodeCCUserCodeChecksumReport extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userCodeChecksum,
 		});
 	}
@@ -2297,6 +2308,7 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userCodes,
 		});
 	}
@@ -2381,6 +2393,7 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			userCodes,
 			nextUserId,
 		});

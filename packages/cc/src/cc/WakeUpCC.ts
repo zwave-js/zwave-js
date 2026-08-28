@@ -371,6 +371,7 @@ export class WakeUpCCIntervalSet extends WakeUpCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			wakeUpInterval,
 			controllerNodeId,
 		});
@@ -431,6 +432,7 @@ export class WakeUpCCIntervalReport extends WakeUpCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			wakeUpInterval,
 			controllerNodeId,
 		});
@@ -506,6 +508,7 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			minWakeUpInterval,
 			maxWakeUpInterval,
 			defaultWakeUpInterval,

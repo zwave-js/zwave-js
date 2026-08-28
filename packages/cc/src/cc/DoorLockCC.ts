@@ -988,6 +988,7 @@ export class DoorLockCCOperationSet extends DoorLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			mode,
 		});
 	}
@@ -1098,6 +1099,7 @@ export class DoorLockCCOperationReport extends DoorLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			currentMode,
 			outsideHandlesCanOpenDoor,
 			insideHandlesCanOpenDoor,
@@ -1333,6 +1335,7 @@ export class DoorLockCCConfigurationReport extends DoorLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			operationType,
 			outsideHandlesCanOpenDoorConfiguration,
 			insideHandlesCanOpenDoorConfiguration,
@@ -1804,6 +1807,7 @@ export class DoorLockCCCapabilitiesReport extends DoorLockCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedOperationTypes,
 			supportedDoorLockModes,
 			supportedOutsideHandles,

@@ -174,6 +174,7 @@ export class ManufacturerProprietaryCC extends CommandClass {
 
 		return new ManufacturerProprietaryCC({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			manufacturerId,
 			payload,
 		});

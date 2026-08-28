@@ -350,6 +350,7 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 		if (mode !== ThermostatMode["Manufacturer specific"]) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				mode,
 			});
 		}
@@ -365,6 +366,7 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			mode,
 			manufacturerData,
 		});
@@ -440,6 +442,7 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
 		if (mode !== ThermostatMode["Manufacturer specific"]) {
 			return new this({
 				nodeId: ctx.sourceNodeId,
+				frameType: ctx.frameType,
 				mode,
 			});
 		}
@@ -456,6 +459,7 @@ export class ThermostatModeCCReport extends ThermostatModeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			mode,
 			manufacturerData,
 		});
@@ -559,6 +563,7 @@ export class ThermostatModeCCSupportedReport extends ThermostatModeCC {
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
+			frameType: ctx.frameType,
 			supportedModes,
 		});
 	}
