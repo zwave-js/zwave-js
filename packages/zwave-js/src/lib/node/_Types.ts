@@ -4,6 +4,8 @@ import type {
 	EntryControlEventTypes,
 	FirmwareUpdateProgress,
 	FirmwareUpdateResult,
+	IndicatorState,
+	IndicatorTimeout,
 	MultilevelSwitchCommand,
 	Powerlevel,
 	PowerlevelTestStatus,
@@ -279,6 +281,12 @@ export interface CredentialLearnCompletedArgs {
 	success: boolean;
 }
 
+export interface IndicatorUpdatedArgs extends Omit<IndicatorState, "timeout"> {
+	/** The ID of the updated indicator. 0 is the unspecified indicator of a V1 node. */
+	indicatorId: number;
+	timeout?: IndicatorTimeout;
+}
+
 export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	notification: ZWaveNotificationCallback;
 	"interview failed": ZWaveInterviewFailedCallback;
@@ -317,6 +325,10 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 		endpoint: Endpoint,
 		args: CredentialLearnCompletedArgs,
 	) => void;
+	"indicator updated": (
+		endpoint: Endpoint,
+		args: IndicatorUpdatedArgs,
+	) => void;
 }
 
 export type ZWaveNodeEvents = Extract<keyof ZWaveNodeEventCallbacks, string>;
@@ -348,6 +360,7 @@ export const zWaveNodeEvents = [
 	"credential deleted",
 	"credential learn progress",
 	"credential learn completed",
+	"indicator updated",
 ] as const satisfies readonly ZWaveNodeEvents[];
 
 /** Represents the result of one health check round of a node's lifeline */

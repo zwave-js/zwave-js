@@ -972,6 +972,29 @@ export type IndicatorMetadata = ValueMetadata & {
 	};
 };
 
+/** Describes how an indicator should blink */
+export interface IndicatorBlink {
+	/** Duration of one on/off period in seconds (0.1-25.5) */
+	period: number;
+	/** Number of on/off periods (1-254). `undefined` means the indicator blinks until turned off. */
+	cycles?: number;
+	/** On time within an on/off period in seconds. `undefined` means symmetric (on time equals off time). */
+	onTime?: number;
+}
+
+/** The normalized state of an indicator */
+export interface IndicatorState {
+	/** Whether the indicator is on or off */
+	on?: boolean;
+	/** The level of a multilevel indicator (0-99) */
+	level?: number;
+	blink?: IndicatorBlink;
+	/** Timeout after which the indicator will be turned off. When setting, a string in the form `12h18m17.59s` is also accepted. */
+	timeout?: IndicatorTimeout | string;
+	/** The volume of an audible indicator (0-100). 0 means off/mute. */
+	soundLevel?: number;
+}
+
 export enum IrrigationCommand {
 	SystemInfoGet = 0x01,
 	SystemInfoReport = 0x02,
