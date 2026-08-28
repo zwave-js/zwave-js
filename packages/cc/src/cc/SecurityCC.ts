@@ -734,7 +734,7 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 	private secondFrame: boolean | undefined;
 	private sequenceCounter: number | undefined;
 
-	private decryptedCCBytes: BytesView | undefined;
+	public decryptedCCBytes: BytesView | undefined;
 	public encapsulated!: CommandClass;
 
 	private alternativeNetworkKey?: BytesView;

@@ -99,3 +99,45 @@ integrationTest(
 		},
 	},
 );
+
+integrationTest(
+	"S0 Commands Supported Report is accepted from an S2-enabled node",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				CommandClasses.Security,
+				CommandClasses["Security 2"],
+			],
+			securityClasses: new Set([
+				SecurityClass.S2_Unauthenticated,
+				SecurityClass.S0_Legacy,
+			]),
+		},
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+		},
+
+		testBody: async (t, _driver, node) => {
+			node.addCC(CommandClasses.Security, {
+				isSupported: true,
+				version: 1,
+			});
+			node.addCC(CommandClasses["Security 2"], {
+				isSupported: true,
+				version: 1,
+			});
+			node.setSecurityClass(SecurityClass.S0_Legacy, true);
+			node.setSecurityClass(SecurityClass.S2_Unauthenticated, true);
+
+			await t.expect(
+				node.commandClasses.Security.getSupportedCommands(),
+			).resolves.toStrictEqual({
+				supportedCCs: [],
+				controlledCCs: [],
+			});
+		},
+	},
+);

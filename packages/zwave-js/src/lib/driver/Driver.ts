@@ -5663,6 +5663,21 @@ ${handlers.length} left`,
 						return true;
 					}
 
+					// The same is true before the command has been assembled, when the encapsulated command
+					// is still only in binary form
+					if (
+						cmd.decryptedCCBytes
+						&& cmd.decryptedCCBytes[0] === CommandClasses.Security
+						&& [
+							SecurityCommand.CommandsSupportedGet,
+							SecurityCommand.CommandsSupportedReport,
+						].includes(
+							cmd.decryptedCCBytes[1],
+						)
+					) {
+						return true;
+					}
+
 					// Other S0 commands are only accepted if S0 is the highest security class
 					return secClass === SecurityClass.S0_Legacy;
 				}
