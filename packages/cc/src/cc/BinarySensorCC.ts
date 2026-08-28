@@ -30,6 +30,7 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	type RefreshValuesOptions,
+	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -402,8 +403,15 @@ export class BinarySensorCCReport extends BinarySensorCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
+		// The sensor type field only exists in V2+ reports.
+		// Ignore it if the device advertises version 1.
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+
 		// Workaround for devices reporting with sensor type Any -> find first supported sensor type and use that
-		let sensorType = this.type;
+		let sensorType = BinarySensorType.Any;
+		if (ccVersion >= 2) {
+			sensorType = this.type;
+		}
 		if (sensorType === BinarySensorType.Any) {
 			const supportedSensorTypes = this.getValue<BinarySensorType[]>(
 				ctx,
