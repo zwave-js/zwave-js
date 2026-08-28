@@ -193,12 +193,18 @@ integrationTest.sequential(
 			const successfulCount = control.getCount;
 			const successfulFirst = driver.sendCommand(
 				new BasicCCGet({ nodeId: 2 }),
-				commandOptions,
+				{
+					...commandOptions,
+					priority: MessagePriority.Poll,
+				},
 			);
 			await control.started;
 			const successfulSecond = driver.sendCommand(
 				new BasicCCGet({ nodeId: 2 }),
-				commandOptions,
+				{
+					...commandOptions,
+					priority: MessagePriority.Poll,
+				},
 			);
 			control.release.resolve();
 			const [successfulFirstResult, successfulSecondResult] =
