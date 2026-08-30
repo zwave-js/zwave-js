@@ -1,0 +1,103 @@
+{
+	"manufacturer": "SimonTech S.L.U",
+	"manufacturerId": "0x0267",
+	"label": "10002181-13x",
+	"description": "Simon 100: Battery Master Roller Blind",
+	"devices": [
+		{
+			"productType": "0x0006",
+			"productId": "0x0000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "13",
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Buttons Lock"
+		},
+		{
+			"#": "15",
+			"label": "Reset to Default",
+			"valueSize": 2,
+			"minValue": 17170,
+			"maxValue": 39015,
+			"defaultValue": 39015,
+			"unsigned": true,
+			"writeOnly": true,
+			"options": [
+				{
+					"label": "Parameters, groups, and Z-Wave status are restored to default",
+					"value": 39015
+				},
+				{
+					"label": "Parameters, except lock long press are restored to default",
+					"value": 17170
+				}
+			]
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Manual Association Lock"
+		},
+		{
+			"#": "19",
+			"label": "Short Press Action",
+			"valueSize": 1,
+			"defaultValue": 7,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Toggle on/off",
+					"value": 0
+				},
+				{
+					"label": "Turn on",
+					"value": 1
+				},
+				{
+					"label": "Turn off",
+					"value": 2
+				},
+				{
+					"label": "Roller blind up/down/stop",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": "27",
+			"$import": "~/templates/master_template.json#base_enable_disable_255",
+			"label": "Long Press Lock",
+			"description": "Prevents sending Node Info on a long press (2-10 seconds)"
+		},
+		{
+			"#": "29",
+			"label": "No Associated Devices Mode",
+			"valueSize": 1,
+			"defaultValue": 255,
+			"unsigned": true,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Send error signal",
+					"value": 0
+				},
+				{
+					"label": "Send Central Scene Notification",
+					"value": 255
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "Set the Z-Wave Controller to inclusion mode.\nPress the button for between 2 and 10 seconds.",
+		"exclusion": "Set the Z-Wave Controller to exclusion mode.\nPress the button for between 2 and 10 seconds.",
+		"reset": "Press and hold the button for between 30 and 33 seconds to restore factory defaults.",
+		"manual": "https://www.simonelectric.com/es-es/10002181-230-tecla-master-simon-io-persianas-bateria-blanco-mate-simon-100"
+	}
+}
