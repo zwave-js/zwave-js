@@ -1073,7 +1073,10 @@ export class NotificationCC extends CommandClass {
 			// because the behaviour is too complex and spans the lifetime
 			// of several reports. Thus we handle it in the Node instance
 
-			if (response) {
+			// Push nodes respond to a Get with event 0xfe when they have
+			// no active notification. Skip these to avoid persisting
+			// spurious "unknown" values.
+			if (response && response.notificationEvent !== 0xfe) {
 				// @ts-expect-error
 				await node.handleCommand(response);
 			}
