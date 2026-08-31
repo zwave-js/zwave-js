@@ -44,7 +44,6 @@ function createDummyTransaction(
 ): Transaction {
 	options.priority ??= MessagePriority.Normal;
 	options.message ??= {} as any;
-	options.promise ??= createDeferredPromise();
 	options.parts = createDummyMessageGenerator(options.message!);
 	return new Transaction(driver, options as TransactionOptions);
 }
@@ -437,16 +436,14 @@ test("should capture a stack trace where it was created", (t) => {
 });
 
 describe("attachments", () => {
-	function createAttachedTransaction() {
-		const physicalPromise = createDeferredPromise<Message | void>();
-		const transaction = createDummyTransaction({} as Driver, {
-			promise: physicalPromise,
-		});
-		return { physicalPromise, transaction };
+	function createAttachedTransaction(
+		options: Partial<TransactionOptions> = {},
+	) {
+		return createDummyTransaction({} as Driver, options);
 	}
 
 	test("fans out the physical result and progress", async () => {
-		const { physicalPromise, transaction } = createAttachedTransaction();
+		const transaction = createAttachedTransaction();
 		const first = createDeferredPromise<Message | void>();
 		const second = createDeferredPromise<Message | void>();
 		const firstProgress = vi.fn();
@@ -457,22 +454,24 @@ describe("attachments", () => {
 		transaction.setProgress({ state: TransactionState.Active });
 
 		const result = {} as Message;
-		physicalPromise.resolve(result);
+		transaction.abort(result);
 
 		await expect(first).resolves.toBe(result);
 		await expect(second).resolves.toBe(result);
 		expect(firstProgress.mock.calls).toEqual([
 			[{ state: TransactionState.Queued }],
 			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
 		]);
 		expect(secondProgress.mock.calls).toEqual([
 			[{ state: TransactionState.Queued }],
 			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
 		]);
 	});
 
 	test("fans out errors and TX reports", async () => {
-		const { physicalPromise, transaction } = createAttachedTransaction();
+		const transaction = createAttachedTransaction();
 		const first = createDeferredPromise<Message | void>();
 		const second = createDeferredPromise<Message | void>();
 		const firstReport = vi.fn();
@@ -486,7 +485,7 @@ describe("attachments", () => {
 			"failed",
 			ZWaveErrorCodes.Controller_MessageDropped,
 		);
-		physicalPromise.reject(error);
+		transaction.abort(error);
 
 		await expect(first).rejects.toBe(error);
 		await expect(second).rejects.toBe(error);
@@ -495,7 +494,7 @@ describe("attachments", () => {
 	});
 
 	test("detaches callers independently", async () => {
-		const { physicalPromise, transaction } = createAttachedTransaction();
+		const transaction = createAttachedTransaction();
 		const first = createDeferredPromise<Message | void>();
 		const second = createDeferredPromise<Message | void>();
 		const firstProgress = vi.fn();
@@ -506,10 +505,11 @@ describe("attachments", () => {
 			"expired",
 			ZWaveErrorCodes.Controller_MessageExpired,
 		);
-		firstAttachment.detach(error);
-		firstAttachment.detach(error);
+		// The second caller is still attached, so detaching must report false
+		expect(firstAttachment.detach(error)).toBe(false);
+		expect(firstAttachment.detach(error)).toBe(false);
 		const result = {} as Message;
-		physicalPromise.resolve(result);
+		transaction.abort(result);
 
 		await expect(first).rejects.toBe(error);
 		await expect(second).resolves.toBe(result);
@@ -520,9 +520,28 @@ describe("attachments", () => {
 		expect(firstProgress).toHaveBeenCalledTimes(1);
 	});
 
+	test("reports when the last caller detaches", async () => {
+		const transaction = createAttachedTransaction();
+		const first = createDeferredPromise<Message | void>();
+		const second = createDeferredPromise<Message | void>();
+		const firstAttachment = transaction.attach(first);
+		const secondAttachment = transaction.attach(second);
+
+		const error = new ZWaveError(
+			"expired",
+			ZWaveErrorCodes.Controller_MessageExpired,
+		);
+		expect(firstAttachment.detach(error)).toBe(false);
+		expect(secondAttachment.detach(error)).toBe(true);
+		expect(firstAttachment.sharesLifecycleWith(transaction)).toBe(true);
+
+		await expect(first).rejects.toBe(error);
+		await expect(second).rejects.toBe(error);
+	});
+
 	test("replays changed progress when adopting callers", async () => {
-		const { transaction: source } = createAttachedTransaction();
-		const { transaction: target } = createAttachedTransaction();
+		const source = createAttachedTransaction();
+		const target = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
 		const progress = vi.fn();
 		const attachment = source.attach(caller, progress);
@@ -537,7 +556,7 @@ describe("attachments", () => {
 		]);
 		expect(source.hasAttachments).toBe(false);
 		expect(target.hasAttachments).toBe(true);
-		expect(attachment.isAttachedTo(target)).toBe(true);
+		expect(attachment.sharesLifecycleWith(target)).toBe(true);
 
 		const error = new ZWaveError(
 			"expired",
@@ -549,8 +568,8 @@ describe("attachments", () => {
 	});
 
 	test("does not replay unchanged progress when adopting callers", () => {
-		const { transaction: source } = createAttachedTransaction();
-		const { transaction: target } = createAttachedTransaction();
+		const source = createAttachedTransaction();
+		const target = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
 		const progress = vi.fn();
 		source.attach(caller, progress);
@@ -563,7 +582,7 @@ describe("attachments", () => {
 	});
 
 	test("preserves callers through cloning", async () => {
-		const { physicalPromise, transaction } = createAttachedTransaction();
+		const transaction = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
 		const progress = vi.fn();
 		transaction.attach(caller, progress);
@@ -572,17 +591,18 @@ describe("attachments", () => {
 		const clone = transaction.clone();
 		clone.setProgress({ state: TransactionState.Queued });
 		const result = {} as Message;
-		physicalPromise.resolve(result);
+		transaction.abort(result);
 
 		await expect(caller).resolves.toBe(result);
 		expect(progress.mock.calls).toEqual([
 			[{ state: TransactionState.Active }],
 			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Completed }],
 		]);
 	});
 
 	test("shares progress through requeue clones", async () => {
-		const { physicalPromise, transaction } = createAttachedTransaction();
+		const transaction = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
 		const progress = vi.fn();
 		transaction.attach(caller, progress);
@@ -592,8 +612,7 @@ describe("attachments", () => {
 		const clone = transaction.clone();
 		clone.setProgress({ state: TransactionState.Queued });
 		clone.setProgress({ state: TransactionState.Active });
-		physicalPromise.resolve();
-		transaction.setProgress({ state: TransactionState.Completed });
+		transaction.abort(undefined);
 		clone.setProgress({
 			state: TransactionState.Failed,
 			reason: "stale clone",
@@ -609,47 +628,59 @@ describe("attachments", () => {
 		]);
 	});
 
-	test("marks transactions unavailable after physical settlement", async () => {
-		const { physicalPromise, transaction } = createAttachedTransaction();
+	test("marks transactions settled synchronously", () => {
+		const transaction = createAttachedTransaction();
 		expect(transaction.isSettled).toBe(false);
-		physicalPromise.resolve();
-		await physicalPromise;
+		transaction.abort(undefined);
 		expect(transaction.isSettled).toBe(true);
 	});
 
-	test("marks terminal progress before notifying callers", () => {
-		const { transaction } = createAttachedTransaction();
+	test("reports the outcome once via onSettled", () => {
+		const onSettled = vi.fn();
+		const transaction = createAttachedTransaction({ onSettled });
+		const result = {} as Message;
+		transaction.abort(result);
+		transaction.abort(undefined);
+
+		expect(onSettled).toHaveBeenCalledTimes(1);
+		expect(onSettled).toHaveBeenCalledWith({
+			status: "fulfilled",
+			value: result,
+		});
+	});
+
+	test("settles before notifying callers", async () => {
+		const transaction = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
-		const terminalStateSeen = vi.fn();
+		const settledSeen = vi.fn();
 		transaction.attach(caller, ({ state }) => {
 			if (state === TransactionState.Failed) {
-				terminalStateSeen(transaction.hasTerminalProgress);
+				settledSeen(transaction.isSettled);
 			}
 		});
 
-		transaction.setProgress({
-			state: TransactionState.Failed,
-			reason: "failed",
-		});
+		const error = new ZWaveError(
+			"failed",
+			ZWaveErrorCodes.Controller_MessageDropped,
+		);
+		transaction.abort(error);
 
-		expect(terminalStateSeen).toHaveBeenCalledWith(true);
+		expect(settledSeen).toHaveBeenCalledWith(true);
+		await expect(caller).rejects.toBe(error);
 	});
 
 	test("reports terminal progress to callers added after settlement", async () => {
-		const { physicalPromise, transaction } = createAttachedTransaction();
+		const transaction = createAttachedTransaction();
 		transaction.setProgress({ state: TransactionState.Active });
 		const result = {} as Message;
-		physicalPromise.resolve(result);
-		await physicalPromise;
+		transaction.abort(result);
 
 		const caller = createDeferredPromise<Message | void>();
 		const progress = vi.fn();
 		transaction.attach(caller, progress);
-		transaction.setProgress({ state: TransactionState.Completed });
 
 		await expect(caller).resolves.toBe(result);
 		expect(progress.mock.calls).toEqual([
-			[{ state: TransactionState.Active }],
 			[{ state: TransactionState.Completed }],
 		]);
 	});

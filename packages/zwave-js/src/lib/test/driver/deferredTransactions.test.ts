@@ -1,4 +1,9 @@
-import { BasicCCGet, type CommandClass, CommandRelation } from "@zwave-js/cc";
+import {
+	BasicCCGet,
+	BasicCCSet,
+	type CommandClass,
+	CommandRelation,
+} from "@zwave-js/cc";
 import { TransactionState, ZWaveErrorCodes } from "@zwave-js/core";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import { RemoveNodeReason } from "../../controller/Inclusion.js";
@@ -9,6 +14,17 @@ class RelatedBasicCCGet extends BasicCCGet {
 		return other instanceof RelatedBasicCCGet
 			? CommandRelation.Redundant
 			: CommandRelation.Unrelated;
+	}
+}
+
+class RelatedBasicCCSet extends BasicCCSet {
+	protected override determineRelation(other: CommandClass): CommandRelation {
+		if (!(other instanceof RelatedBasicCCSet)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.targetValue === other.targetValue
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
 	}
 }
 
@@ -110,6 +126,42 @@ integrationTest.sequential(
 			t.expect(await result).toMatchObject({
 				code: ZWaveErrorCodes.Controller_NodeRemoved,
 			});
+		},
+	},
+);
+
+integrationTest.sequential(
+	"Superseding commands reject deferred transactions",
+	{
+		...testOptions,
+		testBody: async (t, driver) => {
+			driver["pauseSendQueue"]();
+			const queued = createDeferredPromise<void>();
+			const older = driver.sendCommand(
+				new RelatedBasicCCSet({ nodeId: 2, targetValue: 1 }),
+				{
+					...commandOptions,
+					onProgress: ({ state }) => {
+						if (state === TransactionState.Queued) queued.resolve();
+					},
+				},
+			);
+			const olderResult = older.catch((error) => error);
+			await queued;
+			await driver.delayTransactionsForNode(2, 3600);
+
+			const newer = driver.sendCommand(
+				new RelatedBasicCCSet({ nodeId: 2, targetValue: 2 }),
+				commandOptions,
+			);
+			// The newer command stays queued until teardown
+			newer.catch(() => {});
+
+			t.expect(await olderResult).toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageSuperseded,
+			});
+			// The emptied batch must free its requeue timer
+			t.expect(driver["requeueTimers"].size).toBe(0);
 		},
 	},
 );

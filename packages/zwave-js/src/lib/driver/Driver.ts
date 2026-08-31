@@ -7065,9 +7065,6 @@ ${handlers.length} left`,
 				}
 			}
 		}
-
-		// This transaction completed successfully, try the next one
-		transaction.setProgress({ state: TransactionState.Completed });
 	}
 
 	/**
@@ -7452,123 +7449,161 @@ ${handlers.length} left`,
 			);
 	}
 
+	/**
+	 * Adds a transaction to the appropriate queue, coalescing it with related
+	 * queued or in-flight commands:
+	 * - A redundant command shares the older command's transmission.
+	 * - A superseding command replaces queued older commands, failing their callers.
+	 *
+	 * `preventDeduplication` opts a command out of both: it always transmits
+	 * itself and is never dropped in favor of a newer command. It does absorb
+	 * the callers of unprotected duplicates it replaces in the queue.
+	 */
 	private enqueueTransaction(transaction: Transaction): void {
 		type QueuedTransaction = {
 			queue: TransactionQueue;
 			transaction: Transaction;
 		};
 
-		let activeRedundant: QueuedTransaction | undefined;
+		let activeRedundant: Transaction | undefined;
 		const queuedRedundant: QueuedTransaction[] = [];
 		const queuedSuperseded: QueuedTransaction[] = [];
+		const superseded: Transaction[] = [];
 
 		const newerMessage = transaction.message;
 		if (isSendData(newerMessage) && containsCC(newerMessage)) {
-			for (const queue of this.queues) {
-				const inspect = (
-					older: Transaction,
-					source: "active" | "queue",
-				): void => {
-					if (
-						!older.hasAttachments
-						|| older.isSettled
-						|| older.hasTerminalProgress
-						|| !this.areTransactionsCompatible(transaction, older)
-						|| !isSendData(older.message)
-						|| !containsCC(older.message)
-					) {
-						return;
-					}
+			const relationTo = (older: Transaction): CommandRelation => {
+				if (
+					!older.hasAttachments
+					|| older.isSettled
+					|| !this.areTransactionsCompatible(transaction, older)
+					|| !isSendData(older.message)
+					|| !containsCC(older.message)
+				) {
+					return CommandRelation.Unrelated;
+				}
+				return getCommandRelation(
+					newerMessage.command,
+					older.message.command,
+				);
+			};
 
-					const relation = getCommandRelation(
-						newerMessage.command,
-						older.message.command,
-					);
-					if (relation === CommandRelation.Supersedes) {
-						if (
-							source === "queue"
-							&& !older.preventDeduplication
-						) {
-							queuedSuperseded.push({
-								queue,
-								transaction: older,
-							});
-						}
-					} else if (relation === CommandRelation.Redundant) {
-						if (
-							transaction.preventDeduplication
-							&& older.preventDeduplication
-						) {
-							return;
-						}
-						if (source === "active") {
-							if (!transaction.preventDeduplication) {
-								activeRedundant ??= {
+			for (const queue of this.queues) {
+				if (
+					queue.currentTransaction
+					// Protected commands must transmit themselves, so they ignore the active transmission
+					&& !transaction.preventDeduplication
+					&& relationTo(queue.currentTransaction)
+						=== CommandRelation.Redundant
+				) {
+					activeRedundant ??= queue.currentTransaction;
+				}
+
+				for (const older of queue.transactions) {
+					switch (relationTo(older)) {
+						case CommandRelation.Supersedes:
+							// Protected commands must not be dropped for a newer command
+							if (!older.preventDeduplication) {
+								queuedSuperseded.push({
 									queue,
 									transaction: older,
-								};
+								});
 							}
-						} else {
-							queuedRedundant.push({
-								queue,
-								transaction: older,
-							});
-						}
+							break;
+						case CommandRelation.Redundant:
+							// Two protected commands transmit separately
+							if (
+								!transaction.preventDeduplication
+								|| !older.preventDeduplication
+							) {
+								queuedRedundant.push({
+									queue,
+									transaction: older,
+								});
+							}
+							break;
 					}
-				};
+				}
+			}
 
-				if (queue.currentTransaction) {
-					inspect(queue.currentTransaction, "active");
+			// Deferred transactions (see delayTransactionsForNode) must also be
+			// superseded, or they would transmit their stale command after the
+			// newer one once their requeue timer fires. Redundant deferred
+			// transactions are left alone: joining them would inherit their delay.
+			for (const [nodeId, batches] of this.requeueTimers) {
+				for (const batch of batches) {
+					batch.transactions = batch.transactions.filter((older) => {
+						if (
+							relationTo(older) === CommandRelation.Supersedes
+							&& !older.preventDeduplication
+						) {
+							superseded.push(older);
+							return false;
+						}
+						return true;
+					});
+					if (batch.transactions.length === 0) {
+						batch.timer.clear();
+						batches.delete(batch);
+					}
 				}
-				for (const queued of queue.transactions) {
-					inspect(queued, "queue");
-				}
+				if (batches.size === 0) this.requeueTimers.delete(nodeId);
 			}
 		}
 
-		for (const superseded of queuedSuperseded) {
-			superseded.queue.removeWithoutTrigger(superseded.transaction);
+		// Reject only after all bookkeeping is done. Rejecting runs caller
+		// listeners synchronously, which may re-enter this method.
+		for (const { queue, transaction: older } of queuedSuperseded) {
+			queue.removeWithoutTrigger(older);
+			superseded.push(older);
+		}
+		for (const older of superseded) {
 			this.rejectTransaction(
-				superseded.transaction,
+				older,
 				new ZWaveError(
 					"The message was superseded by a newer command",
 					ZWaveErrorCodes.Controller_MessageSuperseded,
 					undefined,
-					superseded.transaction.stack,
+					older.stack,
 				),
 			);
 		}
 
 		if (transaction.preventDeduplication) {
-			for (const redundant of queuedRedundant) {
-				if (redundant.transaction.preventDeduplication) continue;
+			// The protected command transmits itself and absorbs the callers of
+			// the duplicates it replaces, keeping the earliest schedule among them
+			for (const { queue, transaction: older } of queuedRedundant) {
 				transaction.priority = Math.min(
 					transaction.priority,
-					redundant.transaction.priority,
+					older.priority,
 				);
 				transaction.creationTimestamp = Math.min(
 					transaction.creationTimestamp,
-					redundant.transaction.creationTimestamp,
+					older.creationTimestamp,
 				);
-				redundant.queue.removeWithoutTrigger(redundant.transaction);
-				transaction.adoptCallersFrom(redundant.transaction);
+				queue.removeWithoutTrigger(older);
+				transaction.adoptCallersFrom(older);
 			}
 			this.getQueueForTransaction(transaction).addWithoutTrigger(
 				transaction,
 			);
 		} else {
-			const redundant = activeRedundant ?? queuedRedundant[0];
+			// The new command's callers join an existing transmission. When
+			// multiple queued matches exist, all of them are protected commands
+			// which will each transmit, so joining the first one is enough.
+			const redundant = activeRedundant
+				?? queuedRedundant[0]?.transaction;
 			if (redundant) {
-				redundant.transaction.adoptCallersFrom(transaction);
+				redundant.adoptCallersFrom(transaction);
 				if (
 					!activeRedundant
-					&& transaction.priority < redundant.transaction.priority
+					&& transaction.priority < redundant.priority
 				) {
-					const oldQueue = redundant.queue;
-					oldQueue.removeWithoutTrigger(redundant.transaction);
-					redundant.transaction.priority = transaction.priority;
-					this.getQueueForTransaction(redundant.transaction)
-						.addWithoutTrigger(redundant.transaction);
+					// Re-sort the queued transmission under its improved priority
+					queuedRedundant[0].queue.removeWithoutTrigger(redundant);
+					redundant.priority = transaction.priority;
+					this.getQueueForTransaction(redundant)
+						.addWithoutTrigger(redundant);
 				}
 			} else {
 				this.getQueueForTransaction(transaction)
@@ -7647,7 +7682,7 @@ ${handlers.length} left`,
 
 		// Create the transaction
 		let transaction: Transaction;
-		const { generator, resultPromise } = createMessageGenerator(
+		const generator = createMessageGenerator(
 			this,
 			this.getEncodingContext(),
 			msg,
@@ -7662,9 +7697,19 @@ ${handlers.length} left`,
 			message: msg,
 			priority: options.priority,
 			parts: generator,
-			promise: resultPromise,
 			preventDeduplication: "preventDeduplication" in options
 				&& options.preventDeduplication === true,
+			onSettled: (result) => {
+				if (
+					result.status === "rejected"
+					&& isZWaveError(result.reason)
+					&& result.reason.code
+						=== ZWaveErrorCodes.Controller_NodeTimeout
+				) {
+					// Count each physical timeout once across coalesced callers
+					node?.incrementStatistics("timeoutResponse");
+				}
+			},
 		});
 		const callerPromise = createDeferredPromise<Message | void>();
 		const attachment = transaction.attach(
@@ -7672,15 +7717,6 @@ ${handlers.length} left`,
 			options.onProgress,
 			options.onTXReport,
 		);
-		void resultPromise.catch((error) => {
-			if (
-				isZWaveError(error)
-				&& error.code === ZWaveErrorCodes.Controller_NodeTimeout
-			) {
-				// Count each physical timeout once across coalesced callers
-				node?.incrementStatistics("timeoutResponse");
-			}
-		});
 
 		// Configure its options
 		if (options.changeNodeStatusOnMissingACK != undefined) {
@@ -7709,10 +7745,10 @@ ${handlers.length} left`,
 					undefined,
 					transaction.stack,
 				);
-				attachment.detach(error);
-				if (!attachment.hasAttachments) {
+				if (attachment.detach(error)) {
+					// Nobody waits for the transmission anymore, cancel it
 					void this.reduceQueues((t, _source) => {
-						if (!attachment.isAttachedTo(t)) {
+						if (!attachment.sharesLifecycleWith(t)) {
 							return { type: "keep" };
 						}
 						return {
@@ -7754,9 +7790,6 @@ ${handlers.length} left`,
 			if (maybeSendToSleep && node && node.canSleep && !node.keepAwake) {
 				setImmediate(() => this.debounceSendNodeToSleep(node));
 			}
-
-			// Set the transaction progress to completed before resolving the Promise
-			transaction.setProgress({ state: TransactionState.Completed });
 
 			return result;
 		} catch (e) {
@@ -8385,11 +8418,6 @@ ${handlers.length} left`,
 		transaction: Transaction,
 		error: ZWaveError,
 	): void {
-		transaction.setProgress({
-			state: TransactionState.Failed,
-			reason: error.message,
-		});
-
 		transaction.abort(error);
 	}
 
@@ -8516,7 +8544,9 @@ ${handlers.length} left`,
 				if (timerSet.size === 0) {
 					this.requeueTimers.delete(nodeId);
 				}
-				const requeued = requeue.map((t) => t.clone());
+				// A newer superseding command may have removed some transactions
+				// from the batch in the meantime
+				const requeued = batch.transactions.map((t) => t.clone());
 				for (const t of requeued) {
 					this.getQueueForTransaction(t).add(t);
 				}

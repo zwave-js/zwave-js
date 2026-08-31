@@ -9,7 +9,7 @@ import {
 	isZWaveError,
 } from "@zwave-js/core";
 import type { Message } from "@zwave-js/serial";
-import { noop } from "@zwave-js/shared";
+import { getErrorMessage, noop } from "@zwave-js/shared";
 import {
 	type Comparable,
 	type CompareResult,
@@ -41,12 +41,13 @@ export interface TransactionOptions {
 	parts: MessageGenerator;
 	/** The priority of this transaction */
 	priority: MessagePriority;
-	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
-	promise: DeferredPromise<Message | void>;
-	/** Prevents this transaction from sharing another physical transmission. */
+	/**
+	 * Ensures this command is transmitted: it will not share another command's
+	 * physical transmission and a newer command cannot supersede it.
+	 */
 	preventDeduplication?: boolean;
-	/** @internal */
-	lifecycle?: TransactionLifecycle;
+	/** Reports the physical outcome exactly once, even when no callers remain attached */
+	onSettled?: (result: TransactionResult) => void;
 }
 
 interface TransactionCaller {
@@ -56,17 +57,14 @@ interface TransactionCaller {
 	lifecycle: TransactionLifecycle;
 }
 
-type TransactionResult =
+export type TransactionResult =
 	| { status: "fulfilled"; value: Message | void }
 	| { status: "rejected"; reason: unknown };
 
 class TransactionLifecycle {
-	public constructor(physicalPromise: DeferredPromise<Message | void>) {
-		void physicalPromise.then(
-			(value) => this.settle({ status: "fulfilled", value }),
-			(reason) => this.settle({ status: "rejected", reason }),
-		);
-	}
+	public constructor(
+		private readonly onSettled?: (result: TransactionResult) => void,
+	) {}
 
 	private readonly callers = new Set<TransactionCaller>();
 	private settled: TransactionResult | undefined;
@@ -80,13 +78,18 @@ class TransactionLifecycle {
 		this.replaySettlement(caller);
 	}
 
-	public detach(caller: TransactionCaller, error: ZWaveError): void {
-		if (this.settled || !this.callers.delete(caller)) return;
+	/**
+	 * Rejects the given caller's promise and stops its progress updates.
+	 * Returns `true` when this removed the last attached caller.
+	 */
+	public detach(caller: TransactionCaller, error: ZWaveError): boolean {
+		if (this.settled || !this.callers.delete(caller)) return false;
 		caller.listener?.({
 			state: TransactionState.Failed,
 			reason: error.message,
 		});
 		caller.promise.reject(error);
+		return this.callers.size === 0;
 	}
 
 	public get hasCallers(): boolean {
@@ -97,12 +100,26 @@ class TransactionLifecycle {
 		return this.settled != undefined;
 	}
 
-	public get hasTerminalProgress(): boolean {
-		// Terminal progress must be visible before synchronous listeners run
-		return (
-			this.progress?.state === TransactionState.Completed
-			|| this.progress?.state === TransactionState.Failed
-		);
+	/**
+	 * Reports the physical outcome. The first call wins, emits the terminal
+	 * progress update and settles all attached callers.
+	 */
+	public settle(result: TransactionResult): void {
+		if (this.settled) return;
+		this.settled = result;
+		if (result.status === "fulfilled") {
+			this.setProgress({ state: TransactionState.Completed });
+		} else {
+			this.setProgress({
+				state: TransactionState.Failed,
+				reason: getErrorMessage(result.reason),
+			});
+		}
+		this.onSettled?.(result);
+		for (const caller of this.callers) {
+			this.replaySettlement(caller);
+		}
+		this.callers.clear();
 	}
 
 	public adoptCallersFrom(source: TransactionLifecycle): void {
@@ -144,27 +161,28 @@ class TransactionLifecycle {
 		}
 	}
 
-	private settle(result: TransactionResult): void {
-		if (this.settled) return;
-		this.settled = result;
-		for (const caller of this.callers) {
-			this.replaySettlement(caller);
-		}
-	}
-
 	private replaySettlement(caller: TransactionCaller): void {
 		if (this.settled?.status === "rejected") {
 			caller.promise.reject(this.settled.reason);
 		} else if (this.settled?.status === "fulfilled") {
+			// Coalesced callers all resolve with the same Message instance
 			caller.promise.resolve(this.settled.value);
 		}
 	}
 }
 
 export interface TransactionAttachmentHandle {
-	detach(error: ZWaveError): void;
-	readonly hasAttachments: boolean;
-	isAttachedTo(transaction: Transaction): boolean;
+	/**
+	 * Rejects this caller's promise and stops its progress updates.
+	 * Returns `true` when no callers remain attached to the shared transmission.
+	 */
+	detach(error: ZWaveError): boolean;
+	/**
+	 * Whether the given transaction currently carries this caller's lifecycle.
+	 * Remains usable after detaching, so the caller can locate and cancel
+	 * a transmission nobody waits for anymore.
+	 */
+	sharesLifecycleWith(transaction: Transaction): boolean;
 }
 
 /**
@@ -174,18 +192,18 @@ export class Transaction implements Comparable<Transaction> {
 	public constructor(
 		public readonly driver: Driver,
 		private readonly options: TransactionOptions,
+		lifecycle?: TransactionLifecycle,
 	) {
 		// Give the message generator a reference to this transaction
 		options.parts.parent = this;
 
 		// Initialize class fields
-		this.promise = options.promise;
 		this.message = options.message;
 		this.priority = options.priority;
 		this.parts = options.parts;
 		this.preventDeduplication = options.preventDeduplication ?? false;
-		this.lifecycle = options.lifecycle
-			?? new TransactionLifecycle(options.promise);
+		this.lifecycle = lifecycle
+			?? new TransactionLifecycle(options.onSettled);
 
 		// We need create the stack on a temporary object or the Error
 		// class will try to print the message
@@ -195,10 +213,7 @@ export class Transaction implements Comparable<Transaction> {
 	}
 
 	public clone(): Transaction {
-		const ret = new Transaction(this.driver, {
-			...this.options,
-			lifecycle: this.lifecycle,
-		});
+		const ret = new Transaction(this.driver, this.options, this.lifecycle);
 		for (
 			const prop of [
 				"_stack",
@@ -216,9 +231,6 @@ export class Transaction implements Comparable<Transaction> {
 
 		return ret;
 	}
-
-	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
-	public readonly promise: DeferredPromise<Message | void>;
 
 	/** The "primary" message this transaction contains, e.g. the un-encapsulated version of a SendData request */
 	public readonly message: Message;
@@ -242,13 +254,8 @@ export class Transaction implements Comparable<Transaction> {
 		this.lifecycle.attach(caller);
 
 		return {
-			detach: (error) => {
-				caller.lifecycle.detach(caller, error);
-			},
-			get hasAttachments() {
-				return caller.lifecycle.hasCallers;
-			},
-			isAttachedTo: (transaction) =>
+			detach: (error) => caller.lifecycle.detach(caller, error),
+			sharesLifecycleWith: (transaction) =>
 				caller.lifecycle === transaction.lifecycle,
 		};
 	}
@@ -261,8 +268,14 @@ export class Transaction implements Comparable<Transaction> {
 		return this.lifecycle.isSettled;
 	}
 
-	public get hasTerminalProgress(): boolean {
-		return this.lifecycle.hasTerminalProgress;
+	/** @internal Reports the successful physical outcome, settling all attached callers */
+	public settleFulfilled(value: Message | void): void {
+		this.lifecycle.settle({ status: "fulfilled", value });
+	}
+
+	/** @internal Reports the failed physical outcome, settling all attached callers */
+	public settleRejected(reason: unknown): void {
+		this.lifecycle.settle({ status: "rejected", reason });
 	}
 
 	public adoptCallersFrom(other: Transaction): void {
@@ -321,16 +334,19 @@ export class Transaction implements Comparable<Transaction> {
 		if (this.parts.self) {
 			this.parts.self.throw(result).catch(noop);
 		} else if (isZWaveError(result)) {
-			this.promise.reject(result);
+			this.settleRejected(result);
 		} else {
-			this.promise.resolve(result);
+			this.settleFulfilled(result);
 		}
 	}
 
 	/** The priority of this transaction */
 	public priority: MessagePriority;
 
-	/** Prevents this transaction from sharing another physical transmission. */
+	/**
+	 * Ensures this command is transmitted: it will not share another command's
+	 * physical transmission and a newer command cannot supersede it.
+	 */
 	public readonly preventDeduplication: boolean;
 
 	/** The timestamp at which the transaction was created */

@@ -446,7 +446,11 @@ export class SupervisionCCGet extends SupervisionCC {
 	protected override determineRelation(
 		other: CommandClass,
 	): CommandRelation {
-		if (other instanceof SupervisionCCGet) {
+		if (
+			other instanceof SupervisionCCGet
+			// Requesting status updates changes the expected response flow
+			&& this.requestStatusUpdates === other.requestStatusUpdates
+		) {
 			return this.encapsulated.getRelationTo(other.encapsulated);
 		}
 		return CommandRelation.Unrelated;

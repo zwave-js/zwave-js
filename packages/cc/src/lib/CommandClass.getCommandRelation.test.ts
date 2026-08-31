@@ -151,6 +151,14 @@ describe("getCommandRelation", () => {
 		);
 	});
 
+	test("separates Supervision status update requests", () => {
+		const newer = SupervisionCC.encapsulate(createSet(1), 2, true);
+		const older = SupervisionCC.encapsulate(createSet(1), 1, false);
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
+	});
+
 	test("recurses through transparent nested wrappers", () => {
 		const securityManager = {} as SecurityManager;
 		const newer = CRC16CC.encapsulate(
