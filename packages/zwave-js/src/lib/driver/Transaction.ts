@@ -50,26 +50,44 @@ export interface TransactionOptions {
 	onSettled?: (result: TransactionResult) => void;
 }
 
+/**
+ * A caller waiting for the result of a transaction: the promise to settle,
+ * plus optional callbacks for progress updates and TX reports. Multiple
+ * callers can wait for the same transaction when commands are coalesced.
+ */
 interface TransactionCaller {
 	promise: DeferredPromise<Message | void>;
 	listener?: TransactionProgressListener;
 	onTXReport?: (report: TXReport) => void;
+	/** The lifecycle this caller is currently attached to */
 	lifecycle: TransactionLifecycle;
 }
 
+/** The physical outcome of a transaction */
 export type TransactionResult =
 	| { status: "fulfilled"; value: Message | void }
 	| { status: "rejected"; reason: unknown };
 
+/**
+ * Tracks the state of one physical transmission and distributes progress
+ * updates, TX reports and the final result to all attached callers.
+ * Requeued clones of a transaction share its lifecycle. When commands are
+ * coalesced, callers move between lifecycles.
+ */
 class TransactionLifecycle {
-	public constructor(
-		private readonly onSettled?: (result: TransactionResult) => void,
-	) {}
+	public constructor(onSettled?: (result: TransactionResult) => void) {
+		this.onSettled = onSettled;
+	}
 
+	private readonly onSettled?: (result: TransactionResult) => void;
 	private readonly callers = new Set<TransactionCaller>();
 	private settled: TransactionResult | undefined;
 	private progress: TransactionProgress | undefined;
 
+	/**
+	 * Adds a caller. It immediately receives the current progress and, if the
+	 * transaction is already settled, the result.
+	 */
 	public attach(caller: TransactionCaller): void {
 		if (this.progress) {
 			caller.listener?.({ ...this.progress });
@@ -92,10 +110,12 @@ class TransactionLifecycle {
 		return this.callers.size === 0;
 	}
 
+	/** Whether any callers are waiting for the result */
 	public get hasCallers(): boolean {
 		return this.callers.size > 0;
 	}
 
+	/** Whether the physical outcome is already known */
 	public get isSettled(): boolean {
 		return this.settled != undefined;
 	}
@@ -122,6 +142,10 @@ class TransactionLifecycle {
 		this.callers.clear();
 	}
 
+	/**
+	 * Moves all callers waiting for another lifecycle over to this one,
+	 * e.g. when a newer command replaces or joins an older one.
+	 */
 	public adoptCallersFrom(source: TransactionLifecycle): void {
 		if (source === this) return;
 		const targetProgress = this.progress;
@@ -129,7 +153,8 @@ class TransactionLifecycle {
 			&& source.progress?.state !== targetProgress.state;
 		for (const caller of source.callers) {
 			source.callers.delete(caller);
-			// Expiry handles must follow the caller after a protected replacement
+			// The caller's attachment handle finds the lifecycle through this
+			// field. It must point here so detaching affects the right transaction.
 			caller.lifecycle = this;
 			this.callers.add(caller);
 			if (replayTargetProgress) {
@@ -139,14 +164,18 @@ class TransactionLifecycle {
 		}
 	}
 
+	/** Forwards a TX report to all attached callers */
 	public reportTXReport(report: TXReport): void {
 		for (const caller of this.callers) {
 			caller.onTXReport?.(report);
 		}
 	}
 
+	/**
+	 * Notifies all attached callers of a progress update.
+	 * Duplicate updates and updates after Completed/Failed are ignored.
+	 */
 	public setProgress(progress: TransactionProgress): void {
-		// Ignore duplicate updates
 		const previousState = this.progress?.state;
 		if (
 			previousState === progress.state
@@ -161,6 +190,7 @@ class TransactionLifecycle {
 		}
 	}
 
+	/** Passes an already-known result on to a single caller */
 	private replaySettlement(caller: TransactionCaller): void {
 		if (this.settled?.status === "rejected") {
 			caller.promise.reject(this.settled.reason);
@@ -171,15 +201,16 @@ class TransactionLifecycle {
 	}
 }
 
+/** Lets a single caller manage its attachment to a transaction */
 export interface TransactionAttachmentHandle {
 	/**
 	 * Rejects this caller's promise and stops its progress updates.
-	 * Returns `true` when no callers remain attached to the shared transmission.
+	 * Returns `true` when no other callers are waiting for the transmission.
 	 */
 	detach(error: ZWaveError): boolean;
 	/**
-	 * Whether the given transaction currently carries this caller's lifecycle.
-	 * Remains usable after detaching, so the caller can locate and cancel
+	 * Whether this caller gets its result from the given transaction.
+	 * Also works after detaching, so the caller can find and cancel
 	 * a transmission nobody waits for anymore.
 	 */
 	sharesLifecycleWith(transaction: Transaction): boolean;
@@ -212,6 +243,7 @@ export class Transaction implements Comparable<Transaction> {
 		this._stack = (tmp as any).stack.replace(/^Error:?\s*\n/, "");
 	}
 
+	/** Creates a copy of this transaction that shares its lifecycle, e.g. for requeuing */
 	public clone(): Transaction {
 		const ret = new Transaction(this.driver, this.options, this.lifecycle);
 		for (
@@ -240,6 +272,12 @@ export class Transaction implements Comparable<Transaction> {
 
 	private readonly lifecycle: TransactionLifecycle;
 
+	/**
+	 * Adds a caller that waits for this transaction's result.
+	 * @param promise Settled with the result of the transaction
+	 * @param listener Called with each progress update
+	 * @param onTXReport Called when a TX report for the transmission is received
+	 */
 	public attach(
 		promise: DeferredPromise<Message | void>,
 		listener?: TransactionProgressListener,
@@ -260,10 +298,12 @@ export class Transaction implements Comparable<Transaction> {
 		};
 	}
 
+	/** Whether any callers are waiting for this transaction's result */
 	public get hasAttachments(): boolean {
 		return this.lifecycle.hasCallers;
 	}
 
+	/** Whether the physical outcome of this transaction is already known */
 	public get isSettled(): boolean {
 		return this.lifecycle.isSettled;
 	}
@@ -278,14 +318,17 @@ export class Transaction implements Comparable<Transaction> {
 		this.lifecycle.settle({ status: "rejected", reason });
 	}
 
+	/** Moves all callers waiting for the given transaction over to this one */
 	public adoptCallersFrom(other: Transaction): void {
 		this.lifecycle.adoptCallersFrom(other.lifecycle);
 	}
 
+	/** Forwards a TX report to all attached callers */
 	public reportTXReport(report: TXReport): void {
 		this.lifecycle.reportTXReport(report);
 	}
 
+	/** Notifies all attached callers of a progress update */
 	public setProgress(progress: TransactionProgress): void {
 		this.lifecycle.setProgress(progress);
 	}

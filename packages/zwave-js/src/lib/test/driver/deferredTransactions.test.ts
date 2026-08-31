@@ -131,6 +131,40 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
+	"Redundant commands join deferred transactions",
+	{
+		...testOptions,
+		testBody: async (t, driver) => {
+			driver["pauseSendQueue"]();
+			const queued = createDeferredPromise<void>();
+			const first = driver.sendCommand(createGet(), {
+				...commandOptions,
+				onProgress: ({ state }) => {
+					if (state === TransactionState.Queued) queued.resolve();
+				},
+			});
+			const firstResult = first.catch((error) => error);
+			await queued;
+			await driver.delayTransactionsForNode(2, 3600);
+
+			const second = driver.sendCommand(createGet(), commandOptions);
+			const secondResult = second.catch((error) => error);
+
+			// The duplicate waits for the deferred transaction instead of queueing
+			t.expect(driver["queue"].transactions.length).toBe(0);
+
+			await driver.destroy();
+			t.expect(await firstResult).toMatchObject({
+				code: ZWaveErrorCodes.Driver_Destroyed,
+			});
+			t.expect(await secondResult).toMatchObject({
+				code: ZWaveErrorCodes.Driver_Destroyed,
+			});
+		},
+	},
+);
+
+integrationTest.sequential(
 	"Superseding commands reject deferred transactions",
 	{
 		...testOptions,
