@@ -202,48 +202,47 @@
 		{
 			"#": "10",
 			"label": "Notification Type",
-  		"valueSize": 1,
-  		"defaultValue": 6,
-  		"unsigned": true,
-  		"allowManualEntry": false,
-  		"options": [
-  			{
-  				"label": "Water alarm",
-  				"value": 0
-  			},
-  			{
-  				"label": "Smoke alarm",
-  				"value": 1
-  			},
-  			{
-  				"label": "CO alarm",
-  				"value": 2
-  			},
-  			{
-  				"label": "CO2 alarm",
-  				"value": 3
-  			},
-  			{
-  				"label": "Access Control (Door/Window)",
-  				"value": 4
-  			},
-  			{
-  				"label": "Access Control (Tilt)",
-  				"value": 5
-  			},
-  			{
-  				"label": "Home Security (Motion)",
-  				"value": 6
-  			},
-  			{
-  				"label": "Home Security (Glass Break)",
-  				"value": 7
-  			},
-  			{
-  				"label": "Emergency alarm notification",
-  				"value": 8
-  			}
-  		]
+			"valueSize": 1,
+			"defaultValue": 6,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Water alarm",
+					"value": 0
+				},
+				{
+					"label": "Smoke alarm",
+					"value": 1
+				},
+				{
+					"label": "CO alarm",
+					"value": 2
+				},
+				{
+					"label": "CO2 alarm",
+					"value": 3
+				},
+				{
+					"label": "Access control (Door/Window)",
+					"value": 4
+				},
+				{
+					"label": "Access control (Tilt)",
+					"value": 5
+				},
+				{
+					"label": "Home security (Motion)",
+					"value": 6
+				},
+				{
+					"label": "Home security (Glass break)",
+					"value": 7
+				},
+				{
+					"label": "Emergency alarm notification",
+					"value": 8
+				}
+			]
 		},
 		{
 			"#": "12[0x01]",
