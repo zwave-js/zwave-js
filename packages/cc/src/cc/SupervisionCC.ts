@@ -448,7 +448,9 @@ export class SupervisionCCGet extends SupervisionCC {
 	): CommandRelation {
 		if (
 			other instanceof SupervisionCCGet
-			// Requesting status updates changes the expected response flow
+			// Requesting status updates changes the expected response flow.
+			// The driver never coalesces status-update transactions, so this
+			// check matters only when getRelationTo is called directly.
 			&& this.requestStatusUpdates === other.requestStatusUpdates
 		) {
 			return this.encapsulated.getRelationTo(other.encapsulated);

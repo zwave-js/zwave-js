@@ -37,6 +37,7 @@ import {
 	type InterviewContext,
 	type PersistValuesContext,
 	getEffectiveCCVersion,
+	haveSameDestination,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -1374,18 +1375,6 @@ export class MultiChannelCCAggregatedMembersGet extends MultiChannelCC {
 
 // @publicAPI
 export type MultiChannelCCDestination = number | (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
-
-function haveSameDestination(
-	first: MultiChannelCCDestination,
-	second: MultiChannelCCDestination,
-): boolean {
-	if (typeof first === "number" || typeof second === "number") {
-		return first === second;
-	}
-	const secondEndpoints = new Set(second);
-	return new Set(first).size === secondEndpoints.size
-		&& first.every((endpoint) => secondEndpoints.has(endpoint));
-}
 
 // @publicAPI
 export interface MultiChannelCCCommandEncapsulationOptions {

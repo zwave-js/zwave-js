@@ -95,12 +95,12 @@ export enum CommandRelation {
 }
 
 /**
- * Singlecast targets must match exactly. Multicast targets must contain the
- * same node IDs regardless of order.
+ * Compares command destinations. Single targets must match exactly.
+ * Multi-targets must contain the same IDs regardless of order.
  */
-function haveSameNodeTarget(
-	first: number | MulticastDestination,
-	second: number | MulticastDestination,
+export function haveSameDestination(
+	first: number | readonly number[],
+	second: number | readonly number[],
 ): boolean {
 	if (typeof first === "number" || typeof second === "number") {
 		return first === second;
@@ -108,7 +108,7 @@ function haveSameNodeTarget(
 	const firstTargets = new Set(first);
 	const secondTargets = new Set(second);
 	return firstTargets.size === secondTargets.size
-		&& [...firstTargets].every((nodeId) => secondTargets.has(nodeId));
+		&& [...firstTargets].every((target) => secondTargets.has(target));
 }
 
 export function getCommandRelation(
@@ -450,7 +450,7 @@ export class CommandClass implements CCId {
 	public getRelationTo(other: CommandClass): CommandRelation {
 		if (
 			this.ccId !== other.ccId
-			|| !haveSameNodeTarget(this.nodeId, other.nodeId)
+			|| !haveSameDestination(this.nodeId, other.nodeId)
 			|| this.endpointIndex !== other.endpointIndex
 			|| this.encapsulationFlags !== other.encapsulationFlags
 		) {

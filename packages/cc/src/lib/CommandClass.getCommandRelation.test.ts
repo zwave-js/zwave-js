@@ -121,23 +121,23 @@ describe("getCommandRelation", () => {
 
 	test.each([
 		[
+			"different node targets",
 			createSet(1, { nodeId: 3 }),
 			createSet(1),
-			"different node targets",
 		],
 		[
+			"different endpoints",
 			createSet(1, { endpointIndex: 1 }),
 			createSet(1),
-			"different endpoints",
 		],
 		[
+			"different encapsulation flags",
 			createSet(1, {
 				encapsulationFlags: EncapsulationFlags.Security,
 			}),
 			createSet(1),
-			"different encapsulation flags",
 		],
-	])("returns unrelated for %s", (newer, older) => {
+	])("returns unrelated for %s", (_label, newer, older) => {
 		expect(getCommandRelation(newer, older)).toBe(
 			CommandRelation.Unrelated,
 		);
