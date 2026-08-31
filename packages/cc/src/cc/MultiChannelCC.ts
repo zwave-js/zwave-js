@@ -1509,12 +1509,12 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 		other: CommandClass,
 	): CommandRelation {
 		if (
-			!(other instanceof MultiChannelCCCommandEncapsulation)
-			|| !haveSameDestination(this.destination, other.destination)
+			other instanceof MultiChannelCCCommandEncapsulation
+			&& haveSameDestination(this.destination, other.destination)
 		) {
-			return CommandRelation.Unrelated;
+			return this.encapsulated.getRelationTo(other.encapsulated);
 		}
-		return this.encapsulated.getRelationTo(other.encapsulated);
+		return CommandRelation.Unrelated;
 	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -1748,10 +1748,10 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 	protected override determineRelation(
 		other: CommandClass,
 	): CommandRelation {
-		if (!(other instanceof MultiChannelCCV1CommandEncapsulation)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof MultiChannelCCV1CommandEncapsulation) {
+			return this.encapsulated.getRelationTo(other.encapsulated);
 		}
-		return this.encapsulated.getRelationTo(other.encapsulated);
+		return CommandRelation.Unrelated;
 	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {

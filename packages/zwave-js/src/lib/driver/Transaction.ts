@@ -54,8 +54,6 @@ interface TransactionAttachment {
 	listener?: TransactionProgressListener;
 	onTXReport?: (report: TXReport) => void;
 	state: TransactionAttachmentState;
-	detached: boolean;
-	lastProgressState?: TransactionState;
 }
 
 type TransactionResult =
@@ -164,11 +162,9 @@ export class Transaction implements Comparable<Transaction> {
 			listener,
 			onTXReport,
 			state: this.attachmentState,
-			detached: false,
 		};
 
 		if (this.attachmentState.progress) {
-			attachment.lastProgressState = this.attachmentState.progress.state;
 			listener?.({ ...this.attachmentState.progress });
 		}
 		this.attachmentState.attachments.add(attachment);
@@ -183,14 +179,16 @@ export class Transaction implements Comparable<Transaction> {
 
 		return {
 			detach: (error) => {
-				if (attachment.detached || attachment.state.settled) return;
-				attachment.detached = true;
-				attachment.state.attachments.delete(attachment);
+				if (
+					attachment.state.settled
+					|| !attachment.state.attachments.delete(attachment)
+				) {
+					return;
+				}
 				attachment.listener?.({
 					state: TransactionState.Failed,
 					reason: error.message,
 				});
-				attachment.lastProgressState = TransactionState.Failed;
 				attachment.promise.reject(error);
 			},
 			get hasAttachments() {
@@ -210,6 +208,7 @@ export class Transaction implements Comparable<Transaction> {
 	}
 
 	public get hasTerminalProgress(): boolean {
+		// Terminal progress must be visible before synchronous listeners run
 		return (
 			this.attachmentState.progress?.state === TransactionState.Completed
 			|| this.attachmentState.progress?.state === TransactionState.Failed
@@ -218,18 +217,17 @@ export class Transaction implements Comparable<Transaction> {
 
 	public transferAttachmentsFrom(other: Transaction): void {
 		if (other.attachmentState === this.attachmentState) return;
-		for (const attachment of other.attachmentState.attachments) {
-			other.attachmentState.attachments.delete(attachment);
+		const sourceState = other.attachmentState;
+		const targetProgress = this.attachmentState.progress;
+		const replayTargetProgress = targetProgress != undefined
+			&& sourceState.progress?.state !== targetProgress.state;
+		for (const attachment of sourceState.attachments) {
+			sourceState.attachments.delete(attachment);
+			// Expiry handles must follow the caller after a protected replacement
 			attachment.state = this.attachmentState;
 			this.attachmentState.attachments.add(attachment);
-			if (
-				this.attachmentState.progress
-				&& attachment.lastProgressState
-					!== this.attachmentState.progress.state
-			) {
-				attachment.lastProgressState =
-					this.attachmentState.progress.state;
-				attachment.listener?.({ ...this.attachmentState.progress });
+			if (replayTargetProgress) {
+				attachment.listener?.({ ...targetProgress });
 			}
 			const settled = this.attachmentState.settled;
 			if (settled?.status === "rejected") {
@@ -258,7 +256,6 @@ export class Transaction implements Comparable<Transaction> {
 		}
 		this.attachmentState.progress = progress;
 		for (const attachment of this.attachmentState.attachments) {
-			attachment.lastProgressState = progress.state;
 			attachment.listener?.({ ...progress });
 		}
 	}

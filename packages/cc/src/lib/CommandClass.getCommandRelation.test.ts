@@ -1,4 +1,4 @@
-import { EncapsulationFlags } from "@zwave-js/core";
+import { EncapsulationFlags, type SecurityManager } from "@zwave-js/core";
 import { describe, expect, test } from "vitest";
 import { BasicCCGet, BasicCCSet } from "../cc/BasicCC.js";
 import { BinarySwitchCCSet } from "../cc/BinarySwitchCC.js";
@@ -14,6 +14,7 @@ import { SecurityCC } from "../cc/SecurityCC.js";
 import { SupervisionCC } from "../cc/SupervisionCC.js";
 import { CommandRelation, getCommandRelation } from "./CommandClass.js";
 
+// Basic Set supplies the smallest command payload needed for relation semantics
 class RelatedBasicCCSet extends BasicCCSet {
 	protected override determineRelation(other: BasicCCSet): CommandRelation {
 		if (!(other instanceof BasicCCSet)) {
@@ -25,6 +26,7 @@ class RelatedBasicCCSet extends BasicCCSet {
 	}
 }
 
+// Same-CC commands may explicitly opt into cross-command relations
 class CrossCommandBasicCCSet extends BasicCCSet {
 	protected override determineRelation(other: BasicCCGet): CommandRelation {
 		return other instanceof BasicCCGet
@@ -53,6 +55,7 @@ function createSet(
 
 describe("getCommandRelation", () => {
 	test("uses the newer command's relation override", () => {
+		// Relation semantics belong to the newer command
 		expect(getCommandRelation(createSet(1), createSet(1))).toBe(
 			CommandRelation.Redundant,
 		);
@@ -145,17 +148,18 @@ describe("getCommandRelation", () => {
 	});
 
 	test("recurses through transparent nested wrappers", () => {
+		const securityManager = {} as SecurityManager;
 		const newer = CRC16CC.encapsulate(
 			SecurityCC.encapsulate(
 				1,
-				{} as Parameters<typeof SecurityCC.encapsulate>[1],
+				securityManager,
 				SupervisionCC.encapsulate(createSet(1), 2),
 			),
 		);
 		const older = CRC16CC.encapsulate(
 			SecurityCC.encapsulate(
 				1,
-				{} as Parameters<typeof SecurityCC.encapsulate>[1],
+				securityManager,
 				SupervisionCC.encapsulate(createSet(1), 1),
 			),
 		);
@@ -173,6 +177,7 @@ describe("getCommandRelation", () => {
 			createSet(1, { endpointIndex: 1 }),
 		);
 
+		// The wrapper endpoint cannot distinguish its logical destinations
 		expect(newer.endpointIndex).toBe(0);
 		expect(older.endpointIndex).toBe(0);
 		expect(getCommandRelation(newer, older)).toBe(
@@ -278,9 +283,11 @@ describe("getCommandRelation", () => {
 			),
 		];
 
+		// The wrapper node ID cannot distinguish its multicast target sets
 		expect(differentTargets[0].nodeId).toBe(
 			differentTargets[1].nodeId,
 		);
+		// Inner targets and S2 group metadata must all match
 		expect(
 			getCommandRelation(differentTargets[0], differentTargets[1]),
 		).toBe(CommandRelation.Unrelated);

@@ -1799,23 +1799,23 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		other: CommandClass,
 	): CommandRelation {
 		if (
-			!(other instanceof Security2CCMessageEncapsulation)
-			|| this.securityClass !== other.securityClass
-			|| this.verifyDelivery !== other.verifyDelivery
-			|| getMulticastGroupId(this.extensions)
-				!== getMulticastGroupId(other.extensions)
-			|| this.extensions.some((extension) =>
+			other instanceof Security2CCMessageEncapsulation
+			&& this.securityClass === other.securityClass
+			&& this.verifyDelivery === other.verifyDelivery
+			&& getMulticastGroupId(this.extensions)
+				=== getMulticastGroupId(other.extensions)
+			&& this.extensions.some((extension) =>
 					extension instanceof MOSExtension
 				)
-				!== other.extensions.some((extension) =>
+				=== other.extensions.some((extension) =>
 					extension instanceof MOSExtension
 				)
-			|| !this.encapsulated
-			|| !other.encapsulated
+			&& this.encapsulated
+			&& other.encapsulated
 		) {
-			return CommandRelation.Unrelated;
+			return this.encapsulated.getRelationTo(other.encapsulated);
 		}
-		return this.encapsulated.getRelationTo(other.encapsulated);
+		return CommandRelation.Unrelated;
 	}
 
 	public override prepareRetransmission(): void {

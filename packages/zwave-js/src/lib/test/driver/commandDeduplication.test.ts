@@ -149,6 +149,7 @@ integrationTest.sequential(
 				targetValue,
 			});
 
+			// Exercise in-flight attachment replay and independent expiry
 			blockNextGet();
 			const firstProgress: TransactionState[] = [];
 			const lateProgress: TransactionState[] = [];
@@ -187,6 +188,7 @@ integrationTest.sequential(
 				TransactionState.Failed,
 			]);
 
+			// Fan out one successful physical result
 			blockNextGet();
 			const successfulCount = control.getCount;
 			const successfulFirst = driver.sendCommand(
@@ -205,6 +207,7 @@ integrationTest.sequential(
 			t.expect(successfulFirstResult).toBe(successfulSecondResult);
 			t.expect(control.getCount).toBe(successfulCount + 1);
 
+			// Fan out one queued physical rejection
 			blockNextGet();
 			const rejectedCount = control.getCount;
 			const rejectionBlocker = driver.sendCommand(
@@ -243,6 +246,7 @@ integrationTest.sequential(
 			await rejectionBlocker;
 			t.expect(control.getCount).toBe(rejectedCount + 1);
 
+			// Promote a queued redundant command without changing queue order
 			control.setValues = [];
 			blockNextGet();
 			const blocker = driver.sendCommand(
@@ -274,6 +278,7 @@ integrationTest.sequential(
 			]);
 			t.expect(control.setValues).toEqual([1, 10]);
 
+			// Supersede a queued command before transmission
 			control.setValues = [];
 			blockNextGet();
 			const supersedingBlocker = driver.sendCommand(
@@ -297,6 +302,7 @@ integrationTest.sequential(
 			await Promise.all([supersedingBlocker, superseding]);
 			t.expect(control.setValues).toEqual([2]);
 
+			// Preserve an in-flight command when a newer command supersedes it
 			blockNextGet();
 			const supersedingCount = control.getCount;
 			const inFlightSuperseded = driver.sendCommand(
@@ -312,6 +318,7 @@ integrationTest.sequential(
 			await Promise.all([inFlightSuperseded, inFlightSuperseding]);
 			t.expect(control.getCount).toBe(supersedingCount + 2);
 
+			// Keep execution-affecting options on separate transmissions
 			blockNextGet();
 			const incompatibleCount = control.getCount;
 			const incompatibleFirst = driver.sendCommand(createGet(5), {
@@ -327,6 +334,7 @@ integrationTest.sequential(
 			await Promise.all([incompatibleFirst, incompatibleSecond]);
 			t.expect(control.getCount).toBe(incompatibleCount + 2);
 
+			// Let protected queued and active commands absorb enabled callers
 			control.setValues = [];
 			blockNextGet();
 			const protectedBlocker = driver.sendCommand(
@@ -365,6 +373,7 @@ integrationTest.sequential(
 			await Promise.all([protectedActive, enabledAttached]);
 			t.expect(control.getCount).toBe(protectedActiveCount + 1);
 
+			// Replace an enabled queued command with a protected command
 			control.setValues = [];
 			blockNextGet();
 			const replacementBlocker = driver.sendCommand(
@@ -388,6 +397,7 @@ integrationTest.sequential(
 			]);
 			t.expect(control.setValues).toEqual([4]);
 
+			// Preserve the higher priority during protected replacement
 			control.setValues = [];
 			blockNextGet();
 			const priorityReplacementBlocker = driver.sendCommand(
@@ -425,6 +435,7 @@ integrationTest.sequential(
 			]);
 			t.expect(control.setValues).toEqual([13, 14]);
 
+			// Transmit protected commands that match active or protected commands
 			blockNextGet();
 			const protectedInFlightCount = control.getCount;
 			const enabledInFlight = driver.sendCommand(
@@ -455,6 +466,7 @@ integrationTest.sequential(
 			await Promise.all([firstProtected, secondProtected]);
 			t.expect(control.getCount).toBe(protectedPairCount + 2);
 
+			// Keep supervised status streams on separate physical sessions
 			blockNextGet();
 			const supervisedCount = control.supervisedSetCount;
 			const supervisedBlocker = driver.sendCommand(
@@ -485,6 +497,7 @@ integrationTest.sequential(
 			]);
 			t.expect(control.supervisedSetCount).toBe(supervisedCount + 2);
 
+			// Apply superseding relations around protected commands
 			control.setValues = [];
 			blockNextGet();
 			const protectedSupersedingBlocker = driver.sendCommand(
@@ -536,6 +549,7 @@ integrationTest.sequential(
 			]);
 			t.expect(control.setValues).toEqual([7, 8]);
 
+			// Keep different relation contexts and default commands independent
 			control.setValues = [];
 			blockNextGet();
 			const distinctBlocker = driver.sendCommand(
@@ -594,6 +608,7 @@ integrationTest.sequential(
 			]);
 			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12, 12]);
 
+			// Exclude completed transactions from synchronous coalescing
 			blockNextGet();
 			const settledCount = control.getCount;
 			let afterCompletion: Promise<unknown> | undefined;
@@ -614,6 +629,7 @@ integrationTest.sequential(
 			await afterCompletion;
 			t.expect(control.getCount).toBe(settledCount + 2);
 
+			// Exclude failed transactions before progress listeners retry
 			control.setValues = [];
 			blockNextGet();
 			const failedRetryBlocker = driver.sendCommand(
@@ -648,6 +664,7 @@ integrationTest.sequential(
 			await Promise.all([failedRetryBlocker, failedRetry]);
 			t.expect(control.setValues).toEqual([16]);
 
+			// Preserve progress across delayed clone requeue
 			control.setValues = [];
 			blockNextGet();
 			const delayedBlocker = driver.sendCommand(

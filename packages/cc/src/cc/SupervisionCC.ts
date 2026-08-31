@@ -446,10 +446,10 @@ export class SupervisionCCGet extends SupervisionCC {
 	protected override determineRelation(
 		other: CommandClass,
 	): CommandRelation {
-		if (!(other instanceof SupervisionCCGet)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof SupervisionCCGet) {
+			return this.encapsulated.getRelationTo(other.encapsulated);
 		}
-		return this.encapsulated.getRelationTo(other.encapsulated);
+		return CommandRelation.Unrelated;
 	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {

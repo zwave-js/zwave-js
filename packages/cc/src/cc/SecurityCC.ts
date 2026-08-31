@@ -742,14 +742,14 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		other: CommandClass,
 	): CommandRelation {
 		if (
-			!(other instanceof SecurityCCCommandEncapsulation)
-			|| this.ccCommand !== other.ccCommand
-			|| !this.encapsulated
-			|| !other.encapsulated
+			other instanceof SecurityCCCommandEncapsulation
+			&& this.ccCommand === other.ccCommand
+			&& this.encapsulated
+			&& other.encapsulated
 		) {
-			return CommandRelation.Unrelated;
+			return this.encapsulated.getRelationTo(other.encapsulated);
 		}
-		return this.encapsulated.getRelationTo(other.encapsulated);
+		return CommandRelation.Unrelated;
 	}
 
 	private alternativeNetworkKey?: BytesView;

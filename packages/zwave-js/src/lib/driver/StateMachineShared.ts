@@ -159,11 +159,7 @@ export function createMessageDroppedUnexpectedError(
 
 export type TransactionReducerResult =
 	| {
-		// Silently drop the transaction
-		type: "drop";
-	}
-	| {
-		// Remove the transaction until the caller requeues it.
+		// Deferred transactions remain unsettled for requeue and teardown
 		type: "defer";
 	}
 	| {

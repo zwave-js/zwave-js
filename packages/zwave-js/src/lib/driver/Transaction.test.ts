@@ -507,6 +507,7 @@ describe("attachments", () => {
 			ZWaveErrorCodes.Controller_MessageExpired,
 		);
 		firstAttachment.detach(error);
+		firstAttachment.detach(error);
 		const result = {} as Message;
 		physicalPromise.resolve(result);
 
@@ -516,6 +517,47 @@ describe("attachments", () => {
 			state: TransactionState.Failed,
 			reason: error.message,
 		});
+		expect(firstProgress).toHaveBeenCalledTimes(1);
+	});
+
+	test("replays changed progress when transferring attachments", async () => {
+		const { transaction: source } = createAttachedTransaction();
+		const { transaction: target } = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		const attachment = source.attach(caller, progress);
+		source.setProgress({ state: TransactionState.Active });
+		target.setProgress({ state: TransactionState.Queued });
+
+		target.transferAttachmentsFrom(source);
+
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Queued }],
+		]);
+		expect(attachment.isAttachedTo(target)).toBe(true);
+
+		const error = new ZWaveError(
+			"expired",
+			ZWaveErrorCodes.Controller_MessageExpired,
+		);
+		attachment.detach(error);
+		await expect(caller).rejects.toBe(error);
+		expect(target.hasAttachments).toBe(false);
+	});
+
+	test("does not replay unchanged progress when transferring attachments", () => {
+		const { transaction: source } = createAttachedTransaction();
+		const { transaction: target } = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		source.attach(caller, progress);
+		source.setProgress({ state: TransactionState.Queued });
+		target.setProgress({ state: TransactionState.Queued });
+
+		target.transferAttachmentsFrom(source);
+
+		expect(progress).toHaveBeenCalledTimes(1);
 	});
 
 	test("preserves attachments through cloning", async () => {

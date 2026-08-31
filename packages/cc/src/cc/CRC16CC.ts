@@ -153,10 +153,10 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
 	protected override determineRelation(
 		other: CommandClass,
 	): CommandRelation {
-		if (!(other instanceof CRC16CCCommandEncapsulation)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof CRC16CCCommandEncapsulation) {
+			return this.encapsulated.getRelationTo(other.encapsulated);
 		}
-		return this.encapsulated.getRelationTo(other.encapsulated);
+		return CommandRelation.Unrelated;
 	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {

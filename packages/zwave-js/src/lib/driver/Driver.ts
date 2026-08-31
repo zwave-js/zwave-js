@@ -7417,6 +7417,7 @@ ${handlers.length} left`,
 		first: Transaction,
 		second: Transaction,
 	): boolean {
+		// Status-update callers require separate physical Supervision sessions
 		if (
 			first.requestStatusUpdates
 			|| second.requestStatusUpdates
@@ -7676,6 +7677,7 @@ ${handlers.length} left`,
 				isZWaveError(error)
 				&& error.code === ZWaveErrorCodes.Controller_NodeTimeout
 			) {
+				// Count each physical timeout once across coalesced callers
 				node?.incrementStatistics("timeoutResponse");
 			}
 		});
@@ -7693,6 +7695,7 @@ ${handlers.length} left`,
 			&& options.requestStatusUpdates === true;
 		transaction.tag = options.tag;
 
+		// Emit Queued first because coalescing may replay Active synchronously
 		transaction.setProgress({ state: TransactionState.Queued });
 		this.enqueueTransaction(transaction);
 
@@ -8590,20 +8593,6 @@ ${handlers.length} left`,
 				case "defer":
 					if (source === "queue") {
 						dropQueued.push(transaction);
-					} else {
-						stopActive = transaction;
-					}
-					break;
-				case "drop":
-					if (source === "queue") {
-						dropQueued.push(transaction);
-
-						// This will silently drop the transaction, so awaiting it will never resolve.
-						// At least notify the listeners about it.
-						transaction.setProgress({
-							state: TransactionState.Failed,
-							reason: "The message was dropped",
-						});
 					} else {
 						stopActive = transaction;
 					}
