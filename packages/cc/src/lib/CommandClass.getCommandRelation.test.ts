@@ -1,4 +1,8 @@
-import { EncapsulationFlags, type SecurityManager } from "@zwave-js/core";
+import {
+	EncapsulationFlags,
+	type SecurityManager,
+	type SecurityManagers,
+} from "@zwave-js/core";
 import { describe, expect, test } from "vitest";
 import { BasicCCGet, BasicCCSet } from "../cc/BasicCC.js";
 import { BinarySwitchCCSet } from "../cc/BinarySwitchCC.js";
@@ -26,7 +30,7 @@ class RelatedBasicCCSet extends BasicCCSet {
 	}
 }
 
-// Same-CC commands may explicitly opt into cross-command relations
+// This helper verifies that relations between different commands are supported
 class CrossCommandBasicCCSet extends BasicCCSet {
 	protected override determineRelation(other: BasicCCGet): CommandRelation {
 		return other instanceof BasicCCGet
@@ -220,9 +224,7 @@ describe("getCommandRelation", () => {
 	});
 
 	test("preserves S2 multicast targets and groups while unwrapping", () => {
-		const securityManagers = {} as Parameters<
-			typeof Security2CC.encapsulate
-		>[2];
+		const securityManagers = {} as SecurityManagers;
 		const differentTargets = [
 			Security2CC.encapsulate(
 				createSet(1, { nodeId: [2, 3] }),
