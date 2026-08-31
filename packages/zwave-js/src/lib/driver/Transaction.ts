@@ -46,21 +46,21 @@ export interface TransactionOptions {
 	/** Prevents this transaction from sharing another physical transmission. */
 	preventDeduplication?: boolean;
 	/** @internal */
-	attachmentState?: TransactionAttachmentState;
+	lifecycle?: TransactionLifecycle;
 }
 
-interface TransactionAttachment {
+interface TransactionCaller {
 	promise: DeferredPromise<Message | void>;
 	listener?: TransactionProgressListener;
 	onTXReport?: (report: TXReport) => void;
-	state: TransactionAttachmentState;
+	lifecycle: TransactionLifecycle;
 }
 
 type TransactionResult =
 	| { status: "fulfilled"; value: Message | void }
 	| { status: "rejected"; reason: unknown };
 
-class TransactionAttachmentState {
+class TransactionLifecycle {
 	public constructor(physicalPromise: DeferredPromise<Message | void>) {
 		void physicalPromise.then(
 			(value) => this.settle({ status: "fulfilled", value }),
@@ -68,19 +68,95 @@ class TransactionAttachmentState {
 		);
 	}
 
-	public readonly attachments = new Set<TransactionAttachment>();
-	public settled: TransactionResult | undefined;
-	public progress: TransactionProgress | undefined;
+	private readonly callers = new Set<TransactionCaller>();
+	private settled: TransactionResult | undefined;
+	private progress: TransactionProgress | undefined;
+
+	public attach(caller: TransactionCaller): void {
+		if (this.progress) {
+			caller.listener?.({ ...this.progress });
+		}
+		this.callers.add(caller);
+		this.replaySettlement(caller);
+	}
+
+	public detach(caller: TransactionCaller, error: ZWaveError): void {
+		if (this.settled || !this.callers.delete(caller)) return;
+		caller.listener?.({
+			state: TransactionState.Failed,
+			reason: error.message,
+		});
+		caller.promise.reject(error);
+	}
+
+	public get hasCallers(): boolean {
+		return this.callers.size > 0;
+	}
+
+	public get isSettled(): boolean {
+		return this.settled != undefined;
+	}
+
+	public get hasTerminalProgress(): boolean {
+		// Terminal progress must be visible before synchronous listeners run
+		return (
+			this.progress?.state === TransactionState.Completed
+			|| this.progress?.state === TransactionState.Failed
+		);
+	}
+
+	public adoptCallersFrom(source: TransactionLifecycle): void {
+		if (source === this) return;
+		const targetProgress = this.progress;
+		const replayTargetProgress = targetProgress != undefined
+			&& source.progress?.state !== targetProgress.state;
+		for (const caller of source.callers) {
+			source.callers.delete(caller);
+			// Expiry handles must follow the caller after a protected replacement
+			caller.lifecycle = this;
+			this.callers.add(caller);
+			if (replayTargetProgress) {
+				caller.listener?.({ ...targetProgress });
+			}
+			this.replaySettlement(caller);
+		}
+	}
+
+	public reportTXReport(report: TXReport): void {
+		for (const caller of this.callers) {
+			caller.onTXReport?.(report);
+		}
+	}
+
+	public setProgress(progress: TransactionProgress): void {
+		// Ignore duplicate updates
+		const previousState = this.progress?.state;
+		if (
+			previousState === progress.state
+			|| previousState === TransactionState.Completed
+			|| previousState === TransactionState.Failed
+		) {
+			return;
+		}
+		this.progress = progress;
+		for (const caller of this.callers) {
+			caller.listener?.({ ...progress });
+		}
+	}
 
 	private settle(result: TransactionResult): void {
 		if (this.settled) return;
 		this.settled = result;
-		for (const attachment of this.attachments) {
-			if (result.status === "rejected") {
-				attachment.promise.reject(result.reason);
-			} else {
-				attachment.promise.resolve(result.value);
-			}
+		for (const caller of this.callers) {
+			this.replaySettlement(caller);
+		}
+	}
+
+	private replaySettlement(caller: TransactionCaller): void {
+		if (this.settled?.status === "rejected") {
+			caller.promise.reject(this.settled.reason);
+		} else if (this.settled?.status === "fulfilled") {
+			caller.promise.resolve(this.settled.value);
 		}
 	}
 }
@@ -108,8 +184,8 @@ export class Transaction implements Comparable<Transaction> {
 		this.priority = options.priority;
 		this.parts = options.parts;
 		this.preventDeduplication = options.preventDeduplication ?? false;
-		this.attachmentState = options.attachmentState
-			?? new TransactionAttachmentState(options.promise);
+		this.lifecycle = options.lifecycle
+			?? new TransactionLifecycle(options.promise);
 
 		// We need create the stack on a temporary object or the Error
 		// class will try to print the message
@@ -121,7 +197,7 @@ export class Transaction implements Comparable<Transaction> {
 	public clone(): Transaction {
 		const ret = new Transaction(this.driver, {
 			...this.options,
-			attachmentState: this.attachmentState,
+			lifecycle: this.lifecycle,
 		});
 		for (
 			const prop of [
@@ -150,114 +226,55 @@ export class Transaction implements Comparable<Transaction> {
 	/** The message generator to create the actual messages for this transaction */
 	public readonly parts: MessageGenerator;
 
-	private readonly attachmentState: TransactionAttachmentState;
+	private readonly lifecycle: TransactionLifecycle;
 
 	public attach(
 		promise: DeferredPromise<Message | void>,
 		listener?: TransactionProgressListener,
 		onTXReport?: (report: TXReport) => void,
 	): TransactionAttachmentHandle {
-		const attachment: TransactionAttachment = {
+		const caller: TransactionCaller = {
 			promise,
 			listener,
 			onTXReport,
-			state: this.attachmentState,
+			lifecycle: this.lifecycle,
 		};
-
-		if (this.attachmentState.progress) {
-			listener?.({ ...this.attachmentState.progress });
-		}
-		this.attachmentState.attachments.add(attachment);
-		const settled = this.attachmentState.settled;
-		if (settled) {
-			if (settled.status === "rejected") {
-				promise.reject(settled.reason);
-			} else {
-				promise.resolve(settled.value);
-			}
-		}
+		this.lifecycle.attach(caller);
 
 		return {
 			detach: (error) => {
-				if (
-					attachment.state.settled
-					|| !attachment.state.attachments.delete(attachment)
-				) {
-					return;
-				}
-				attachment.listener?.({
-					state: TransactionState.Failed,
-					reason: error.message,
-				});
-				attachment.promise.reject(error);
+				caller.lifecycle.detach(caller, error);
 			},
 			get hasAttachments() {
-				return attachment.state.attachments.size > 0;
+				return caller.lifecycle.hasCallers;
 			},
 			isAttachedTo: (transaction) =>
-				attachment.state === transaction.attachmentState,
+				caller.lifecycle === transaction.lifecycle,
 		};
 	}
 
 	public get hasAttachments(): boolean {
-		return this.attachmentState.attachments.size > 0;
+		return this.lifecycle.hasCallers;
 	}
 
 	public get isSettled(): boolean {
-		return this.attachmentState.settled != undefined;
+		return this.lifecycle.isSettled;
 	}
 
 	public get hasTerminalProgress(): boolean {
-		// Terminal progress must be visible before synchronous listeners run
-		return (
-			this.attachmentState.progress?.state === TransactionState.Completed
-			|| this.attachmentState.progress?.state === TransactionState.Failed
-		);
+		return this.lifecycle.hasTerminalProgress;
 	}
 
-	public transferAttachmentsFrom(other: Transaction): void {
-		if (other.attachmentState === this.attachmentState) return;
-		const sourceState = other.attachmentState;
-		const targetProgress = this.attachmentState.progress;
-		const replayTargetProgress = targetProgress != undefined
-			&& sourceState.progress?.state !== targetProgress.state;
-		for (const attachment of sourceState.attachments) {
-			sourceState.attachments.delete(attachment);
-			// Expiry handles must follow the caller after a protected replacement
-			attachment.state = this.attachmentState;
-			this.attachmentState.attachments.add(attachment);
-			if (replayTargetProgress) {
-				attachment.listener?.({ ...targetProgress });
-			}
-			const settled = this.attachmentState.settled;
-			if (settled?.status === "rejected") {
-				attachment.promise.reject(settled.reason);
-			} else if (settled?.status === "fulfilled") {
-				attachment.promise.resolve(settled.value);
-			}
-		}
+	public adoptCallersFrom(other: Transaction): void {
+		this.lifecycle.adoptCallersFrom(other.lifecycle);
 	}
 
 	public reportTXReport(report: TXReport): void {
-		for (const attachment of this.attachmentState.attachments) {
-			attachment.onTXReport?.(report);
-		}
+		this.lifecycle.reportTXReport(report);
 	}
 
 	public setProgress(progress: TransactionProgress): void {
-		// Ignore duplicate updates
-		const previousState = this.attachmentState.progress?.state;
-		if (
-			previousState === progress.state
-			|| previousState === TransactionState.Completed
-			|| previousState === TransactionState.Failed
-		) {
-			return;
-		}
-		this.attachmentState.progress = progress;
-		for (const attachment of this.attachmentState.attachments) {
-			attachment.listener?.({ ...progress });
-		}
+		this.lifecycle.setProgress(progress);
 	}
 
 	/**

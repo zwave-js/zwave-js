@@ -520,7 +520,7 @@ describe("attachments", () => {
 		expect(firstProgress).toHaveBeenCalledTimes(1);
 	});
 
-	test("replays changed progress when transferring attachments", async () => {
+	test("replays changed progress when adopting callers", async () => {
 		const { transaction: source } = createAttachedTransaction();
 		const { transaction: target } = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
@@ -529,12 +529,14 @@ describe("attachments", () => {
 		source.setProgress({ state: TransactionState.Active });
 		target.setProgress({ state: TransactionState.Queued });
 
-		target.transferAttachmentsFrom(source);
+		target.adoptCallersFrom(source);
 
 		expect(progress.mock.calls).toEqual([
 			[{ state: TransactionState.Active }],
 			[{ state: TransactionState.Queued }],
 		]);
+		expect(source.hasAttachments).toBe(false);
+		expect(target.hasAttachments).toBe(true);
 		expect(attachment.isAttachedTo(target)).toBe(true);
 
 		const error = new ZWaveError(
@@ -546,7 +548,7 @@ describe("attachments", () => {
 		expect(target.hasAttachments).toBe(false);
 	});
 
-	test("does not replay unchanged progress when transferring attachments", () => {
+	test("does not replay unchanged progress when adopting callers", () => {
 		const { transaction: source } = createAttachedTransaction();
 		const { transaction: target } = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
@@ -555,12 +557,12 @@ describe("attachments", () => {
 		source.setProgress({ state: TransactionState.Queued });
 		target.setProgress({ state: TransactionState.Queued });
 
-		target.transferAttachmentsFrom(source);
+		target.adoptCallersFrom(source);
 
 		expect(progress).toHaveBeenCalledTimes(1);
 	});
 
-	test("preserves attachments through cloning", async () => {
+	test("preserves callers through cloning", async () => {
 		const { physicalPromise, transaction } = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
 		const progress = vi.fn();
@@ -615,7 +617,7 @@ describe("attachments", () => {
 		expect(transaction.isSettled).toBe(true);
 	});
 
-	test("marks terminal progress before notifying attachments", () => {
+	test("marks terminal progress before notifying callers", () => {
 		const { transaction } = createAttachedTransaction();
 		const caller = createDeferredPromise<Message | void>();
 		const terminalStateSeen = vi.fn();
@@ -633,7 +635,7 @@ describe("attachments", () => {
 		expect(terminalStateSeen).toHaveBeenCalledWith(true);
 	});
 
-	test("reports terminal progress to attachments added after settlement", async () => {
+	test("reports terminal progress to callers added after settlement", async () => {
 		const { physicalPromise, transaction } = createAttachedTransaction();
 		transaction.setProgress({ state: TransactionState.Active });
 		const result = {} as Message;

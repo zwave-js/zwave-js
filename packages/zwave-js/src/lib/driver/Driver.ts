@@ -7551,7 +7551,7 @@ ${handlers.length} left`,
 					redundant.transaction.creationTimestamp,
 				);
 				redundant.queue.removeWithoutTrigger(redundant.transaction);
-				transaction.transferAttachmentsFrom(redundant.transaction);
+				transaction.adoptCallersFrom(redundant.transaction);
 			}
 			this.getQueueForTransaction(transaction).addWithoutTrigger(
 				transaction,
@@ -7559,7 +7559,7 @@ ${handlers.length} left`,
 		} else {
 			const redundant = activeRedundant ?? queuedRedundant[0];
 			if (redundant) {
-				redundant.transaction.transferAttachmentsFrom(transaction);
+				redundant.transaction.adoptCallersFrom(transaction);
 				if (
 					!activeRedundant
 					&& transaction.priority < redundant.transaction.priority
