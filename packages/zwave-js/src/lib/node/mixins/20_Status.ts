@@ -1,4 +1,8 @@
-import { type CommandClasses, InterviewStage } from "@zwave-js/core";
+import {
+	type CommandClasses,
+	InterviewStage,
+	type MaybeNotKnown,
+} from "@zwave-js/core";
 import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
@@ -50,6 +54,11 @@ export interface NodeWithStatus {
 	 * Marks this node as awake (if applicable)
 	 */
 	markAsAwake(): void;
+
+	/**
+	 * The last time this node was awake. Only tracked for nodes that can sleep.
+	 */
+	lastAwake: MaybeNotKnown<Date>;
 
 	/**
 	 * Which interview stage was last completed
@@ -115,6 +124,7 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 		if (this._status === NodeStatus.Asleep) {
 			this._emit("sleep", this, oldStatus);
 		} else if (this._status === NodeStatus.Awake) {
+			this.lastAwake = new Date();
 			this._emit("wake up", this, oldStatus);
 		} else if (this._status === NodeStatus.Dead) {
 			this._emit("dead", this, oldStatus);
@@ -202,6 +212,15 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 	}
 	protected set ready(ready: boolean) {
 		this._ready = ready;
+	}
+
+	/** The last time this node was awake. Only tracked for nodes that can sleep. */
+	public get lastAwake(): MaybeNotKnown<Date> {
+		return this.driver.cacheGet(cacheKeys.node(this.id).lastAwake);
+	}
+	/** @internal */
+	public set lastAwake(value: MaybeNotKnown<Date>) {
+		this.driver.cacheSet(cacheKeys.node(this.id).lastAwake, value);
 	}
 
 	public get interviewStage(): InterviewStage {
