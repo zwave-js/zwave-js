@@ -46,14 +46,14 @@ export interface TransactionOptions {
 	 * physical transmission and a newer command cannot supersede it.
 	 */
 	preventDeduplication?: boolean;
-	/** Reports the physical outcome exactly once, even when no callers remain attached */
+	/** Reports the physical outcome exactly once, no matter how many deduplicated transactions are attached. */
 	onSettled?: (result: TransactionResult) => void;
 }
 
 /**
  * A caller waiting for the result of a transaction: the promise to settle,
  * plus optional callbacks for progress updates and TX reports. Multiple
- * callers can wait for the same transaction when commands are coalesced.
+ * callers can wait for the same transaction when commands are deduplicated.
  */
 interface TransactionCaller {
 	promise: DeferredPromise<Message | void>;
@@ -68,11 +68,26 @@ export type TransactionResult =
 	| { status: "fulfilled"; value: Message | void }
 	| { status: "rejected"; reason: unknown };
 
+/** Lets a single caller manage its attachment to a transaction */
+export interface TransactionAttachmentHandle {
+	/**
+	 * Rejects this caller's promise and stops its progress updates.
+	 * Returns `true` when no other callers are waiting for the transmission.
+	 */
+	detach(error: ZWaveError): boolean;
+	/**
+	 * Whether this caller gets its result from the given transaction.
+	 * Also works after detaching, so the caller can find and cancel
+	 * a transmission nobody waits for anymore.
+	 */
+	sharesLifecycleWith(transaction: Transaction): boolean;
+}
+
 /**
  * Tracks the state of one physical transmission and distributes progress
  * updates, TX reports and the final result to all attached callers.
  * Requeued clones of a transaction share its lifecycle. When commands are
- * coalesced, callers move between lifecycles.
+ * deduplicated, callers move between lifecycles.
  */
 class TransactionLifecycle {
 	public constructor(onSettled?: (result: TransactionResult) => void) {
@@ -195,25 +210,10 @@ class TransactionLifecycle {
 		if (this.settled?.status === "rejected") {
 			caller.promise.reject(this.settled.reason);
 		} else if (this.settled?.status === "fulfilled") {
-			// Coalesced callers all resolve with the same Message instance
+			// Callers of deduplicated commands resolve with the same Message instance
 			caller.promise.resolve(this.settled.value);
 		}
 	}
-}
-
-/** Lets a single caller manage its attachment to a transaction */
-export interface TransactionAttachmentHandle {
-	/**
-	 * Rejects this caller's promise and stops its progress updates.
-	 * Returns `true` when no other callers are waiting for the transmission.
-	 */
-	detach(error: ZWaveError): boolean;
-	/**
-	 * Whether this caller gets its result from the given transaction.
-	 * Also works after detaching, so the caller can find and cancel
-	 * a transmission nobody waits for anymore.
-	 */
-	sharesLifecycleWith(transaction: Transaction): boolean;
 }
 
 /**

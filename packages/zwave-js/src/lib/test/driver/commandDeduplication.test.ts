@@ -87,7 +87,7 @@ const commandOptions = {
 } as const;
 
 integrationTest.sequential(
-	"Command relations coalesce physical transmissions through the Driver",
+	"Command relations deduplicate physical transmissions through the Driver",
 	{
 		nodeCapabilities: {
 			commandClasses: [
@@ -608,7 +608,7 @@ integrationTest.sequential(
 			]);
 			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12, 12]);
 
-			// Exclude completed transactions from synchronous coalescing
+			// Exclude completed transactions from synchronous deduplication
 			blockNextGet();
 			const settledCount = control.getCount;
 			let afterCompletion: Promise<unknown> | undefined;

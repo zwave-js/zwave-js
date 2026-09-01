@@ -28,21 +28,29 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 	public currentTransaction: Transaction | undefined;
 
 	public add(...items: Transaction[]): void {
-		this.addWithoutTrigger(...items);
-		this.trigger();
-	}
-
-	public addWithoutTrigger(...items: Transaction[]): void {
 		this.transactions.add(...items);
+		this.trigger();
 	}
 
 	public remove(...items: Transaction[]): void {
-		this.removeWithoutTrigger(...items);
+		this.transactions.remove(...items);
 		this.trigger();
 	}
 
-	public removeWithoutTrigger(...items: Transaction[]): void {
-		this.transactions.remove(...items);
+	private pauseCount = 0;
+
+	/**
+	 * Pauses the queue, so no new transaction is started while it is being
+	 * modified. Nested calls must be balanced with unpause().
+	 */
+	public pause(): void {
+		this.pauseCount++;
+	}
+
+	/** Unpauses the queue and starts the next transaction if possible */
+	public unpause(): void {
+		this.pauseCount--;
+		if (this.pauseCount === 0) this.trigger();
 	}
 
 	public find(
@@ -61,6 +69,7 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 
 	/** Causes the queue to re-evaluate whether the next transaction may be started */
 	public trigger(): void {
+		if (this.pauseCount > 0) return;
 		while (this.transactions.length > 0 && this.listeners.length > 0) {
 			if (this.mayStartNextTransaction(this.transactions.peekStart()!)) {
 				const promise = this.listeners.shift()!;
@@ -101,7 +110,8 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 				let value: Transaction | undefined;
 
 				if (
-					this.transactions.length > 0
+					this.pauseCount === 0
+					&& this.transactions.length > 0
 					&& this.mayStartNextTransaction(
 						this.transactions.peekStart()!,
 					)

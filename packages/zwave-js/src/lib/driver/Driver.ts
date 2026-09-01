@@ -7410,16 +7410,23 @@ ${handlers.length} left`,
 		}
 	}
 
+	/**
+	 * Checks whether two SendData transactions would be executed and handled
+	 * the same way, so one of them may be deduplicated.
+	 */
 	private areTransactionsCompatible(
 		first: Transaction,
 		second: Transaction,
 	): boolean {
-		// Status-update callers require separate physical Supervision sessions
+		// Callers that request Supervision status updates each need their own
+		// Supervision session
+		if (first.requestStatusUpdates || second.requestStatusUpdates) {
+			return false;
+		}
+
+		// The driver must handle both transactions the same way
 		if (
-			first.requestStatusUpdates
-			|| second.requestStatusUpdates
-			|| first.message.constructor !== second.message.constructor
-			|| first.changeNodeStatusOnTimeout
+			first.changeNodeStatusOnTimeout
 				!== second.changeNodeStatusOnTimeout
 			|| first.pauseSendThread !== second.pauseSendThread
 			|| first.requestWakeUpOnDemand !== second.requestWakeUpOnDemand
@@ -7428,30 +7435,46 @@ ${handlers.length} left`,
 			return false;
 		}
 
-		if (!isSendData(first.message) || !isSendData(second.message)) {
+		// Both must use the same kind of SendData message
+		if (
+			first.message.constructor !== second.message.constructor
+			|| !isSendData(first.message)
+			|| !isSendData(second.message)
+		) {
 			return false;
 		}
-		return first.message.transmitOptions === second.message.transmitOptions
-			&& first.message.maxSendAttempts === second.message.maxSendAttempts
-			&& first.message.nodeUpdateTimeout
-				=== second.message.nodeUpdateTimeout
-			&& first.message.ignoreNodeUpdate
-				=== second.message.ignoreNodeUpdate
-			&& (
-				!(first.message instanceof SendDataBridgeRequest)
-				|| !(second.message instanceof SendDataBridgeRequest)
-				|| first.message.sourceNodeId === second.message.sourceNodeId
-			)
-			&& (
-				!(first.message instanceof SendDataMulticastBridgeRequest)
-				|| !(second.message instanceof SendDataMulticastBridgeRequest)
-				|| first.message.sourceNodeId === second.message.sourceNodeId
-			);
+
+		// The controller must transmit and follow up on both the same way
+		if (
+			first.message.transmitOptions !== second.message.transmitOptions
+			|| first.message.maxSendAttempts
+				!== second.message.maxSendAttempts
+			|| first.message.nodeUpdateTimeout
+				!== second.message.nodeUpdateTimeout
+			|| first.message.ignoreNodeUpdate
+				!== second.message.ignoreNodeUpdate
+		) {
+			return false;
+		}
+
+		// Bridge commands must be sent from the same source node
+		if (
+			(first.message instanceof SendDataBridgeRequest
+				&& second.message instanceof SendDataBridgeRequest
+				&& first.message.sourceNodeId !== second.message.sourceNodeId)
+			|| (first.message instanceof SendDataMulticastBridgeRequest
+				&& second.message instanceof SendDataMulticastBridgeRequest
+				&& first.message.sourceNodeId !== second.message.sourceNodeId)
+		) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
 	 * Determines how a new transaction relates to an existing one, so redundant
-	 * or superseded commands can be coalesced.
+	 * commands can be deduplicated and superseded ones dropped.
 	 * Returns `Unrelated` unless both transactions contain a CC and would be
 	 * executed the same way.
 	 */
@@ -7476,7 +7499,7 @@ ${handlers.length} left`,
 	}
 
 	/**
-	 * Adds a transaction to the queue it belongs to, coalescing it with
+	 * Adds a transaction to the queue it belongs to, deduplicating it against
 	 * related commands in that queue:
 	 * - A redundant command shares the older command's transmission.
 	 * - A superseding command replaces queued older commands, failing their callers.
@@ -7487,6 +7510,9 @@ ${handlers.length} left`,
 	 */
 	private enqueueTransaction(transaction: Transaction): void {
 		const queue = this.getQueueForTransaction(transaction);
+		// While the queue is updated, it must not start a transaction,
+		// e.g. because a completed command triggers it elsewhere
+		queue.pause();
 
 		let activeRedundant: Transaction | undefined;
 		let deferredRedundant: Transaction | undefined;
@@ -7578,7 +7604,7 @@ ${handlers.length} left`,
 		// Remove superseded transactions from the queue before rejecting any
 		// of them. Rejecting runs caller listeners synchronously, and those may
 		// re-enter this method, which must not see the removed transactions.
-		queue.removeWithoutTrigger(...queuedSuperseded);
+		queue.remove(...queuedSuperseded);
 		for (const older of [...queuedSuperseded, ...deferredSuperseded]) {
 			this.rejectTransaction(
 				older,
@@ -7607,15 +7633,16 @@ ${handlers.length} left`,
 				);
 				// The duplicate never transmits. Its callers get their result
 				// from the protected command instead.
-				queue.removeWithoutTrigger(older);
+				queue.remove(older);
 				transaction.adoptCallersFrom(older);
 			}
-			queue.addWithoutTrigger(transaction);
+			queue.add(transaction);
 		} else {
-			// The new command's callers wait for an existing transmission and
-			// the command itself is dropped. When multiple queued matches exist,
-			// all of them are protected commands which will each transmit, so
-			// joining the first one is enough.
+			// Instead of queueing the new command, its callers wait for a
+			// matching command that is active, queued, or waiting for a delayed
+			// requeue. When there are multiple queued matches, all of them are
+			// protected commands which will each transmit, so it does not
+			// matter which one the callers wait for.
 			const redundant = activeRedundant
 				?? queuedRedundant[0]
 				?? deferredRedundant;
@@ -7632,20 +7659,17 @@ ${handlers.length} left`,
 						redundant.priority = transaction.priority;
 					} else {
 						// Re-add the queued command so the queue re-sorts it
-						queue.removeWithoutTrigger(redundant);
+						queue.remove(redundant);
 						redundant.priority = transaction.priority;
-						queue.addWithoutTrigger(redundant);
+						queue.add(redundant);
 					}
 				}
 			} else {
-				queue.addWithoutTrigger(transaction);
+				queue.add(transaction);
 			}
 		}
 
-		// The queue was modified without triggering it, so it does not start
-		// executing a transaction in the middle of this update. Trigger it now
-		// that the update is complete.
-		queue.trigger();
+		queue.unpause();
 	}
 
 	/**
@@ -7740,7 +7764,7 @@ ${handlers.length} left`,
 					&& result.reason.code
 						=== ZWaveErrorCodes.Controller_NodeTimeout
 				) {
-					// Count each physical timeout once across coalesced callers
+					// Count each physical timeout once per actual transaction
 					node?.incrementStatistics("timeoutResponse");
 				}
 			},
@@ -8579,8 +8603,8 @@ ${handlers.length} left`,
 				if (timerSet.size === 0) {
 					this.requeueTimers.delete(nodeId);
 				}
-				// A newer superseding command may have removed some transactions
-				// from the batch in the meantime
+				// Clone the transactions immediately before queuing them.
+				// A newer superseding command may have removed some transactions in the meantime.
 				const requeued = batch.transactions.map((t) => t.clone());
 				for (const t of requeued) {
 					this.getQueueForTransaction(t).add(t);
