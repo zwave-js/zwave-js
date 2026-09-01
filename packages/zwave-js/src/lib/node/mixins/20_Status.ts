@@ -56,7 +56,7 @@ export interface NodeWithStatus {
 	markAsAwake(): void;
 
 	/**
-	 * The last time this node was known to be awake. Only tracked for nodes that can sleep.
+	 * The last time this node was observed to be awake. Only tracked for nodes that can sleep.
 	 */
 	readonly lastAwake: MaybeNotKnown<Date>;
 
@@ -173,11 +173,10 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 	 * Marks this node as awake (if applicable)
 	 */
 	public markAsAwake(): void {
-		// Nodes are marked awake whenever we observe them being awake, which may
-		// happen repeatedly while we already believe them to be. Remember the
-		// most recent observation, not just the one that changed the status.
-		// The guard mirrors the status machine, which only enters "awake" for
-		// nodes that can sleep.
+		// Record every observation, not just the ones that change the status: a node
+		// that is kept awake or whose transition to sleep was missed keeps waking up
+		// while we already believe it to be awake. For always-listening nodes there
+		// is no wake-up to record.
 		if (this.canSleep) this.lastAwake = new Date();
 		this.updateStatusMachine({ value: "AWAKE" });
 	}
@@ -219,11 +218,10 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 		this._ready = ready;
 	}
 
-	/** The last time this node was known to be awake. Only tracked for nodes that can sleep. */
 	public get lastAwake(): MaybeNotKnown<Date> {
 		return this.driver.cacheGet(cacheKeys.node(this.id).lastAwake);
 	}
-	protected set lastAwake(value: MaybeNotKnown<Date>) {
+	private set lastAwake(value: MaybeNotKnown<Date>) {
 		this.driver.cacheSet(cacheKeys.node(this.id).lastAwake, value);
 	}
 
