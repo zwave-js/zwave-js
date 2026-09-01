@@ -1195,7 +1195,11 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				this.isListening = false;
 				this.isFrequentListening = false;
 
+				// Restoring a remembered status is not a new observation of the
+				// node being awake, so the timestamp must not move
+				const lastAwake = this.lastAwake;
 				this.markAsAwake();
+				if (!didWakeUp) this.lastAwake = lastAwake;
 			}
 
 			// Queue a fresh interview
