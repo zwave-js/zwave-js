@@ -479,10 +479,22 @@ jobs:
     - name: Bump zwave-js in Z-Wave JS UI
       # Prereleases are not rolled out to Z-Wave JS UI automatically
       if: ${{ !contains(steps.extract_release.outputs.VERSION, '-') }}
+      timeout-minutes: 15
       env:
         GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         VERSION: ${{ steps.extract_release.outputs.VERSION }}
       run: |
+        # The dispatched workflow installs zwave-js@$VERSION right away. Publishing
+        # and the registry serving the new version are not the same moment, so wait
+        # for it instead of opening a bump PR that cannot resolve the dependency.
+        for _ in $(seq 60); do
+          if npm view "zwave-js@$VERSION" version > /dev/null 2>&1; then break; fi
+          echo "zwave-js@$VERSION is not available on npm yet, waiting..."
+          sleep 10
+        done
+        # Fail loudly instead of dispatching a workflow that is bound to fail
+        npm view "zwave-js@$VERSION" version
+
         gh workflow run update-dep.yml \
           --repo zwave-js/zwave-js-ui \
           --ref master \
