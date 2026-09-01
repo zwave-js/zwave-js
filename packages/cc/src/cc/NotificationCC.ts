@@ -1073,10 +1073,16 @@ export class NotificationCC extends CommandClass {
 			// because the behaviour is too complex and spans the lifetime
 			// of several reports. Thus we handle it in the Node instance
 
-			// Push nodes respond to a Get with event 0xfe when they have
-			// no active notification. Skip these to avoid persisting
-			// spurious "unknown" values.
-			if (response && response.notificationEvent !== 0xfe) {
+			if (response) {
+				// Nodes report event 0xfe ("unknown event") in response to a
+				// Get when no notification of this type is active. Treat it as
+				// a generic idle so idle-able variables are reset, instead of
+				// persisting a spurious "unknown" value. Unsolicited 0xfe
+				// reports are left to the regular handling.
+				if (response.notificationEvent === 0xfe) {
+					response.notificationEvent = 0;
+					response.eventParameters = undefined;
+				}
 				// @ts-expect-error
 				await node.handleCommand(response);
 			}
