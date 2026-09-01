@@ -478,7 +478,7 @@ jobs:
         with:
           script: "const body = process.env.COMMENT_BODY ?? \"\";\nconst match =\n  /^\\/analyze-logfile\\s+(?<url>https?:\\/\\/\\S+)\\s*\\n?(?<query>[\\s\\S]*)/m\n    .exec(body);\nif (!match?.groups?.url) {\n  core.setFailed(\n    \"No valid URL provided. Please use the format: /analyze-logfile <url>\",\n  );\n  return;\n}\ncore.setOutput(\"url\", match.groups.url.trim());\n// The prompt is rendered in the activation job, before this step\n// runs, so its values cannot be interpolated into the prompt via\n// steps.* expressions. Hand them to the agent through a file next\n// to the logfile instead.\nconst fs = require(\"fs\");\nfs.mkdirSync(\"/tmp/gh-aw/agent\", { recursive: true });\nfs.writeFileSync(\n  \"/tmp/gh-aw/agent/command.json\",\n  JSON.stringify({\n    query: (match.groups.query || \"\").trim(),\n    // The safeoutputs MCP server runs in a container without the\n    // GitHub event context, so add_comment cannot auto-target the\n    // triggering item and needs an explicit target\n    item_number:\n      context.payload.discussion?.number\n        ?? context.payload.issue?.number,\n    reply_to_id: context.payload.comment?.node_id ?? \"\",\n  }),\n);\n"
       - name: Download logfile
-        uses: zwave-js/bot-workflows/actions/download-logfile@ab0bc5d7f9172ce658daf685b3554a57cf99ec39 # v1
+        uses: zwave-js/bot-workflows/actions/download-logfile@af08eadd9af802c4d28ba310867710d0b266328e # v1
         with:
           url: ${{ steps.parse_command.outputs.url }}
 

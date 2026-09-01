@@ -495,7 +495,7 @@ jobs:
             const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
             return bot.extractLogfileUrlFromDiscussion({github, context});
       - name: Download logfile
-        uses: zwave-js/bot-workflows/actions/download-logfile@ab0bc5d7f9172ce658daf685b3554a57cf99ec39 # v1
+        uses: zwave-js/bot-workflows/actions/download-logfile@af08eadd9af802c4d28ba310867710d0b266328e # v1
         with:
           url: ${{ steps.get_logfile_url.outputs.result }}
 
