@@ -42,7 +42,7 @@
     "@alcalzone/monopack": "^2.0.0",
     "@alcalzone/release-script": "~5.1.1",
     "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/config-conventional": "^21.2.2",
     "@dprint/formatter": "^0.5.1",
     "@dprint/json": "^0.21.3",
     "@dprint/markdown": "^0.21.1",

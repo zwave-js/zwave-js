@@ -274,13 +274,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@commitlint/config-conventional@npm:^20.5.0":
-  version: 20.5.0
-  resolution: "@commitlint/config-conventional@npm:20.5.0"
+"@commitlint/config-conventional@npm:^21.2.2":
+  version: 21.2.2
+  resolution: "@commitlint/config-conventional@npm:21.2.2"
   dependencies:
-    "@commitlint/types": "npm:^20.5.0"
-    conventional-changelog-conventionalcommits: "npm:^9.2.0"
-  checksum: 10/1088e1cd39dee173999bcda49417533e0c7f649faa1835e0309eddf3b21e9d2238757d7774f17e69572e894ff1c02efd2880a2e2da734c343ec2c68155af12f8
+    "@commitlint/types": "npm:^21.2.0"
+    conventional-changelog-conventionalcommits: "npm:^10.0.0"
+  checksum: 10/fc94e15b7337f1b1e19373fc35bb39819ff9e339cacae58cdc3137a9116fa3e3a4160582cc265d1467247ac13371ddec726138aab6782d1478d804952a730a50
   languageName: node
   linkType: hard
 
@@ -447,6 +447,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@commitlint/types@npm:^21.2.0":
+  version: 21.2.0
+  resolution: "@commitlint/types@npm:21.2.0"
+  dependencies:
+    conventional-commits-parser: "npm:^7.0.0"
+    picocolors: "npm:^1.1.1"
+  checksum: 10/e5dff2c90290c53f6fd23e7f547fd7ee6e20880c40a4be4f5cdb36f31541aa15e7b9dc1337243cbeaed0a4dd17ba6c6b9f09d438f49c0cf8ea49078744ad634a
+  languageName: node
+  linkType: hard
+
 "@conventional-changelog/git-client@npm:^2.6.0":
   version: 2.6.0
   resolution: "@conventional-changelog/git-client@npm:2.6.0"
@@ -463,6 +473,13 @@ __metadata:
     conventional-commits-parser:
       optional: true
   checksum: 10/20886451e594ecf569351806be05764a24310bd90bdbb428bbef5208f4e6499966dc2014a35b1aa66ff8c4cd08cd5a43e3b35d70b607cda813de0915a85780e9
+  languageName: node
+  linkType: hard
+
+"@conventional-changelog/template@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "@conventional-changelog/template@npm:1.4.0"
+  checksum: 10/dac527b0eb01ff4b2457b560f3fb61e24c8797cd5e7cafe4d4561454352714d8aec4d39092a15da068fc082878b1713a589cfd8471267f340f9a78c28057d74b
   languageName: node
   linkType: hard
 
@@ -2650,6 +2667,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@simple-libs/stream-utils@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@simple-libs/stream-utils@npm:2.0.0"
+  checksum: 10/012fddda038a0657e62ae2cbb4f89c9ac56d0d2c611b695695ddaabf70cfc9c5207e6b88a9cb3497b9ff05fc74fbe75296cb70f1d1cf9c015efff197b06ee481
+  languageName: node
+  linkType: hard
+
 "@sindresorhus/merge-streams@npm:^2.1.0":
   version: 2.3.0
   resolution: "@sindresorhus/merge-streams@npm:2.3.0"
@@ -3617,7 +3641,7 @@ __metadata:
     "@alcalzone/monopack": "npm:^2.0.0"
     "@alcalzone/release-script": "npm:~5.1.1"
     "@commitlint/cli": "npm:^20.5.0"
-    "@commitlint/config-conventional": "npm:^20.5.0"
+    "@commitlint/config-conventional": "npm:^21.2.2"
     "@dprint/formatter": "npm:^0.5.1"
     "@dprint/json": "npm:^0.21.3"
     "@dprint/markdown": "npm:^0.21.1"
@@ -4047,6 +4071,13 @@ __metadata:
   dependencies:
     sprintf-js: "npm:~1.0.2"
   checksum: 10/c6a621343a553ff3779390bb5ee9c2263d6643ebcd7843227bdde6cc7adbed796eb5540ca98db19e3fd7b4714e1faa51551f8849b268bb62df27ddb15cbcd91e
+  languageName: node
+  linkType: hard
+
+"argue-cli@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "argue-cli@npm:3.1.0"
+  checksum: 10/e7bfdfb2c804e0070591e865d0c231618c8d71dac5eef768c8a4d39a3d159b45e5e08306fcb3c88a013ee7115bee90ba2b9411d3a8c4a0b3a7477c8c7024f642
   languageName: node
   linkType: hard
 
@@ -4669,12 +4700,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"conventional-changelog-conventionalcommits@npm:^9.2.0":
-  version: 9.3.0
-  resolution: "conventional-changelog-conventionalcommits@npm:9.3.0"
+"conventional-changelog-conventionalcommits@npm:^10.0.0":
+  version: 10.4.0
+  resolution: "conventional-changelog-conventionalcommits@npm:10.4.0"
   dependencies:
-    compare-func: "npm:^2.0.0"
-  checksum: 10/678785cf8189b563d89f3e3dc070d36d74a0b0c4ec24e67ca2892e8c030be993e6da446885352c6240ac2146baf4431df1ba01cc35617bed986feae7d73adc6f
+    "@conventional-changelog/template": "npm:^1.4.0"
+  checksum: 10/e277c5e7226fc108478d5b67c6a581673b3443e022cfa3eea300e6ddf2683a93690048f9f07fb4e24b01ef174ab77c6cf04406b21afb70f9de5a7a61cb6acecf
   languageName: node
   linkType: hard
 
@@ -4694,6 +4725,18 @@ __metadata:
   bin:
     conventional-commits-parser: dist/cli/index.js
   checksum: 10/e57ed66a739cf5c747d9c89594dbffb35572ad5d8324767416d8cfd9014aecbf0d0cc0f0f29e9d16595ec795dc868d83597b38275ab2667971ba6aba38d2fcb0
+  languageName: node
+  linkType: hard
+
+"conventional-commits-parser@npm:^7.0.0":
+  version: 7.1.2
+  resolution: "conventional-commits-parser@npm:7.1.2"
+  dependencies:
+    "@simple-libs/stream-utils": "npm:^2.0.0"
+    argue-cli: "npm:^3.1.0"
+  bin:
+    conventional-commits-parser: ./dist/cli/index.js
+  checksum: 10/50b846af6cd494d3c7fd680f17af7dc2e762a43c45ea160c433e2bc24040337275418b401f4796be70b3de6221f41ae2471a0e5acc6e86b7a857a65e42e9d128
   languageName: node
   linkType: hard
 
