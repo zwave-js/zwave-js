@@ -33,7 +33,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Check PR information
       id: pr-info
@@ -116,7 +116,7 @@ jobs:
 
     steps:
     - name: Checkout merged code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
       with:
         fetch-depth: 0 # We need the history for versioning with yarn
         ref: ${{ needs.check-pr.outputs.merge_commit_sha }}
@@ -272,7 +272,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
  
     - name: Check user's permissions to do this
       id: check-permissions
@@ -380,7 +380,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
  
     - name: Check user's permissions to do this
       id: check-permissions
@@ -500,7 +500,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
  
     - name: Check user's permissions to do this
       id: check-permissions
@@ -621,7 +621,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Check user's permissions to do this
       id: check-permissions

@@ -55,7 +55,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -83,7 +83,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Restore Turbo Cache from previous jobs
       uses: ./.github/actions/build-cache-download
@@ -184,7 +184,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -206,7 +206,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -232,7 +232,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -265,7 +265,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -299,7 +299,7 @@ jobs:
 
   #   steps:
   #   - name: Checkout code
-  #     uses: actions/checkout@v7
+  #     uses: actions/checkout@v7.0.1
 
   #   - name: Restore Turbo Cache from previous jobs
   #     uses: ./.github/actions/build-cache-download
@@ -348,7 +348,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -384,7 +384,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env
@@ -427,7 +427,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Restore Turbo Cache from previous jobs
       uses: ./.github/actions/build-cache-download
@@ -504,7 +504,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Prepare testing environment
       uses: ./.github/actions/prepare-env

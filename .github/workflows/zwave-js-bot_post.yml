@@ -18,7 +18,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     # Installs the shared bot-scripts dependencies and exports BOT_SCRIPTS_DIR
     - name: Setup bot scripts
@@ -75,7 +75,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     - name: Hide inherited bot comments
       uses: actions/github-script@v9
@@ -99,7 +99,7 @@ jobs:
 
     steps:
     - name: Checkout master branch
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
 
     # Restoring from the artifact and re-saving the cache below is also how an
     # evicted cache entry heals itself between two nightly rebuilds
