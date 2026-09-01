@@ -1561,13 +1561,13 @@ jobs:
           persist-credentials: false
       - name: Restore docs index
         id: docs-index
-        uses: zwave-js/bot-workflows/actions/restore-bot-index@ab0bc5d7f9172ce658daf685b3554a57cf99ec39 # v1
+        uses: zwave-js/bot-workflows/actions/restore-bot-index@af08eadd9af802c4d28ba310867710d0b266328e # v1
         with:
           github-token: ${{ github.token }}
           index: docs
       - name: Restore posts index
         id: posts-index
-        uses: zwave-js/bot-workflows/actions/restore-bot-index@ab0bc5d7f9172ce658daf685b3554a57cf99ec39 # v1
+        uses: zwave-js/bot-workflows/actions/restore-bot-index@af08eadd9af802c4d28ba310867710d0b266328e # v1
         with:
           github-token: ${{ github.token }}
           index: posts
