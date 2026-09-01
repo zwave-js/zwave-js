@@ -56,6 +56,12 @@ export interface NodeWithStatus {
 	markAsAwake(): void;
 
 	/**
+	 * @internal
+	 * Restores a previously known awake status without recording a new observation
+	 */
+	restoreAwakeStatus(): void;
+
+	/**
 	 * The last time this node was observed to be awake. Only tracked for nodes that can sleep.
 	 */
 	readonly lastAwake: MaybeNotKnown<Date>;
@@ -178,6 +184,14 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 		// while we already believe it to be awake. For always-listening nodes there
 		// is no wake-up to record.
 		if (this.canSleep) this.lastAwake = new Date();
+		this.updateStatusMachine({ value: "AWAKE" });
+	}
+
+	/**
+	 * @internal
+	 * Restores a previously known awake status without recording a new observation
+	 */
+	public restoreAwakeStatus(): void {
 		this.updateStatusMachine({ value: "AWAKE" });
 	}
 
