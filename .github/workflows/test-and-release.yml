@@ -476,6 +476,19 @@ jobs:
         prerelease: ${{ contains(steps.extract_release.outputs.VERSION, '-') }}
         body: ${{ steps.extract_release.outputs.BODY }}
 
+    - name: Bump zwave-js in Z-Wave JS UI
+      # Prereleases are not rolled out to Z-Wave JS UI automatically
+      if: ${{ !contains(steps.extract_release.outputs.VERSION, '-') }}
+      env:
+        GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        VERSION: ${{ steps.extract_release.outputs.VERSION }}
+      run: |
+        gh workflow run update-dep.yml \
+          --repo zwave-js/zwave-js-ui \
+          --ref master \
+          -f dep=zwave-js \
+          -f version="$VERSION"
+
     # - name: Notify Sentry.io about the release
     #   run: |
     #     npm i -g @sentry/cli
