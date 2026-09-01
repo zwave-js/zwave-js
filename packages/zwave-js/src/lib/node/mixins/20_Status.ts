@@ -56,7 +56,7 @@ export interface NodeWithStatus {
 	markAsAwake(): void;
 
 	/**
-	 * The last time this node was awake. Only tracked for nodes that can sleep.
+	 * The last time this node was known to be awake. Only tracked for nodes that can sleep.
 	 */
 	lastAwake: MaybeNotKnown<Date>;
 
@@ -124,7 +124,6 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 		if (this._status === NodeStatus.Asleep) {
 			this._emit("sleep", this, oldStatus);
 		} else if (this._status === NodeStatus.Awake) {
-			this.lastAwake = new Date();
 			this._emit("wake up", this, oldStatus);
 		} else if (this._status === NodeStatus.Dead) {
 			this._emit("dead", this, oldStatus);
@@ -174,6 +173,10 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 	 * Marks this node as awake (if applicable)
 	 */
 	public markAsAwake(): void {
+		// Nodes are marked awake whenever we observe them being awake, which may
+		// happen repeatedly while we already believe them to be. Remember the
+		// most recent observation, not just the one that changed the status.
+		if (this.canSleep) this.lastAwake = new Date();
 		this.updateStatusMachine({ value: "AWAKE" });
 	}
 
@@ -214,7 +217,7 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 		this._ready = ready;
 	}
 
-	/** The last time this node was awake. Only tracked for nodes that can sleep. */
+	/** The last time this node was known to be awake. Only tracked for nodes that can sleep. */
 	public get lastAwake(): MaybeNotKnown<Date> {
 		return this.driver.cacheGet(cacheKeys.node(this.id).lastAwake);
 	}

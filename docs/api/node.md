@@ -935,7 +935,7 @@ This property tracks when the node was last seen, meaning a command was either r
 readonly lastAwake: MaybeNotKnown<Date>
 ```
 
-This property tracks when the node last woke up. It is only tracked for nodes that can sleep and, like `lastSeen`, is preserved across restarts.
+This property tracks when the node was last known to be awake. It is only tracked for nodes that can sleep and, like `lastSeen`, is preserved across restarts.
 
 ### `isControllerNode`
 
