@@ -43,6 +43,7 @@ import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 } from "../lib/CommandClass.js";
 import {
@@ -736,6 +737,20 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 
 	public decryptedCCBytes: BytesView | undefined;
 	public encapsulated!: CommandClass;
+
+	protected override determineRelation(
+		other: CommandClass,
+	): CommandRelation {
+		if (
+			other instanceof SecurityCCCommandEncapsulation
+			&& this.ccCommand === other.ccCommand
+			&& this.encapsulated
+			&& other.encapsulated
+		) {
+			return this.encapsulated.getRelationTo(other.encapsulated);
+		}
+		return CommandRelation.Unrelated;
+	}
 
 	private alternativeNetworkKey?: BytesView;
 
