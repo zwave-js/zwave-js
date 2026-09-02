@@ -40,7 +40,6 @@
 			"maxNodes": 5
 		}
 	},
-	// https://www.support.getzooz.com/kb/article/1562-zen12-motion-dimmer-advanced-settings
 	"paramInformation": [
 		{
 			"#": "1",
@@ -229,8 +228,7 @@
 		{
 			"#": "43",
 			"$import": "templates/zooz_template.json#night_light_mode",
-			"description": "Brightness level the dimmer turns on to while it is off.",
-			"unit": "%"
+			"description": "Brightness level the dimmer turns on to while it is off."
 		},
 		{
 			"#": "44",
@@ -238,6 +236,7 @@
 		},
 		{
 			"#": "46",
+			"$purpose": "orientation",
 			"label": "Dimming Button Orientation",
 			"valueSize": 1,
 			"defaultValue": 0,
@@ -305,15 +304,13 @@
 		},
 		{
 			"#": "34",
-			"$import": "templates/zooz_template.json#custom_brightness",
-			"unit": "%"
+			"$import": "templates/zooz_template.json#custom_brightness"
 		},
 		{
 			"#": "39",
 			"$import": "templates/zooz_template.json#custom_brightness",
 			"label": "Custom Brightness Level (Association)",
-			"description": "Brightness the dimmer turns on to when an associated device sends a Basic Set on command.",
-			"unit": "%"
+			"description": "Brightness the dimmer turns on to when an associated device sends a Basic Set on command."
 		},
 		{
 			"#": "8",
@@ -437,7 +434,7 @@
 		},
 		{
 			"#": "15",
-			"label": "Night Mode Lux Threshold",
+			"label": "Night Mode Brightness Threshold",
 			"description": "Brightness below which the dimmer switches to night mode.",
 			"valueSize": 2,
 			"unit": "lux",
@@ -447,7 +444,7 @@
 		},
 		{
 			"#": "16",
-			"label": "Day Mode Lux Threshold",
+			"label": "Day Mode Brightness Threshold",
 			"description": "Brightness above which the dimmer switches to day mode.",
 			"valueSize": 2,
 			"unit": "lux",
