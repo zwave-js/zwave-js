@@ -460,8 +460,7 @@ export class CommandClass implements CCId {
 	}
 
 	/**
-	 * Subclasses override this to determine command-specific relations after
-	 * the shared context checks pass.
+	 * Subclasses override this to determine additional command-specific relations.
 	 */
 	protected determineRelation(_other: CommandClass): CommandRelation {
 		return CommandRelation.Unrelated;

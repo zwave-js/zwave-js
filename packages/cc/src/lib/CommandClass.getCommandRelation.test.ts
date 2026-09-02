@@ -59,7 +59,6 @@ function createSet(
 
 describe("getCommandRelation", () => {
 	test("uses the newer command's relation override", () => {
-		// Relation semantics belong to the newer command
 		expect(getCommandRelation(createSet(1), createSet(1))).toBe(
 			CommandRelation.Redundant,
 		);

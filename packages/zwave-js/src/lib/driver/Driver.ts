@@ -7510,8 +7510,7 @@ ${handlers.length} left`,
 	 */
 	private enqueueTransaction(transaction: Transaction): void {
 		const queue = this.getQueueForTransaction(transaction);
-		// While the queue is updated, it must not start a transaction,
-		// e.g. because a completed command triggers it elsewhere
+		// The queue must not start a transaction while it is being modified
 		queue.pause();
 		try {
 			let activeRedundant: Transaction | undefined;
@@ -7575,8 +7574,7 @@ ${handlers.length} left`,
 									)
 								) {
 									case CommandRelation.Supersedes:
-										// Cancel the stale command. When its timer fires, it
-										// would otherwise transmit after the newer command.
+										// Cancel the stale command before its requeue timer fires
 										if (!older.preventDeduplication) {
 											deferredSuperseded.push(older);
 											return false;
@@ -7584,8 +7582,7 @@ ${handlers.length} left`,
 										break;
 									case CommandRelation.Redundant:
 										// The node cannot handle this command right now, so a
-										// duplicate waits for the delayed command instead of
-										// transmitting immediately
+										// duplicate waits for the delayed command
 										if (!transaction.preventDeduplication) {
 											deferredRedundant ??= older;
 										}
@@ -7603,9 +7600,8 @@ ${handlers.length} left`,
 				}
 			}
 
-			// Remove superseded transactions from the queue before rejecting any
-			// of them. Rejecting runs caller listeners synchronously, and those may
-			// re-enter this method, which must not see the removed transactions.
+			// Remove superseded transactions before rejecting them. Rejecting
+			// runs synchronous caller listeners that may re-enter this method.
 			queue.remove(...queuedSuperseded);
 			for (const older of [...queuedSuperseded, ...deferredSuperseded]) {
 				this.rejectTransaction(
@@ -7622,39 +7618,34 @@ ${handlers.length} left`,
 			if (transaction.preventDeduplication) {
 				// The protected command replaces its unprotected duplicates in the queue
 				for (const older of queuedRedundant) {
-					// It inherits their highest priority (lower value = higher priority)...
+					// Inherit the highest priority (lower value)
 					transaction.priority = Math.min(
 						transaction.priority,
 						older.priority,
 					);
-					// ...and their earliest creation time, so it is not scheduled
-					// later than the commands it replaces
+					// Inherit the earliest creation time so it keeps its spot in the queue
 					transaction.creationTimestamp = Math.min(
 						transaction.creationTimestamp,
 						older.creationTimestamp,
 					);
-					// The duplicate never transmits. Its callers get their result
-					// from the protected command instead.
+					// The duplicate never transmits.
+					// Its callers get their result from the protected command.
 					queue.remove(older);
 					transaction.adoptCallersFrom(older);
 				}
 				queue.add(transaction);
 			} else {
-				// Instead of queueing the new command, its callers wait for a
-				// matching command that is active, queued, or waiting for a delayed
-				// requeue. When there are multiple queued matches, all of them are
-				// protected commands which will each transmit, so it does not
-				// matter which one the callers wait for.
+				// Attach the new command's callers to the first matching command found.
+				// Multiple queued matches are all protected, so any of them works.
 				const redundant = activeRedundant
 					?? queuedRedundant[0]
 					?? deferredRedundant;
 				if (redundant) {
 					redundant.adoptCallersFrom(transaction);
+					// Re-add the transaction to the queue if its priority changed
+					// to force a re-sort.
 					if (
-						// The active transmission's priority no longer matters
 						redundant !== activeRedundant
-						// The shared command inherits the new command's priority
-						// if that is higher (= a lower value)
 						&& transaction.priority < redundant.priority
 					) {
 						if (redundant === deferredRedundant) {
@@ -7794,8 +7785,9 @@ ${handlers.length} left`,
 			&& options.requestStatusUpdates === true;
 		transaction.tag = options.tag;
 
-		// Notify callers that the command was queued. If it ends up waiting for
-		// an already active transmission, they get an Active update right after.
+		// Notify callers that the command was queued. If enqueueTransaction() ands up
+		// attaching the command to an active transaction, the callers will immediately
+		// receive the `Active` progress update.
 		transaction.setProgress({ state: TransactionState.Queued });
 		this.enqueueTransaction(transaction);
 

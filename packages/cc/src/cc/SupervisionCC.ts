@@ -449,8 +449,7 @@ export class SupervisionCCGet extends SupervisionCC {
 		if (
 			other instanceof SupervisionCCGet
 			// Requesting status updates changes the expected response flow.
-			// The driver never coalesces status-update transactions, so this
-			// check matters only when getRelationTo is called directly.
+			// Transactions with this flag are exempt from deduplication.
 			&& this.requestStatusUpdates === other.requestStatusUpdates
 		) {
 			return this.encapsulated.getRelationTo(other.encapsulated);

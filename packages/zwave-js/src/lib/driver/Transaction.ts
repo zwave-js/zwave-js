@@ -77,8 +77,7 @@ export interface TransactionAttachmentHandle {
 	detach(error: ZWaveError): boolean;
 	/**
 	 * Whether this caller gets its result from the given transaction.
-	 * Also works after detaching, so the caller can find and cancel
-	 * a transmission nobody waits for anymore.
+	 * Also works after detaching.
 	 */
 	sharesLifecycleWith(transaction: Transaction): boolean;
 }
@@ -90,9 +89,7 @@ export interface TransactionAttachmentHandle {
 function invokeSafely(callback: () => void): void {
 	try {
 		callback();
-	} catch {
-		// Ignore errors thrown by caller-provided callbacks
-	}
+	} catch {}
 }
 
 /**
@@ -183,8 +180,7 @@ class TransactionLifecycle {
 			&& source.progress?.state !== targetProgress.state;
 		for (const caller of source.callers) {
 			source.callers.delete(caller);
-			// The caller's attachment handle finds the lifecycle through this
-			// field. It must point here so detaching affects the right transaction.
+			// Update the caller's lifecycle, so detaching affects the right transaction.
 			caller.lifecycle = this;
 			this.callers.add(caller);
 			if (replayTargetProgress) {
@@ -258,7 +254,7 @@ export class Transaction implements Comparable<Transaction> {
 		this._stack = (tmp as any).stack.replace(/^Error:?\s*\n/, "");
 	}
 
-	/** Creates a copy of this transaction that shares its lifecycle, e.g. for requeuing */
+	/** Creates a copy of this transaction that shares its lifecycle. */
 	public clone(): Transaction {
 		const ret = new Transaction(this.driver, this.options, this.lifecycle);
 		for (

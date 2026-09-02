@@ -40,8 +40,8 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 	private pauseCount = 0;
 
 	/**
-	 * Pauses the queue, so no new transaction is started while it is being
-	 * modified. Nested calls must be balanced with unpause().
+	 * Pauses the queue to prevent it from triggering while being modified.
+	 * Each call must be balanced with unpause().
 	 */
 	public pause(): void {
 		this.pauseCount++;
