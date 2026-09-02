@@ -110,7 +110,14 @@
 		},
 		{
 			"#": "17",
-			"$import": "templates/heatit_template.json#standby_display_brightness"
+			"$import": "templates/heatit_template.json#standby_display_brightness",
+			"minValue": 0,
+			"options": [
+				{
+					"label": "Off",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "18",
