@@ -305,6 +305,7 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 	}
 
 	/**
+	 * Queries the current status of a notification type and persists changes if needed.
 	 * @internal
 	 */
 	public async getInternal(
@@ -320,10 +321,35 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		return this.host.sendCommand<NotificationCCReport>(
+		const response = await this.host.sendCommand<NotificationCCReport>(
 			cc,
 			this.commandOptions,
 		);
+		if (!response) return;
+
+		// NotificationCCReport does not persist its variables automatically.
+		// By calling handleCommand() here, we make that all code paths calling get()
+		// are persisted correctly.
+
+		// A 0xfe event ("unknown event") in a Get response means the queried type
+		// is idle. For persisting the value, we temporarily modify the field, so
+		// that handleCommand() treats it as an idle notification.
+		const rawEvent = response.notificationEvent;
+		const rawEventParameters = response.eventParameters;
+		if (rawEvent === 0xfe) {
+			response.notificationEvent = 0;
+			response.eventParameters = undefined;
+		}
+
+		const node = this.host.getNode(this.endpoint.nodeId);
+		// @ts-expect-error handleCommand is not part of the reduced node type
+		await node?.handleCommand(response);
+
+		// Restore the original values for returning the response to the caller
+		response.notificationEvent = rawEvent;
+		response.eventParameters = rawEventParameters;
+
+		return response;
 	}
 
 	@validateArgs()
@@ -1066,20 +1092,9 @@ export class NotificationCC extends CommandClass {
 				message: `querying notification status for ${name}...`,
 				direction: "outbound",
 			});
-			const response = await api.getInternal({
+			await api.getInternal({
 				notificationType: type,
 			});
-			// NotificationReports don't store their values themselves,
-			// because the behaviour is too complex and spans the lifetime
-			// of several reports. Thus we handle it in the Node instance
-
-			// Push nodes respond to a Get with event 0xfe when they have
-			// no active notification. Skip these to avoid persisting
-			// spurious "unknown" values.
-			if (response && response.notificationEvent !== 0xfe) {
-				// @ts-expect-error
-				await node.handleCommand(response);
-			}
 
 			options?.onProgress?.(i + 1, supportedNotificationTypes.length);
 		}
