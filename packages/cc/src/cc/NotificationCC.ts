@@ -305,6 +305,8 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 	}
 
 	/**
+	 * Queries the current status of a notification type. The response is handed
+	 * to the node, so the notification state is persisted like an unsolicited report.
 	 * @internal
 	 */
 	public async getInternal(
@@ -1090,8 +1092,6 @@ export class NotificationCC extends CommandClass {
 				message: `querying notification status for ${name}...`,
 				direction: "outbound",
 			});
-			// getInternal hands the response to the node, which persists the
-			// notification state
 			await api.getInternal({
 				notificationType: type,
 			});
