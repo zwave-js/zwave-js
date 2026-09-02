@@ -305,8 +305,7 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 	}
 
 	/**
-	 * Queries the current status of a notification type. The response is handed
-	 * to the node, so the notification state is persisted like an unsolicited report.
+	 * Queries the current status of a notification type and persists changes if needed.
 	 * @internal
 	 */
 	public async getInternal(
