@@ -32,6 +32,7 @@ import {
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type RefreshValuesContext,
 	type RefreshValuesOptions,
@@ -341,6 +342,17 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 	public targetValue: boolean;
 	public duration: Duration | undefined;
 
+	protected override determineRelation(other: CommandClass): CommandRelation {
+		if (other instanceof BinarySwitchCCSet) {
+			return this.targetValue === other.targetValue
+					&& (this.duration ?? Duration.default())
+						.equals(other.duration ?? Duration.default())
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
+		}
+		return CommandRelation.Unrelated;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.targetValue ? 0xff : 0x00,
@@ -427,6 +439,18 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 
 	public readonly duration: Duration | undefined;
 
+	protected override determineRelation(other: CommandClass): CommandRelation {
+		if (other instanceof BinarySwitchCCReport) {
+			return this.currentValue === other.currentValue
+					&& this.targetValue === other.targetValue
+					&& (this.duration ?? Duration.default())
+						.equals(other.duration ?? Duration.default())
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
+		}
+		return CommandRelation.Unrelated;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			encodeMaybeBoolean(this.currentValue ?? UNKNOWN_STATE),
@@ -462,4 +486,11 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 
 @CCCommand(BinarySwitchCommand.Get)
 @expectedCCResponse(BinarySwitchCCReport)
-export class BinarySwitchCCGet extends BinarySwitchCC {}
+export class BinarySwitchCCGet extends BinarySwitchCC {
+	protected override determineRelation(other: CommandClass): CommandRelation {
+		if (other instanceof BinarySwitchCCGet) {
+			return CommandRelation.Redundant;
+		}
+		return CommandRelation.Unrelated;
+	}
+}

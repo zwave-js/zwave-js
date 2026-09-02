@@ -188,17 +188,24 @@ integrationTest.sequential(
 				TransactionState.Failed,
 			]);
 
-			// Fan out one successful physical result
+			// Fan out one successful physical result. Two identical polls
+			// deduplicate through the concrete Basic CC Get relation.
 			blockNextGet();
 			const successfulCount = control.getCount;
 			const successfulFirst = driver.sendCommand(
-				createGet(2),
-				commandOptions,
+				new BasicCCGet({ nodeId: 2 }),
+				{
+					...commandOptions,
+					priority: MessagePriority.Poll,
+				},
 			);
 			await control.started;
 			const successfulSecond = driver.sendCommand(
-				createGet(2),
-				commandOptions,
+				new BasicCCGet({ nodeId: 2 }),
+				{
+					...commandOptions,
+					priority: MessagePriority.Poll,
+				},
 			);
 			control.release.resolve();
 			const [successfulFirstResult, successfulSecondResult] =
@@ -410,7 +417,12 @@ integrationTest.sequential(
 				priority: MessagePriority.Controller,
 			});
 			const unrelatedAfterReplacement = driver.sendCommand(
-				new BasicCCSet({ nodeId: 2, targetValue: 14 }),
+				// The different endpoint keeps this Set unrelated to the ones being merged
+				new BasicCCSet({
+					nodeId: 2,
+					endpointIndex: 1,
+					targetValue: 14,
+				}),
 				{
 					...commandOptions,
 					priority: MessagePriority.Normal,
@@ -585,13 +597,15 @@ integrationTest.sequential(
 			t.expect(control.setValues).toEqual([9, 9, 11, 11]);
 			await driver.waitForIdle(1000);
 
+			// Concrete Basic CC relations deduplicate identical commands
+			// without any test-specific relation overrides
 			blockNextGet();
-			const unannotatedBlocker = driver.sendCommand(
+			const concreteBlocker = driver.sendCommand(
 				new BasicCCGet({ nodeId: 2 }),
 				commandOptions,
 			);
 			await control.started;
-			const unannotated = Promise.all([
+			const concrete = Promise.all([
 				driver.sendCommand(
 					new BasicCCSet({ nodeId: 2, targetValue: 12 }),
 					commandOptions,
@@ -603,10 +617,10 @@ integrationTest.sequential(
 			]);
 			control.release.resolve();
 			await Promise.all([
-				unannotatedBlocker,
-				unannotated,
+				concreteBlocker,
+				concrete,
 			]);
-			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12, 12]);
+			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12]);
 
 			// Exclude completed transactions from synchronous deduplication
 			blockNextGet();

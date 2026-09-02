@@ -45,6 +45,11 @@ export class Duration {
 		return new Duration(0, "default");
 	}
 
+	/** Whether this duration is equal to another one */
+	public equals(other: Duration): boolean {
+		return this.value === other.value && this.unit === other.unit;
+	}
+
 	public static isDuration(value: any): value is DurationLike {
 		return typeof value === "object"
 			&& value != null

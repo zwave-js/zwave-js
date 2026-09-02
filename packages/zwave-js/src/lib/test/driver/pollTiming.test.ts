@@ -86,6 +86,9 @@ integrationTest(
 		testBody: async (t, _driver, node, _mockController, _mockNode) => {
 			const basicPoll = node.commandClasses.Basic.withOptions({
 				priority: MessagePriority.Poll,
+				// In normal operation, we want polls to be deduplicated too, but for these
+				// tests, we need each individual transaction
+				preventDeduplication: true,
 			});
 
 			// Queue all three without awaiting
@@ -249,6 +252,9 @@ integrationTest(
 		testBody: async (t, _driver, node, _mockController, mockNode) => {
 			const basicPoll = node.commandClasses.Basic.withOptions({
 				priority: MessagePriority.Poll,
+				// In normal operation, we want polls to be deduplicated too, but for these
+				// tests, we need each individual transaction
+				preventDeduplication: true,
 			});
 
 			// Disable auto-ACK now that the driver is fully initialized.
