@@ -108,3 +108,13 @@ automations:
         We may get around to doing it ourselves at some point, but community support will speed up this process immensely.
 
         Thanks!
+
+# Trigger the dependency bump in Z-Wave JS UI when a release is published.
+# Prereleases are skipped by the bot.
+releaseDispatch:
+  - repo: zwave-js/zwave-js-ui
+    workflow: update-dep.yml
+    ref: master
+    inputs:
+      dep: zwave-js
+      version: '{version}'
