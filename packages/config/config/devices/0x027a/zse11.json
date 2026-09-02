@@ -39,7 +39,31 @@
 		},
 		{
 			"#": "15",
+			"$if": "firmwareVersion < 2.30",
 			"$import": "templates/zooz_template.json#basic_set_value"
+		},
+		{
+			"#": "15",
+			"$if": "firmwareVersion >= 2.30",
+			"$import": "templates/zooz_template.json#basic_set_value",
+			"options": [
+				{
+					"label": "0xff for motion; 0x00 for clear",
+					"value": 0
+				},
+				{
+					"label": "0x00 for motion; 0xff for clear",
+					"value": 1
+				},
+				{
+					"label": "0xff for motion only",
+					"value": 2
+				},
+				{
+					"label": "0x00 for motion only",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "16",
