@@ -162,6 +162,14 @@
 			"minValue": 1,
 			"maxValue": 99,
 			"defaultValue": 5
+		},
+		{
+			"#": "6",
+			"$if": "firmwareVersion >= 2.20",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
 		}
 	],
 	"compat": {
