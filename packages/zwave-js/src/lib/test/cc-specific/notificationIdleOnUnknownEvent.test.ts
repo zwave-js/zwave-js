@@ -12,8 +12,8 @@ import {
 import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
-// Heat Alarm, events 2 (Overheat) and 6 (Underheat) map to the idle-able
-// "Heat sensor status" variable.
+// Heat Alarm events 2 (Overheat) and 6 (Underheat) share the "Heat sensor status"
+// value. This value can be reset to its idle state.
 const HEAT_ALARM = 0x04;
 
 const heatSensorStatus = NotificationCCValues
@@ -36,8 +36,8 @@ const nodeCapabilities = {
 	],
 };
 
-// Every Get for the notification status is answered with event 0xfe, mimicking
-// a node that reports no active notification for the queried type.
+// The mock answers every Get with event 0xfe. This response tells the poller
+// the node has no active notification.
 const respondToNotificationGetWithUnknownEvent: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof NotificationCCGet) {
@@ -64,7 +64,7 @@ integrationTest(
 			// Pretend the variable currently reflects an active overheat alarm
 			node.valueDB.setValue(heatSensorStatus, 0x02);
 
-			// Querying the status returns event 0xfe
+			// This returns event 0xfe
 			await node.refreshCCValues(CommandClasses.Notification);
 
 			// The idle-able variable was reset to idle, without storing an
