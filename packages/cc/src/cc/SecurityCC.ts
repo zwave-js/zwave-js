@@ -744,6 +744,8 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 		if (
 			other instanceof SecurityCCCommandEncapsulation
 			&& this.ccCommand === other.ccCommand
+			// Only outgoing encapsulations have `encapsulated` set. Sequenced
+			// commands only exist on the receiving side, so they cannot appear here.
 			&& this.encapsulated
 			&& other.encapsulated
 		) {

@@ -188,7 +188,8 @@ integrationTest.sequential(
 				TransactionState.Failed,
 			]);
 
-			// Fan out one successful physical result
+			// Fan out one successful physical result. Two identical polls
+			// deduplicate through the concrete Basic CC Get relation.
 			blockNextGet();
 			const successfulCount = control.getCount;
 			const successfulFirst = driver.sendCommand(
@@ -416,6 +417,7 @@ integrationTest.sequential(
 				priority: MessagePriority.Controller,
 			});
 			const unrelatedAfterReplacement = driver.sendCommand(
+				// The different endpoint keeps this Set unrelated to the ones being merged
 				new BasicCCSet({
 					nodeId: 2,
 					endpointIndex: 1,
@@ -595,6 +597,8 @@ integrationTest.sequential(
 			t.expect(control.setValues).toEqual([9, 9, 11, 11]);
 			await driver.waitForIdle(1000);
 
+			// Concrete Basic CC relations deduplicate identical commands
+			// without any test-specific relation overrides
 			blockNextGet();
 			const concreteBlocker = driver.sendCommand(
 				new BasicCCGet({ nodeId: 2 }),

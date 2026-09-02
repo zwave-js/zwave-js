@@ -48,7 +48,6 @@ import {
 	implementedVersion,
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
-import { areDurationsEqual } from "../lib/CommandRelationUtils.js";
 import { V } from "../lib/Values.js";
 import { BinarySwitchCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
@@ -346,10 +345,8 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (other instanceof BinarySwitchCCSet) {
 			return this.targetValue === other.targetValue
-					&& areDurationsEqual(
-						this.duration ?? Duration.default(),
-						other.duration ?? Duration.default(),
-					)
+					&& (this.duration ?? Duration.default())
+						.equals(other.duration ?? Duration.default())
 				? CommandRelation.Redundant
 				: CommandRelation.Supersedes;
 		}
@@ -446,7 +443,8 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 		if (other instanceof BinarySwitchCCReport) {
 			return this.currentValue === other.currentValue
 					&& this.targetValue === other.targetValue
-					&& areDurationsEqual(this.duration, other.duration)
+					&& (this.duration ?? Duration.default())
+						.equals(other.duration ?? Duration.default())
 				? CommandRelation.Redundant
 				: CommandRelation.Supersedes;
 		}

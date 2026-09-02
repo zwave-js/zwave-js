@@ -56,7 +56,6 @@ import {
 	implementedVersion,
 	useSupervision,
 } from "../lib/CommandClassDecorators.js";
-import { areDurationsEqual } from "../lib/CommandRelationUtils.js";
 import { V } from "../lib/Values.js";
 import { BasicCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
@@ -478,7 +477,8 @@ export class BasicCCReport extends BasicCC {
 		if (other instanceof BasicCCReport) {
 			return this.currentValue === other.currentValue
 					&& this.targetValue === other.targetValue
-					&& areDurationsEqual(this.duration, other.duration)
+					&& (this.duration ?? Duration.default())
+						.equals(other.duration ?? Duration.default())
 				? CommandRelation.Redundant
 				: CommandRelation.Supersedes;
 		}

@@ -17,6 +17,7 @@ import { Security2CC } from "../cc/Security2CC.js";
 import { SecurityCC } from "../cc/SecurityCC.js";
 import { SupervisionCC } from "../cc/SupervisionCC.js";
 import { CommandRelation, getCommandRelation } from "./CommandClass.js";
+import { SPANExtension } from "./Security2/Extension.js";
 
 // Basic Set supplies the smallest command payload needed for relation semantics
 class RelatedBasicCCSet extends BasicCCSet {
@@ -315,6 +316,27 @@ describe("getCommandRelation", () => {
 				differentMulticastExtensions[1],
 			),
 		).toBe(CommandRelation.Unrelated);
+	});
+
+	test("transmits S2 synchronization commands individually", () => {
+		const securityManagers = {} as SecurityManagers;
+		const newer = Security2CC.encapsulate(
+			createSet(1),
+			1,
+			securityManagers,
+		);
+		const older = Security2CC.encapsulate(
+			createSet(1),
+			1,
+			securityManagers,
+		);
+		older.extensions.push(
+			new SPANExtension({ senderEI: new Uint8Array(16) }),
+		);
+
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
 	});
 
 	test("returns unrelated for multi-command encapsulation", () => {

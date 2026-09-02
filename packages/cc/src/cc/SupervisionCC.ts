@@ -448,8 +448,8 @@ export class SupervisionCCGet extends SupervisionCC {
 	): CommandRelation {
 		if (
 			other instanceof SupervisionCCGet
-			// Requesting status updates changes the expected response flow.
-			// Transactions with this flag are exempt from deduplication.
+			// Requesting status updates changes the expected response flow,
+			// so commands with different flags must not be related
 			&& this.requestStatusUpdates === other.requestStatusUpdates
 		) {
 			return this.encapsulated.getRelationTo(other.encapsulated);
