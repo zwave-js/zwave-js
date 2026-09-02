@@ -259,6 +259,16 @@
 		"maxValue": 10,
 		"defaultValue": 5
 	},
+	"standby_display_brightness_off": {
+		"$import": "#standby_display_brightness",
+		"minValue": 0,
+		"options": [
+			{
+				"label": "Off",
+				"value": 0
+			}
+		]
+	},
 	"temperature_control_hysteresis": {
 		"label": "Temperature Control Hysteresis",
 		"valueSize": 1,
