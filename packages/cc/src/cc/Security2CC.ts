@@ -56,7 +56,6 @@ import {
 	type CCRaw,
 	type CCResponseRole,
 	CommandClass,
-	CommandRelation,
 	type InterviewContext,
 } from "../lib/CommandClass.js";
 import {
@@ -1794,29 +1793,6 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 
 	public encapsulated?: CommandClass;
 	public extensions: Security2Extension[];
-
-	protected override determineRelation(
-		other: CommandClass,
-	): CommandRelation {
-		if (
-			other instanceof Security2CCMessageEncapsulation
-			&& this.securityClass === other.securityClass
-			&& this.verifyDelivery === other.verifyDelivery
-			&& getMulticastGroupId(this.extensions)
-				=== getMulticastGroupId(other.extensions)
-			&& this.extensions.some((extension) =>
-					extension instanceof MOSExtension
-				)
-				=== other.extensions.some((extension) =>
-					extension instanceof MOSExtension
-				)
-			&& this.encapsulated
-			&& other.encapsulated
-		) {
-			return this.encapsulated.getRelationTo(other.encapsulated);
-		}
-		return CommandRelation.Unrelated;
-	}
 
 	public override prepareRetransmission(): void {
 		super.prepareRetransmission();

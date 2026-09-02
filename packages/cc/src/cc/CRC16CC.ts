@@ -12,11 +12,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { CCAPI } from "../lib/API.js";
-import {
-	type CCRaw,
-	CommandClass,
-	CommandRelation,
-} from "../lib/CommandClass.js";
+import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	API,
 	CCCommand,
@@ -149,15 +145,6 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
 	}
 
 	public encapsulated: CommandClass;
-
-	protected override determineRelation(
-		other: CommandClass,
-	): CommandRelation {
-		if (other instanceof CRC16CCCommandEncapsulation) {
-			return this.encapsulated.getRelationTo(other.encapsulated);
-		}
-		return CommandRelation.Unrelated;
-	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const commandBuffer = await this.encapsulated.serialize(ctx);
