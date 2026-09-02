@@ -76,6 +76,32 @@ integrationTest(
 );
 
 integrationTest(
+	"Notification CC: get() persists the idle state but returns the raw 0xfe event",
+	{
+		nodeCapabilities,
+
+		customSetup: async (driver, controller, mockNode) => {
+			mockNode.defineBehavior(respondToNotificationGetWithUnknownEvent);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Pretend the variable currently reflects an active overheat alarm
+			node.valueDB.setValue(heatSensorStatus, 0x02);
+
+			const result = await node.commandClasses.Notification.get({
+				notificationType: HEAT_ALARM,
+			});
+
+			// The API response reflects the raw event reported by the node
+			t.expect(result?.notificationEvent).toBe(0xfe);
+			// ... while the persisted state was idled, without an unknown value
+			t.expect(node.getValue(heatSensorStatus)).toBe(0);
+			t.expect(node.getValue(unknownHeatAlarm)).toBeUndefined();
+		},
+	},
+);
+
+integrationTest(
 	"Notification CC: an unsolicited report with event 0xfe is kept as an unknown value",
 	{
 		nodeCapabilities,

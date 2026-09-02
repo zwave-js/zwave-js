@@ -320,10 +320,34 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		return this.host.sendCommand<NotificationCCReport>(
+		const response = await this.host.sendCommand<NotificationCCReport>(
 			cc,
 			this.commandOptions,
 		);
+		if (!response) return;
+
+		// NotificationCCReport does not persist its variables during the
+		// automatic persist step, because the behavior spans several reports.
+		// We hand the solicited response to the node so it updates the notification
+		// state, just like an unsolicited report would.
+		// A 0xfe event ("unknown event") in a Get response means the queried type
+		// is idle. Normalize it to a generic idle for persistence, then restore
+		// the raw value so API callers see what the node actually reported.
+		const rawEvent = response.notificationEvent;
+		const rawEventParameters = response.eventParameters;
+		if (rawEvent === 0xfe) {
+			response.notificationEvent = 0;
+			response.eventParameters = undefined;
+		}
+
+		const node = this.host.getNode(this.endpoint.nodeId);
+		// @ts-expect-error handleCommand is not part of the reduced node type
+		await node?.handleCommand(response);
+
+		response.notificationEvent = rawEvent;
+		response.eventParameters = rawEventParameters;
+
+		return response;
 	}
 
 	@validateArgs()
@@ -1066,26 +1090,11 @@ export class NotificationCC extends CommandClass {
 				message: `querying notification status for ${name}...`,
 				direction: "outbound",
 			});
-			const response = await api.getInternal({
+			// getInternal hands the response to the node, which persists the
+			// notification state
+			await api.getInternal({
 				notificationType: type,
 			});
-			// NotificationReports don't store their values themselves,
-			// because the behaviour is too complex and spans the lifetime
-			// of several reports. Thus we handle it in the Node instance
-
-			if (response) {
-				// Nodes report event 0xfe ("unknown event") in response to a
-				// Get when no notification of this type is active. Treat it as
-				// a generic idle so idle-able variables are reset, instead of
-				// persisting a spurious "unknown" value. Unsolicited 0xfe
-				// reports are left to the regular handling.
-				if (response.notificationEvent === 0xfe) {
-					response.notificationEvent = 0;
-					response.eventParameters = undefined;
-				}
-				// @ts-expect-error
-				await node.handleCommand(response);
-			}
 
 			options?.onProgress?.(i + 1, supportedNotificationTypes.length);
 		}
