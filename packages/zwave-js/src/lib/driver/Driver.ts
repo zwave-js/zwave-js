@@ -7,6 +7,7 @@ import {
 	CRC16CC,
 	CRC16CCCommandEncapsulation,
 	CommandClass,
+	CommandRelation,
 	type FirmwareUpdateResult,
 	InclusionControllerCCInitiate,
 	InclusionControllerStep,
@@ -50,6 +51,7 @@ import {
 	WakeUpCCNoMoreInformation,
 	WakeUpCCValues,
 	type ZWaveProtocolCC,
+	getCommandRelation,
 	getImplementedVersion,
 	getInnermostCommandClass,
 	isEncapsulatingCommandClass,
@@ -802,6 +804,11 @@ export interface DriverEventCallbacks extends PrefixedNodeEvents {
 
 export type DriverEvents = Extract<keyof DriverEventCallbacks, string>;
 
+interface DeferredTransactionBatch {
+	timer: Timer;
+	transactions: Transaction[];
+}
+
 /**
  * The driver is the core of this library. It controls the serial interface,
  * handles transmission and receipt of messages and manages the network cache.
@@ -945,7 +952,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 	// And all of them feed into the serial API queue, which contains commands that will be sent ASAP
 	private serialAPIQueue!: AsyncQueue<SerialAPIQueueItem>; // Is initialized in initControllerAndNodes()
 	// Timers for delayed transaction re-queuing
-	private requeueTimers: Map<number, Set<Timer>> = new Map();
+	private requeueTimers: Map<number, Set<DeferredTransactionBatch>> =
+		new Map();
 
 	// Poll timing state per the Z-Wave specification.
 	// After any transaction completes, we must wait at least pollTime
@@ -1001,13 +1009,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		reason: string,
 		errorCode?: ZWaveErrorCodes,
 	): Promise<void> {
-		// Clear all delayed requeue timers
-		for (const set of this.requeueTimers.values()) {
-			for (const timer of set) {
-				timer.clear();
-			}
-		}
-		this.requeueTimers.clear();
+		this.clearDeferredTransactions(
+			undefined,
+			reason,
+			errorCode ?? ZWaveErrorCodes.Driver_TaskRemoved,
+		);
 
 		// Clear the poll delay timer
 		this._pollDelayTimer?.clear();
@@ -3024,10 +3030,11 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 			),
 		);
 		if (this.requeueTimers.has(node.id)) {
-			for (const timer of this.requeueTimers.get(node.id)!) {
-				timer.clear();
-			}
-			this.requeueTimers.delete(node.id);
+			this.clearDeferredTransactions(
+				node.id,
+				"The node was removed from the network",
+				ZWaveErrorCodes.Controller_NodeRemoved,
+			);
 		}
 
 		// purge node values from the DB
@@ -4014,7 +4021,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 				...this.awaitedBootloaderChunks.map((b) => b.timeout),
 				...this.awaitedCLIChunks.map((c) => c.timeout),
 				...[...this.requeueTimers.values()].flatMap(
-					(t) => [...t.values()],
+					(batches) => [...batches].map((batch) => batch.timer),
 				),
 				this._pollDelayTimer,
 			]
@@ -6705,7 +6712,6 @@ ${handlers.length} left`,
 
 				// Notify listeners about the status report if one was received
 				if (hasTXReport(result)) {
-					options.onTXReport?.(result.txReport);
 					node.updateRouteStatistics(result.txReport);
 				}
 			}
@@ -7059,9 +7065,6 @@ ${handlers.length} left`,
 				}
 			}
 		}
-
-		// This transaction completed successfully, try the next one
-		transaction.setProgress({ state: TransactionState.Completed });
 	}
 
 	/**
@@ -7408,6 +7411,264 @@ ${handlers.length} left`,
 	}
 
 	/**
+	 * Checks whether two SendData transactions would be executed and handled
+	 * the same way, so one of them may be deduplicated.
+	 */
+	private areTransactionsCompatible(
+		first: Transaction,
+		second: Transaction,
+	): boolean {
+		// Callers that request Supervision status updates each need their own
+		// Supervision session
+		if (first.requestStatusUpdates || second.requestStatusUpdates) {
+			return false;
+		}
+
+		// The driver must handle both transactions the same way
+		if (
+			first.changeNodeStatusOnTimeout
+				!== second.changeNodeStatusOnTimeout
+			|| first.pauseSendThread !== second.pauseSendThread
+			|| first.requestWakeUpOnDemand !== second.requestWakeUpOnDemand
+			|| first.tag !== second.tag
+		) {
+			return false;
+		}
+
+		// Both must use the same kind of SendData message
+		if (
+			first.message.constructor !== second.message.constructor
+			|| !isSendData(first.message)
+			|| !isSendData(second.message)
+		) {
+			return false;
+		}
+
+		// The controller must transmit and follow up on both the same way
+		if (
+			first.message.transmitOptions !== second.message.transmitOptions
+			|| first.message.maxSendAttempts
+				!== second.message.maxSendAttempts
+			|| first.message.nodeUpdateTimeout
+				!== second.message.nodeUpdateTimeout
+			|| first.message.ignoreNodeUpdate
+				!== second.message.ignoreNodeUpdate
+		) {
+			return false;
+		}
+
+		// Bridge commands must be sent from the same source node
+		if (
+			(first.message instanceof SendDataBridgeRequest
+				&& second.message instanceof SendDataBridgeRequest
+				&& first.message.sourceNodeId !== second.message.sourceNodeId)
+			|| (first.message instanceof SendDataMulticastBridgeRequest
+				&& second.message instanceof SendDataMulticastBridgeRequest
+				&& first.message.sourceNodeId !== second.message.sourceNodeId)
+		) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Determines how a new transaction relates to an existing one, so redundant
+	 * commands can be deduplicated and superseded ones dropped.
+	 * Returns `Unrelated` unless both transactions contain a CC and would be
+	 * executed the same way.
+	 */
+	private getTransactionRelation(
+		newer: Transaction,
+		newerMessage: SendDataMessage & ContainsCC,
+		older: Transaction,
+	): CommandRelation {
+		if (
+			!older.hasAttachments
+			|| older.isSettled
+			|| !this.areTransactionsCompatible(newer, older)
+			|| !isSendData(older.message)
+			|| !containsCC(older.message)
+		) {
+			return CommandRelation.Unrelated;
+		}
+		return getCommandRelation(
+			newerMessage.command,
+			older.message.command,
+		);
+	}
+
+	/**
+	 * Adds a transaction to the queue it belongs to, deduplicating it against
+	 * related commands in that queue:
+	 * - A redundant command shares the older command's transmission.
+	 * - A superseding command replaces queued older commands, failing their callers.
+	 *
+	 * `preventDeduplication` opts a command out of both: it always transmits
+	 * itself and is never dropped in favor of a newer command. It does absorb
+	 * the callers of unprotected duplicates it replaces in the queue.
+	 */
+	private enqueueTransaction(transaction: Transaction): void {
+		const queue = this.getQueueForTransaction(transaction);
+		// The queue must not start a transaction while it is being modified
+		queue.pause();
+		try {
+			let activeRedundant: Transaction | undefined;
+			let deferredRedundant: Transaction | undefined;
+			const queuedRedundant: Transaction[] = [];
+			const queuedSuperseded: Transaction[] = [];
+			const deferredSuperseded: Transaction[] = [];
+
+			const newerMessage = transaction.message;
+			if (isSendData(newerMessage) && containsCC(newerMessage)) {
+				if (
+					queue.currentTransaction
+					// Protected commands must transmit themselves, so they ignore the active transmission
+					&& !transaction.preventDeduplication
+					&& this.getTransactionRelation(
+							transaction,
+							newerMessage,
+							queue.currentTransaction,
+						) === CommandRelation.Redundant
+				) {
+					activeRedundant = queue.currentTransaction;
+				}
+
+				for (const older of queue.transactions) {
+					switch (
+						this.getTransactionRelation(
+							transaction,
+							newerMessage,
+							older,
+						)
+					) {
+						case CommandRelation.Supersedes:
+							// Protected commands must not be dropped for a newer command
+							if (!older.preventDeduplication) {
+								queuedSuperseded.push(older);
+							}
+							break;
+						case CommandRelation.Redundant:
+							// Two protected commands transmit separately
+							if (
+								!transaction.preventDeduplication
+								|| !older.preventDeduplication
+							) {
+								queuedRedundant.push(older);
+							}
+							break;
+					}
+				}
+
+				// Also look at transactions that wait for a delayed requeue,
+				// see delayTransactionsForNode
+				for (const [nodeId, batches] of this.requeueTimers) {
+					for (const batch of batches) {
+						batch.transactions = batch.transactions.filter(
+							(older) => {
+								switch (
+									this.getTransactionRelation(
+										transaction,
+										newerMessage,
+										older,
+									)
+								) {
+									case CommandRelation.Supersedes:
+										// Cancel the stale command before its requeue timer fires
+										if (!older.preventDeduplication) {
+											deferredSuperseded.push(older);
+											return false;
+										}
+										break;
+									case CommandRelation.Redundant:
+										// The node cannot handle this command right now, so a
+										// duplicate waits for the delayed command
+										if (!transaction.preventDeduplication) {
+											deferredRedundant ??= older;
+										}
+										break;
+								}
+								return true;
+							},
+						);
+						if (batch.transactions.length === 0) {
+							batch.timer.clear();
+							batches.delete(batch);
+						}
+					}
+					if (batches.size === 0) this.requeueTimers.delete(nodeId);
+				}
+			}
+
+			// Remove superseded transactions before rejecting them. Rejecting
+			// runs synchronous caller listeners that may re-enter this method.
+			queue.remove(...queuedSuperseded);
+			for (const older of [...queuedSuperseded, ...deferredSuperseded]) {
+				this.rejectTransaction(
+					older,
+					new ZWaveError(
+						"The message was superseded by a newer command",
+						ZWaveErrorCodes.Controller_MessageSuperseded,
+						undefined,
+						older.stack,
+					),
+				);
+			}
+
+			if (transaction.preventDeduplication) {
+				// The protected command replaces its unprotected duplicates in the queue
+				for (const older of queuedRedundant) {
+					// Inherit the highest priority (lower value)
+					transaction.priority = Math.min(
+						transaction.priority,
+						older.priority,
+					);
+					// Inherit the earliest creation time so it keeps its spot in the queue
+					transaction.creationTimestamp = Math.min(
+						transaction.creationTimestamp,
+						older.creationTimestamp,
+					);
+					// The duplicate never transmits.
+					// Its callers get their result from the protected command.
+					queue.remove(older);
+					transaction.adoptCallersFrom(older);
+				}
+				queue.add(transaction);
+			} else {
+				// Attach the new command's callers to the first matching command found.
+				// Multiple queued matches are all protected, so any of them works.
+				const redundant = activeRedundant
+					?? queuedRedundant[0]
+					?? deferredRedundant;
+				if (redundant) {
+					redundant.adoptCallersFrom(transaction);
+					// Re-add the transaction to the queue if its priority changed
+					// to force a re-sort.
+					if (
+						redundant !== activeRedundant
+						&& transaction.priority < redundant.priority
+					) {
+						if (redundant === deferredRedundant) {
+							redundant.priority = transaction.priority;
+						} else {
+							// Re-add the queued command so the queue re-sorts it
+							queue.remove(redundant);
+							redundant.priority = transaction.priority;
+							queue.add(redundant);
+						}
+					}
+				} else {
+					queue.add(transaction);
+				}
+			}
+		} finally {
+			// Rejections and progress updates run synchronous listeners which
+			// may throw. The queue must not stay paused in that case.
+			queue.unpause();
+		}
+	}
+
+	/**
 	 * Sends a message to the Z-Wave stick.
 	 * @param msg The message to send
 	 * @param options (optional) Options regarding the message transmission
@@ -7474,21 +7735,42 @@ ${handlers.length} left`,
 		}
 
 		// Create the transaction
-		const { generator, resultPromise } = createMessageGenerator(
+		let transaction: Transaction;
+		const generator = createMessageGenerator(
 			this,
 			this.getEncodingContext(),
 			msg,
 			(msg, _result) => {
 				this.handleSerialAPICommandResult(msg, options, _result);
+				if (hasTXReport(_result)) {
+					transaction.reportTXReport(_result.txReport);
+				}
 			},
 		);
-		const transaction = new Transaction(this, {
+		transaction = new Transaction(this, {
 			message: msg,
 			priority: options.priority,
 			parts: generator,
-			promise: resultPromise,
-			listener: options.onProgress,
+			preventDeduplication: "preventDeduplication" in options
+				&& options.preventDeduplication === true,
+			onSettled: (result) => {
+				if (
+					result.status === "rejected"
+					&& isZWaveError(result.reason)
+					&& result.reason.code
+						=== ZWaveErrorCodes.Controller_NodeTimeout
+				) {
+					// Count each physical timeout once per actual transaction
+					node?.incrementStatistics("timeoutResponse");
+				}
+			},
 		});
+		const callerPromise = createDeferredPromise<Message | void>();
+		const attachment = transaction.attach(
+			callerPromise,
+			options.onProgress,
+			options.onTXReport,
+		);
 
 		// Configure its options
 		if (options.changeNodeStatusOnMissingACK != undefined) {
@@ -7499,31 +7781,44 @@ ${handlers.length} left`,
 			transaction.pauseSendThread = true;
 		}
 		transaction.requestWakeUpOnDemand = !!options.requestWakeUpOnDemand;
+		transaction.requestStatusUpdates = "requestStatusUpdates" in options
+			&& options.requestStatusUpdates === true;
 		transaction.tag = options.tag;
 
-		// And queue it
-		this.getQueueForTransaction(transaction).add(transaction);
+		// Notify callers that the command was queued. If enqueueTransaction() ands up
+		// attaching the command to an active transaction, the callers will immediately
+		// receive the `Active` progress update.
 		transaction.setProgress({ state: TransactionState.Queued });
+		this.enqueueTransaction(transaction);
 
 		// If the transaction should expire, start the timeout
 		let expirationTimeout: Timer | undefined;
 		if (options.expire) {
 			expirationTimeout = setTimer(() => {
-				void this.reduceQueues((t, _source) => {
-					if (t === transaction) {
+				const error = new ZWaveError(
+					"The message has expired",
+					ZWaveErrorCodes.Controller_MessageExpired,
+					undefined,
+					transaction.stack,
+				);
+				if (attachment.detach(error)) {
+					// Nobody waits for the transmission anymore, cancel it
+					void this.reduceQueues((t, _source) => {
+						if (!attachment.sharesLifecycleWith(t)) {
+							return { type: "keep" };
+						}
 						return {
 							type: "reject",
-							message: `The message has expired`,
+							message: error.message,
 							code: ZWaveErrorCodes.Controller_MessageExpired,
 						};
-					}
-					return { type: "keep" };
-				});
+					});
+				}
 			}, options.expire).unref();
 		}
 
 		try {
-			const result = (await resultPromise) as TResponse;
+			const result = (await callerPromise) as TResponse;
 
 			// If this was a successful non-nonce message to a sleeping node, make sure it goes to sleep again
 			let maybeSendToSleep: boolean;
@@ -7552,9 +7847,6 @@ ${handlers.length} left`,
 				setImmediate(() => this.debounceSendNodeToSleep(node));
 			}
 
-			// Set the transaction progress to completed before resolving the Promise
-			transaction.setProgress({ state: TransactionState.Completed });
-
 			return result;
 		} catch (e) {
 			if (isZWaveError(e)) {
@@ -7572,9 +7864,6 @@ ${handlers.length} left`,
 				) {
 					this._controller?.incrementStatistics("messagesDroppedTX");
 					return e.context as TResponse;
-				} else if (e.code === ZWaveErrorCodes.Controller_NodeTimeout) {
-					// If the node failed to respond in time, remember this for the statistics
-					node?.incrementStatistics("timeoutResponse");
 				}
 				// Enrich errors with the transaction's stack instead of the internal stack
 				if (!e.transactionSource) {
@@ -8185,11 +8474,6 @@ ${handlers.length} left`,
 		transaction: Transaction,
 		error: ZWaveError,
 	): void {
-		transaction.setProgress({
-			state: TransactionState.Failed,
-			reason: error.message,
-		});
-
 		transaction.abort(error);
 	}
 
@@ -8297,7 +8581,7 @@ ${handlers.length} left`,
 				&& source === "queue"
 			) {
 				requeue.push(transaction);
-				return { type: "drop" };
+				return { type: "defer" };
 			}
 			return { type: "keep" };
 		});
@@ -8310,14 +8594,49 @@ ${handlers.length} left`,
 				);
 			}
 			const timerSet = this.requeueTimers.get(nodeId)!;
+			let batch: DeferredTransactionBatch;
 			const timer = setTimer(() => {
-				timerSet.delete(timer);
-				const requeued = requeue.map((t) => t.clone());
+				timerSet.delete(batch);
+				if (timerSet.size === 0) {
+					this.requeueTimers.delete(nodeId);
+				}
+				// Clone the transactions immediately before queuing them.
+				// A newer superseding command may have removed some transactions in the meantime.
+				const requeued = batch.transactions.map((t) => t.clone());
 				for (const t of requeued) {
 					this.getQueueForTransaction(t).add(t);
 				}
 			}, delaySeconds * 1000).unref();
-			timerSet.add(timer);
+			batch = { timer, transactions: requeue };
+			timerSet.add(batch);
+		}
+	}
+
+	private clearDeferredTransactions(
+		nodeId: number | undefined,
+		reason: string,
+		errorCode: ZWaveErrorCodes,
+	): void {
+		const entries = nodeId == undefined
+			? [...this.requeueTimers.entries()]
+			: [[nodeId, this.requeueTimers.get(nodeId)] as const];
+		for (const [entryNodeId, batches] of entries) {
+			if (!batches) continue;
+			for (const batch of batches) {
+				batch.timer.clear();
+				for (const transaction of batch.transactions) {
+					this.rejectTransaction(
+						transaction,
+						new ZWaveError(
+							reason,
+							errorCode,
+							undefined,
+							transaction.stack,
+						),
+					);
+				}
+			}
+			this.requeueTimers.delete(entryNodeId);
 		}
 	}
 
@@ -8357,16 +8676,9 @@ ${handlers.length} left`,
 		) => void = (transaction, source) => {
 			const reducerResult = reducer(transaction, source);
 			switch (reducerResult.type) {
-				case "drop":
+				case "defer":
 					if (source === "queue") {
 						dropQueued.push(transaction);
-
-						// This will silently drop the transaction, so awaiting it will never resolve.
-						// At least notify the listeners about it.
-						transaction.setProgress({
-							state: TransactionState.Failed,
-							reason: "The message was dropped",
-						});
 					} else {
 						stopActive = transaction;
 					}

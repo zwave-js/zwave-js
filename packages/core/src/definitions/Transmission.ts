@@ -113,6 +113,12 @@ export type SendCommandOptions =
 		/** Overwrite the default report timeout */
 		reportTimeoutMs?: number;
 		/**
+		 * Ensures this command is transmitted: it will not share another
+		 * command's physical transmission and a newer command cannot
+		 * supersede it while it is queued.
+		 */
+		preventDeduplication?: boolean;
+		/**
 		 * @internal
 		 * Do not wait for the expected response to this command,
 		 * e.g. because another transaction is already waiting for it.

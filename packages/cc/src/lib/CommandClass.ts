@@ -88,6 +88,36 @@ export interface CommandClassOptions extends CCAddress {
 	payload?: BytesView;
 }
 
+export enum CommandRelation {
+	Unrelated,
+	Redundant,
+	Supersedes,
+}
+
+/**
+ * Compares command destinations. Single targets must match exactly.
+ * Multi-targets must contain the same IDs regardless of order.
+ */
+export function haveSameDestination(
+	first: number | readonly number[],
+	second: number | readonly number[],
+): boolean {
+	if (typeof first === "number" || typeof second === "number") {
+		return first === second;
+	}
+	const firstTargets = new Set(first);
+	const secondTargets = new Set(second);
+	return firstTargets.size === secondTargets.size
+		&& [...firstTargets].every((target) => secondTargets.has(target));
+}
+
+export function getCommandRelation(
+	newer: CommandClass,
+	older: CommandClass,
+): CommandRelation {
+	return newer.getRelationTo(older);
+}
+
 // Defines the necessary traits an endpoint passed to a CC instance must have
 export type CCEndpoint =
 	& EndpointId
@@ -411,6 +441,29 @@ export class CommandClass implements CCId {
 
 	public prepareRetransmission(): void {
 		// Do nothing by default
+	}
+
+	/**
+	 * Determines this command's relation to an older command. Shared command
+	 * context must match before command-specific relation logic runs.
+	 */
+	public getRelationTo(other: CommandClass): CommandRelation {
+		if (
+			this.ccId !== other.ccId
+			|| !haveSameDestination(this.nodeId, other.nodeId)
+			|| this.endpointIndex !== other.endpointIndex
+			|| this.encapsulationFlags !== other.encapsulationFlags
+		) {
+			return CommandRelation.Unrelated;
+		}
+		return this.determineRelation(other);
+	}
+
+	/**
+	 * Subclasses override this to determine additional command-specific relations.
+	 */
+	protected determineRelation(_other: CommandClass): CommandRelation {
+		return CommandRelation.Unrelated;
 	}
 
 	/**

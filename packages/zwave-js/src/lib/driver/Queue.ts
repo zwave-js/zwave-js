@@ -37,6 +37,22 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 		this.trigger();
 	}
 
+	private pauseCount = 0;
+
+	/**
+	 * Pauses the queue to prevent it from triggering while being modified.
+	 * Each call must be balanced with unpause().
+	 */
+	public pause(): void {
+		this.pauseCount++;
+	}
+
+	/** Unpauses the queue and starts the next transaction if possible */
+	public unpause(): void {
+		this.pauseCount--;
+		if (this.pauseCount === 0) this.trigger();
+	}
+
 	public find(
 		predicate: (item: Transaction) => boolean,
 	): Transaction | undefined {
@@ -53,6 +69,7 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 
 	/** Causes the queue to re-evaluate whether the next transaction may be started */
 	public trigger(): void {
+		if (this.pauseCount > 0) return;
 		while (this.transactions.length > 0 && this.listeners.length > 0) {
 			if (this.mayStartNextTransaction(this.transactions.peekStart()!)) {
 				const promise = this.listeners.shift()!;
@@ -93,7 +110,8 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 				let value: Transaction | undefined;
 
 				if (
-					this.transactions.length > 0
+					this.pauseCount === 0
+					&& this.transactions.length > 0
 					&& this.mayStartNextTransaction(
 						this.transactions.peekStart()!,
 					)
