@@ -288,6 +288,8 @@ export interface ZWaveNodeEventCallbacks extends ZWaveNodeValueEventCallbacks {
 	sleep: ZWaveNodeStatusChangeCallback;
 	dead: ZWaveNodeStatusChangeCallback;
 	alive: ZWaveNodeStatusChangeCallback;
+	overdue: (node: ZWaveNode) => void;
+	"no longer overdue": (node: ZWaveNode) => void;
 	"interview completed": (node: ZWaveNode) => void;
 	ready: (node: ZWaveNode) => void;
 	"interview stage completed": (node: ZWaveNode, stageName: string) => void;
@@ -330,6 +332,8 @@ export const zWaveNodeEvents = [
 	"sleep",
 	"dead",
 	"alive",
+	"overdue",
+	"no longer overdue",
 	"interview completed",
 	"ready",
 	"interview stage completed",

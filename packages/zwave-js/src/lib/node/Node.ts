@@ -353,6 +353,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 		) {
 			timeout?.clear();
 		}
+		this.cancelOverdueCheck();
 
 		// Remove all event handlers
 		this.removeAllListeners();
@@ -438,6 +439,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			...cur,
 			lastSeen: value,
 		}));
+		// Hearing from a node resets how long it may stay silent before being overdue
+		this.scheduleOverdueCheck();
 	}
 
 	/**
