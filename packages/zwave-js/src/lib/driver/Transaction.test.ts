@@ -628,6 +628,28 @@ describe("attachments", () => {
 		]);
 	});
 
+	test("ignores errors thrown by caller listeners", async () => {
+		const transaction = createAttachedTransaction();
+		const first = createDeferredPromise<Message | void>();
+		const second = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		transaction.attach(first, () => {
+			throw new Error("listener error");
+		});
+		transaction.attach(second, progress);
+
+		transaction.setProgress({ state: TransactionState.Active });
+		const result = {} as Message;
+		transaction.abort(result);
+
+		await expect(first).resolves.toBe(result);
+		await expect(second).resolves.toBe(result);
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
+		]);
+	});
+
 	test("marks transactions settled synchronously", () => {
 		const transaction = createAttachedTransaction();
 		expect(transaction.isSettled).toBe(false);

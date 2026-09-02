@@ -84,6 +84,18 @@ export interface TransactionAttachmentHandle {
 }
 
 /**
+ * Runs a caller-provided callback. Errors it throws must not disrupt other
+ * callers or the queue update in progress.
+ */
+function invokeSafely(callback: () => void): void {
+	try {
+		callback();
+	} catch {
+		// Ignore errors thrown by caller-provided callbacks
+	}
+}
+
+/**
  * Tracks the state of one physical transmission and distributes progress
  * updates, TX reports and the final result to all attached callers.
  * Requeued clones of a transaction share its lifecycle. When commands are
@@ -104,8 +116,9 @@ class TransactionLifecycle {
 	 * transaction is already settled, the result.
 	 */
 	public attach(caller: TransactionCaller): void {
-		if (this.progress) {
-			caller.listener?.({ ...this.progress });
+		const progress = this.progress;
+		if (progress) {
+			invokeSafely(() => caller.listener?.({ ...progress }));
 		}
 		this.callers.add(caller);
 		this.replaySettlement(caller);
@@ -117,10 +130,12 @@ class TransactionLifecycle {
 	 */
 	public detach(caller: TransactionCaller, error: ZWaveError): boolean {
 		if (this.settled || !this.callers.delete(caller)) return false;
-		caller.listener?.({
-			state: TransactionState.Failed,
-			reason: error.message,
-		});
+		invokeSafely(() =>
+			caller.listener?.({
+				state: TransactionState.Failed,
+				reason: error.message,
+			})
+		);
 		caller.promise.reject(error);
 		return this.callers.size === 0;
 	}
@@ -150,7 +165,7 @@ class TransactionLifecycle {
 				reason: getErrorMessage(result.reason),
 			});
 		}
-		this.onSettled?.(result);
+		invokeSafely(() => this.onSettled?.(result));
 		for (const caller of this.callers) {
 			this.replaySettlement(caller);
 		}
@@ -173,7 +188,7 @@ class TransactionLifecycle {
 			caller.lifecycle = this;
 			this.callers.add(caller);
 			if (replayTargetProgress) {
-				caller.listener?.({ ...targetProgress });
+				invokeSafely(() => caller.listener?.({ ...targetProgress }));
 			}
 			this.replaySettlement(caller);
 		}
@@ -182,7 +197,7 @@ class TransactionLifecycle {
 	/** Forwards a TX report to all attached callers */
 	public reportTXReport(report: TXReport): void {
 		for (const caller of this.callers) {
-			caller.onTXReport?.(report);
+			invokeSafely(() => caller.onTXReport?.(report));
 		}
 	}
 
@@ -201,7 +216,7 @@ class TransactionLifecycle {
 		}
 		this.progress = progress;
 		for (const caller of this.callers) {
-			caller.listener?.({ ...progress });
+			invokeSafely(() => caller.listener?.({ ...progress }));
 		}
 	}
 
