@@ -7513,163 +7513,168 @@ ${handlers.length} left`,
 		// While the queue is updated, it must not start a transaction,
 		// e.g. because a completed command triggers it elsewhere
 		queue.pause();
+		try {
+			let activeRedundant: Transaction | undefined;
+			let deferredRedundant: Transaction | undefined;
+			const queuedRedundant: Transaction[] = [];
+			const queuedSuperseded: Transaction[] = [];
+			const deferredSuperseded: Transaction[] = [];
 
-		let activeRedundant: Transaction | undefined;
-		let deferredRedundant: Transaction | undefined;
-		const queuedRedundant: Transaction[] = [];
-		const queuedSuperseded: Transaction[] = [];
-		const deferredSuperseded: Transaction[] = [];
-
-		const newerMessage = transaction.message;
-		if (isSendData(newerMessage) && containsCC(newerMessage)) {
-			if (
-				queue.currentTransaction
-				// Protected commands must transmit themselves, so they ignore the active transmission
-				&& !transaction.preventDeduplication
-				&& this.getTransactionRelation(
-						transaction,
-						newerMessage,
-						queue.currentTransaction,
-					) === CommandRelation.Redundant
-			) {
-				activeRedundant = queue.currentTransaction;
-			}
-
-			for (const older of queue.transactions) {
-				switch (
-					this.getTransactionRelation(
-						transaction,
-						newerMessage,
-						older,
-					)
-				) {
-					case CommandRelation.Supersedes:
-						// Protected commands must not be dropped for a newer command
-						if (!older.preventDeduplication) {
-							queuedSuperseded.push(older);
-						}
-						break;
-					case CommandRelation.Redundant:
-						// Two protected commands transmit separately
-						if (
-							!transaction.preventDeduplication
-							|| !older.preventDeduplication
-						) {
-							queuedRedundant.push(older);
-						}
-						break;
-				}
-			}
-
-			// Also look at transactions that wait for a delayed requeue,
-			// see delayTransactionsForNode
-			for (const [nodeId, batches] of this.requeueTimers) {
-				for (const batch of batches) {
-					batch.transactions = batch.transactions.filter((older) => {
-						switch (
-							this.getTransactionRelation(
-								transaction,
-								newerMessage,
-								older,
-							)
-						) {
-							case CommandRelation.Supersedes:
-								// Cancel the stale command. When its timer fires, it
-								// would otherwise transmit after the newer command.
-								if (!older.preventDeduplication) {
-									deferredSuperseded.push(older);
-									return false;
-								}
-								break;
-							case CommandRelation.Redundant:
-								// The node cannot handle this command right now, so a
-								// duplicate waits for the delayed command instead of
-								// transmitting immediately
-								if (!transaction.preventDeduplication) {
-									deferredRedundant ??= older;
-								}
-								break;
-						}
-						return true;
-					});
-					if (batch.transactions.length === 0) {
-						batch.timer.clear();
-						batches.delete(batch);
-					}
-				}
-				if (batches.size === 0) this.requeueTimers.delete(nodeId);
-			}
-		}
-
-		// Remove superseded transactions from the queue before rejecting any
-		// of them. Rejecting runs caller listeners synchronously, and those may
-		// re-enter this method, which must not see the removed transactions.
-		queue.remove(...queuedSuperseded);
-		for (const older of [...queuedSuperseded, ...deferredSuperseded]) {
-			this.rejectTransaction(
-				older,
-				new ZWaveError(
-					"The message was superseded by a newer command",
-					ZWaveErrorCodes.Controller_MessageSuperseded,
-					undefined,
-					older.stack,
-				),
-			);
-		}
-
-		if (transaction.preventDeduplication) {
-			// The protected command replaces its unprotected duplicates in the queue
-			for (const older of queuedRedundant) {
-				// It inherits their highest priority (lower value = higher priority)...
-				transaction.priority = Math.min(
-					transaction.priority,
-					older.priority,
-				);
-				// ...and their earliest creation time, so it is not scheduled
-				// later than the commands it replaces
-				transaction.creationTimestamp = Math.min(
-					transaction.creationTimestamp,
-					older.creationTimestamp,
-				);
-				// The duplicate never transmits. Its callers get their result
-				// from the protected command instead.
-				queue.remove(older);
-				transaction.adoptCallersFrom(older);
-			}
-			queue.add(transaction);
-		} else {
-			// Instead of queueing the new command, its callers wait for a
-			// matching command that is active, queued, or waiting for a delayed
-			// requeue. When there are multiple queued matches, all of them are
-			// protected commands which will each transmit, so it does not
-			// matter which one the callers wait for.
-			const redundant = activeRedundant
-				?? queuedRedundant[0]
-				?? deferredRedundant;
-			if (redundant) {
-				redundant.adoptCallersFrom(transaction);
+			const newerMessage = transaction.message;
+			if (isSendData(newerMessage) && containsCC(newerMessage)) {
 				if (
-					// The active transmission's priority no longer matters
-					redundant !== activeRedundant
-					// The shared command inherits the new command's priority
-					// if that is higher (= a lower value)
-					&& transaction.priority < redundant.priority
+					queue.currentTransaction
+					// Protected commands must transmit themselves, so they ignore the active transmission
+					&& !transaction.preventDeduplication
+					&& this.getTransactionRelation(
+							transaction,
+							newerMessage,
+							queue.currentTransaction,
+						) === CommandRelation.Redundant
 				) {
-					if (redundant === deferredRedundant) {
-						redundant.priority = transaction.priority;
-					} else {
-						// Re-add the queued command so the queue re-sorts it
-						queue.remove(redundant);
-						redundant.priority = transaction.priority;
-						queue.add(redundant);
+					activeRedundant = queue.currentTransaction;
+				}
+
+				for (const older of queue.transactions) {
+					switch (
+						this.getTransactionRelation(
+							transaction,
+							newerMessage,
+							older,
+						)
+					) {
+						case CommandRelation.Supersedes:
+							// Protected commands must not be dropped for a newer command
+							if (!older.preventDeduplication) {
+								queuedSuperseded.push(older);
+							}
+							break;
+						case CommandRelation.Redundant:
+							// Two protected commands transmit separately
+							if (
+								!transaction.preventDeduplication
+								|| !older.preventDeduplication
+							) {
+								queuedRedundant.push(older);
+							}
+							break;
 					}
 				}
-			} else {
-				queue.add(transaction);
-			}
-		}
 
-		queue.unpause();
+				// Also look at transactions that wait for a delayed requeue,
+				// see delayTransactionsForNode
+				for (const [nodeId, batches] of this.requeueTimers) {
+					for (const batch of batches) {
+						batch.transactions = batch.transactions.filter(
+							(older) => {
+								switch (
+									this.getTransactionRelation(
+										transaction,
+										newerMessage,
+										older,
+									)
+								) {
+									case CommandRelation.Supersedes:
+										// Cancel the stale command. When its timer fires, it
+										// would otherwise transmit after the newer command.
+										if (!older.preventDeduplication) {
+											deferredSuperseded.push(older);
+											return false;
+										}
+										break;
+									case CommandRelation.Redundant:
+										// The node cannot handle this command right now, so a
+										// duplicate waits for the delayed command instead of
+										// transmitting immediately
+										if (!transaction.preventDeduplication) {
+											deferredRedundant ??= older;
+										}
+										break;
+								}
+								return true;
+							},
+						);
+						if (batch.transactions.length === 0) {
+							batch.timer.clear();
+							batches.delete(batch);
+						}
+					}
+					if (batches.size === 0) this.requeueTimers.delete(nodeId);
+				}
+			}
+
+			// Remove superseded transactions from the queue before rejecting any
+			// of them. Rejecting runs caller listeners synchronously, and those may
+			// re-enter this method, which must not see the removed transactions.
+			queue.remove(...queuedSuperseded);
+			for (const older of [...queuedSuperseded, ...deferredSuperseded]) {
+				this.rejectTransaction(
+					older,
+					new ZWaveError(
+						"The message was superseded by a newer command",
+						ZWaveErrorCodes.Controller_MessageSuperseded,
+						undefined,
+						older.stack,
+					),
+				);
+			}
+
+			if (transaction.preventDeduplication) {
+				// The protected command replaces its unprotected duplicates in the queue
+				for (const older of queuedRedundant) {
+					// It inherits their highest priority (lower value = higher priority)...
+					transaction.priority = Math.min(
+						transaction.priority,
+						older.priority,
+					);
+					// ...and their earliest creation time, so it is not scheduled
+					// later than the commands it replaces
+					transaction.creationTimestamp = Math.min(
+						transaction.creationTimestamp,
+						older.creationTimestamp,
+					);
+					// The duplicate never transmits. Its callers get their result
+					// from the protected command instead.
+					queue.remove(older);
+					transaction.adoptCallersFrom(older);
+				}
+				queue.add(transaction);
+			} else {
+				// Instead of queueing the new command, its callers wait for a
+				// matching command that is active, queued, or waiting for a delayed
+				// requeue. When there are multiple queued matches, all of them are
+				// protected commands which will each transmit, so it does not
+				// matter which one the callers wait for.
+				const redundant = activeRedundant
+					?? queuedRedundant[0]
+					?? deferredRedundant;
+				if (redundant) {
+					redundant.adoptCallersFrom(transaction);
+					if (
+						// The active transmission's priority no longer matters
+						redundant !== activeRedundant
+						// The shared command inherits the new command's priority
+						// if that is higher (= a lower value)
+						&& transaction.priority < redundant.priority
+					) {
+						if (redundant === deferredRedundant) {
+							redundant.priority = transaction.priority;
+						} else {
+							// Re-add the queued command so the queue re-sorts it
+							queue.remove(redundant);
+							redundant.priority = transaction.priority;
+							queue.add(redundant);
+						}
+					}
+				} else {
+					queue.add(transaction);
+				}
+			}
+		} finally {
+			// Rejections and progress updates run synchronous listeners which
+			// may throw. The queue must not stay paused in that case.
+			queue.unpause();
+		}
 	}
 
 	/**
