@@ -327,13 +327,13 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 		);
 		if (!response) return;
 
-		// NotificationCCReport does not persist its variables during the
-		// automatic persist step, because the behavior spans several reports.
-		// We hand the solicited response to the node so it updates the notification
-		// state, just like an unsolicited report would.
+		// NotificationCCReport does not persist its variables automatically.
+		// By calling handleCommand() here, we make that all code paths calling get()
+		// are persisted correctly.
+
 		// A 0xfe event ("unknown event") in a Get response means the queried type
-		// is idle. Normalize it to a generic idle for persistence, then restore
-		// the raw value so API callers see what the node actually reported.
+		// is idle. For persisting the value, we temporarily modify the field, so
+		// that handleCommand() treats it as an idle notification.
 		const rawEvent = response.notificationEvent;
 		const rawEventParameters = response.eventParameters;
 		if (rawEvent === 0xfe) {
@@ -345,6 +345,7 @@ export class NotificationCCAPI extends PhysicalCCAPI {
 		// @ts-expect-error handleCommand is not part of the reduced node type
 		await node?.handleCommand(response);
 
+		// Restore the original values for returning the response to the caller
 		response.notificationEvent = rawEvent;
 		response.eventParameters = rawEventParameters;
 
