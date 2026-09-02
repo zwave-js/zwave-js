@@ -463,7 +463,7 @@
 			"defaultValue": 0,
 			"options": [
 				{
-					"label": "Stay on until day mode or manual override",
+					"label": "Disable",
 					"value": 0
 				}
 			]
