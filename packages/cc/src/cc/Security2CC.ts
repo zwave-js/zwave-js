@@ -1834,14 +1834,16 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 
 		// Commands that establish or repair synchronization (SPAN/MPAN)
 		// must each be transmitted
-		const carriesSyncExtension = (
-			cc: Security2CCMessageEncapsulation,
-		): boolean =>
-			cc.extensions.some((extension) =>
+		if (
+			this.extensions.some((extension) =>
 				extension instanceof SPANExtension
 				|| extension instanceof MPANExtension
-			);
-		if (carriesSyncExtension(this) || carriesSyncExtension(other)) {
+			)
+			|| other.extensions.some((extension) =>
+				extension instanceof SPANExtension
+				|| extension instanceof MPANExtension
+			)
+		) {
 			return CommandRelation.Unrelated;
 		}
 
