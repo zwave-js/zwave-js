@@ -1,4 +1,4 @@
-name: 'Z-Wave Bot: Auto-Merge PR'
+name: 'Z-Wave Bot: Approve / Auto-Merge PR'
 
 on:
   issue_comment:
@@ -41,6 +41,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           gh pr merge --auto --squash "$PR_URL"
+
+  # #########################################################################
+  # Approves a PR once when authorized person comments
+  # @zwave-js-bot approve
+  bot-approve:
+    if: |
+      contains(github.event.issue.html_url, '/pull/') &&
+      contains(github.event.comment.body, '@zwave-js-bot approve') &&
+      github.event.comment.user.login == 'AlCalzone' &&
+      github.event.issue.user.login != 'zwave-js-bot'
+
+    runs-on: [ubuntu-latest]
+
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          github-token: ${{secrets.BOT_TOKEN}}
+          script: |
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.issue.number,
+              event: "APPROVE"
+            });
 
   bot-reenable-automerge:
     # Don't run in forks, don't run for drafts, don't run for zwave-js-bot's PRs
