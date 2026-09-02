@@ -1,7 +1,7 @@
 {
 	"manufacturer": "Zooz",
 	"manufacturerId": "0x027a",
-	"label": "ZEN12 800LR",
+	"label": "ZEN12",
 	"description": "Motion Dimmer",
 	"devices": [
 		{
