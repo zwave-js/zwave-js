@@ -1798,6 +1798,40 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 	protected override determineRelation(
 		other: CommandClass,
 	): CommandRelation {
+		if (!(other instanceof Security2CCMessageEncapsulation)) {
+			return CommandRelation.Unrelated;
+		}
+
+		// Both commands must be encrypted with the same security class
+		// and verify delivery the same way
+		if (
+			this.securityClass !== other.securityClass
+			|| this.verifyDelivery !== other.verifyDelivery
+		) {
+			return CommandRelation.Unrelated;
+		}
+
+		// S2 multicast frames are encrypted for one multicast group, so
+		// commands only match within the same group (or none at all)
+		if (
+			getMulticastGroupId(this.extensions)
+				!== getMulticastGroupId(other.extensions)
+		) {
+			return CommandRelation.Unrelated;
+		}
+
+		// Notifying the node about de-synced multicast state must not get
+		// lost when only one of the commands would do so
+		const hasMOSExtension = (
+			cc: Security2CCMessageEncapsulation,
+		): boolean =>
+			cc.extensions.some((extension) =>
+				extension instanceof MOSExtension
+			);
+		if (hasMOSExtension(this) !== hasMOSExtension(other)) {
+			return CommandRelation.Unrelated;
+		}
+
 		// Commands that establish or repair synchronization (SPAN/MPAN)
 		// must each be transmitted
 		const carriesSyncExtension = (
@@ -1807,31 +1841,17 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				extension instanceof SPANExtension
 				|| extension instanceof MPANExtension
 			);
-
-		if (
-			other instanceof Security2CCMessageEncapsulation
-			&& this.securityClass === other.securityClass
-			&& this.verifyDelivery === other.verifyDelivery
-			// S2 multicast frames are encrypted for one multicast group, so
-			// commands only match within the same group (or none at all)
-			&& getMulticastGroupId(this.extensions)
-				=== getMulticastGroupId(other.extensions)
-			// Notifying the node about de-synced multicast state must not get
-			// lost when only one of the commands would do so
-			&& this.extensions.some((extension) =>
-					extension instanceof MOSExtension
-				)
-				=== other.extensions.some((extension) =>
-					extension instanceof MOSExtension
-				)
-			&& !carriesSyncExtension(this)
-			&& !carriesSyncExtension(other)
-			&& this.encapsulated
-			&& other.encapsulated
-		) {
-			return this.encapsulated.getRelationTo(other.encapsulated);
+		if (carriesSyncExtension(this) || carriesSyncExtension(other)) {
+			return CommandRelation.Unrelated;
 		}
-		return CommandRelation.Unrelated;
+
+		// Only commands that transport another command can be related.
+		// Received commands do not have `encapsulated` set at this point.
+		if (!this.encapsulated || !other.encapsulated) {
+			return CommandRelation.Unrelated;
+		}
+
+		return this.encapsulated.getRelationTo(other.encapsulated);
 	}
 
 	public override prepareRetransmission(): void {
