@@ -608,14 +608,14 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (
-			!(other instanceof ThermostatSetpointCCSet)
-			|| this.setpointType !== other.setpointType
+			other instanceof ThermostatSetpointCCSet
+			&& this.setpointType === other.setpointType
 		) {
-			return CommandRelation.Unrelated;
+			return this.value === other.value && this.scale === other.scale
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		return this.value === other.value && this.scale === other.scale
-			? CommandRelation.Redundant
-			: CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -728,14 +728,14 @@ export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (
-			!(other instanceof ThermostatSetpointCCReport)
-			|| this.type !== other.type
+			other instanceof ThermostatSetpointCCReport
+			&& this.type === other.type
 		) {
-			return CommandRelation.Unrelated;
+			return this.value === other.value && this.scale === other.scale
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		return this.value === other.value && this.scale === other.scale
-			? CommandRelation.Redundant
-			: CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -803,12 +803,13 @@ export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
 	public setpointType: ThermostatSetpointType;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (!(other instanceof ThermostatSetpointCCGet)) {
-			return CommandRelation.Unrelated;
+		if (
+			other instanceof ThermostatSetpointCCGet
+			&& this.setpointType === other.setpointType
+		) {
+			return CommandRelation.Redundant;
 		}
-		return this.setpointType === other.setpointType
-			? CommandRelation.Redundant
-			: CommandRelation.Unrelated;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {

@@ -344,16 +344,16 @@ export class BinarySwitchCCSet extends BinarySwitchCC {
 	public duration: Duration | undefined;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (!(other instanceof BinarySwitchCCSet)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof BinarySwitchCCSet) {
+			return this.targetValue === other.targetValue
+					&& areDurationsEqual(
+						this.duration ?? Duration.default(),
+						other.duration ?? Duration.default(),
+					)
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		return this.targetValue === other.targetValue
-				&& areDurationsEqual(
-					this.duration ?? Duration.default(),
-					other.duration ?? Duration.default(),
-				)
-			? CommandRelation.Redundant
-			: CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -443,14 +443,14 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 	public readonly duration: Duration | undefined;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (!(other instanceof BinarySwitchCCReport)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof BinarySwitchCCReport) {
+			return this.currentValue === other.currentValue
+					&& this.targetValue === other.targetValue
+					&& areDurationsEqual(this.duration, other.duration)
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		return this.currentValue === other.currentValue
-				&& this.targetValue === other.targetValue
-				&& areDurationsEqual(this.duration, other.duration)
-			? CommandRelation.Redundant
-			: CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -490,8 +490,9 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
 @expectedCCResponse(BinarySwitchCCReport)
 export class BinarySwitchCCGet extends BinarySwitchCC {
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		return other instanceof BinarySwitchCCGet
-			? CommandRelation.Redundant
-			: CommandRelation.Unrelated;
+		if (other instanceof BinarySwitchCCGet) {
+			return CommandRelation.Redundant;
+		}
+		return CommandRelation.Unrelated;
 	}
 }

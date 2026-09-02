@@ -660,23 +660,19 @@ export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
 	public duration: Duration | undefined;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (
-			!(other instanceof MultilevelSwitchCCSet)
-			&& !(other instanceof MultilevelSwitchCCStartLevelChange)
-		) {
-			return CommandRelation.Unrelated;
+		if (other instanceof MultilevelSwitchCCSet) {
+			return this.targetValue === other.targetValue
+					&& areDurationsEqual(
+						this.duration ?? Duration.default(),
+						other.duration ?? Duration.default(),
+					)
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		if (
-			other instanceof MultilevelSwitchCCSet
-			&& this.targetValue === other.targetValue
-			&& areDurationsEqual(
-				this.duration ?? Duration.default(),
-				other.duration ?? Duration.default(),
-			)
-		) {
-			return CommandRelation.Redundant;
+		if (other instanceof MultilevelSwitchCCStartLevelChange) {
+			return CommandRelation.Supersedes;
 		}
-		return CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -767,14 +763,14 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 	public currentValue: MaybeUnknown<number> | undefined;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (!(other instanceof MultilevelSwitchCCReport)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof MultilevelSwitchCCReport) {
+			return this.currentValue === other.currentValue
+					&& this.targetValue === other.targetValue
+					&& areDurationsEqual(this.duration, other.duration)
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		return this.currentValue === other.currentValue
-				&& this.targetValue === other.targetValue
-				&& areDurationsEqual(this.duration, other.duration)
-			? CommandRelation.Redundant
-			: CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -872,9 +868,10 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
 @expectedCCResponse(MultilevelSwitchCCReport)
 export class MultilevelSwitchCCGet extends MultilevelSwitchCC {
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		return other instanceof MultilevelSwitchCCGet
-			? CommandRelation.Redundant
-			: CommandRelation.Unrelated;
+		if (other instanceof MultilevelSwitchCCGet) {
+			return CommandRelation.Redundant;
+		}
+		return CommandRelation.Unrelated;
 	}
 }
 
@@ -941,25 +938,21 @@ export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
 	public direction: keyof typeof LevelChangeDirection;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (
-			!(other instanceof MultilevelSwitchCCSet)
-			&& !(other instanceof MultilevelSwitchCCStartLevelChange)
-		) {
-			return CommandRelation.Unrelated;
+		if (other instanceof MultilevelSwitchCCStartLevelChange) {
+			return this.direction === other.direction
+					&& this.ignoreStartLevel === other.ignoreStartLevel
+					&& this.startLevel === other.startLevel
+					&& areDurationsEqual(
+						this.duration ?? Duration.default(),
+						other.duration ?? Duration.default(),
+					)
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		if (
-			other instanceof MultilevelSwitchCCStartLevelChange
-			&& this.direction === other.direction
-			&& this.ignoreStartLevel === other.ignoreStartLevel
-			&& this.startLevel === other.startLevel
-			&& areDurationsEqual(
-				this.duration ?? Duration.default(),
-				other.duration ?? Duration.default(),
-			)
-		) {
-			return CommandRelation.Redundant;
+		if (other instanceof MultilevelSwitchCCSet) {
+			return CommandRelation.Supersedes;
 		}
-		return CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {

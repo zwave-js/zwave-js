@@ -399,12 +399,12 @@ export class BasicCCSet extends BasicCC {
 	public targetValue: number;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (!(other instanceof BasicCCSet)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof BasicCCSet) {
+			return this.targetValue === other.targetValue
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		return this.targetValue === other.targetValue
-			? CommandRelation.Redundant
-			: CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
@@ -475,14 +475,14 @@ export class BasicCCReport extends BasicCC {
 	public readonly duration: Duration | undefined;
 
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		if (!(other instanceof BasicCCReport)) {
-			return CommandRelation.Unrelated;
+		if (other instanceof BasicCCReport) {
+			return this.currentValue === other.currentValue
+					&& this.targetValue === other.targetValue
+					&& areDurationsEqual(this.duration, other.duration)
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
 		}
-		return this.currentValue === other.currentValue
-				&& this.targetValue === other.targetValue
-				&& areDurationsEqual(this.duration, other.duration)
-			? CommandRelation.Redundant
-			: CommandRelation.Supersedes;
+		return CommandRelation.Unrelated;
 	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -569,8 +569,9 @@ export class BasicCCReport extends BasicCC {
 @expectedCCResponse(BasicCCReport)
 export class BasicCCGet extends BasicCC {
 	protected override determineRelation(other: CommandClass): CommandRelation {
-		return other instanceof BasicCCGet
-			? CommandRelation.Redundant
-			: CommandRelation.Unrelated;
+		if (other instanceof BasicCCGet) {
+			return CommandRelation.Redundant;
+		}
+		return CommandRelation.Unrelated;
 	}
 }
