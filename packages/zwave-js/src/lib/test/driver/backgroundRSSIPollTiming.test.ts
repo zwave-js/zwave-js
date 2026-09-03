@@ -14,7 +14,7 @@ import {
 import { vi } from "vitest";
 import { integrationTest } from "../integrationTestSuite.js";
 
-// Regression test for discussion #9119.
+// Regression test for https://github.com/zwave-js/zwave-js/issues/9182
 // The driver polls the background RSSI every 30 seconds while the send queue is idle.
 // That query never reaches the mesh, so it must not count as mesh activity for the
 // poll spacing. Otherwise a poll whose required spacing exceeds 30 seconds is deferred
