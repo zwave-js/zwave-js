@@ -1,0 +1,427 @@
+{
+	"manufacturer": "Aeotec Ltd.",
+	"manufacturerId": "0x0371",
+	"label": "ZWA056",
+	"description": "Water Sensor 8",
+	"devices": [
+		{
+			// EU version
+			"productType": "0x0002",
+			"productId": "0x0038"
+		},
+		{
+			// AU version
+			"productType": "0x0102",
+			"productId": "0x0038"
+		},
+		{
+			// US version
+			"productType": "0x0202",
+			"productId": "0x0038"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Control",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Alarm",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Tamper",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "High Temperature",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Low Temperature",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "High Humidity",
+			"maxNodes": 5
+		},
+		"8": {
+			"label": "Low Humidity",
+			"maxNodes": 5
+		},
+		"9": {
+			"label": "Mold Danger",
+			"maxNodes": 5
+		},
+		"10": {
+			"label": "Air Temperature",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Threshold Check Interval",
+			"description": "Sets how often the device checks the thresholds in parameters 2, 3, and 14-17.",
+			"valueSize": 4,
+			"unit": "seconds",
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 2678400] }
+			],
+			"defaultValue": 900,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$if": "productType === 0x0202",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Change Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 °C/°F",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 36,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "2",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Change Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 °C/°F",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 20,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "3",
+			"$purpose": "reporting_threshold.humidity",
+			"label": "Humidity Change Report Threshold",
+			"valueSize": 1,
+			"unit": "0.1 %",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 50,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indication: Periodic Reports",
+			"defaultValue": 1
+		},
+		{
+			"#": "4[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indication: Wakeup Reports",
+			"defaultValue": 1
+		},
+		{
+			"#": "4[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indication: Mold Danger Alarm",
+			"defaultValue": 1
+		},
+		{
+			"#": "4[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indication: Tamper Alarm",
+			"defaultValue": 1
+		},
+		{
+			"#": "4[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indication: Dry Contact Change Report",
+			"defaultValue": 1
+		},
+		{
+			"#": "5",
+			"$import": "~/templates/master_template.json#base_options_nounit",
+			"label": "State When Alarm Is Triggered",
+			"options": [
+				{
+					"label": "Closed",
+					"value": 0
+				},
+				{
+					"label": "Opened",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "6",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_trigger"
+		},
+		{
+			"#": "7",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_command_type"
+		},
+		{
+			"#": "8",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on"
+		},
+		{
+			"#": "9",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off"
+		},
+		{
+			"#": "10",
+			"label": "Notification Type",
+			"valueSize": 1,
+			"defaultValue": 6,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Water alarm",
+					"value": 0
+				},
+				{
+					"label": "Smoke alarm",
+					"value": 1
+				},
+				{
+					"label": "CO alarm",
+					"value": 2
+				},
+				{
+					"label": "CO2 alarm",
+					"value": 3
+				},
+				{
+					"label": "Access control (Door/Window)",
+					"value": 4
+				},
+				{
+					"label": "Access control (Tilt)",
+					"value": 5
+				},
+				{
+					"label": "Home security (Motion)",
+					"value": 6
+				},
+				{
+					"label": "Home security (Glass break)",
+					"value": 7
+				},
+				{
+					"label": "Emergency alarm notification",
+					"value": 8
+				}
+			]
+		},
+		{
+			"#": "12[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sensor Limit: High Temperature"
+		},
+		{
+			"#": "12[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sensor Limit: High Humidity"
+		},
+		{
+			"#": "12[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sensor Limit: Low Temperature"
+		},
+		{
+			"#": "12[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Sensor Limit: Low Humidity"
+		},
+		{
+			"#": "13",
+			"label": "Mold Danger Humidity Offset",
+			"description": "Sets the trigger threshold using 95 - 5 * |1 + value| %.",
+			"valueSize": 1,
+			"minValue": -10,
+			"maxValue": 10,
+			"defaultValue": 0
+		},
+		{
+			"#": "14",
+			"$if": "productType === 0x0102",
+			"label": "High Temperature Threshold",
+			"description": "Sends a Basic Set to association group 6 when this threshold is exceeded.",
+			"valueSize": 2,
+			"unit": "0.1 °F",
+			"minValue": 32,
+			"maxValue": 2120,
+			"defaultValue": 860
+		},
+		{
+			"#": "14",
+			"label": "High Temperature Threshold",
+			"description": "Sends a Basic Set to association group 6 when this threshold is exceeded.",
+			"valueSize": 2,
+			"unit": "0.1 °C",
+			"minValue": 0,
+			"maxValue": 1000,
+			"defaultValue": 300
+		},
+		{
+			"#": "15",
+			"$if": "productType === 0x0102",
+			"label": "Low Temperature Threshold",
+			"description": "Sends a Basic Set to association group 7 when the temperature falls below this threshold.",
+			"valueSize": 2,
+			"unit": "0.1 °F",
+			"minValue": -40,
+			"maxValue": 2120,
+			"defaultValue": 320
+		},
+		{
+			"#": "15",
+			"label": "Low Temperature Threshold",
+			"description": "Sends a Basic Set to association group 7 when the temperature falls below this threshold.",
+			"valueSize": 2,
+			"unit": "0.1 °C",
+			"minValue": -200,
+			"maxValue": 1000,
+			"defaultValue": 0
+		},
+		{
+			"#": "16",
+			"label": "High Humidity Threshold",
+			"description": "Sends a Basic Set to association group 8 when this threshold is exceeded.",
+			"valueSize": 2,
+			"unit": "0.1 %",
+			"minValue": 0,
+			"maxValue": 1000,
+			"defaultValue": 700
+		},
+		{
+			"#": "17",
+			"label": "Low Humidity Threshold",
+			"description": "Sends a Basic Set to association group 9 when the humidity falls below this threshold.",
+			"valueSize": 2,
+			"unit": "0.1 %",
+			"minValue": 0,
+			"maxValue": 1000,
+			"defaultValue": 300
+		},
+		{
+			"#": "18",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off",
+			"label": "Association Group 6: Basic Set Value"
+		},
+		{
+			"#": "19",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on",
+			"label": "Association Group 7: Basic Set Value"
+		},
+		{
+			"#": "20",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off",
+			"label": "Association Group 8: Basic Set Value"
+		},
+		{
+			"#": "21",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on",
+			"label": "Association Group 9: Basic Set Value"
+		},
+		{
+			"#": "22",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Binary Sensor Reports",
+			"description": "Enables Binary Sensor reports for door, tilt, and mold danger states."
+		},
+		{
+			"#": "23",
+			"$import": "~/0x0086/templates/aeotec_template.json#reporting_threshold.low_battery",
+			"defaultValue": 20
+		},
+		{
+			"#": "24",
+			"label": "Periodic Reporting Interval",
+			"description": "Sets the interval for battery, temperature, humidity, and acceleration reports.",
+			"valueSize": 4,
+			"unit": "seconds",
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 2678400] }
+			],
+			"defaultValue": 43200,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "25",
+			"$purpose": "calibration.temperature",
+			"label": "Temperature Calibration",
+			"valueSize": 2,
+			"unit": "0.1 °C/°F",
+			"minValue": -200,
+			"maxValue": 200,
+			"defaultValue": 0
+		},
+		{
+			"#": "26",
+			"$purpose": "calibration.humidity",
+			"label": "Humidity Calibration",
+			"valueSize": 2,
+			"unit": "0.1 %",
+			"minValue": -200,
+			"maxValue": 200,
+			"defaultValue": 0
+		},
+		{
+			"#": "64",
+			"$if": "productType === 0x0202",
+			"$import": "~/templates/master_template.json#temperature_scale_celsius_fahrenheit",
+			"label": "Temperature and Dew Point Scale",
+			"defaultValue": 1
+		},
+		{
+			"#": "64",
+			"$import": "~/templates/master_template.json#temperature_scale_celsius_fahrenheit",
+			"label": "Temperature and Dew Point Scale"
+		}
+	],
+	"metadata": {
+		"wakeup": "Press the Action Button once. The green LED turns on for 1 second. The device remains awake for 15 seconds.",
+		"inclusion": "Press the Action Button twice within 1 second. The green LED flashes for up to 30 seconds. The green LED stays on for 2 seconds when successful. The red LED stays on for 1 second when unsuccessful.",
+		"exclusion": "Press the Action Button twice within 1 second. The green LED flashes for up to 30 seconds. The green LED stays on for 2 seconds when successful. The red LED stays on for 1 second when unsuccessful.",
+		"reset": "Press and hold the Action Button for more than 12 seconds. The green LED stays on for 1 second, then breathes to confirm the reset.",
+		"manual": "https://aeotec.freshdesk.com/support/solutions/folders/6000244700"
+	}
+}
