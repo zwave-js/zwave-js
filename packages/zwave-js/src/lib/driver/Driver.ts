@@ -956,7 +956,7 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		new Map();
 
 	// Poll timing state per the Z-Wave specification.
-	// After any transaction completes, we must wait at least pollTime
+	// After any transaction on the mesh completes, we must wait at least pollTime
 	// before starting the next poll transaction.
 	private _lastTransactionEnd: number = 0;
 	// CommandTime is measured from when the poll command is sent to when
@@ -6851,6 +6851,17 @@ ${handlers.length} left`,
 		);
 	}
 
+	/**
+	 * Whether a completed transaction delays the next poll. Controller-only requests
+	 * never reach the mesh. Immediate-priority commands are replies forced by the
+	 * other node, so a chatty node must not be able to hold back polls forever.
+	 */
+	private countsAsMeshActivity(transaction: Transaction): boolean {
+		if (transaction.message.getNodeId() == undefined) return false;
+		return transaction.priority !== MessagePriority.Immediate
+			&& transaction.priority !== MessagePriority.ImmediateLow;
+	}
+
 	private markQueueBusy(queue: TransactionQueue, busy: boolean): void {
 		const index = this.queues.indexOf(queue);
 		if (busy) {
@@ -6886,7 +6897,9 @@ ${handlers.length} left`,
 
 			// Per spec, PollTime MUST NOT be less than 1 second + CommandTime after any
 			// command, including failed ones. Track when the last transaction ended.
-			this._lastTransactionEnd = Date.now();
+			if (this.countsAsMeshActivity(transaction)) {
+				this._lastTransactionEnd = Date.now();
+			}
 			if (isPoll) {
 				// CommandTime is measured from when the poll was first sent to when the
 				// transmit report was received. For simplicity, we approximate it as the

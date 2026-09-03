@@ -11,6 +11,7 @@ import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
+	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
 	MessageType,
@@ -18,6 +19,7 @@ import {
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
+import { Bytes } from "@zwave-js/shared";
 
 @messageTypes(MessageType.Request, FunctionType.GetBackgroundRSSI)
 @priority(MessagePriority.Normal)
@@ -38,7 +40,6 @@ export class GetBackgroundRSSIResponse extends Message {
 	) {
 		super(options);
 
-		// TODO: Check implementation:
 		this.rssiChannel0 = options.rssiChannel0;
 		this.rssiChannel1 = options.rssiChannel1;
 		this.rssiChannel2 = options.rssiChannel2;
@@ -66,6 +67,18 @@ export class GetBackgroundRSSIResponse extends Message {
 	public readonly rssiChannel1: RSSI;
 	public readonly rssiChannel2?: RSSI;
 	public readonly rssiChannel3?: RSSI;
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		const channels = [
+			this.rssiChannel0,
+			this.rssiChannel1,
+			this.rssiChannel2,
+			this.rssiChannel3,
+		].filter((rssi) => rssi != undefined);
+		this.payload = new Bytes(channels.length);
+		channels.forEach((rssi, i) => this.payload.writeInt8(rssi, i));
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
 		const message: MessageRecord = {
