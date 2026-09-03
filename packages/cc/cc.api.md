@@ -1894,6 +1894,8 @@ export class BasicCC extends CommandClass {
 //
 // @public (undocumented)
 export class BasicCCGet extends BasicCC {
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
 }
 
 // Warning: (ae-missing-release-tag) "BasicCCReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1903,6 +1905,8 @@ export class BasicCCReport extends BasicCC {
     constructor(options: WithAddress<BasicCCReportOptions>);
     // (undocumented)
     currentValue: MaybeUnknown<number> | undefined;
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     readonly duration: Duration | undefined;
     // (undocumented)
@@ -1934,6 +1938,8 @@ export interface BasicCCReportOptions {
 // @public (undocumented)
 export class BasicCCSet extends BasicCC {
     constructor(options: WithAddress<BasicCCSetOptions>);
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): BasicCCSet;
     // (undocumented)
@@ -2904,6 +2910,8 @@ export class BinarySwitchCC extends CommandClass {
 //
 // @public (undocumented)
 export class BinarySwitchCCGet extends BinarySwitchCC {
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
 }
 
 // Warning: (ae-missing-release-tag) "BinarySwitchCCReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -2913,6 +2921,8 @@ export class BinarySwitchCCReport extends BinarySwitchCC {
     constructor(options: WithAddress<BinarySwitchCCReportOptions>);
     // (undocumented)
     readonly currentValue: MaybeUnknown<boolean> | undefined;
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     readonly duration: Duration | undefined;
     // (undocumented)
@@ -2942,6 +2952,8 @@ export interface BinarySwitchCCReportOptions {
 // @public (undocumented)
 export class BinarySwitchCCSet extends BinarySwitchCC {
     constructor(options: WithAddress<BinarySwitchCCSetOptions>);
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
@@ -4809,6 +4821,7 @@ export class CommandClass implements CCId {
     get ccName(): string;
     protected computeEncapsulationOverhead(): number;
     static createInstanceUnchecked<T extends CommandClass>(endpoint: EndpointId, cc: CommandClasses | CCConstructor<T>): T | undefined;
+    protected determineRelation(_other: CommandClass): CommandRelation;
     determineRequiredCCInterviews(): readonly CommandClasses[];
     encapsulatingCC?: EncapsulatingCommandClass;
     encapsulationFlags: EncapsulationFlags;
@@ -4830,6 +4843,7 @@ export class CommandClass implements CCId {
     protected getMetadata<T extends ValueMetadata>(ctx: GetValueDB, ccValue: CCValue): T | undefined;
     getNode<T extends NodeId>(ctx: GetNode<T>): T | undefined;
     getPartialCCSessionId(): Record<string, any> | undefined;
+    getRelationTo(other: CommandClass): CommandRelation;
     getRemainingSegments(): number | undefined;
     protected getValue<T>(ctx: GetValueDB, ccValue: CCValue): T | undefined;
     protected getValueDB(ctx: GetValueDB): ValueDB;
@@ -4900,6 +4914,18 @@ export interface CommandClassOptions extends CCAddress {
     ccId?: number;
     // (undocumented)
     payload?: BytesView;
+}
+
+// Warning: (ae-missing-release-tag) "CommandRelation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum CommandRelation {
+    // (undocumented)
+    Redundant = 1,
+    // (undocumented)
+    Supersedes = 2,
+    // (undocumented)
+    Unrelated = 0
 }
 
 // Warning: (ae-missing-release-tag) "ConfigurationCC" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5467,6 +5493,8 @@ export class CRC16CCCommandEncapsulation extends CRC16CC {
     constructor(options: WithAddress<CRC16CCCommandEncapsulationOptions>);
     // (undocumented)
     protected computeEncapsulationOverhead(): number;
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
@@ -8393,6 +8421,11 @@ export function getCommandClass(cc: CommandClass | CCAPI): CommandClasses;
 // @public
 export function getCommandClassStatic(classConstructor: CCConstructor<CommandClass>): CommandClasses;
 
+// Warning: (ae-missing-release-tag) "getCommandRelation" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function getCommandRelation(newer: CommandClass, older: CommandClass): CommandRelation;
+
 // Warning: (ae-missing-release-tag) "getEffectiveCCVersion" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -8530,6 +8563,11 @@ export enum HailCommand {
     // (undocumented)
     Hail = 1
 }
+
+// Warning: (ae-missing-release-tag) "haveSameDestination" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function haveSameDestination(first: number | readonly number[], second: number | readonly number[]): boolean;
 
 // Warning: (ae-missing-release-tag) "HumidityControlMode" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -13171,6 +13209,8 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
     protected computeEncapsulationOverhead(): number;
     destination: MultiChannelCCDestination;
     // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
+    // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): Promise<MultiChannelCCCommandEncapsulation>;
@@ -13311,6 +13351,8 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
     constructor(options: WithAddress<MultiChannelCCV1CommandEncapsulationOptions>);
     // (undocumented)
     protected computeEncapsulationOverhead(): number;
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
@@ -13967,6 +14009,8 @@ export class MultilevelSwitchCC extends CommandClass {
 //
 // @public (undocumented)
 export class MultilevelSwitchCCGet extends MultilevelSwitchCC {
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
 }
 
 // Warning: (ae-missing-release-tag) "MultilevelSwitchCCReport" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -13976,6 +14020,8 @@ export class MultilevelSwitchCCReport extends MultilevelSwitchCC {
     constructor(options: WithAddress<MultilevelSwitchCCReportOptions>);
     // (undocumented)
     currentValue: MaybeUnknown<number> | undefined;
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
@@ -14008,6 +14054,8 @@ export interface MultilevelSwitchCCReportOptions {
 export class MultilevelSwitchCCSet extends MultilevelSwitchCC {
     constructor(options: WithAddress<MultilevelSwitchCCSetOptions>);
     // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
+    // (undocumented)
     duration: Duration | undefined;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): MultilevelSwitchCCSet;
@@ -14034,6 +14082,8 @@ export interface MultilevelSwitchCCSetOptions {
 // @public (undocumented)
 export class MultilevelSwitchCCStartLevelChange extends MultilevelSwitchCC {
     constructor(options: WithAddress<MultilevelSwitchCCStartLevelChangeOptions>);
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     direction: keyof typeof LevelChangeDirection;
     // (undocumented)
@@ -17457,6 +17507,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
     // (undocumented)
     protected computeEncapsulationOverhead(): number;
     // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
+    // (undocumented)
     encapsulated?: CommandClass;
     // (undocumented)
     extensions: Security2Extension[];
@@ -17753,6 +17805,8 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     protected computeEncapsulationOverhead(): number;
     // (undocumented)
     decryptedCCBytes: BytesView | undefined;
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
@@ -18511,6 +18565,8 @@ export class SupervisionCCGet extends SupervisionCC {
     constructor(options: WithAddress<SupervisionCCGetOptions>);
     // (undocumented)
     protected computeEncapsulationOverhead(): number;
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
@@ -19647,6 +19703,8 @@ export interface ThermostatSetpointCCCapabilitiesReportOptions {
 export class ThermostatSetpointCCGet extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCGetOptions>);
     // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
+    // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCGet;
     // (undocumented)
     serialize(ctx: CCEncodingContext): Promise<Bytes>;
@@ -19669,6 +19727,8 @@ export interface ThermostatSetpointCCGetOptions {
 // @public (undocumented)
 export class ThermostatSetpointCCReport extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCReportOptions>);
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCReport;
     // (undocumented)
@@ -19702,6 +19762,8 @@ export interface ThermostatSetpointCCReportOptions {
 // @public (undocumented)
 export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
     constructor(options: WithAddress<ThermostatSetpointCCSetOptions>);
+    // (undocumented)
+    protected determineRelation(other: CommandClass): CommandRelation;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ThermostatSetpointCCSet;
     // (undocumented)

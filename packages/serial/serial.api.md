@@ -2218,6 +2218,8 @@ export class GetBackgroundRSSIResponse extends Message_2 {
     // (undocumented)
     readonly rssiChannel3?: RSSI;
     // (undocumented)
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
 
