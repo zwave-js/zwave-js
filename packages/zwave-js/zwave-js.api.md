@@ -2602,7 +2602,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
-    restoreNVM(nvmData: BytesView, convertProgress?: (bytesRead: number, total: number) => void, restoreProgress?: (bytesWritten: number, total: number) => void, migrateOptions?: MigrateNVMOptions): Promise<void>;
+    restoreNVM(nvmData: BytesView, convertProgress?: (bytesRead: number, total: number) => void, restoreProgress?: (commandsCompleted: number, totalCommands: number) => void, migrateOptions?: MigrateNVMOptions): Promise<void>;
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "restoreNVM"

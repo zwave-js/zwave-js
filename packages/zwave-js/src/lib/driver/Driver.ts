@@ -3625,6 +3625,45 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		void this.initializeControllerAndNodes();
 	}
 
+	/** @internal */
+	public async restartAfterControllerReboot(
+		triggerRestart: () => Promise<void>,
+	): Promise<void> {
+		const abortController = new AbortController();
+		const serialAPIStarted = this.waitForMessage<SerialAPIStartedRequest>(
+			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+			undefined,
+			undefined,
+			abortController.signal,
+		);
+
+		this.isSoftResetting = true;
+		try {
+			await triggerRestart();
+			const waitResult = await Promise.race([
+				serialAPIStarted,
+				wait(1500).then(() => false as const),
+			]);
+			if (!waitResult) abortController.abort();
+
+			if (
+				!(await this.ensureSerialAPI(Promise.resolve(waitResult)))
+			) {
+				await this.destroyWithMessage(
+					"The Serial API did not respond after controller restart",
+				);
+			}
+		} catch (e) {
+			abortController.abort();
+			throw e;
+		} finally {
+			this.isSoftResetting = false;
+		}
+
+		await this.destroyController();
+		void this.initializeControllerAndNodes();
+	}
+
 	/**
 	 * Checks whether recovering an unresponsive controller is enabled
 	 * and whether the driver is in a state where it makes sense.
@@ -3637,15 +3676,20 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks>
 		return this._controllerInterviewed;
 	}
 
-	private async ensureSerialAPI(): Promise<boolean> {
+	private async ensureSerialAPI(
+		serialAPIStarted?: Promise<SerialAPIStartedRequest | false>,
+	): Promise<boolean> {
 		// Wait 1.5 seconds after reset to ensure that the module is ready for communication again
 		// Z-Wave 700 sticks are relatively fast, so we also wait for the Serial API started command
 		// to bail early
 		this.controllerLog.print("Waiting for the controller to reconnect...");
-		let waitResult = await this.waitForMessage<SerialAPIStartedRequest>(
-			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
-			1500,
-		).catch(() => false as const);
+		let waitResult = await (
+			serialAPIStarted
+				?? this.waitForMessage<SerialAPIStartedRequest>(
+					(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+					1500,
+				).catch(() => false as const)
+		);
 
 		if (waitResult) {
 			// Serial API did start
