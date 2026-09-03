@@ -81,6 +81,12 @@ export const DoorLockCCValues = V.defineCCValues(CommandClasses["Door Lock"], {
 			states: enumValuesToMetadataStates(DoorLockMode),
 		},
 	),
+	// Some locks repeat their Notification CC reports several seconds after the
+	// original. Remembering when the device last reported its mode through Door Lock CC
+	// lets us discard a repeated notification that has since been superseded.
+	...V.staticProperty("currentModeReportedAt", undefined, {
+		internal: true,
+	}),
 	...V.staticProperty(
 		"duration",
 		{
@@ -1150,6 +1156,12 @@ export class DoorLockCCOperationReport extends DoorLockCC {
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
+
+		this.setValue(
+			ctx,
+			DoorLockCCValues.currentModeReportedAt,
+			Date.now(),
+		);
 
 		// Only store the door/bolt/latch status if the lock supports it
 		const supportsDoorStatus = !!this.getValue(

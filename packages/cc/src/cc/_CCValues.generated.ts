@@ -2128,6 +2128,33 @@ export const DoorLockCCValues = Object.freeze({
 			autoCreate: true,
 		} as const satisfies CCValueOptions,
 	},
+	currentModeReportedAt: {
+		id: {
+			commandClass: CommandClasses["Door Lock"],
+			property: "currentModeReportedAt",
+		} as const,
+		endpoint: (endpoint: number = 0) => ({
+			commandClass: CommandClasses["Door Lock"],
+			endpoint,
+			property: "currentModeReportedAt",
+		} as const),
+		is: (valueId: ValueID): boolean => {
+			return valueId.commandClass === CommandClasses["Door Lock"]
+				&& valueId.property === "currentModeReportedAt"
+				&& valueId.propertyKey == undefined;
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
 	duration: {
 		id: {
 			commandClass: CommandClasses["Door Lock"],
