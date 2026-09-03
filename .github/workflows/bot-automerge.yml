@@ -67,11 +67,11 @@ jobs:
             });
 
   bot-reenable-automerge:
-    # Don't run in forks, don't run for drafts, don't run for zwave-js-bot's PRs
+    # Don't run in forks, don't run for drafts, don't run for bot PRs
     if: |
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'renovate[bot]' &&
       github.event.pull_request.user.login != 'zwave-js-bot' &&
       github.event.pull_request.draft == false
 
