@@ -1,8 +1,4 @@
-import {
-	type CommandClasses,
-	InterviewStage,
-	type MaybeNotKnown,
-} from "@zwave-js/core";
+import { type CommandClasses, InterviewStage } from "@zwave-js/core";
 import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
@@ -54,17 +50,6 @@ export interface NodeWithStatus {
 	 * Marks this node as awake (if applicable)
 	 */
 	markAsAwake(): void;
-
-	/**
-	 * @internal
-	 * Restores a previously known awake status without recording a new observation
-	 */
-	restoreAwakeStatus(): void;
-
-	/**
-	 * The last time this node was observed to be awake. Only tracked for nodes that are known to be able to sleep.
-	 */
-	readonly lastAwake: MaybeNotKnown<Date>;
 
 	/**
 	 * Which interview stage was last completed
@@ -179,19 +164,6 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 	 * Marks this node as awake (if applicable)
 	 */
 	public markAsAwake(): void {
-		// Record every observation, not just the ones that change the status: a node
-		// that is kept awake or whose transition to sleep was missed keeps waking up
-		// while we already believe it to be awake. For always-listening nodes there
-		// is no wake-up to record.
-		if (this.canSleep) this.lastAwake = new Date();
-		this.restoreAwakeStatus();
-	}
-
-	/**
-	 * @internal
-	 * Restores a previously known awake status without recording a new observation
-	 */
-	public restoreAwakeStatus(): void {
 		this.updateStatusMachine({ value: "AWAKE" });
 	}
 
@@ -230,13 +202,6 @@ export abstract class NodeStatusMixin extends NodeEventsMixin
 	}
 	protected set ready(ready: boolean) {
 		this._ready = ready;
-	}
-
-	public get lastAwake(): MaybeNotKnown<Date> {
-		return this.driver.cacheGet(cacheKeys.node(this.id).lastAwake);
-	}
-	private set lastAwake(value: MaybeNotKnown<Date>) {
-		this.driver.cacheSet(cacheKeys.node(this.id).lastAwake, value);
 	}
 
 	public get interviewStage(): InterviewStage {

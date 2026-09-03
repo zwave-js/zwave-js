@@ -1,3 +1,4 @@
+import { WakeUpCCWakeUpNotification } from "@zwave-js/cc";
 import { MockController } from "@zwave-js/testing";
 import { test as baseTest } from "vitest";
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
@@ -45,46 +46,45 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-function createNode(driver: Driver, canSleep: boolean): ZWaveNode {
+function createNode(driver: Driver): ZWaveNode {
 	// Not node 1, which is the controller and can never sleep
 	const node = new ZWaveNode(2, driver);
-	node["isListening"] = !canSleep;
+	node["isListening"] = false;
 	node["isFrequentListening"] = false;
 	return node;
 }
 
-const longAgo = new Date(2020, 0, 1);
+function wakeUpNotification(node: ZWaveNode): WakeUpCCWakeUpNotification {
+	return new WakeUpCCWakeUpNotification({ nodeId: node.id });
+}
 
-test("Marking a sleeping node as awake remembers when it was observed", ({ context, expect }) => {
-	const node = createNode(context.driver, true);
-	node.markAsAwake();
+const longAgo = new Date(1970, 0, 1);
+
+test("A Wake Up notification records when the node was awake", async ({ context, expect }) => {
+	const node = createNode(context.driver);
+	expect(node.lastAwake).toBeUndefined();
+
+	await node.handleCommand(wakeUpNotification(node));
 	expect(node.lastAwake).toBeInstanceOf(Date);
 	node.destroy();
 });
 
-test("Nodes that are always listening do not track when they were awake", ({ context, expect }) => {
-	const node = createNode(context.driver, false);
-	node.markAsAwake();
-	expect(node.lastAwake).toBeUndefined();
-	node.destroy();
-});
-
-test("Marking an already awake node as awake updates when it was observed", ({ context, expect }) => {
-	const node = createNode(context.driver, true);
-	node.markAsAwake();
-	node["lastAwake"] = longAgo;
+test("Repeated Wake Up notifications update when the node was last awake", async ({ context, expect }) => {
+	const node = createNode(context.driver);
+	await node.handleCommand(wakeUpNotification(node));
+	node.lastAwake = longAgo;
 
 	// The node is already considered awake, so this does not change its status
-	node.markAsAwake();
+	await node.handleCommand(wakeUpNotification(node));
 	expect(node.lastAwake.getTime()).toBeGreaterThan(longAgo.getTime());
 	node.destroy();
 });
 
-test("Restoring the awake status does not count as an observation", ({ context, expect }) => {
-	const node = createNode(context.driver, true);
-	node["lastAwake"] = longAgo;
+test("Marking a node as awake does not count as an observation", ({ context, expect }) => {
+	const node = createNode(context.driver);
+	node.lastAwake = longAgo;
 
-	node.restoreAwakeStatus();
+	node.markAsAwake();
 	expect(node.lastAwake).toStrictEqual(longAgo);
 	node.destroy();
 });
