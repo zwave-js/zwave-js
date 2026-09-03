@@ -413,3 +413,84 @@ integrationTestMulti(
 		},
 	},
 );
+
+let shouldFailAfterTransmitting = false;
+
+integrationTest.sequential(
+	"a TX status of Fail after transmitting is reported as such, not as a missing acknowledgement",
+	{
+		controllerCapabilities: controllerCapabilitiesNoBridge,
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			const handleSendData: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (msg instanceof SendDataRequest) {
+						if (!shouldFailAfterTransmitting) {
+							// Defer to the default behavior
+							return false;
+						}
+
+						controller.state.set(
+							MockControllerStateKeys.CommunicationState,
+							MockControllerCommunicationState.Sending,
+						);
+
+						const res = new SendDataResponse({
+							wasSent: true,
+						});
+						await controller.sendMessageToHost(res);
+
+						await wait(100);
+
+						controller.state.set(
+							MockControllerStateKeys.CommunicationState,
+							MockControllerCommunicationState.Idle,
+						);
+
+						// txTicks > 0 means the controller did transmit,
+						// so this is a failed transmission and not a jam
+						const cb = new SendDataRequestTransmitReport({
+							callbackId: msg.callbackId!,
+							transmitStatus: TransmitStatus.Fail,
+							txReport: {
+								txTicks: 10,
+								routeSpeed: 0 as any,
+								routingAttempts: 1,
+								ackRSSI: 0,
+							},
+						});
+						await controller.sendMessageToHost(cb);
+
+						return true;
+					} else if (msg instanceof SendDataAbort) {
+						controller.state.set(
+							MockControllerStateKeys.CommunicationState,
+							MockControllerCommunicationState.Idle,
+						);
+					}
+				},
+			};
+			controller.defineBehavior(handleSendData);
+		},
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			shouldFailAfterTransmitting = true;
+
+			await assertZWaveError(
+				t.expect,
+				() => node.commandClasses.Basic.set(99),
+				{
+					messageMatches: "Fail",
+				},
+			);
+
+			shouldFailAfterTransmitting = false;
+		},
+	},
+);
