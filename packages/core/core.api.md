@@ -966,6 +966,7 @@ export class Duration {
     constructor(value: number, unit: DurationUnit);
     // (undocumented)
     static default(): Duration;
+    equals(other: Duration): boolean;
     static from(input: "default"): Duration;
     // (undocumented)
     static from(input?: Duration | DurationLike | string): Duration | undefined;
@@ -4087,6 +4088,7 @@ export type SendCommandOptions = SendMessageOptions & SupervisionOptions & SendC
     encapsulationFlags?: EncapsulationFlags;
     transmitOptions?: TransmitOptions;
     reportTimeoutMs?: number;
+    preventDeduplication?: boolean;
     ignoreNodeUpdate?: boolean;
 };
 
@@ -5475,6 +5477,7 @@ export enum ZWaveErrorCodes {
     // (undocumented)
     Controller_MessageDropped = 202,
     Controller_MessageExpired = 215,
+    Controller_MessageSuperseded = 219,
     Controller_MessageTooLarge = 217,
     Controller_NodeInsecureCommunication = 214,
     Controller_NodeNotFound = 211,

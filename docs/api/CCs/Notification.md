@@ -21,7 +21,7 @@ async getInternal(
 ): Promise<NotificationCCReport | undefined>;
 ```
 
-.
+Queries the current status of a notification type and persists changes if needed.
 
 ### `sendReport`
 
