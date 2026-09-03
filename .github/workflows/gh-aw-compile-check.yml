@@ -35,8 +35,8 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       # Pin to the version the locks were generated with. Upgrading it
       # regenerates all locks, which then land in the same PR. This pin is
-      # the reference; keep gh-aw-dependabot-recompile.yml and
-      # bot-workflows-update.yml in sync with it.
+      # the reference: gh-aw-renovate-recompile.yml reads it from the PR, and
+      # Renovate bumps it together with the one in bot-workflows-update.yml.
       run: gh extension install github/gh-aw --pin v0.81.6
 
     - name: Recompile workflows
