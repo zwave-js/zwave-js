@@ -1,5 +1,6 @@
 import { WakeUpCCWakeUpNotification } from "@zwave-js/cc";
 import { MockController } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import { test as baseTest } from "vitest";
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
@@ -16,7 +17,6 @@ interface LocalTestContext {
 const test = baseTest.extend<LocalTestContext>({
 	context: [
 		async ({}, use) => {
-			// Setup
 			const context = {} as LocalTestContext["context"];
 
 			const { driver } = await createAndStartTestingDriver({
@@ -35,10 +35,8 @@ const test = baseTest.extend<LocalTestContext>({
 			});
 			context.driver = driver;
 
-			// Run tests
 			await use(context);
 
-			// Teardown
 			driver.removeAllListeners();
 			await driver.destroy();
 		},
@@ -47,7 +45,6 @@ const test = baseTest.extend<LocalTestContext>({
 });
 
 function createNode(driver: Driver): ZWaveNode {
-	// Not node 1, which is the controller and can never sleep
 	const node = new ZWaveNode(2, driver);
 	node["isListening"] = false;
 	node["isFrequentListening"] = false;
@@ -72,11 +69,11 @@ test("A Wake Up notification records when the node was awake", async ({ context,
 test("Repeated Wake Up notifications update when the node was last awake", async ({ context, expect }) => {
 	const node = createNode(context.driver);
 	await node.handleCommand(wakeUpNotification(node));
-	node.lastAwake = longAgo;
+	const firstAwake = node.lastAwake!;
 
-	// The node is already considered awake, so this does not change its status
+	await wait(5);
 	await node.handleCommand(wakeUpNotification(node));
-	expect(node.lastAwake.getTime()).toBeGreaterThan(longAgo.getTime());
+	expect(node.lastAwake!.getTime()).toBeGreaterThan(firstAwake.getTime());
 	node.destroy();
 });
 
