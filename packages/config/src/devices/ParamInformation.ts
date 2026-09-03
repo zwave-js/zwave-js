@@ -15,7 +15,7 @@ import {
 	validateCondition,
 } from "./ConditionalItem.js";
 import type { ConditionalDeviceConfig } from "./DeviceConfig.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 export class ConditionalParamInformation
 	implements ConditionalItem<ParamInformation>
@@ -385,9 +385,9 @@ Parameter #${parameterNumber}: allowed[${i}] must have either "value" or "range"
 	public readonly condition?: string;
 
 	public evaluateCondition(
-		deviceId?: DeviceID,
+		context?: ConditionalConfigContext,
 	): ParamInformation | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+		if (!conditionApplies(this, context)) return;
 
 		const ret = {
 			...pick(this, [
@@ -410,7 +410,7 @@ Parameter #${parameterNumber}: allowed[${i}] must have either "value" or "range"
 				"hidden",
 				"purpose",
 			]),
-			options: evaluateDeep(this.options, deviceId, true),
+			options: evaluateDeep(this.options, context, true),
 		};
 
 		// If allowed is defined, compute the envelope (minValue/maxValue) for backwards compatibility
@@ -488,8 +488,10 @@ export class ConditionalConfigOption implements ConditionalItem<ConfigOption> {
 		public readonly condition?: string,
 	) {}
 
-	public evaluateCondition(deviceId?: DeviceID): ConfigOption | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+	public evaluateCondition(
+		context?: ConditionalConfigContext,
+	): ConfigOption | undefined {
+		if (!conditionApplies(this, context)) return;
 
 		return pick(this, ["value", "label"]);
 	}

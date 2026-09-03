@@ -10,7 +10,7 @@ import {
 	type ConditionalPrimitive,
 	parseConditionalPrimitive,
 } from "./ConditionalPrimitive.js";
-import type { DeviceID } from "./shared.js";
+import type { ConditionalConfigContext } from "./shared.js";
 
 export class ConditionalDeviceMetadata
 	implements ConditionalItem<DeviceMetadata>
@@ -66,8 +66,10 @@ The metadata entry comments is invalid!`,
 
 	public readonly condition?: string;
 
-	public evaluateCondition(deviceId?: DeviceID): DeviceMetadata | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+	public evaluateCondition(
+		context?: ConditionalConfigContext,
+	): DeviceMetadata | undefined {
+		if (!conditionApplies(this, context)) return;
 		const ret: DeviceMetadata = {};
 		for (
 			const prop of [
@@ -79,11 +81,11 @@ The metadata entry comments is invalid!`,
 			] as const
 		) {
 			if (this[prop]) {
-				const evaluated = evaluateDeep(this[prop], deviceId);
+				const evaluated = evaluateDeep(this[prop], context);
 				if (evaluated) ret[prop] = evaluated;
 			}
 		}
-		const comments = evaluateDeep(this.comments, deviceId, true);
+		const comments = evaluateDeep(this.comments, context, true);
 		if (comments) ret.comments = comments;
 
 		return ret;
@@ -123,8 +125,10 @@ export class ConditionalDeviceComment
 		public readonly condition?: string,
 	) {}
 
-	public evaluateCondition(deviceId?: DeviceID): DeviceComment | undefined {
-		if (!conditionApplies(this, deviceId)) return;
+	public evaluateCondition(
+		context?: ConditionalConfigContext,
+	): DeviceComment | undefined {
+		if (!conditionApplies(this, context)) return;
 		return pick(this, ["level", "text"]);
 	}
 }
