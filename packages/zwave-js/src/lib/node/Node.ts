@@ -266,10 +266,7 @@ import {
 	handleVersionCommandClassGet,
 	handleVersionGet,
 } from "./CCHandlers/VersionCC.js";
-import {
-	getDefaultWakeUpHandlerStore,
-	handleWakeUpNotification,
-} from "./CCHandlers/WakeUpCC.js";
+import { handleWakeUpNotification } from "./CCHandlers/WakeUpCC.js";
 import { handleZWavePlusGet } from "./CCHandlers/ZWavePlusCC.js";
 import { DeviceClass } from "./DeviceClass.js";
 import type { NodeDump, ValueDump } from "./Dump.js";
@@ -438,6 +435,15 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			...cur,
 			lastSeen: value,
 		}));
+	}
+
+	/** The last time this node sent a Wake Up notification */
+	public get lastAwake(): MaybeNotKnown<Date> {
+		return this.driver.cacheGet(cacheKeys.node(this.id).lastAwake);
+	}
+	/** @internal */
+	public set lastAwake(value: MaybeNotKnown<Date>) {
+		this.driver.cacheSet(cacheKeys.node(this.id).lastAwake, value);
 	}
 
 	/**
@@ -2783,7 +2789,6 @@ protocol version:      ${this.protocolVersion}`;
 	private hailHandlerStore = getDefaultHailHandlerStore();
 	private notificationHandlerStore = getDefaultNotificationHandlerStore();
 	private soundSwitchHandlerStore = getDefaultSoundSwitchHandlerStore();
-	private wakeUpHandlerStore = getDefaultWakeUpHandlerStore();
 	private entryControlHandlerStore = getDefaultEntryControlHandlerStore();
 
 	/**
@@ -2860,7 +2865,6 @@ protocol version:      ${this.protocolVersion}`;
 				this.driver,
 				this,
 				command,
-				this.wakeUpHandlerStore,
 			);
 		} else if (command instanceof NotificationCCReport) {
 			return handleNotificationReport(

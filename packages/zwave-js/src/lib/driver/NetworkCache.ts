@@ -104,6 +104,7 @@ export const cacheKeys = {
 				`${nodeBaseKey}defaultTransitionDuration`,
 			defaultVolume: `${nodeBaseKey}defaultVolume`,
 			lastSeen: `${nodeBaseKey}lastSeen`,
+			lastAwake: `${nodeBaseKey}lastAwake`,
 			deviceConfigHash: `${nodeBaseKey}deviceConfigHash`,
 		};
 	},
@@ -484,7 +485,8 @@ export function deserializeNetworkCacheValue(
 			fail();
 		}
 
-		case "lastSeen": {
+		case "lastSeen":
+		case "lastAwake": {
 			value = tryParseDate(value);
 			if (value) return value;
 			fail();
@@ -572,7 +574,8 @@ export function serializeNetworkCacheValue(
 		case "dsk": {
 			return dskToString(value as BytesView);
 		}
-		case "lastSeen": {
+		case "lastSeen":
+		case "lastAwake": {
 			// Dates are stored as timestamps
 			return (value as Date).getTime();
 		}

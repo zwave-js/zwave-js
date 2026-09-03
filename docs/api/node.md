@@ -929,6 +929,14 @@ readonly lastSeen: MaybeNotKnown<Date>
 
 This property tracks when the node was last seen, meaning a command was either received from the node or successfully sent to it.
 
+### `lastAwake`
+
+```ts
+readonly lastAwake: MaybeNotKnown<Date>
+```
+
+This property tracks when the node last sent a Wake Up notification, so it is only known for nodes that can sleep. Like `lastSeen`, it is preserved across restarts.
+
 ### `isControllerNode`
 
 ```ts

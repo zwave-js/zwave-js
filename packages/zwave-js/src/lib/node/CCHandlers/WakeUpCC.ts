@@ -14,23 +14,11 @@ import { getErrorMessage } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { ZWaveNode } from "../Node.js";
 
-export interface WakeUpHandlerStore {
-	/** The timestamp of the last received wakeup notification */
-	lastWakeUp: number | undefined;
-}
-
-export function getDefaultWakeUpHandlerStore(): WakeUpHandlerStore {
-	return {
-		lastWakeUp: undefined,
-	};
-}
-
 /** Handles the receipt of a Wake Up notification */
 export function handleWakeUpNotification(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
 	_command: WakeUpCC,
-	store: WakeUpHandlerStore,
 ): void {
 	ctx.logNode(node.id, {
 		message: `received wakeup notification`,
@@ -52,8 +40,9 @@ export function handleWakeUpNotification(
 	// From the specs:
 	// A controlling node SHOULD read the Wake Up Interval of a supporting node when the delays between
 	// Wake Up periods are larger than what was last set at the supporting node.
-	const now = Date.now();
-	if (store.lastWakeUp) {
+	const now = new Date();
+	const lastWakeUp = node.lastAwake;
+	if (lastWakeUp) {
 		// we've already measured the wake up interval, so we can check whether a refresh is necessary
 		const wakeUpInterval =
 			node.getValue<number>(WakeUpCCValues.wakeUpInterval.id) ?? 1;
@@ -62,14 +51,15 @@ export function handleWakeUpNotification(
 		// so the interval shouldn't be verified
 		if (
 			wakeUpInterval > 0
-			&& (now - store.lastWakeUp) / 1000 > wakeUpInterval + 5 * 60
+			&& (now.getTime() - lastWakeUp.getTime()) / 1000
+				> wakeUpInterval + 5 * 60
 		) {
 			node.commandClasses["Wake Up"].getInterval().catch(() => {
 				// Don't throw if there's an error
 			});
 		}
 	}
-	store.lastWakeUp = now;
+	node.lastAwake = now;
 
 	// Some legacy devices expect us to query them on wake up in order to function correctly
 	if (node.deviceConfig?.compat?.queryOnWakeup) {
