@@ -347,9 +347,51 @@
 		},
 		{
 			"#": "50",
+			"$if": "firmwareVersion < 2.4",
 			"label": "Button Delay Time",
 			"valueSize": 1,
 			"defaultValue": 5,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "No delay (Config button still has 500 ms delay)",
+					"value": 0
+				},
+				{
+					"label": "300 ms",
+					"value": 3
+				},
+				{
+					"label": "400 ms",
+					"value": 4
+				},
+				{
+					"label": "500 ms",
+					"value": 5
+				},
+				{
+					"label": "600 ms",
+					"value": 6
+				},
+				{
+					"label": "700 ms",
+					"value": 7
+				},
+				{
+					"label": "800 ms",
+					"value": 8
+				},
+				{
+					"label": "900 ms",
+					"value": 9
+				}
+			]
+		},
+		{
+			"#": "50",
+			"label": "Button Delay Time",
+			"valueSize": 1,
+			"defaultValue": 3,
 			"allowManualEntry": false,
 			"options": [
 				{
@@ -702,8 +744,34 @@
 		},
 		{
 			"#": "107",
+			"$if": "firmwareVersion < 2.4",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "mmWave Target Info Report"
+		},
+		{
+			"#": "107",
+			"label": "mmWave Target Info Report",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "Enable mmWave target info reporting",
+					"value": 1
+				},
+				{
+					"label": "Enable mmWave P116 reporting",
+					"value": 2
+				},
+				{
+					"label": "Enable both",
+					"value": 3
+				}
+			]
 		},
 		{
 			"#": "108",
