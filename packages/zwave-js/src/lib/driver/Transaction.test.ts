@@ -1,12 +1,19 @@
 import { NoOperationCC } from "@zwave-js/cc/NoOperationCC";
-import { MessagePriority } from "@zwave-js/core";
+import {
+	MessagePriority,
+	TransactionState,
+	ZWaveError,
+	ZWaveErrorCodes,
+} from "@zwave-js/core";
+import type { TXReport } from "@zwave-js/core";
 import { type Message, getDefaultPriority } from "@zwave-js/serial";
 import {
 	GetControllerVersionRequest,
 	RemoveFailedNodeRequest,
 	SendDataRequest,
 } from "@zwave-js/serial/serialapi";
-import { test } from "vitest";
+import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+import { describe, expect, test, vi } from "vitest";
 import type { ZWaveNode } from "../node/Node.js";
 import { NodeStatus } from "../node/_Types.js";
 import type { Driver } from "./Driver.js";
@@ -426,4 +433,277 @@ test("should capture a stack trace where it was created", (t) => {
 	});
 	t.expect(test.stack.includes(__filename)).toBe(true);
 	t.expect(test.stack.includes("FOOBAR")).toBe(false);
+});
+
+describe("attachments", () => {
+	function createAttachedTransaction(
+		options: Partial<TransactionOptions> = {},
+	) {
+		return createDummyTransaction({} as Driver, options);
+	}
+
+	test("fans out the physical result and progress", async () => {
+		const transaction = createAttachedTransaction();
+		const first = createDeferredPromise<Message | void>();
+		const second = createDeferredPromise<Message | void>();
+		const firstProgress = vi.fn();
+		const secondProgress = vi.fn();
+		transaction.attach(first, firstProgress);
+		transaction.setProgress({ state: TransactionState.Queued });
+		transaction.attach(second, secondProgress);
+		transaction.setProgress({ state: TransactionState.Active });
+
+		const result = {} as Message;
+		transaction.abort(result);
+
+		await expect(first).resolves.toBe(result);
+		await expect(second).resolves.toBe(result);
+		expect(firstProgress.mock.calls).toEqual([
+			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
+		]);
+		expect(secondProgress.mock.calls).toEqual([
+			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
+		]);
+	});
+
+	test("fans out errors and TX reports", async () => {
+		const transaction = createAttachedTransaction();
+		const first = createDeferredPromise<Message | void>();
+		const second = createDeferredPromise<Message | void>();
+		const firstReport = vi.fn();
+		const secondReport = vi.fn();
+		transaction.attach(first, undefined, firstReport);
+		transaction.attach(second, undefined, secondReport);
+
+		const report = {} as TXReport;
+		transaction.reportTXReport(report);
+		const error = new ZWaveError(
+			"failed",
+			ZWaveErrorCodes.Controller_MessageDropped,
+		);
+		transaction.abort(error);
+
+		await expect(first).rejects.toBe(error);
+		await expect(second).rejects.toBe(error);
+		expect(firstReport).toHaveBeenCalledWith(report);
+		expect(secondReport).toHaveBeenCalledWith(report);
+	});
+
+	test("detaches callers independently", async () => {
+		const transaction = createAttachedTransaction();
+		const first = createDeferredPromise<Message | void>();
+		const second = createDeferredPromise<Message | void>();
+		const firstProgress = vi.fn();
+		const firstAttachment = transaction.attach(first, firstProgress);
+		transaction.attach(second);
+
+		const error = new ZWaveError(
+			"expired",
+			ZWaveErrorCodes.Controller_MessageExpired,
+		);
+		// The second caller is still attached, so detaching must report false
+		expect(firstAttachment.detach(error)).toBe(false);
+		expect(firstAttachment.detach(error)).toBe(false);
+		const result = {} as Message;
+		transaction.abort(result);
+
+		await expect(first).rejects.toBe(error);
+		await expect(second).resolves.toBe(result);
+		expect(firstProgress).toHaveBeenLastCalledWith({
+			state: TransactionState.Failed,
+			reason: error.message,
+		});
+		expect(firstProgress).toHaveBeenCalledTimes(1);
+	});
+
+	test("reports when the last caller detaches", async () => {
+		const transaction = createAttachedTransaction();
+		const first = createDeferredPromise<Message | void>();
+		const second = createDeferredPromise<Message | void>();
+		const firstAttachment = transaction.attach(first);
+		const secondAttachment = transaction.attach(second);
+
+		const error = new ZWaveError(
+			"expired",
+			ZWaveErrorCodes.Controller_MessageExpired,
+		);
+		expect(firstAttachment.detach(error)).toBe(false);
+		expect(secondAttachment.detach(error)).toBe(true);
+		expect(firstAttachment.sharesLifecycleWith(transaction)).toBe(true);
+
+		await expect(first).rejects.toBe(error);
+		await expect(second).rejects.toBe(error);
+	});
+
+	test("replays changed progress when adopting callers", async () => {
+		const source = createAttachedTransaction();
+		const target = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		const attachment = source.attach(caller, progress);
+		source.setProgress({ state: TransactionState.Active });
+		target.setProgress({ state: TransactionState.Queued });
+
+		target.adoptCallersFrom(source);
+
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Queued }],
+		]);
+		expect(source.hasAttachments).toBe(false);
+		expect(target.hasAttachments).toBe(true);
+		expect(attachment.sharesLifecycleWith(target)).toBe(true);
+
+		const error = new ZWaveError(
+			"expired",
+			ZWaveErrorCodes.Controller_MessageExpired,
+		);
+		attachment.detach(error);
+		await expect(caller).rejects.toBe(error);
+		expect(target.hasAttachments).toBe(false);
+	});
+
+	test("does not replay unchanged progress when adopting callers", () => {
+		const source = createAttachedTransaction();
+		const target = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		source.attach(caller, progress);
+		source.setProgress({ state: TransactionState.Queued });
+		target.setProgress({ state: TransactionState.Queued });
+
+		target.adoptCallersFrom(source);
+
+		expect(progress).toHaveBeenCalledTimes(1);
+	});
+
+	test("preserves callers through cloning", async () => {
+		const transaction = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		transaction.attach(caller, progress);
+		transaction.setProgress({ state: TransactionState.Active });
+
+		const clone = transaction.clone();
+		clone.setProgress({ state: TransactionState.Queued });
+		const result = {} as Message;
+		transaction.abort(result);
+
+		await expect(caller).resolves.toBe(result);
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Completed }],
+		]);
+	});
+
+	test("shares progress through requeue clones", async () => {
+		const transaction = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		transaction.attach(caller, progress);
+		transaction.setProgress({ state: TransactionState.Queued });
+		transaction.setProgress({ state: TransactionState.Active });
+
+		const clone = transaction.clone();
+		clone.setProgress({ state: TransactionState.Queued });
+		clone.setProgress({ state: TransactionState.Active });
+		transaction.abort(undefined);
+		clone.setProgress({
+			state: TransactionState.Failed,
+			reason: "stale clone",
+		});
+
+		await expect(caller).resolves.toBeUndefined();
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Queued }],
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
+		]);
+	});
+
+	test("ignores errors thrown by caller listeners", async () => {
+		const transaction = createAttachedTransaction();
+		const first = createDeferredPromise<Message | void>();
+		const second = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		transaction.attach(first, () => {
+			throw new Error("listener error");
+		});
+		transaction.attach(second, progress);
+
+		transaction.setProgress({ state: TransactionState.Active });
+		const result = {} as Message;
+		transaction.abort(result);
+
+		await expect(first).resolves.toBe(result);
+		await expect(second).resolves.toBe(result);
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Active }],
+			[{ state: TransactionState.Completed }],
+		]);
+	});
+
+	test("marks transactions settled synchronously", () => {
+		const transaction = createAttachedTransaction();
+		expect(transaction.isSettled).toBe(false);
+		transaction.abort(undefined);
+		expect(transaction.isSettled).toBe(true);
+	});
+
+	test("reports the outcome once via onSettled", () => {
+		const onSettled = vi.fn();
+		const transaction = createAttachedTransaction({ onSettled });
+		const result = {} as Message;
+		transaction.abort(result);
+		transaction.abort(undefined);
+
+		expect(onSettled).toHaveBeenCalledTimes(1);
+		expect(onSettled).toHaveBeenCalledWith({
+			status: "fulfilled",
+			value: result,
+		});
+	});
+
+	test("settles before notifying callers", async () => {
+		const transaction = createAttachedTransaction();
+		const caller = createDeferredPromise<Message | void>();
+		const settledSeen = vi.fn();
+		transaction.attach(caller, ({ state }) => {
+			if (state === TransactionState.Failed) {
+				settledSeen(transaction.isSettled);
+			}
+		});
+
+		const error = new ZWaveError(
+			"failed",
+			ZWaveErrorCodes.Controller_MessageDropped,
+		);
+		transaction.abort(error);
+
+		expect(settledSeen).toHaveBeenCalledWith(true);
+		await expect(caller).rejects.toBe(error);
+	});
+
+	test("reports terminal progress to callers added after settlement", async () => {
+		const transaction = createAttachedTransaction();
+		transaction.setProgress({ state: TransactionState.Active });
+		const result = {} as Message;
+		transaction.abort(result);
+
+		const caller = createDeferredPromise<Message | void>();
+		const progress = vi.fn();
+		transaction.attach(caller, progress);
+
+		await expect(caller).resolves.toBe(result);
+		expect(progress.mock.calls).toEqual([
+			[{ state: TransactionState.Completed }],
+		]);
+	});
 });

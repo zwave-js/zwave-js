@@ -63,6 +63,13 @@
 			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off_on"
 		},
 		{
+			"#": "16",
+			"$if": "firmwareVersion >= 2.60",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Manual Control",
+			"defaultValue": 1
+		},
+		{
 			"#": "10",
 			"$if": "firmwareVersion >= 1.30",
 			"$import": "~/templates/master_template.json#base_enable_disable_inverted",

@@ -235,9 +235,15 @@ function parsePTIFrame(
 	const body = Bytes.view(frame.subarray(3, -1));
 	if (body.length < 2) return;
 	const version = body.readUInt16LE(0);
-	let messageType: DCHMessageType;
+	let messageType: DCHMessageType | undefined;
 	let ptiOffset: number;
-	if (version === 2) {
+	if (version === 0) {
+		// Z-Wave CTT uses the v2 header size with zeroed version and message type fields.
+		if (body.length < 11) return;
+		if (body.readUInt16LE(8) !== 0) return;
+		messageType = undefined;
+		ptiOffset = 11;
+	} else if (version === 2) {
 		if (body.length < 11) return;
 		messageType = body.readUInt16LE(8);
 		ptiOffset = 11;
@@ -251,7 +257,8 @@ function parsePTIFrame(
 
 	// Only Tx and Rx packets contain radio frames
 	if (
-		messageType !== DCHMessageType.EFRTxPacket
+		messageType !== undefined
+		&& messageType !== DCHMessageType.EFRTxPacket
 		&& messageType !== DCHMessageType.EFRRxPacket
 	) {
 		return;

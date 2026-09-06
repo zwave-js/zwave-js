@@ -13,6 +13,12 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "White" },
+		"2": { "label": "Red" },
+		"3": { "label": "Green" },
+		"4": { "label": "Blue" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

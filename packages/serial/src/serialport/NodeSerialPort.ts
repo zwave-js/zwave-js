@@ -22,6 +22,10 @@ export function createNodeSerialPortFactory(
 			dataBits: 8,
 			stopBits: 1,
 			parity: "none",
+			// Do not assert DTR (Windows) or drop it on close (Linux/macOS).
+			// Some controllers wire DTR/RTS to reset/bootloader logic and would
+			// otherwise unintentionally enter the bootloader.
+			hupcl: false,
 		});
 
 		let isOpen = serial.isOpen;

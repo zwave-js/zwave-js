@@ -43,6 +43,7 @@ import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 } from "../lib/CommandClass.js";
 import {
@@ -734,8 +735,24 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
 	private secondFrame: boolean | undefined;
 	private sequenceCounter: number | undefined;
 
-	private decryptedCCBytes: BytesView | undefined;
+	public decryptedCCBytes: BytesView | undefined;
 	public encapsulated!: CommandClass;
+
+	protected override determineRelation(
+		other: CommandClass,
+	): CommandRelation {
+		if (
+			other instanceof SecurityCCCommandEncapsulation
+			&& this.ccCommand === other.ccCommand
+			// Only outgoing encapsulations have `encapsulated` set. Sequenced
+			// commands only exist on the receiving side, so they cannot appear here.
+			&& this.encapsulated
+			&& other.encapsulated
+		) {
+			return this.encapsulated.getRelationTo(other.encapsulated);
+		}
+		return CommandRelation.Unrelated;
+	}
 
 	private alternativeNetworkKey?: BytesView;
 

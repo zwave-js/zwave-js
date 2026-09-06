@@ -526,6 +526,32 @@
 			"$if": "firmwareVersion >= 2.0",
 			"$import": "~/templates/master_template.json#base_enable_disable",
 			"label": "Simultaneous On/Off Operation of R1/R2"
+		},
+		{
+			"#": "29",
+			"$if": "firmwareVersion >= 2.30",
+			"label": "Z-Wave Control",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "All relays - Enabled",
+					"value": 0
+				},
+				{
+					"label": "Relay 1 - Enabled; Relay 2 - Disabled",
+					"value": 1
+				},
+				{
+					"label": "Relay 1 - Disabled; Relay 2 - Enabled",
+					"value": 2
+				},
+				{
+					"label": "All relays - Disabled",
+					"value": 3
+				}
+			]
 		}
 	],
 	"compat": {

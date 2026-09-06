@@ -14,6 +14,12 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Switch 1" },
+		"2": { "label": "Switch 2" },
+		"3": { "label": "Switch 3" },
+		"4": { "label": "Switch 4" }
+	},
 	"metadata": {
 		"inclusion": "1. Put the controller into INCLUDE mode. Follow the instructions provided by the controller manufacturer.\n\n2. Touch and hold any key on the panel for more than 5 seconds. All indication lights will blink in blue. At this point release the key, the touch panel will start the inclusion process.",
 		"exclusion": "1. Put the controller into REMOVE device mode. Follow the instructions provided by the controller manufacturer.\n\n2. Touch and hold any key on the panel for more than 5 seconds. All indication lights will blink blue in color. At this point release the key, the touch panel will start the exclusion process",

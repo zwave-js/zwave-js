@@ -55,10 +55,6 @@ import {
 } from "@zwave-js/serial/serialapi";
 import { type BytesView, getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
-import {
-	type DeferredPromise,
-	createDeferredPromise,
-} from "alcalzone-shared/deferred-promise";
 import type { Driver } from "./Driver.js";
 import type { MessageGenerator } from "./Transaction.js";
 
@@ -959,17 +955,12 @@ export const secureMessageGeneratorS2Multicast: MessageGeneratorImplementation<
 	}
 };
 
-export function createMessageGenerator<TResponse extends Message = Message>(
+export function createMessageGenerator(
 	driver: Driver,
 	ctx: CCEncodingContext,
 	msg: Message,
 	onMessageSent: (msg: Message, result: Message | undefined) => void,
-): {
-	generator: MessageGenerator;
-	resultPromise: DeferredPromise<TResponse>;
-} {
-	const resultPromise = createDeferredPromise<TResponse>();
-
+): MessageGenerator {
 	const generator: MessageGenerator = {
 		parent: undefined as any, // The transaction will set this field on creation
 		current: undefined,
@@ -1034,7 +1025,7 @@ export function createMessageGenerator<TResponse extends Message = Message>(
 					} catch (e) {
 						if (e instanceof Error) {
 							// There was an actual error, reject the transaction
-							resultPromise.reject(e);
+							generator.parent.settleRejected(e);
 						} else if (isTransmitReport(e) && !e.isOK()) {
 							// The generator was prematurely ended by throwing a NOK transmit report.
 							// The driver may want to retry it, so reset the generator
@@ -1042,13 +1033,13 @@ export function createMessageGenerator<TResponse extends Message = Message>(
 							return;
 						} else {
 							// The generator was prematurely ended by throwing a Message
-							resultPromise.resolve(e as TResponse);
+							generator.parent.settleFulfilled(e as Message);
 						}
 						break;
 					}
 				}
 
-				resultPromise.resolve(result as TResponse);
+				generator.parent.settleFulfilled(result);
 				generator.reset();
 				return;
 			}
@@ -1057,5 +1048,5 @@ export function createMessageGenerator<TResponse extends Message = Message>(
 			return generator.self;
 		},
 	};
-	return { resultPromise, generator };
+	return generator;
 }

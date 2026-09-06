@@ -13,6 +13,10 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Lamp" },
+		"2": { "label": "Motion Sensor" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

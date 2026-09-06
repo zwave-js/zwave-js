@@ -1,0 +1,355 @@
+import {
+	EncapsulationFlags,
+	type SecurityManager,
+	type SecurityManagers,
+} from "@zwave-js/core";
+import { describe, expect, test } from "vitest";
+import { BasicCCGet, BasicCCSet } from "../cc/BasicCC.js";
+import { BinarySwitchCCSet } from "../cc/BinarySwitchCC.js";
+import { CRC16CC } from "../cc/CRC16CC.js";
+import {
+	MultiChannelCC,
+	MultiChannelCCCommandEncapsulation,
+	MultiChannelCCV1CommandEncapsulation,
+} from "../cc/MultiChannelCC.js";
+import { MultiCommandCC } from "../cc/MultiCommandCC.js";
+import { Security2CC } from "../cc/Security2CC.js";
+import { SecurityCC } from "../cc/SecurityCC.js";
+import { SupervisionCC } from "../cc/SupervisionCC.js";
+import { CommandRelation, getCommandRelation } from "./CommandClass.js";
+import { SPANExtension } from "./Security2/Extension.js";
+
+// Basic Set supplies the smallest command payload needed for relation semantics
+class RelatedBasicCCSet extends BasicCCSet {
+	protected override determineRelation(other: BasicCCSet): CommandRelation {
+		if (!(other instanceof BasicCCSet)) {
+			return CommandRelation.Unrelated;
+		}
+		return this.targetValue === other.targetValue
+			? CommandRelation.Redundant
+			: CommandRelation.Supersedes;
+	}
+}
+
+// This helper verifies that relations between different commands are supported
+class CrossCommandBasicCCSet extends BasicCCSet {
+	protected override determineRelation(other: BasicCCGet): CommandRelation {
+		return other instanceof BasicCCGet
+			? CommandRelation.Supersedes
+			: CommandRelation.Unrelated;
+	}
+}
+
+function createSet(
+	targetValue: number,
+	options: {
+		nodeId?: number | [number, number, ...number[]];
+		endpointIndex?: number;
+		encapsulationFlags?: EncapsulationFlags;
+	} = {},
+): RelatedBasicCCSet {
+	const command = new RelatedBasicCCSet({
+		nodeId: options.nodeId ?? 2,
+		endpointIndex: options.endpointIndex,
+		targetValue,
+	});
+	command.encapsulationFlags = options.encapsulationFlags
+		?? EncapsulationFlags.None;
+	return command;
+}
+
+describe("getCommandRelation", () => {
+	test("uses the newer command's relation override", () => {
+		expect(getCommandRelation(createSet(1), createSet(1))).toBe(
+			CommandRelation.Redundant,
+		);
+		expect(getCommandRelation(createSet(2), createSet(1))).toBe(
+			CommandRelation.Supersedes,
+		);
+		expect(
+			getCommandRelation(
+				createSet(1),
+				new BasicCCSet({ nodeId: 2, targetValue: 1 }),
+			),
+		).toBe(CommandRelation.Redundant);
+		expect(
+			getCommandRelation(
+				new BasicCCSet({ nodeId: 2, targetValue: 1 }),
+				createSet(1),
+			),
+		).toBe(CommandRelation.Redundant);
+	});
+
+	test("allows same-CC cross-command opt-in", () => {
+		const newer = new CrossCommandBasicCCSet({
+			nodeId: 2,
+			targetValue: 1,
+		});
+		const older = new BasicCCGet({ nodeId: 2 });
+
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Supersedes,
+		);
+	});
+
+	test("rejects relations between different CCs", () => {
+		expect(
+			getCommandRelation(
+				createSet(1),
+				new BinarySwitchCCSet({
+					nodeId: 2,
+					targetValue: true,
+				}),
+			),
+		).toBe(CommandRelation.Unrelated);
+	});
+
+	test("compares multicast targets as sets", () => {
+		expect(
+			getCommandRelation(
+				createSet(1, { nodeId: [2, 3] }),
+				createSet(1, { nodeId: [3, 2] }),
+			),
+		).toBe(CommandRelation.Redundant);
+		expect(
+			getCommandRelation(
+				createSet(1, { nodeId: [2, 3] }),
+				createSet(1, { nodeId: [2, 4] }),
+			),
+		).toBe(CommandRelation.Unrelated);
+	});
+
+	test.each([
+		[
+			"different node targets",
+			createSet(1, { nodeId: 3 }),
+			createSet(1),
+		],
+		[
+			"different endpoints",
+			createSet(1, { endpointIndex: 1 }),
+			createSet(1),
+		],
+		[
+			"different encapsulation flags",
+			createSet(1, {
+				encapsulationFlags: EncapsulationFlags.Security,
+			}),
+			createSet(1),
+		],
+	])("returns unrelated for %s", (_label, newer, older) => {
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
+	});
+
+	test("ignores generated fields on single-command wrappers", () => {
+		const newer = SupervisionCC.encapsulate(createSet(1), 2);
+		const older = SupervisionCC.encapsulate(createSet(1), 1);
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Redundant,
+		);
+	});
+
+	test("separates Supervision status update requests", () => {
+		const newer = SupervisionCC.encapsulate(createSet(1), 2, true);
+		const older = SupervisionCC.encapsulate(createSet(1), 1, false);
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
+	});
+
+	test("recurses through transparent nested wrappers", () => {
+		const securityManager = {} as SecurityManager;
+		const newer = CRC16CC.encapsulate(
+			SecurityCC.encapsulate(
+				1,
+				securityManager,
+				SupervisionCC.encapsulate(createSet(1), 2),
+			),
+		);
+		const older = CRC16CC.encapsulate(
+			SecurityCC.encapsulate(
+				1,
+				securityManager,
+				SupervisionCC.encapsulate(createSet(1), 1),
+			),
+		);
+
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Redundant,
+		);
+	});
+
+	test("preserves Multi Channel destinations while unwrapping", () => {
+		const newer = MultiChannelCC.encapsulate(
+			createSet(1, { endpointIndex: 2 }),
+		);
+		const older = MultiChannelCC.encapsulate(
+			createSet(1, { endpointIndex: 1 }),
+		);
+
+		// The wrapper endpoint cannot distinguish its logical destinations
+		expect(newer.endpointIndex).toBe(0);
+		expect(older.endpointIndex).toBe(0);
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
+	});
+
+	test("compares Multi Channel destination bit masks as sets", () => {
+		const newer = new MultiChannelCCCommandEncapsulation({
+			nodeId: 2,
+			destination: [1, 2],
+			encapsulated: createSet(1),
+		});
+		const older = new MultiChannelCCCommandEncapsulation({
+			nodeId: 2,
+			destination: [2, 1],
+			encapsulated: createSet(1),
+		});
+
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Redundant,
+		);
+	});
+
+	test("recurses through Multi Channel V1 encapsulation", () => {
+		const newer = new MultiChannelCCV1CommandEncapsulation({
+			nodeId: 2,
+			endpointIndex: 1,
+			encapsulated: createSet(1),
+		});
+		const older = new MultiChannelCCV1CommandEncapsulation({
+			nodeId: 2,
+			endpointIndex: 1,
+			encapsulated: createSet(1),
+		});
+
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Redundant,
+		);
+	});
+
+	test("preserves S2 multicast targets and groups while unwrapping", () => {
+		const securityManagers = {} as SecurityManagers;
+		const differentTargets = [
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 4] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+		];
+		const differentGroups = [
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 2 },
+			),
+		];
+		const sameGroupAndTargets = [
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [3, 2] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+		];
+		const differentMulticastExtensions = [
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{ multicastGroupId: 1 },
+			),
+			Security2CC.encapsulate(
+				createSet(1, { nodeId: [2, 3] }),
+				1,
+				securityManagers,
+				{
+					multicastGroupId: 1,
+					multicastOutOfSync: true,
+				},
+			),
+		];
+
+		// The wrapper node ID cannot distinguish its multicast target sets
+		expect(differentTargets[0].nodeId).toBe(
+			differentTargets[1].nodeId,
+		);
+		// Inner targets and S2 group metadata must all match
+		expect(
+			getCommandRelation(differentTargets[0], differentTargets[1]),
+		).toBe(CommandRelation.Unrelated);
+		expect(
+			getCommandRelation(differentGroups[0], differentGroups[1]),
+		).toBe(CommandRelation.Unrelated);
+		expect(
+			getCommandRelation(
+				sameGroupAndTargets[0],
+				sameGroupAndTargets[1],
+			),
+		).toBe(CommandRelation.Redundant);
+		expect(
+			getCommandRelation(
+				differentMulticastExtensions[0],
+				differentMulticastExtensions[1],
+			),
+		).toBe(CommandRelation.Unrelated);
+	});
+
+	test("transmits S2 synchronization commands individually", () => {
+		const securityManagers = {} as SecurityManagers;
+		const newer = Security2CC.encapsulate(
+			createSet(1),
+			1,
+			securityManagers,
+		);
+		const older = Security2CC.encapsulate(
+			createSet(1),
+			1,
+			securityManagers,
+		);
+		older.extensions.push(
+			new SPANExtension({ senderEI: new Uint8Array(16) }),
+		);
+
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
+	});
+
+	test("returns unrelated for multi-command encapsulation", () => {
+		const newer = MultiCommandCC.encapsulate([
+			createSet(1),
+			createSet(2),
+		]);
+		const older = MultiCommandCC.encapsulate([
+			createSet(1),
+			createSet(2),
+		]);
+		expect(getCommandRelation(newer, older)).toBe(
+			CommandRelation.Unrelated,
+		);
+	});
+});

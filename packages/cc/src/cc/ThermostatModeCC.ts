@@ -75,6 +75,7 @@ export const ThermostatModeCCValues = V.defineCCValues(
 				...ValueMetadata.ReadOnlyBuffer,
 				label: "Manufacturer data",
 			},
+			{ minVersion: 3 },
 		),
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
 	},

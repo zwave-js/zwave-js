@@ -717,6 +717,9 @@ export class ProtectionCCSupportedReport extends ProtectionCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
+		// This command only exists in V2. Ignore it if the device advertises a lower version.
+		if (getEffectiveCCVersion(ctx, this) < 2) return true;
+
 		// update metadata (partially) for the local and rf values
 		const localStateValue = ProtectionCCValues.localProtectionState;
 		this.setMetadata(ctx, localStateValue, {

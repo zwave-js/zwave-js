@@ -13,6 +13,11 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "CT1 + CT2" },
+		"2": { "label": "CT1" },
+		"3": { "label": "CT2" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

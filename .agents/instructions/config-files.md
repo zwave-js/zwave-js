@@ -216,6 +216,39 @@ Becomes four partial parameters:
 - All devices have a group for communication with the controller - this should be labeled "Lifeline"
 - Modern devices typically use Association group 1 as the lifeline, but older devices may use different numbers
 
+## Endpoint Labels
+
+The `endpoints` property (property order slot 8) can carry a `label` string for each Multi Channel endpoint, giving it a concise human-readable name ("Relay 1", "Floor Sensor"). These labels help home automation UIs display meaningful names instead of bare endpoint indices.
+
+### When to Add Endpoint Labels
+
+Only add a label when the device manual or manufacturer's product page **explicitly describes what that endpoint controls**. Never derive a label solely from the endpoint's device class or invent one. If an endpoint's purpose is undocumented, leave it unlabeled.
+
+### Label Style
+
+- Apply Title Case ("Circuit 1", "USB Port")
+- Keep labels short — 1–3 words is typical
+- Omit redundant words like "channel" or "endpoint" unless they are part of the documented name
+- When multiple endpoints share an undifferentiated type, disambiguate with an index that matches the documentation ("Relay 1", "Relay 2")
+- Do not label root endpoint `"0"` unless the documentation gives it a name distinct from the device itself
+- **Describe the device part, not the abstract feature** — prefer "Temperature Sensor" over "Temperature", "Motion Sensor" over "Motion". Naming the physical part is more concrete and more understandable to users who know what device they have.
+- **Normalize cryptic manufacturer-internal names** when normalization removes no information about what the endpoint does. A name is cryptic if a typical user would not understand it without consulting the manual — e.g. `SIG1` says nothing more than "Input 1", so normalize it: `SIG1` → `Input 1`. Apply the same logic to unexplained abbreviations like `OUT1` → `Output 1`.
+- **Keep informative original names verbatim** when the documented name conveys feature context that a generic label would lose. For example, `CT1` signals a current-transformer clamp input — normalizing it to `Input 1` would drop that context. The same applies when the documented names distinguish different input types on the same device — e.g. a module with both analog and digital inputs should keep `Analog 1` and `Digital Input` rather than collapsing them to `Input 1`, `Input 2`, which would erase the type distinction. In such cases keep the documented name exactly, without expanding or rewording it.
+
+### Root Association Migration
+
+If an `endpoints` block is added to a config that already has root-level `associations`, the spec requires those associations to move under `endpoints["0"]` (using `$import` self-references to avoid duplication). This migration is non-trivial — flag such files for human review rather than auto-migrating.
+
+### Example
+
+```json
+"endpoints": {
+    "1": { "label": "Circuit 1" },
+    "2": { "label": "Circuit 2" },
+    "3": { "label": "Circuit 3" }
+}
+```
+
 ## Central Scene Labels
 
 The `scenes` property allows defining custom labels and descriptions for Central Scenes instead of the default "Scene 001", "Scene 002" format.

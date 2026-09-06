@@ -21,7 +21,7 @@ async get(): Promise<
 ```ts
 async deviceSpecificGet(
 	deviceIdType: DeviceIdType,
-): Promise<MaybeNotKnown<string>>;
+): Promise<MaybeNotKnown<string | Bytes>>;
 ```
 
 ### `sendReport`
@@ -32,6 +32,17 @@ async sendReport(
 		manufacturerId: number;
 		productType: number;
 		productId: number;
+	},
+): Promise<void>;
+```
+
+### `sendDeviceSpecificReport`
+
+```ts
+async sendDeviceSpecificReport(
+	options: {
+		type: DeviceIdType;
+		deviceId: string | Uint8Array;
 	},
 ): Promise<void>;
 ```

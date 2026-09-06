@@ -1,13 +1,15 @@
 import {
 	MessagePriority,
+	type TXReport,
 	type TransactionProgress,
 	type TransactionProgressListener,
+	TransactionState,
 	type ZWaveError,
 	highResTimestamp,
 	isZWaveError,
 } from "@zwave-js/core";
 import type { Message } from "@zwave-js/serial";
-import { noop } from "@zwave-js/shared";
+import { getErrorMessage, noop } from "@zwave-js/shared";
 import {
 	type Comparable,
 	type CompareResult,
@@ -39,11 +41,190 @@ export interface TransactionOptions {
 	parts: MessageGenerator;
 	/** The priority of this transaction */
 	priority: MessagePriority;
-	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
-	promise: DeferredPromise<Message | void>;
+	/**
+	 * Ensures this command is transmitted: it will not share another command's
+	 * physical transmission and a newer command cannot supersede it.
+	 */
+	preventDeduplication?: boolean;
+	/** Reports the physical outcome exactly once, no matter how many deduplicated transactions are attached. */
+	onSettled?: (result: TransactionResult) => void;
+}
 
-	/** Gets called with progress updates for a transaction */
+/**
+ * A caller waiting for the result of a transaction: the promise to settle,
+ * plus optional callbacks for progress updates and TX reports. Multiple
+ * callers can wait for the same transaction when commands are deduplicated.
+ */
+interface TransactionCaller {
+	promise: DeferredPromise<Message | void>;
 	listener?: TransactionProgressListener;
+	onTXReport?: (report: TXReport) => void;
+	/** The lifecycle this caller is currently attached to */
+	lifecycle: TransactionLifecycle;
+}
+
+/** The physical outcome of a transaction */
+export type TransactionResult =
+	| { status: "fulfilled"; value: Message | void }
+	| { status: "rejected"; reason: unknown };
+
+/** Lets a single caller manage its attachment to a transaction */
+export interface TransactionAttachmentHandle {
+	/**
+	 * Rejects this caller's promise and stops its progress updates.
+	 * Returns `true` when no other callers are waiting for the transmission.
+	 */
+	detach(error: ZWaveError): boolean;
+	/**
+	 * Whether this caller gets its result from the given transaction.
+	 * Also works after detaching.
+	 */
+	sharesLifecycleWith(transaction: Transaction): boolean;
+}
+
+/**
+ * Runs a caller-provided callback. Errors it throws must not disrupt other
+ * callers or the queue update in progress.
+ */
+function invokeSafely(callback: () => void): void {
+	try {
+		callback();
+	} catch {}
+}
+
+/**
+ * Tracks the state of one physical transmission and distributes progress
+ * updates, TX reports and the final result to all attached callers.
+ * Requeued clones of a transaction share its lifecycle. When commands are
+ * deduplicated, callers move between lifecycles.
+ */
+class TransactionLifecycle {
+	public constructor(onSettled?: (result: TransactionResult) => void) {
+		this.onSettled = onSettled;
+	}
+
+	private readonly onSettled?: (result: TransactionResult) => void;
+	private readonly callers = new Set<TransactionCaller>();
+	private settled: TransactionResult | undefined;
+	private progress: TransactionProgress | undefined;
+
+	/**
+	 * Adds a caller. It immediately receives the current progress and, if the
+	 * transaction is already settled, the result.
+	 */
+	public attach(caller: TransactionCaller): void {
+		const progress = this.progress;
+		if (progress) {
+			invokeSafely(() => caller.listener?.({ ...progress }));
+		}
+		this.callers.add(caller);
+		this.replaySettlement(caller);
+	}
+
+	/**
+	 * Rejects the given caller's promise and stops its progress updates.
+	 * Returns `true` when this removed the last attached caller.
+	 */
+	public detach(caller: TransactionCaller, error: ZWaveError): boolean {
+		if (this.settled || !this.callers.delete(caller)) return false;
+		invokeSafely(() =>
+			caller.listener?.({
+				state: TransactionState.Failed,
+				reason: error.message,
+			})
+		);
+		caller.promise.reject(error);
+		return this.callers.size === 0;
+	}
+
+	/** Whether any callers are waiting for the result */
+	public get hasCallers(): boolean {
+		return this.callers.size > 0;
+	}
+
+	/** Whether the physical outcome is already known */
+	public get isSettled(): boolean {
+		return this.settled != undefined;
+	}
+
+	/**
+	 * Reports the physical outcome. The first call wins, emits the terminal
+	 * progress update and settles all attached callers.
+	 */
+	public settle(result: TransactionResult): void {
+		if (this.settled) return;
+		this.settled = result;
+		if (result.status === "fulfilled") {
+			this.setProgress({ state: TransactionState.Completed });
+		} else {
+			this.setProgress({
+				state: TransactionState.Failed,
+				reason: getErrorMessage(result.reason),
+			});
+		}
+		invokeSafely(() => this.onSettled?.(result));
+		for (const caller of this.callers) {
+			this.replaySettlement(caller);
+		}
+		this.callers.clear();
+	}
+
+	/**
+	 * Moves all callers waiting for another lifecycle over to this one,
+	 * e.g. when a newer command replaces or joins an older one.
+	 */
+	public adoptCallersFrom(source: TransactionLifecycle): void {
+		if (source === this) return;
+		const targetProgress = this.progress;
+		const replayTargetProgress = targetProgress != undefined
+			&& source.progress?.state !== targetProgress.state;
+		for (const caller of source.callers) {
+			source.callers.delete(caller);
+			// Update the caller's lifecycle, so detaching affects the right transaction.
+			caller.lifecycle = this;
+			this.callers.add(caller);
+			if (replayTargetProgress) {
+				invokeSafely(() => caller.listener?.({ ...targetProgress }));
+			}
+			this.replaySettlement(caller);
+		}
+	}
+
+	/** Forwards a TX report to all attached callers */
+	public reportTXReport(report: TXReport): void {
+		for (const caller of this.callers) {
+			invokeSafely(() => caller.onTXReport?.(report));
+		}
+	}
+
+	/**
+	 * Notifies all attached callers of a progress update.
+	 * Duplicate updates and updates after Completed/Failed are ignored.
+	 */
+	public setProgress(progress: TransactionProgress): void {
+		const previousState = this.progress?.state;
+		if (
+			previousState === progress.state
+			|| previousState === TransactionState.Completed
+			|| previousState === TransactionState.Failed
+		) {
+			return;
+		}
+		this.progress = progress;
+		for (const caller of this.callers) {
+			invokeSafely(() => caller.listener?.({ ...progress }));
+		}
+	}
+
+	/** Passes an already-known result on to a single caller */
+	private replaySettlement(caller: TransactionCaller): void {
+		if (this.settled?.status === "rejected") {
+			caller.promise.reject(this.settled.reason);
+		} else if (this.settled?.status === "fulfilled") {
+			// Callers of deduplicated commands resolve with the same Message instance
+			caller.promise.resolve(this.settled.value);
+		}
+	}
 }
 
 /**
@@ -53,16 +234,18 @@ export class Transaction implements Comparable<Transaction> {
 	public constructor(
 		public readonly driver: Driver,
 		private readonly options: TransactionOptions,
+		lifecycle?: TransactionLifecycle,
 	) {
 		// Give the message generator a reference to this transaction
 		options.parts.parent = this;
 
 		// Initialize class fields
-		this.promise = options.promise;
 		this.message = options.message;
 		this.priority = options.priority;
 		this.parts = options.parts;
-		this.listener = options.listener;
+		this.preventDeduplication = options.preventDeduplication ?? false;
+		this.lifecycle = lifecycle
+			?? new TransactionLifecycle(options.onSettled);
 
 		// We need create the stack on a temporary object or the Error
 		// class will try to print the message
@@ -71,31 +254,26 @@ export class Transaction implements Comparable<Transaction> {
 		this._stack = (tmp as any).stack.replace(/^Error:?\s*\n/, "");
 	}
 
+	/** Creates a copy of this transaction that shares its lifecycle. */
 	public clone(): Transaction {
-		const ret = new Transaction(this.driver, this.options);
+		const ret = new Transaction(this.driver, this.options, this.lifecycle);
 		for (
 			const prop of [
 				"_stack",
-				"_progress",
 				"creationTimestamp",
 				"changeNodeStatusOnTimeout",
 				"pauseSendThread",
 				"priority",
 				"tag",
 				"requestWakeUpOnDemand",
+				"requestStatusUpdates",
 			] as const
 		) {
 			(ret as any)[prop] = this[prop];
 		}
 
-		// The listener callback now lives on the clone
-		this.listener = undefined;
-
 		return ret;
 	}
-
-	/** Will be resolved/rejected by the Send Thread Machine when the entire transaction is handled */
-	public readonly promise: DeferredPromise<Message | void>;
 
 	/** The "primary" message this transaction contains, e.g. the un-encapsulated version of a SendData request */
 	public readonly message: Message;
@@ -103,15 +281,67 @@ export class Transaction implements Comparable<Transaction> {
 	/** The message generator to create the actual messages for this transaction */
 	public readonly parts: MessageGenerator;
 
-	/** A callback which gets called with state updates of this transaction */
-	private listener?: TransactionProgressListener;
+	private readonly lifecycle: TransactionLifecycle;
 
-	private _progress: TransactionProgress | undefined;
+	/**
+	 * Adds a caller that waits for this transaction's result.
+	 * @param promise Settled with the result of the transaction
+	 * @param listener Called with each progress update
+	 * @param onTXReport Called when a TX report for the transmission is received
+	 */
+	public attach(
+		promise: DeferredPromise<Message | void>,
+		listener?: TransactionProgressListener,
+		onTXReport?: (report: TXReport) => void,
+	): TransactionAttachmentHandle {
+		const caller: TransactionCaller = {
+			promise,
+			listener,
+			onTXReport,
+			lifecycle: this.lifecycle,
+		};
+		this.lifecycle.attach(caller);
+
+		return {
+			detach: (error) => caller.lifecycle.detach(caller, error),
+			sharesLifecycleWith: (transaction) =>
+				caller.lifecycle === transaction.lifecycle,
+		};
+	}
+
+	/** Whether any callers are waiting for this transaction's result */
+	public get hasAttachments(): boolean {
+		return this.lifecycle.hasCallers;
+	}
+
+	/** Whether the physical outcome of this transaction is already known */
+	public get isSettled(): boolean {
+		return this.lifecycle.isSettled;
+	}
+
+	/** @internal Reports the successful physical outcome, settling all attached callers */
+	public settleFulfilled(value: Message | void): void {
+		this.lifecycle.settle({ status: "fulfilled", value });
+	}
+
+	/** @internal Reports the failed physical outcome, settling all attached callers */
+	public settleRejected(reason: unknown): void {
+		this.lifecycle.settle({ status: "rejected", reason });
+	}
+
+	/** Moves all callers waiting for the given transaction over to this one */
+	public adoptCallersFrom(other: Transaction): void {
+		this.lifecycle.adoptCallersFrom(other.lifecycle);
+	}
+
+	/** Forwards a TX report to all attached callers */
+	public reportTXReport(report: TXReport): void {
+		this.lifecycle.reportTXReport(report);
+	}
+
+	/** Notifies all attached callers of a progress update */
 	public setProgress(progress: TransactionProgress): void {
-		// Ignore duplicate updates
-		if (this._progress?.state === progress.state) return;
-		this._progress = progress;
-		this.listener?.({ ...progress });
+		this.lifecycle.setProgress(progress);
 	}
 
 	/**
@@ -158,14 +388,20 @@ export class Transaction implements Comparable<Transaction> {
 		if (this.parts.self) {
 			this.parts.self.throw(result).catch(noop);
 		} else if (isZWaveError(result)) {
-			this.promise.reject(result);
+			this.settleRejected(result);
 		} else {
-			this.promise.resolve(result);
+			this.settleFulfilled(result);
 		}
 	}
 
 	/** The priority of this transaction */
 	public priority: MessagePriority;
+
+	/**
+	 * Ensures this command is transmitted: it will not share another command's
+	 * physical transmission and a newer command cannot supersede it.
+	 */
+	public readonly preventDeduplication: boolean;
 
 	/** The timestamp at which the transaction was created */
 	public creationTimestamp: number = highResTimestamp();
@@ -178,6 +414,9 @@ export class Transaction implements Comparable<Transaction> {
 
 	/** If a Wake Up On Demand should be requested for the target node. */
 	public requestWakeUpOnDemand: boolean = false;
+
+	/** Whether follow-up Supervision status updates are requested. */
+	public requestStatusUpdates: boolean = false;
 
 	/** Internal information used to identify or mark this transaction */
 	public tag?: any;

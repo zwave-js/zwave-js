@@ -42,6 +42,7 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	type RefreshValuesOptions,
+	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -504,7 +505,11 @@ export class BatteryCCReport extends BatteryCC {
 		// Setting the values to undefined is a bit hacky, but we need to avoid persisting
 		// them in these special cases, and I don't like copy-pasting what persistValues does.
 
-		if (this.disconnected) {
+		// Some devices send reports with trailing bytes although they advertise CC version 1.
+		// Only trust the V2+ fields if the advertised version includes them.
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+
+		if (this.disconnected && ccVersion >= 2) {
 			// Level and chargingStatus are meaningless when disconnected.
 			// Suppress persisting them, then remove any previously stored values.
 			const savedLevel = this.level;

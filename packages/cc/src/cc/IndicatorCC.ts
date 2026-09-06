@@ -38,6 +38,7 @@ import {
 	type PersistValuesContext,
 	type RefreshValuesContext,
 	type RefreshValuesOptions,
+	getEffectiveCCVersion,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -1206,6 +1207,10 @@ export class IndicatorCCReport extends IndicatorCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
+		// Indicator objects only exist in V2+ reports, the timeout properties in V3+.
+		// Ignore them if the device advertises a lower version.
+		const ccVersion = getEffectiveCCVersion(ctx, this);
+
 		if (this.indicator0Value != undefined) {
 			if (!this.supportsV2Indicators(ctx)) {
 				// Publish the value
@@ -1223,7 +1228,7 @@ export class IndicatorCCReport extends IndicatorCC {
 					});
 				}
 			}
-		} else if (this.values) {
+		} else if (this.values && ccVersion >= 2) {
 			// Store the simple values first
 			for (const value of this.values) {
 				this.setIndicatorValue(ctx, value);
@@ -1249,7 +1254,7 @@ export class IndicatorCCReport extends IndicatorCC {
 
 				// ... timeout
 				const timeout = indicatorObjectsToTimeout(filteredValues);
-				if (timeout) {
+				if (timeout && ccVersion >= 3) {
 					let timeoutString = "";
 					if (timeout?.hours) timeoutString += `${timeout.hours}h`;
 					if (timeout?.minutes) {
@@ -1615,7 +1620,8 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
-		if (this.description) {
+		// This command only exists in V4. Ignore it if the device advertises a lower version.
+		if (this.description && getEffectiveCCVersion(ctx, this) >= 4) {
 			this.setValue(
 				ctx,
 				IndicatorCCValues.indicatorDescription(this.indicatorId),

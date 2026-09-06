@@ -88,6 +88,36 @@ export interface CommandClassOptions extends CCAddress {
 	payload?: BytesView;
 }
 
+export enum CommandRelation {
+	Unrelated,
+	Redundant,
+	Supersedes,
+}
+
+/**
+ * Compares command destinations. Single targets must match exactly.
+ * Multi-targets must contain the same IDs regardless of order.
+ */
+export function haveSameDestination(
+	first: number | readonly number[],
+	second: number | readonly number[],
+): boolean {
+	if (typeof first === "number" || typeof second === "number") {
+		return first === second;
+	}
+	const firstTargets = new Set(first);
+	const secondTargets = new Set(second);
+	return firstTargets.size === secondTargets.size
+		&& [...firstTargets].every((target) => secondTargets.has(target));
+}
+
+export function getCommandRelation(
+	newer: CommandClass,
+	older: CommandClass,
+): CommandRelation {
+	return newer.getRelationTo(older);
+}
+
 // Defines the necessary traits an endpoint passed to a CC instance must have
 export type CCEndpoint =
 	& EndpointId
@@ -238,7 +268,10 @@ export class CommandClass implements CCId {
 		const CCConstructor = getCCConstructor(raw.ccId);
 		if (!CCConstructor) {
 			// None -> fall back to the default constructor
-			return await CommandClass.from(raw, ctx);
+			return CommandClass.withFrameType(
+				await CommandClass.from(raw, ctx),
+				ctx.frameType,
+			);
 		}
 
 		let CommandConstructor: CCConstructor<CommandClass> | undefined;
@@ -251,7 +284,10 @@ export class CommandClass implements CCId {
 		// Not every CC has a constructor for its commands. In that case,
 		// call the CC constructor directly
 		try {
-			return await (CommandConstructor ?? CCConstructor).from(raw, ctx);
+			return CommandClass.withFrameType(
+				await (CommandConstructor ?? CCConstructor).from(raw, ctx),
+				ctx.frameType,
+			);
 		} catch (e) {
 			// Indicate invalid payloads with a special CC type
 			if (
@@ -279,10 +315,18 @@ export class CommandClass implements CCId {
 					reason,
 				});
 
-				return ret;
+				return CommandClass.withFrameType(ret, ctx.frameType);
 			}
 			throw e;
 		}
+	}
+
+	private static withFrameType<T extends CommandClass>(
+		cc: T,
+		frameType: FrameType,
+	): T {
+		cc._frameType = frameType;
+		return cc;
 	}
 
 	public static from(
@@ -334,8 +378,11 @@ export class CommandClass implements CCId {
 	/** Contains a reference to the encapsulating CC if this CC is encapsulated */
 	public encapsulatingCC?: EncapsulatingCommandClass;
 
+	private _frameType?: FrameType;
 	/** The type of Z-Wave frame this CC was sent with */
-	public readonly frameType?: FrameType;
+	public get frameType(): FrameType | undefined {
+		return this._frameType;
+	}
 
 	/** Returns true if this CC is an extended CC (0xF100..0xFFFF) */
 	public isExtended(): boolean {
@@ -394,6 +441,29 @@ export class CommandClass implements CCId {
 
 	public prepareRetransmission(): void {
 		// Do nothing by default
+	}
+
+	/**
+	 * Determines this command's relation to an older command. Shared command
+	 * context must match before command-specific relation logic runs.
+	 */
+	public getRelationTo(other: CommandClass): CommandRelation {
+		if (
+			this.ccId !== other.ccId
+			|| !haveSameDestination(this.nodeId, other.nodeId)
+			|| this.endpointIndex !== other.endpointIndex
+			|| this.encapsulationFlags !== other.encapsulationFlags
+		) {
+			return CommandRelation.Unrelated;
+		}
+		return this.determineRelation(other);
+	}
+
+	/**
+	 * Subclasses override this to determine additional command-specific relations.
+	 */
+	protected determineRelation(_other: CommandClass): CommandRelation {
+		return CommandRelation.Unrelated;
 	}
 
 	/**

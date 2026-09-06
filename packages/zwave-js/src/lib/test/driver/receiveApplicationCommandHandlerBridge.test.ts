@@ -1,4 +1,8 @@
-import { SecurityCCNonceReport } from "@zwave-js/cc";
+import {
+	SecurityCCNonceReport,
+	ZWavePlusCCGet,
+	ZWavePlusCCReport,
+} from "@zwave-js/cc";
 import { CommandClasses, SecurityManager } from "@zwave-js/core";
 import {
 	BridgeApplicationCommandRequest,
@@ -6,9 +10,11 @@ import {
 } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import {
+	MockZWaveFrameType,
 	getDefaultMockControllerCapabilities,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
+import { wait } from "alcalzone-shared/async";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -88,6 +94,68 @@ integrationTest(
 
 			const nonce = Uint8Array.from((await noncePromise)!);
 			t.expect(nonce).toStrictEqual(expectedNonce);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"Get commands received via multicast or broadcast should not be answered",
+	{
+		nodeCapabilities: {
+			commandClasses: [CommandClasses["Z-Wave Plus Info"]],
+		},
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+		},
+
+		testBody: async (_t, _driver, node, mockController, mockNode) => {
+			async function sendGet(
+				frameType: "singlecast" | "multicast" | "broadcast",
+			): Promise<void> {
+				const request = new BridgeApplicationCommandRequest({
+					command: new ZWavePlusCCGet({
+						nodeId: node.id,
+					}),
+					frameType,
+					ownNodeId: mockController.ownNodeId,
+					fromForeignHomeId: false,
+					isExploreFrame: false,
+					isForeignFrame: false,
+					routedBusy: false,
+					targetNodeId: frameType === "multicast"
+						? [mockController.ownNodeId]
+						: mockController.ownNodeId,
+				});
+
+				await mockController.sendMessageToHost(request, mockNode);
+			}
+
+			await sendGet("singlecast");
+			await mockNode.expectControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof ZWavePlusCCReport,
+				{ timeout: 1000 },
+			);
+
+			for (const frameType of ["multicast", "broadcast"] as const) {
+				mockNode.clearReceivedControllerFrames();
+				await sendGet(frameType);
+				await wait(100);
+
+				mockNode.assertReceivedControllerFrame(
+					(frame) =>
+						frame.type === MockZWaveFrameType.Request
+						&& frame.payload instanceof ZWavePlusCCReport,
+					{
+						noMatch: true,
+						errorMessage: `${frameType} Get should not be answered`,
+					},
+				);
+			}
 		},
 	},
 );

@@ -956,9 +956,14 @@ export class MeterCCReport extends MeterCC {
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 
+		// The rate type field only exists in V2+ reports, the third scale bit in V3+ reports.
+		// Ignore them if the device advertises a lower version.
+		const rateType = ccVersion >= 2 ? this.rateType : RateType.Unspecified;
+		const scaleNumber = ccVersion >= 3 ? this.scale : this.scale & 0b11;
+
 		const meter = getMeter(this.type);
-		const scale = getMeterScale(this.type, this.scale)
-			?? getUnknownMeterScale(this.scale);
+		const scale = getMeterScale(this.type, scaleNumber)
+			?? getUnknownMeterScale(scaleNumber);
 
 		// Filter out unknown meter types and scales, unless the strict validation is disabled
 		const measurementValidation = !ctx.getDeviceConfig?.(
@@ -970,8 +975,8 @@ export class MeterCCReport extends MeterCC {
 				`Unknown meter type ${num2hex(this.type)} or corrupted data`,
 			)(!!meter);
 			validatePayload.withReason(
-				`Unknown meter scale ${num2hex(this.scale)} or corrupted data`,
-			)(scale.label !== getUnknownMeterScale(this.scale).label);
+				`Unknown meter scale ${num2hex(scaleNumber)} or corrupted data`,
+			)(scale.label !== getUnknownMeterScale(scaleNumber).label);
 
 			// Filter out unsupported meter types, scales and rate types if possible
 			if (ccVersion >= 2) {
@@ -992,7 +997,7 @@ export class MeterCCReport extends MeterCC {
 				if (supportedScales?.length) {
 					validatePayload.withReason(
 						`Unsupported meter scale ${scale.label} or corrupted data`,
-					)(supportedScales.includes(this.scale));
+					)(supportedScales.includes(scaleNumber));
 				}
 
 				const supportedRateTypes = this.getValue<RateType[]>(
@@ -1004,27 +1009,27 @@ export class MeterCCReport extends MeterCC {
 						`Unsupported rate type ${
 							getEnumMemberName(
 								RateType,
-								this.rateType,
+								rateType,
 							)
 						} or corrupted data`,
-					)(supportedRateTypes.includes(this.rateType));
+					)(supportedRateTypes.includes(rateType));
 				}
 			}
 		}
 
 		const valueValue = MeterCCValues.value(
 			this.type,
-			this.rateType,
-			this.scale,
+			rateType,
+			scaleNumber,
 		);
 		this.setMetadata(ctx, valueValue, {
 			...valueValue.meta,
-			label: getValueLabel(this.type, this.scale, this.rateType),
+			label: getValueLabel(this.type, scaleNumber, rateType),
 			unit: scale.unit,
 			ccSpecific: {
 				meterType: this.type,
-				scale: this.scale,
-				rateType: this.rateType,
+				scale: scaleNumber,
+				rateType,
 			},
 		});
 		this.setValue(ctx, valueValue, this.value);

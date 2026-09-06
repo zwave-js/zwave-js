@@ -3858,6 +3858,7 @@ export class ZWaveController
 				);
 
 				this.emit("node removed", node, RemoveNodeReason.ProxyExcluded);
+				this._nodes.delete(node.id);
 			}
 		} else if (msg instanceof ApplicationUpdateRequestNodeAdded) {
 			// A node was included by another controller

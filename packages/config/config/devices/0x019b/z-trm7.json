@@ -45,7 +45,7 @@
 		},
 		{
 			"#": "3",
-			"$import": "templates/heatit_template.json#sensor_resistance_ntc"
+			"$import": "templates/heatit_template.json#sensor_resistance_ntc_ordered"
 		},
 		{
 			"#": "4",
@@ -110,7 +110,14 @@
 		},
 		{
 			"#": "17",
-			"$import": "templates/heatit_template.json#standby_display_brightness"
+			"$import": "templates/heatit_template.json#standby_display_brightness",
+			"minValue": 0,
+			"options": [
+				{
+					"label": "Off",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "18",

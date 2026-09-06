@@ -14,6 +14,10 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Switch" },
+		"2": { "label": "Motion Sensor" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

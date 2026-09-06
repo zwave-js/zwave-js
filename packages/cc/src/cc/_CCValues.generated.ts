@@ -8294,7 +8294,7 @@ export const ThermostatModeCCValues = Object.freeze({
 		},
 		options: {
 			internal: false,
-			minVersion: 1,
+			minVersion: 3,
 			secret: false,
 			stateful: true,
 			supportsEndpoints: true,

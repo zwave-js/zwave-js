@@ -11,6 +11,5 @@ module.exports = {
 		require("./hideTransferredComments.cjs")(...args),
 	importConfigCreatePR: (...args) =>
 		require("./importConfigCreatePR.cjs")(...args),
-	shouldAutomerge: (...args) => require("./shouldAutomerge.cjs")(...args),
 	escalate: (...args) => require("./escalate.cjs")(...args),
 };

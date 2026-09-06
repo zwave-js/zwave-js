@@ -10,6 +10,7 @@ import {
 	AssociationGroupInfoProfile,
 	BasicCommand,
 	CommandClass,
+	DeviceResetLocallyCommand,
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
@@ -176,6 +177,31 @@ test("the CommandListGet command should serialize correctly", async (t) => {
 			AssociationGroupInfoCommand.CommandListGet, // CC Command
 			0b1000_0000, // allow cache
 			6, // group id
+		]),
+	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
+		expected,
+	);
+});
+
+test("the CommandListReport command should serialize correctly", async (t) => {
+	const cc = new AssociationGroupInfoCCCommandListReport({
+		nodeId: 1,
+		groupId: 1,
+		commands: new Map([
+			[
+				CommandClasses["Device Reset Locally"],
+				[DeviceResetLocallyCommand.Notification],
+			],
+		]),
+	});
+	const expected = buildCCBuffer(
+		Uint8Array.from([
+			AssociationGroupInfoCommand.CommandListReport,
+			1, // group id
+			2, // list length in bytes
+			CommandClasses["Device Reset Locally"],
+			DeviceResetLocallyCommand.Notification,
 		]),
 	);
 	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(

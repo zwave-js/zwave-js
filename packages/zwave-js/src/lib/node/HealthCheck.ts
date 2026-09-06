@@ -43,7 +43,7 @@ export function formatLifelineHealthCheckRound(
 			? `  route changes:                   ${result.routeChanges}`
 			: "",
 		result.snrMargin != undefined
-			? `  SNR margin:                      ${result.snrMargin} dBm`
+			? `  SNR margin:                      ${result.snrMargin} dB`
 			: "",
 		result.failedPingsController != undefined
 			? `  failed pings → controller:       ${result.failedPingsController}/${healthCheckTestFrameCount} at normal power`

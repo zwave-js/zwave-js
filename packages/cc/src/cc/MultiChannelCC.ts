@@ -33,9 +33,11 @@ import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type PersistValuesContext,
 	getEffectiveCCVersion,
+	haveSameDestination,
 } from "../lib/CommandClass.js";
 import {
 	API,
@@ -1492,6 +1494,18 @@ export class MultiChannelCCCommandEncapsulation extends MultiChannelCC {
 	/** The destination end point (0-127) or an array of destination end points (1-7) */
 	public destination: MultiChannelCCDestination;
 
+	protected override determineRelation(
+		other: CommandClass,
+	): CommandRelation {
+		if (
+			other instanceof MultiChannelCCCommandEncapsulation
+			&& haveSameDestination(this.destination, other.destination)
+		) {
+			return this.encapsulated.getRelationTo(other.encapsulated);
+		}
+		return CommandRelation.Unrelated;
+	}
+
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		if (
 			ctx.getDeviceConfig?.(this.nodeId as number)?.compat
@@ -1719,6 +1733,15 @@ export class MultiChannelCCV1CommandEncapsulation extends MultiChannelCC {
 	}
 
 	public encapsulated!: CommandClass;
+
+	protected override determineRelation(
+		other: CommandClass,
+	): CommandRelation {
+		if (other instanceof MultiChannelCCV1CommandEncapsulation) {
+			return this.encapsulated.getRelationTo(other.encapsulated);
+		}
+		return CommandRelation.Unrelated;
+	}
 
 	public async serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.concat([

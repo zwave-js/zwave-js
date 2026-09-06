@@ -3145,16 +3145,31 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 
 		// If we actually received parameter info, store it
 		if (this.valueSize > 0) {
+			// The option fields only exist in V4+ reports.
+			// Ignore them if the device advertises a lower version.
+			const ccVersion = getEffectiveCCVersion(ctx, this);
+
+			let altersCapabilities: MaybeNotKnown<boolean>;
+			let isReadonly: MaybeNotKnown<boolean>;
+			let isAdvanced: MaybeNotKnown<boolean>;
+			let noBulkSupport: MaybeNotKnown<boolean>;
+			if (ccVersion >= 4) {
+				altersCapabilities = this.altersCapabilities;
+				isReadonly = this.isReadonly;
+				isAdvanced = this.isAdvanced;
+				noBulkSupport = this.noBulkSupport;
+			}
+
 			const baseInfo = {
 				type: "number",
 				format: this.valueFormat,
 				valueSize: this.valueSize,
-				requiresReInclusion: this.altersCapabilities,
+				requiresReInclusion: altersCapabilities,
 				readable: true,
-				writeable: !this.isReadonly,
+				writeable: !isReadonly,
 				allowManualEntry: true,
-				isAdvanced: this.isAdvanced,
-				noBulkSupport: this.noBulkSupport,
+				isAdvanced,
+				noBulkSupport,
 				isFromConfig: false,
 			} as const;
 

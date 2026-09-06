@@ -29,6 +29,7 @@ integrationTest(
 				CommandClasses.Basic,
 				ccCaps({
 					ccId: CommandClasses["Binary Sensor"],
+					version: 2,
 					supportedSensorTypes: [BinarySensorType.Motion],
 				}),
 			],

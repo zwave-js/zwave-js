@@ -39,6 +39,7 @@ import {
 import {
 	type CCRaw,
 	CommandClass,
+	CommandRelation,
 	type InterviewContext,
 	type PersistValuesContext,
 	type RefreshValuesContext,
@@ -396,6 +397,15 @@ export class BasicCCSet extends BasicCC {
 
 	public targetValue: number;
 
+	protected override determineRelation(other: CommandClass): CommandRelation {
+		if (other instanceof BasicCCSet) {
+			return this.targetValue === other.targetValue
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
+		}
+		return CommandRelation.Unrelated;
+	}
+
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([this.targetValue]);
 		return super.serialize(ctx);
@@ -462,6 +472,18 @@ export class BasicCCReport extends BasicCC {
 	public readonly targetValue: MaybeUnknown<number> | undefined;
 
 	public readonly duration: Duration | undefined;
+
+	protected override determineRelation(other: CommandClass): CommandRelation {
+		if (other instanceof BasicCCReport) {
+			return this.currentValue === other.currentValue
+					&& this.targetValue === other.targetValue
+					&& (this.duration ?? Duration.default())
+						.equals(other.duration ?? Duration.default())
+				? CommandRelation.Redundant
+				: CommandRelation.Supersedes;
+		}
+		return CommandRelation.Unrelated;
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		// Basic CC Report persists its values itself, since there are some
@@ -545,4 +567,11 @@ export class BasicCCReport extends BasicCC {
 
 @CCCommand(BasicCommand.Get)
 @expectedCCResponse(BasicCCReport)
-export class BasicCCGet extends BasicCC {}
+export class BasicCCGet extends BasicCC {
+	protected override determineRelation(other: CommandClass): CommandRelation {
+		if (other instanceof BasicCCGet) {
+			return CommandRelation.Redundant;
+		}
+		return CommandRelation.Unrelated;
+	}
+}

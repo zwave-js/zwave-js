@@ -13,6 +13,18 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "LED 1" },
+		"2": { "label": "LED 2" },
+		"3": { "label": "LED 3" },
+		"4": { "label": "LED 4" },
+		"5": { "label": "LED 5" },
+		"6": { "label": "Relay 1" },
+		"7": { "label": "Relay 2" },
+		"8": { "label": "Relay 3" },
+		"9": { "label": "Relay 4" },
+		"10": { "label": "Relay 5" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

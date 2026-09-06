@@ -13,6 +13,12 @@
 		"min": "0.0",
 		"max": "2.255"
 	},
+	"endpoints": {
+		"1": { "label": "Thermostat" },
+		"2": { "label": "Room Sensor" },
+		"3": { "label": "External Sensor" },
+		"4": { "label": "Floor Sensor" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

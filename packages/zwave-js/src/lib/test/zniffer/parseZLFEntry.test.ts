@@ -38,6 +38,18 @@ test("parse complete data frame", async (t) => {
 	t.expect(parsed.entries[0].msg).toBeInstanceOf(ZnifferDataMessage);
 });
 
+test("parse CTT PTI frame with zeroed DCH header", async (t) => {
+	const rawMsg = Bytes.from(
+		"8013fa7c93addd8801220000005b20000000000000000000000000f8c4dae60701410a0c02008f68f9000f0006515df5",
+		"hex",
+	);
+	const parsed = parseZLFEntry(rawMsg, 0);
+	t.expect(parsed.complete).toBe(true);
+	t.expect(parsed.entries).toHaveLength(1);
+	t.expect(parsed.entries[0].msg).toBeInstanceOf(ZnifferDataMessage);
+	t.expect(parsed.entries[0].msg).toHaveProperty("checksumOK", true);
+});
+
 test("parse incomplete data frame", async (t) => {
 	let rawMsg = Bytes.from("0c0b3e6713addd88010100000021fe", "hex");
 	let parsed = parseZLFEntry(rawMsg, 0);

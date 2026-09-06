@@ -14,6 +14,12 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"2": { "label": "Switch 1" },
+		"3": { "label": "Switch 2" },
+		"4": { "label": "Switch 3" },
+		"5": { "label": "Switch 4" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

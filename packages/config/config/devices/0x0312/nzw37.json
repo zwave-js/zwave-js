@@ -20,5 +20,9 @@
 	"firmwareVersion": {
 		"min": "0.0",
 		"max": "255.255"
+	},
+	"endpoints": {
+		"1": { "label": "Switch 1" },
+		"2": { "label": "Switch 2" }
 	}
 }

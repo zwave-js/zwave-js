@@ -1,0 +1,516 @@
+{
+	"manufacturer": "Zooz",
+	"manufacturerId": "0x027a",
+	"label": "ZEN12",
+	"description": "Motion Dimmer",
+	"devices": [
+		{
+			"productType": "0x7000",
+			"productId": "0x0012"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 1,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "On/Off Control",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Dimmer Control",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Dimmer Control (Press and Hold)",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Motion Trigger",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Lux Sensor Trigger",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
+		},
+		{
+			"#": "2",
+			"label": "LED Indicator Color",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "White",
+					"value": 0
+				},
+				{
+					"label": "Blue",
+					"value": 1
+				},
+				{
+					"label": "Green",
+					"value": 2
+				},
+				{
+					"label": "Red",
+					"value": 3
+				},
+				{
+					"label": "Yellow",
+					"value": 4
+				},
+				{
+					"label": "Cyan",
+					"value": 5
+				},
+				{
+					"label": "Magenta",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "45",
+			"label": "LED Indicator Multi-Color",
+			"description": "Color of the LED indicator in the opposite switch state, instead of off.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Off",
+					"value": 0
+				},
+				{
+					"label": "White",
+					"value": 1
+				},
+				{
+					"label": "Blue",
+					"value": 2
+				},
+				{
+					"label": "Green",
+					"value": 3
+				},
+				{
+					"label": "Red",
+					"value": 4
+				},
+				{
+					"label": "Yellow",
+					"value": 5
+				},
+				{
+					"label": "Cyan",
+					"value": 6
+				},
+				{
+					"label": "Magenta",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": "3",
+			"$import": "templates/zooz_template.json#led_indicator_brightness_1_10"
+		},
+		{
+			"#": "23",
+			"$import": "templates/zooz_template.json#led_confirm_config_change"
+		},
+		{
+			"#": "9",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "LED Indicator (Scene Control)",
+			"description": "When enabled, LED indicator will flash to confirm scene activation."
+		},
+		{
+			"#": "4",
+			"$import": "templates/zooz_template.json#auto_on_timer_0x_1x_3x_7x"
+		},
+		{
+			"#": "6[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-On Timer Trigger: Button",
+			"defaultValue": 1
+		},
+		{
+			"#": "6[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-On Timer Trigger: 3-Way Switch",
+			"defaultValue": 1
+		},
+		{
+			"#": "6[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-On Timer Trigger: Z-Wave",
+			"defaultValue": 1
+		},
+		{
+			"#": "5",
+			"$import": "templates/zooz_template.json#auto_off_timer_0x_1x_3x_7x"
+		},
+		{
+			"#": "7[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-Off Timer Trigger: Button",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-Off Timer Trigger: 3-Way Switch",
+			"defaultValue": 1
+		},
+		{
+			"#": "7[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Auto Turn-Off Timer Trigger: Z-Wave",
+			"defaultValue": 1
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
+		},
+		{
+			"#": "24",
+			"$import": "templates/zooz_template.json#dimmer_on_ramp_rate"
+		},
+		{
+			"#": "25",
+			"$import": "templates/zooz_template.json#dimmer_off_ramp_rate",
+			"defaultValue": 2
+		},
+		{
+			"#": "27",
+			"$import": "templates/zooz_template.json#zwave_on_dimmer_ramp_rate_match_manual_255"
+		},
+		{
+			"#": "28",
+			"$import": "templates/zooz_template.json#zwave_off_dimmer_ramp_rate_match_manual_255"
+		},
+		{
+			"#": "26",
+			"$import": "templates/zooz_template.json#local_dimming_speed",
+			"description": "The time it takes to get from 0% to 100% brightness when pressing and holding the dimming button."
+		},
+		{
+			"#": "29",
+			"$import": "templates/zooz_template.json#local_dimming_speed_group_3_and_4",
+			"description": "The time it takes to get from 0% to 100% brightness of dimmers and smart bulbs associated with Group 3 and 4 when pressing and holding the dimming button."
+		},
+		{
+			"#": "30",
+			"$import": "templates/zooz_template.json#min_brightness"
+		},
+		{
+			"#": "31",
+			"$import": "templates/zooz_template.json#max_brightness"
+		},
+		{
+			"#": "41",
+			"$import": "templates/zooz_template.json#gamma_factor"
+		},
+		{
+			"#": "43",
+			"$import": "templates/zooz_template.json#night_light_mode",
+			"description": "Brightness level the dimmer turns on to while it is off."
+		},
+		{
+			"#": "44",
+			"$import": "templates/zooz_template.json#on_off_switch_mode"
+		},
+		{
+			"#": "46",
+			"$purpose": "orientation",
+			"label": "Dimming Button Orientation",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Left button dims, right button brightens",
+					"value": 0
+				},
+				{
+					"label": "Left button brightens, right button dims",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "33",
+			"label": "Top Button Single Tap",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Previous brightness",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (Parameter 34)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness (Parameter 31)",
+					"value": 2
+				},
+				{
+					"label": "Full brightness",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "32",
+			"label": "Top Button Double Tap",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Full brightness",
+					"value": 0
+				},
+				{
+					"label": "Configured custom brightness (Parameter 34)",
+					"value": 1
+				},
+				{
+					"label": "Configured maximum brightness (Parameter 31)",
+					"value": 2
+				},
+				{
+					"label": "Double tap disabled",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "34",
+			"$import": "templates/zooz_template.json#custom_brightness"
+		},
+		{
+			"#": "39",
+			"$import": "templates/zooz_template.json#custom_brightness",
+			"label": "Custom Brightness Level (Association)",
+			"description": "Brightness the dimmer turns on to when an associated device sends a Basic Set on command."
+		},
+		{
+			"#": "8",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Scene Control"
+		},
+		{
+			"#": "40",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Scene Control Multi-Tap",
+			"description": "When disabled, only single taps report via central scene.",
+			"defaultValue": 0
+		},
+		{
+			"#": "37",
+			"$import": "templates/zooz_template.json#enable_scene_control_3way"
+		},
+		{
+			"#": "11",
+			"$import": "~/templates/master_template.json#smart_switch_mode_0-2"
+		},
+		{
+			"#": "36",
+			"$import": "templates/zooz_template.json#smart_switch_mode_dimming_reporting_3_options"
+		},
+		{
+			"#": "42",
+			"$import": "templates/zooz_template.json#smart_switch_mode_reporting"
+		},
+		{
+			"#": "10",
+			"$import": "templates/zooz_template.json#local_programming",
+			"defaultValue": 0
+		},
+		{
+			"#": "35",
+			"label": "3-Way Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Toggle switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch with dimming control",
+					"value": 1
+				},
+				{
+					"label": "Momentary switch",
+					"value": 2
+				},
+				{
+					"label": "Momentary switch with smart sequence",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "13",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Motion Trigger",
+			"defaultValue": 0
+		},
+		{
+			"#": "14",
+			"label": "Sensor Mode",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Motion and lux sensor disabled",
+					"value": 0
+				},
+				{
+					"label": "Motion sensor always enabled",
+					"value": 1
+				},
+				{
+					"label": "Motion sensor enabled in night mode only",
+					"value": 2
+				},
+				{
+					"label": "Lux sensor only",
+					"value": 3
+				}
+			]
+		},
+		{
+			"#": "21",
+			"$purpose": "motion_sensitivity",
+			"label": "Motion Sensor Sensitivity",
+			"description": "1 = Low sensitivity, 10 = High sensitivity",
+			"valueSize": 1,
+			"minValue": 1,
+			"maxValue": 10,
+			"defaultValue": 5
+		},
+		{
+			"#": "17",
+			"$purpose": "motion_clear_delay",
+			"label": "Motion Detection: Timeout",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 3600,
+			"defaultValue": 30
+		},
+		{
+			"#": "38",
+			// The knowledge base lists this parameter as 1 byte, which cannot hold the documented range
+			"label": "Manual Override Timer",
+			"description": "How long the dimmer ignores sensor triggers after being turned on or off manually or via Z-Wave.",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 1,
+			"maxValue": 3600,
+			"defaultValue": 10
+		},
+		{
+			"#": "15",
+			"label": "Night Mode Brightness Threshold",
+			"description": "Brightness below which the dimmer switches to night mode.",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": 1,
+			"maxValue": 1000,
+			"defaultValue": 25
+		},
+		{
+			"#": "16",
+			"label": "Day Mode Brightness Threshold",
+			"description": "Brightness above which the dimmer switches to day mode.",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": 1,
+			"maxValue": 1000,
+			"defaultValue": 100
+		},
+		{
+			"#": "18",
+			"label": "Auto Turn-Off After Dusk",
+			"description": "Applies when the dimmer is turned on in night mode and parameter 14 is set to lux sensor only.",
+			"valueSize": 2,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 1200,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "19",
+			"$purpose": "reporting_threshold.brightness",
+			"label": "Brightness Reporting Change Threshold",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": 0,
+			"maxValue": 200,
+			"defaultValue": 20,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "20",
+			"$purpose": "reporting_interval.brightness",
+			"label": "Brightness Reporting Interval",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 5,
+			"maxValue": 120,
+			"defaultValue": 10
+		},
+		{
+			"#": "22",
+			"$purpose": "calibration.brightness",
+			"label": "Brightness Calibration",
+			"description": "Value is offset by 100: 0 = -100 lux, 100 = 0 lux, 200 = +100 lux",
+			"valueSize": 1,
+			"unit": "lux",
+			"minValue": 0,
+			"maxValue": 200,
+			"defaultValue": 100,
+			"unsigned": true
+		}
+	],
+	"metadata": {
+		"inclusion": "Click the top button 3 times quickly.",
+		"exclusion": "Click the top button 3 times quickly.",
+		"reset": "1. Press and hold the main button for 10 seconds until the LED indicator starts blinking green\n2. Release the button\n3. Immediately tap the left dimming button 5 times to complete the reset",
+		"manual": "https://www.support.getzooz.com/kb/article/2424-zen12-motion-dimmer-product-manual/"
+	}
+}

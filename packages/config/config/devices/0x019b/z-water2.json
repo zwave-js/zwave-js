@@ -14,6 +14,19 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": { "label": "Output 1" },
+		"2": { "label": "Output 2" },
+		"3": { "label": "Output 3" },
+		"4": { "label": "Output 4" },
+		"5": { "label": "Output 5" },
+		"6": { "label": "Output 6" },
+		"7": { "label": "Output 7" },
+		"8": { "label": "Output 8" },
+		"9": { "label": "Output 9" },
+		"10": { "label": "Temperature Sensor 1" },
+		"11": { "label": "Temperature Sensor 2" }
+	},
 	"paramInformation": [
 		{
 			"#": "1",

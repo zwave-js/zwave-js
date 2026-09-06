@@ -4817,7 +4817,7 @@ export class CommandClass implements CCId {
     // Warning: (ae-forgotten-export) The symbol "CCValue" needs to be exported by the entry point index.d.ts
     protected ensureMetadata(ctx: GetValueDB, ccValue: CCValue, meta?: ValueMetadata): void;
     expectsCCResponse(ctx: GetNode<NodeId & SupportsCC>): boolean;
-    readonly frameType?: FrameType;
+    get frameType(): FrameType | undefined;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): CommandClass | Promise<CommandClass>;
     protected getCCValue(valueId: ValueID): StaticCCValue | DynamicCCValue | undefined;
@@ -5525,6 +5525,16 @@ export const defaultCCValueOptions: {
     readonly supportsEndpoints: true;
     readonly autoCreate: true;
 };
+
+// Warning: (ae-missing-release-tag) "DeviceIdDataFormat" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export enum DeviceIdDataFormat {
+    // (undocumented)
+    Binary = 1,
+    // (undocumented)
+    UTF8 = 0
+}
 
 // Warning: (ae-missing-release-tag) "DeviceIdType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -12024,7 +12034,7 @@ export class ManufacturerSpecificCCDeviceSpecificGet extends ManufacturerSpecifi
     // (undocumented)
     deviceIdType: DeviceIdType;
     // (undocumented)
-    static from(_raw: CCRaw, _ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificGet;
+    static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificGet;
     // (undocumented)
     serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
@@ -12045,9 +12055,11 @@ export interface ManufacturerSpecificCCDeviceSpecificGetOptions {
 export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpecificCC {
     constructor(options: WithAddress<ManufacturerSpecificCCDeviceSpecificReportOptions>);
     // (undocumented)
-    readonly deviceId: string;
+    readonly deviceId: string | Bytes;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): ManufacturerSpecificCCDeviceSpecificReport;
+    // (undocumented)
+    serialize(ctx: CCEncodingContext): Promise<Bytes>;
     // (undocumented)
     toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry;
     // (undocumented)
@@ -12059,7 +12071,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpec
 // @public (undocumented)
 export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
     // (undocumented)
-    deviceId: string;
+    deviceId: string | Uint8Array;
     // (undocumented)
     type: DeviceIdType;
 }
@@ -17740,6 +17752,8 @@ export class SecurityCCCommandEncapsulation extends SecurityCC {
     // (undocumented)
     protected computeEncapsulationOverhead(): number;
     // (undocumented)
+    decryptedCCBytes: BytesView | undefined;
+    // (undocumented)
     encapsulated: CommandClass;
     // (undocumented)
     static from(raw: CCRaw, ctx: CCParsingContext): Promise<SecurityCCCommandEncapsulation>;
@@ -19180,7 +19194,7 @@ export const ThermostatModeCCValues: Readonly<{
         };
         options: {
             readonly internal: false;
-            readonly minVersion: 1;
+            readonly minVersion: 3;
             readonly secret: false;
             readonly stateful: true;
             readonly supportsEndpoints: true;
