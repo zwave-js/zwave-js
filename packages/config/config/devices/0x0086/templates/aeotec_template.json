@@ -4598,5 +4598,82 @@
 				"value": 2
 			}
 		]
+	},
+	// Gen8 sensor settings
+	"led_indicator_periodic_reports": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "LED Indicator: Periodic Reports",
+		"defaultValue": 1
+	},
+	"led_indicator_mold_danger": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "LED Indicator: Mold Danger",
+		"defaultValue": 1
+	},
+	"sensor_limit_enable_temperature_upper": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Temperature Reports: Send Above Upper Limit"
+	},
+	"sensor_limit_enable_temperature_lower": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Temperature Reports: Send Below Lower Limit"
+	},
+	"sensor_limit_enable_humidity_upper": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Humidity Reports: Send Above Upper Limit"
+	},
+	"sensor_limit_enable_humidity_lower": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Humidity Reports: Send Below Lower Limit"
+	},
+	"threshold_check_time": {
+		"label": "Threshold Check Time",
+		"description": "Allowable range: 30-2678400",
+		"valueSize": 4,
+		"unit": "seconds",
+		"minValue": 0,
+		"maxValue": 2678400,
+		"defaultValue": 900,
+		"unsigned": true,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
+	},
+	"periodic_reports_interval": {
+		"label": "Periodic Reports Interval",
+		"description": "Allowable range: 30-2678400",
+		"valueSize": 4,
+		"unit": "seconds",
+		"minValue": 0,
+		"maxValue": 2678400,
+		"defaultValue": 43200,
+		"unsigned": true,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
+	},
+	"watermark_humidity_upper": {
+		"label": "Humidity Reports: Upper Limit",
+		"valueSize": 2,
+		"unit": "0.1 %",
+		"minValue": 0,
+		"maxValue": 1000,
+		"defaultValue": 700,
+		"unsigned": true
+	},
+	"watermark_humidity_lower": {
+		"label": "Humidity Reports: Lower Limit",
+		"valueSize": 2,
+		"unit": "0.1 %",
+		"minValue": 0,
+		"maxValue": 1000,
+		"defaultValue": 300,
+		"unsigned": true
 	}
 }
