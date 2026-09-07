@@ -20,18 +20,24 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 				)
 					return;
 
-				const match = node.value.raw.match(/ *\(default\) */i);
-				if (!match) return;
-				const startsWithWhitespace = match[0].startsWith(" ");
-				const endsWithWhitespace = match[0].endsWith(" ");
-				const before = node.value.raw.slice(0, match.index);
-				const after = node.value.raw.slice(
-					match.index! + match[0].length,
-				);
+				const marker = "(default)";
+				const markerIndex = node.value.raw
+					.toLowerCase()
+					.indexOf(marker);
+				if (markerIndex === -1) return;
 
+				let start = markerIndex;
+				while (node.value.raw[start - 1] === " ") start--;
+				let end = markerIndex + marker.length;
+				while (node.value.raw[end] === " ") end++;
+
+				const before = node.value.raw.slice(0, start);
+				const after = node.value.raw.slice(end);
 				const fixed =
 					before
-					+ (startsWithWhitespace && endsWithWhitespace ? " " : "")
+					+ (start < markerIndex && end > markerIndex + marker.length
+						? " "
+						: "")
 					+ after;
 
 				context.report({
