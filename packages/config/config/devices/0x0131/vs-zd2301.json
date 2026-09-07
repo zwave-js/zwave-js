@@ -58,11 +58,7 @@
 			"label": "Luminance Report Threshold",
 			"valueSize": 1,
 			"unit": "%",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 50] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 50] }],
 			"defaultValue": 10,
 			"options": [
 				{

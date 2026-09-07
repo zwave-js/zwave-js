@@ -14,7 +14,6 @@
 		"valueSize": 4,
 		"unsigned": true,
 		"defaultValue": 255,
-		// oxfmt-ignore
 		"allowed": [
 			{
 				"range": [0, 99]

@@ -214,11 +214,7 @@
 			"description": "Venetian mode only",
 			"valueSize": 1,
 			"unit": "0.1s",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 250] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 250] }],
 			"defaultValue": 15,
 			"unsigned": true,
 			"options": [

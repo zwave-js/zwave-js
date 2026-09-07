@@ -265,11 +265,7 @@
 			"#": "159",
 			"label": "Shutter: Favorite Position",
 			"valueSize": 1,
-			// oxfmt-ignore
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
+			"allowed": [{ "range": [0, 99] }, { "value": 255 }],
 			"defaultValue": 50,
 			"unsigned": true,
 			"options": [
@@ -283,11 +279,7 @@
 			"#": "160",
 			"label": "Slats: Favorite Angle",
 			"valueSize": 1,
-			// oxfmt-ignore
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
+			"allowed": [{ "range": [0, 99] }, { "value": 255 }],
 			"defaultValue": 50,
 			"unsigned": true,
 			"options": [

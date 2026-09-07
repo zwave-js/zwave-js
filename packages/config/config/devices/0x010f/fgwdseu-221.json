@@ -55,11 +55,7 @@
 			"description": "Allowable range: 10-45000 (single switch mode), 10-36200 (double switch mode)",
 			"valueSize": 4,
 			"unit": "0.1 W",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [10, 45000] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [10, 45000] }],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -74,11 +70,7 @@
 			"description": "Double switch mode only",
 			"valueSize": 4,
 			"unit": "0.1 W",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [10, 36200] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [10, 36200] }],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -518,11 +510,7 @@
 			"label": "First Channel - Periodic Power Reports",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 32400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 32400] }],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -543,11 +531,7 @@
 			"label": "Second Channel - Periodic Power Reports",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 32400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 32400] }],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -569,11 +553,7 @@
 			"label": "First Channel - Periodic Energy Reports",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 32400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 32400] }],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -595,11 +575,7 @@
 			"label": "Second Channel - Periodic Energy Reports",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 32400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 32400] }],
 			"defaultValue": 3600,
 			"options": [
 				{

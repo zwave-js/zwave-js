@@ -13,11 +13,7 @@
 		"valueSize": 2,
 		"unit": "lux",
 		"defaultValue": 2000,
-		// oxfmt-ignore
-		"allowed": [
-			{ "value": 0 },
-			{ "range": [2, 2000] }
-		],
+		"allowed": [{ "value": 0 }, { "range": [2, 2000] }],
 		"options": [
 			{
 				"label": "Execute learn sequence",
@@ -36,11 +32,7 @@
 		"unit": "minutes",
 		"defaultValue": 0,
 		"unsigned": true,
-		// oxfmt-ignore
-		"allowed": [
-			{ "range": [0, 60] },
-			{ "value": 255 }
-		],
+		"allowed": [{ "range": [0, 60] }, { "value": 255 }],
 		"options": [
 			{
 				"label": "Disable, light off completely",
@@ -77,11 +69,7 @@
 		"valueSize": 1,
 		"unit": "minutes",
 		"defaultValue": 0,
-		// oxfmt-ignore
-		"allowed": [
-			{ "value": 0 },
-			{ "range": [5, 120] }
-		],
+		"allowed": [{ "value": 0 }, { "range": [5, 120] }],
 		"options": [
 			{
 				"label": "Disable",

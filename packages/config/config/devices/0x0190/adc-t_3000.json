@@ -71,11 +71,7 @@
 			"label": "Calibration Temperature",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "range": [-100, 100], "step": 10 },
-				{ "value": -1 }
-			],
+			"allowed": [{ "range": [-100, 100], "step": 10 }, { "value": -1 }],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -120,11 +116,7 @@
 			"label": "Swing",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [0, 30], "step": 5 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [0, 30], "step": 5 }],
 			"defaultValue": 5,
 			"options": [
 				{
@@ -169,11 +161,7 @@
 			"label": "Overshoot",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [0, 30], "step": 5 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [0, 30], "step": 5 }],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -236,11 +224,7 @@
 			"label": "Balance Setpoint",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [0, 950], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [0, 950], "step": 10 }],
 			"defaultValue": 300,
 			"options": [
 				{
@@ -312,11 +296,7 @@
 			"label": "Maximum Heat Setpoint",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [350, 950], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [350, 950], "step": 10 }],
 			"defaultValue": 950,
 			"options": [
 				{
@@ -361,11 +341,7 @@
 			"label": "Minimum Heat Setpoint",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [350, 950], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [350, 950], "step": 10 }],
 			"defaultValue": 350,
 			"options": [
 				{
@@ -410,11 +386,7 @@
 			"label": "Maximum Cool Setpoint",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [500, 950], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [500, 950], "step": 10 }],
 			"defaultValue": 950,
 			"options": [
 				{
@@ -459,11 +431,7 @@
 			"label": "Minimum Cool Setpoint",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [500, 950], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [500, 950], "step": 10 }],
 			"defaultValue": 500,
 			"options": [
 				{
@@ -1174,11 +1142,7 @@
 			"label": "Heat Differential",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [10, 100], "step": 5 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [10, 100], "step": 5 }],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -1223,11 +1187,7 @@
 			"label": "Cool Differential",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [10, 100], "step": 5 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [10, 100], "step": 5 }],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -1273,11 +1233,7 @@
 			"label": "Temperature Reporting Threshold",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [5, 20], "step": 5 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [5, 20], "step": 5 }],
 			"defaultValue": 10,
 			"options": [
 				{
@@ -1591,11 +1547,7 @@
 			"label": "Remote Temperature Differential",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [0, 990], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [0, 990], "step": 10 }],
 			"defaultValue": 250,
 			"options": [
 				{
@@ -1672,11 +1624,7 @@
 			"label": "Dehumidify by AC Offset",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [0, 100], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [0, 100], "step": 10 }],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -1926,11 +1874,7 @@
 			"label": "Vent Maximum Outdoor Temperature",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [0, 990], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [0, 990], "step": 10 }],
 			"defaultValue": -1,
 			"options": [
 				{
@@ -1975,11 +1919,7 @@
 			"label": "Vent Minimum Outdoor Temperature",
 			"valueSize": 4,
 			"unit": "0.1 °F",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -1 },
-				{ "range": [0, 990], "step": 10 }
-			],
+			"allowed": [{ "value": -1 }, { "range": [0, 990], "step": 10 }],
 			"defaultValue": -1,
 			"options": [
 				{

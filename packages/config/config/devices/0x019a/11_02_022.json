@@ -174,11 +174,7 @@
 			"label": "High Luminance Threshold",
 			"valueSize": 4,
 			"unit": "lux",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [20, 64000] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [20, 64000] }],
 			"defaultValue": 0,
 			"options": [
 				{

@@ -101,11 +101,7 @@
 			"label": "Power (W) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 2678400] }],
 			"defaultValue": 600,
 			"options": [
 				{
@@ -120,11 +116,7 @@
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 2678400] }],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -139,11 +131,7 @@
 			"label": "Voltage (V) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 2678400] }],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -158,11 +146,7 @@
 			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 2678400] }],
 			"defaultValue": 0,
 			"options": [
 				{

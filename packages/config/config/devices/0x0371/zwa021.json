@@ -127,11 +127,7 @@
 			"label": "Temperature Offset",
 			"valueSize": 1,
 			"unit": "0.1 °C",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": -128 },
-				{ "range": [-50, 50] }
-			],
+			"allowed": [{ "value": -128 }, { "range": [-50, 50] }],
 			"defaultValue": 0,
 			"options": [
 				{

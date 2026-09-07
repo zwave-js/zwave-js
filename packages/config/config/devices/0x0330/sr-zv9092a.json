@@ -31,11 +31,7 @@
 			"label": "Overcurrent Protection",
 			"valueSize": 1,
 			"unit": "A",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 16] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 16] }],
 			"defaultValue": 16,
 			"options": [
 				{
@@ -87,11 +83,7 @@
 			"label": "Overheat Protection",
 			"valueSize": 1,
 			"unit": "°C",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [20, 60] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [20, 60] }],
 			"defaultValue": 45,
 			"options": [
 				{
@@ -218,11 +210,7 @@
 			"label": "Automatic Reporting: Temperature Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [2, 10] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [2, 10] }],
 			"defaultValue": 2,
 			"options": [
 				{
@@ -237,11 +225,7 @@
 			"label": "Automatic Reporting: Humidity Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 28800] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 28800] }],
 			"defaultValue": 300,
 			"options": [
 				{

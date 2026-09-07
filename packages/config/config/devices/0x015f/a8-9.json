@@ -178,11 +178,7 @@
 			"label": "Smoke Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 60,
 			"options": [
 				{
@@ -196,11 +192,7 @@
 			"label": "PIR Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 60,
 			"options": [
 				{
@@ -214,11 +206,7 @@
 			"label": "PM2.5 Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 120,
 			"options": [
 				{
@@ -232,11 +220,7 @@
 			"label": "CO2 Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 120,
 			"options": [
 				{
@@ -251,11 +235,7 @@
 			"label": "Temperature Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 180,
 			"options": [
 				{
@@ -270,11 +250,7 @@
 			"label": "Humidity Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 180,
 			"options": [
 				{
@@ -288,11 +264,7 @@
 			"label": "VOC Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 180,
 			"options": [
 				{
@@ -307,11 +279,7 @@
 			"label": "Brightness Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 300,
 			"options": [
 				{
@@ -325,11 +293,7 @@
 			"label": "dB Sensor: Auto-Report Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			// oxfmt-ignore
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [35, 32767] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [35, 32767] }],
 			"defaultValue": 300,
 			"options": [
 				{
