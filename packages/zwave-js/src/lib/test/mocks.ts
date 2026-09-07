@@ -27,6 +27,7 @@ import {
 } from "@zwave-js/serial";
 import { SendDataRequest } from "@zwave-js/serial/serialapi";
 import sinon from "sinon";
+
 import type { ZWaveNode } from "../node/Node.js";
 import * as nodeUtils from "../node/utils.js";
 
@@ -207,12 +208,7 @@ export interface CreateTestNodeOptions {
 	interviewStage?: InterviewStage;
 	isSecure?: MaybeNotKnown<boolean>;
 
-	commandClasses?: Partial<
-		Record<
-			CommandClasses,
-			Partial<CommandClassInfo>
-		>
-	>;
+	commandClasses?: Partial<Record<CommandClasses, Partial<CommandClassInfo>>>;
 	endpoints?: Record<
 		number,
 		Omit<CreateTestEndpointOptions, "index" | "nodeId">
@@ -336,12 +332,7 @@ export function createTestNode(
 export interface CreateTestEndpointOptions {
 	nodeId: number;
 	index: number;
-	commandClasses?: Partial<
-		Record<
-			CommandClasses,
-			Partial<CommandClassInfo>
-		>
-	>;
+	commandClasses?: Partial<Record<CommandClasses, Partial<CommandClassInfo>>>;
 }
 
 export function createTestEndpoint(
@@ -372,9 +363,11 @@ export function createTestEndpoint(
 			const defaultVersion = ccInfo?.isSupported
 				? getImplementedVersion(cc)
 				: 0;
-			return ccInfo?.version
+			return (
+				ccInfo?.version
 				?? host.getNode(options.nodeId)?.getCCVersion(cc)
-				?? defaultVersion;
+				?? defaultVersion
+			);
 		},
 	};
 

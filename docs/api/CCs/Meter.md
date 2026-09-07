@@ -7,27 +7,23 @@
 ### `get`
 
 ```ts
-async get(
-	options?: {
-		scale?: number;
-		rateType?: RateType;
-	},
-): Promise<MeterReading | undefined>;
+async get(options?: {
+	scale?: number;
+	rateType?: RateType;
+}): Promise<MeterReading | undefined>;
 ```
 
 ### `sendReport`
 
 ```ts
-async sendReport(
-	options: {
-		type: number;
-		scale: number;
-		value: number;
-		previousValue?: MaybeNotKnown<number>;
-		rateType?: RateType;
-		deltaTime?: MaybeUnknown<number>;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendReport(options: {
+	type: number;
+	scale: number;
+	value: number;
+	previousValue?: MaybeNotKnown<number>;
+	rateType?: RateType;
+	deltaTime?: MaybeUnknown<number>;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getAll`
@@ -42,26 +38,25 @@ async getAll(
 
 ```ts
 async getSupported(): Promise<
-	{
-		supportedRateTypes: readonly RateType[];
-		supportedScales: readonly number[];
-		supportsReset: boolean;
-		type: number;
-	} | undefined
+	| {
+			supportedRateTypes: readonly RateType[];
+			supportedScales: readonly number[];
+			supportsReset: boolean;
+			type: number;
+	  }
+	| undefined
 >;
 ```
 
 ### `sendSupportedReport`
 
 ```ts
-async sendSupportedReport(
-	options: {
-		type: number;
-		supportsReset: boolean;
-		supportedScales: readonly number[];
-		supportedRateTypes: readonly RateType[];
-	},
-): Promise<void>;
+async sendSupportedReport(options: {
+	type: number;
+	supportsReset: boolean;
+	supportedScales: readonly number[];
+	supportedRateTypes: readonly RateType[];
+}): Promise<void>;
 ```
 
 ### `reset`

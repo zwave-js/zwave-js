@@ -1,6 +1,8 @@
 import { Bytes, type BytesView, sum } from "@zwave-js/shared";
+
 import type { BasicDeviceClass } from "../registries/DeviceClasses.js";
 import { validatePayload } from "../util/misc.js";
+
 import { CommandClasses } from "./CommandClasses.js";
 import { NodeIDType } from "./NodeID.js";
 import type { ProtocolVersion } from "./Protocol.js";
@@ -199,16 +201,16 @@ export interface NodeProtocolInfo {
 	hasSpecificDeviceClass: boolean;
 }
 
-export interface NodeProtocolInfoAndDeviceClass
-	extends Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-{
+export interface NodeProtocolInfoAndDeviceClass extends Omit<
+	NodeProtocolInfo,
+	"hasSpecificDeviceClass"
+> {
 	basicDeviceClass: BasicDeviceClass;
 	genericDeviceClass: number;
 	specificDeviceClass: number;
 }
 
-export type NodeInformationFrame =
-	& NodeProtocolInfoAndDeviceClass
+export type NodeInformationFrame = NodeProtocolInfoAndDeviceClass
 	& ApplicationNodeInformation;
 
 export function parseNodeProtocolInfo(
@@ -269,7 +271,7 @@ export function parseNodeProtocolInfo(
 			nodeType = NodeType.Controller;
 			break;
 		case 0b1000:
-			// Routing end node
+		// Routing end node
 		default:
 			// Non-routing end node
 			nodeType = NodeType["End Node"];
@@ -381,10 +383,7 @@ export function parseNodeInformationFrame(
 	buffer: BytesView,
 	isLongRange: boolean = false,
 ): NodeInformationFrame {
-	const result = parseNodeProtocolInfoAndDeviceClass(
-		buffer,
-		isLongRange,
-	);
+	const result = parseNodeProtocolInfoAndDeviceClass(buffer, isLongRange);
 	const info = result.info;
 	let offset = result.bytesRead;
 

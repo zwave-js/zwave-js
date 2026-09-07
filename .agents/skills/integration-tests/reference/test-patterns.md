@@ -76,13 +76,18 @@ integrationTest(
 					ccId: CommandClasses["User Credential"],
 					isSupported: true,
 					numberOfSupportedUsers: 1,
-					supportedCredentialTypes: new Map([[1, {
-						numberOfCredentialSlots: 1,
-						minCredentialLength: 4,
-						maxCredentialLength: 10,
-						maxCredentialHashLength: 0,
-						supportsCredentialLearn: false,
-					}]]),
+					supportedCredentialTypes: new Map([
+						[
+							1,
+							{
+								numberOfCredentialSlots: 1,
+								minCredentialLength: 4,
+								maxCredentialLength: 10,
+								maxCredentialHashLength: 0,
+								supportsCredentialLearn: false,
+							},
+						],
+					]),
 				}),
 			],
 		},
@@ -127,51 +132,48 @@ import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest(
-	"UserCodeCCAPI.set uses Extended User Code Set on V2 nodes",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const api = node.commandClasses["User Code"];
-			await api.set(1, UserIDStatus.Enabled, "1234");
-
-			// Should use the V2 command
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet,
-				{
-					errorMessage: "Should have used ExtendedUserCodeSet",
-				},
-			);
-
-			// Should NOT use the V1 command
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCSet,
-				{
-					noMatch: true,
-					errorMessage: "Should NOT have used legacy UserCodeCCSet",
-				},
-			);
-		},
+integrationTest("UserCodeCCAPI.set uses Extended User Code Set on V2 nodes", {
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		const api = node.commandClasses["User Code"];
+		await api.set(1, UserIDStatus.Enabled, "1234");
+
+		// Should use the V2 command
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCExtendedUserCodeSet,
+			{
+				errorMessage: "Should have used ExtendedUserCodeSet",
+			},
+		);
+
+		// Should NOT use the V1 command
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCSet,
+			{
+				noMatch: true,
+				errorMessage: "Should NOT have used legacy UserCodeCCSet",
+			},
+		);
+	},
+});
 ```
 
 ---
@@ -194,71 +196,71 @@ import { Bytes } from "@zwave-js/shared";
 import { ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest(
-	"Interview discovers pre-existing users and credentials",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					supportsAllUsersChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[UserCredentialType.PINCode, {
+integrationTest("Interview discovers pre-existing users and credentials", {
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				supportsAllUsersChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
 							numberOfCredentialSlots: 10,
 							minCredentialLength: 4,
 							maxCredentialLength: 10,
 							maxCredentialHashLength: 0,
 							supportsCredentialLearn: false,
-						}],
-					]),
-				}),
-			],
-		},
-
-		customSetup: async (driver, controller, mockNode) => {
-			// Pre-populate user 1
-			mockNode.state.set("UserCredential_user_1", {
-				userType: UserCredentialUserType.General,
-				active: true,
-				credentialRule: UserCredentialRule.Single,
-				expiringTimeoutMinutes: 0,
-				nameEncoding: UserCredentialNameEncoding.ASCII,
-				userName: "Test User",
-				modifierType: UserCredentialModifierType.Locally,
-				modifierNodeId: 0,
-			});
-
-			// Pre-populate a PIN code credential for user 1
-			mockNode.state.set("UserCredential_cred_1_1_1", {
-				credentialData: Bytes.from("1234", "ascii"),
-				modifierType: UserCredentialModifierType.Locally,
-				modifierNodeId: 0,
-			});
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// The interview should have discovered the user
-			const userType = node.getValue(
-				UserCredentialCCValues.userType(1).endpoint(0),
-			);
-			t.expect(userType).toBe(UserCredentialUserType.General);
-
-			// And the credential
-			const credential = node.getValue(
-				UserCredentialCCValues.credential(
-					1,
-					UserCredentialType.PINCode,
-					1,
-				).endpoint(0),
-			);
-			t.expect(credential).toBeDefined();
-		},
+						},
+					],
+				]),
+			}),
+		],
 	},
-);
+
+	customSetup: async (driver, controller, mockNode) => {
+		// Pre-populate user 1
+		mockNode.state.set("UserCredential_user_1", {
+			userType: UserCredentialUserType.General,
+			active: true,
+			credentialRule: UserCredentialRule.Single,
+			expiringTimeoutMinutes: 0,
+			nameEncoding: UserCredentialNameEncoding.ASCII,
+			userName: "Test User",
+			modifierType: UserCredentialModifierType.Locally,
+			modifierNodeId: 0,
+		});
+
+		// Pre-populate a PIN code credential for user 1
+		mockNode.state.set("UserCredential_cred_1_1_1", {
+			credentialData: Bytes.from("1234", "ascii"),
+			modifierType: UserCredentialModifierType.Locally,
+			modifierNodeId: 0,
+		});
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		// The interview should have discovered the user
+		const userType = node.getValue(
+			UserCredentialCCValues.userType(1).endpoint(0),
+		);
+		t.expect(userType).toBe(UserCredentialUserType.General);
+
+		// And the credential
+		const credential = node.getValue(
+			UserCredentialCCValues.credential(
+				1,
+				UserCredentialType.PINCode,
+				1,
+			).endpoint(0),
+		);
+		t.expect(credential).toBeDefined();
+	},
+});
 ```
 
 **State key conventions** for UserCredential CC:

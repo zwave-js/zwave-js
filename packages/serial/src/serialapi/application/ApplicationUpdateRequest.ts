@@ -78,9 +78,8 @@ export class ApplicationUpdateRequest extends Message {
 		const updateType: ApplicationUpdateTypes = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
-		const CommandConstructor = getApplicationUpdateRequestConstructor(
-			updateType,
-		);
+		const CommandConstructor =
+			getApplicationUpdateRequestConstructor(updateType);
 		if (CommandConstructor) {
 			return CommandConstructor.from(
 				raw.withPayload(payload),
@@ -98,10 +97,7 @@ export class ApplicationUpdateRequest extends Message {
 	public readonly updateType: ApplicationUpdateTypes;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([
-			[this.updateType],
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[this.updateType], this.payload]);
 		return super.serialize(ctx);
 	}
 }
@@ -110,12 +106,9 @@ export interface ApplicationUpdateRequestWithNodeInfoOptions {
 	nodeInformation: NodeUpdatePayload;
 }
 
-export class ApplicationUpdateRequestWithNodeInfo
-	extends ApplicationUpdateRequest
-{
+export class ApplicationUpdateRequestWithNodeInfo extends ApplicationUpdateRequest {
 	public constructor(
-		options:
-			& ApplicationUpdateRequestWithNodeInfoOptions
+		options: ApplicationUpdateRequestWithNodeInfoOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -151,9 +144,7 @@ export class ApplicationUpdateRequestWithNodeInfo
 }
 
 @applicationUpdateType(ApplicationUpdateTypes.NodeInfo_Received)
-export class ApplicationUpdateRequestNodeInfoReceived
-	extends ApplicationUpdateRequestWithNodeInfo
-{}
+export class ApplicationUpdateRequestNodeInfoReceived extends ApplicationUpdateRequestWithNodeInfo {}
 
 @applicationUpdateType(ApplicationUpdateTypes.NodeInfo_RequestFailed)
 export class ApplicationUpdateRequestNodeInfoRequestFailed
@@ -166,21 +157,16 @@ export class ApplicationUpdateRequestNodeInfoRequestFailed
 }
 
 @applicationUpdateType(ApplicationUpdateTypes.Node_Added)
-export class ApplicationUpdateRequestNodeAdded
-	extends ApplicationUpdateRequestWithNodeInfo
-{}
+export class ApplicationUpdateRequestNodeAdded extends ApplicationUpdateRequestWithNodeInfo {}
 
 export interface ApplicationUpdateRequestNodeRemovedOptions {
 	nodeId: number;
 }
 
 @applicationUpdateType(ApplicationUpdateTypes.Node_Removed)
-export class ApplicationUpdateRequestNodeRemoved
-	extends ApplicationUpdateRequest
-{
+export class ApplicationUpdateRequestNodeRemoved extends ApplicationUpdateRequest {
 	public constructor(
-		options:
-			& ApplicationUpdateRequestNodeRemovedOptions
+		options: ApplicationUpdateRequestNodeRemovedOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -211,12 +197,9 @@ export interface ApplicationUpdateRequestSmartStartHomeIDReceivedBaseOptions {
 	supportedCCs: CommandClasses[];
 }
 
-class ApplicationUpdateRequestSmartStartHomeIDReceivedBase
-	extends ApplicationUpdateRequest
-{
+class ApplicationUpdateRequestSmartStartHomeIDReceivedBase extends ApplicationUpdateRequest {
 	public constructor(
-		options:
-			& ApplicationUpdateRequestSmartStartHomeIDReceivedBaseOptions
+		options: ApplicationUpdateRequestSmartStartHomeIDReceivedBaseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -294,28 +277,21 @@ class ApplicationUpdateRequestSmartStartHomeIDReceivedBase
 }
 
 @applicationUpdateType(ApplicationUpdateTypes.SmartStart_HomeId_Received)
-export class ApplicationUpdateRequestSmartStartHomeIDReceived
-	extends ApplicationUpdateRequestSmartStartHomeIDReceivedBase
-{}
+export class ApplicationUpdateRequestSmartStartHomeIDReceived extends ApplicationUpdateRequestSmartStartHomeIDReceivedBase {}
 
 @applicationUpdateType(
 	ApplicationUpdateTypes.SmartStart_LongRange_HomeId_Received,
 )
-export class ApplicationUpdateRequestSmartStartLongRangeHomeIDReceived
-	extends ApplicationUpdateRequestSmartStartHomeIDReceivedBase
-{}
+export class ApplicationUpdateRequestSmartStartLongRangeHomeIDReceived extends ApplicationUpdateRequestSmartStartHomeIDReceivedBase {}
 
 export interface ApplicationUpdateRequestSUCIdChangedOptions {
 	sucNodeID: number;
 }
 
 @applicationUpdateType(ApplicationUpdateTypes.SUC_IdChanged)
-export class ApplicationUpdateRequestSUCIdChanged
-	extends ApplicationUpdateRequest
-{
+export class ApplicationUpdateRequestSUCIdChanged extends ApplicationUpdateRequest {
 	public constructor(
-		options:
-			& ApplicationUpdateRequestSUCIdChangedOptions
+		options: ApplicationUpdateRequestSUCIdChangedOptions
 			& MessageBaseOptions,
 	) {
 		super(options);

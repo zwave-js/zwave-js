@@ -1,4 +1,5 @@
 import type { Bytes } from "@zwave-js/shared";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,

@@ -277,12 +277,10 @@ async function flash() {
 		}
 
 		alert(
-			`Failed to flash firmware: ${
-				getEnumMemberName(
-					OTWFirmwareUpdateStatus,
-					result.status,
-				)
-			}`,
+			`Failed to flash firmware: ${getEnumMemberName(
+				OTWFirmwareUpdateStatus,
+				result.status,
+			)}`,
 		);
 	} catch (e) {
 		alert(`Failed to flash firmware: ${getErrorMessage(e)}`);

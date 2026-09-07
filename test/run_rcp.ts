@@ -1,9 +1,11 @@
-import { wait as _wait } from "alcalzone-shared/async";
-import path from "node:path";
 import "reflect-metadata";
-import { type LogConfig } from "@zwave-js/core";
+
 import _os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { type LogConfig } from "@zwave-js/core";
+import { wait as _wait } from "alcalzone-shared/async";
 import { type PHYLayer, ProtocolController, RCPHost } from "zwave-js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

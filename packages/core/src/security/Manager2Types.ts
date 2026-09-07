@@ -1,8 +1,10 @@
 import type { BytesView } from "@zwave-js/shared";
+
 import type {
 	S2SecurityClass,
 	SecurityClass,
 } from "../definitions/SecurityClass.js";
+
 import type { CtrDRBG } from "./ctr_drbg.js";
 
 export interface NetworkKeys {
@@ -38,35 +40,35 @@ export enum MPANState {
 
 export type SPANTableEntry =
 	| {
-		// We know the other node's receiver's entropy input, but we didn't send it our sender's EI yet
-		type: SPANState.RemoteEI;
-		receiverEI: BytesView;
-	}
+			// We know the other node's receiver's entropy input, but we didn't send it our sender's EI yet
+			type: SPANState.RemoteEI;
+			receiverEI: BytesView;
+	  }
 	| {
-		// We've sent the other node our receiver's entropy input, but we didn't receive its sender's EI yet
-		type: SPANState.LocalEI;
-		receiverEI: BytesView;
-	}
+			// We've sent the other node our receiver's entropy input, but we didn't receive its sender's EI yet
+			type: SPANState.LocalEI;
+			receiverEI: BytesView;
+	  }
 	| {
-		// We've established an SPAN with the other node
-		type: SPANState.SPAN;
-		securityClass: SecurityClass;
-		rng: CtrDRBG;
-		/** The most recent generated SPAN */
-		currentSPAN?: {
-			nonce: BytesView;
-			expires: number;
-		};
-	};
+			// We've established an SPAN with the other node
+			type: SPANState.SPAN;
+			securityClass: SecurityClass;
+			rng: CtrDRBG;
+			/** The most recent generated SPAN */
+			currentSPAN?: {
+				nonce: BytesView;
+				expires: number;
+			};
+	  };
 
 export type MPANTableEntry =
 	| {
-		type: MPANState.OutOfSync;
-	}
+			type: MPANState.OutOfSync;
+	  }
 	| {
-		type: MPANState.MPAN;
-		currentMPAN: BytesView;
-	};
+			type: MPANState.MPAN;
+			currentMPAN: BytesView;
+	  };
 
 export interface MulticastGroup {
 	nodeIDs: readonly number[];

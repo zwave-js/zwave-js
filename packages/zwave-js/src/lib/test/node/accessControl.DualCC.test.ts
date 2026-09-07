@@ -17,6 +17,7 @@ import {
 } from "@zwave-js/cc/UserCredentialCC";
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // These tests cover nodes that support BOTH User Code CC and User Credential
@@ -113,8 +114,8 @@ integrationTest(
 			const userCaps = node.accessControl!.getUserCapabilitiesCached();
 			t.expect(userCaps.maxUsers).toBe(10);
 
-			const credCaps = node.accessControl!
-				.getCredentialCapabilitiesCached();
+			const credCaps =
+				node.accessControl!.getCredentialCapabilitiesCached();
 			const pinCap = credCaps.supportedCredentialTypes.get(
 				UserCredentialType.PINCode,
 			);
@@ -164,13 +165,16 @@ integrationTest(
 						UserCredentialType,
 						UserCredentialCapability
 					>([
-						[UserCredentialType.PINCode, {
-							numberOfCredentialSlots: 5,
-							minCredentialLength: 4,
-							maxCredentialLength: 10,
-							maxCredentialHashLength: 0,
-							supportsCredentialLearn: false,
-						}],
+						[
+							UserCredentialType.PINCode,
+							{
+								numberOfCredentialSlots: 5,
+								minCredentialLength: 4,
+								maxCredentialLength: 10,
+								maxCredentialHashLength: 0,
+								supportsCredentialLearn: false,
+							},
+						],
 					]),
 				}),
 			],
@@ -224,8 +228,8 @@ integrationTest(
 			const userCaps = node.accessControl!.getUserCapabilitiesCached();
 			t.expect(userCaps.maxUsers).toBe(20);
 
-			const credCaps = node.accessControl!
-				.getCredentialCapabilitiesCached();
+			const credCaps =
+				node.accessControl!.getCredentialCapabilitiesCached();
 			const pinCap = credCaps.supportedCredentialTypes.get(
 				UserCredentialType.PINCode,
 			);
@@ -248,8 +252,7 @@ integrationTest(
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
 					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCCredentialSet,
+					&& frame.payload instanceof UserCredentialCCCredentialSet,
 				{
 					errorMessage: "Should have used User Credential Set",
 				},

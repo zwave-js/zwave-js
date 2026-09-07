@@ -1,5 +1,6 @@
-import { getCCName } from "@zwave-js/core";
 import fs from "node:fs/promises";
+
+import { getCCName } from "@zwave-js/core";
 import xml2js from "xml2js";
 
 const xmlParserOptions_default: xml2js.ParserOptions = {
@@ -18,11 +19,10 @@ const xmlParserOptions_default: xml2js.ParserOptions = {
 };
 
 async function main() {
-	const { cmd_class } = await xml2js
-		.parseStringPromise(
-			await fs.readFile("zwave.xml", "utf8"),
-			xmlParserOptions_default,
-		);
+	const { cmd_class } = await xml2js.parseStringPromise(
+		await fs.readFile("zwave.xml", "utf8"),
+		xmlParserOptions_default,
+	);
 
 	const ccs = new Map<string, any>();
 	for (const cc of cmd_class) {
@@ -39,28 +39,28 @@ async function main() {
 	}
 
 	const allCCs = [...ccs.values()].sort((a, b) =>
-		a.name.localeCompare(b.name)
+		a.name.localeCompare(b.name),
 	);
 
 	const implemented = `{
-${
-		allCCs.map((cc) => {
-			let info = "";
-			if (cc.comment?.toLowerCase().includes("deprecated")) {
-				info = ", deprecated: true";
-			} else if (cc.comment?.toLowerCase().includes("obsoleted")) {
-				info = ", obsolete: true";
-			}
-			return `	"${cc.key}": { version: ${cc.version}${info} }, // ${cc.name}`;
-		}).join("\n")
-	}
+${allCCs
+	.map((cc) => {
+		let info = "";
+		if (cc.comment?.toLowerCase().includes("deprecated")) {
+			info = ", deprecated: true";
+		} else if (cc.comment?.toLowerCase().includes("obsoleted")) {
+			info = ", obsolete: true";
+		}
+		return `	"${cc.key}": { version: ${cc.version}${info} }, // ${cc.name}`;
+	})
+	.join("\n")}
 }`;
 
 	await fs.writeFile("implemented.txt", implemented);
 
-	const enumm = allCCs.map((cc) => `	"${cc.name}" = ${cc.key},`).join(
-		"\n",
-	);
+	const enumm = allCCs
+		.map((cc) => `	"${cc.name}" = ${cc.key},`)
+		.join("\n");
 
 	await fs.writeFile("enum.txt", enumm);
 }

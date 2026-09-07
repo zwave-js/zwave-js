@@ -30,6 +30,7 @@ import {
 	isCCInfoEqual,
 } from "@zwave-js/core";
 import { getEnumMemberName, getenv, num2hex } from "@zwave-js/shared";
+
 import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
@@ -43,7 +44,13 @@ import type { ZWaveNode } from "../Node.js";
  * Each endpoint may have different capabilities (device class/supported CCs)
  */
 export class EndpointBase
-	implements EndpointId, SupportsCC, ControlsCC, IsCCSecure, ModifyCCs, GetCCs
+	implements
+		EndpointId,
+		SupportsCC,
+		ControlsCC,
+		IsCCSecure,
+		ModifyCCs,
+		GetCCs
 {
 	public constructor(
 		/** The id of the node this endpoint belongs to */
@@ -59,8 +66,8 @@ export class EndpointBase
 		this._implementedCommandClasses = new CacheBackedMap(
 			this.driver.networkCache,
 			{
-				prefix:
-					cacheKeys.node(this.nodeId).endpoint(this.index)._ccBaseKey,
+				prefix: cacheKeys.node(this.nodeId).endpoint(this.index)
+					._ccBaseKey,
 				suffixSerializer: (cc: CommandClasses) => num2hex(cc),
 				suffixDeserializer: (key: string) => {
 					const ccId = parseInt(key, 16);
@@ -205,9 +212,11 @@ export class EndpointBase
 			return false;
 		}
 		// ...or the device class forbids it
-		return this.deviceClass?.specific.maySupportBasicCC
+		return (
+			this.deviceClass?.specific.maySupportBasicCC
 			?? this.deviceClass?.generic.maySupportBasicCC
-			?? true;
+			?? true
+		);
 	}
 
 	/** Determines if support for a CC was force-removed via config file */
@@ -330,9 +339,7 @@ export class EndpointBase
 		// Create the dependencies
 		for (const node of ret) {
 			const instance = this.createCCInstance(node.value)!;
-			for (
-				const requiredCCId of instance.determineRequiredCCInterviews()
-			) {
+			for (const requiredCCId of instance.determineRequiredCCInterviews()) {
 				const requiredCC = ret.find(
 					(instance) => instance.value === requiredCCId,
 				);
@@ -402,7 +409,7 @@ export class EndpointBase
 	/**
 	 * Used to iterate over the commandClasses API without throwing errors by accessing unsupported CCs
 	 */
-	private readonly commandClassesIterator: () => Iterator<CCAPI> = function*(
+	private readonly commandClassesIterator: () => Iterator<CCAPI> = function* (
 		this: EndpointBase,
 	) {
 		for (const cc of this.implementedCommandClasses.keys()) {
@@ -432,12 +439,12 @@ export class EndpointBase
 	public invokeCCAPI<
 		CC extends CCNameOrId,
 		TMethod extends keyof TAPI,
-		TAPI extends Record<
-			string,
-			(...args: any[]) => any
-		> = CommandClasses extends CC ? any
-			: Omit<CCNameOrId, CommandClasses> extends CC ? any
-			: APIMethodsOf<CC>,
+		TAPI extends Record<string, (...args: any[]) => any> =
+			CommandClasses extends CC
+				? any
+				: Omit<CCNameOrId, CommandClasses> extends CC
+					? any
+					: APIMethodsOf<CC>,
 	>(
 		cc: CC,
 		method: TMethod,

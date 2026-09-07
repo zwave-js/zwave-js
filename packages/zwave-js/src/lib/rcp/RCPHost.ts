@@ -81,6 +81,7 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
+
 import {
 	type SerialAPICommandMachineInput,
 	createSerialAPICommandMachine,
@@ -88,6 +89,7 @@ import {
 import { serialAPICommandErrorToZWaveError } from "../driver/StateMachineShared.js";
 import type { ZWaveOptions } from "../driver/ZWaveOptions.js";
 import { RCPLogger } from "../log/RCP.js";
+
 import {
 	type MpduRxInfo,
 	type PHYLayer,
@@ -144,22 +146,10 @@ export interface RCPHostOptions {
 }
 
 export type PartialRCPHostOptions = Expand<
-	& DeepPartial<
-		Omit<
-			RCPHostOptions,
-			| "logConfig"
-			| "host"
-		>
-	>
-	& Partial<
-		Pick<
-			RCPHostOptions,
-			"host"
-		>
-	>
-	& {
-		logConfig?: Partial<LogConfig>;
-	}
+	DeepPartial<Omit<RCPHostOptions, "logConfig" | "host">>
+		& Partial<Pick<RCPHostOptions, "host">> & {
+			logConfig?: Partial<LogConfig>;
+		}
 >;
 
 const defaultOptions: RCPHostOptions = {
@@ -194,7 +184,8 @@ function checkOptions(options: RCPHostOptions): void {
 
 // FIXME: Split out MAC layer functionality
 
-export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
+export class RCPHost
+	extends TypedEventTarget<RCPHostEventCallbacks>
 	implements PHYLayer
 {
 	public constructor(
@@ -235,12 +226,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	 * The host bindings used to access file system etc.
 	 */
 	// This is set during `start()` and should not be accessed before
-	private bindings!: Omit<
-		Required<
-			NonNullable<ZWaveOptions["host"]>
-		>,
-		"db"
-	>;
+	private bindings!: Omit<Required<NonNullable<ZWaveOptions["host"]>>, "db">;
 
 	private serialFactory: RCPSerialStreamFactory | undefined;
 	/** The serial port instance */
@@ -311,11 +297,14 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		// Populate default bindings. This has to happen asynchronously, so the driver does not have a hard dependency
 		// on Node.js internals
 		this.bindings = {
-			fs: this._options.host?.fs
+			fs:
+				this._options.host?.fs
 				?? (await import("@zwave-js/core/bindings/fs/node")).fs,
-			serial: this._options.host?.serial
+			serial:
+				this._options.host?.serial
 				?? (await import("@zwave-js/serial/bindings/node")).serial,
-			log: this._options.host?.log
+			log:
+				this._options.host?.log
 				?? (await import("@zwave-js/core/bindings/log/node")).log,
 		};
 
@@ -390,16 +379,18 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		this.rcpLog.print(
 			`Received firmware information:
 	  RCP firmware:  v${this.rcpFirmwareVersion}
-	  radio library: ${
-				getEnumMemberName(RadioLibrary, this.radioLibrary)
-			} v${this.radioLibraryVersion}
-	  supported commands: ${
-				this.supportedFunctionTypes.map((ft) =>
-					`\n  · ${(RCPFunctionType as any)[ft] ?? "unknown"} (${
-						num2hex(ft)
-					})`
-				).join("")
-			}`,
+	  radio library: ${getEnumMemberName(
+			RadioLibrary,
+			this.radioLibrary,
+		)} v${this.radioLibraryVersion}
+	  supported commands: ${this.supportedFunctionTypes
+			.map(
+				(ft) =>
+					`\n  · ${(RCPFunctionType as any)[ft] ?? "unknown"} (${num2hex(
+						ft,
+					)})`,
+			)
+			.join("")}`,
 		);
 
 		this.rcpLog.print(`Querying region info...`);
@@ -411,28 +402,26 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		this.rcpLog.print(
 			`Received region information:
 	  region:         ${getEnumMemberName(RFRegion, this.rfRegion)}
-	  channel config: ${
-				getEnumMemberName(
-					ChannelConfiguration,
-					this.channelConfig,
-				)
-			}
-	  channels: ${
-				this.channels
-					.map((ch) =>
-						`\n    · ${ch.channel} (${
-							(ch.frequency / 1e6).toFixed(2)
-						} MHz): ${protocolDataRateToString(ch.dataRate)}`
-					).join("")
-			}`,
+	  channel config: ${getEnumMemberName(
+			ChannelConfiguration,
+			this.channelConfig,
+		)}
+	  channels: ${this.channels
+			.map(
+				(ch) =>
+					`\n    · ${ch.channel} (${(ch.frequency / 1e6).toFixed(
+						2,
+					)} MHz): ${protocolDataRateToString(ch.dataRate)}`,
+			)
+			.join("")}`,
 		);
 
 		this.rcpLog.print(`Querying TX power range...`);
 		this._txPowerRange = await this.queryTxPowerRange();
 		this.rcpLog.print(
-			`Received TX power range: ${
-				this._txPowerRange.min.toFixed(1)
-			} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
+			`Received TX power range: ${this._txPowerRange.min.toFixed(
+				1,
+			)} ... ${this._txPowerRange.max.toFixed(1)} dBm`,
 		);
 
 		this.rcpLog.print(`Querying radio capabilities...`);
@@ -474,10 +463,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	 * Is called when the serial port has received a single-byte message or a complete message buffer
 	 */
 	private async serialport_onData(
-		data:
-			| BytesView
-			| MessageHeaders.ACK
-			| MessageHeaders.NAK,
+		data: BytesView | MessageHeaders.ACK | MessageHeaders.NAK,
 	): Promise<void> {
 		if (typeof data === "number") {
 			switch (data) {
@@ -497,10 +483,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 		let msg: RCPMessage | undefined;
 		try {
-			msg = RCPMessage.parse(
-				data,
-				{},
-			);
+			msg = RCPMessage.parse(data, {});
 
 			// all good, send ACK
 			await this.writeHeader(MessageHeaders.ACK);
@@ -529,9 +512,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	}
 
 	/** Handles a decoding error and returns the desired reply to the stick */
-	private handleDecodeError(
-		e: Error,
-	): MessageHeaders | undefined {
+	private handleDecodeError(e: Error): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
 			switch (e.code) {
 				case ZWaveErrorCodes.PacketFormat_Invalid:
@@ -611,9 +592,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		transactionSource?: string,
 	): Promise<RCPMessage | undefined> {
 		const machine = createSerialAPICommandMachine(msg);
-		const abort = this.abortSerialAPICommand = createDeferredPromise<
-			Error
-		>();
+		const abort = (this.abortSerialAPICommand =
+			createDeferredPromise<Error>());
 		// Avoid an unhandled rejection when destroying the host while not actively waiting
 		abort.catch(noop);
 		const abortController = new AbortController();
@@ -715,7 +695,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 						if (response === "timeout") {
 							nextInput = { value: "timeout" };
 						} else if (
-							isSuccessIndicator(response) && !response.isOK()
+							isSuccessIndicator(response)
+							&& !response.isOK()
 						) {
 							nextInput = { value: "response NOK", response };
 						} else {
@@ -747,7 +728,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 						if (callback === "timeout") {
 							nextInput = { value: "timeout" };
 						} else if (
-							isSuccessIndicator(callback) && !callback.isOK()
+							isSuccessIndicator(callback)
+							&& !callback.isOK()
 						) {
 							nextInput = { value: "callback NOK", callback };
 						} else {
@@ -783,9 +765,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	 */
 	public async queueSerialApiCommand<
 		TResponse extends RCPMessage = RCPMessage,
-	>(
-		msg: RCPMessage,
-	): Promise<TResponse> {
+	>(msg: RCPMessage): Promise<TResponse> {
 		if (this.wasDestroyed) {
 			throw new ZWaveError(
 				`The RCP host was destroyed`,
@@ -831,9 +811,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		supportedFunctionTypes: RCPFunctionType[];
 	}> {
 		const msg = new GetFirmwareInfoRequest();
-		const result = await this.queueSerialApiCommand<
-			GetFirmwareInfoResponse
-		>(msg);
+		const result =
+			await this.queueSerialApiCommand<GetFirmwareInfoResponse>(msg);
 
 		return pick(result, [
 			"rcpFirmwareVersion",
@@ -845,24 +824,18 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 
 	public async queryRegion(): Promise<RegionConfig> {
 		const msg = new SetupRadio_GetRegionRequest();
-		const result = await this.queueSerialApiCommand<
-			SetupRadio_GetRegionResponse
-		>(
-			msg,
-		);
+		const result =
+			await this.queueSerialApiCommand<SetupRadio_GetRegionResponse>(msg);
 
-		return pick(result, [
-			"region",
-			"channelConfig",
-			"channels",
-		]);
+		return pick(result, ["region", "channelConfig", "channels"]);
 	}
 
 	public async queryTxPowerRange(): Promise<TxPowerRange> {
 		const msg = new SetupRadio_GetTxPowerRangeRequest();
-		const result = await this.queueSerialApiCommand<
-			SetupRadio_GetTxPowerRangeResponse
-		>(msg);
+		const result =
+			await this.queueSerialApiCommand<SetupRadio_GetTxPowerRangeResponse>(
+				msg,
+			);
 
 		// An unsatisfiable range would reject every TX power later, far from
 		// the answer that caused it
@@ -887,11 +860,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			region,
 			channelConfig,
 		});
-		const result = await this.queueSerialApiCommand<
-			SetupRadio_SetRegionResponse
-		>(
-			msg,
-		);
+		const result =
+			await this.queueSerialApiCommand<SetupRadio_SetRegionResponse>(msg);
 
 		if (result.success) {
 			return result.channels!;
@@ -921,9 +891,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			data,
 		});
 		try {
-			const result = await this.queueSerialApiCommand<TransmitCallback>(
-				msg,
-			);
+			const result =
+				await this.queueSerialApiCommand<TransmitCallback>(msg);
 			// Successful transmission
 			return result.status;
 		} catch (e) {
@@ -951,9 +920,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		}
 		if (!this.supportedFunctionTypes.includes(functionType)) {
 			throw new ZWaveError(
-				`The command ${
-					getEnumMemberName(RCPFunctionType, functionType)
-				} is not supported by this firmware`,
+				`The command ${getEnumMemberName(
+					RCPFunctionType,
+					functionType,
+				)} is not supported by this firmware`,
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}
@@ -980,7 +950,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				await this.queueSerialApiCommand<TransmitBeamResponse>(msg);
 			} catch (e) {
 				if (
-					isZWaveError(e) && e.context instanceof TransmitBeamResponse
+					isZWaveError(e)
+					&& e.context instanceof TransmitBeamResponse
 				) {
 					return e.context.status;
 				}
@@ -991,14 +962,15 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 			// are processed in order, so the callback cannot arrive before this wait is registered.
 			// Awaiting it outside of the transaction queue keeps the queue free for an abort command.
 			try {
-				const callback = await this.waitForMessage<
-					TransmitBeamCallback
-				>(
-					(resp) =>
-						resp.type === RCPMessageType.Callback
-						&& resp.functionType === RCPFunctionType.TransmitBeam,
-					msg.getCallbackTimeout() ?? this._options.timeouts.callback,
-				);
+				const callback =
+					await this.waitForMessage<TransmitBeamCallback>(
+						(resp) =>
+							resp.type === RCPMessageType.Callback
+							&& resp.functionType
+								=== RCPFunctionType.TransmitBeam,
+						msg.getCallbackTimeout()
+							?? this._options.timeouts.callback,
+					);
 				return callback.status;
 			} catch (e) {
 				if (
@@ -1015,9 +987,9 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 						await this.abortBeam();
 					} catch (abortError) {
 						this.rcpLog.print(
-							`Could not abort the timed out beam: ${
-								getErrorMessage(abortError)
-							}`,
+							`Could not abort the timed out beam: ${getErrorMessage(
+								abortError,
+							)}`,
 							"error",
 						);
 					}
@@ -1041,9 +1013,8 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		this.assertFunctionSupported(RCPFunctionType.MeasureNoiseFloor);
 
 		const msg = new MeasureNoiseFloorRequest({ channel });
-		const result = await this.queueSerialApiCommand<
-			MeasureNoiseFloorResponse
-		>(msg);
+		const result =
+			await this.queueSerialApiCommand<MeasureNoiseFloorResponse>(msg);
 		return result.noiseFloor;
 	}
 
@@ -1062,9 +1033,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	/** Queries the optional features the firmware implements */
 	public async queryRadioCapabilities(): Promise<RadioCapability[]> {
 		const msg = new SetupRadio_GetCapabilitiesRequest();
-		const result = await this.queueSerialApiCommand<
-			SetupRadio_GetCapabilitiesResponse
-		>(msg);
+		const result =
+			await this.queueSerialApiCommand<SetupRadio_GetCapabilitiesResponse>(
+				msg,
+			);
 		return result.capabilities;
 	}
 
@@ -1109,10 +1081,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 				this.handleCallback(msg);
 			}
 		} catch (e) {
-			if (
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Driver_NotReady
-			) {
+			if (isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_NotReady) {
 				this.rcpLog.print(
 					`Cannot handle message because the driver is not ready to handle it yet.`,
 					"warn",
@@ -1216,15 +1185,11 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		}
 		const rssi = convertRawRSSI(msg.rssi, this.channelConfig, msg.channel);
 
-		this.emit(
-			"mpdu received",
-			mpdu,
-			{
-				channel: msg.channel,
-				rssi,
-				protocolDataRate,
-			},
-		);
+		this.emit("mpdu received", mpdu, {
+			channel: msg.channel,
+			rssi,
+			protocolDataRate,
+		});
 	}
 
 	/**
@@ -1364,10 +1329,7 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 	private async destroyWithMessage(message: string): Promise<void> {
 		this.rcpLog.print(message, "error");
 
-		const error = new ZWaveError(
-			message,
-			ZWaveErrorCodes.Driver_Failed,
-		);
+		const error = new ZWaveError(message, ZWaveErrorCodes.Driver_Failed);
 		this.emit("error", error);
 
 		await this.destroy();
@@ -1396,12 +1358,10 @@ export class RCPHost extends TypedEventTarget<RCPHostEventCallbacks>
 		);
 
 		// Remove all timeouts
-		for (
-			const timeout of [
-				...this.awaitedMessages.map((m) => m.timeout),
-				...this.awaitedMessageHeaders.map((h) => h.timeout),
-			]
-		) {
+		for (const timeout of [
+			...this.awaitedMessages.map((m) => m.timeout),
+			...this.awaitedMessageHeaders.map((h) => h.timeout),
+		]) {
 			timeout?.clear();
 		}
 

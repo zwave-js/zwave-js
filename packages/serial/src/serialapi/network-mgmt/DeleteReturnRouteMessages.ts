@@ -80,7 +80,8 @@ export interface DeleteReturnRouteResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.DeleteReturnRoute)
-export class DeleteReturnRouteResponse extends Message
+export class DeleteReturnRouteResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -126,8 +127,7 @@ export class DeleteReturnRouteRequestTransmitReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& DeleteReturnRouteRequestTransmitReportOptions
+		options: DeleteReturnRouteRequestTransmitReportOptions
 			& MessageBaseOptions,
 	) {
 		super(options);

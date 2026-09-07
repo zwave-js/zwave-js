@@ -7,14 +7,13 @@ import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { ccCaps, createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 const MAX_NODE_TEXT_LENGTH = 16;
 const NODE_TEXT_ENCODING_ASCII = 0x00;
 
-class SpoofedNodeNamingAndLocationCCNameReport
-	extends NodeNamingAndLocationCCNameReport
-{
+class SpoofedNodeNamingAndLocationCCNameReport extends NodeNamingAndLocationCCNameReport {
 	public override serialize(
 		...args: Parameters<CommandClass["serialize"]>
 	): ReturnType<CommandClass["serialize"]> {
@@ -27,43 +26,40 @@ class SpoofedNodeNamingAndLocationCCNameReport
 	}
 }
 
-integrationTest(
-	"Node Naming CC reports with overlong payloads are discarded",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["Node Naming and Location"],
-					isSupported: true,
-					version: 1,
-					name: "Initial Name",
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const nameValueId = NodeNamingAndLocationCCValues.name.id;
-			const spoofedName = "12345678901234567";
-			const spoofedNamePayload = Bytes.from(spoofedName, "ascii");
-
-			t.expect(spoofedNamePayload.length).toBeGreaterThan(
-				MAX_NODE_TEXT_LENGTH,
-			);
-			t.expect(node.getValue(nameValueId)).toBe("Initial Name");
-
-			const cc = new SpoofedNodeNamingAndLocationCCNameReport({
-				nodeId: mockController.ownNodeId,
-				name: spoofedName,
-			});
-
-			await mockNode.sendToController(
-				createMockZWaveRequestFrame(cc, {
-					ackRequested: false,
-				}),
-			);
-			await wait(100);
-
-			t.expect(node.getValue(nameValueId)).toBe("Initial Name");
-		},
+integrationTest("Node Naming CC reports with overlong payloads are discarded", {
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["Node Naming and Location"],
+				isSupported: true,
+				version: 1,
+				name: "Initial Name",
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		const nameValueId = NodeNamingAndLocationCCValues.name.id;
+		const spoofedName = "12345678901234567";
+		const spoofedNamePayload = Bytes.from(spoofedName, "ascii");
+
+		t.expect(spoofedNamePayload.length).toBeGreaterThan(
+			MAX_NODE_TEXT_LENGTH,
+		);
+		t.expect(node.getValue(nameValueId)).toBe("Initial Name");
+
+		const cc = new SpoofedNodeNamingAndLocationCCNameReport({
+			nodeId: mockController.ownNodeId,
+			name: spoofedName,
+		});
+
+		await mockNode.sendToController(
+			createMockZWaveRequestFrame(cc, {
+				ackRequested: false,
+			}),
+		);
+		await wait(100);
+
+		t.expect(node.getValue(nameValueId)).toBe("Initial Name");
+	},
+});

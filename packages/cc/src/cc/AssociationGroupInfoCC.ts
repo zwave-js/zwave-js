@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -42,6 +43,7 @@ import {
 	AssociationGroupInfoProfile,
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { AssociationCC } from "./AssociationCC.js";
 import { MultiChannelAssociationCC } from "./MultiChannelAssociationCC.js";
 
@@ -111,12 +113,11 @@ export class AssociationGroupInfoCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			groupId,
 		});
-		const response = await this.host.sendCommand<
-			AssociationGroupInfoCCNameReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<AssociationGroupInfoCCNameReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) return response.name;
 	}
 
@@ -151,12 +152,11 @@ export class AssociationGroupInfoCCAPI extends PhysicalCCAPI {
 			groupId,
 			refreshCache,
 		});
-		const response = await this.host.sendCommand<
-			AssociationGroupInfoCCInfoReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<AssociationGroupInfoCCInfoReport>(
+				cc,
+				this.commandOptions,
+			);
 		// SDS13782 says: If List Mode is set to 0, the Group Count field MUST be set to 1.
 		// But that's not always the case. Apparently some endpoints return 0 groups
 		// although they support AGI CC
@@ -205,12 +205,11 @@ export class AssociationGroupInfoCCAPI extends PhysicalCCAPI {
 			groupId,
 			allowCache,
 		});
-		const response = await this.host.sendCommand<
-			AssociationGroupInfoCCCommandListReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<AssociationGroupInfoCCCommandListReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) return response.commands;
 	}
 
@@ -273,11 +272,7 @@ export class AssociationGroupInfoCC extends CommandClass {
 	): MaybeNotKnown<AssociationGroupInfoProfile> {
 		return ctx.getValueDB(endpoint.nodeId).getValue<{
 			profile: AssociationGroupInfoProfile;
-		}>(
-			AssociationGroupInfoCCValues.groupInfo(groupId).endpoint(
-				endpoint.index,
-			),
-		)
+		}>(AssociationGroupInfoCCValues.groupInfo(groupId).endpoint(endpoint.index))
 			?.profile;
 	}
 
@@ -336,13 +331,8 @@ export class AssociationGroupInfoCC extends CommandClass {
 		return (
 			// First query the Multi Channel Association CC
 			// And fall back to 0
-			(endpoint.supportsCC(
-				CommandClasses["Multi Channel Association"],
-			)
-				&& MultiChannelAssociationCC.getGroupCountCached(
-					ctx,
-					endpoint,
-				))
+			(endpoint.supportsCC(CommandClasses["Multi Channel Association"])
+				&& MultiChannelAssociationCC.getGroupCountCached(ctx, endpoint))
 			// Then the Association CC
 			|| (endpoint.supportsCC(CommandClasses.Association)
 				&& AssociationCC.getGroupCountCached(ctx, endpoint))
@@ -350,9 +340,7 @@ export class AssociationGroupInfoCC extends CommandClass {
 		);
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -370,8 +358,8 @@ export class AssociationGroupInfoCC extends CommandClass {
 			direction: "none",
 		});
 
-		const associationGroupCount = AssociationGroupInfoCC
-			.getAssociationGroupCountCached(
+		const associationGroupCount =
+			AssociationGroupInfoCC.getAssociationGroupCountCached(
 				ctx,
 				endpoint,
 			);
@@ -385,8 +373,7 @@ export class AssociationGroupInfoCC extends CommandClass {
 			});
 			const name = await api.getGroupName(groupId);
 			if (name) {
-				const logMessage =
-					`Association group #${groupId} has name "${name}"`;
+				const logMessage = `Association group #${groupId} has name "${name}"`;
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
 					message: logMessage,
@@ -397,8 +384,7 @@ export class AssociationGroupInfoCC extends CommandClass {
 			// Then the command list
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`Association group #${groupId}: Querying command list...`,
+				message: `Association group #${groupId}: Querying command list...`,
 				direction: "outbound",
 			});
 			await api.getCommands(groupId);
@@ -439,8 +425,8 @@ export class AssociationGroupInfoCC extends CommandClass {
 		});
 
 		// Query the information for each group (this is the only thing that could be dynamic)
-		const associationGroupCount = AssociationGroupInfoCC
-			.getAssociationGroupCountCached(
+		const associationGroupCount =
+			AssociationGroupInfoCC.getAssociationGroupCountCached(
 				ctx,
 				endpoint,
 			);
@@ -684,7 +670,8 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.alloc(1 + this.groups.length * 7, 0);
 
-		this.payload[0] = (this.isListMode ? 0b1000_0000 : 0)
+		this.payload[0] =
+			(this.isListMode ? 0b1000_0000 : 0)
 			| (this.hasDynamicInfo ? 0b0100_0000 : 0)
 			| (this.groups.length & 0b0011_1111);
 
@@ -713,7 +700,7 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 							profile: g.profile,
 							"event code": g.eventCode,
 						}),
-					})
+					}),
 				),
 			),
 		};
@@ -721,18 +708,16 @@ export class AssociationGroupInfoCCInfoReport extends AssociationGroupInfoCC {
 }
 
 // @publicAPI
-export type AssociationGroupInfoCCInfoGetOptions =
-	& {
-		refreshCache: boolean;
-	}
-	& (
-		| {
+export type AssociationGroupInfoCCInfoGetOptions = {
+	refreshCache: boolean;
+} & (
+	| {
 			listMode: boolean;
-		}
-		| {
+	  }
+	| {
 			groupId: number;
-		}
-	);
+	  }
+);
 
 @CCCommand(AssociationGroupInfoCommand.InfoGet)
 @expectedCCResponse(AssociationGroupInfoCCInfoReport)
@@ -774,12 +759,10 @@ export class AssociationGroupInfoCCInfoGet extends AssociationGroupInfoCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const isListMode = this.listMode === true;
-		const optionByte = (this.refreshCache ? 0b1000_0000 : 0)
+		const optionByte =
+			(this.refreshCache ? 0b1000_0000 : 0)
 			| (isListMode ? 0b0100_0000 : 0);
-		this.payload = Bytes.from([
-			optionByte,
-			isListMode ? 0 : this.groupId!,
-		]);
+		this.payload = Bytes.from([optionByte, isListMode ? 0 : this.groupId!]);
 		return super.serialize(ctx);
 	}
 
@@ -806,14 +789,10 @@ export interface AssociationGroupInfoCCCommandListReportOptions {
 }
 
 @CCCommand(AssociationGroupInfoCommand.CommandListReport)
-@ccValueProperty(
-	"commands",
-	AssociationGroupInfoCCValues.commands,
-	(self) => [self.groupId],
-)
-export class AssociationGroupInfoCCCommandListReport
-	extends AssociationGroupInfoCC
-{
+@ccValueProperty("commands", AssociationGroupInfoCCValues.commands, (self) => [
+	self.groupId,
+])
+export class AssociationGroupInfoCCCommandListReport extends AssociationGroupInfoCC {
 	public constructor(
 		options: WithAddress<AssociationGroupInfoCCCommandListReportOptions>,
 	) {
@@ -879,12 +858,11 @@ export class AssociationGroupInfoCCCommandListReport
 			message: {
 				"group id": this.groupId,
 				commands: logList(
-					[...this.commands].map(([cc, cmds]) =>
-						`${getCCName(cc)}: ${
-							cmds
+					[...this.commands].map(
+						([cc, cmds]) =>
+							`${getCCName(cc)}: ${cmds
 								.map((cmd) => num2hex(cmd))
-								.join(", ")
-						}`
+								.join(", ")}`,
 					),
 				),
 			},
@@ -900,9 +878,7 @@ export interface AssociationGroupInfoCCCommandListGetOptions {
 
 @CCCommand(AssociationGroupInfoCommand.CommandListGet)
 @expectedCCResponse(AssociationGroupInfoCCCommandListReport)
-export class AssociationGroupInfoCCCommandListGet
-	extends AssociationGroupInfoCC
-{
+export class AssociationGroupInfoCCCommandListGet extends AssociationGroupInfoCC {
 	public constructor(
 		options: WithAddress<AssociationGroupInfoCCCommandListGetOptions>,
 	) {

@@ -170,21 +170,24 @@ export function rankCandidates<T>(
 	// Tokenize the query once instead of per candidate
 	const queryTokens = new Set(tokenize(query.text));
 	const results = candidates.map((candidate) => {
-		const cosine = query.embedding && candidate.embedding
-			? Math.max(
-				0,
-				cosineSimilarity(query.embedding, candidate.embedding),
-			)
-			: 0;
+		const cosine =
+			query.embedding && candidate.embedding
+				? Math.max(
+						0,
+						cosineSimilarity(query.embedding, candidate.embedding),
+					)
+				: 0;
 		const lexical = tokenSetSimilarity(queryTokens, candidate.semanticText);
 		const structural = query.structure
 			? structuralCompatibility(query.structure, candidate.structure)
 			: 0;
-		const purposeMatch = !!query.purpose
+		const purposeMatch =
+			!!query.purpose
 			&& !!candidate.semantics.purpose
 			&& query.purpose === candidate.semantics.purpose;
 
-		const score = weights.cosine * cosine
+		const score =
+			weights.cosine * cosine
 			+ weights.lexical * lexical
 			+ weights.structural * structural
 			+ (purposeMatch ? weights.purposeBoost : 0);
@@ -235,7 +238,8 @@ export function diffStructure(
 	}
 
 	const queryOptionLabels = query.options.map((o) => o.label).toSorted();
-	const candidateOptionLabels = candidate.options.map((o) => o.label)
+	const candidateOptionLabels = candidate.options
+		.map((o) => o.label)
 		.toSorted();
 	if (queryOptionLabels.join("|") !== candidateOptionLabels.join("|")) {
 		diffs.push({

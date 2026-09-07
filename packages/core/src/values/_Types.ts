@@ -1,4 +1,5 @@
 import type { CommandClasses } from "../definitions/CommandClasses.js";
+
 import type { ValueMetadata } from "./Metadata.js";
 
 /** Uniquely identifies to which CC, endpoint and property a value belongs to */

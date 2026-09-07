@@ -23,6 +23,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // ==========================================================================
@@ -140,81 +141,68 @@ integrationTest(
 // Interview stores capability values correctly
 // ==========================================================================
 
-integrationTest(
-	"User Credential CC interview stores capability values",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 5,
-					supportedCredentialRules: [
-						UserCredentialRule.Single,
-						UserCredentialRule.Dual,
+integrationTest("User Credential CC interview stores capability values", {
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 5,
+				supportedCredentialRules: [
+					UserCredentialRule.Single,
+					UserCredentialRule.Dual,
+				],
+				maxUserNameLength: 20,
+				supportsAllUsersChecksum: true,
+				supportsUserChecksum: true,
+				supportsAdminCode: true,
+				supportsAdminCodeDeactivation: true,
+				supportedUserNameEncodings: [UserCredentialNameEncoding.ASCII],
+				supportedUserTypes: [
+					UserCredentialUserType.General,
+					UserCredentialUserType.Programming,
+				],
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						} satisfies UserCredentialCapability,
 					],
-					maxUserNameLength: 20,
-					supportsAllUsersChecksum: true,
-					supportsUserChecksum: true,
-					supportsAdminCode: true,
-					supportsAdminCodeDeactivation: true,
-					supportedUserNameEncodings: [
-						UserCredentialNameEncoding.ASCII,
-					],
-					supportedUserTypes: [
-						UserCredentialUserType.General,
-						UserCredentialUserType.Programming,
-					],
-					supportedCredentialTypes: new Map([
-						[
-							UserCredentialType.PINCode,
-							{
-								numberOfCredentialSlots: 10,
-								minCredentialLength: 4,
-								maxCredentialLength: 10,
-								maxCredentialHashLength: 0,
-								supportsCredentialLearn: false,
-							} satisfies UserCredentialCapability,
-						],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			t.expect(
-				node.getValue(
-					UserCredentialCCValues.supportedUsers.id,
-				),
-			).toBe(5);
-
-			t.expect(
-				node.getValue(
-					UserCredentialCCValues.maxUserNameLength.id,
-				),
-			).toBe(20);
-
-			t.expect(
-				node.getValue(
-					UserCredentialCCValues.supportsAllUsersChecksum.id,
-				),
-			).toBe(true);
-
-			t.expect(
-				node.getValue(
-					UserCredentialCCValues.supportsAdminCode.id,
-				),
-			).toBe(true);
-
-			t.expect(
-				node.getValue(
-					UserCredentialCCValues.supportsAdminCodeDeactivation.id,
-				),
-			).toBe(true);
-		},
+				]),
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		t.expect(node.getValue(UserCredentialCCValues.supportedUsers.id)).toBe(
+			5,
+		);
+
+		t.expect(
+			node.getValue(UserCredentialCCValues.maxUserNameLength.id),
+		).toBe(20);
+
+		t.expect(
+			node.getValue(UserCredentialCCValues.supportsAllUsersChecksum.id),
+		).toBe(true);
+
+		t.expect(
+			node.getValue(UserCredentialCCValues.supportsAdminCode.id),
+		).toBe(true);
+
+		t.expect(
+			node.getValue(
+				UserCredentialCCValues.supportsAdminCodeDeactivation.id,
+			),
+		).toBe(true);
+	},
+});
 
 // ==========================================================================
 // Interview discovers pre-existing users and credentials
@@ -292,15 +280,11 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// User 1 should be discovered
 			t.expect(
-				node.getValue(
-					UserCredentialCCValues.userType(1).endpoint(0),
-				),
+				node.getValue(UserCredentialCCValues.userType(1).endpoint(0)),
 			).toBe(UserCredentialUserType.General);
 
 			t.expect(
-				node.getValue(
-					UserCredentialCCValues.userName(1).endpoint(0),
-				),
+				node.getValue(UserCredentialCCValues.userName(1).endpoint(0)),
 			).toBe("Alice");
 
 			// User 1's credential should be discovered
@@ -323,15 +307,11 @@ integrationTest(
 
 			// User 3 should be discovered (gap at user 2)
 			t.expect(
-				node.getValue(
-					UserCredentialCCValues.userType(3).endpoint(0),
-				),
+				node.getValue(UserCredentialCCValues.userType(3).endpoint(0)),
 			).toBe(UserCredentialUserType.Expiring);
 
 			t.expect(
-				node.getValue(
-					UserCredentialCCValues.userName(3).endpoint(0),
-				),
+				node.getValue(UserCredentialCCValues.userName(3).endpoint(0)),
 			).toBe("Bob");
 
 			// User 3's credential should be discovered
@@ -359,113 +339,103 @@ integrationTest(
 // Interview queries admin PIN code when supported
 // ==========================================================================
 
-integrationTest(
-	"Interview queries admin PIN code when supported",
-	{
-		clearMessageStatsBeforeTest: false,
+integrationTest("Interview queries admin PIN code when supported", {
+	clearMessageStatsBeforeTest: false,
 
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 1,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: true,
-					supportsAdminCodeDeactivation: true,
-					supportedCredentialTypes: new Map([
-						[
-							UserCredentialType.PINCode,
-							{
-								numberOfCredentialSlots: 10,
-								minCredentialLength: 4,
-								maxCredentialLength: 10,
-								maxCredentialHashLength: 0,
-								supportsCredentialLearn: false,
-							} satisfies UserCredentialCapability,
-						],
-					]),
-				}),
-			],
-		},
-
-		customSetup: async (_driver, _controller, mockNode) => {
-			mockNode.state.set("UserCredential_adminPinCode", "9999");
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCAdminPinCodeGet,
-				{
-					errorMessage:
-						"Should have sent AdminPinCodeGet during interview",
-				},
-			);
-
-			t.expect(
-				node.getValue(
-					UserCredentialCCValues.adminPinCode.id,
-				),
-			).toBe("9999");
-		},
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 1,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: true,
+				supportsAdminCodeDeactivation: true,
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						} satisfies UserCredentialCapability,
+					],
+				]),
+			}),
+		],
 	},
-);
 
-integrationTest(
-	"Interview does not query admin PIN code when not supported",
-	{
-		clearMessageStatsBeforeTest: false,
-
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 1,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[
-							UserCredentialType.PINCode,
-							{
-								numberOfCredentialSlots: 10,
-								minCredentialLength: 4,
-								maxCredentialLength: 10,
-								maxCredentialHashLength: 0,
-								supportsCredentialLearn: false,
-							} satisfies UserCredentialCapability,
-						],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCAdminPinCodeGet,
-				{
-					noMatch: true,
-					errorMessage:
-						"Should NOT have sent AdminPinCodeGet when admin code is not supported",
-				},
-			);
-		},
+	customSetup: async (_driver, _controller, mockNode) => {
+		mockNode.state.set("UserCredential_adminPinCode", "9999");
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCAdminPinCodeGet,
+			{
+				errorMessage:
+					"Should have sent AdminPinCodeGet during interview",
+			},
+		);
+
+		t.expect(node.getValue(UserCredentialCCValues.adminPinCode.id)).toBe(
+			"9999",
+		);
+	},
+});
+
+integrationTest("Interview does not query admin PIN code when not supported", {
+	clearMessageStatsBeforeTest: false,
+
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 1,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						} satisfies UserCredentialCapability,
+					],
+				]),
+			}),
+		],
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCAdminPinCodeGet,
+			{
+				noMatch: true,
+				errorMessage:
+					"Should NOT have sent AdminPinCodeGet when admin code is not supported",
+			},
+		);
+	},
+});
 
 // ==========================================================================
 // All-users checksum optimization
@@ -555,122 +525,115 @@ integrationTest(
 // Per-user checksum optimization
 // ==========================================================================
 
-integrationTest(
-	"Interview queries per-user checksum when supported",
-	{
-		clearMessageStatsBeforeTest: false,
+integrationTest("Interview queries per-user checksum when supported", {
+	clearMessageStatsBeforeTest: false,
 
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: true,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[
-							UserCredentialType.PINCode,
-							{
-								numberOfCredentialSlots: 10,
-								minCredentialLength: 4,
-								maxCredentialLength: 10,
-								maxCredentialHashLength: 0,
-								supportsCredentialLearn: false,
-							} satisfies UserCredentialCapability,
-						],
-					]),
-				}),
-			],
-		},
-
-		customSetup: async (_driver, _controller, mockNode) => {
-			mockNode.state.set("UserCredential_user_1", {
-				userType: UserCredentialUserType.General,
-				active: true,
-				credentialRule: UserCredentialRule.Single,
-				expiringTimeoutMinutes: 0,
-				nameEncoding: UserCredentialNameEncoding.ASCII,
-				userName: "Alice",
-				modifierType: UserCredentialModifierType.Locally,
-				modifierNodeId: 0,
-			});
-
-			mockNode.state.set("UserCredential_cred_1_1", {
-				userId: 1,
-				credentialData: Bytes.from("1234", "ascii"),
-				modifierType: UserCredentialModifierType.Locally,
-				modifierNodeId: 0,
-			});
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCUserChecksumGet,
-				{
-					errorMessage:
-						"Should have sent UserChecksumGet during interview",
-				},
-			);
-		},
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: true,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						} satisfies UserCredentialCapability,
+					],
+				]),
+			}),
+		],
 	},
-);
+
+	customSetup: async (_driver, _controller, mockNode) => {
+		mockNode.state.set("UserCredential_user_1", {
+			userType: UserCredentialUserType.General,
+			active: true,
+			credentialRule: UserCredentialRule.Single,
+			expiringTimeoutMinutes: 0,
+			nameEncoding: UserCredentialNameEncoding.ASCII,
+			userName: "Alice",
+			modifierType: UserCredentialModifierType.Locally,
+			modifierNodeId: 0,
+		});
+
+		mockNode.state.set("UserCredential_cred_1_1", {
+			userId: 1,
+			credentialData: Bytes.from("1234", "ascii"),
+			modifierType: UserCredentialModifierType.Locally,
+			modifierNodeId: 0,
+		});
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCUserChecksumGet,
+			{
+				errorMessage:
+					"Should have sent UserChecksumGet during interview",
+			},
+		);
+	},
+});
 
 // ==========================================================================
 // Empty device (no pre-existing users)
 // ==========================================================================
 
-integrationTest(
-	"Interview handles device with no pre-existing users",
-	{
-		clearMessageStatsBeforeTest: false,
+integrationTest("Interview handles device with no pre-existing users", {
+	clearMessageStatsBeforeTest: false,
 
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[
-							UserCredentialType.PINCode,
-							{
-								numberOfCredentialSlots: 10,
-								minCredentialLength: 4,
-								maxCredentialLength: 10,
-								maxCredentialHashLength: 0,
-								supportsCredentialLearn: false,
-							} satisfies UserCredentialCapability,
-						],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// With no users pre-populated, the first User Get should return
-			// an empty report and the interview should stop iterating.
-			// No user values should be stored.
-			const userType = node.getValue(
-				UserCredentialCCValues.userType(1).endpoint(0),
-			);
-			t.expect(userType).toBeUndefined();
-		},
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						} satisfies UserCredentialCapability,
+					],
+				]),
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		// With no users pre-populated, the first User Get should return
+		// an empty report and the interview should stop iterating.
+		// No user values should be stored.
+		const userType = node.getValue(
+			UserCredentialCCValues.userType(1).endpoint(0),
+		);
+		t.expect(userType).toBeUndefined();
+	},
+});
 
 // ==========================================================================
 // Multiple credential types
@@ -774,117 +737,107 @@ integrationTest(
 // V2: Key locker entry interview
 // ==========================================================================
 
-integrationTest(
-	"V2 interview queries key locker entries for supported types",
-	{
-		clearMessageStatsBeforeTest: false,
+integrationTest("V2 interview queries key locker entries for supported types", {
+	clearMessageStatsBeforeTest: false,
 
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 2,
-					numberOfSupportedUsers: 5,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[
-							UserCredentialType.PINCode,
-							{
-								numberOfCredentialSlots: 10,
-								minCredentialLength: 4,
-								maxCredentialLength: 10,
-								maxCredentialHashLength: 0,
-								supportsCredentialLearn: false,
-							} satisfies UserCredentialCapability,
-						],
-					]),
-					supportedKeyLockerEntryTypes: new Map([
-						[
-							UserCredentialKeyLockerEntryType
-								.DESFireApplicationIdAndKey,
-							{
-								numberOfEntrySlots: 2,
-								minEntryDataLength: 4,
-								maxEntryDataLength: 20,
-							} satisfies UserCredentialKeyLockerEntryCapability,
-						],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCKeyLockerEntryGet,
-				{
-					errorMessage:
-						"Should have sent KeyLockerEntryGet during V2 interview",
-				},
-			);
-		},
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 2,
+				numberOfSupportedUsers: 5,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						} satisfies UserCredentialCapability,
+					],
+				]),
+				supportedKeyLockerEntryTypes: new Map([
+					[
+						UserCredentialKeyLockerEntryType.DESFireApplicationIdAndKey,
+						{
+							numberOfEntrySlots: 2,
+							minEntryDataLength: 4,
+							maxEntryDataLength: 20,
+						} satisfies UserCredentialKeyLockerEntryCapability,
+					],
+				]),
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCKeyLockerEntryGet,
+			{
+				errorMessage:
+					"Should have sent KeyLockerEntryGet during V2 interview",
+			},
+		);
+	},
+});
 
 // ==========================================================================
 // V1 does not query key locker entries
 // ==========================================================================
 
-integrationTest(
-	"V1 interview does not query key locker entries",
-	{
-		clearMessageStatsBeforeTest: false,
+integrationTest("V1 interview does not query key locker entries", {
+	clearMessageStatsBeforeTest: false,
 
-		nodeCapabilities: {
-			commandClasses: [
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 5,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[
-							UserCredentialType.PINCode,
-							{
-								numberOfCredentialSlots: 10,
-								minCredentialLength: 4,
-								maxCredentialLength: 10,
-								maxCredentialHashLength: 0,
-								supportsCredentialLearn: false,
-							} satisfies UserCredentialCapability,
-						],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCKeyLockerEntryGet,
-				{
-					noMatch: true,
-					errorMessage:
-						"Should NOT have sent KeyLockerEntryGet for V1",
-				},
-			);
-		},
+	nodeCapabilities: {
+		commandClasses: [
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 5,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[
+						UserCredentialType.PINCode,
+						{
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						} satisfies UserCredentialCapability,
+					],
+				]),
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCKeyLockerEntryGet,
+			{
+				noMatch: true,
+				errorMessage: "Should NOT have sent KeyLockerEntryGet for V1",
+			},
+		);
+	},
+});
 
 // ==========================================================================
 // Interview iterates credential pagination correctly
@@ -1064,15 +1017,11 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// Both users should be discovered
 			t.expect(
-				node.getValue(
-					UserCredentialCCValues.userName(2).endpoint(0),
-				),
+				node.getValue(UserCredentialCCValues.userName(2).endpoint(0)),
 			).toBe("User Two");
 
 			t.expect(
-				node.getValue(
-					UserCredentialCCValues.userName(5).endpoint(0),
-				),
+				node.getValue(UserCredentialCCValues.userName(5).endpoint(0)),
 			).toBe("User Five");
 
 			// Credentials for both users should be discovered
@@ -1124,8 +1073,7 @@ integrationTest(
 			mockNode.assertReceivedControllerFrame(
 				(frame) =>
 					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCCredentialGet,
+					&& frame.payload instanceof UserCredentialCCCredentialGet,
 				{
 					errorMessage:
 						"Should have sent CredentialGet during interview",

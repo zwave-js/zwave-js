@@ -85,10 +85,7 @@
 			"description": "Device will wakeup once after the configured delay",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 65535] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 65535] }],
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [

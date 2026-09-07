@@ -214,8 +214,8 @@ export class AddNodeToNetworkRequest extends AddNodeToNetworkRequestBase {
 
 export class EnableSmartStartListenRequest extends AddNodeToNetworkRequestBase {
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		const control: number = AddNodeType.SmartStartListen
-			| AddNodeFlags.NetworkWide;
+		const control: number =
+			AddNodeType.SmartStartListen | AddNodeFlags.NetworkWide;
 		// The Serial API does not send a callback, so disable waiting for one
 		this.callbackId = 0;
 
@@ -294,9 +294,10 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 			"NWI Home ID": buffer2hex(this.nwiHomeId),
 			"high power": this.highPower,
 			"network wide": this.networkWide,
-			protocol: this.protocol === Protocols.ZWaveLongRange
-				? "Z-Wave Long Range"
-				: "Z-Wave Classic",
+			protocol:
+				this.protocol === Protocols.ZWaveLongRange
+					? "Z-Wave Long Range"
+					: "Z-Wave Classic",
 		};
 		if (this.hasCallbackId()) {
 			message["callback id"] = this.callbackId;
@@ -309,27 +310,29 @@ export class AddNodeDSKToNetworkRequest extends AddNodeToNetworkRequestBase {
 	}
 }
 
-export type AddNodeToNetworkRequestStatusReportOptions = {
-	status:
-		| AddNodeStatus.Ready
-		| AddNodeStatus.NodeFound
-		| AddNodeStatus.ProtocolDone
-		| AddNodeStatus.Failed;
-} | {
-	status: AddNodeStatus.Done;
-	nodeId: number;
-} | {
-	status: AddNodeStatus.AddingController | AddNodeStatus.AddingSlave;
-	nodeInfo: NodeUpdatePayload;
-};
+export type AddNodeToNetworkRequestStatusReportOptions =
+	| {
+			status:
+				| AddNodeStatus.Ready
+				| AddNodeStatus.NodeFound
+				| AddNodeStatus.ProtocolDone
+				| AddNodeStatus.Failed;
+	  }
+	| {
+			status: AddNodeStatus.Done;
+			nodeId: number;
+	  }
+	| {
+			status: AddNodeStatus.AddingController | AddNodeStatus.AddingSlave;
+			nodeInfo: NodeUpdatePayload;
+	  };
 
 export class AddNodeToNetworkRequestStatusReport
 	extends AddNodeToNetworkRequestBase
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& AddNodeToNetworkRequestStatusReportOptions
+		options: AddNodeToNetworkRequestStatusReportOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -360,11 +363,7 @@ export class AddNodeToNetworkRequestStatusReport
 				});
 
 			case AddNodeStatus.Done: {
-				const { nodeId } = parseNodeID(
-					raw.payload,
-					ctx.nodeIdType,
-					2,
-				);
+				const { nodeId } = parseNodeID(raw.payload, ctx.nodeIdType, 2);
 				return new this({
 					callbackId,
 					status,

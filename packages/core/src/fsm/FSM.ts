@@ -27,9 +27,10 @@ export type StateMachineTransitionMap<
 
 export type InferStateMachineTransitions<
 	T extends StateMachine<any, any, any>,
-> = T extends StateMachine<infer S, infer I, infer E>
-	? StateMachineTransitionMap<S, I, E | undefined>
-	: never;
+> =
+	T extends StateMachine<infer S, infer I, infer E>
+		? StateMachineTransitionMap<S, I, E | undefined>
+		: never;
 
 export class StateMachine<
 	State extends StateMachineState,

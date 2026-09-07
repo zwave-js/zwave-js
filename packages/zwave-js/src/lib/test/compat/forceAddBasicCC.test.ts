@@ -1,6 +1,8 @@
+import path from "node:path";
+
 import { BasicCCValues } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

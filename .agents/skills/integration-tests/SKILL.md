@@ -498,23 +498,23 @@ Examples:
 ## Checklist for New Integration Test
 
 1. **Determine what to test**
-   - [ ] Interview behavior (commands sent, values stored)
-   - [ ] Post-interview API behavior
-   - [ ] Unsolicited report handling
-   - [ ] Edge cases (timeouts, missing capabilities, version differences)
+    - [ ] Interview behavior (commands sent, values stored)
+    - [ ] Post-interview API behavior
+    - [ ] Unsolicited report handling
+    - [ ] Edge cases (timeouts, missing capabilities, version differences)
 
 2. **Set up the test**
-   - [ ] Choose single-node or multi-node harness
-   - [ ] Define `nodeCapabilities` with `ccCaps()` for type safety
-   - [ ] Add `customSetup` if mock node state needs pre-population
-   - [ ] Set `clearMessageStatsBeforeTest: false` if verifying interview frames
-   - [ ] Use `integrationTest.sequential(...)` only if the test asserts on timing, retry counts, or ordering
+    - [ ] Choose single-node or multi-node harness
+    - [ ] Define `nodeCapabilities` with `ccCaps()` for type safety
+    - [ ] Add `customSetup` if mock node state needs pre-population
+    - [ ] Set `clearMessageStatsBeforeTest: false` if verifying interview frames
+    - [ ] Use `integrationTest.sequential(...)` only if the test asserts on timing, retry counts, or ordering
 
 3. **Write assertions**
-   - [ ] Use `node.getValue()` / `node.getValueMetadata()` for value checks
-   - [ ] Use `mockNode.assertReceivedControllerFrame()` for command checks
-   - [ ] Use `createMockZWaveRequestFrame()` + `mockNode.sendToController()` for unsolicited reports
+    - [ ] Use `node.getValue()` / `node.getValueMetadata()` for value checks
+    - [ ] Use `mockNode.assertReceivedControllerFrame()` for command checks
+    - [ ] Use `createMockZWaveRequestFrame()` + `mockNode.sendToController()` for unsolicited reports
 
 4. **Run and validate**
-   - [ ] `yarn test:ts <test-file-path>`
-   - [ ] `yarn fmt`
+    - [ ] `yarn test:ts <test-file-path>`
+    - [ ] `yarn fmt`

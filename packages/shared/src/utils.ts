@@ -1,4 +1,5 @@
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { num2hex } from "./strings.js";
 
 /** Object.keys, but with `(keyof T)[]` as the return type */
@@ -226,7 +227,8 @@ export type FnOrStatic<TArgs extends any[], TReturn> =
 	| ((...args: TArgs) => TReturn)
 	| TReturn;
 
-export type ReturnTypeOrStatic<T> = T extends (...args: any[]) => infer R ? R
+export type ReturnTypeOrStatic<T> = T extends (...args: any[]) => infer R
+	? R
 	: T;
 
 export function evalOrStatic<T>(

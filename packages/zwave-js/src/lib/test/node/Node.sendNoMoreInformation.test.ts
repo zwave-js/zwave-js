@@ -3,6 +3,7 @@ import { WakeUpCC } from "@zwave-js/cc/WakeUpCC";
 import { CommandClasses, InterviewStage } from "@zwave-js/core";
 import sinon from "sinon";
 import { beforeEach, test } from "vitest";
+
 import type { Driver } from "../../driver/Driver.js";
 import { ZWaveNode } from "../../node/Node.js";
 import { assertCC } from "../assertCC.js";
@@ -21,41 +22,32 @@ function makeNode(): ZWaveNode {
 
 beforeEach(() => fakeDriver.sendMessage.resetHistory());
 
-test.sequential(
-	"should not do anything and return false if the node is asleep",
-	async (t) => {
-		const node = makeNode();
-		node.markAsAsleep();
+test.sequential("should not do anything and return false if the node is asleep", async (t) => {
+	const node = makeNode();
+	node.markAsAsleep();
 
-		t.expect(await node.sendNoMoreInformation()).toBe(false);
-		sinon.assert.notCalled(fakeDriver.sendMessage);
-		node.destroy();
-	},
-);
+	t.expect(await node.sendNoMoreInformation()).toBe(false);
+	sinon.assert.notCalled(fakeDriver.sendMessage);
+	node.destroy();
+});
 
-test.sequential(
-	"should not do anything and return false if the node interview is not complete",
-	async (t) => {
-		const node = makeNode();
-		node.interviewStage = InterviewStage.CommandClasses;
-		t.expect(await node.sendNoMoreInformation()).toBe(false);
-		sinon.assert.notCalled(fakeDriver.sendMessage);
-		node.destroy();
-	},
-);
+test.sequential("should not do anything and return false if the node interview is not complete", async (t) => {
+	const node = makeNode();
+	node.interviewStage = InterviewStage.CommandClasses;
+	t.expect(await node.sendNoMoreInformation()).toBe(false);
+	sinon.assert.notCalled(fakeDriver.sendMessage);
+	node.destroy();
+});
 
-test.sequential(
-	"should not send anything if the node should be kept awake",
-	async (t) => {
-		const node = makeNode();
-		node.markAsAwake();
-		node.keepAwake = true;
+test.sequential("should not send anything if the node should be kept awake", async (t) => {
+	const node = makeNode();
+	node.markAsAwake();
+	node.keepAwake = true;
 
-		t.expect(await node.sendNoMoreInformation()).toBe(false);
-		sinon.assert.notCalled(fakeDriver.sendMessage);
-		node.destroy();
-	},
-);
+	t.expect(await node.sendNoMoreInformation()).toBe(false);
+	sinon.assert.notCalled(fakeDriver.sendMessage);
+	node.destroy();
+});
 
 test.sequential("should send a WakeupCC.NoMoreInformation otherwise", async (t) => {
 	const node = makeNode();

@@ -8,11 +8,12 @@
 
 ```ts
 async get(): Promise<
-	{
-		manufacturerId: number;
-		productId: number;
-		productType: number;
-	} | undefined
+	| {
+			manufacturerId: number;
+			productId: number;
+			productType: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -27,24 +28,20 @@ async deviceSpecificGet(
 ### `sendReport`
 
 ```ts
-async sendReport(
-	options: {
-		manufacturerId: number;
-		productType: number;
-		productId: number;
-	},
-): Promise<void>;
+async sendReport(options: {
+	manufacturerId: number;
+	productType: number;
+	productId: number;
+}): Promise<void>;
 ```
 
 ### `sendDeviceSpecificReport`
 
 ```ts
-async sendDeviceSpecificReport(
-	options: {
-		type: DeviceIdType;
-		deviceId: string | Uint8Array;
-	},
-): Promise<void>;
+async sendDeviceSpecificReport(options: {
+	type: DeviceIdType;
+	deviceId: string | Uint8Array;
+}): Promise<void>;
 ```
 
 ## Manufacturer Specific CC values

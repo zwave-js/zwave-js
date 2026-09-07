@@ -1,18 +1,21 @@
+import { isUint8Array } from "node:util/types";
+
 import { log as createZWaveLogContainer } from "@zwave-js/core/bindings/log/node";
 import { Bytes, type BytesView } from "@zwave-js/shared";
-import { isUint8Array } from "node:util/types";
 import {
 	type ExpectStatic,
 	afterEach,
 	beforeEach,
 	test as baseTest,
 } from "vitest";
+
 import { MessageHeaders } from "../message/MessageHeaders.js";
 import { MockPort } from "../mock/MockPort.js";
 import {
 	type ZWaveSerialFrame,
 	ZWaveSerialFrameType,
 } from "../parsers/ZWaveSerialFrame.js";
+
 import {
 	type ZWaveSerialStream,
 	ZWaveSerialStreamFactory,
@@ -79,9 +82,7 @@ function assertSerialAPIFrame(
 		expect(frame.data).toStrictEqual(expectedData);
 	} else {
 		expect(isUint8Array(frame.data)).toBe(true);
-		expect(Bytes.view(frame.data as BytesView)).to.deep.equal(
-			expectedData,
-		);
+		expect(Bytes.view(frame.data as BytesView)).to.deep.equal(expectedData);
 	}
 	expect(frame.data).toStrictEqual(expectedData);
 }
@@ -112,11 +113,15 @@ test("passes written data through unchanged", async ({ context, expect }) => {
 test("write rejects if the port is not open", async ({ context, expect }) => {
 	const { port, serial } = context;
 	await serial.close();
-	await expect(() => serial.writeAsync(Bytes.from([MessageHeaders.ACK])))
-		.rejects.toThrowError();
+	await expect(() =>
+		serial.writeAsync(Bytes.from([MessageHeaders.ACK])),
+	).rejects.toThrowError();
 });
 
-test("emits a chunk of data for each single-byte message that was read", async ({ context, expect }) => {
+test("emits a chunk of data for each single-byte message that was read", async ({
+	context,
+	expect,
+}) => {
 	const { port, serial } = context;
 	port.emitData(Bytes.from([MessageHeaders.ACK]));
 	let data = await waitForData(serial.readable);
@@ -131,7 +136,10 @@ test("emits a chunk of data for each single-byte message that was read", async (
 	assertSerialAPIFrame(expect, data, MessageHeaders.NAK);
 });
 
-test("emits a series of chunks when multiple single-byte messages are received", async ({ context, expect }) => {
+test("emits a series of chunks when multiple single-byte messages are received", async ({
+	context,
+	expect,
+}) => {
 	const { port, serial } = context;
 	port.emitData(
 		Bytes.from([
@@ -179,7 +187,10 @@ test("marks all invalid/unexpected data", async ({ context, expect }) => {
 	}
 });
 
-test("marks all invalid/unexpected data (test 2)", async ({ context, expect }) => {
+test("marks all invalid/unexpected data (test 2)", async ({
+	context,
+	expect,
+}) => {
 	const { port, serial } = context;
 	port.emitData(
 		Bytes.from([
@@ -208,7 +219,10 @@ test("marks all invalid/unexpected data (test 2)", async ({ context, expect }) =
 	}
 });
 
-test("emits a buffer when a message is received", async ({ context, expect }) => {
+test("emits a buffer when a message is received", async ({
+	context,
+	expect,
+}) => {
 	const { port, serial } = context;
 	const data = Bytes.from([
 		MessageHeaders.SOF,

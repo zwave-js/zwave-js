@@ -1,12 +1,17 @@
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import { type ConditionalItem, conditionApplies } from "./ConditionalItem.js";
 import type { DeviceID } from "./shared.js";
 
-type ToPrimitive<T extends string> = T extends "string" ? string
-	: T extends "number" ? number
-	: T extends "boolean" ? boolean
-	: never;
+type ToPrimitive<T extends string> = T extends "string"
+	? string
+	: T extends "number"
+		? number
+		: T extends "boolean"
+			? boolean
+			: never;
 
 export function parseConditionalPrimitive<
 	T extends "string" | "number" | "boolean",
@@ -30,9 +35,9 @@ export function parseConditionalPrimitive<
 			typeof d === valueType
 				? new ConditionalPrimitiveVariant<ToPrimitive<T>>(d)
 				: new ConditionalPrimitiveVariant<ToPrimitive<T>>(
-					d.value,
-					typeof d.$if === "string" ? d.$if : undefined,
-				)
+						d.value,
+						typeof d.$if === "string" ? d.$if : undefined,
+					),
 		);
 	} else if (typeof definition === valueType) {
 		return definition;
@@ -49,9 +54,9 @@ export type ConditionalPrimitive<T extends number | string | boolean> =
 	| T
 	| ConditionalPrimitiveVariant<T>[];
 
-export class ConditionalPrimitiveVariant<T extends number | string | boolean>
-	implements ConditionalItem<T>
-{
+export class ConditionalPrimitiveVariant<
+	T extends number | string | boolean,
+> implements ConditionalItem<T> {
 	public constructor(
 		public readonly value: T,
 		public readonly condition?: string,

@@ -1,16 +1,14 @@
 import { Bytes } from "@zwave-js/shared";
+
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
+
 import { longRangeBeamPowerToIndex } from "./utils.js";
 
 // ITU-T G.9959 (01/2015), Table 8-17: "The Beam Tag value 0x55 shall advertise
 // the presence of a NodeID field and an optional HomeID Hash field"
 const BEAM_TAG = 0x55;
 
-function assertNodeIdFits(
-	nodeId: number,
-	max: number,
-	protocol: string,
-): void {
+function assertNodeIdFits(nodeId: number, max: number, protocol: string): void {
 	if (!Number.isInteger(nodeId) || nodeId < 1 || nodeId > max) {
 		throw new ZWaveError(
 			`${nodeId} is not a valid ${protocol} node ID for a beam frame`,

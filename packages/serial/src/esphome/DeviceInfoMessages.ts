@@ -1,5 +1,6 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import {
 	ESPHomeMessage,
 	type ESPHomeMessageBaseOptions,
@@ -292,8 +293,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						);
 						zwaveProxyFeatureFlags =
 							zwaveProxyFeatureFlagsResult.value;
-						return offset
-							+ zwaveProxyFeatureFlagsResult.bytesRead;
+						return offset + zwaveProxyFeatureFlagsResult.bytesRead;
 
 					default:
 						return skipField(data, offset, wireType);

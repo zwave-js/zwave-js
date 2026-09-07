@@ -1,3 +1,6 @@
+import { readFile, readdir } from "node:fs/promises";
+import { dirname, join, sep } from "node:path";
+
 import {
 	clearTemplateCache,
 	readJsonWithTemplate,
@@ -12,11 +15,11 @@ import {
 	getNodeValue,
 	parseTree,
 } from "jsonc-parser";
-import { readFile, readdir } from "node:fs/promises";
-import { dirname, join, sep } from "node:path";
 import PQueue from "p-queue";
 import { TextDocument } from "vscode-languageserver-textdocument";
+
 import { DEVICES_DIR, fs } from "../configEnv.js";
+
 import { semanticHash } from "./hash.js";
 import type {
 	Corpus,
@@ -84,13 +87,15 @@ export function extractSemantics(
 	const options = extractOptions(resolved);
 	return {
 		label: typeof resolved.label === "string" ? resolved.label : undefined,
-		description: typeof resolved.description === "string"
-			? resolved.description
-			: undefined,
+		description:
+			typeof resolved.description === "string"
+				? resolved.description
+				: undefined,
 		unit: typeof resolved.unit === "string" ? resolved.unit : undefined,
-		purpose: typeof resolved["$purpose"] === "string"
-			? resolved["$purpose"]
-			: undefined,
+		purpose:
+			typeof resolved["$purpose"] === "string"
+				? resolved["$purpose"]
+				: undefined,
 		optionLabels: options.map((o) => o.label),
 	};
 }
@@ -99,26 +104,32 @@ export function extractStructure(
 	resolved: Record<string, unknown>,
 ): CorpusStructure {
 	return {
-		valueSize: typeof resolved.valueSize === "number"
-			? resolved.valueSize
-			: undefined,
-		minValue: typeof resolved.minValue === "number"
-			? resolved.minValue
-			: undefined,
-		maxValue: typeof resolved.maxValue === "number"
-			? resolved.maxValue
-			: undefined,
-		defaultValue: typeof resolved.defaultValue === "number"
-			? resolved.defaultValue
-			: undefined,
-		unsigned: typeof resolved.unsigned === "boolean"
-			? resolved.unsigned
-			: undefined,
+		valueSize:
+			typeof resolved.valueSize === "number"
+				? resolved.valueSize
+				: undefined,
+		minValue:
+			typeof resolved.minValue === "number"
+				? resolved.minValue
+				: undefined,
+		maxValue:
+			typeof resolved.maxValue === "number"
+				? resolved.maxValue
+				: undefined,
+		defaultValue:
+			typeof resolved.defaultValue === "number"
+				? resolved.defaultValue
+				: undefined,
+		unsigned:
+			typeof resolved.unsigned === "boolean"
+				? resolved.unsigned
+				: undefined,
 		readOnly: resolved.readOnly === true,
 		writeOnly: resolved.writeOnly === true,
-		allowManualEntry: typeof resolved.allowManualEntry === "boolean"
-			? resolved.allowManualEntry
-			: undefined,
+		allowManualEntry:
+			typeof resolved.allowManualEntry === "boolean"
+				? resolved.allowManualEntry
+				: undefined,
 		options: extractOptions(resolved),
 	};
 }
@@ -191,9 +202,9 @@ async function tryResolveTemplates(
 	} catch (error) {
 		warnings.push({
 			file: parsed.relativeFile,
-			message: `Failed to resolve $import templates: ${
-				getErrorMessage(error)
-			}`,
+			message: `Failed to resolve $import templates: ${getErrorMessage(
+				error,
+			)}`,
 		});
 		return undefined;
 	}
@@ -203,22 +214,23 @@ function extractDeviceContext(raw: Record<string, unknown>): DeviceContext {
 	const devices = Array.isArray(raw.devices) ? raw.devices : [];
 	const firstDevice = isPlainObject(devices[0]) ? devices[0] : undefined;
 	return {
-		manufacturer: typeof raw.manufacturer === "string"
-			? raw.manufacturer
-			: undefined,
-		manufacturerId: typeof raw.manufacturerId === "string"
-			? raw.manufacturerId
-			: undefined,
+		manufacturer:
+			typeof raw.manufacturer === "string" ? raw.manufacturer : undefined,
+		manufacturerId:
+			typeof raw.manufacturerId === "string"
+				? raw.manufacturerId
+				: undefined,
 		deviceLabel: typeof raw.label === "string" ? raw.label : undefined,
-		deviceDescription: typeof raw.description === "string"
-			? raw.description
-			: undefined,
-		productType: typeof firstDevice?.productType === "string"
-			? firstDevice.productType
-			: undefined,
-		productId: typeof firstDevice?.productId === "string"
-			? firstDevice.productId
-			: undefined,
+		deviceDescription:
+			typeof raw.description === "string" ? raw.description : undefined,
+		productType:
+			typeof firstDevice?.productType === "string"
+				? firstDevice.productType
+				: undefined,
+		productId:
+			typeof firstDevice?.productId === "string"
+				? firstDevice.productId
+				: undefined,
 	};
 }
 
@@ -240,7 +252,7 @@ async function buildParameterRecords(
 
 	const rawParams = raw.paramInformation as unknown[];
 	const resolvedParams = Array.isArray(resolved.paramInformation)
-		? resolved.paramInformation as unknown[]
+		? (resolved.paramInformation as unknown[])
 		: [];
 	if (resolvedParams.length !== rawParams.length) {
 		warnings.push({
@@ -264,8 +276,7 @@ async function buildParameterRecords(
 		if (typeof key !== "string") {
 			warnings.push({
 				file: parsed.relativeFile,
-				message:
-					`paramInformation[${i}] has no "#" key; skipping entry`,
+				message: `paramInformation[${i}] has no "#" key; skipping entry`,
 			});
 			continue;
 		}
@@ -273,32 +284,30 @@ async function buildParameterRecords(
 		if (!parsedKey) {
 			warnings.push({
 				file: parsed.relativeFile,
-				message:
-					`paramInformation[${i}] has an unparseable "#" key "${key}"; skipping entry`,
+				message: `paramInformation[${i}] has an unparseable "#" key "${key}"; skipping entry`,
 			});
 			continue;
 		}
 
-		const rawImport = typeof rawEntry["$import"] === "string"
-			? rawEntry["$import"]
-			: undefined;
+		const rawImport =
+			typeof rawEntry["$import"] === "string"
+				? rawEntry["$import"]
+				: undefined;
 		const entryImports: string[] = [];
 		collectImportSpecifiers(rawEntry, entryImports);
 		for (const specifier of new Set(entryImports)) {
 			importUsages.push({ contextFile: file, specifier });
 		}
 		// Conditions are kept verbatim: we never guess which firmware they apply to
-		const condition = typeof rawEntry["$if"] === "string"
-			? rawEntry["$if"]
-			: undefined;
+		const condition =
+			typeof rawEntry["$if"] === "string" ? rawEntry["$if"] : undefined;
 
 		let templateFile: string | undefined;
 		let templateName: string | undefined;
 		if (rawImport) {
 			const hashIndex = rawImport.indexOf("#");
-			templateName = hashIndex >= 0
-				? rawImport.slice(hashIndex + 1)
-				: undefined;
+			templateName =
+				hashIndex >= 0 ? rawImport.slice(hashIndex + 1) : undefined;
 			try {
 				templateFile = await resolveImportPath(
 					fs,
@@ -309,10 +318,9 @@ async function buildParameterRecords(
 			} catch (error) {
 				warnings.push({
 					file: parsed.relativeFile,
-					message:
-						`Failed to resolve parameter ${key} import "${rawImport}": ${
-							getErrorMessage(error)
-						}`,
+					message: `Failed to resolve parameter ${key} import "${rawImport}": ${getErrorMessage(
+						error,
+					)}`,
 				});
 			}
 		}
@@ -320,9 +328,10 @@ async function buildParameterRecords(
 		const semantics = extractSemantics(resolvedEntry);
 		const structure = extractStructure(resolvedEntry);
 		const semanticText = buildSemanticText(semantics);
-		const bitmaskSuffix = parsedKey.valueBitMask != undefined
-			? `[${num2hex(parsedKey.valueBitMask)}]`
-			: "";
+		const bitmaskSuffix =
+			parsedKey.valueBitMask != undefined
+				? `[${num2hex(parsedKey.valueBitMask)}]`
+				: "";
 
 		records.push({
 			kind: "parameter",
@@ -432,8 +441,12 @@ async function tallyTemplateReferences(
 		const cacheKey = `${dirname(contextFile)}\0${specifier}`;
 		let promise = resolved.get(cacheKey);
 		if (!promise) {
-			promise = resolveImportPath(fs, contextFile, specifier, DEVICES_DIR)
-				.catch(() => undefined);
+			promise = resolveImportPath(
+				fs,
+				contextFile,
+				specifier,
+				DEVICES_DIR,
+			).catch(() => undefined);
 			resolved.set(cacheKey, promise);
 		}
 		return promise;
@@ -470,49 +483,51 @@ export async function buildCorpus(): Promise<Corpus> {
 	const importUsages: { contextFile: string; specifier: string }[] = [];
 
 	const queue = new PQueue({ concurrency: 32 });
-	await queue.addAll(files.map((relativeFile) => async () => {
-		const file = join(DEVICES_DIR, relativeFile);
-		let parsed: ParsedFile | { error: string };
-		try {
-			parsed = await parseFile(file, relativeFile);
-		} catch (error) {
-			warnings.push({
-				file: relativeFile,
-				message: `Failed to read file: ${getErrorMessage(error)}`,
-			});
-			return;
-		}
-		if ("error" in parsed) {
-			warnings.push({ file: relativeFile, message: parsed.error });
-			return;
-		}
-
-		try {
-			if (isTemplateFile(relativeFile)) {
-				const records = await buildTemplateRecords(
-					parsed,
-					file,
-					warnings,
-				);
-				templates.push(...records);
-			} else {
-				const records = await buildParameterRecords(
-					parsed,
-					file,
-					warnings,
-					importUsages,
-				);
-				parameters.push(...records);
+	await queue.addAll(
+		files.map((relativeFile) => async () => {
+			const file = join(DEVICES_DIR, relativeFile);
+			let parsed: ParsedFile | { error: string };
+			try {
+				parsed = await parseFile(file, relativeFile);
+			} catch (error) {
+				warnings.push({
+					file: relativeFile,
+					message: `Failed to read file: ${getErrorMessage(error)}`,
+				});
+				return;
 			}
-		} catch (error) {
-			warnings.push({
-				file: relativeFile,
-				message: `Unexpected error while indexing: ${
-					getErrorMessage(error)
-				}`,
-			});
-		}
-	}));
+			if ("error" in parsed) {
+				warnings.push({ file: relativeFile, message: parsed.error });
+				return;
+			}
+
+			try {
+				if (isTemplateFile(relativeFile)) {
+					const records = await buildTemplateRecords(
+						parsed,
+						file,
+						warnings,
+					);
+					templates.push(...records);
+				} else {
+					const records = await buildParameterRecords(
+						parsed,
+						file,
+						warnings,
+						importUsages,
+					);
+					parameters.push(...records);
+				}
+			} catch (error) {
+				warnings.push({
+					file: relativeFile,
+					message: `Unexpected error while indexing: ${getErrorMessage(
+						error,
+					)}`,
+				});
+			}
+		}),
+	);
 
 	await tallyTemplateReferences(templates, importUsages);
 

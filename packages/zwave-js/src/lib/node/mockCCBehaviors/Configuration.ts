@@ -46,7 +46,8 @@ const respondToConfigurationGet: MockNodeBehavior = {
 			// Do not respond if the parameter is not supported
 			if (!paramInfo) return { action: "stop" };
 
-			const value = (self.state.get(StateKeys.value(parameter)) as number)
+			const value =
+				(self.state.get(StateKeys.value(parameter)) as number)
 				?? paramInfo.defaultValue
 				?? 0;
 
@@ -209,8 +210,8 @@ const respondToConfigurationPropertiesGet: MockNodeBehavior = {
 					nodeId: controller.ownNodeId,
 					parameter,
 					valueSize: paramInfo.valueSize,
-					valueFormat: paramInfo.format
-						?? ConfigValueFormat.SignedInteger,
+					valueFormat:
+						paramInfo.format ?? ConfigValueFormat.SignedInteger,
 					minValue: paramInfo.minValue,
 					maxValue: paramInfo.maxValue,
 					defaultValue: paramInfo.defaultValue,

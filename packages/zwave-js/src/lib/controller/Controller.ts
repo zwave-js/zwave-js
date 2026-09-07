@@ -307,6 +307,7 @@ import {
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 import { isObject } from "alcalzone-shared/typeguards";
+
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacks } from "../driver/Statistics.js";
@@ -323,6 +324,7 @@ import {
 	type LifelineRoutes,
 	NodeStatus,
 } from "../node/_Types.js";
+
 import {
 	type ControllerStatistics,
 	ControllerStatisticsHost,
@@ -383,9 +385,7 @@ import {
 } from "./utils.js";
 
 // Strongly type the event emitter events
-interface ControllerEventCallbacks
-	extends StatisticsEventCallbacks<ControllerStatistics>
-{
+interface ControllerEventCallbacks extends StatisticsEventCallbacks<ControllerStatistics> {
 	"inclusion failed": () => void;
 	"exclusion failed": () => void;
 	"inclusion started": (strategy: InclusionStrategy) => void;
@@ -416,9 +416,7 @@ export type ControllerEvents = Extract<keyof ControllerEventCallbacks, string>;
 export interface ZWaveController extends ControllerStatisticsHost {}
 
 @Mixin([ControllerStatisticsHost])
-export class ZWaveController
-	extends TypedEventTarget<ControllerEventCallbacks>
-{
+export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> {
 	/** @internal */
 	public constructor(driver: Driver) {
 		super();
@@ -485,8 +483,8 @@ export class ZWaveController
 	 */
 	public async getDSK(): Promise<BytesView> {
 		if (this._dsk == undefined) {
-			const { publicKey } = await this.driver
-				.getLearnModeAuthenticatedKeyPair();
+			const { publicKey } =
+				await this.driver.getLearnModeAuthenticatedKeyPair();
 			this._dsk = publicKey.subarray(0, 16);
 		}
 		return this._dsk;
@@ -657,8 +655,7 @@ export class ZWaveController
 		| undefined;
 	public get supportedSerialAPISetupCommands():
 		| readonly SerialAPISetupCommand[]
-		| undefined
-	{
+		| undefined {
 		return this._supportedSerialAPISetupCommands;
 	}
 
@@ -688,12 +685,10 @@ export class ZWaveController
 	private assertFeature(feature: ZWaveFeature): void {
 		if (!this.supportsFeature(feature)) {
 			throw new ZWaveError(
-				`The controller does not support the ${
-					getEnumMemberName(
-						ZWaveFeature,
-						feature,
-					)
-				} feature`,
+				`The controller does not support the ${getEnumMemberName(
+					ZWaveFeature,
+					feature,
+				)} feature`,
 				ZWaveErrorCodes.Controller_NotSupported,
 			);
 		}
@@ -799,7 +794,8 @@ export class ZWaveController
 		} catch (e) {
 			// Return undefined if the DSK is invalid
 			if (
-				isZWaveError(e) && e.code === ZWaveErrorCodes.Argument_Invalid
+				isZWaveError(e)
+				&& e.code === ZWaveErrorCodes.Argument_Invalid
 			) {
 				return undefined;
 			}
@@ -817,9 +813,7 @@ export class ZWaveController
 
 	/** @internal Which associations are currently configured */
 	public get associations(): readonly AssociationAddress[] {
-		return (
-			this.driver.cacheGet(cacheKeys.controller.associations(1)) ?? []
-		);
+		return this.driver.cacheGet(cacheKeys.controller.associations(1)) ?? [];
 	}
 
 	/** @internal */
@@ -833,10 +827,12 @@ export class ZWaveController
 	 * Remembers which powerlevel was set by another node.
 	 */
 	public get powerlevel(): { powerlevel: Powerlevel; until: Date } {
-		return this._powerlevel ?? {
-			powerlevel: Powerlevel["Normal Power"],
-			until: new Date(),
-		};
+		return (
+			this._powerlevel ?? {
+				powerlevel: Powerlevel["Normal Power"],
+				until: new Date(),
+			}
+		);
 	}
 
 	/** @internal */
@@ -1025,9 +1021,10 @@ export class ZWaveController
 			const ret: SmartStartProvisioningEntry = {
 				...entry,
 			};
-			const node = typeof dskOrNodeId === "string"
-				? this.getNodeByDSK(dskOrNodeId)
-				: this.nodes.get(dskOrNodeId);
+			const node =
+				typeof dskOrNodeId === "string"
+					? this.getNodeByDSK(dskOrNodeId)
+					: this.nodes.get(dskOrNodeId);
 			if (node) ret.nodeId = node.id;
 			return ret;
 		}
@@ -1091,14 +1088,13 @@ export class ZWaveController
 	public async queryCapabilities(): Promise<{ nodeIds: readonly number[] }> {
 		// Figure out what the serial API can do
 		this.driver.controllerLog.print(`querying Serial API capabilities...`);
-		const apiCaps = await this.driver.sendMessage<
-			GetSerialApiCapabilitiesResponse
-		>(
-			new GetSerialApiCapabilitiesRequest(),
-			{
-				supportCheck: false,
-			},
-		);
+		const apiCaps =
+			await this.driver.sendMessage<GetSerialApiCapabilitiesResponse>(
+				new GetSerialApiCapabilitiesRequest(),
+				{
+					supportCheck: false,
+				},
+			);
 		this._firmwareVersion = apiCaps.firmwareVersion;
 		this._manufacturerId = apiCaps.manufacturerId;
 		this._productType = apiCaps.productType;
@@ -1125,14 +1121,13 @@ export class ZWaveController
 
 		// Get basic controller version info
 		this.driver.controllerLog.print(`querying version info...`);
-		const version = await this.driver.sendMessage<
-			GetControllerVersionResponse
-		>(
-			new GetControllerVersionRequest(),
-			{
-				supportCheck: false,
-			},
-		);
+		const version =
+			await this.driver.sendMessage<GetControllerVersionResponse>(
+				new GetControllerVersionRequest(),
+				{
+					supportCheck: false,
+				},
+			);
 		this._protocolVersion = version.libraryVersion;
 		this._type = version.controllerType;
 		this.driver.controllerLog.print(
@@ -1152,11 +1147,10 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				`querying protocol version info...`,
 			);
-			const protocol = await this.driver.sendMessage<
-				GetProtocolVersionResponse
-			>(
-				new GetProtocolVersionRequest(),
-			);
+			const protocol =
+				await this.driver.sendMessage<GetProtocolVersionResponse>(
+					new GetProtocolVersionRequest(),
+				);
 
 			this._protocolVersion = protocol.protocolVersion;
 
@@ -1171,8 +1165,7 @@ export class ZWaveController
 						"appl. framework build no.":
 							protocol.applicationFrameworkBuildNumber
 							|| undefined,
-						"git commit hash": protocol.gitCommitHash
-							|| undefined,
+						"git commit hash": protocol.gitCommitHash || undefined,
 					}),
 				}),
 			);
@@ -1190,21 +1183,16 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				`querying serial API setup capabilities...`,
 			);
-			const setupCaps = await this.driver.sendMessage<
-				SerialAPISetup_GetSupportedCommandsResponse
-			>(
-				new SerialAPISetup_GetSupportedCommandsRequest(),
-			);
+			const setupCaps =
+				await this.driver.sendMessage<SerialAPISetup_GetSupportedCommandsResponse>(
+					new SerialAPISetup_GetSupportedCommandsRequest(),
+				);
 			this._supportedSerialAPISetupCommands = setupCaps.supportedCommands;
 			this.driver.controllerLog.print(
 				logText("supported serial API setup commands:", {
 					nested: logList(
-						this._supportedSerialAPISetupCommands.map(
-							(cmd) =>
-								getEnumMemberName(
-									SerialAPISetupCommand,
-									cmd,
-								),
+						this._supportedSerialAPISetupCommands.map((cmd) =>
+							getEnumMemberName(SerialAPISetupCommand, cmd),
 						),
 					),
 				}),
@@ -1375,28 +1363,22 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				logText("supported regions:", {
 					nested: logList(
-						[...this._supportedRegions.values()]
-							.map((info) => {
-								let ret = getEnumMemberName(
+						[...this._supportedRegions.values()].map((info) => {
+							let ret = getEnumMemberName(RFRegion, info.region);
+							if (info.includesRegion != undefined) {
+								ret += ` · superset of ${getEnumMemberName(
 									RFRegion,
-									info.region,
-								);
-								if (info.includesRegion != undefined) {
-									ret += ` · superset of ${
-										getEnumMemberName(
-											RFRegion,
-											info.includesRegion,
-										)
-									}`;
+									info.includesRegion,
+								)}`;
+							}
+							if (info.supportsLongRange) {
+								ret += " · ZWLR";
+								if (!info.supportsZWave) {
+									ret += " only";
 								}
-								if (info.supportsLongRange) {
-									ret += " · ZWLR";
-									if (!info.supportsZWave) {
-										ret += " only";
-									}
-								}
-								return ret;
-							}),
+							}
+							return ret;
+						}),
 					),
 				}),
 			);
@@ -1412,12 +1394,10 @@ export class ZWaveController
 			const resp = await this.getRFRegion().catch(() => undefined);
 			if (resp != undefined) {
 				this.driver.controllerLog.print(
-					`The controller is using RF region ${
-						getEnumMemberName(
-							RFRegion,
-							resp,
-						)
-					}`,
+					`The controller is using RF region ${getEnumMemberName(
+						RFRegion,
+						resp,
+					)}`,
 				);
 			} else {
 				this.driver.controllerLog.print(
@@ -1456,8 +1436,8 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				`Querying configured max. Long Range powerlevel...`,
 			);
-			const resp = await this.getMaxLongRangePowerlevel().catch(() =>
-				undefined
+			const resp = await this.getMaxLongRangePowerlevel().catch(
+				() => undefined,
 			);
 			if (resp != undefined) {
 				this.driver.controllerLog.print(
@@ -1495,23 +1475,19 @@ export class ZWaveController
 			&& this.rfRegion != desiredRFRegion
 		) {
 			this.driver.controllerLog.print(
-				`Current RF region (${
-					getEnumMemberName(
-						RFRegion,
-						this.rfRegion ?? RFRegion.Unknown,
-					)
-				}) differs from desired region (${
-					getEnumMemberName(
-						RFRegion,
-						desiredRFRegion,
-					)
-				}), configuring it...`,
+				`Current RF region (${getEnumMemberName(
+					RFRegion,
+					this.rfRegion ?? RFRegion.Unknown,
+				)}) differs from desired region (${getEnumMemberName(
+					RFRegion,
+					desiredRFRegion,
+				)}), configuring it...`,
 			);
 
 			// To know if the region is actually different, also consider the LR capable version of it
 			const isRegionActuallyDifferent =
 				this.tryGetLRCapableRegion(this.rfRegion ?? RFRegion.Unknown)
-					!== this.tryGetLRCapableRegion(desiredRFRegion);
+				!== this.tryGetLRCapableRegion(desiredRFRegion);
 
 			const resp = await this.setRFRegionInternal(
 				desiredRFRegion,
@@ -1520,12 +1496,10 @@ export class ZWaveController
 			).catch((e) => (e as Error).message);
 			if (resp === true) {
 				this.driver.controllerLog.print(
-					`Changed RF region to ${
-						getEnumMemberName(
-							RFRegion,
-							desiredRFRegion,
-						)
-					}`,
+					`Changed RF region to ${getEnumMemberName(
+						RFRegion,
+						desiredRFRegion,
+					)}`,
 				);
 			} else {
 				this.driver.controllerLog.print(
@@ -1595,38 +1569,35 @@ export class ZWaveController
 				).catch(noop);
 			}
 			if (legalPowerlevelLR != undefined) {
-				await this.setMaxLongRangePowerlevel(legalPowerlevelLR)
-					.catch(noop);
+				await this.setMaxLongRangePowerlevel(legalPowerlevelLR).catch(
+					noop,
+				);
 			}
 		}
 
 		// Check and possibly update the Long Range channel settings
-		if (
-			this.isFunctionSupported(FunctionType.GetLongRangeChannel)
-		) {
+		if (this.isFunctionSupported(FunctionType.GetLongRangeChannel)) {
 			this.driver.controllerLog.print(
 				`Querying configured Long Range channel information...`,
 			);
-			const resp = await this.getLongRangeChannel().catch(() =>
-				undefined
+			const resp = await this.getLongRangeChannel().catch(
+				() => undefined,
 			);
 			if (resp != undefined) {
 				this.driver.controllerLog.print(
-					logText(
-						"received Z-Wave Long Range channel information:",
-						{
-							nested: logDict({
-								channel: resp.channel != undefined
+					logText("received Z-Wave Long Range channel information:", {
+						nested: logDict({
+							channel:
+								resp.channel != undefined
 									? getEnumMemberName(
-										LongRangeChannel,
-										resp.channel,
-									)
+											LongRangeChannel,
+											resp.channel,
+										)
 									: "(unknown)",
-								"supports auto channel selection":
-									resp.supportsAutoChannelSelection,
-							}),
-						},
-					),
+							"supports auto channel selection":
+								resp.supportsAutoChannelSelection,
+						}),
+					}),
 				);
 			} else {
 				this.driver.controllerLog.print(
@@ -1640,8 +1611,7 @@ export class ZWaveController
 		if (
 			this.isFunctionSupported(FunctionType.SetLongRangeChannel)
 			&& this.driver.options.rf?.longRangeChannel != undefined
-			&& this.longRangeChannel
-				!== this.driver.options.rf.longRangeChannel
+			&& this.longRangeChannel !== this.driver.options.rf.longRangeChannel
 		) {
 			const desired = this.driver.options.rf.longRangeChannel;
 			if (
@@ -1657,24 +1627,21 @@ export class ZWaveController
 					`Current LR channel ${
 						this.longRangeChannel != undefined
 							? getEnumMemberName(
-								LongRangeChannel,
-								this.longRangeChannel,
-							)
+									LongRangeChannel,
+									this.longRangeChannel,
+								)
 							: "(unknown)"
-					} differs from desired channel ${
-						getEnumMemberName(
-							LongRangeChannel,
-							desired,
-						)
-					}, configuring it...`,
+					} differs from desired channel ${getEnumMemberName(
+						LongRangeChannel,
+						desired,
+					)}, configuring it...`,
 				);
 
-				const resp = await this.setLongRangeChannel(desired)
-					.catch((e) => (e as Error).message);
+				const resp = await this.setLongRangeChannel(desired).catch(
+					(e) => (e as Error).message,
+				);
 				if (resp === true) {
-					this.driver.controllerLog.print(
-						`LR channel updated`,
-					);
+					this.driver.controllerLog.print(`LR channel updated`);
 				} else {
 					this.driver.controllerLog.print(
 						`Changing the LR channel failed!${
@@ -1713,9 +1680,7 @@ export class ZWaveController
 	 * @internal
 	 * Performs additional controller configuration
 	 */
-	public async configure(
-		knownNodeIds: readonly number[],
-	): Promise<void> {
+	public async configure(knownNodeIds: readonly number[]): Promise<void> {
 		// Enable TX status report if supported
 		if (
 			this.isSerialAPISetupCommandSupported(
@@ -1723,13 +1688,12 @@ export class ZWaveController
 			)
 		) {
 			this.driver.controllerLog.print(`Enabling TX status report...`);
-			const resp = await this.driver.sendMessage<
-				SerialAPISetup_SetTXStatusReportResponse
-			>(
-				new SerialAPISetup_SetTXStatusReportRequest({
-					enabled: true,
-				}),
-			);
+			const resp =
+				await this.driver.sendMessage<SerialAPISetup_SetTXStatusReportResponse>(
+					new SerialAPISetup_SetTXStatusReportRequest({
+						enabled: true,
+					}),
+				);
 			this.driver.controllerLog.print(
 				`Enabling TX status report ${
 					resp.success ? "successful" : "failed"
@@ -1744,7 +1708,8 @@ export class ZWaveController
 			{ supportCheck: false },
 		);
 		this._sucNodeId = suc.sucNodeId;
-		const sucNodeMissing = this._sucNodeId !== 0
+		const sucNodeMissing =
+			this._sucNodeId !== 0
 			&& this._sucNodeId !== this._ownNodeId
 			&& !knownNodeIds.includes(this._sucNodeId);
 		if (this._sucNodeId === 0) {
@@ -1768,12 +1733,10 @@ export class ZWaveController
 		if (
 			this.role === ControllerRole.Primary
 			&& !this._isSUC
-			&& (
-				(this._noNodesIncluded
-					&& this._sucNodeId === 0
-					&& !this._isSISPresent)
-				|| sucNodeMissing
-			)
+			&& ((this._noNodesIncluded
+				&& this._sucNodeId === 0
+				&& !this._isSISPresent)
+				|| sucNodeMissing)
 		) {
 			this.driver.controllerLog.print(
 				`There is no SUC/SIS in the network - promoting ourselves...`,
@@ -1811,14 +1774,13 @@ export class ZWaveController
 			this.driver.controllerLog.print(
 				`setting serial API timeouts: ack = ${ack} ms, byte = ${byte} ms`,
 			);
-			const resp = await this.driver.sendMessage<
-				SetSerialApiTimeoutsResponse
-			>(
-				new SetSerialApiTimeoutsRequest({
-					ackTimeout: ack,
-					byteTimeout: byte,
-				}),
-			);
+			const resp =
+				await this.driver.sendMessage<SetSerialApiTimeoutsResponse>(
+					new SetSerialApiTimeoutsRequest({
+						ackTimeout: ack,
+						byteTimeout: byte,
+					}),
+				);
 			this.driver.controllerLog.print(
 				`serial API timeouts overwritten. The old values were: ack = ${resp.oldAckTimeout} ms, byte = ${resp.oldByteTimeout} ms`,
 			);
@@ -1834,9 +1796,9 @@ export class ZWaveController
 				await impl.interview();
 			} catch (e) {
 				this.driver.controllerLog.print(
-					`Interviewing the ${name} proprietary implementation failed: ${
-						getErrorMessage(e)
-					}`,
+					`Interviewing the ${name} proprietary implementation failed: ${getErrorMessage(
+						e,
+					)}`,
 					"warn",
 				);
 			}
@@ -1977,14 +1939,13 @@ export class ZWaveController
 		const nodeIds: number[] = [];
 
 		if (this.supportsLongRange) {
-			for (let segment = 0;; segment++) {
-				const nodesResponse = await this.driver.sendMessage<
-					GetLongRangeNodesResponse
-				>(
-					new GetLongRangeNodesRequest({
-						segmentNumber: segment,
-					}),
-				);
+			for (let segment = 0; ; segment++) {
+				const nodesResponse =
+					await this.driver.sendMessage<GetLongRangeNodesResponse>(
+						new GetLongRangeNodesRequest({
+							segmentNumber: segment,
+						}),
+					);
 				nodeIds.push(...nodesResponse.nodeIds);
 
 				if (!nodesResponse.moreNodes) break;
@@ -2097,16 +2058,14 @@ export class ZWaveController
 				this.driver.controllerLog.print(
 					"Starting hardware watchdog...",
 				);
-				await this.driver.sendMessage(
-					new StartWatchdogRequest(),
-				);
+				await this.driver.sendMessage(new StartWatchdogRequest());
 
 				return true;
 			} catch (e) {
 				this.driver.controllerLog.print(
-					`Starting the hardware watchdog failed: ${
-						getErrorMessage(e)
-					}`,
+					`Starting the hardware watchdog failed: ${getErrorMessage(
+						e,
+					)}`,
 					"error",
 				);
 			}
@@ -2124,16 +2083,14 @@ export class ZWaveController
 				this.driver.controllerLog.print(
 					"Stopping hardware watchdog...",
 				);
-				await this.driver.sendMessage(
-					new StopWatchdogRequest(),
-				);
+				await this.driver.sendMessage(new StopWatchdogRequest());
 
 				return true;
 			} catch (e) {
 				this.driver.controllerLog.print(
-					`Stopping the hardware watchdog failed: ${
-						getErrorMessage(e)
-					}`,
+					`Stopping the hardware watchdog failed: ${getErrorMessage(
+						e,
+					)}`,
 					"error",
 				);
 			}
@@ -2196,10 +2153,11 @@ export class ZWaveController
 		}
 
 		const startedPromise = createDeferredPromise<void>();
-		void this.driver.scheduler.queueTask(this.getBeginClassicInclusionTask(
-			startedPromise,
-			options,
-		)).catch(noop); // Errors will be exposed through events
+		void this.driver.scheduler
+			.queueTask(
+				this.getBeginClassicInclusionTask(startedPromise, options),
+			)
+			.catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
 		await startedPromise;
@@ -2227,9 +2185,10 @@ export class ZWaveController
 				// Start the inclusion process
 				self.setInclusionState(InclusionState.Including);
 				self.driver.controllerLog.print(
-					`Starting inclusion process with strategy ${
-						getEnumMemberName(InclusionStrategy, options.strategy)
-					}...`,
+					`Starting inclusion process with strategy ${getEnumMemberName(
+						InclusionStrategy,
+						options.strategy,
+					)}...`,
 				);
 
 				// Keep track of the callback ID for the inclusion process
@@ -2302,12 +2261,14 @@ export class ZWaveController
 		}
 
 		const startedPromise = createDeferredPromise<void>();
-		void this.driver.scheduler.queueTask(
-			this.getBeginSmartStartInclusionTask(
-				startedPromise,
-				provisioningEntry,
-			),
-		).catch(noop); // Errors will be exposed through events
+		void this.driver.scheduler
+			.queueTask(
+				this.getBeginSmartStartInclusionTask(
+					startedPromise,
+					provisioningEntry,
+				),
+			)
+			.catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
 		await startedPromise;
@@ -2347,7 +2308,8 @@ export class ZWaveController
 					// Kick off the inclusion process using either the
 					// specified protocol or the first supported one
 					const dskBuffer = dskFromString(provisioningEntry.dsk);
-					const protocol = provisioningEntry.protocol
+					const protocol =
+						provisioningEntry.protocol
 						?? provisioningEntry.supportedProtocols?.[0]
 						?? Protocols.ZWave;
 
@@ -2409,8 +2371,7 @@ export class ZWaveController
 			const msg = yield* waitFor(
 				self.driver.waitForMessage(
 					(msg): msg is AddNodeToNetworkRequestStatusReport =>
-						msg
-							instanceof AddNodeToNetworkRequestStatusReport
+						msg instanceof AddNodeToNetworkRequestStatusReport
 						&& msg.callbackId === callbackId,
 					undefined, // Wait indefinitely
 					undefined,
@@ -2444,20 +2405,16 @@ export class ZWaveController
 			expected: AddNodeStatus[],
 		) {
 			// Unexpected status, abort
-			let message = `Unexpected status during inclusion: ${
-				getEnumMemberName(
-					AddNodeStatus,
-					status,
-				)
-			}, expected `;
+			let message = `Unexpected status during inclusion: ${getEnumMemberName(
+				AddNodeStatus,
+				status,
+			)}, expected `;
 			if (expected.length === 1) {
 				message += getEnumMemberName(AddNodeStatus, expected[0]);
 			} else {
-				message += `one of: ${
-					expected
-						.map((s) => getEnumMemberName(AddNodeStatus, s))
-						.join(", ")
-				}`;
+				message += `one of: ${expected
+					.map((s) => getEnumMemberName(AddNodeStatus, s))
+					.join(", ")}`;
 			}
 			self.driver.controllerLog.print(message, "error");
 			yield* waitFor(self.stopInclusionInternal());
@@ -2470,10 +2427,7 @@ export class ZWaveController
 
 			if (msg.status !== AddNodeStatus.NodeFound) {
 				// Unexpected status, abort
-				yield* abortInclusion(
-					msg.status,
-					[AddNodeStatus.NodeFound],
-				);
+				yield* abortInclusion(msg.status, [AddNodeStatus.NodeFound]);
 				return;
 			}
 
@@ -2514,10 +2468,7 @@ export class ZWaveController
 				msg.statusContext!.controlledCCs,
 				// Create an empty value DB and specify that it contains no values
 				// to avoid indexing the existing values
-				this.createValueDBForNode(
-					msg.statusContext!.nodeId,
-					new Set(),
-				),
+				this.createValueDBForNode(msg.statusContext!.nodeId, new Set()),
 			);
 
 			// TODO: According to INS13954, there are several more steps and different timeouts when including a controller
@@ -2531,9 +2482,7 @@ export class ZWaveController
 
 			if (msg.status !== AddNodeStatus.ProtocolDone) {
 				// Unexpected status, abort
-				yield* abortInclusion(msg.status, [
-					AddNodeStatus.ProtocolDone,
-				]);
+				yield* abortInclusion(msg.status, [AddNodeStatus.ProtocolDone]);
 				return;
 			}
 		}
@@ -2589,14 +2538,10 @@ export class ZWaveController
 		// Inclusion is now completed, bootstrap the node
 		const newNode = nodePendingInclusion;
 
-		const supportedCCs = [
-			...newNode.implementedCommandClasses.entries(),
-		]
+		const supportedCCs = [...newNode.implementedCommandClasses.entries()]
 			.filter(([, info]) => info.isSupported)
 			.map(([cc]) => cc);
-		const controlledCCs = [
-			...newNode.implementedCommandClasses.entries(),
-		]
+		const controlledCCs = [...newNode.implementedCommandClasses.entries()]
 			.filter(([, info]) => info.isControlled)
 			.map(([cc]) => cc);
 
@@ -2612,14 +2557,13 @@ export class ZWaveController
 				nested: logDict({
 					"basic device class": newNode.deviceClass
 						? getEnumMemberName(
-							BasicDeviceClass,
-							newNode.deviceClass.basic,
-						)
+								BasicDeviceClass,
+								newNode.deviceClass.basic,
+							)
 						: undefined,
-					"generic device class": newNode.deviceClass
-						?.generic.label,
-					"specific device class": newNode.deviceClass
-						?.specific.label,
+					"generic device class": newNode.deviceClass?.generic.label,
+					"specific device class":
+						newNode.deviceClass?.specific.label,
 					"supported CCs": logList(
 						supportedCCs.map(
 							(cc) => `${CommandClasses[cc]} (${num2hex(cc)})`,
@@ -2647,9 +2591,7 @@ export class ZWaveController
 			);
 		}
 
-		let bootstrapFailure:
-			| SecurityBootstrapFailure
-			| undefined;
+		let bootstrapFailure: SecurityBootstrapFailure | undefined;
 		let smartStartFailed = false;
 
 		// A controller performing a SmartStart network inclusion shall perform S2 bootstrapping,
@@ -2657,9 +2599,7 @@ export class ZWaveController
 		let forceAddedS2Support = false;
 		if (
 			opts.strategy === InclusionStrategy.SmartStart
-			&& !newNode.supportsCC(
-				CommandClasses["Security 2"],
-			)
+			&& !newNode.supportsCC(CommandClasses["Security 2"])
 		) {
 			this.driver.controllerLog.logNode(newNode.id, {
 				message:
@@ -2678,38 +2618,25 @@ export class ZWaveController
 		if (
 			newNode.supportsCC(CommandClasses["Security 2"])
 			&& (opts.strategy === InclusionStrategy.Default
-				|| opts.strategy
-					=== InclusionStrategy.Security_S2
-				|| opts.strategy
-					=== InclusionStrategy.SmartStart)
+				|| opts.strategy === InclusionStrategy.Security_S2
+				|| opts.strategy === InclusionStrategy.SmartStart)
 		) {
-			bootstrapFailure = yield* waitFor(this.secureBootstrapS2(
-				newNode,
-				opts,
-			));
-			const actualSecurityClass = newNode
-				.getHighestSecurityClass();
+			bootstrapFailure = yield* waitFor(
+				this.secureBootstrapS2(newNode, opts),
+			);
+			const actualSecurityClass = newNode.getHighestSecurityClass();
 
 			if (bootstrapFailure == undefined) {
-				if (
-					actualSecurityClass
-						== SecurityClass.S0_Legacy
-				) {
+				if (actualSecurityClass == SecurityClass.S0_Legacy) {
 					// Notify user about potential S0 downgrade attack.
 					// S0 is considered insecure if both controller and node are S2-capable
-					bootstrapFailure = SecurityBootstrapFailure
-						.S0Downgrade;
+					bootstrapFailure = SecurityBootstrapFailure.S0Downgrade;
 
-					this.driver.controllerLog.logNode(
-						newNode.id,
-						{
-							message: "Possible S0 downgrade attack detected!",
-							level: "warn",
-						},
-					);
-				} else if (
-					!securityClassIsS2(actualSecurityClass)
-				) {
+					this.driver.controllerLog.logNode(newNode.id, {
+						message: "Possible S0 downgrade attack detected!",
+						level: "warn",
+					});
+				} else if (!securityClassIsS2(actualSecurityClass)) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
 			} else {
@@ -2723,67 +2650,45 @@ export class ZWaveController
 				&& !securityClassIsS2(actualSecurityClass)
 			) {
 				// Remove the fake S2 support again
-				newNode.removeCC(
-					CommandClasses["Security 2"],
-				);
+				newNode.removeCC(CommandClasses["Security 2"]);
 			}
 		} else if (
 			newNode.supportsCC(CommandClasses.Security)
-			&& (opts.strategy
-					=== InclusionStrategy.Security_S0
-				|| (opts.strategy
-						=== InclusionStrategy.Default
+			&& (opts.strategy === InclusionStrategy.Security_S0
+				|| (opts.strategy === InclusionStrategy.Default
 					&& (opts.forceSecurity
 						|| (
 							newNode.deviceClass?.specific
-								?? newNode.deviceClass
-									?.generic
+							?? newNode.deviceClass?.generic
 						)?.requiresSecurity)))
 		) {
-			bootstrapFailure = yield* waitFor(this.secureBootstrapS0(
-				newNode,
-				newNodeIsController,
-			));
+			bootstrapFailure = yield* waitFor(
+				this.secureBootstrapS0(newNode, newNodeIsController),
+			);
 			if (bootstrapFailure == undefined) {
-				const actualSecurityClass = newNode
-					.getHighestSecurityClass();
-				if (
-					actualSecurityClass
-						== SecurityClass.S0_Legacy
-				) {
+				const actualSecurityClass = newNode.getHighestSecurityClass();
+				if (actualSecurityClass == SecurityClass.S0_Legacy) {
 					// If the user chose this, i.e. InclusionStrategy.Security_S0 was used,
 					// then this is the expected outcome and not a failure
-					if (
-						opts.strategy
-							!== InclusionStrategy
-								.Security_S0
-					) {
+					if (opts.strategy !== InclusionStrategy.Security_S0) {
 						// S0 is considered insecure if both controller and node are S2-capable
 						const nif = yield* waitFor(
-							newNode
-								.requestNodeInfo()
-								.catch(() => undefined),
+							newNode.requestNodeInfo().catch(() => undefined),
 						);
 						if (
 							nif?.supportedCCs.includes(
-								CommandClasses[
-									"Security 2"
-								],
+								CommandClasses["Security 2"],
 							)
 						) {
 							// Notify user about potential S0 downgrade attack.
-							bootstrapFailure = SecurityBootstrapFailure
-								.S0Downgrade;
+							bootstrapFailure =
+								SecurityBootstrapFailure.S0Downgrade;
 
-							this.driver.controllerLog
-								.logNode(
-									newNode.id,
-									{
-										message:
-											"Possible S0 downgrade attack detected!",
-										level: "warn",
-									},
-								);
+							this.driver.controllerLog.logNode(newNode.id, {
+								message:
+									"Possible S0 downgrade attack detected!",
+								level: "warn",
+							});
 						}
 					}
 				} else {
@@ -2793,10 +2698,7 @@ export class ZWaveController
 		} else {
 			// Remember that no security classes were granted
 			for (const secClass of securityClassOrder) {
-				newNode.securityClasses.set(
-					secClass,
-					false,
-				);
+				newNode.securityClasses.set(secClass, false);
 			}
 		}
 
@@ -2811,25 +2713,21 @@ export class ZWaveController
 				const dsk = opts.provisioning.dsk;
 				const maxAttempts =
 					this.driver.options.attempts.smartStartInclusion;
-				const currentAttempts = this._smartStartFailedAttempts.get(dsk)
-					|| 0;
+				const currentAttempts =
+					this._smartStartFailedAttempts.get(dsk) || 0;
 				const newAttempts = currentAttempts + 1;
 				this._smartStartFailedAttempts.set(dsk, newAttempts);
 
-				this.driver.controllerLog.logNode(
-					newNode.id,
-					{
-						message:
-							`SmartStart inclusion failed for DSK ${dsk} (attempt ${newAttempts}/${maxAttempts}).`,
-						level: "warn",
-					},
-				);
+				this.driver.controllerLog.logNode(newNode.id, {
+					message: `SmartStart inclusion failed for DSK ${dsk} (attempt ${newAttempts}/${maxAttempts}).`,
+					level: "warn",
+				});
 
 				// Disable the provisioning entry after max failed attempts
 				if (newAttempts >= maxAttempts) {
 					const provisioningList = [...this.provisioningList];
-					const entryIndex = provisioningList.findIndex((e) =>
-						e.dsk === dsk
+					const entryIndex = provisioningList.findIndex(
+						(e) => e.dsk === dsk,
 					);
 					if (entryIndex >= 0) {
 						provisioningList[entryIndex] = {
@@ -2841,65 +2739,55 @@ export class ZWaveController
 						// Reset the failure counter when automatically disabling the entry
 						this.resetSmartStartFailureCount(dsk);
 
-						this.driver.controllerLog.logNode(
-							newNode.id,
-							{
-								message:
-									`Provisioning entry for DSK ${dsk} has been disabled after ${maxAttempts} failed inclusion attempts.`,
-								level: "warn",
-							},
-						);
+						this.driver.controllerLog.logNode(newNode.id, {
+							message: `Provisioning entry for DSK ${dsk} has been disabled after ${maxAttempts} failed inclusion attempts.`,
+							level: "warn",
+						});
 					}
 				}
 			}
 
 			try {
-				this.driver.controllerLog.logNode(
-					newNode.id,
-					{
-						message:
-							"SmartStart inclusion failed. Checking if the node needs to be removed.",
-						level: "warn",
-					},
+				this.driver.controllerLog.logNode(newNode.id, {
+					message:
+						"SmartStart inclusion failed. Checking if the node needs to be removed.",
+					level: "warn",
+				});
+
+				yield* waitFor(
+					this.removeFailedNodeInternal(
+						newNode.id,
+						RemoveNodeReason.SmartStartFailed,
+					),
 				);
 
-				yield* waitFor(this.removeFailedNodeInternal(
-					newNode.id,
-					RemoveNodeReason.SmartStartFailed,
-				));
-
-				this.driver.controllerLog.logNode(
-					newNode.id,
-					{
-						message: "was removed",
-					},
-				);
+				this.driver.controllerLog.logNode(newNode.id, {
+					message: "was removed",
+				});
 
 				// The node was removed. Do not emit the "node added" event
 				this.setInclusionState(InclusionState.Idle);
 				return;
 			} catch {
 				// The node could not be removed, continue
-				this.driver.controllerLog.logNode(
-					newNode.id,
-					{
-						message:
-							"The node is still part of the network, continuing with insecure communication.",
-						level: "warn",
-					},
-				);
+				this.driver.controllerLog.logNode(newNode.id, {
+					message:
+						"The node is still part of the network, continuing with insecure communication.",
+					level: "warn",
+				});
 			}
 		}
 
 		this.setInclusionState(InclusionState.Idle);
 
 		// We're done adding this node, notify listeners
-		const result: InclusionResult = bootstrapFailure != undefined
-			? {
-				lowSecurity: true,
-				lowSecurityReason: bootstrapFailure,
-			}
-			: { lowSecurity: false };
+		const result: InclusionResult =
+			bootstrapFailure != undefined
+				? {
+						lowSecurity: true,
+						lowSecurityReason: bootstrapFailure,
+					}
+				: { lowSecurity: false };
 
 		// Clear the failed attempts counter for successful SmartStart inclusions
 		if (
@@ -2939,15 +2827,14 @@ export class ZWaveController
 	private async finishInclusion(): Promise<number> {
 		this.driver.controllerLog.print(`finishing inclusion process...`);
 
-		const response = await this.driver.sendMessage<
-			AddNodeToNetworkRequestStatusReport
-		>(
-			new AddNodeToNetworkRequest({
-				addNodeType: AddNodeType.Stop,
-				highPower: true,
-				networkWide: true,
-			}),
-		);
+		const response =
+			await this.driver.sendMessage<AddNodeToNetworkRequestStatusReport>(
+				new AddNodeToNetworkRequest({
+					addNodeType: AddNodeType.Stop,
+					highPower: true,
+					networkWide: true,
+				}),
+			);
 		if (response.status === AddNodeStatus.Done) {
 			return response.statusContext!.nodeId;
 		}
@@ -2970,8 +2857,10 @@ export class ZWaveController
 		const result = await this.stopInclusionInternal();
 		// If this stopped an inclusion process, we need to drop all inclusion-related tasks
 		if (result) {
-			await this.driver.scheduler.removeTasks((t) =>
-				t.tag?.id === "inclusion" || t.tag?.id === "replace-failed-node"
+			await this.driver.scheduler.removeTasks(
+				(t) =>
+					t.tag?.id === "inclusion"
+					|| t.tag?.id === "replace-failed-node",
 			);
 		}
 		return result;
@@ -3054,11 +2943,9 @@ export class ZWaveController
 			} catch (e) {
 				this.setInclusionState(InclusionState.Idle);
 				this.driver.controllerLog.print(
-					`Smart Start listening mode could not be enabled: ${
-						getErrorMessage(
-							e,
-						)
-					}`,
+					`Smart Start listening mode could not be enabled: ${getErrorMessage(
+						e,
+					)}`,
 					"error",
 				);
 				throw e;
@@ -3103,11 +2990,9 @@ export class ZWaveController
 			} catch (e) {
 				this.setInclusionState(InclusionState.SmartStart);
 				this.driver.controllerLog.print(
-					`Smart Start listening mode could not be disabled: ${
-						getErrorMessage(
-							e,
-						)
-					}`,
+					`Smart Start listening mode could not be disabled: ${getErrorMessage(
+						e,
+					)}`,
 					"error",
 				);
 				throw e;
@@ -3144,11 +3029,9 @@ export class ZWaveController
 				return true;
 			} catch (e) {
 				this.driver.controllerLog.print(
-					`Smart Start listening mode could not be left: ${
-						getErrorMessage(
-							e,
-						)
-					}`,
+					`Smart Start listening mode could not be left: ${getErrorMessage(
+						e,
+					)}`,
 					"error",
 				);
 				throw e;
@@ -3178,10 +3061,9 @@ export class ZWaveController
 		}
 
 		const startedPromise = createDeferredPromise<void>();
-		void this.driver.scheduler.queueTask(this.getExclusionTask(
-			startedPromise,
-			options,
-		)).catch(noop); // Errors will be exposed through events
+		void this.driver.scheduler
+			.queueTask(this.getExclusionTask(startedPromise, options))
+			.catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
 		await startedPromise;
@@ -3213,8 +3095,8 @@ export class ZWaveController
 		const result = await this.stopExclusionInternal();
 		// If this stopped an exclusion process, we need to drop the task
 		if (result) {
-			await this.driver.scheduler.removeTasks((t) =>
-				t.tag?.id === "exclusion"
+			await this.driver.scheduler.removeTasks(
+				(t) => t.tag?.id === "exclusion",
 			);
 		}
 		return result;
@@ -3358,8 +3240,7 @@ export class ZWaveController
 			const msg = yield* waitFor(
 				self.driver.waitForMessage(
 					(msg): msg is RemoveNodeFromNetworkRequestStatusReport =>
-						msg
-							instanceof RemoveNodeFromNetworkRequestStatusReport
+						msg instanceof RemoveNodeFromNetworkRequestStatusReport
 						&& msg.callbackId === callbackId,
 					undefined, // Wait indefinitely
 					undefined,
@@ -3393,20 +3274,16 @@ export class ZWaveController
 			expected: RemoveNodeStatus[],
 		) {
 			// Unexpected status, abort
-			let message = `Unexpected status during exclusion: ${
-				getEnumMemberName(
-					RemoveNodeStatus,
-					status,
-				)
-			}, expected `;
+			let message = `Unexpected status during exclusion: ${getEnumMemberName(
+				RemoveNodeStatus,
+				status,
+			)}, expected `;
 			if (expected.length === 1) {
 				message += getEnumMemberName(RemoveNodeStatus, expected[0]);
 			} else {
-				message += `one of: ${
-					expected
-						.map((s) => getEnumMemberName(RemoveNodeStatus, s))
-						.join(", ")
-				}`;
+				message += `one of: ${expected
+					.map((s) => getEnumMemberName(RemoveNodeStatus, s))
+					.join(", ")}`;
 			}
 			self.driver.controllerLog.print(message, "error");
 			yield* waitFor(self.stopExclusionInternal());
@@ -3419,9 +3296,7 @@ export class ZWaveController
 
 			if (msg.status !== RemoveNodeStatus.NodeFound) {
 				// Unexpected status, abort
-				yield* abortExclusion(msg.status, [
-					RemoveNodeStatus.NodeFound,
-				]);
+				yield* abortExclusion(msg.status, [RemoveNodeStatus.NodeFound]);
 				return;
 			}
 
@@ -3447,9 +3322,7 @@ export class ZWaveController
 				return;
 			}
 
-			nodePendingExclusion = this.nodes.get(
-				msg.statusContext!.nodeId,
-			);
+			nodePendingExclusion = this.nodes.get(msg.statusContext!.nodeId);
 		}
 
 		// Step 3: Wait for Done
@@ -3583,8 +3456,8 @@ export class ZWaveController
 				const nodeId = newState.includedNodeId;
 				// We might end up here after only receiving an Initiate command, but no NIF
 				// For this case, just create an empty shell for the node and replace it later
-				let newNode = newState.newNode
-					?? new ZWaveNode(nodeId, this.driver);
+				let newNode =
+					newState.newNode ?? new ZWaveNode(nodeId, this.driver);
 				this._nodes.set(nodeId, newNode);
 
 				const inclCtrlr = this.nodes.getOrThrow(
@@ -3640,12 +3513,13 @@ export class ZWaveController
 				);
 
 				// We're done adding this node, notify listeners
-				const result: InclusionResult = bootstrapFailure != undefined
-					? {
-						lowSecurity: true,
-						lowSecurityReason: bootstrapFailure,
-					}
-					: { lowSecurity: false };
+				const result: InclusionResult =
+					bootstrapFailure != undefined
+						? {
+								lowSecurity: true,
+								lowSecurityReason: bootstrapFailure,
+							}
+						: { lowSecurity: false };
 
 				this.setInclusionState(InclusionState.Idle);
 				this.emit("node added", newNode, result);
@@ -3734,7 +3608,8 @@ export class ZWaveController
 			|| msg
 				instanceof ApplicationUpdateRequestSmartStartLongRangeHomeIDReceived
 		) {
-			const isLongRange = msg
+			const isLongRange =
+				msg
 				instanceof ApplicationUpdateRequestSmartStartLongRangeHomeIDReceived;
 			// The controller is in Smart Start learn mode and a node requests inclusion via Smart Start
 			this.driver.controllerLog.print(
@@ -3764,20 +3639,20 @@ export class ZWaveController
 					return false;
 				}
 				// TODO: This is duplicated with the logic in beginInclusionSmartStart
-				const entryProtocol = entry.protocol
+				const entryProtocol =
+					entry.protocol
 					?? entry.supportedProtocols?.[0]
 					?? Protocols.ZWave;
-				return (entryProtocol === Protocols.ZWaveLongRange)
-					=== isLongRange;
+				return (
+					(entryProtocol === Protocols.ZWaveLongRange) === isLongRange
+				);
 			});
 			if (!entry) {
 				this.driver.controllerLog.print(
 					"NWI Home ID not found in provisioning list, ignoring request...",
 				);
 				return;
-			} else if (
-				entry.status === ProvisioningEntryStatus.Inactive
-			) {
+			} else if (entry.status === ProvisioningEntryStatus.Inactive) {
 				this.driver.controllerLog.print(
 					"The provisioning entry for this node is inactive, ignoring request...",
 				);
@@ -3789,10 +3664,11 @@ export class ZWaveController
 			// for Z-Wave Classic.
 			const provisioningEntry = cloneDeep(entry);
 			if (isLongRange) {
-				provisioningEntry.securityClasses = provisioningEntry
-					.securityClasses.filter((sc) =>
-						sc === SecurityClass.S2_AccessControl
-						|| sc === SecurityClass.S2_Authenticated
+				provisioningEntry.securityClasses =
+					provisioningEntry.securityClasses.filter(
+						(sc) =>
+							sc === SecurityClass.S2_AccessControl
+							|| sc === SecurityClass.S2_Authenticated,
 					);
 			}
 
@@ -3809,13 +3685,12 @@ export class ZWaveController
 						"Ignoring inclusion request because the following security classes were granted but have no key configured:",
 						{
 							nested: logList(
-								missingKeys.map((sc) =>
-									`${
-										getEnumMemberName(
+								missingKeys.map(
+									(sc) =>
+										`${getEnumMemberName(
 											SecurityClass,
 											sc,
-										)
-									}${isLongRange ? " (Long Range)" : ""}`
+										)}${isLongRange ? " (Long Range)" : ""}`,
 								),
 							),
 						},
@@ -3829,9 +3704,8 @@ export class ZWaveController
 				"NWI Home ID found in provisioning list, including node...",
 			);
 			try {
-				const result = await this.beginInclusionSmartStart(
-					provisioningEntry,
-				);
+				const result =
+					await this.beginInclusionSmartStart(provisioningEntry);
 				if (!result) {
 					this.driver.controllerLog.print(
 						"Smart Start inclusion could not be started",
@@ -3840,11 +3714,9 @@ export class ZWaveController
 				}
 			} catch (e) {
 				this.driver.controllerLog.print(
-					`Smart Start inclusion could not be started: ${
-						getErrorMessage(
-							e,
-						)
-					}`,
+					`Smart Start inclusion could not be started: ${getErrorMessage(
+						e,
+					)}`,
 					"error",
 				);
 			}
@@ -3914,20 +3786,20 @@ export class ZWaveController
 						nested: logDict({
 							"basic device class": newNode.deviceClass
 								? getEnumMemberName(
-									BasicDeviceClass,
-									newNode.deviceClass.basic,
-								)
+										BasicDeviceClass,
+										newNode.deviceClass.basic,
+									)
 								: undefined,
-							"generic device class": newNode.deviceClass
-								?.generic.label,
-							"specific device class": newNode.deviceClass
-								?.specific.label,
+							"generic device class":
+								newNode.deviceClass?.generic.label,
+							"specific device class":
+								newNode.deviceClass?.specific.label,
 							"supported CCs": logList(
 								nodeInfo.supportedCCs.map(
 									(cc) =>
-										`${CommandClasses[cc]} (${
-											num2hex(cc)
-										})`,
+										`${CommandClasses[cc]} (${num2hex(
+											cc,
+										)})`,
 								),
 							),
 						}),
@@ -4040,12 +3912,13 @@ export class ZWaveController
 			);
 
 			// We're done adding this node, notify listeners
-			const result: InclusionResult = bootstrapFailure != undefined
-				? {
-					lowSecurity: true,
-					lowSecurityReason: bootstrapFailure,
-				}
-				: { lowSecurity: false };
+			const result: InclusionResult =
+				bootstrapFailure != undefined
+					? {
+							lowSecurity: true,
+							lowSecurityReason: bootstrapFailure,
+						}
+					: { lowSecurity: false };
 
 			this.setInclusionState(InclusionState.Idle);
 			this.emit("node added", newNode, result);
@@ -4129,15 +4002,16 @@ export class ZWaveController
 					s0result == undefined
 						? "timed out"
 						: s0result.status === InclusionControllerStatus.OK
-						? "succeeded"
-						: "failed"
+							? "succeeded"
+							: "failed"
 				}`,
 			);
-			bootstrapFailure = s0result == undefined
-				? SecurityBootstrapFailure.Timeout
-				: s0result.status === InclusionControllerStatus.OK
-				? undefined
-				: SecurityBootstrapFailure.Unknown;
+			bootstrapFailure =
+				s0result == undefined
+					? SecurityBootstrapFailure.Timeout
+					: s0result.status === InclusionControllerStatus.OK
+						? undefined
+						: SecurityBootstrapFailure.Unknown;
 
 			// When bootstrapping with S0, no other keys are granted
 			for (const secClass of securityClassOrder) {
@@ -4241,8 +4115,7 @@ export class ZWaveController
 
 			// success 🎉
 		} catch (e) {
-			let errorMessage =
-				`Security S0 bootstrapping failed, the node was not granted the S0 security class`;
+			let errorMessage = `Security S0 bootstrapping failed, the node was not granted the S0 security class`;
 			let failure: SecurityBootstrapFailure =
 				SecurityBootstrapFailure.Unknown;
 			if (!isZWaveError(e)) {
@@ -4298,9 +4171,10 @@ export class ZWaveController
 			}
 		};
 
-		const securityManager = node.protocol === Protocols.ZWaveLongRange
-			? this.driver.securityManagerLR
-			: this.driver.securityManager2;
+		const securityManager =
+			node.protocol === Protocols.ZWaveLongRange
+				? this.driver.securityManagerLR
+				: this.driver.securityManager2;
 
 		if (!securityManager) {
 			// Remember that the node was NOT granted any S2 security classes
@@ -4324,7 +4198,7 @@ export class ZWaveController
 					return Promise.resolve({
 						clientSideAuth: false,
 						securityClasses: requested.securityClasses.filter((r) =>
-							grantedSecurityClasses.includes(r)
+							grantedSecurityClasses.includes(r),
 						),
 					});
 				},
@@ -4409,8 +4283,7 @@ export class ZWaveController
 
 			const abortTimeout = async () => {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
+					message: `Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
 					level: "warn",
 				});
 
@@ -4424,8 +4297,7 @@ export class ZWaveController
 				.getKeyExchangeParameters();
 			if (!kexParams) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: did not receive the node's desired security classes.`,
+					message: `Security S2 bootstrapping failed: did not receive the node's desired security classes.`,
 					level: "warn",
 				});
 				await abort();
@@ -4436,8 +4308,7 @@ export class ZWaveController
 			// Echo flag must be false
 			if (kexParams.echo) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: KEX Report unexpectedly has the echo flag set.`,
+					message: `Security S2 bootstrapping failed: KEX Report unexpectedly has the echo flag set.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoVerify);
@@ -4453,8 +4324,7 @@ export class ZWaveController
 				)
 			) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: No supported key exchange scheme or invalid list.`,
+					message: `Security S2 bootstrapping failed: No supported key exchange scheme or invalid list.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoSupportedScheme);
@@ -4466,8 +4336,7 @@ export class ZWaveController
 				)
 			) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: No supported ECDH profile or invalid list.`,
+					message: `Security S2 bootstrapping failed: No supported ECDH profile or invalid list.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoSupportedCurve);
@@ -4476,8 +4345,7 @@ export class ZWaveController
 				// We do not support CSA at the moment, so it is never granted.
 				// Alternatively, filter out S2 Authenticated and S2 Access Control
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: CSA requested but not granted.`,
+					message: `Security S2 bootstrapping failed: CSA requested but not granted.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.BootstrappingCanceled);
@@ -4485,12 +4353,11 @@ export class ZWaveController
 			}
 
 			const supportedKeys = kexParams.requestedKeys.filter((k) =>
-				securityClassOrder.includes(k as any)
+				securityClassOrder.includes(k as any),
 			);
 			if (!supportedKeys.length) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: None of the requested security classes are supported.`,
+					message: `Security S2 bootstrapping failed: None of the requested security classes are supported.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoKeyMatch);
@@ -4511,20 +4378,18 @@ export class ZWaveController
 			if (grantResult === false) {
 				// There was a timeout or the user did not confirm the request, abort
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: User rejected the requested security classes or interaction timed out.`,
+					message: `Security S2 bootstrapping failed: User rejected the requested security classes or interaction timed out.`,
 					level: "warn",
 				});
 				return abortUser();
 			}
 			const grantedKeys = supportedKeys.filter((k) =>
-				grantResult.securityClasses.includes(k)
+				grantResult.securityClasses.includes(k),
 			);
 			if (!grantedKeys.length) {
 				// The user did not grant any of the requested keys
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: None of the requested keys were granted by the user.`,
+					message: `Security S2 bootstrapping failed: None of the requested keys were granted by the user.`,
 					level: "warn",
 				});
 				return abortUser();
@@ -4539,22 +4404,23 @@ export class ZWaveController
 				selectedKEXScheme: KEXSchemes.KEXScheme1,
 			});
 
-			const pubKeyResponse = await this.driver.waitForCommand<
-				Security2CCPublicKeyReport | Security2CCKEXFail
-			>(
-				(cc) =>
-					cc instanceof Security2CCPublicKeyReport
-					|| cc instanceof Security2CCKEXFail,
-				inclusionTimeouts.TA2,
-			).catch(() => "timeout" as const);
+			const pubKeyResponse = await this.driver
+				.waitForCommand<
+					Security2CCPublicKeyReport | Security2CCKEXFail
+				>(
+					(cc) =>
+						cc instanceof Security2CCPublicKeyReport
+						|| cc instanceof Security2CCKEXFail,
+					inclusionTimeouts.TA2,
+				)
+				.catch(() => "timeout" as const);
 			if (pubKeyResponse === "timeout") return abortTimeout();
 			if (
 				pubKeyResponse instanceof Security2CCKEXFail
 				|| pubKeyResponse.includingNode
 			) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`The joining node canceled the Security S2 bootstrapping.`,
+					message: `The joining node canceled the Security S2 bootstrapping.`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -4582,8 +4448,8 @@ export class ZWaveController
 				const dsk = dskToString(nodePublicKey.subarray(0, 16)).slice(5);
 
 				// The time the user has to enter the PIN is limited by the timeout TAI2
-				const tai2RemainingMs = inclusionTimeouts.TAI2
-					- (Date.now() - timerStartTAI2);
+				const tai2RemainingMs =
+					inclusionTimeouts.TAI2 - (Date.now() - timerStartTAI2);
 
 				let pinResult: string | false;
 				if (
@@ -4609,8 +4475,7 @@ export class ZWaveController
 				) {
 					// There was a timeout, the user did not confirm the DSK or entered an invalid PIN
 					this.driver.controllerLog.logNode(node.id, {
-						message:
-							`Security S2 bootstrapping failed: User rejected the DSK, entered an invalid PIN or the interaction timed out.`,
+						message: `Security S2 bootstrapping failed: User rejected the DSK, entered an invalid PIN or the interaction timed out.`,
 						level: "warn",
 					});
 					return abortUser();
@@ -4641,26 +4506,25 @@ export class ZWaveController
 			});
 
 			// Now wait for the next KEXSet from the node (if there is even time left)
-			const tai2RemainingMs = inclusionTimeouts.TAI2
-				- (Date.now() - timerStartTAI2);
+			const tai2RemainingMs =
+				inclusionTimeouts.TAI2 - (Date.now() - timerStartTAI2);
 			if (tai2RemainingMs < 1) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
+					message: `Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
 					level: "warn",
 				});
 				return abortUser();
 			}
 
 			const kexSetEcho = await Promise.race([
-				this.driver.waitForCommand<
-					Security2CCKEXSet | Security2CCKEXFail
-				>(
-					(cc) =>
-						cc instanceof Security2CCKEXSet
-						|| cc instanceof Security2CCKEXFail,
-					tai2RemainingMs,
-				).catch(() => "timeout" as const),
+				this.driver
+					.waitForCommand<Security2CCKEXSet | Security2CCKEXFail>(
+						(cc) =>
+							cc instanceof Security2CCKEXSet
+							|| cc instanceof Security2CCKEXFail,
+						tai2RemainingMs,
+					)
+					.catch(() => "timeout" as const),
 				this.cancelBootstrapS2Promise,
 			]);
 			if (kexSetEcho === "timeout") return abortTimeout();
@@ -4673,8 +4537,7 @@ export class ZWaveController
 			// Validate that the received command contains the correct list of keys
 			if (kexSetEcho instanceof Security2CCKEXFail) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`The joining node canceled the Security S2 bootstrapping.`,
+					message: `The joining node canceled the Security S2 bootstrapping.`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -4682,8 +4545,7 @@ export class ZWaveController
 				return SecurityBootstrapFailure.NodeCanceled;
 			} else if (!kexSetEcho.echo) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: KEXSet received without echo flag`,
+					message: `Security S2 bootstrapping failed: KEXSet received without echo flag`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -4691,8 +4553,7 @@ export class ZWaveController
 				return SecurityBootstrapFailure.NodeCanceled;
 			} else if (kexSetEcho._reserved !== 0) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: Invalid KEXSet received`,
+					message: `Security S2 bootstrapping failed: Invalid KEXSet received`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -4705,8 +4566,7 @@ export class ZWaveController
 				)
 			) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: Command received without encryption`,
+					message: `Security S2 bootstrapping failed: Command received without encryption`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -4717,8 +4577,7 @@ export class ZWaveController
 				|| !kexSetEcho.grantedKeys.every((k) => grantedKeys.includes(k))
 			) {
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: Granted key mismatch.`,
+					message: `Security S2 bootstrapping failed: Granted key mismatch.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
@@ -4735,20 +4594,21 @@ export class ZWaveController
 
 			for (let i = 0; i < grantedKeys.length; i++) {
 				// Wait for the key request
-				const keyRequest = await this.driver.waitForCommand<
-					Security2CCNetworkKeyGet | Security2CCKEXFail
-				>(
-					(cc) =>
-						cc instanceof Security2CCNetworkKeyGet
-						|| cc instanceof Security2CCKEXFail,
-					inclusionTimeouts.TA3,
-				).catch(() => "timeout" as const);
+				const keyRequest = await this.driver
+					.waitForCommand<
+						Security2CCNetworkKeyGet | Security2CCKEXFail
+					>(
+						(cc) =>
+							cc instanceof Security2CCNetworkKeyGet
+							|| cc instanceof Security2CCKEXFail,
+						inclusionTimeouts.TA3,
+					)
+					.catch(() => "timeout" as const);
 				if (keyRequest === "timeout") {
 					return abortTimeout();
 				} else if (keyRequest instanceof Security2CCKEXFail) {
 					this.driver.controllerLog.logNode(node.id, {
-						message:
-							`The joining node canceled the Security S2 bootstrapping.`,
+						message: `The joining node canceled the Security S2 bootstrapping.`,
 						direction: "inbound",
 						level: "warn",
 					});
@@ -4761,8 +4621,7 @@ export class ZWaveController
 					)
 				) {
 					this.driver.controllerLog.logNode(node.id, {
-						message:
-							`Security S2 bootstrapping failed: Command received without encryption`,
+						message: `Security S2 bootstrapping failed: Command received without encryption`,
 						direction: "inbound",
 						level: "warn",
 					});
@@ -4779,8 +4638,7 @@ export class ZWaveController
 					)
 				) {
 					this.driver.controllerLog.logNode(node.id, {
-						message:
-							`Security S2 bootstrapping failed: Node used wrong key to communicate.`,
+						message: `Security S2 bootstrapping failed: Node used wrong key to communicate.`,
 						level: "warn",
 					});
 					await abort(KEXFailType.WrongSecurityLevel);
@@ -4788,8 +4646,7 @@ export class ZWaveController
 				} else if (!grantedKeys.includes(securityClass)) {
 					// and that the requested key is one of the granted keys
 					this.driver.controllerLog.logNode(node.id, {
-						message:
-							`Security S2 bootstrapping failed: Node used key it was not granted.`,
+						message: `Security S2 bootstrapping failed: Node used key it was not granted.`,
 						level: "warn",
 					});
 					await abort(KEXFailType.KeyNotGranted);
@@ -4804,26 +4661,25 @@ export class ZWaveController
 				// Send the node the requested key
 				await api.sendNetworkKey(
 					securityClass,
-					securityManager.getKeysForSecurityClass(
-						securityClass,
-					).pnk,
+					securityManager.getKeysForSecurityClass(securityClass).pnk,
 				);
 
 				// And wait for verification
-				const verify = await this.driver.waitForCommand<
-					Security2CCNetworkKeyVerify | Security2CCKEXFail
-				>(
-					(cc) =>
-						cc instanceof Security2CCNetworkKeyVerify
-						|| cc instanceof Security2CCKEXFail,
-					inclusionTimeouts.TA4,
-				).catch(() => "timeout" as const);
+				const verify = await this.driver
+					.waitForCommand<
+						Security2CCNetworkKeyVerify | Security2CCKEXFail
+					>(
+						(cc) =>
+							cc instanceof Security2CCNetworkKeyVerify
+							|| cc instanceof Security2CCKEXFail,
+						inclusionTimeouts.TA4,
+					)
+					.catch(() => "timeout" as const);
 				if (verify === "timeout") return abortTimeout();
 
 				if (verify instanceof Security2CCKEXFail) {
 					this.driver.controllerLog.logNode(node.id, {
-						message:
-							`The joining node canceled the Security S2 bootstrapping.`,
+						message: `The joining node canceled the Security S2 bootstrapping.`,
 						direction: "inbound",
 						level: "warn",
 					});
@@ -4838,8 +4694,7 @@ export class ZWaveController
 					)
 				) {
 					this.driver.controllerLog.logNode(node.id, {
-						message:
-							`Security S2 bootstrapping failed: Node used wrong key to communicate.`,
+						message: `Security S2 bootstrapping failed: Node used wrong key to communicate.`,
 						level: "warn",
 					});
 					await abort(KEXFailType.NoVerify);
@@ -4856,18 +4711,17 @@ export class ZWaveController
 			}
 
 			// After all keys were sent and verified, we need to wait for the node to confirm that it is done
-			const transferEnd = await this.driver.waitForCommand<
-				Security2CCTransferEnd
-			>(
-				(cc) => cc instanceof Security2CCTransferEnd,
-				inclusionTimeouts.TA5,
-			).catch(() => "timeout" as const);
+			const transferEnd = await this.driver
+				.waitForCommand<Security2CCTransferEnd>(
+					(cc) => cc instanceof Security2CCTransferEnd,
+					inclusionTimeouts.TA5,
+				)
+				.catch(() => "timeout" as const);
 			if (transferEnd === "timeout") return abortTimeout();
 			if (!transferEnd.keyRequestComplete) {
 				// S2 bootstrapping failed
 				this.driver.controllerLog.logNode(node.id, {
-					message:
-						`Security S2 bootstrapping failed: Node did not confirm completion of the key exchange`,
+					message: `Security S2 bootstrapping failed: Node did not confirm completion of the key exchange`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoVerify);
@@ -4892,7 +4746,7 @@ export class ZWaveController
 							[...node.securityClasses.entries()]
 								.filter(([, v]) => v)
 								.map(([k]) =>
-									getEnumMemberName(SecurityClass, k)
+									getEnumMemberName(SecurityClass, k),
 								),
 						),
 					},
@@ -4901,8 +4755,7 @@ export class ZWaveController
 
 			// success 🎉
 		} catch (e) {
-			let errorMessage =
-				`Security S2 bootstrapping failed, the node was not granted any S2 security class`;
+			let errorMessage = `Security S2 bootstrapping failed, the node was not granted any S2 security class`;
 			let result = SecurityBootstrapFailure.Unknown;
 			if (!isZWaveError(e)) {
 				errorMessage += `: ${e as any}`;
@@ -4936,12 +4789,8 @@ export class ZWaveController
 	 * The information is the same as in the `"rebuild routes progress"` event.
 	 */
 	public get rebuildRoutesProgress():
-		| ReadonlyMap<
-			number,
-			RebuildRoutesStatus
-		>
-		| undefined
-	{
+		| ReadonlyMap<number, RebuildRoutesStatus>
+		| undefined {
 		if (!this.isRebuildingRoutes) return undefined;
 		return new Map(this._rebuildRoutesProgress);
 	}
@@ -5002,7 +4851,7 @@ export class ZWaveController
 				!options.deletePriorityReturnRoutes
 				&& (this.getPrioritySUCReturnRouteCached(id)
 					|| Object.keys(this.getPriorityReturnRoutesCached(id))
-							.length > 0)
+						.length > 0)
 			) {
 				this.driver.controllerLog.logNode(
 					id,
@@ -5144,16 +4993,17 @@ export class ZWaveController
 						"Rebuilding routes for sleeping nodes when they wake up",
 					);
 
-					const sleepingNodes = todoSleeping.map((nodeId) =>
-						self.nodes.get(nodeId)
-					).filter((node) => node != undefined);
+					const sleepingNodes = todoSleeping
+						.map((nodeId) => self.nodes.get(nodeId))
+						.filter((node) => node != undefined);
 
 					const wakeupPromises = new Map(
-						sleepingNodes.map((node) =>
-							[
-								node.id,
-								node.waitForWakeup().then(() => node),
-							] as const
+						sleepingNodes.map(
+							(node) =>
+								[
+									node.id,
+									node.waitForWakeup().then(() => node),
+								] as const,
 						),
 					);
 
@@ -5168,9 +5018,9 @@ export class ZWaveController
 							// The node has gone to sleep again since the promise was resolved. Wait again
 							wakeupPromises.set(
 								wokenUpNode.id,
-								wokenUpNode.waitForWakeup().then(() =>
-									wokenUpNode
-								),
+								wokenUpNode
+									.waitForWakeup()
+									.then(() => wokenUpNode),
 							);
 							continue;
 						}
@@ -5180,9 +5030,7 @@ export class ZWaveController
 					}
 				}
 
-				self.driver.controllerLog.print(
-					"rebuilding routes completed",
-				);
+				self.driver.controllerLog.print("rebuilding routes completed");
 
 				self.emit(
 					"rebuild routes done",
@@ -5209,9 +5057,7 @@ export class ZWaveController
 		// Stop all tasks that are part of the route rebuilding process
 		// FIXME: This should be an async function that waits for the task removal
 		void this.driver.scheduler.removeTasks(isRebuildRoutesTask).then(() => {
-			this.driver.controllerLog.print(
-				"rebuilding routes aborted",
-			);
+			this.driver.controllerLog.print("rebuilding routes aborted");
 		});
 
 		// Cancel all transactions that were created by the route rebuilding process
@@ -5273,9 +5119,7 @@ export class ZWaveController
 		return this.rebuildNodeRoutesInternal(nodeId);
 	}
 
-	private rebuildNodeRoutesInternal(
-		nodeId: number,
-	): Promise<boolean> {
+	private rebuildNodeRoutesInternal(nodeId: number): Promise<boolean> {
 		const node = this.nodes.getOrThrow(nodeId);
 		const task = this.getRebuildNodeRoutesTask(node);
 		if (task instanceof Promise) return task;
@@ -5287,8 +5131,9 @@ export class ZWaveController
 		node: ZWaveNode,
 	): Promise<boolean> | TaskBuilder<boolean> {
 		// This task should only run once at a time
-		const existingTask = this.driver.scheduler.findTask<boolean>((t) =>
-			t.tag?.id === "rebuild-node-routes" && t.tag.nodeId === node.id
+		const existingTask = this.driver.scheduler.findTask<boolean>(
+			(t) =>
+				t.tag?.id === "rebuild-node-routes" && t.tag.nodeId === node.id,
 		);
 		if (existingTask) return existingTask;
 
@@ -5305,7 +5150,8 @@ export class ZWaveController
 				node.keepAwake = true;
 
 				if (
-					node.canSleep && node.supportsCC(CommandClasses["Wake Up"])
+					node.canSleep
+					&& node.supportsCC(CommandClasses["Wake Up"])
 				) {
 					yield* waitFor(node.waitForWakeup());
 				}
@@ -5323,8 +5169,7 @@ export class ZWaveController
 					yield; // Give the task scheduler time to do something else
 
 					self.driver.controllerLog.logNode(node.id, {
-						message:
-							`refreshing neighbor list (attempt ${attempt})...`,
+						message: `refreshing neighbor list (attempt ${attempt})...`,
 						direction: "outbound",
 					});
 
@@ -5349,18 +5194,15 @@ export class ZWaveController
 					} catch (e) {
 						self.driver.controllerLog.logNode(
 							node.id,
-							`refreshing neighbor list failed: ${
-								getErrorMessage(
-									e,
-								)
-							}`,
+							`refreshing neighbor list failed: ${getErrorMessage(
+								e,
+							)}`,
 							"warn",
 						);
 					}
 					if (attempt === maxAttempts) {
 						self.driver.controllerLog.logNode(node.id, {
-							message:
-								`rebuilding routes failed: could not update the neighbor list after ${maxAttempts} attempts`,
+							message: `rebuilding routes failed: could not update the neighbor list after ${maxAttempts} attempts`,
 							level: "warn",
 							direction: "none",
 						});
@@ -5380,8 +5222,7 @@ export class ZWaveController
 					yield; // Give the task scheduler time to do something else
 
 					self.driver.controllerLog.logNode(node.id, {
-						message:
-							`deleting return routes (attempt ${attempt})...`,
+						message: `deleting return routes (attempt ${attempt})...`,
 						direction: "outbound",
 					});
 
@@ -5391,8 +5232,7 @@ export class ZWaveController
 
 					if (attempt === maxAttempts) {
 						self.driver.controllerLog.logNode(node.id, {
-							message:
-								`rebuilding routes failed: failed to delete return routes after ${maxAttempts} attempts`,
+							message: `rebuilding routes failed: failed to delete return routes after ${maxAttempts} attempts`,
 							level: "warn",
 							direction: "none",
 						});
@@ -5405,10 +5245,11 @@ export class ZWaveController
 				try {
 					associatedNodes = distinct(
 						[
-							...(self.getAssociations({ nodeId: node.id })
+							...(self
+								.getAssociations({ nodeId: node.id })
 								.values() as any),
 						].flatMap((assocs: AssociationAddress[]) =>
-							assocs.map((a) => a.nodeId)
+							assocs.map((a) => a.nodeId),
 						),
 					)
 						// ...except the controller itself, which was handled by step 2
@@ -5426,8 +5267,7 @@ export class ZWaveController
 
 				if (associatedNodes.length > 0) {
 					self.driver.controllerLog.logNode(node.id, {
-						message:
-							`assigning return routes to the following nodes:
+						message: `assigning return routes to the following nodes:
 	${associatedNodes.join(", ")}`,
 						direction: "outbound",
 					});
@@ -5440,8 +5280,7 @@ export class ZWaveController
 							yield; // Give the task scheduler time to do something else
 
 							self.driver.controllerLog.logNode(node.id, {
-								message:
-									`assigning return route to node ${destinationNodeId} (attempt ${attempt})...`,
+								message: `assigning return route to node ${destinationNodeId} (attempt ${attempt})...`,
 								direction: "outbound",
 							});
 
@@ -5457,8 +5296,7 @@ export class ZWaveController
 
 							if (attempt === maxAttempts) {
 								self.driver.controllerLog.logNode(node.id, {
-									message:
-										`failed to assign return route to node ${destinationNodeId} after ${maxAttempts} attempts, continuing with other targets...`,
+									message: `failed to assign return route to node ${destinationNodeId} after ${maxAttempts} attempts, continuing with other targets...`,
 									level: "warn",
 									direction: "none",
 								});
@@ -5557,9 +5395,9 @@ export class ZWaveController
 			// to an AssignSUCReturnRouteRequest with DeleteSUCReturnRoute
 			const disableCallbackFunctionTypeCheck = !!this.driver
 				.getDeviceConfig?.(this.ownNodeId!)
-				?.compat
-				?.disableCallbackFunctionTypeCheck
-				?.includes(FunctionType.AssignSUCReturnRoute);
+				?.compat?.disableCallbackFunctionTypeCheck?.includes(
+					FunctionType.AssignSUCReturnRoute,
+				);
 			const result = await this.driver.sendMessage(
 				new AssignSUCReturnRouteRequest({
 					nodeId,
@@ -5659,9 +5497,9 @@ export class ZWaveController
 		const MAX_ROUTES = 4;
 
 		// Keep track of which routes have been assigned
-		const assignedRoutes = Array
-			.from<Route>({ length: MAX_ROUTES })
-			.fill(EMPTY_ROUTE);
+		const assignedRoutes = Array.from<Route>({ length: MAX_ROUTES }).fill(
+			EMPTY_ROUTE,
+		);
 
 		let priorityRouteIndex = -1;
 		// If a priority route is given, add it to the end of the routes array to mimick what the Z-Wave controller does
@@ -5680,7 +5518,7 @@ export class ZWaveController
 			const cc = new ZWaveProtocolCCAssignSUCReturnRoute({
 				nodeId,
 				// Empty routes are marked with a nodeId of 0
-				destinationNodeId: isEmpty ? 0 : this.ownNodeId ?? 1,
+				destinationNodeId: isEmpty ? 0 : (this.ownNodeId ?? 1),
 				routeIndex: i,
 				repeaters: route.repeaters,
 				destinationSpeed: route.routeSpeed,
@@ -5714,8 +5552,7 @@ export class ZWaveController
 				await this.driver.sendZWaveProtocolCC(cc);
 			} catch {
 				this.driver.controllerLog.logNode(nodeId, {
-					message:
-						`Marking custom SUC return route as priority failed`,
+					message: `Marking custom SUC return route as priority failed`,
 					direction: "outbound",
 					level: "warn",
 				});
@@ -5764,9 +5601,9 @@ export class ZWaveController
 			// to an DeleteSUCReturnRouteRequest with a different function type
 			const disableCallbackFunctionTypeCheck = !!this.driver
 				.getDeviceConfig?.(this.ownNodeId!)
-				?.compat
-				?.disableCallbackFunctionTypeCheck
-				?.includes(FunctionType.DeleteSUCReturnRoute);
+				?.compat?.disableCallbackFunctionTypeCheck?.includes(
+					FunctionType.DeleteSUCReturnRoute,
+				);
 			const result = await this.driver.sendMessage(
 				new DeleteSUCReturnRouteRequest({
 					nodeId,
@@ -5878,14 +5715,13 @@ export class ZWaveController
 		});
 
 		try {
-			const result = await this.driver.sendMessage<
-				AssignReturnRouteRequestTransmitReport
-			>(
-				new AssignReturnRouteRequest({
-					nodeId,
-					destinationNodeId,
-				}),
-			);
+			const result =
+				await this.driver.sendMessage<AssignReturnRouteRequestTransmitReport>(
+					new AssignReturnRouteRequest({
+						nodeId,
+						destinationNodeId,
+					}),
+				);
 
 			const success = this.handleRouteAssignmentTransmitReport(
 				result,
@@ -5900,10 +5736,8 @@ export class ZWaveController
 				);
 				// The priority route probably is invalid too now, but it may also point to a random route
 				if (
-					this.hasPriorityReturnRouteCached(
-						nodeId,
-						destinationNodeId,
-					) !== false
+					this.hasPriorityReturnRouteCached(nodeId, destinationNodeId)
+					!== false
 				) {
 					this.setPriorityReturnRouteCached(
 						nodeId,
@@ -5961,8 +5795,7 @@ export class ZWaveController
 		}
 
 		this.driver.controllerLog.logNode(nodeId, {
-			message:
-				`Assigning custom return routes to node ${destinationNodeId}...`,
+			message: `Assigning custom return routes to node ${destinationNodeId}...`,
 			direction: "outbound",
 		});
 
@@ -5970,9 +5803,9 @@ export class ZWaveController
 		const MAX_ROUTES = 4;
 
 		// Keep track of which routes have been assigned
-		const assignedRoutes = Array
-			.from<Route>({ length: MAX_ROUTES })
-			.fill(EMPTY_ROUTE);
+		const assignedRoutes = Array.from<Route>({ length: MAX_ROUTES }).fill(
+			EMPTY_ROUTE,
+		);
 
 		let priorityRouteIndex = -1;
 		// If a priority route is given, add it to the end of the routes array to mimick what the Z-Wave controller does
@@ -6057,7 +5890,7 @@ export class ZWaveController
 			);
 		} else if (
 			this.hasPriorityReturnRouteCached(nodeId, destinationNodeId)
-				!== false
+			!== false
 		) {
 			// The priority route is probably invalid now, but it may also point to a random route
 			this.setPriorityReturnRouteCached(
@@ -6090,13 +5923,12 @@ export class ZWaveController
 		});
 
 		try {
-			const result = await this.driver.sendMessage<
-				DeleteReturnRouteRequestTransmitReport
-			>(
-				new DeleteReturnRouteRequest({
-					nodeId,
-				}),
-			);
+			const result =
+				await this.driver.sendMessage<DeleteReturnRouteRequestTransmitReport>(
+					new DeleteReturnRouteRequest({
+						nodeId,
+					}),
+				);
 
 			const success = this.handleRouteAssignmentTransmitReport(
 				result,
@@ -6140,22 +5972,20 @@ export class ZWaveController
 		}
 
 		this.driver.controllerLog.logNode(nodeId, {
-			message:
-				`Assigning priority return route to node ${destinationNodeId}...`,
+			message: `Assigning priority return route to node ${destinationNodeId}...`,
 			direction: "outbound",
 		});
 
 		try {
-			const result = await this.driver.sendMessage<
-				AssignReturnRouteRequestTransmitReport
-			>(
-				new AssignPriorityReturnRouteRequest({
-					nodeId,
-					destinationNodeId,
-					repeaters,
-					routeSpeed,
-				}),
-			);
+			const result =
+				await this.driver.sendMessage<AssignReturnRouteRequestTransmitReport>(
+					new AssignPriorityReturnRouteRequest({
+						nodeId,
+						destinationNodeId,
+						repeaters,
+						routeSpeed,
+					}),
+				);
 
 			const success = this.handleRouteAssignmentTransmitReport(
 				result,
@@ -6238,8 +6068,8 @@ export class ZWaveController
 			cacheKeys.node(nodeId)._priorityReturnRouteBaseKey,
 		);
 		for (const [key, route] of Object.entries(routes)) {
-			const destination = cacheKeyUtils
-				.destinationFromPriorityReturnRouteKey(key);
+			const destination =
+				cacheKeyUtils.destinationFromPriorityReturnRouteKey(key);
 			if (destination !== undefined) ret[destination] = route;
 		}
 
@@ -6263,15 +6093,14 @@ export class ZWaveController
 		});
 
 		try {
-			const result = await this.driver.sendMessage<
-				AssignPrioritySUCReturnRouteRequestTransmitReport
-			>(
-				new AssignPrioritySUCReturnRouteRequest({
-					nodeId,
-					repeaters,
-					routeSpeed,
-				}),
-			);
+			const result =
+				await this.driver.sendMessage<AssignPrioritySUCReturnRouteRequestTransmitReport>(
+					new AssignPrioritySUCReturnRouteRequest({
+						nodeId,
+						repeaters,
+						routeSpeed,
+					}),
+				);
 
 			const success = this.handleRouteAssignmentTransmitReport(
 				result,
@@ -6291,11 +6120,9 @@ export class ZWaveController
 		} catch (e) {
 			this.driver.controllerLog.logNode(
 				nodeId,
-				`Assigning priority SUC return route failed: ${
-					getErrorMessage(
-						e,
-					)
-				}`,
+				`Assigning priority SUC return route failed: ${getErrorMessage(
+					e,
+				)}`,
 				"error",
 			);
 			return false;
@@ -6433,13 +6260,13 @@ export class ZWaveController
 	 */
 	public async getPriorityRoute(destinationNodeId: number): Promise<
 		| {
-			routeKind:
-				| RouteKind.LWR
-				| RouteKind.NLWR
-				| RouteKind.Application;
-			repeaters: number[];
-			routeSpeed: ZWaveDataRate;
-		}
+				routeKind:
+					| RouteKind.LWR
+					| RouteKind.NLWR
+					| RouteKind.Application;
+				repeaters: number[];
+				routeSpeed: ZWaveDataRate;
+		  }
 		| undefined
 	> {
 		this.driver.controllerLog.print(
@@ -6447,13 +6274,12 @@ export class ZWaveController
 		);
 
 		try {
-			const result = await this.driver.sendMessage<
-				GetPriorityRouteResponse
-			>(
-				new GetPriorityRouteRequest({
-					destinationNodeId,
-				}),
-			);
+			const result =
+				await this.driver.sendMessage<GetPriorityRouteResponse>(
+					new GetPriorityRouteRequest({
+						destinationNodeId,
+					}),
+				);
 
 			if (result.routeKind === RouteKind.None) return undefined;
 
@@ -6465,9 +6291,8 @@ export class ZWaveController
 				&& (result.routeKind === RouteKind.LWR
 					|| result.routeKind === RouteKind.NLWR)
 			) {
-				const routeName = result.routeKind === RouteKind.LWR
-					? "lwr"
-					: "nlwr";
+				const routeName =
+					result.routeKind === RouteKind.LWR ? "lwr" : "nlwr";
 
 				if (!node.statistics[routeName]) {
 					node.updateStatistics((current) => {
@@ -6476,8 +6301,7 @@ export class ZWaveController
 							repeaters: result.repeaters!,
 							protocolDataRate:
 								// ZWaveDataRate is a subset of ProtocolDataRate
-								result
-									.routeSpeed as unknown as ProtocolDataRate,
+								result.routeSpeed as unknown as ProtocolDataRate,
 						};
 						return ret;
 					});
@@ -6662,14 +6486,14 @@ export class ZWaveController
 						"Multi Channel Association"
 					].isSupported()
 				) {
-					const existing = MultiChannelAssociationCC
-						.getAllDestinationsCached(
+					const existing =
+						MultiChannelAssociationCC.getAllDestinationsCached(
 							this.driver,
 							endpoint,
 						);
 					if (
 						[...existing.values()].some((dests) =>
-							dests.some((a) => a.nodeId === nodeId)
+							dests.some((a) => a.nodeId === nodeId),
 						)
 					) {
 						tasks.push(
@@ -6687,14 +6511,13 @@ export class ZWaveController
 					);
 					if (
 						[...existing.values()].some((dests) =>
-							dests.some((a) => a.nodeId === nodeId)
+							dests.some((a) => a.nodeId === nodeId),
 						)
 					) {
 						tasks.push(
-							endpoint.commandClasses.Association
-								.removeNodeIdsFromAllGroups(
-									[nodeId],
-								),
+							endpoint.commandClasses.Association.removeNodeIdsFromAllGroups(
+								[nodeId],
+							),
 						);
 					}
 				}
@@ -6748,8 +6571,9 @@ export class ZWaveController
 		node: ZWaveNode,
 		reason: RemoveNodeReason,
 	): Promise<void> | TaskBuilder<void> {
-		const existingTask = this.driver.scheduler.findTask<void>((t) =>
-			t.tag?.id === "remove-failed-node" && t.tag.nodeId === node.id
+		const existingTask = this.driver.scheduler.findTask<void>(
+			(t) =>
+				t.tag?.id === "remove-failed-node" && t.tag.nodeId === node.id,
 		);
 		if (existingTask) return existingTask;
 
@@ -6799,8 +6623,7 @@ export class ZWaveController
 
 				if (result instanceof RemoveFailedNodeResponse) {
 					// This implicates that the process was unsuccessful.
-					let message =
-						`The node removal process could not be started due to the following reasons:`;
+					let message = `The node removal process could not be started due to the following reasons:`;
 					if (
 						!!(
 							result.removeStatus
@@ -6816,8 +6639,7 @@ export class ZWaveController
 							& RemoveFailedNodeStartFlags.NodeNotFound
 						)
 					) {
-						message +=
-							`\n· Node ${node.id} is not in the list of failed nodes`;
+						message += `\n· Node ${node.id} is not in the list of failed nodes`;
 					}
 					if (
 						!!(
@@ -6825,8 +6647,7 @@ export class ZWaveController
 							& RemoveFailedNodeStartFlags.RemoveProcessBusy
 						)
 					) {
-						message +=
-							`\n· The node removal process is currently busy`;
+						message += `\n· The node removal process is currently busy`;
 					}
 					if (
 						!!(
@@ -6834,8 +6655,7 @@ export class ZWaveController
 							& RemoveFailedNodeStartFlags.RemoveFailed
 						)
 					) {
-						message +=
-							`\n· The controller is busy or the node has responded`;
+						message += `\n· The controller is busy or the node has responded`;
 					}
 					throw new ZWaveError(
 						message,
@@ -6857,11 +6677,7 @@ export class ZWaveController
 							// If everything went well, the status is RemoveFailedNodeStatus.NodeRemoved
 
 							// Emit the removed event so the driver and applications can react
-							self.emit(
-								"node removed",
-								node,
-								reason,
-							);
+							self.emit("node removed", node, reason);
 							// and forget the node
 							self._nodes.delete(node.id);
 
@@ -6902,11 +6718,11 @@ export class ZWaveController
 		const node = this._nodes.getOrThrow(nodeId);
 
 		const startedPromise = createDeferredPromise<void>();
-		void this.driver.scheduler.queueTask(this.getReplaceFailedNodeTask(
-			startedPromise,
-			node,
-			options,
-		)).catch(noop); // Errors will be exposed through events
+		void this.driver.scheduler
+			.queueTask(
+				this.getReplaceFailedNodeTask(startedPromise, node, options),
+			)
+			.catch(noop); // Errors will be exposed through events
 
 		// Wait for the inclusion to actually start, then return to the caller
 		await startedPromise;
@@ -6928,7 +6744,7 @@ export class ZWaveController
 			priority: TaskPriority.Normal,
 			tag: { id: "replace-failed-node", nodeId: node.id },
 			group: { id: "inclusion-exclusion" },
-			task: async function*() {
+			task: async function* () {
 				yield* self.replaceFailedNodeTask(
 					startedPromise,
 					node,
@@ -6982,8 +6798,7 @@ export class ZWaveController
 
 		if (!startResult.isOK()) {
 			// This implicates that the process was unsuccessful.
-			let message =
-				`The node replace process could not be started due to the following reasons:`;
+			let message = `The node replace process could not be started due to the following reasons:`;
 			if (
 				!!(
 					startResult.replaceStatus
@@ -6998,8 +6813,7 @@ export class ZWaveController
 					& ReplaceFailedNodeStartFlags.NodeNotFound
 				)
 			) {
-				message +=
-					`\n· Node ${node.id} is not in the list of failed nodes`;
+				message += `\n· Node ${node.id} is not in the list of failed nodes`;
 			}
 			if (
 				!!(
@@ -7015,8 +6829,7 @@ export class ZWaveController
 					& ReplaceFailedNodeStartFlags.ReplaceFailed
 				)
 			) {
-				message +=
-					`\n· The controller is busy or the node has responded`;
+				message += `\n· The controller is busy or the node has responded`;
 			}
 
 			self.setInclusionState(InclusionState.Idle);
@@ -7037,8 +6850,7 @@ export class ZWaveController
 			const msg = yield* waitFor(
 				self.driver.waitForMessage(
 					(msg) =>
-						msg
-							instanceof ReplaceFailedNodeRequestStatusReport,
+						msg instanceof ReplaceFailedNodeRequestStatusReport,
 					undefined, // Wait indefinitely
 					undefined,
 					abortWaiting,
@@ -7059,7 +6871,7 @@ export class ZWaveController
 
 			if (
 				msg.replaceStatus
-					=== ReplaceFailedNodeStatus.FailedNodeReplaceFailed
+				=== ReplaceFailedNodeStatus.FailedNodeReplaceFailed
 			) {
 				startedPromise.reject(
 					new ZWaveError(
@@ -7104,7 +6916,7 @@ export class ZWaveController
 
 			if (
 				msg.replaceStatus
-					!== ReplaceFailedNodeStatus.FailedNodeReplaceDone
+				!== ReplaceFailedNodeStatus.FailedNodeReplaceDone
 			) {
 				// Unexpected status, abort
 				return;
@@ -7114,11 +6926,7 @@ export class ZWaveController
 		self.driver.controllerLog.print(`The failed node was replaced`);
 		self.emit("inclusion stopped");
 
-		this.emit(
-			"node removed",
-			node,
-			RemoveNodeReason.Replaced,
-		);
+		this.emit("node removed", node, RemoveNodeReason.Replaced);
 		this._nodes.delete(node.id);
 
 		// We're technically done with the replacing but should not include
@@ -7134,10 +6942,7 @@ export class ZWaveController
 			undefined,
 			// Create an empty value DB and specify that it contains no values
 			// to avoid indexing the existing values
-			this.createValueDBForNode(
-				node.id,
-				new Set(),
-			),
+			this.createValueDBForNode(node.id, new Set()),
 		);
 		this._nodes.set(newNode.id, newNode);
 
@@ -7151,8 +6956,9 @@ export class ZWaveController
 
 		if (newNode.protocol == Protocols.ZWave) {
 			// Assign SUC return route to make sure the node knows where to get its routes from
-			newNode.hasSUCReturnRoute = await this
-				.assignSUCReturnRoutes(newNode.id);
+			newNode.hasSUCReturnRoute = await this.assignSUCReturnRoutes(
+				newNode.id,
+			);
 		}
 
 		// Try perform the security bootstrap process. When replacing a node, we don't know any supported CCs
@@ -7166,12 +6972,10 @@ export class ZWaveController
 				true,
 			);
 			if (bootstrapFailure == undefined) {
-				const actualSecurityClass = newNode
-					.getHighestSecurityClass();
+				const actualSecurityClass = newNode.getHighestSecurityClass();
 				if (
 					actualSecurityClass == undefined
-					|| actualSecurityClass
-						< SecurityClass.S2_Unauthenticated
+					|| actualSecurityClass < SecurityClass.S2_Unauthenticated
 				) {
 					bootstrapFailure = SecurityBootstrapFailure.Unknown;
 				}
@@ -7191,8 +6995,7 @@ export class ZWaveController
 				true,
 			);
 			if (bootstrapFailure == undefined) {
-				const actualSecurityClass = newNode
-					.getHighestSecurityClass();
+				const actualSecurityClass = newNode.getHighestSecurityClass();
 				if (
 					actualSecurityClass == undefined
 					|| actualSecurityClass < SecurityClass.S0_Legacy
@@ -7208,12 +7011,13 @@ export class ZWaveController
 		}
 
 		// We're done adding this node, notify listeners. This also kicks off the node interview
-		const inclusionResult: InclusionResult = bootstrapFailure != undefined
-			? {
-				lowSecurity: true,
-				lowSecurityReason: bootstrapFailure,
-			}
-			: { lowSecurity: false };
+		const inclusionResult: InclusionResult =
+			bootstrapFailure != undefined
+				? {
+						lowSecurity: true,
+						lowSecurityReason: bootstrapFailure,
+					}
+				: { lowSecurity: false };
 
 		this.setInclusionState(InclusionState.Idle);
 		this.emit("node added", newNode, inclusionResult);
@@ -7297,7 +7101,8 @@ export class ZWaveController
 		}
 
 		// If automatic powerlevel adjustments are configured, do them now.
-		const isRegionActuallyDifferent = this.tryGetLRCapableRegion(prevRegion)
+		const isRegionActuallyDifferent =
+			this.tryGetLRCapableRegion(prevRegion)
 			!== this.tryGetLRCapableRegion(region);
 		if (result && isRegionActuallyDifferent) {
 			await this.applyLegalPowerlevelLimits(
@@ -7392,9 +7197,7 @@ export class ZWaveController
 	 *
 	 * **Note:** Applications should prefer reading the cached value from {@link supportedRFRegions} instead
 	 */
-	public async queryRFRegionInfo(
-		region: RFRegion,
-	): Promise<{
+	public async queryRFRegionInfo(region: RFRegion): Promise<{
 		region: RFRegion;
 		supportsZWave: boolean;
 		supportsLongRange: boolean;
@@ -7490,9 +7293,7 @@ export class ZWaveController
 				"Applying legal TX powerlevel for Z-Wave Classic",
 			);
 
-			await this.applyDesiredPowerlevelMesh(
-				desiredTXPowerlevelMesh,
-			);
+			await this.applyDesiredPowerlevelMesh(desiredTXPowerlevelMesh);
 		}
 		const desiredTXPowerlevelLR = getLegalPowerlevelLR(region);
 		if (longRange && desiredTXPowerlevelLR !== undefined) {
@@ -7583,9 +7384,7 @@ export class ZWaveController
 	}
 
 	/** Configure the maximum TX powerlevel for Z-Wave Long Range */
-	public async setMaxLongRangePowerlevel(
-		limit: number,
-	): Promise<boolean> {
+	public async setMaxLongRangePowerlevel(limit: number): Promise<boolean> {
 		const request = new SerialAPISetup_SetLongRangeMaximumTxPowerRequest({
 			limit,
 		});
@@ -7682,9 +7481,7 @@ export class ZWaveController
 		}
 	}
 
-	private async applyDesiredPowerlevelLR(
-		powerlevel: number,
-	): Promise<void> {
+	private async applyDesiredPowerlevelLR(powerlevel: number): Promise<void> {
 		if (
 			!this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.SetLongRangeMaximumTxPower,
@@ -7699,15 +7496,14 @@ export class ZWaveController
 		}
 
 		this.driver.controllerLog.print(
-			`Current max. Long Range powerlevel ${
-				this.maxLongRangePowerlevel?.toFixed(1)
-			} dBm differs from desired powerlevel ${powerlevel} dBm, configuring it...`,
+			`Current max. Long Range powerlevel ${this.maxLongRangePowerlevel?.toFixed(
+				1,
+			)} dBm differs from desired powerlevel ${powerlevel} dBm, configuring it...`,
 		);
 
-		const resp = await this.setMaxLongRangePowerlevel(
-			powerlevel,
-		)
-			.catch((e) => (e as Error).message);
+		const resp = await this.setMaxLongRangePowerlevel(powerlevel).catch(
+			(e) => (e as Error).message,
+		);
 		if (resp === true) {
 			this.driver.controllerLog.print(
 				`max. Long Range powerlevel updated`,
@@ -7741,11 +7537,10 @@ export class ZWaveController
 			);
 		}
 
-		const result = await this.driver.sendMessage<
-			SetLongRangeChannelResponse
-		>(
-			new SetLongRangeChannelRequest({ channel }),
-		);
+		const result =
+			await this.driver.sendMessage<SetLongRangeChannelResponse>(
+				new SetLongRangeChannelRequest({ channel }),
+			);
 
 		if (result.success) {
 			this._longRangeChannel = channel;
@@ -7754,19 +7549,20 @@ export class ZWaveController
 	}
 
 	/** Request the channel setting and capabilities for Z-Wave Long Range */
-	public async getLongRangeChannel(): Promise<
-		{ channel: LongRangeChannel; supportsAutoChannelSelection: boolean }
-	> {
-		const result = await this.driver.sendMessage<
-			GetLongRangeChannelResponse
-		>(
-			new GetLongRangeChannelRequest(),
-		);
+	public async getLongRangeChannel(): Promise<{
+		channel: LongRangeChannel;
+		supportsAutoChannelSelection: boolean;
+	}> {
+		const result =
+			await this.driver.sendMessage<GetLongRangeChannelResponse>(
+				new GetLongRangeChannelRequest(),
+			);
 
-		const channel = result.autoChannelSelectionActive
-				&& result.supportsAutoChannelSelection
-			? LongRangeChannel.Auto
-			: result.channel;
+		const channel =
+			result.autoChannelSelectionActive
+			&& result.supportsAutoChannelSelection
+				? LongRangeChannel.Auto
+				: result.channel;
 
 		this._longRangeChannel = channel;
 		this._supportsLongRangeAutoChannelSelection =
@@ -7859,9 +7655,7 @@ export class ZWaveController
 		const result = await this.driver.sendMessage<
 			| SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse
 			| SerialAPISetup_CommandUnsupportedResponse
-		>(
-			new SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest(),
-		);
+		>(new SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest());
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
 				`Your hardware does not support getting the max. long range payload size!`,
@@ -7900,14 +7694,13 @@ export class ZWaveController
 			NodeType.Controller,
 		);
 
-		const resp = await this.driver.sendMessage<
-			RequestNodeNeighborUpdateReport
-		>(
-			new RequestNodeNeighborUpdateRequest({
-				nodeId,
-				discoveryTimeout,
-			}),
-		);
+		const resp =
+			await this.driver.sendMessage<RequestNodeNeighborUpdateReport>(
+				new RequestNodeNeighborUpdateRequest({
+					nodeId,
+					discoveryTimeout,
+				}),
+			);
 		const success =
 			resp.updateStatus === NodeNeighborUpdateStatus.UpdateDone;
 
@@ -7988,30 +7781,25 @@ export class ZWaveController
 		this.driver.controllerLog.print(
 			`querying additional controller information...`,
 		);
-		const initData = await this.driver.sendMessage<
-			GetSerialApiInitDataResponse
-		>(
-			new GetSerialApiInitDataRequest(),
-		);
+		const initData =
+			await this.driver.sendMessage<GetSerialApiInitDataResponse>(
+				new GetSerialApiInitDataRequest(),
+			);
 
 		this.driver.controllerLog.print(
 			logText("received additional controller information:", {
 				nested: logDict({
-					"Z-Wave API version":
-						`${initData.zwaveApiVersion.version} (${initData.zwaveApiVersion.kind})`,
+					"Z-Wave API version": `${initData.zwaveApiVersion.version} (${initData.zwaveApiVersion.kind})`,
 					"Z-Wave chip type": initData.zwaveChipType
 						? typeof initData.zwaveChipType === "string"
 							? initData.zwaveChipType
-							: `unknown (type: ${
-								num2hex(initData.zwaveChipType.type)
-							}, version: ${
-								num2hex(initData.zwaveChipType.version)
-							})`
+							: `unknown (type: ${num2hex(
+									initData.zwaveChipType.type,
+								)}, version: ${num2hex(
+									initData.zwaveChipType.version,
+								)})`
 						: undefined,
-					"node type": getEnumMemberName(
-						NodeType,
-						initData.nodeType,
-					),
+					"node type": getEnumMemberName(NodeType, initData.nodeType),
 					"controller role": initData.isPrimary
 						? "primary"
 						: "secondary",
@@ -8049,12 +7837,11 @@ export class ZWaveController
 	/** Determines the controller's network role/capabilities */
 	public async getControllerCapabilities(): Promise<ControllerCapabilities> {
 		this.driver.controllerLog.print(`querying controller capabilities...`);
-		const result = await this.driver.sendMessage<
-			GetControllerCapabilitiesResponse
-		>(
-			new GetControllerCapabilitiesRequest(),
-			{ supportCheck: false },
-		);
+		const result =
+			await this.driver.sendMessage<GetControllerCapabilitiesResponse>(
+				new GetControllerCapabilitiesRequest(),
+				{ supportCheck: false },
+			);
 
 		const ret: ControllerCapabilities = {
 			isSecondary: result.isSecondary,
@@ -8080,8 +7867,7 @@ export class ZWaveController
 						this.role!,
 					),
 					"is the SUC": ret.isSUC,
-					"started this network": !ret
-						.isUsingHomeIdFromOtherNetwork,
+					"started this network": !ret.isUsingHomeIdFromOtherNetwork,
 					"SIS is present": ret.isSISPresent,
 					"was real primary": ret.wasRealPrimary,
 				}),
@@ -8126,11 +7912,9 @@ export class ZWaveController
 			return ret.isOK();
 		} catch (e) {
 			this.driver.controllerLog.print(
-				`Error turning RF ${enabled ? "on" : "off"}: ${
-					getErrorMessage(
-						e,
-					)
-				}`,
+				`Error turning RF ${enabled ? "on" : "off"}: ${getErrorMessage(
+					e,
+				)}`,
 				"error",
 			);
 			return false;
@@ -8162,11 +7946,10 @@ export class ZWaveController
 	 * @internal
 	 */
 	public async firmwareUpdateNVMInit(): Promise<boolean> {
-		const ret = await this.driver.sendMessage<
-			FirmwareUpdateNVM_InitResponse
-		>(
-			new FirmwareUpdateNVM_InitRequest(),
-		);
+		const ret =
+			await this.driver.sendMessage<FirmwareUpdateNVM_InitResponse>(
+				new FirmwareUpdateNVM_InitRequest(),
+			);
 		return ret.supported;
 	}
 
@@ -8192,11 +7975,10 @@ export class ZWaveController
 	 * Return the value of the NEWIMAGE marker in the NVM, which is used to signal that a new firmware image is present
 	 */
 	private async firmwareUpdateNVMGetNewImage(): Promise<boolean> {
-		const ret = await this.driver.sendMessage<
-			FirmwareUpdateNVM_GetNewImageResponse
-		>(
-			new FirmwareUpdateNVM_GetNewImageRequest(),
-		);
+		const ret =
+			await this.driver.sendMessage<FirmwareUpdateNVM_GetNewImageResponse>(
+				new FirmwareUpdateNVM_GetNewImageRequest(),
+			);
 		return ret.newImage;
 	}
 
@@ -8210,15 +7992,14 @@ export class ZWaveController
 		blockLength: number,
 		crcSeed: number,
 	): Promise<number> {
-		const ret = await this.driver.sendMessage<
-			FirmwareUpdateNVM_UpdateCRC16Response
-		>(
-			new FirmwareUpdateNVM_UpdateCRC16Request({
-				offset,
-				blockLength,
-				crcSeed,
-			}),
-		);
+		const ret =
+			await this.driver.sendMessage<FirmwareUpdateNVM_UpdateCRC16Response>(
+				new FirmwareUpdateNVM_UpdateCRC16Request({
+					offset,
+					blockLength,
+					crcSeed,
+				}),
+			);
 		return ret.crc16;
 	}
 
@@ -8247,11 +8028,10 @@ export class ZWaveController
 	 * @internal
 	 */
 	public async firmwareUpdateNVMIsValidCRC16(): Promise<boolean> {
-		const ret = await this.driver.sendMessage<
-			FirmwareUpdateNVM_IsValidCRC16Response
-		>(
-			new FirmwareUpdateNVM_IsValidCRC16Request(),
-		);
+		const ret =
+			await this.driver.sendMessage<FirmwareUpdateNVM_IsValidCRC16Response>(
+				new FirmwareUpdateNVM_IsValidCRC16Request(),
+			);
 		return ret.isValid;
 	}
 
@@ -8365,24 +8145,23 @@ export class ZWaveController
 		offset: number,
 		length: number,
 	): Promise<{ buffer: BytesView; endOfFile: boolean }> {
-		const ret = await this.driver.sendMessage<
-			ExtendedNVMOperationsResponse
-		>(
-			new ExtendedNVMOperationsReadRequest({
-				offset,
-				length,
-			}),
-		);
+		const ret =
+			await this.driver.sendMessage<ExtendedNVMOperationsResponse>(
+				new ExtendedNVMOperationsReadRequest({
+					offset,
+					length,
+				}),
+			);
 		if (!ret.isOK()) {
 			let message = "Could not read from the external NVM";
 			if (
 				ret.status
-					=== ExtendedNVMOperationStatus.Error_OperationInterference
+				=== ExtendedNVMOperationStatus.Error_OperationInterference
 			) {
 				message += ": interference between read and write operation.";
 			} else if (
 				ret.status
-					=== ExtendedNVMOperationStatus.Error_OperationMismatch
+				=== ExtendedNVMOperationStatus.Error_OperationMismatch
 			) {
 				message += ": wrong operation requested.";
 			}
@@ -8411,14 +8190,13 @@ export class ZWaveController
 		offset: number,
 		buffer: BytesView,
 	): Promise<boolean> {
-		const ret = await this.driver.sendMessage<
-			ExtNVMWriteLongBufferResponse
-		>(
-			new ExtNVMWriteLongBufferRequest({
-				offset,
-				buffer,
-			}),
-		);
+		const ret =
+			await this.driver.sendMessage<ExtNVMWriteLongBufferResponse>(
+				new ExtNVMWriteLongBufferRequest({
+					offset,
+					buffer,
+				}),
+			);
 		return ret.success;
 	}
 
@@ -8477,30 +8255,29 @@ export class ZWaveController
 		offset: number,
 		buffer: BytesView,
 	): Promise<{ endOfFile: boolean }> {
-		const ret = await this.driver.sendMessage<
-			ExtendedNVMOperationsResponse
-		>(
-			new ExtendedNVMOperationsWriteRequest({
-				offset,
-				buffer,
-			}),
-		);
+		const ret =
+			await this.driver.sendMessage<ExtendedNVMOperationsResponse>(
+				new ExtendedNVMOperationsWriteRequest({
+					offset,
+					buffer,
+				}),
+			);
 
 		if (!ret.isOK()) {
 			let message = "Could not write to the external NVM";
 			if (
 				ret.status
-					=== ExtendedNVMOperationStatus.Error_OperationInterference
+				=== ExtendedNVMOperationStatus.Error_OperationInterference
 			) {
 				message += ": interference between read and write operation.";
 			} else if (
 				ret.status
-					=== ExtendedNVMOperationStatus.Error_OperationMismatch
+				=== ExtendedNVMOperationStatus.Error_OperationMismatch
 			) {
 				message += ": wrong operation requested.";
 			} else if (
 				ret.status
-					=== ExtendedNVMOperationStatus.Error_SubCommandNotSupported
+				=== ExtendedNVMOperationStatus.Error_SubCommandNotSupported
 			) {
 				message += ": sub-command not supported.";
 			}
@@ -8546,11 +8323,10 @@ export class ZWaveController
 		size: number;
 		supportedOperations: ExtendedNVMOperationsCommand[];
 	}> {
-		const ret = await this.driver.sendMessage<
-			ExtendedNVMOperationsResponse
-		>(
-			new ExtendedNVMOperationsOpenRequest(),
-		);
+		const ret =
+			await this.driver.sendMessage<ExtendedNVMOperationsResponse>(
+				new ExtendedNVMOperationsOpenRequest(),
+			);
 		if (!ret.isOK()) {
 			throw new ZWaveError(
 				"Failed to open the external NVM",
@@ -8595,11 +8371,10 @@ export class ZWaveController
 	 * **Note:** If supported, this command should be preferred over {@link externalNVMClose} as it supports larger NVMs than 64 KiB.
 	 */
 	public async externalNVMCloseExt(): Promise<void> {
-		const ret = await this.driver.sendMessage<
-			ExtendedNVMOperationsResponse
-		>(
-			new ExtendedNVMOperationsCloseRequest(),
-		);
+		const ret =
+			await this.driver.sendMessage<ExtendedNVMOperationsResponse>(
+				new ExtendedNVMOperationsCloseRequest(),
+			);
 		if (!ret.isOK()) {
 			throw new ZWaveError(
 				"Failed to close the external NVM",
@@ -8870,18 +8645,17 @@ export class ZWaveController
 						);
 					}
 
-					convertedNVM = yield* waitFor(migrateNVM(
-						nvmData,
-						targetNVM,
-						migrateOptions,
-					));
+					convertedNVM = yield* waitFor(
+						migrateNVM(nvmData, targetNVM, migrateOptions),
+					);
 				} catch (e) {
 					// If the process fails, at least turn the Z-Wave radio back on
 					yield* waitFor(self.toggleRF(true));
 					rfRestored = true;
 
 					// And re-throw the error with a more descriptive message
-					const message = "Failed to convert NVM to target format: "
+					const message =
+						"Failed to convert NVM to target format: "
 						+ (e as Error).message;
 					self.driver.controllerLog.print(message, "error");
 					(e as Error).message = message;
@@ -8914,8 +8688,8 @@ export class ZWaveController
 					rfRestored = true;
 
 					// And re-throw the error with a more descriptive message
-					const message = "Failed to restore NVM backup: "
-						+ (e as Error).message;
+					const message =
+						"Failed to restore NVM backup: " + (e as Error).message;
 					self.driver.controllerLog.print(message, "error");
 					(e as Error).message = message;
 					throw e;
@@ -9289,13 +9063,11 @@ export class ZWaveController
 
 		// Use the bulk method and extract the result for this specific node
 		try {
-			const allUpdates = await this.getAllAvailableFirmwareUpdates(
-				options,
-			);
+			const allUpdates =
+				await this.getAllAvailableFirmwareUpdates(options);
 			return allUpdates.get(nodeId) || [];
 		} catch (e: any) {
-			let message =
-				`Cannot check for firmware updates for node ${nodeId}: `;
+			let message = `Cannot check for firmware updates for node ${nodeId}: `;
 			if (e.response) {
 				if (isObject(e.response.data)) {
 					if (typeof e.response.data.error === "string") {
@@ -9351,9 +9123,7 @@ export class ZWaveController
 			const allFirmwareVersions = node.getValue<string[]>(
 				VersionCCValues.firmwareVersions.id,
 			);
-			let additionalFirmwareVersions:
-				| Record<string, string>
-				| undefined;
+			let additionalFirmwareVersions: Record<string, string> | undefined;
 			if (allFirmwareVersions && allFirmwareVersions.length > 1) {
 				additionalFirmwareVersions = {};
 				for (let i = 1; i < allFirmwareVersions.length; i++) {
@@ -9385,10 +9155,10 @@ export class ZWaveController
 
 		const rfRegion = // Prefer the actual region...
 			this.rfRegion
-				// ...over the specified one,
-				?? options?.rfRegion
-				// ... and fall back to the configured region on 500 series controllers as a last resort.
-				?? this.driver.options.rf?.region;
+			// ...over the specified one,
+			?? options?.rfRegion
+			// ... and fall back to the configured region on 500 series controllers as a last resort.
+			?? this.driver.options.rf?.region;
 
 		// Perform bulk request
 		try {
@@ -9398,7 +9168,8 @@ export class ZWaveController
 					userAgent: this.driver.getUserAgentStringWithComponents(
 						options?.additionalUserAgentComponents,
 					),
-					apiKey: options?.apiKey
+					apiKey:
+						options?.apiKey
 						?? this.driver.options.apiKeys?.firmwareUpdateService,
 					rfRegion,
 				},
@@ -9458,9 +9229,8 @@ export class ZWaveController
 			);
 		}
 
-		const manufacturerResponse = await node.commandClasses[
-			"Manufacturer Specific"
-		].get();
+		const manufacturerResponse =
+			await node.commandClasses["Manufacturer Specific"].get();
 
 		if (!manufacturerResponse) {
 			throw new ZWaveError(
@@ -9482,8 +9252,8 @@ export class ZWaveController
 				VersionCommand.ZWaveSoftwareGet,
 			)
 		) {
-			const softwareResponse = await node.commandClasses.Version
-				.getZWaveSoftware();
+			const softwareResponse =
+				await node.commandClasses.Version.getZWaveSoftware();
 			if (!softwareResponse) {
 				throw new ZWaveError(
 					`Cannot check for firmware updates for node ${node.id}: Failed to query firmware version from the node!`,
@@ -9524,8 +9294,7 @@ export class ZWaveController
 	): Promise<FirmwareUpdateResult> {
 		// Don't let two firmware updates happen in parallel
 		if (this.isAnyOTAFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: A firmware update is already in progress on this network!`;
+			const message = `Failed to start the update: A firmware update is already in progress on this network!`;
 			this.driver.controllerLog.print(message, "error");
 			throw new ZWaveError(
 				message,
@@ -9535,8 +9304,7 @@ export class ZWaveController
 
 		// Don't allow updating firmware when the controller is currently updating its own firmware
 		if (this.driver.isOTWFirmwareUpdateInProgress()) {
-			const message =
-				`Failed to start the update: The controller is currently being updated!`;
+			const message = `Failed to start the update: The controller is currently being updated!`;
 			this.driver.controllerLog.print(message, "error");
 			throw new ZWaveError(
 				message,
@@ -9567,25 +9335,24 @@ export class ZWaveController
 		const firmwares: Firmware[] = [];
 		for (let i = 0; i < files.length; i++) {
 			const update = files[i];
-			const logMessage =
-				`Downloading firmware update ${i} of ${files.length}...`;
+			const logMessage = `Downloading firmware update ${i} of ${files.length}...`;
 			this.driver.controllerLog.logNode(nodeId, {
-				message: loglevel === "silly"
-					? logText(logMessage, {
-						nested: logDict({
-							URL: update.url,
-							integrity: update.integrity,
-						}),
-					})
-					: logMessage,
+				message:
+					loglevel === "silly"
+						? logText(logMessage, {
+								nested: logDict({
+									URL: update.url,
+									integrity: update.integrity,
+								}),
+							})
+						: logMessage,
 			});
 
 			try {
 				const firmware = await downloadFirmwareUpdate(update);
 				firmwares.push(firmware);
 			} catch (e: any) {
-				let message =
-					`Downloading the firmware update for node ${nodeId} failed:\n`;
+				let message = `Downloading the firmware update for node ${nodeId} failed:\n`;
 				if (isZWaveError(e)) {
 					// Pass "real" Z-Wave errors through
 					throw new ZWaveError(message + e.message, e.code);
@@ -9597,8 +9364,7 @@ export class ZWaveController
 					) {
 						message += `${e.response.data.message} `;
 					}
-					message +=
-						`[${e.response.status} ${e.response.statusText}]`;
+					message += `[${e.response.status} ${e.response.statusText}]`;
 				} else if (typeof e.message === "string") {
 					message += e.message;
 				} else {
@@ -9795,23 +9561,23 @@ export class ZWaveController
 
 		// FIXME: Reset security manager on successful join or leave
 
-		const wasJoining = this._currentLearnMode === LearnModeIntent.Inclusion
+		const wasJoining =
+			this._currentLearnMode === LearnModeIntent.Inclusion
 			|| this._currentLearnMode === LearnModeIntent.SmartStart
 			|| this._currentLearnMode
 				=== LearnModeIntent.LegacyNetworkWideInclusion
 			|| (this._currentLearnMode
-					=== LearnModeIntent.LegacyInclusionExclusion
+				=== LearnModeIntent.LegacyInclusionExclusion
 				// TODO: Secondary controller may also use this to accept controller shift
 				// Figure out how to detect that.
 				&& this.role === ControllerRole.Primary);
 		const wasLeaving =
 			this._currentLearnMode === LearnModeIntent.DirectExclusion
-			|| this._currentLearnMode
-				=== LearnModeIntent.NetworkWideExclusion
+			|| this._currentLearnMode === LearnModeIntent.NetworkWideExclusion
 			|| this._currentLearnMode
 				=== LearnModeIntent.LegacyNetworkWideExclusion
 			|| (this._currentLearnMode
-					=== LearnModeIntent.LegacyInclusionExclusion
+				=== LearnModeIntent.LegacyInclusionExclusion
 				&& this.role !== ControllerRole.Primary);
 
 		if (msg.status === LearnModeStatus.Started) {
@@ -9836,10 +9602,10 @@ export class ZWaveController
 			if (wasJoining) {
 				this._currentLearnMode = undefined;
 				this.driver["_securityManager"] = undefined;
-				this.driver["_securityManager2"] = await SecurityManager2
-					.create();
-				this.driver["_securityManagerLR"] = await SecurityManager2
-					.create();
+				this.driver["_securityManager2"] =
+					await SecurityManager2.create();
+				this.driver["_securityManagerLR"] =
+					await SecurityManager2.create();
 				this._nodes.clear();
 
 				process.nextTick(() => this.afterJoiningNetwork().catch(noop));
@@ -9875,8 +9641,7 @@ export class ZWaveController
 
 		const abortTimeout = () => {
 			this.driver.controllerLog.logNode(bootstrappingNode.id, {
-				message:
-					`Security S0 bootstrapping failed: a secure inclusion timer has elapsed`,
+				message: `Security S0 bootstrapping failed: a secure inclusion timer has elapsed`,
 				level: "warn",
 			});
 
@@ -9898,22 +9663,24 @@ export class ZWaveController
 			await api.reportSecurityScheme(false);
 
 			// Expect a NonceGet within 10 seconds
-			let nonceGet = await this.driver.waitForCommand<SecurityCCNonceGet>(
-				(cc) => cc instanceof SecurityCCNonceGet,
-				10000,
-			).catch(() => "timeout" as const);
+			let nonceGet = await this.driver
+				.waitForCommand<SecurityCCNonceGet>(
+					(cc) => cc instanceof SecurityCCNonceGet,
+					10000,
+				)
+				.catch(() => "timeout" as const);
 			if (nonceGet === "timeout") return abortTimeout();
 
 			// Send nonce
 			await api.sendNonce();
 
 			// Expect NetworkKeySet within 10 seconds
-			const networkKeySet = await this.driver.waitForCommand<
-				SecurityCCNetworkKeySet
-			>(
-				(cc) => cc instanceof SecurityCCNetworkKeySet,
-				10000,
-			).catch(() => "timeout" as const);
+			const networkKeySet = await this.driver
+				.waitForCommand<SecurityCCNetworkKeySet>(
+					(cc) => cc instanceof SecurityCCNetworkKeySet,
+					10000,
+				)
+				.catch(() => "timeout" as const);
 			if (networkKeySet === "timeout") return abortTimeout();
 
 			// Now that the key is known, we can create the real security manager
@@ -9924,7 +9691,8 @@ export class ZWaveController
 			});
 
 			// Request a new nonce to respond, which should be answered within 10 seconds
-			let nonce = await api.withOptions({ reportTimeoutMs: 10000 })
+			let nonce = await api
+				.withOptions({ reportTimeoutMs: 10000 })
 				.getNonce();
 			if (!nonce) return abortTimeout();
 
@@ -9934,26 +9702,29 @@ export class ZWaveController
 			// We are a controller, so continue with scheme inherit
 
 			// Expect a NonceGet within 10 seconds
-			nonceGet = await this.driver.waitForCommand<SecurityCCNonceGet>(
-				(cc) => cc instanceof SecurityCCNonceGet,
-				10000,
-			).catch(() => "timeout" as const);
+			nonceGet = await this.driver
+				.waitForCommand<SecurityCCNonceGet>(
+					(cc) => cc instanceof SecurityCCNonceGet,
+					10000,
+				)
+				.catch(() => "timeout" as const);
 			if (nonceGet === "timeout") return abortTimeout();
 
 			// Send nonce
 			await api.sendNonce();
 
 			// Expect SchemeInherit within 10 seconds
-			const schemeInherit = await this.driver.waitForCommand<
-				SecurityCCSchemeInherit
-			>(
-				(cc) => cc instanceof SecurityCCSchemeInherit,
-				10000,
-			).catch(() => "timeout" as const);
+			const schemeInherit = await this.driver
+				.waitForCommand<SecurityCCSchemeInherit>(
+					(cc) => cc instanceof SecurityCCSchemeInherit,
+					10000,
+				)
+				.catch(() => "timeout" as const);
 			if (schemeInherit === "timeout") return abortTimeout();
 
 			// Request a new nonce to respond, which should be answered within 10 seconds
-			nonce = await api.withOptions({ reportTimeoutMs: 10000 })
+			nonce = await api
+				.withOptions({ reportTimeoutMs: 10000 })
 				.getNonce();
 			if (!nonce) return abortTimeout();
 
@@ -9973,9 +9744,7 @@ export class ZWaveController
 				networkKeySet.networkKey,
 			);
 
-			this.driver.driverLog.print(
-				`Security S0 bootstrapping successful`,
-			);
+			this.driver.driverLog.print(`Security S0 bootstrapping successful`);
 
 			// success 🎉
 		} catch (e) {
@@ -10006,17 +9775,14 @@ export class ZWaveController
 	private async expectSecurityBootstrapS2(
 		bootstrappingNode: ZWaveNode,
 		requested: InclusionGrant,
-		userCallbacks: JoinNetworkUserCallbacks | undefined =
-			this.driver.options.joinNetworkUserCallbacks,
-	): Promise<
-		SecurityBootstrapFailure | undefined
-	> {
-		const api = bootstrappingNode.commandClasses["Security 2"]
-			.withOptions({
-				// Do not wait for Nonce Reports after SET-type commands.
-				// Timing is critical here
-				s2VerifyDelivery: false,
-			});
+		userCallbacks: JoinNetworkUserCallbacks | undefined = this.driver
+			.options.joinNetworkUserCallbacks,
+	): Promise<SecurityBootstrapFailure | undefined> {
+		const api = bootstrappingNode.commandClasses["Security 2"].withOptions({
+			// Do not wait for Nonce Reports after SET-type commands.
+			// Timing is critical here
+			s2VerifyDelivery: false,
+		});
 
 		const unGrantSecurityClasses = () => {
 			for (const secClass of securityClassOrder) {
@@ -10070,8 +9836,7 @@ export class ZWaveController
 
 		const abortTimeout = async () => {
 			this.driver.controllerLog.logNode(bootstrappingNode.id, {
-				message:
-					`Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
+				message: `Security S2 bootstrapping failed: a secure inclusion timer has elapsed`,
 				level: "warn",
 			});
 
@@ -10081,8 +9846,7 @@ export class ZWaveController
 
 		const abortCanceled = async () => {
 			this.driver.controllerLog.logNode(bootstrappingNode.id, {
-				message:
-					`The including node canceled the Security S2 bootstrapping.`,
+				message: `The including node canceled the Security S2 bootstrapping.`,
 				direction: "inbound",
 				level: "warn",
 			});
@@ -10100,14 +9864,14 @@ export class ZWaveController
 			});
 
 			// Wait for including node to grant keys
-			const kexSet = await this.driver.waitForCommand<
-				Security2CCKEXSet | Security2CCKEXFail
-			>(
-				(cc) =>
-					cc instanceof Security2CCKEXSet
-					|| cc instanceof Security2CCKEXFail,
-				inclusionTimeouts.TB2,
-			).catch(() => "timeout" as const);
+			const kexSet = await this.driver
+				.waitForCommand<Security2CCKEXSet | Security2CCKEXFail>(
+					(cc) =>
+						cc instanceof Security2CCKEXSet
+						|| cc instanceof Security2CCKEXFail,
+					inclusionTimeouts.TB2,
+				)
+				.catch(() => "timeout" as const);
 
 			if (kexSet === "timeout") return abortTimeout();
 			if (kexSet instanceof Security2CCKEXFail) {
@@ -10118,28 +9882,21 @@ export class ZWaveController
 			// Echo flag must be false
 			if (kexSet.echo) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: KEX Set unexpectedly has the echo flag set.`,
+					message: `Security S2 bootstrapping failed: KEX Set unexpectedly has the echo flag set.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoVerify);
 				return SecurityBootstrapFailure.ParameterMismatch;
-			} else if (
-				kexSet.selectedKEXScheme !== KEXSchemes.KEXScheme1
-			) {
+			} else if (kexSet.selectedKEXScheme !== KEXSchemes.KEXScheme1) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: Unsupported key exchange scheme.`,
+					message: `Security S2 bootstrapping failed: Unsupported key exchange scheme.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoSupportedScheme);
 				return SecurityBootstrapFailure.ParameterMismatch;
-			} else if (
-				kexSet.selectedECDHProfile !== ECDHProfiles.Curve25519
-			) {
+			} else if (kexSet.selectedECDHProfile !== ECDHProfiles.Curve25519) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: Unsupported ECDH profile.`,
+					message: `Security S2 bootstrapping failed: Unsupported ECDH profile.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoSupportedCurve);
@@ -10147,22 +9904,21 @@ export class ZWaveController
 			} else if (kexSet.permitCSA !== false) {
 				// We do not support CSA at the moment, so it is never requested.
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: CSA granted but not requested.`,
+					message: `Security S2 bootstrapping failed: CSA granted but not requested.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.BootstrappingCanceled);
 				return SecurityBootstrapFailure.ParameterMismatch;
 			}
 
-			const matchingKeys = kexSet.grantedKeys.filter((k) =>
-				securityClassOrder.includes(k as any)
-				&& requested.securityClasses.includes(k)
+			const matchingKeys = kexSet.grantedKeys.filter(
+				(k) =>
+					securityClassOrder.includes(k as any)
+					&& requested.securityClasses.includes(k),
 			);
 			if (!matchingKeys.length) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: None of the requested security classes are granted.`,
+					message: `Security S2 bootstrapping failed: None of the requested security classes are granted.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.NoKeyMatch);
@@ -10195,14 +9951,16 @@ export class ZWaveController
 			await api.sendPublicKey(transmittedPublicKey, false);
 
 			// Wait for including node to send its public key
-			const pubKeyReport = await this.driver.waitForCommand<
-				Security2CCPublicKeyReport | Security2CCKEXFail
-			>(
-				(cc) =>
-					cc instanceof Security2CCPublicKeyReport
-					|| cc instanceof Security2CCKEXFail,
-				inclusionTimeouts.TB3,
-			).catch(() => "timeout" as const);
+			const pubKeyReport = await this.driver
+				.waitForCommand<
+					Security2CCPublicKeyReport | Security2CCKEXFail
+				>(
+					(cc) =>
+						cc instanceof Security2CCPublicKeyReport
+						|| cc instanceof Security2CCKEXFail,
+					inclusionTimeouts.TB3,
+				)
+				.catch(() => "timeout" as const);
 
 			if (pubKeyReport === "timeout") return abortTimeout();
 			if (pubKeyReport instanceof Security2CCKEXFail) {
@@ -10240,15 +9998,17 @@ export class ZWaveController
 				| undefined;
 			for (let i = 0; i <= 25; i++) {
 				try {
-					kexReportEcho = await api.withOptions({
-						reportTimeoutMs: 10000,
-					}).confirmGrantedKeys({
-						grantedKeys: kexSet.grantedKeys,
-						permitCSA: kexSet.permitCSA,
-						selectedECDHProfile: kexSet.selectedECDHProfile,
-						selectedKEXScheme: kexSet.selectedKEXScheme,
-						_reserved: kexSet._reserved,
-					});
+					kexReportEcho = await api
+						.withOptions({
+							reportTimeoutMs: 10000,
+						})
+						.confirmGrantedKeys({
+							grantedKeys: kexSet.grantedKeys,
+							permitCSA: kexSet.permitCSA,
+							selectedECDHProfile: kexSet.selectedECDHProfile,
+							selectedKEXScheme: kexSet.selectedKEXScheme,
+							_reserved: kexSet._reserved,
+						});
 				} catch {
 					// ignore
 				}
@@ -10268,8 +10028,7 @@ export class ZWaveController
 			// Validate the response
 			if (!kexReportEcho.echo) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: KEXReport received without echo flag`,
+					message: `Security S2 bootstrapping failed: KEXReport received without echo flag`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -10278,16 +10037,14 @@ export class ZWaveController
 			} else if (kexReportEcho.requestCSA !== false) {
 				// We don't request CSA
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: Invalid KEXReport received`,
+					message: `Security S2 bootstrapping failed: Invalid KEXReport received`,
 					level: "warn",
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
 				return SecurityBootstrapFailure.NodeCanceled;
 			} else if (kexReportEcho._reserved !== 0) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: Invalid KEXReport received`,
+					message: `Security S2 bootstrapping failed: Invalid KEXReport received`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -10300,8 +10057,7 @@ export class ZWaveController
 				)
 			) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: Command received without encryption`,
+					message: `Security S2 bootstrapping failed: Command received without encryption`,
 					direction: "inbound",
 					level: "warn",
 				});
@@ -10311,12 +10067,11 @@ export class ZWaveController
 				kexReportEcho.requestedKeys.length
 					!== requested.securityClasses.length
 				|| !kexReportEcho.requestedKeys.every((k) =>
-					requested.securityClasses.includes(k)
+					requested.securityClasses.includes(k),
 				)
 			) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message:
-						`Security S2 bootstrapping failed: Granted key mismatch.`,
+					message: `Security S2 bootstrapping failed: Granted key mismatch.`,
 					level: "warn",
 				});
 				await abort(KEXFailType.WrongSecurityLevel);
@@ -10325,14 +10080,16 @@ export class ZWaveController
 
 			for (const key of kexSet.grantedKeys) {
 				// Request network key and wait for including node to respond
-				const keyReportPromise = this.driver.waitForCommand<
-					Security2CCNetworkKeyReport | Security2CCKEXFail
-				>(
-					(cc) =>
-						cc instanceof Security2CCNetworkKeyReport
-						|| cc instanceof Security2CCKEXFail,
-					inclusionTimeouts.TB4,
-				).catch(() => "timeout" as const);
+				const keyReportPromise = this.driver
+					.waitForCommand<
+						Security2CCNetworkKeyReport | Security2CCKEXFail
+					>(
+						(cc) =>
+							cc instanceof Security2CCNetworkKeyReport
+							|| cc instanceof Security2CCKEXFail,
+						inclusionTimeouts.TB4,
+					)
+					.catch(() => "timeout" as const);
 
 				await api.requestNetworkKey(key);
 				const keyReport = await keyReportPromise;
@@ -10349,8 +10106,7 @@ export class ZWaveController
 					)
 				) {
 					this.driver.controllerLog.logNode(bootstrappingNode.id, {
-						message:
-							`Security S2 bootstrapping failed: Command received without encryption`,
+						message: `Security S2 bootstrapping failed: Command received without encryption`,
 						direction: "inbound",
 						level: "warn",
 					});
@@ -10366,8 +10122,7 @@ export class ZWaveController
 					)
 				) {
 					this.driver.controllerLog.logNode(bootstrappingNode.id, {
-						message:
-							`Security S2 bootstrapping failed: Node used wrong key to communicate.`,
+						message: `Security S2 bootstrapping failed: Node used wrong key to communicate.`,
 						level: "warn",
 					});
 					await abort(KEXFailType.WrongSecurityLevel);
@@ -10378,8 +10133,7 @@ export class ZWaveController
 				if (securityClass !== key) {
 					// and that the granted key is the requested key
 					this.driver.controllerLog.logNode(bootstrappingNode.id, {
-						message:
-							`Security S2 bootstrapping failed: Received key for wrong security class`,
+						message: `Security S2 bootstrapping failed: Received key for wrong security class`,
 						direction: "inbound",
 						level: "warn",
 					});
@@ -10404,22 +10158,26 @@ export class ZWaveController
 
 				// Force nonce synchronization, then verify the network key
 				securityManager.deleteNonce(bootstrappingNode.id);
-				await api.withOptions({
-					s2OverrideSecurityClass: securityClass,
-				}).verifyNetworkKey();
+				await api
+					.withOptions({
+						s2OverrideSecurityClass: securityClass,
+					})
+					.verifyNetworkKey();
 
 				// Force nonce synchronization again for the temporary key
 				securityManager.deleteNonce(bootstrappingNode.id);
 
 				// Wait for including node to send its public key
-				const transferEnd = await this.driver.waitForCommand<
-					Security2CCTransferEnd | Security2CCKEXFail
-				>(
-					(cc) =>
-						cc instanceof Security2CCTransferEnd
-						|| cc instanceof Security2CCKEXFail,
-					inclusionTimeouts.TB5,
-				).catch(() => "timeout" as const);
+				const transferEnd = await this.driver
+					.waitForCommand<
+						Security2CCTransferEnd | Security2CCKEXFail
+					>(
+						(cc) =>
+							cc instanceof Security2CCTransferEnd
+							|| cc instanceof Security2CCKEXFail,
+						inclusionTimeouts.TB5,
+					)
+					.catch(() => "timeout" as const);
 
 				if (transferEnd === "timeout") return abortTimeout();
 				if (transferEnd instanceof Security2CCKEXFail) {
@@ -10433,19 +10191,18 @@ export class ZWaveController
 					)
 				) {
 					this.driver.controllerLog.logNode(bootstrappingNode.id, {
-						message:
-							`Security S2 bootstrapping failed: Command received without encryption`,
+						message: `Security S2 bootstrapping failed: Command received without encryption`,
 						direction: "inbound",
 						level: "warn",
 					});
 					await abort(KEXFailType.WrongSecurityLevel);
 					return SecurityBootstrapFailure.S2WrongSecurityLevel;
 				} else if (
-					!transferEnd.keyVerified || transferEnd.keyRequestComplete
+					!transferEnd.keyVerified
+					|| transferEnd.keyRequestComplete
 				) {
 					this.driver.controllerLog.logNode(bootstrappingNode.id, {
-						message:
-							`Security S2 bootstrapping failed: Invalid TransferEnd received`,
+						message: `Security S2 bootstrapping failed: Invalid TransferEnd received`,
 						direction: "inbound",
 						level: "warn",
 					});
@@ -10480,7 +10237,7 @@ export class ZWaveController
 							[...bootstrappingNode.securityClasses.entries()]
 								.filter(([, v]) => v)
 								.map(([k]) =>
-									getEnumMemberName(SecurityClass, k)
+									getEnumMemberName(SecurityClass, k),
 								),
 						),
 					},
@@ -10489,8 +10246,7 @@ export class ZWaveController
 
 			// success 🎉
 		} catch (e) {
-			let errorMessage =
-				`Security S2 bootstrapping failed, no S2 security classes were granted`;
+			let errorMessage = `Security S2 bootstrapping failed, no S2 security classes were granted`;
 			let result = SecurityBootstrapFailure.Unknown;
 			if (!isZWaveError(e)) {
 				errorMessage += `: ${e as any}`;
@@ -10552,9 +10308,12 @@ export class ZWaveController
 			initPredicate = () => false;
 		}
 
-		const bootstrapInitPromise = this.driver.waitForCommand<
-			Security2CCKEXGet | SecurityCCSchemeGet
-		>(initPredicate, initTimeout).catch(() => "timeout" as const);
+		const bootstrapInitPromise = this.driver
+			.waitForCommand<Security2CCKEXGet | SecurityCCSchemeGet>(
+				initPredicate,
+				initTimeout,
+			)
+			.catch(() => "timeout" as const);
 
 		const identifySelf = async () => {
 			// Update own node ID and other controller flags.
@@ -10607,9 +10366,8 @@ export class ZWaveController
 					message: `Received S0 bootstrap initiation`,
 				});
 
-				const bootstrapResult = await this.expectSecurityBootstrapS0(
-					bootstrappingNode,
-				);
+				const bootstrapResult =
+					await this.expectSecurityBootstrapS0(bootstrappingNode);
 				if (bootstrapResult !== undefined) {
 					// If there was a failure, mark S0 as not supported
 					bootstrappingNode.removeCC(CommandClasses.Security);
@@ -10661,7 +10419,7 @@ export class ZWaveController
 											getEnumMemberName(
 												SecurityClass,
 												sc,
-											)
+											),
 										),
 									),
 									logDict({
@@ -10673,8 +10431,8 @@ export class ZWaveController
 						),
 					});
 
-					const bootstrapResult = await this
-						.expectSecurityBootstrapS2(
+					const bootstrapResult =
+						await this.expectSecurityBootstrapS2(
 							bootstrappingNode,
 							grant,
 							this._joinNetworkOptions?.userCallbacks,

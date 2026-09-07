@@ -1,6 +1,8 @@
+import path from "node:path";
+
 import { BasicCCGet, BasicCCReport, BasicCCValues } from "@zwave-js/cc";
 import { type MockNodeBehavior } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

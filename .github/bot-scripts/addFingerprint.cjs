@@ -6,7 +6,7 @@ const { ConfigManager } = require("@zwave-js/config");
 const { formatId } = require("@zwave-js/shared");
 const JSONC = require("comment-json");
 const fs = require("node:fs/promises");
-const { formatWithDprint } = require("./utils.cjs");
+const { formatWithOxfmt } = require("./utils.cjs");
 
 /**
  * @param {{github: Github, context: Context}} param
@@ -48,7 +48,7 @@ async function main(param) {
 
 		// And save it again
 		content = JSONC.stringify(json, undefined, "\t");
-		content = formatWithDprint(filename, content);
+		content = await formatWithOxfmt(filename, content);
 		await fs.writeFile(filename, content, "utf8");
 
 		// Return the device label so it can be used in the PR title

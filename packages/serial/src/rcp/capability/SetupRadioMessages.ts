@@ -13,6 +13,7 @@ import {
 	znifferProtocolDataRateToProtocolDataRate,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -105,9 +106,7 @@ export class SetupRadioRequest extends RCPMessage {
 		const command: SetupRadioCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
-		const CommandConstructor = getSubCommandRequestConstructor(
-			command,
-		);
+		const CommandConstructor = getSubCommandRequestConstructor(command);
 		if (CommandConstructor) {
 			return CommandConstructor.from(
 				raw.withPayload(payload),
@@ -125,10 +124,7 @@ export class SetupRadioRequest extends RCPMessage {
 	public command: SetupRadioCommand;
 
 	public serialize(ctx: RCPMessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([
-			[this.command],
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[this.command], this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -164,9 +160,7 @@ export class SetupRadioResponse extends RCPMessage {
 		const command: SetupRadioCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
-		const CommandConstructor = getSubCommandResponseConstructor(
-			command,
-		);
+		const CommandConstructor = getSubCommandResponseConstructor(command);
 		if (CommandConstructor) {
 			return CommandConstructor.from(
 				raw.withPayload(payload),
@@ -319,16 +313,19 @@ export class SetupRadio_SetRegionRequest extends SetupRadioRequest {
 	}
 }
 
-export type SetupRadio_SetRegionResponseOptions = {
-	success: false;
-	channels?: undefined;
-} | {
-	success: true;
-	channels: ChannelInfo[];
-};
+export type SetupRadio_SetRegionResponseOptions =
+	| {
+			success: false;
+			channels?: undefined;
+	  }
+	| {
+			success: true;
+			channels: ChannelInfo[];
+	  };
 
 @subCommandResponse(SetupRadioCommand.SetRegion)
-export class SetupRadio_SetRegionResponse extends SetupRadioResponse
+export class SetupRadio_SetRegionResponse
+	extends SetupRadioResponse
 	implements SuccessIndicator
 {
 	public constructor(
@@ -382,7 +379,8 @@ export class SetupRadio_SetRegionResponse extends SetupRadioResponse
 			...ret,
 			message: mergeLogDict(ret.message, {
 				success: this.success,
-				channels: this.channels
+				channels:
+					this.channels
 					&& logList(this.channels.map(formatChannelInfo)),
 				// The parsed fields supersede the raw payload
 				payload: undefined,
@@ -404,8 +402,7 @@ export interface SetupRadio_GetTxPowerRangeResponseOptions {
 @subCommandResponse(SetupRadioCommand.GetTxPowerRange)
 export class SetupRadio_GetTxPowerRangeResponse extends SetupRadioResponse {
 	public constructor(
-		options:
-			& SetupRadio_GetTxPowerRangeResponseOptions
+		options: SetupRadio_GetTxPowerRangeResponseOptions
 			& RCPMessageBaseOptions,
 	) {
 		super(options);
@@ -458,8 +455,7 @@ export interface SetupRadio_GetCapabilitiesResponseOptions {
 @subCommandResponse(SetupRadioCommand.GetCapabilities)
 export class SetupRadio_GetCapabilitiesResponse extends SetupRadioResponse {
 	public constructor(
-		options:
-			& SetupRadio_GetCapabilitiesResponseOptions
+		options: SetupRadio_GetCapabilitiesResponseOptions
 			& RCPMessageBaseOptions,
 	) {
 		super(options);
@@ -489,7 +485,7 @@ export class SetupRadio_GetCapabilitiesResponse extends SetupRadioResponse {
 			message: mergeLogDict(ret.message, {
 				capabilities: logList(
 					this.capabilities.map((c) =>
-						getEnumMemberName(RadioCapability, c)
+						getEnumMemberName(RadioCapability, c),
 					),
 				),
 				// The parsed fields supersede the raw payload

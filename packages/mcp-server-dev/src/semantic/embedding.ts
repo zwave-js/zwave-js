@@ -146,7 +146,7 @@ export class LocalEmbeddingProvider {
 		});
 		const data = output.tolist() as number[][] | number[];
 		const vectors: number[][] = Array.isArray(data[0])
-			? data as number[][]
+			? (data as number[][])
 			: [data as number[]];
 
 		for (const vector of vectors) {

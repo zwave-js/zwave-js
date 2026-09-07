@@ -1,6 +1,7 @@
 import { SoundSwitchCC, SoundSwitchCCValues } from "@zwave-js/cc";
 import type { GetValueDB } from "@zwave-js/core";
 import { type Timer, setTimer } from "@zwave-js/shared";
+
 import type { ZWaveNode } from "../Node.js";
 
 export interface SoundSwitchHandlerStore {

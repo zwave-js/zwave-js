@@ -49,10 +49,10 @@ test("device classes without slow actuators should not be marked as such", (t) =
 
 test("unknown device classes should default to not being slow actuators", (t) => {
 	// Test unknown generic class
-	const unknownGeneric = getGenericDeviceClass(0xFF);
+	const unknownGeneric = getGenericDeviceClass(0xff);
 	t.expect(unknownGeneric.isSlowActuator).toBe(false);
 
 	// Test unknown specific class
-	const unknownSpecific = getSpecificDeviceClass(0x10, 0xFF);
+	const unknownSpecific = getSpecificDeviceClass(0x10, 0xff);
 	t.expect(unknownSpecific.isSlowActuator).toBe(false);
 });

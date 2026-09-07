@@ -11,7 +11,8 @@ import {
 	SyntaxKind,
 	type TypeLiteralNode,
 } from "ts-morph";
-import { formatWithDprint } from "../dprint.js";
+
+import { formatWithOxfmt } from "../oxfmt.js";
 
 export interface ImportOptions {
 	comments?: boolean;
@@ -53,12 +54,12 @@ export function findSourceNode(
 	identifier: string,
 ): ExportedDeclarations | undefined {
 	if (!exportDeclarationCache.has(exportingFile)) {
-		const decls = program.getSourceFile(exportingFile)
+		const decls = program
+			.getSourceFile(exportingFile)
 			?.getExportedDeclarations();
 		if (decls) exportDeclarationCache.set(exportingFile, decls);
 	}
-	return exportDeclarationCache.get(exportingFile)
-		?.get(identifier)?.[0];
+	return exportDeclarationCache.get(exportingFile)?.get(identifier)?.[0];
 }
 
 function stripComments(
@@ -79,9 +80,10 @@ function stripComments(
 			const comments = node.getLeadingCommentRanges();
 			const ret = comments.map((c, i) => ({
 				pos: c.getPos(),
-				end: i < comments.length - 1
-					? comments[i + 1].getPos()
-					: Math.max(node.getStart(), c.getEnd()),
+				end:
+					i < comments.length - 1
+						? comments[i + 1].getPos()
+						: Math.max(node.getStart(), c.getEnd()),
 				remove: removePredicate(c),
 			}));
 			return ret.filter((r) => r.remove);
@@ -135,7 +137,7 @@ function shouldStripPropertySignature(
 ): boolean {
 	const tagNames =
 		p.docs?.flatMap((d) =>
-			typeof d === "string" ? [] : d.tags?.map((t) => t.tagName) ?? []
+			typeof d === "string" ? [] : (d.tags?.map((t) => t.tagName) ?? []),
 		) ?? [];
 	return isInternalMember(p.name, tagNames);
 }
@@ -146,27 +148,25 @@ function printInterfaceDeclarationStructure(
 	return `
 interface ${struct.name}${
 		struct.typeParameters?.length
-			// oxlint-disable-next-line typescript/no-base-to-string
-			? `<${struct.typeParameters.map((t) => t.toString()).join(", ")}>`
+			? // oxlint-disable-next-line typescript/no-base-to-string
+				`<${struct.typeParameters.map((t) => t.toString()).join(", ")}>`
 			: ""
 	} {
-	${
-		struct.properties
-			?.filter((p) => !shouldStripPropertySignature(p))
-			.map((p) => {
-				let type = p.type as string;
-				// ts-morph 28 (TS 6.0) appends "| undefined" to the structure
-				// type of optional properties. Strip it so the output keeps
-				// matching the original source.
-				if (p.hasQuestionToken) {
-					type = type.replace(/\s*\|\s*undefined\s*$/, "");
-				}
-				return `${p.isReadonly ? "readonly " : ""}${p.name}${
-					p.hasQuestionToken ? "?:" : ":"
-				} ${type};`;
-			})
-			.join("\n")
-	}
+	${struct.properties
+		?.filter((p) => !shouldStripPropertySignature(p))
+		.map((p) => {
+			let type = p.type as string;
+			// ts-morph 28 (TS 6.0) appends "| undefined" to the structure
+			// type of optional properties. Strip it so the output keeps
+			// matching the original source.
+			if (p.hasQuestionToken) {
+				type = type.replace(/\s*\|\s*undefined\s*$/, "");
+			}
+			return `${p.isReadonly ? "readonly " : ""}${p.name}${
+				p.hasQuestionToken ? "?:" : ":"
+			} ${type};`;
+		})
+		.join("\n")}
 }`;
 }
 
@@ -215,8 +215,8 @@ function collectInheritedMembers(
 			const literals = Node.isTypeLiteral(typeNode)
 				? [typeNode]
 				: Node.isIntersectionTypeNode(typeNode)
-				? typeNode.getTypeNodes().filter(Node.isTypeLiteral)
-				: [];
+					? typeNode.getTypeNodes().filter(Node.isTypeLiteral)
+					: [];
 			if (!literals.length) return false;
 			for (const literal of literals) {
 				for (const member of literal.getMembers()) {
@@ -252,10 +252,10 @@ function flattenInterfaceExtends(
 	return `${header} {\n${[...members.values()].join("\n")}\n}`;
 }
 
-export function getTransformedSource(
+export async function getTransformedSource(
 	node: ExportedDeclarations,
 	options: ImportOptions,
-): string {
+): Promise<string> {
 	// Unless opted out, resolve the full shape of interfaces using `extends`
 	let sourceText = node.getText();
 	if (
@@ -318,5 +318,5 @@ export function getTransformedSource(
 		ret = node.getText();
 	}
 
-	return formatWithDprint("index.ts", ret).trim();
+	return (await formatWithOxfmt("index.ts", ret)).trim();
 }

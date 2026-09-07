@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { createWrappingCounter } from "./wrappingCounter.js";
 
 test("wrappingCounter -> should return 1 first", (t) => {

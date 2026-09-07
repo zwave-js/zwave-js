@@ -26,7 +26,9 @@ import {
 	valueIdToString,
 } from "@zwave-js/core";
 import { distinct } from "alcalzone-shared/arrays";
+
 import type { Driver } from "../driver/Driver.js";
+
 import type { ZWaveNode } from "./Node.js";
 import { VirtualEndpoint } from "./VirtualEndpoint.js";
 
@@ -136,10 +138,9 @@ export class VirtualNode extends VirtualEndpoint {
 			if (!endpointInstance) {
 				return {
 					status: SetValueStatus.EndpointNotFound,
-					message:
-						`Endpoint ${valueId.endpoint} does not exist on virtual node ${
-							this.id ?? "??"
-						}`,
+					message: `Endpoint ${valueId.endpoint} does not exist on virtual node ${
+						this.id ?? "??"
+					}`,
 				};
 			}
 			let api = (endpointInstance.commandClasses as any)[
@@ -149,11 +150,9 @@ export class VirtualNode extends VirtualEndpoint {
 			if (!api.setValue) {
 				return {
 					status: SetValueStatus.NotImplemented,
-					message: `The ${
-						getCCName(
-							valueId.commandClass,
-						)
-					} CC does not support setting values`,
+					message: `The ${getCCName(
+						valueId.commandClass,
+					)} CC does not support setting values`,
 				};
 			}
 
@@ -201,12 +200,11 @@ export class VirtualNode extends VirtualEndpoint {
 			if (api.isSetValueOptimistic(valueId)) {
 				// If the call did not throw, assume that the call was successful and remember the new value
 				// for each node that was affected by this command
-				const affectedNodes = this.physicalNodes
-					.filter((node) =>
-						node
-							.getEndpoint(endpointInstance.index)
-							?.supportsCC(valueId.commandClass)
-					);
+				const affectedNodes = this.physicalNodes.filter((node) =>
+					node
+						.getEndpoint(endpointInstance.index)
+						?.supportsCC(valueId.commandClass),
+				);
 				for (const node of affectedNodes) {
 					node.valueDB.setValue(valueId, value);
 				}
@@ -215,7 +213,8 @@ export class VirtualNode extends VirtualEndpoint {
 			// Depending on the settings of the SET_VALUE implementation, we may have to
 			// optimistically update a different value and/or verify the changes
 			if (hooks) {
-				const supervisedAndSuccessful = isSupervisionResult(result)
+				const supervisedAndSuccessful =
+					isSupervisionResult(result)
 					&& result.status === SupervisionStatus.Success;
 
 				const shouldUpdateOptimistically =
@@ -303,8 +302,8 @@ export class VirtualNode extends VirtualEndpoint {
 				// Don't expose read-only values for virtual nodes, they won't ever have any value
 				if (!metadata.writeable) continue;
 
-				const needsUpdate = !ret.has(mapKey)
-					|| ret.get(mapKey)!.ccVersion < ccVersion;
+				const needsUpdate =
+					!ret.has(mapKey) || ret.get(mapKey)!.ccVersion < ccVersion;
 				if (needsUpdate) {
 					ret.set(mapKey, {
 						...valueId,

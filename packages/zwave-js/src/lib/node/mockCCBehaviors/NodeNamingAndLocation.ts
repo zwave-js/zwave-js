@@ -23,14 +23,16 @@ const StateKeys = {
 const respondToNodeNameGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof NodeNamingAndLocationCCNameGet) {
-			const capabilities = self.getCCCapabilities(
-				CommandClasses["Node Naming and Location"],
-				0,
-			) ?? defaultCapabilities;
+			const capabilities =
+				self.getCCCapabilities(
+					CommandClasses["Node Naming and Location"],
+					0,
+				) ?? defaultCapabilities;
 
 			const cc = new NodeNamingAndLocationCCNameReport({
 				nodeId: controller.ownNodeId,
-				name: self.state.get(StateKeys.name) as string | undefined
+				name:
+					(self.state.get(StateKeys.name) as string | undefined)
 					?? capabilities.name
 					?? "",
 			});
@@ -51,17 +53,18 @@ const respondToNodeNameSet: MockNodeBehavior = {
 const respondToNodeLocationGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof NodeNamingAndLocationCCLocationGet) {
-			const capabilities = self.getCCCapabilities(
-				CommandClasses["Node Naming and Location"],
-				0,
-			) ?? defaultCapabilities;
+			const capabilities =
+				self.getCCCapabilities(
+					CommandClasses["Node Naming and Location"],
+					0,
+				) ?? defaultCapabilities;
 
 			const cc = new NodeNamingAndLocationCCLocationReport({
 				nodeId: controller.ownNodeId,
 				location:
 					(self.state.get(StateKeys.location) as string | undefined)
-						?? capabilities.location
-						?? "",
+					?? capabilities.location
+					?? "",
 			});
 			return { action: "sendCC", cc };
 		}

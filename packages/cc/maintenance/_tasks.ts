@@ -7,6 +7,7 @@ import {
 } from "@zwave-js/transformers/validateArgs";
 import c from "ansi-colors";
 import type ts from "typescript";
+
 import { generateCCAPIInterfaceFile } from "./generateCCAPIInterface.js";
 import { generateCCExportsFile } from "./generateCCExports.js";
 import { generateCCValueDefinitionsFile } from "./generateCCValueDefinitions.js";
@@ -40,7 +41,7 @@ const codegen = async () => {
 			const transformers: ts.TransformerFactory<ts.SourceFile>[] = [];
 
 			// validateArgs transformer for files importing @zwave-js/transformers
-			if (content.includes("from \"@zwave-js/transformers\"")) {
+			if (content.includes('from "@zwave-js/transformers"')) {
 				transformers.push(createValidateArgsTransformer());
 			}
 
@@ -51,9 +52,7 @@ const codegen = async () => {
 
 			return transformers.length > 0 ? transformers : undefined;
 		},
-		generateAuxiliaryFiles: [
-			generateValidateArgsFiles,
-		],
+		generateAuxiliaryFiles: [generateValidateArgsFiles],
 		unchangedFileHandling: "symlink",
 	});
 };

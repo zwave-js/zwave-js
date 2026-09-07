@@ -10,6 +10,7 @@ import {
 	createWrappingCounter,
 	getEnumMemberName,
 } from "@zwave-js/shared";
+
 import { ControllerProprietary_ZWaveMe } from "./ControllerProprietary_ZWaveMe.js";
 import {
 	LICENSE_STATUS_OK,
@@ -61,9 +62,7 @@ export interface ZWaveMeBoardInfo {
  * Proprietary Serial API support for 700-series Z-Wave.me controllers
  * (RaZberry 7, RaZberry 7 Pro, Z-Station)
  */
-export class ControllerProprietary_ZWaveMe700
-	extends ControllerProprietary_ZWaveMe
-{
+export class ControllerProprietary_ZWaveMe700 extends ControllerProprietary_ZWaveMe {
 	// Matches license and bootloader-update requests to their callbacks
 	private nextSeq = createWrappingCounter(0xff);
 
@@ -73,13 +72,12 @@ export class ControllerProprietary_ZWaveMe700
 		const license = await this.getLicense().catch(() => undefined);
 		if (license?.flags.length) {
 			this.driver.controllerLog.print(
-				`Z-Wave.me license enables: ${
-					license.flags
-						.map((f) =>
-							`\n  · ${getEnumMemberName(ZWaveMeLicenseFlag, f)}`
-						)
-						.join("")
-				}`,
+				`Z-Wave.me license enables: ${license.flags
+					.map(
+						(f) =>
+							`\n  · ${getEnumMemberName(ZWaveMeLicenseFlag, f)}`,
+					)
+					.join("")}`,
 			);
 		}
 	}

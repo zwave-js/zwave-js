@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { WakeUpTime, ZWaveProtocolCCAssignSUCReturnRoute } from "@zwave-js/cc";
 import { TransmitStatus, ZWaveDataRate } from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
@@ -13,7 +15,7 @@ import {
 	createMockZWaveRequestFrame,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
-import path from "node:path";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
@@ -230,14 +232,10 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			mockController.clearReceivedHostMessages();
 			driver.options.timeouts.sendDataCallback = 1000;
-			let result = await driver.controller.assignSUCReturnRoutes(
-				node.id,
-			);
+			let result = await driver.controller.assignSUCReturnRoutes(node.id);
 			t.expect(result).toBe(false);
 
-			result = await driver.controller.deleteSUCReturnRoutes(
-				node.id,
-			);
+			result = await driver.controller.deleteSUCReturnRoutes(node.id);
 			t.expect(result).toBe(false);
 		},
 	},

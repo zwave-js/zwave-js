@@ -8,6 +8,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
+
 import {
 	ackWaitDuration,
 	classic2ChannelAttemptSchedule,
@@ -51,14 +52,14 @@ describe("frameDuration()", () => {
 				ProtocolDataRate.ZWave_9k6,
 				ProtocolHeaderFormat.Classic2Channel,
 			),
-		).toBe((10 + 10) * 8 * 1000 / 9600);
+		).toBe(((10 + 10) * 8 * 1000) / 9600);
 		expect(
 			frameDuration(
 				10,
 				ProtocolDataRate.ZWave_40k,
 				ProtocolHeaderFormat.Classic2Channel,
 			),
-		).toBe((10 + 10) * 8 * 1000 / 40000);
+		).toBe(((10 + 10) * 8 * 1000) / 40000);
 	});
 
 	// G.9959 Table 7-10: 40 bytes in channel configuration 2, 24 in configuration 3
@@ -69,14 +70,14 @@ describe("frameDuration()", () => {
 				ProtocolDataRate.ZWave_100k,
 				ProtocolHeaderFormat.Classic2Channel,
 			),
-		).toBe((10 + 40) * 8 * 1000 / 100000);
+		).toBe(((10 + 40) * 8 * 1000) / 100000);
 		expect(
 			frameDuration(
 				10,
 				ProtocolDataRate.ZWave_100k,
 				ProtocolHeaderFormat.Classic3Channel,
 			),
-		).toBe((10 + 24) * 8 * 1000 / 100000);
+		).toBe(((10 + 24) * 8 * 1000) / 100000);
 	});
 
 	test("scales with the frame length", () => {
@@ -90,7 +91,7 @@ describe("frameDuration()", () => {
 			ProtocolDataRate.ZWave_100k,
 			ProtocolHeaderFormat.Classic2Channel,
 		);
-		expect(long - short).toBeCloseTo(10 * 8 * 1000 / 100000, 10);
+		expect(long - short).toBeCloseTo((10 * 8 * 1000) / 100000, 10);
 	});
 });
 
@@ -175,7 +176,7 @@ describe("ackWaitDuration()", () => {
 		"data rate %i with header format %i waits for %i ack bits",
 		(dataRate, headerFormat, ackBits, bitrate) => {
 			expect(ackWaitDuration(dataRate, headerFormat)).toBeCloseTo(
-				1 + ackBits * 1000 / bitrate + 20,
+				1 + (ackBits * 1000) / bitrate + 20,
 				10,
 			);
 		},
@@ -332,7 +333,8 @@ describe("getBeamParameters()", () => {
 		// §8.1.3.11: "A full fragmented beam shall span 3 000 ms." An integer
 		// number of fragments cannot land on exactly 3000 ms, so the beam covers
 		// the window and overshoots by less than one period
-		const span = (beam.numFragments - 1) * beam.fragmentPeriodMs
+		const span =
+			(beam.numFragments - 1) * beam.fragmentPeriodMs
 			+ beam.fragmentDurationMs;
 		expect(span).toBeGreaterThanOrEqual(3000);
 		expect(span).toBeLessThan(3000 + beam.fragmentPeriodMs);

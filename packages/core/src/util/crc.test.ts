@@ -1,5 +1,6 @@
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import { CRC16_CCITT } from "./crc.js";
 
 // Test cases based on http://srecord.sourceforge.net/crc16-ccitt.html

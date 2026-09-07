@@ -1,4 +1,5 @@
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import {
 	FragmentType,
 	NVM3_CODE_LARGE_SHIFT,
@@ -38,7 +39,8 @@ export interface NVM3Object {
 }
 
 export function serializeObject(obj: NVM3Object): BytesView {
-	const isLarge = obj.type === ObjectType.DataLarge
+	const isLarge =
+		obj.type === ObjectType.DataLarge
 		|| obj.type === ObjectType.CounterLarge;
 	const headerSize = isLarge
 		? NVM3_OBJ_HEADER_SIZE_LARGE
@@ -50,7 +52,8 @@ export function serializeObject(obj: NVM3Object): BytesView {
 	if (isLarge) {
 		let hdr2 = dataLength & NVM3_OBJ_LARGE_LEN_MASK;
 
-		const hdr1 = (obj.type & NVM3_OBJ_TYPE_MASK)
+		const hdr1 =
+			(obj.type & NVM3_OBJ_TYPE_MASK)
 			| ((obj.key & NVM3_OBJ_KEY_MASK) << NVM3_OBJ_KEY_SHIFT)
 			| ((obj.fragmentType & NVM3_OBJ_FRAGTYPE_MASK)
 				<< NVM3_OBJ_FRAGTYPE_SHIFT);
@@ -68,7 +71,8 @@ export function serializeObject(obj: NVM3Object): BytesView {
 		if (typeAndLen === ObjectType.DataSmall && dataLength > 0) {
 			typeAndLen += dataLength;
 		}
-		let hdr1 = (typeAndLen & NVM3_OBJ_TYPE_MASK)
+		let hdr1 =
+			(typeAndLen & NVM3_OBJ_TYPE_MASK)
 			| ((obj.key & NVM3_OBJ_KEY_MASK) << NVM3_OBJ_KEY_SHIFT);
 		const bergerCode = computeBergerCode(hdr1, NVM3_CODE_SMALL_SHIFT);
 		hdr1 |= bergerCode << NVM3_CODE_SMALL_SHIFT;
@@ -92,27 +96,29 @@ export function fragmentLargeObject(
 
 	if (
 		obj.data!.length + NVM3_OBJ_HEADER_SIZE_LARGE
-			<= maxFirstFragmentSizeWithHeader
+		<= maxFirstFragmentSizeWithHeader
 	) {
 		return [obj];
 	}
 
 	let offset = 0;
 	while (offset < obj.data!.length) {
-		const fragmentSize = offset === 0
-			? maxFirstFragmentSizeWithHeader - NVM3_OBJ_HEADER_SIZE_LARGE
-			: maxFragmentSizeWithHeader - NVM3_OBJ_HEADER_SIZE_LARGE;
+		const fragmentSize =
+			offset === 0
+				? maxFirstFragmentSizeWithHeader - NVM3_OBJ_HEADER_SIZE_LARGE
+				: maxFragmentSizeWithHeader - NVM3_OBJ_HEADER_SIZE_LARGE;
 		const data = obj.data!.subarray(offset, offset + fragmentSize);
 
 		ret.push({
 			type: obj.type,
 			key: obj.key,
-			fragmentType: offset === 0
-				? FragmentType.First
-				: data.length + NVM3_OBJ_HEADER_SIZE_LARGE
-						< maxFragmentSizeWithHeader
-				? FragmentType.Last
-				: FragmentType.Next,
+			fragmentType:
+				offset === 0
+					? FragmentType.First
+					: data.length + NVM3_OBJ_HEADER_SIZE_LARGE
+						  < maxFragmentSizeWithHeader
+						? FragmentType.Last
+						: FragmentType.Next,
 			data,
 		});
 

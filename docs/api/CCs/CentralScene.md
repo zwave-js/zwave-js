@@ -8,14 +8,15 @@
 
 ```ts
 async getSupported(): Promise<
-	{
-		sceneCount: number;
-		supportedKeyAttributes: ReadonlyMap<
-			number,
-			readonly CentralSceneKeys[]
-		>;
-		supportsSlowRefresh: MaybeNotKnown<boolean>;
-	} | undefined
+	| {
+			sceneCount: number;
+			supportedKeyAttributes: ReadonlyMap<
+				number,
+				readonly CentralSceneKeys[]
+			>;
+			supportsSlowRefresh: MaybeNotKnown<boolean>;
+	  }
+	| undefined
 >;
 ```
 
@@ -23,9 +24,10 @@ async getSupported(): Promise<
 
 ```ts
 async getConfiguration(): Promise<
-	{
-		slowRefresh: boolean;
-	} | undefined
+	| {
+			slowRefresh: boolean;
+	  }
+	| undefined
 >;
 ```
 

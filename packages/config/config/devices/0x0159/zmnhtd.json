@@ -130,10 +130,7 @@
 			"label": "Power (W) Reporting Internal",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [60, 32535] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [60, 32535] }],
 			"defaultValue": 600,
 			"options": [
 				{

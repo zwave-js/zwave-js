@@ -17,6 +17,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, isEnumMember, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -76,12 +77,10 @@ export const WindowCoveringCCValues = V.defineCCValues(
 			(parameter: WindowCoveringParameter) => {
 				return {
 					...ValueMetadata.ReadOnlyLevel,
-					label: `Current value - ${
-						getEnumMemberName(
-							WindowCoveringParameter,
-							parameter,
-						)
-					}`,
+					label: `Current value - ${getEnumMemberName(
+						WindowCoveringParameter,
+						parameter,
+					)}`,
 					states: windowCoveringParameterToMetadataStates(parameter),
 					ccSpecific: { parameter },
 				} as const;
@@ -98,12 +97,10 @@ export const WindowCoveringCCValues = V.defineCCValues(
 				const writeable = parameter % 2 === 1;
 				return {
 					...ValueMetadata.Level,
-					label: `Target value - ${
-						getEnumMemberName(
-							WindowCoveringParameter,
-							parameter,
-						)
-					}`,
+					label: `Target value - ${getEnumMemberName(
+						WindowCoveringParameter,
+						parameter,
+					)}`,
 					// Only odd-numbered parameters have position support and are writable
 					writeable: parameter % 2 === 1,
 					states: windowCoveringParameterToMetadataStates(parameter),
@@ -121,12 +118,10 @@ export const WindowCoveringCCValues = V.defineCCValues(
 				property === "duration" && typeof propertyKey === "number",
 			(parameter: WindowCoveringParameter) => ({
 				...ValueMetadata.ReadOnlyDuration,
-				label: `Remaining duration - ${
-					getEnumMemberName(
-						WindowCoveringParameter,
-						parameter,
-					)
-				}`,
+				label: `Remaining duration - ${getEnumMemberName(
+					WindowCoveringParameter,
+					parameter,
+				)}`,
 				ccSpecific: {
 					parameter,
 				},
@@ -142,17 +137,13 @@ export const WindowCoveringCCValues = V.defineCCValues(
 			(parameter: WindowCoveringParameter) => {
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
-					label: `${
-						windowCoveringParameterToLevelChangeLabel(
-							parameter,
-							"up",
-						)
-					} - ${
-						getEnumMemberName(
-							WindowCoveringParameter,
-							parameter,
-						)
-					}`,
+					label: `${windowCoveringParameterToLevelChangeLabel(
+						parameter,
+						"up",
+					)} - ${getEnumMemberName(
+						WindowCoveringParameter,
+						parameter,
+					)}`,
 					valueChangeOptions: ["transitionDuration"],
 					states: {
 						true: "Start",
@@ -173,17 +164,13 @@ export const WindowCoveringCCValues = V.defineCCValues(
 			(parameter: WindowCoveringParameter) => {
 				return {
 					...ValueMetadata.WriteOnlyBoolean,
-					label: `${
-						windowCoveringParameterToLevelChangeLabel(
-							parameter,
-							"down",
-						)
-					} - ${
-						getEnumMemberName(
-							WindowCoveringParameter,
-							parameter,
-						)
-					}`,
+					label: `${windowCoveringParameterToLevelChangeLabel(
+						parameter,
+						"down",
+					)} - ${getEnumMemberName(
+						WindowCoveringParameter,
+						parameter,
+					)}`,
 					valueChangeOptions: ["transitionDuration"],
 					states: {
 						true: "Start",
@@ -211,7 +198,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: WindowCoveringCCAPI,
 			{ property, propertyKey },
 			value,
@@ -264,8 +251,8 @@ export class WindowCoveringCCAPI extends CCAPI {
 
 				const parameter = propertyKey as number;
 				const direction = WindowCoveringCCValues.levelChangeUp.is(
-						valueId,
-					)
+					valueId,
+				)
 					? "up"
 					: "down";
 
@@ -359,8 +346,8 @@ export class WindowCoveringCCAPI extends CCAPI {
 							);
 						} else if (this.isMulticast()) {
 							// Figure out which nodes were affected by this command
-							const affectedNodes = this.endpoint.node
-								.physicalNodes.filter(
+							const affectedNodes =
+								this.endpoint.node.physicalNodes.filter(
 									(node) =>
 										node
 											.getEndpoint(this.endpoint.index)
@@ -391,7 +378,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 	};
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: WindowCoveringCCAPI,
 			{ property, propertyKey },
 		) {
@@ -427,12 +414,11 @@ export class WindowCoveringCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			WindowCoveringCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<WindowCoveringCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedParameters;
 	}
 
@@ -449,9 +435,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			parameter,
 		});
-		const response = await this.host.sendCommand<
-			WindowCoveringCCReport
-		>(
+		const response = await this.host.sendCommand<WindowCoveringCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -530,9 +514,7 @@ export class WindowCoveringCCAPI extends CCAPI {
 export class WindowCoveringCC extends CommandClass {
 	declare ccCommand: WindowCoveringCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -562,7 +544,7 @@ export class WindowCoveringCC extends CommandClass {
 				{
 					nested: logList(
 						supported.map((p) =>
-							getEnumMemberName(WindowCoveringParameter, p)
+							getEnumMemberName(WindowCoveringParameter, p),
 						),
 					),
 				},
@@ -584,10 +566,7 @@ export class WindowCoveringCC extends CommandClass {
 					ctx,
 					WindowCoveringCCValues.targetValue(param),
 				);
-				this.setMetadata(
-					ctx,
-					WindowCoveringCCValues.duration(param),
-				);
+				this.setMetadata(ctx, WindowCoveringCCValues.duration(param));
 
 				// Level change values
 				this.setMetadata(
@@ -627,25 +606,22 @@ export class WindowCoveringCC extends CommandClass {
 			tag: options?.tag,
 		});
 
-		const parameters: number[] = this.getValue(
-			ctx,
-			WindowCoveringCCValues.supportedParameters,
-		) ?? [];
+		const parameters: number[] =
+			this.getValue(ctx, WindowCoveringCCValues.supportedParameters)
+			?? [];
 
 		// Only odd parameters have position support and need to be queried
-		const queryableParameters = parameters.filter((param) =>
-			param % 2 != 0
+		const queryableParameters = parameters.filter(
+			(param) => param % 2 != 0,
 		);
 
 		for (const [i, param] of queryableParameters.entries()) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: `querying position for parameter ${
-					getEnumMemberName(
-						WindowCoveringParameter,
-						param,
-					)
-				}...`,
+				message: `querying position for parameter ${getEnumMemberName(
+					WindowCoveringParameter,
+					param,
+				)}...`,
 				direction: "outbound",
 			});
 			await api.get(param);
@@ -728,10 +704,7 @@ export class WindowCoveringCCSupportedReport extends WindowCoveringCC {
 			message: {
 				"supported parameters": logList(
 					this.supportedParameters.map((p) =>
-						getEnumMemberName(
-							WindowCoveringParameter,
-							p,
-						)
+						getEnumMemberName(WindowCoveringParameter, p),
 					),
 				),
 			},
@@ -757,20 +730,14 @@ export interface WindowCoveringCCReportOptions {
 	WindowCoveringCCValues.currentValue,
 	(self) => [self.parameter],
 )
-@ccValueProperty(
-	"targetValue",
-	WindowCoveringCCValues.targetValue,
-	(self) => [self.parameter],
-)
-@ccValueProperty(
-	"duration",
-	WindowCoveringCCValues.duration,
-	(self) => [self.parameter],
-)
+@ccValueProperty("targetValue", WindowCoveringCCValues.targetValue, (self) => [
+	self.parameter,
+])
+@ccValueProperty("duration", WindowCoveringCCValues.duration, (self) => [
+	self.parameter,
+])
 export class WindowCoveringCCReport extends WindowCoveringCC {
-	public constructor(
-		options: WithAddress<WindowCoveringCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<WindowCoveringCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -787,14 +754,11 @@ export class WindowCoveringCCReport extends WindowCoveringCC {
 		validatePayload(raw.payload.length >= 4);
 		const parameter: WindowCoveringParameter = raw.payload[0];
 		validatePayload(isEnumMember(WindowCoveringParameter, parameter));
-		validatePayload(
-			raw.payload[1] <= 99,
-			raw.payload[2] <= 99,
-		);
+		validatePayload(raw.payload[1] <= 99, raw.payload[2] <= 99);
 		const currentValue = raw.payload[1];
 		const targetValue = raw.payload[2];
-		const duration = Duration.parseReport(raw.payload[3])
-			?? Duration.unknown();
+		const duration =
+			Duration.parseReport(raw.payload[3]) ?? Duration.unknown();
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -851,9 +815,7 @@ function testResponseForWindowCoveringGet(
 @CCCommand(WindowCoveringCommand.Get)
 @expectedCCResponse(WindowCoveringCCReport, testResponseForWindowCoveringGet)
 export class WindowCoveringCCGet extends WindowCoveringCC {
-	public constructor(
-		options: WithAddress<WindowCoveringCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<WindowCoveringCCGetOptions>) {
 		super(options);
 		this.parameter = options.parameter;
 	}
@@ -900,9 +862,7 @@ export interface WindowCoveringCCSetOptions {
 @CCCommand(WindowCoveringCommand.Set)
 @useSupervision()
 export class WindowCoveringCCSet extends WindowCoveringCC {
-	public constructor(
-		options: WithAddress<WindowCoveringCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<WindowCoveringCCSetOptions>) {
 		super(options);
 		this.targetValues = options.targetValues;
 		this.duration = Duration.from(options.duration);
@@ -926,9 +886,7 @@ export class WindowCoveringCCSet extends WindowCoveringCC {
 		let duration: Duration | undefined;
 
 		if (raw.payload.length >= 2 + numEntries * 2) {
-			duration = Duration.parseSet(
-				raw.payload[1 + numEntries * 2],
-			);
+			duration = Duration.parseSet(raw.payload[1 + numEntries * 2]);
 		}
 
 		return new this({
@@ -1002,9 +960,7 @@ export class WindowCoveringCCStartLevelChange extends WindowCoveringCC {
 		ctx: CCParsingContext,
 	): WindowCoveringCCStartLevelChange {
 		validatePayload(raw.payload.length >= 2);
-		const direction = !!(raw.payload[0] & 0b0100_0000)
-			? "down"
-			: "up";
+		const direction = !!(raw.payload[0] & 0b0100_0000) ? "down" : "up";
 		const parameter: WindowCoveringParameter = raw.payload[1];
 		let duration: Duration | undefined;
 

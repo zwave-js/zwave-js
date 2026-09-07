@@ -12,16 +12,13 @@ import {
 	type TypedClassDecorator,
 	staticExtends,
 } from "@zwave-js/shared";
+
 import { RCPFunctionType, RCPMessageType } from "./Constants.js";
 import { MessageHeaders } from "./MessageHeaders.js";
 
-export type RCPMessageConstructor<T extends RCPMessage> =
-	& typeof RCPMessage
-	& {
-		new (
-			options: RCPMessageOptions,
-		): T;
-	};
+export type RCPMessageConstructor<T extends RCPMessage> = typeof RCPMessage & {
+	new (options: RCPMessageOptions): T;
+};
 
 export interface RCPMessageBaseOptions {
 	callbackId?: number;
@@ -115,9 +112,7 @@ export class RCPMessageRaw {
  * Represents a Z-Wave message for communication with the RCP firmware
  */
 export class RCPMessage {
-	public constructor(
-		options: RCPMessageOptions = {},
-	) {
+	public constructor(options: RCPMessageOptions = {}) {
 		const {
 			// Try to determine the message type if none is given
 			type = getRCPMessageType(this),
@@ -155,8 +150,8 @@ export class RCPMessage {
 	): RCPMessage {
 		const raw = RCPMessageRaw.parse(data);
 
-		const Constructor = getRCPMessageConstructor(raw.type, raw.functionType)
-			?? RCPMessage;
+		const Constructor =
+			getRCPMessageConstructor(raw.type, raw.functionType) ?? RCPMessage;
 
 		return Constructor.from(raw, ctx);
 	}
@@ -419,9 +414,7 @@ export function getRCPMessageType<T extends RCPMessage>(
  */
 export function getRCPMessageTypeStatic<
 	T extends RCPMessageConstructor<RCPMessage>,
->(
-	classConstructor: T,
-): RCPMessageType | undefined {
+>(classConstructor: T): RCPMessageType | undefined {
 	return rcpMessageTypesDecorator.lookupValueStatic(classConstructor)
 		?.messageType;
 }
@@ -440,9 +433,7 @@ export function getRCPFunctionType<T extends RCPMessage>(
  */
 export function getRCPFunctionTypeStatic<
 	T extends RCPMessageConstructor<RCPMessage>,
->(
-	classConstructor: T,
-): RCPFunctionType | undefined {
+>(classConstructor: T): RCPFunctionType | undefined {
 	return rcpMessageTypesDecorator.lookupValueStatic(classConstructor)
 		?.functionType;
 }

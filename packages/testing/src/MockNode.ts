@@ -15,6 +15,7 @@ import {
 } from "@zwave-js/core";
 import { TimedExpectation } from "@zwave-js/shared";
 import { type KeyPair } from "@zwave-js/shared/bindings";
+
 import type { CCIdToCapabilities } from "./CCSpecificCapabilities.js";
 import type { MockController } from "./MockController.js";
 import {
@@ -74,8 +75,8 @@ export class MockEndpoint {
 		this.index = options.index;
 		this.node = options.node;
 
-		const { commandClasses = [], ...capabilities } = options.capabilities
-			?? {};
+		const { commandClasses = [], ...capabilities } =
+			options.capabilities ?? {};
 		this.capabilities = {
 			...getDefaultMockEndpointCapabilities(this.node.capabilities),
 			...capabilities,
@@ -297,15 +298,13 @@ export class MockNode {
 				this._options.controller.securityManagers.securityManager2;
 
 			// Copy keys from the controller
-			for (
-				const secClass of [
-					SecurityClass.S2_AccessControl,
-					SecurityClass.S2_Authenticated,
-					SecurityClass.S2_Unauthenticated,
-				]
-			) {
-				const key = controllerSm2.getKeysForSecurityClass(secClass)
-					?.pnk;
+			for (const secClass of [
+				SecurityClass.S2_AccessControl,
+				SecurityClass.S2_Authenticated,
+				SecurityClass.S2_Unauthenticated,
+			]) {
+				const key =
+					controllerSm2.getKeysForSecurityClass(secClass)?.pnk;
 				if (key) {
 					await securityManager2.setKey(secClass, key);
 					// Remember that the controller has this
@@ -382,18 +381,12 @@ export class MockNode {
 		const {
 			timeout = 5000,
 			preventDefault = false,
-			errorMessage =
-				"The controller did not send the expected frame within the provided timeout!",
+			errorMessage = "The controller did not send the expected frame within the provided timeout!",
 		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
-		>(
-			timeout,
-			predicate,
-			errorMessage,
-			preventDefault,
-		);
+		>(timeout, predicate, errorMessage, preventDefault);
 		try {
 			this.expectedControllerFrames.push(expectation);
 			return (await expectation) as T;
@@ -484,11 +477,7 @@ export class MockNode {
 
 			// Figure out what to do with the frame
 			for (const behavior of this.behaviors) {
-				response = await behavior.handleCC?.(
-					this.controller,
-					this,
-					cc,
-				);
+				response = await behavior.handleCC?.(this.controller, this, cc);
 				if (response) break;
 			}
 
@@ -644,26 +633,31 @@ export class MockNode {
 }
 
 /** What the mock node should do after receiving a controller frame */
-export type MockNodeResponse = {
-	// Send a CC
-	action: "sendCC";
-	cc: CommandClass;
-	ackRequested?: boolean; // Defaults to false
-} | {
-	// Acknowledge the incoming frame
-	action: "ack";
-} | {
-	// do nothing
-	action: "stop";
-} | {
-	// indicate success to the sending node
-	action: "ok";
-	/** If set, indicates how long the action will take to complete */
-	durationMs?: number;
-} | {
-	// indicate failure to the sending node
-	action: "fail";
-};
+export type MockNodeResponse =
+	| {
+			// Send a CC
+			action: "sendCC";
+			cc: CommandClass;
+			ackRequested?: boolean; // Defaults to false
+	  }
+	| {
+			// Acknowledge the incoming frame
+			action: "ack";
+	  }
+	| {
+			// do nothing
+			action: "stop";
+	  }
+	| {
+			// indicate success to the sending node
+			action: "ok";
+			/** If set, indicates how long the action will take to complete */
+			durationMs?: number;
+	  }
+	| {
+			// indicate failure to the sending node
+			action: "fail";
+	  };
 
 export interface MockNodeBehavior {
 	/** Gets called before the `handleCC` handlers and can transform an incoming `CommandClass` into another */

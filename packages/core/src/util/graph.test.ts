@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { GraphNode, topologicalSort } from "./graph.js";
 
 test("topologicalSort() -> should sort correctly (Test 1)", (t) => {

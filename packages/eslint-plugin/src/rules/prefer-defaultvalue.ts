@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import type { JSONCRule } from "../utils.js";
 
 export const preferDefaultValue: JSONCRule.RuleModule = {
@@ -16,7 +17,8 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 				if (
 					node.value.type !== "JSONLiteral"
 					|| typeof node.value.value !== "string"
-				) return;
+				)
+					return;
 
 				const match = node.value.raw.match(/ *\(default\) */i);
 				if (!match) return;
@@ -27,7 +29,8 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 					match.index! + match[0].length,
 				);
 
-				const fixed = before
+				const fixed =
+					before
 					+ (startsWithWhitespace && endsWithWhitespace ? " " : "")
 					+ after;
 
@@ -42,8 +45,7 @@ export const preferDefaultValue: JSONCRule.RuleModule = {
 	},
 	meta: {
 		docs: {
-			description:
-				`Ensures that the defaultValue property is used instead of mentioning in text that an option/value is the default`,
+			description: `Ensures that the defaultValue property is used instead of mentioning in text that an option/value is the default`,
 		},
 		fixable: "code",
 		schema: false,

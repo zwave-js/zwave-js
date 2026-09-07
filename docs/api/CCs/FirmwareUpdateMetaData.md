@@ -15,51 +15,45 @@ Requests information about the current firmware on the device.
 ### `reportMetaData`
 
 ```ts
-async reportMetaData(
-	options: {
-		manufacturerId: number;
-		firmwareId?: number;
-		checksum?: number;
-		firmwareUpgradable: boolean;
-		maxFragmentSize?: number;
-		additionalFirmwareIDs?: readonly number[];
-		hardwareVersion?: number;
-		continuesToFunction?: MaybeNotKnown<boolean>;
-		supportsActivation?: MaybeNotKnown<boolean>;
-		supportsResuming?: MaybeNotKnown<boolean>;
-		supportsNonSecureTransfer?: MaybeNotKnown<boolean>;
-	},
-): Promise<void>;
+async reportMetaData(options: {
+	manufacturerId: number;
+	firmwareId?: number;
+	checksum?: number;
+	firmwareUpgradable: boolean;
+	maxFragmentSize?: number;
+	additionalFirmwareIDs?: readonly number[];
+	hardwareVersion?: number;
+	continuesToFunction?: MaybeNotKnown<boolean>;
+	supportsActivation?: MaybeNotKnown<boolean>;
+	supportsResuming?: MaybeNotKnown<boolean>;
+	supportsNonSecureTransfer?: MaybeNotKnown<boolean>;
+}): Promise<void>;
 ```
 
 ### `requestUpdate`
 
 ```ts
-requestUpdate(
-	options: {
-		manufacturerId: number;
-		firmwareId: number;
-		checksum: number;
-	},
-): Promise<FirmwareUpdateMetaDataCCRequestReport | undefined>;
+requestUpdate(options: {
+	manufacturerId: number;
+	firmwareId: number;
+	checksum: number;
+}): Promise<FirmwareUpdateMetaDataCCRequestReport | undefined>;
 
-requestUpdate(
-	options: {
-		manufacturerId: number;
-		firmwareId: number;
-		checksum: number;
-		// V3+
-		firmwareTarget: number;
-		fragmentSize: number;
-		// V4+
-		activation?: boolean;
-		// V5+
-		hardwareVersion?: number;
-		// V8+
-		resume?: boolean;
-		nonSecureTransfer?: boolean;
-	},
-): Promise<FirmwareUpdateMetaDataCCRequestReport | undefined>;
+requestUpdate(options: {
+	manufacturerId: number;
+	firmwareId: number;
+	checksum: number;
+	// V3+
+	firmwareTarget: number;
+	fragmentSize: number;
+	// V4+
+	activation?: boolean;
+	// V5+
+	hardwareVersion?: number;
+	// V8+
+	resume?: boolean;
+	nonSecureTransfer?: boolean;
+}): Promise<FirmwareUpdateMetaDataCCRequestReport | undefined>;
 ```
 
 Requests the device to start the firmware update process and waits for a response.
@@ -69,13 +63,11 @@ should wait manually.
 ### `respondToUpdateRequest`
 
 ```ts
-async respondToUpdateRequest(
-	options: {
-		status: FirmwareUpdateRequestStatus;
-		resume?: boolean;
-		nonSecureTransfer?: boolean;
-	},
-): Promise<void>;
+async respondToUpdateRequest(options: {
+	status: FirmwareUpdateRequestStatus;
+	resume?: boolean;
+	nonSecureTransfer?: boolean;
+}): Promise<void>;
 ```
 
 Responds to a firmware update request.
@@ -83,12 +75,10 @@ Responds to a firmware update request.
 ### `respondToDownloadRequest`
 
 ```ts
-async respondToDownloadRequest(
-	options: {
-		status: FirmwareDownloadStatus;
-		checksum: number;
-	},
-): Promise<void>;
+async respondToDownloadRequest(options: {
+	status: FirmwareDownloadStatus;
+	checksum: number;
+}): Promise<void>;
 ```
 
 Responds to a firmware download request.
@@ -108,16 +98,14 @@ Sends a fragment of the new firmware to the device.
 ### `activateFirmware`
 
 ```ts
-async activateFirmware(
-	options: {
-		manufacturerId: number;
-		firmwareId: number;
-		checksum: number;
-		firmwareTarget: number;
-		// V5+
-		hardwareVersion?: number;
-	},
-): Promise<MaybeNotKnown<FirmwareUpdateActivationStatus>>;
+async activateFirmware(options: {
+	manufacturerId: number;
+	firmwareId: number;
+	checksum: number;
+	firmwareTarget: number;
+	// V5+
+	hardwareVersion?: number;
+}): Promise<MaybeNotKnown<FirmwareUpdateActivationStatus>>;
 ```
 
 Activates a previously transferred firmware image.

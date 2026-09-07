@@ -10,6 +10,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -57,7 +58,7 @@ export class ThermostatSetbackCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: ThermostatSetbackCCAPI, { property }) {
+		return async function (this: ThermostatSetbackCCAPI, { property }) {
 			switch (property) {
 				case "setbackType":
 				case "setbackState":
@@ -80,9 +81,7 @@ export class ThermostatSetbackCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatSetbackCCReport
-		>(
+		const response = await this.host.sendCommand<ThermostatSetbackCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -116,9 +115,7 @@ export class ThermostatSetbackCCAPI extends CCAPI {
 export class ThermostatSetbackCC extends CommandClass {
 	declare ccCommand: ThermostatSetbackCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -177,9 +174,7 @@ export interface ThermostatSetbackCCSetOptions {
 @CCCommand(ThermostatSetbackCommand.Set)
 @useSupervision()
 export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
-	public constructor(
-		options: WithAddress<ThermostatSetbackCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<ThermostatSetbackCCSetOptions>) {
 		super(options);
 		this.setbackType = options.setbackType;
 		this.setbackState = options.setbackState;
@@ -192,7 +187,8 @@ export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
 		validatePayload(raw.payload.length >= 2);
 		const setbackType: SetbackType = raw.payload[0] & 0b11;
 
-		const setbackState: SetbackState = decodeSetbackState(raw.payload, 1)
+		const setbackState: SetbackState =
+			decodeSetbackState(raw.payload, 1)
 			// If we receive an unknown setback state, return the raw value
 			|| raw.payload.readInt8(1);
 
@@ -223,9 +219,10 @@ export class ThermostatSetbackCCSet extends ThermostatSetbackCC {
 					SetbackType,
 					this.setbackType,
 				),
-				"setback state": typeof this.setbackState === "number"
-					? `${this.setbackState} K`
-					: this.setbackState,
+				"setback state":
+					typeof this.setbackState === "number"
+						? `${this.setbackState} K`
+						: this.setbackState,
 			},
 		};
 	}
@@ -239,9 +236,7 @@ export interface ThermostatSetbackCCReportOptions {
 
 @CCCommand(ThermostatSetbackCommand.Report)
 export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
-	public constructor(
-		options: WithAddress<ThermostatSetbackCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<ThermostatSetbackCCReportOptions>) {
 		super(options);
 
 		this.setbackType = options.setbackType;
@@ -255,7 +250,8 @@ export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
 		validatePayload(raw.payload.length >= 2);
 		const setbackType: SetbackType = raw.payload[0] & 0b11;
 
-		const setbackState: SetbackState = decodeSetbackState(raw.payload, 1)
+		const setbackState: SetbackState =
+			decodeSetbackState(raw.payload, 1)
 			// If we receive an unknown setback state, return the raw value
 			|| raw.payload.readInt8(1);
 
@@ -286,9 +282,10 @@ export class ThermostatSetbackCCReport extends ThermostatSetbackCC {
 					SetbackType,
 					this.setbackType,
 				),
-				"setback state": typeof this.setbackState === "number"
-					? `${this.setbackState} K`
-					: this.setbackState,
+				"setback state":
+					typeof this.setbackState === "number"
+						? `${this.setbackState} K`
+						: this.setbackState,
 			},
 		};
 	}

@@ -1,7 +1,10 @@
-import { Bytes, type Timer, setTimer } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
+
+import { Bytes, type Timer, setTimer } from "@zwave-js/shared";
+
 import type { SerialLogger } from "../log/Logger.js";
 import { XModemMessageHeaders } from "../message/MessageHeaders.js";
+
 import {
 	type CLIChunk,
 	CLIChunkType,
@@ -60,10 +63,12 @@ export class CLIParser extends TransformStream<
 					if (!isFlowControl(charCode)) break;
 
 					logger?.data("inbound", Uint8Array.from([charCode]));
-					controller.enqueue(wrapChunk({
-						type: CLIChunkType.FlowControl,
-						command: charCode,
-					}));
+					controller.enqueue(
+						wrapChunk({
+							type: CLIChunkType.FlowControl,
+							command: charCode,
+						}),
+					);
 					receiveBuffer = receiveBuffer.slice(1);
 				}
 
@@ -76,36 +81,43 @@ export class CLIParser extends TransformStream<
 				const lines = receiveBuffer.split("\n");
 				if (lines.some(isPromptLine)) {
 					// There is a prompt input, that means the output is complete
-					const output = lines.map(
-						(line) => {
+					const output = lines
+						.map((line) => {
 							if (!isPromptLine(line)) return line;
 							const normalized = normalizeLine(line);
 							return normalized.startsWith("> ")
 								? normalized.slice(2)
 								: "";
-						},
-					).join("\n").trim();
+						})
+						.join("\n")
+						.trim();
 
 					if (output) {
 						logger?.message(output, "inbound");
-						controller.enqueue(wrapChunk({
-							type: CLIChunkType.Message,
-							message: output,
-						}));
+						controller.enqueue(
+							wrapChunk({
+								type: CLIChunkType.Message,
+								message: output,
+							}),
+						);
 					}
 
-					controller.enqueue(wrapChunk({
-						type: CLIChunkType.Prompt,
-					}));
+					controller.enqueue(
+						wrapChunk({
+							type: CLIChunkType.Prompt,
+						}),
+					);
 
 					receiveBuffer = "";
 				} else if (/^\[[A-Z]\] /.test(receiveBuffer)) {
 					// This is an "unsolicited" log message
 					logger?.message(receiveBuffer, "inbound");
-					controller.enqueue(wrapChunk({
-						type: CLIChunkType.Message,
-						message: receiveBuffer,
-					}));
+					controller.enqueue(
+						wrapChunk({
+							type: CLIChunkType.Message,
+							message: receiveBuffer,
+						}),
+					);
 					receiveBuffer = "";
 				}
 
@@ -114,10 +126,12 @@ export class CLIParser extends TransformStream<
 					flushTimeout = setTimer(() => {
 						flushTimeout = undefined;
 						logger?.message(receiveBuffer, "inbound");
-						controller.enqueue(wrapChunk({
-							type: CLIChunkType.Message,
-							message: receiveBuffer,
-						}));
+						controller.enqueue(
+							wrapChunk({
+								type: CLIChunkType.Message,
+								message: receiveBuffer,
+							}),
+						);
 						receiveBuffer = "";
 					}, 500);
 				}

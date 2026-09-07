@@ -1,5 +1,7 @@
 import { type AddressInfo } from "node:net";
+
 import { afterAll, beforeAll, beforeEach, test } from "vitest";
+
 import { getAvailableFirmwareUpdatesBulk } from "./FirmwareUpdateService.js";
 import type {
 	FirmwareUpdateBulkInfo,

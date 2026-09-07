@@ -8,11 +8,12 @@
 
 ```ts
 async get(sensorType?: AlarmSensorType): Promise<
-	{
-		duration?: number;
-		severity?: number;
-		state: boolean;
-	} | undefined
+	| {
+			duration?: number;
+			severity?: number;
+			state: boolean;
+	  }
+	| undefined
 >;
 ```
 

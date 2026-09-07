@@ -4,9 +4,7 @@ import { Bytes, type BytesView } from "@zwave-js/shared";
 function parseCommandList(output: string): [string, string][] {
 	const commands: [string, string][] = [];
 	for (const line of output.trim().split("\n")) {
-		const match = line.match(
-			/^\s*([A-Za-z][A-Za-z0-9_]*)\s{2,}(.*?)\s*$/,
-		);
+		const match = line.match(/^\s*([A-Za-z][A-Za-z0-9_]*)\s{2,}(.*?)\s*$/);
 		if (match) {
 			commands.push([match[1], match[2]]);
 		} else if (commands.length > 0) {

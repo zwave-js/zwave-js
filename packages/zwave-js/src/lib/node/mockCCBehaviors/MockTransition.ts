@@ -12,9 +12,7 @@ export interface MockTransition {
 }
 
 /** Computes the interpolated current value from a running transition. */
-export function getTransitionCurrentValue(
-	transition: MockTransition,
-): number {
+export function getTransitionCurrentValue(transition: MockTransition): number {
 	const elapsed = Date.now() - transition.startTime;
 	const progress = Math.min(elapsed / transition.durationMs, 1);
 	return Math.round(

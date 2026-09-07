@@ -1,5 +1,6 @@
 import type { MessageOrCCLogEntry, RSSI } from "@zwave-js/core";
 import type { BytesView } from "@zwave-js/shared";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,

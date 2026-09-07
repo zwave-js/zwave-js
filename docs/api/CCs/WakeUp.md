@@ -8,10 +8,11 @@
 
 ```ts
 async getInterval(): Promise<
-	{
-		controllerNodeId: number;
-		wakeUpInterval: number;
-	} | undefined
+	| {
+			controllerNodeId: number;
+			wakeUpInterval: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -19,13 +20,14 @@ async getInterval(): Promise<
 
 ```ts
 async getIntervalCapabilities(): Promise<
-	{
-		defaultWakeUpInterval: number;
-		maxWakeUpInterval: number;
-		minWakeUpInterval: number;
-		wakeUpIntervalSteps: number;
-		wakeUpOnDemandSupported: boolean;
-	} | undefined
+	| {
+			defaultWakeUpInterval: number;
+			maxWakeUpInterval: number;
+			minWakeUpInterval: number;
+			wakeUpIntervalSteps: number;
+			wakeUpOnDemandSupported: boolean;
+	  }
+	| undefined
 >;
 ```
 

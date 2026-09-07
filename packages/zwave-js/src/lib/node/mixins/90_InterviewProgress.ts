@@ -6,6 +6,7 @@ import {
 } from "@zwave-js/core";
 import { throttle } from "@zwave-js/shared";
 import { roundTo } from "alcalzone-shared/math";
+
 import { DeviceConfigMixin } from "./80_DeviceConfig.js";
 
 // The interview progress is approximated as a percentage in [0, 100], matching the unit
@@ -229,7 +230,8 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	 * of distinct parameters, otherwise we assume a typical count.
 	 */
 	private configurationCCInterviewWeight(): number {
-		const paramInfo = this.deviceConfig?.paramInformation
+		const paramInfo =
+			this.deviceConfig?.paramInformation
 			?? this.deviceConfig?.endpoints?.get(0)?.paramInformation;
 		if (!paramInfo?.size) return ASSUMED_CONFIG_PARAM_COUNT;
 
@@ -240,8 +242,9 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 	private computeCCInterviewStepWidth(cc: CommandClasses): number {
 		if (this._ccInterviewBulkPhase) {
 			if (this._ccInterviewBulkRemainingWeight <= 0) return 0;
-			const width = this.ccInterviewWeight(cc)
-				/ this._ccInterviewBulkRemainingWeight
+			const width =
+				(this.ccInterviewWeight(cc)
+					/ this._ccInterviewBulkRemainingWeight)
 				* this._ccInterviewBulkBand;
 			// Never advance past the end of the CC band
 			return Math.max(
@@ -253,8 +256,8 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 			);
 		} else {
 			// Discovery phase: a fixed amount derived from the CC's weight, bounded by the cap
-			const width = this.ccInterviewWeight(cc)
-				* INTERVIEW_PROGRESS_DISCOVERY_UNIT;
+			const width =
+				this.ccInterviewWeight(cc) * INTERVIEW_PROGRESS_DISCOVERY_UNIT;
 			return Math.max(
 				0,
 				Math.min(
@@ -325,11 +328,10 @@ export abstract class InterviewProgressMixin extends DeviceConfigMixin {
 
 		// Make sure that we don't report garbage when the CC interviews
 		// call this with miscalculated progress values.
-		const fraction = total > 0
-			? Math.min(1, Math.max(0, completed / total))
-			: 0;
-		const progress = this._ccInterviewStepStart
-			+ this._ccInterviewStepWidth * fraction;
+		const fraction =
+			total > 0 ? Math.min(1, Math.max(0, completed / total)) : 0;
+		const progress =
+			this._ccInterviewStepStart + this._ccInterviewStepWidth * fraction;
 		// The overall progress must never go backwards
 		if (progress > this._interviewProgress) {
 			this._interviewProgress = progress;

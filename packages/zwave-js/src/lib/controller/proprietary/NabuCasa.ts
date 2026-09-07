@@ -19,6 +19,7 @@ import {
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import { roundTo } from "alcalzone-shared/math";
+
 import type { Driver } from "../../driver/Driver.js";
 import type { ZWaveController } from "../Controller.js";
 import type { ControllerProprietaryCommon } from "../Proprietary.js";
@@ -129,20 +130,15 @@ const BLACK: RGB = { r: 0, g: 2, b: 0 };
 
 function parseGyro(msg: Message): Vector {
 	// According to datasheet: 8g range => 977 µg/LSB
-	const x = roundTo(msg.payload.readInt16BE(1) / 1024 * 9.77, 2);
-	const y = roundTo(msg.payload.readInt16BE(3) / 1024 * 9.77, 2);
-	const z = roundTo(msg.payload.readInt16BE(5) / 1024 * 9.77, 2);
+	const x = roundTo((msg.payload.readInt16BE(1) / 1024) * 9.77, 2);
+	const y = roundTo((msg.payload.readInt16BE(3) / 1024) * 9.77, 2);
+	const z = roundTo((msg.payload.readInt16BE(5) / 1024) * 9.77, 2);
 
 	return { x, y, z };
 }
 
-export class ControllerProprietary_NabuCasa
-	implements ControllerProprietaryCommon
-{
-	constructor(
-		driver: Driver,
-		controller: ZWaveController,
-	) {
+export class ControllerProprietary_NabuCasa implements ControllerProprietaryCommon {
+	constructor(driver: Driver, controller: ZWaveController) {
 		this.driver = driver;
 		this.controller = controller;
 	}
@@ -182,50 +178,37 @@ export class ControllerProprietary_NabuCasa
 			);
 
 			// Clean up RGB values if they exist
-			valueDB.setMetadata(
-				ColorSwitchCCValues.currentColor.id,
-				undefined,
-			);
+			valueDB.setMetadata(ColorSwitchCCValues.currentColor.id, undefined);
 			valueDB.removeValue(ColorSwitchCCValues.currentColor.id);
 
-			valueDB.setMetadata(
-				ColorSwitchCCValues.targetColor.id,
-				undefined,
-			);
+			valueDB.setMetadata(ColorSwitchCCValues.targetColor.id, undefined);
 			valueDB.removeValue(ColorSwitchCCValues.targetColor.id);
 
-			valueDB.setMetadata(
-				ColorSwitchCCValues.hexColor.id,
-				undefined,
-			);
+			valueDB.setMetadata(ColorSwitchCCValues.hexColor.id, undefined);
 			valueDB.removeValue(ColorSwitchCCValues.hexColor.id);
 
 			valueDB.setMetadata(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Red).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Red).id,
 				undefined,
 			);
 			valueDB.removeValue(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Red).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Red).id,
 			);
 			valueDB.setMetadata(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Green).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Green)
+					.id,
 				undefined,
 			);
 			valueDB.removeValue(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Green).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Green)
+					.id,
 			);
 			valueDB.setMetadata(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Blue).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Blue).id,
 				undefined,
 			);
 			valueDB.removeValue(
-				ColorSwitchCCValues
-					.currentColorChannel(ColorComponent.Blue).id,
+				ColorSwitchCCValues.currentColorChannel(ColorComponent.Blue).id,
 			);
 		}
 
@@ -246,17 +229,11 @@ export class ControllerProprietary_NabuCasa
 				configEnableTiltIndicator,
 				configEnableTiltIndicatorMeta,
 			);
-			valueDB.setValue(
-				configEnableTiltIndicator,
-				enableTiltIndicator,
-			);
+			valueDB.setValue(configEnableTiltIndicator, enableTiltIndicator);
 		}
 	}
 
-	private persistRGBValue(
-		valueDB: ValueDB,
-		rgb: RGB,
-	) {
+	private persistRGBValue(valueDB: ValueDB, rgb: RGB) {
 		// Treat any other color than black as "on"
 		valueDB.setValue(
 			BinarySwitchCCValues.currentValue.id,
@@ -268,10 +245,7 @@ export class ControllerProprietary_NabuCasa
 		);
 	}
 
-	private persistLEDState(
-		valueDB: ValueDB,
-		state: boolean,
-	) {
+	private persistLEDState(valueDB: ValueDB, state: boolean) {
 		valueDB.setValue(BinarySwitchCCValues.currentValue.id, state);
 		valueDB.setValue(BinarySwitchCCValues.targetValue.id, state);
 	}
@@ -293,13 +267,10 @@ export class ControllerProprietary_NabuCasa
 			},
 		});
 
-		const result = await this.driver.sendMessage(
-			getSupportedCmd,
-			{
-				priority: MessagePriority.Controller,
-				supportCheck: false,
-			},
-		);
+		const result = await this.driver.sendMessage(getSupportedCmd, {
+			priority: MessagePriority.Controller,
+			supportCheck: false,
+		});
 		const supported = result.payload.subarray(1);
 
 		return parseBitMask(supported, NabuCasaCommand.GetSupportedCommands);
@@ -504,10 +475,7 @@ export class ControllerProprietary_NabuCasa
 		// HOST->ZW (REQ): NABU_CASA_CONFIG_GET | key
 		// ZW->HOST (RES): NABU_CASA_CONFIG_GET | key | size | value...
 
-		const payload = Bytes.from([
-			NabuCasaCommand.GetConfig,
-			key,
-		]);
+		const payload = Bytes.from([NabuCasaCommand.GetConfig, key]);
 
 		const getConfigCmd = new Message({
 			type: MessageType.Request,
@@ -701,14 +669,11 @@ export class ControllerProprietary_NabuCasa
 			ConfigurationCCValues.paramInformation.is(valueId)
 			&& valueId.propertyKey == undefined
 			&& typeof value === "number"
-			&& [
-				NabuCasaConfigKey.EnableTiltIndicator,
-			].includes(valueId.property as any)
+			&& [NabuCasaConfigKey.EnableTiltIndicator].includes(
+				valueId.property as any,
+			)
 		) {
-			await this.setConfig(
-				valueId.property as NabuCasaConfigKey,
-				value,
-			);
+			await this.setConfig(valueId.property as NabuCasaConfigKey, value);
 			this.controller.valueDB.setValue(valueId, value);
 
 			return { status: SetValueStatus.Success };

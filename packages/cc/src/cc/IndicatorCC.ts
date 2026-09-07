@@ -22,6 +22,7 @@ import { Bytes, getEnumMemberName, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { clamp, roundTo } from "alcalzone-shared/math";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -105,7 +106,7 @@ function indicatorObjectsToTimeout(
 	values: IndicatorObject[],
 ): IndicatorTimeout | undefined {
 	const timeoutValues = values.filter((v) =>
-		[0x0a, 0x06, 0x07, 0x08].includes(v.propertyId)
+		[0x0a, 0x06, 0x07, 0x08].includes(v.propertyId),
 	);
 	if (!timeoutValues.length) return undefined;
 
@@ -113,18 +114,19 @@ function indicatorObjectsToTimeout(
 		?? 0) as number;
 	const minutes = (timeoutValues.find((v) => v.propertyId === 0x06)?.value
 		?? 0) as number;
-	const seconds = clamp(
-		(timeoutValues.find((v) => v.propertyId === 0x07)
-			?.value as number) ?? 0,
-		0,
-		59,
-	)
+	const seconds =
+		clamp(
+			(timeoutValues.find((v) => v.propertyId === 0x07)?.value as number)
+				?? 0,
+			0,
+			59,
+		)
 		+ clamp(
-				(timeoutValues.find((v) => v.propertyId === 0x08)
-					?.value as number) ?? 0,
-				0,
-				99,
-			)
+			(timeoutValues.find((v) => v.propertyId === 0x08)?.value as number)
+				?? 0,
+			0,
+			99,
+		)
 			/ 100;
 
 	return {
@@ -138,17 +140,13 @@ export const IndicatorCCValues = V.defineCCValues(CommandClasses.Indicator, {
 	...V.staticProperty("supportedIndicatorIds", undefined, {
 		internal: true,
 	}),
-	...V.staticPropertyWithName(
-		"valueV1",
-		"value",
-		{
-			...ValueMetadata.UInt8,
-			label: "Indicator value",
-			ccSpecific: {
-				indicatorId: 0,
-			},
+	...V.staticPropertyWithName("valueV1", "value", {
+		...ValueMetadata.UInt8,
+		label: "Indicator value",
+		ccSpecific: {
+			indicatorId: 0,
 		},
-	),
+	}),
 	...V.staticProperty(
 		"identify",
 		{
@@ -262,9 +260,7 @@ function getIndicatorMetadata(
 	}
 }
 
-function getIndicatorName(
-	indicatorId: number | undefined,
-): string {
+function getIndicatorName(indicatorId: number | undefined): string {
 	if (indicatorId) {
 		return getEnumMemberName(Indicator, indicatorId);
 	} else {
@@ -343,7 +339,7 @@ export class IndicatorCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: IndicatorCCAPI,
 			{ property, propertyKey },
 			value,
@@ -418,7 +414,7 @@ export class IndicatorCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: IndicatorCCAPI, { property }) {
+		return async function (this: IndicatorCCAPI, { property }) {
 			if (property === "value") return this.get();
 			if (typeof property === "number") {
 				return this.get(property);
@@ -456,8 +452,9 @@ export class IndicatorCCAPI extends CCAPI {
 
 		if (this.version === 1 && typeof value !== "number") {
 			throw new ZWaveError(
-				`Node ${this.endpoint
-					.nodeId as number} only supports IndicatorCC V1 which requires a single value to be set`,
+				`Node ${
+					this.endpoint.nodeId as number
+				} only supports IndicatorCC V1 which requires a single value to be set`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		} else if (
@@ -480,13 +477,8 @@ export class IndicatorCCAPI extends CCAPI {
 	}
 
 	@validateArgs()
-	public async sendReport(
-		options: IndicatorCCReportOptions,
-	): Promise<void> {
-		this.assertSupportsCommand(
-			IndicatorCommand,
-			IndicatorCommand.Report,
-		);
+	public async sendReport(options: IndicatorCCReportOptions): Promise<void> {
+		this.assertSupportsCommand(IndicatorCommand, IndicatorCommand.Report);
 
 		const cc = new IndicatorCCReport({
 			nodeId: this.endpoint.nodeId,
@@ -500,10 +492,10 @@ export class IndicatorCCAPI extends CCAPI {
 	@validateArgs()
 	public async getSupported(indicatorId: number): Promise<
 		| {
-			indicatorId?: number;
-			supportedProperties: readonly number[];
-			nextIndicatorId: number;
-		}
+				indicatorId?: number;
+				supportedProperties: readonly number[];
+				nextIndicatorId: number;
+		  }
 		| undefined
 	> {
 		this.assertSupportsCommand(
@@ -516,12 +508,11 @@ export class IndicatorCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			indicatorId,
 		});
-		const response = await this.host.sendCommand<
-			IndicatorCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<IndicatorCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return {
 				// Include the actual indicator ID if 0x00 was requested
@@ -751,12 +742,11 @@ export class IndicatorCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			indicatorId,
 		});
-		const response = await this.host.sendCommand<
-			IndicatorCCDescriptionReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<IndicatorCCDescriptionReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.description;
 	}
 }
@@ -767,9 +757,7 @@ export class IndicatorCCAPI extends CCAPI {
 export class IndicatorCC extends CommandClass {
 	declare ccCommand: IndicatorCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -822,11 +810,9 @@ export class IndicatorCC extends CommandClass {
 				IndicatorCCValues.supportedIndicatorIds,
 				supportedIndicatorIds,
 			);
-			const logMessage = `supported indicator IDs: ${
-				supportedIndicatorIds.join(
-					", ",
-				)
-			}`;
+			const logMessage = `supported indicator IDs: ${supportedIndicatorIds.join(
+				", ",
+			)}`;
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: logMessage,
@@ -834,8 +820,10 @@ export class IndicatorCC extends CommandClass {
 			});
 
 			if (api.version >= 4) {
-				const manufacturerDefinedIndicatorIds = supportedIndicatorIds
-					.filter((id) => isManufacturerDefinedIndicator(id));
+				const manufacturerDefinedIndicatorIds =
+					supportedIndicatorIds.filter((id) =>
+						isManufacturerDefinedIndicator(id),
+					);
 				if (manufacturerDefinedIndicatorIds.length > 0) {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
@@ -844,10 +832,10 @@ export class IndicatorCC extends CommandClass {
 						direction: "outbound",
 					});
 
-					for (
-						const [i, id] of manufacturerDefinedIndicatorIds
-							.entries()
-					) {
+					for (const [
+						i,
+						id,
+					] of manufacturerDefinedIndicatorIds.entries()) {
 						await api.getDescription(id);
 
 						node.reportInterviewProgress(
@@ -893,18 +881,15 @@ export class IndicatorCC extends CommandClass {
 			});
 			await api.get();
 		} else {
-			const supportedIndicatorIds: number[] = this.getValue(
-				ctx,
-				IndicatorCCValues.supportedIndicatorIds,
-			) ?? [];
+			const supportedIndicatorIds: number[] =
+				this.getValue(ctx, IndicatorCCValues.supportedIndicatorIds)
+				?? [];
 			for (const [i, indicatorId] of supportedIndicatorIds.entries()) {
 				ctx.logNode(node.id, {
 					endpoint: this.endpointIndex,
-					message: `requesting current indicator value (id = ${
-						num2hex(
-							indicatorId,
-						)
-					})...`,
+					message: `requesting current indicator value (id = ${num2hex(
+						indicatorId,
+					)})...`,
 					direction: "outbound",
 				});
 				await api.get(indicatorId);
@@ -929,10 +914,7 @@ export class IndicatorCC extends CommandClass {
 			// The indicator property is our property key
 			const prop = getIndicatorProperty(propertyKey);
 			if (prop) return prop.label;
-		} else if (
-			typeof property === "number"
-			&& propertyKey === "timeout"
-		) {
+		} else if (typeof property === "number" && propertyKey === "timeout") {
 			return "Timeout";
 		}
 		return super.translatePropertyKey(ctx, property, propertyKey);
@@ -973,11 +955,7 @@ export class IndicatorCC extends CommandClass {
 		ctx: GetValueDB,
 		indicatorId: number,
 	): string | undefined {
-		if (
-			isManufacturerDefinedIndicator(
-				indicatorId,
-			)
-		) {
+		if (isManufacturerDefinedIndicator(indicatorId)) {
 			return this.getValue(
 				ctx,
 				IndicatorCCValues.indicatorDescription(indicatorId),
@@ -1010,18 +988,16 @@ export interface IndicatorObject {
 // @publicAPI
 export type IndicatorCCSetOptions =
 	| {
-		value: number;
-	}
+			value: number;
+	  }
 	| {
-		values: IndicatorObject[];
-	};
+			values: IndicatorObject[];
+	  };
 
 @CCCommand(IndicatorCommand.Set)
 @useSupervision()
 export class IndicatorCCSet extends IndicatorCC {
-	public constructor(
-		options: WithAddress<IndicatorCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<IndicatorCCSetOptions>) {
 		super(options);
 		if ("value" in options) {
 			this.indicator0Value = options.value;
@@ -1033,9 +1009,7 @@ export class IndicatorCCSet extends IndicatorCC {
 	public static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCSet {
 		validatePayload(raw.payload.length >= 1);
 
-		const objCount = raw.payload.length >= 2
-			? raw.payload[1] & 0b11111
-			: 0;
+		const objCount = raw.payload.length >= 2 ? raw.payload[1] & 0b11111 : 0;
 
 		if (objCount === 0) {
 			const indicator0Value = raw.payload[0];
@@ -1080,11 +1054,8 @@ export class IndicatorCCSet extends IndicatorCC {
 				this.payload[offset] = this.values[i].indicatorId;
 				this.payload[offset + 1] = this.values[i].propertyId;
 				const value = this.values[i].value;
-				this.payload[offset + 2] = value === true
-					? 0xff
-					: value === false
-					? 0x00
-					: value;
+				this.payload[offset + 2] =
+					value === true ? 0xff : value === false ? 0x00 : value;
 			}
 		} else {
 			// V1
@@ -1118,17 +1089,15 @@ export class IndicatorCCSet extends IndicatorCC {
 // @publicAPI
 export type IndicatorCCReportOptions =
 	| {
-		value: number;
-	}
+			value: number;
+	  }
 	| {
-		values: IndicatorObject[];
-	};
+			values: IndicatorObject[];
+	  };
 
 @CCCommand(IndicatorCommand.Report)
 export class IndicatorCCReport extends IndicatorCC {
-	public constructor(
-		options: WithAddress<IndicatorCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<IndicatorCCReportOptions>) {
 		super(options);
 
 		if ("value" in options) {
@@ -1147,9 +1116,7 @@ export class IndicatorCCReport extends IndicatorCC {
 	public static from(raw: CCRaw, ctx: CCParsingContext): IndicatorCCReport {
 		validatePayload(raw.payload.length >= 1);
 
-		const objCount = raw.payload.length >= 2
-			? raw.payload[1] & 0b11111
-			: 0;
+		const objCount = raw.payload.length >= 2 ? raw.payload[1] & 0b11111 : 0;
 
 		if (objCount === 0) {
 			const indicator0Value = raw.payload[0];
@@ -1221,8 +1188,7 @@ export class IndicatorCCReport extends IndicatorCC {
 				if (this.isSinglecast()) {
 					// Don't!
 					ctx.logNode(this.nodeId, {
-						message:
-							`ignoring V1 indicator report because the node supports V2 indicators`,
+						message: `ignoring V1 indicator report because the node supports V2 indicators`,
 						direction: "none",
 						endpoint: this.endpointIndex,
 					});
@@ -1241,16 +1207,17 @@ export class IndicatorCCReport extends IndicatorCC {
 				// even if it does not support all properties for the given indicator ID.
 				// To avoid confusion, we need to filter out the unsupported properties
 
-				const supportedPropertyIDs = this.getValue<number[]>(
-					ctx,
-					IndicatorCCValues.supportedPropertyIDs(indicatorId),
-				) ?? [];
-				const filteredValues = values.filter(
-					(v) => supportedPropertyIDs.includes(v.propertyId),
+				const supportedPropertyIDs =
+					this.getValue<number[]>(
+						ctx,
+						IndicatorCCValues.supportedPropertyIDs(indicatorId),
+					) ?? [];
+				const filteredValues = values.filter((v) =>
+					supportedPropertyIDs.includes(v.propertyId),
 				);
 
-				const overrideIndicatorLabel = this
-					.getManufacturerDefinedIndicatorLabel(ctx, indicatorId);
+				const overrideIndicatorLabel =
+					this.getManufacturerDefinedIndicatorLabel(ctx, indicatorId);
 
 				// ... timeout
 				const timeout = indicatorObjectsToTimeout(filteredValues);
@@ -1288,13 +1255,10 @@ export class IndicatorCCReport extends IndicatorCC {
 	public readonly indicator0Value: number | undefined;
 	public readonly values: IndicatorObject[] | undefined;
 
-	private setIndicatorValue(
-		ctx: GetValueDB,
-		value: IndicatorObject,
-	): void {
+	private setIndicatorValue(ctx: GetValueDB, value: IndicatorObject): void {
 		// Manufacturer-defined indicators may need a custom label
-		const overrideIndicatorLabel = this
-			.getManufacturerDefinedIndicatorLabel(ctx, value.indicatorId);
+		const overrideIndicatorLabel =
+			this.getManufacturerDefinedIndicatorLabel(ctx, value.indicatorId);
 
 		const metadata = getIndicatorMetadata(
 			value.indicatorId,
@@ -1314,10 +1278,11 @@ export class IndicatorCCReport extends IndicatorCC {
 		if (!prop?.exposeAsValue) return;
 
 		// And only if it is actually supported and not just reported by accident
-		const supportedPropertyIDs = this.getValue<number[]>(
-			ctx,
-			IndicatorCCValues.supportedPropertyIDs(value.indicatorId),
-		) ?? [];
+		const supportedPropertyIDs =
+			this.getValue<number[]>(
+				ctx,
+				IndicatorCCValues.supportedPropertyIDs(value.indicatorId),
+			) ?? [];
 		if (!supportedPropertyIDs.includes(value.propertyId)) return;
 
 		// Publish the value
@@ -1341,11 +1306,8 @@ export class IndicatorCCReport extends IndicatorCC {
 				this.payload[offset] = this.values[i].indicatorId;
 				this.payload[offset + 1] = this.values[i].propertyId;
 				const value = this.values[i].value;
-				this.payload[offset + 2] = value === true
-					? 0xff
-					: value === false
-					? 0x00
-					: value;
+				this.payload[offset + 2] =
+					value === true ? 0xff : value === false ? 0x00 : value;
 			}
 		} else {
 			// V1
@@ -1384,9 +1346,7 @@ export interface IndicatorCCGetOptions {
 @CCCommand(IndicatorCommand.Get)
 @expectedCCResponse(IndicatorCCReport)
 export class IndicatorCCGet extends IndicatorCC {
-	public constructor(
-		options: WithAddress<IndicatorCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<IndicatorCCGetOptions>) {
 		super(options);
 		this.indicatorId = options.indicatorId;
 	}
@@ -1490,15 +1450,12 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 	public readonly supportedProperties: readonly number[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const bitmask = this.supportedProperties.length > 0
-			? encodeBitMask(this.supportedProperties, undefined, 0)
-			: new Bytes();
+		const bitmask =
+			this.supportedProperties.length > 0
+				? encodeBitMask(this.supportedProperties, undefined, 0)
+				: new Bytes();
 		this.payload = Bytes.concat([
-			[
-				this.indicatorId,
-				this.nextIndicatorId,
-				bitmask.length,
-			],
+			[this.indicatorId, this.nextIndicatorId, bitmask.length],
 			bitmask,
 		]);
 
@@ -1514,7 +1471,7 @@ export class IndicatorCCSupportedReport extends IndicatorCC {
 					.map(
 						(id) =>
 							getIndicatorProperty(id)?.label
-								?? `Unknown (${num2hex(id)})`,
+							?? `Unknown (${num2hex(id)})`,
 					)
 					.join(", "),
 				"next indicator": getIndicatorName(this.nextIndicatorId),
@@ -1541,9 +1498,7 @@ function testResponseForIndicatorSupportedGet(
 	testResponseForIndicatorSupportedGet,
 )
 export class IndicatorCCSupportedGet extends IndicatorCC {
-	public constructor(
-		options: WithAddress<IndicatorCCSupportedGetOptions>,
-	) {
+	public constructor(options: WithAddress<IndicatorCCSupportedGetOptions>) {
 		super(options);
 		this.indicatorId = options.indicatorId;
 	}
@@ -1670,9 +1625,7 @@ function testResponseForIndicatorDescriptionGet(
 	testResponseForIndicatorDescriptionGet,
 )
 export class IndicatorCCDescriptionGet extends IndicatorCC {
-	public constructor(
-		options: WithAddress<IndicatorCCDescriptionGetOptions>,
-	) {
+	public constructor(options: WithAddress<IndicatorCCDescriptionGetOptions>) {
 		super(options);
 		this.indicatorId = options.indicatorId;
 	}

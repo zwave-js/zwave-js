@@ -1,7 +1,9 @@
 import { Duration, UNKNOWN_STATE } from "@zwave-js/core";
 import { describe, expect, test } from "vitest";
+
 import { CommandRelation, getCommandRelation } from "../lib/CommandClass.js";
 import { ThermostatSetpointType } from "../lib/_Types.js";
+
 import { BasicCCGet, BasicCCReport, BasicCCSet } from "./BasicCC.js";
 import {
 	BinarySwitchCCGet,
@@ -64,28 +66,26 @@ describe("Basic CC command relations", () => {
 			CommandRelation.Redundant,
 		);
 
-		for (
-			const newer of [
-				new BasicCCReport({
-					nodeId,
-					currentValue: 41,
-					targetValue: 99,
-					duration: new Duration(2, "seconds"),
-				}),
-				new BasicCCReport({
-					nodeId,
-					currentValue: 40,
-					targetValue: 98,
-					duration: new Duration(2, "seconds"),
-				}),
-				new BasicCCReport({
-					nodeId,
-					currentValue: 40,
-					targetValue: 99,
-					duration: new Duration(3, "seconds"),
-				}),
-			]
-		) {
+		for (const newer of [
+			new BasicCCReport({
+				nodeId,
+				currentValue: 41,
+				targetValue: 99,
+				duration: new Duration(2, "seconds"),
+			}),
+			new BasicCCReport({
+				nodeId,
+				currentValue: 40,
+				targetValue: 98,
+				duration: new Duration(2, "seconds"),
+			}),
+			new BasicCCReport({
+				nodeId,
+				currentValue: 40,
+				targetValue: 99,
+				duration: new Duration(3, "seconds"),
+			}),
+		]) {
 			expect(getCommandRelation(newer, older)).toBe(
 				CommandRelation.Supersedes,
 			);
@@ -110,12 +110,9 @@ describe("Basic CC command relations", () => {
 				unknown,
 			),
 		).toBe(CommandRelation.Redundant);
-		expect(
-			getCommandRelation(
-				new BasicCCReport({ nodeId }),
-				unknown,
-			),
-		).toBe(CommandRelation.Supersedes);
+		expect(getCommandRelation(new BasicCCReport({ nodeId }), unknown)).toBe(
+			CommandRelation.Supersedes,
+		);
 	});
 });
 
@@ -202,28 +199,26 @@ describe("Binary Switch CC command relations", () => {
 			),
 		).toBe(CommandRelation.Redundant);
 
-		for (
-			const newer of [
-				new BinarySwitchCCReport({
-					nodeId,
-					currentValue: true,
-					targetValue: true,
-					duration: new Duration(2, "seconds"),
-				}),
-				new BinarySwitchCCReport({
-					nodeId,
-					currentValue: false,
-					targetValue: false,
-					duration: new Duration(2, "seconds"),
-				}),
-				new BinarySwitchCCReport({
-					nodeId,
-					currentValue: false,
-					targetValue: true,
-					duration: new Duration(3, "seconds"),
-				}),
-			]
-		) {
+		for (const newer of [
+			new BinarySwitchCCReport({
+				nodeId,
+				currentValue: true,
+				targetValue: true,
+				duration: new Duration(2, "seconds"),
+			}),
+			new BinarySwitchCCReport({
+				nodeId,
+				currentValue: false,
+				targetValue: false,
+				duration: new Duration(2, "seconds"),
+			}),
+			new BinarySwitchCCReport({
+				nodeId,
+				currentValue: false,
+				targetValue: true,
+				duration: new Duration(3, "seconds"),
+			}),
+		]) {
 			expect(getCommandRelation(newer, older)).toBe(
 				CommandRelation.Supersedes,
 			);
@@ -336,38 +331,36 @@ describe("Multilevel Switch CC command relations", () => {
 			),
 		).toBe(CommandRelation.Redundant);
 
-		for (
-			const newer of [
-				new MultilevelSwitchCCStartLevelChange({
-					nodeId,
-					direction: "down",
-					ignoreStartLevel: false,
-					startLevel: 50,
-					duration: new Duration(2, "seconds"),
-				}),
-				new MultilevelSwitchCCStartLevelChange({
-					nodeId,
-					direction: "up",
-					ignoreStartLevel: true,
-					startLevel: 50,
-					duration: new Duration(2, "seconds"),
-				}),
-				new MultilevelSwitchCCStartLevelChange({
-					nodeId,
-					direction: "up",
-					ignoreStartLevel: false,
-					startLevel: 40,
-					duration: new Duration(2, "seconds"),
-				}),
-				new MultilevelSwitchCCStartLevelChange({
-					nodeId,
-					direction: "up",
-					ignoreStartLevel: false,
-					startLevel: 50,
-					duration: new Duration(3, "seconds"),
-				}),
-			]
-		) {
+		for (const newer of [
+			new MultilevelSwitchCCStartLevelChange({
+				nodeId,
+				direction: "down",
+				ignoreStartLevel: false,
+				startLevel: 50,
+				duration: new Duration(2, "seconds"),
+			}),
+			new MultilevelSwitchCCStartLevelChange({
+				nodeId,
+				direction: "up",
+				ignoreStartLevel: true,
+				startLevel: 50,
+				duration: new Duration(2, "seconds"),
+			}),
+			new MultilevelSwitchCCStartLevelChange({
+				nodeId,
+				direction: "up",
+				ignoreStartLevel: false,
+				startLevel: 40,
+				duration: new Duration(2, "seconds"),
+			}),
+			new MultilevelSwitchCCStartLevelChange({
+				nodeId,
+				direction: "up",
+				ignoreStartLevel: false,
+				startLevel: 50,
+				duration: new Duration(3, "seconds"),
+			}),
+		]) {
 			expect(getCommandRelation(newer, older)).toBe(
 				CommandRelation.Supersedes,
 			);
@@ -384,12 +377,8 @@ describe("Multilevel Switch CC command relations", () => {
 			direction: "up",
 			ignoreStartLevel: true,
 		});
-		expect(getCommandRelation(start, set)).toBe(
-			CommandRelation.Supersedes,
-		);
-		expect(getCommandRelation(set, start)).toBe(
-			CommandRelation.Supersedes,
-		);
+		expect(getCommandRelation(start, set)).toBe(CommandRelation.Supersedes);
+		expect(getCommandRelation(set, start)).toBe(CommandRelation.Supersedes);
 	});
 
 	test("Reports compare current value, target value, and duration", () => {
@@ -411,28 +400,26 @@ describe("Multilevel Switch CC command relations", () => {
 			),
 		).toBe(CommandRelation.Redundant);
 
-		for (
-			const newer of [
-				new MultilevelSwitchCCReport({
-					nodeId,
-					currentValue: 41,
-					targetValue: 99,
-					duration: new Duration(2, "minutes"),
-				}),
-				new MultilevelSwitchCCReport({
-					nodeId,
-					currentValue: 40,
-					targetValue: 98,
-					duration: new Duration(2, "minutes"),
-				}),
-				new MultilevelSwitchCCReport({
-					nodeId,
-					currentValue: 40,
-					targetValue: 99,
-					duration: new Duration(2, "seconds"),
-				}),
-			]
-		) {
+		for (const newer of [
+			new MultilevelSwitchCCReport({
+				nodeId,
+				currentValue: 41,
+				targetValue: 99,
+				duration: new Duration(2, "minutes"),
+			}),
+			new MultilevelSwitchCCReport({
+				nodeId,
+				currentValue: 40,
+				targetValue: 98,
+				duration: new Duration(2, "minutes"),
+			}),
+			new MultilevelSwitchCCReport({
+				nodeId,
+				currentValue: 40,
+				targetValue: 99,
+				duration: new Duration(2, "seconds"),
+			}),
+		]) {
 			expect(getCommandRelation(newer, older)).toBe(
 				CommandRelation.Supersedes,
 			);
@@ -458,10 +445,7 @@ describe("Multilevel Switch CC command relations", () => {
 			),
 		).toBe(CommandRelation.Redundant);
 		expect(
-			getCommandRelation(
-				new MultilevelSwitchCCReport({ nodeId }),
-				older,
-			),
+			getCommandRelation(new MultilevelSwitchCCReport({ nodeId }), older),
 		).toBe(CommandRelation.Supersedes);
 	});
 });

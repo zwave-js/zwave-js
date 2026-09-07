@@ -15,6 +15,7 @@ import {
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -125,9 +126,10 @@ integrationTest.sequential(
 					isExploreFrame: false,
 					isForeignFrame: false,
 					routedBusy: false,
-					targetNodeId: frameType === "multicast"
-						? [mockController.ownNodeId]
-						: mockController.ownNodeId,
+					targetNodeId:
+						frameType === "multicast"
+							? [mockController.ownNodeId]
+							: mockController.ownNodeId,
 				});
 
 				await mockController.sendMessageToHost(request, mockNode);

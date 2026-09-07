@@ -1,6 +1,8 @@
 import { test } from "vitest";
+
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import { Duration } from "./Duration.js";
 
 test("constructor() -> should remember the given value and unit", (t) => {
@@ -178,9 +180,9 @@ test("parseString() -> should return the nearest possible duration for combined 
 	t.expect(Duration.parseString("19m18s")).toStrictEqual(
 		new Duration(19, "minutes"),
 	);
-	t.expect(
-		Duration.parseString("1m10s"),
-	).toStrictEqual(new Duration(60 + 10, "seconds"));
+	t.expect(Duration.parseString("1m10s")).toStrictEqual(
+		new Duration(60 + 10, "seconds"),
+	);
 	t.expect(Duration.parseString("0m9s")).toStrictEqual(
 		new Duration(9, "seconds"),
 	);

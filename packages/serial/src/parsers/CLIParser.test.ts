@@ -1,6 +1,7 @@
 import { Bytes } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { test } from "vitest";
+
 import { CLIParser } from "./CLIParser.js";
 import { CLIChunkType, ZWaveSerialFrameType } from "./ZWaveSerialFrame.js";
 
@@ -22,23 +23,27 @@ test("does not treat argument placeholders as the CLI prompt", async (t) => {
 		}
 	})();
 
-	await writer.write(Bytes.from(
-		`help\r
+	await writer.write(
+		Bytes.from(
+			`help\r
 set_region                    Set the configured region\r
                               [string] <region>\r
 set_powerlevel                Set the configured RF power values\r
                               [int16] <iTxPowerLevelMax> <iTxPowe`,
-		"ascii",
-	));
+			"ascii",
+		),
+	);
 	await wait(25);
 	t.expect(received).toHaveLength(0);
 
-	await writer.write(Bytes.from(
-		`rLevelAdjust> <iTxPowerLevelMaxLR>\r
+	await writer.write(
+		Bytes.from(
+			`rLevelAdjust> <iTxPowerLevelMaxLR>\r
 bootloader                    Restart into bootloader\r
 > `,
-		"ascii",
-	));
+			"ascii",
+		),
+	);
 	await wait(25);
 
 	t.expect(received).toHaveLength(2);

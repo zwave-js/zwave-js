@@ -3,6 +3,7 @@ import type {
 	PropertyASTNode,
 	SymbolInformation,
 } from "vscode-json-languageservice";
+
 import {
 	type PropertyNameASTNode,
 	type PropertyValueASTNode,
@@ -36,8 +37,10 @@ type ImportProperty = readonly [
  */
 function collectImportOverrides(
 	config: ConfigDocument,
-	importsAndSymbolsAfter:
-		readonly (readonly [ImportNode, SymbolInformation[]])[],
+	importsAndSymbolsAfter: readonly (readonly [
+		ImportNode,
+		SymbolInformation[],
+	])[],
 	predicate: (
 		name: string,
 		resolvedImport: Record<string, unknown>,
@@ -53,8 +56,13 @@ function collectImportOverrides(
 		const properties = symbols
 			.map((s) => config.getNodeFromSymbol(s))
 			.filter(nodeIsPropertyNameOrValue)
-			.map((n) =>
-				[getPropertyNameFromNode(n), n.parent.valueNode, n] as const
+			.map(
+				(n) =>
+					[
+						getPropertyNameFromNode(n),
+						n.parent.valueNode,
+						n,
+					] as const,
 			)
 			.filter(([name]) => predicate(name, resolvedImport));
 		if (properties.length > 0) ret.push([resolvedImport, properties]);
@@ -100,7 +108,7 @@ export function generateImportOverrideDiagnostics(
 					.filter(([, r]) => rangeContains(blockRange, r))
 					// but after the import
 					.filter(([, r]) =>
-						positionBeforeOrEqual(importRange.end, r.start)
+						positionBeforeOrEqual(importRange.end, r.start),
 					)
 					.map(([s]) => s),
 			] as const;

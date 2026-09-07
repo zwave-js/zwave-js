@@ -16,6 +16,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, isEnumMember } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -60,12 +61,10 @@ export const BinarySensorCCValues = V.defineCCValues(
 				typeof property === "string" && property in BinarySensorType,
 			/* meta */ (sensorType: BinarySensorType) => ({
 				...ValueMetadata.ReadOnlyBoolean,
-				label: `Sensor state (${
-					getEnumMemberName(
-						BinarySensorType,
-						sensorType,
-					)
-				})`,
+				label: `Sensor state (${getEnumMemberName(
+					BinarySensorType,
+					sensorType,
+				)})`,
 				ccSpecific: { sensorType },
 			}),
 		),
@@ -89,7 +88,7 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: BinarySensorCCAPI, { property }) {
+		return async function (this: BinarySensorCCAPI, { property }) {
 			if (typeof property === "string") {
 				const sensorType = (BinarySensorType as any)[property] as
 					| BinarySensorType
@@ -157,12 +156,11 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			BinarySensorCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<BinarySensorCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		// We don't want to repeat the sensor type
 		return response?.supportedSensorTypes;
 	}
@@ -191,9 +189,7 @@ export class BinarySensorCCAPI extends PhysicalCCAPI {
 export class BinarySensorCC extends CommandClass {
 	declare ccCommand: BinarySensorCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -225,7 +221,7 @@ export class BinarySensorCC extends CommandClass {
 					message: logText("received supported sensor types:", {
 						nested: logList(
 							supportedSensorTypes.map((type) =>
-								getEnumMemberName(BinarySensorType, type)
+								getEnumMemberName(BinarySensorType, type),
 							),
 						),
 					}),
@@ -280,10 +276,8 @@ export class BinarySensorCC extends CommandClass {
 			}
 		} else {
 			const supportedSensorTypes: readonly BinarySensorType[] =
-				this.getValue(
-					ctx,
-					BinarySensorCCValues.supportedSensorTypes,
-				) ?? [];
+				this.getValue(ctx, BinarySensorCCValues.supportedSensorTypes)
+				?? [];
 
 			for (const type of supportedSensorTypes) {
 				// Some devices report invalid sensor types, but the CC API checks
@@ -300,8 +294,7 @@ export class BinarySensorCC extends CommandClass {
 				if (currentValue != undefined) {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message:
-							`received current value for ${sensorName}: ${currentValue}`,
+						message: `received current value for ${sensorName}: ${currentValue}`,
 						direction: "inbound",
 					});
 				}
@@ -326,16 +319,14 @@ export class BinarySensorCC extends CommandClass {
 			);
 	}
 
-	public setMappedBasicValue(
-		ctx: GetValueDB,
-		value: number,
-	): boolean {
+	public setMappedBasicValue(ctx: GetValueDB, value: number): boolean {
 		// Prefer setting an existing value to avoid creating a spurious "Any" sensor type.
 		// Check for the Any type first (backwards compat), then the first one that
 		// already exists in the value DB. Fall back to Any if none exist.
 		const valueDB = this.getValueDB(ctx);
-		const anyValueId = BinarySensorCCValues.state(BinarySensorType.Any)
-			.endpoint(this.endpointIndex);
+		const anyValueId = BinarySensorCCValues.state(
+			BinarySensorType.Any,
+		).endpoint(this.endpointIndex);
 
 		let sensorType: BinarySensorType;
 		if (valueDB.hasMetadata(anyValueId)) {
@@ -343,14 +334,18 @@ export class BinarySensorCC extends CommandClass {
 		} else {
 			const existingSensorTypes = valueDB
 				.getAllMetadata(CommandClasses["Binary Sensor"])
-				.filter((v) =>
-					v.endpoint === this.endpointIndex
-					&& BinarySensorCCValues.state.is(v)
+				.filter(
+					(v) =>
+						v.endpoint === this.endpointIndex
+						&& BinarySensorCCValues.state.is(v),
 				)
-				.map((v) =>
-					(v.metadata as {
-						ccSpecific?: { sensorType?: BinarySensorType };
-					})?.ccSpecific?.sensorType
+				.map(
+					(v) =>
+						(
+							v.metadata as {
+								ccSpecific?: { sensorType?: BinarySensorType };
+							}
+						)?.ccSpecific?.sensorType,
 				)
 				.filter((t): t is BinarySensorType => t != undefined)
 				.toSorted((a, b) => a - b);
@@ -371,9 +366,7 @@ export interface BinarySensorCCReportOptions {
 
 @CCCommand(BinarySensorCommand.Report)
 export class BinarySensorCCReport extends BinarySensorCC {
-	public constructor(
-		options: WithAddress<BinarySensorCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<BinarySensorCCReportOptions>) {
 		super(options);
 
 		this.type = options.type ?? BinarySensorType.Any;
@@ -470,9 +463,7 @@ export interface BinarySensorCCGetOptions {
 @CCCommand(BinarySensorCommand.Get)
 @expectedCCResponse(BinarySensorCCReport, testResponseForBinarySensorGet)
 export class BinarySensorCCGet extends BinarySensorCC {
-	public constructor(
-		options: WithAddress<BinarySensorCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<BinarySensorCCGetOptions>) {
 		super(options);
 		this.sensorType = options.sensorType;
 	}
@@ -539,10 +530,7 @@ export class BinarySensorCCSupportedReport extends BinarySensorCC {
 		const supportedSensorTypes: BinarySensorType[] = parseBitMask(
 			raw.payload,
 			0,
-		)
-			.filter(
-				(t) => t !== 0,
-			);
+		).filter((t) => t !== 0);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,

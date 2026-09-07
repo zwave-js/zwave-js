@@ -1,5 +1,7 @@
-import { getErrorMessage } from "@zwave-js/shared";
 import { readFile } from "node:fs/promises";
+
+import { getErrorMessage } from "@zwave-js/shared";
+
 import type { LocalDownloadPolicy } from "./env.js";
 import { LOCAL_MODEL_ID, LOCAL_MODEL_REVISION } from "./env.js";
 import { writeFileAtomic } from "./fsUtils.js";
@@ -56,9 +58,9 @@ export async function loadConsentStore(
 	} catch (error: any) {
 		if (error?.code === "ENOENT") return emptyConsentStore();
 		throw new Error(
-			`Failed to read semantic model consent file ${filePath}: ${
-				getErrorMessage(error)
-			}`,
+			`Failed to read semantic model consent file ${filePath}: ${getErrorMessage(
+				error,
+			)}`,
 		);
 	}
 
@@ -67,9 +69,9 @@ export async function loadConsentStore(
 		parsed = JSON.parse(text);
 	} catch (error) {
 		throw new Error(
-			`Semantic model consent file ${filePath} is invalid JSON: ${
-				getErrorMessage(error)
-			}`,
+			`Semantic model consent file ${filePath} is invalid JSON: ${getErrorMessage(
+				error,
+			)}`,
 		);
 	}
 	if (
@@ -77,13 +79,14 @@ export async function loadConsentStore(
 		|| typeof parsed !== "object"
 		|| (parsed as Partial<ConsentStore>).version !== 1
 		|| !Array.isArray((parsed as Partial<ConsentStore>).records)
-		|| !(parsed as ConsentStore).records.every((record) =>
-			record != null
-			&& typeof record === "object"
-			&& typeof record.modelId === "string"
-			&& typeof record.revision === "string"
-			&& typeof record.approved === "boolean"
-			&& typeof record.decidedAt === "string"
+		|| !(parsed as ConsentStore).records.every(
+			(record) =>
+				record != null
+				&& typeof record === "object"
+				&& typeof record.modelId === "string"
+				&& typeof record.revision === "string"
+				&& typeof record.approved === "boolean"
+				&& typeof record.decidedAt === "string",
 		)
 	) {
 		throw new Error(

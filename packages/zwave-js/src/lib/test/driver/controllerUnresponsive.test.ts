@@ -8,6 +8,7 @@ import {
 import type { MockControllerBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { vi } from "vitest";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 let shouldRespond = true;
@@ -103,13 +104,12 @@ integrationTest.sequential(
 			shouldRespond = false;
 			mockController.autoAckHostMessages = false;
 
-			const serialPortCloseSpy = vi.spyOn(mockController.serial, "close")
-				.mockImplementation(
-					async () => {
-						shouldRespond = true;
-						mockController.autoAckHostMessages = true;
-					},
-				);
+			const serialPortCloseSpy = vi
+				.spyOn(mockController.serial, "close")
+				.mockImplementation(async () => {
+					shouldRespond = true;
+					mockController.autoAckHostMessages = true;
+				});
 
 			await wait(1000);
 
@@ -220,9 +220,7 @@ integrationTest.sequential(
 			const error = await Promise.race([
 				errorPromise,
 				wait(10000).then(() => {
-					throw new Error(
-						"The driver did not emit an error event",
-					);
+					throw new Error("The driver did not emit an error event");
 				}),
 			]);
 			assertZWaveError(t.expect, error, {
@@ -285,9 +283,9 @@ integrationTest.sequential(
 
 			// And the controller does not get soft-reset
 			t.expect(() =>
-				mockController.assertReceivedHostMessage((msg) =>
-					msg.functionType === FunctionType.SoftReset
-				)
+				mockController.assertReceivedHostMessage(
+					(msg) => msg.functionType === FunctionType.SoftReset,
+				),
 			).toThrow();
 		},
 	},

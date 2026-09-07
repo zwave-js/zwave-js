@@ -9,9 +9,7 @@ async function init() {
 	let port: SerialPort;
 	try {
 		port = await navigator.serial.requestPort({
-			filters: [
-				{ usbVendorId: 0x10c4, usbProductId: 0xea60 },
-			],
+			filters: [{ usbVendorId: 0x10c4, usbProductId: 0xea60 }],
 		});
 		await port.open({ baudRate: 115200 });
 	} catch (e) {

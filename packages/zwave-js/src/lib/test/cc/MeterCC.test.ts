@@ -18,6 +18,7 @@ import {
 import { createTestingHost } from "@zwave-js/host";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import * as nodeUtils from "../../node/utils.js";
 import { createTestNode } from "../mocks.js";
 
@@ -108,9 +109,7 @@ test("the SupportedGet command should serialize correctly", async (t) => {
 			MeterCommand.SupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Reset command (V2) should serialize correctly", async (t) => {
@@ -120,9 +119,7 @@ test("the Reset command (V2) should serialize correctly", async (t) => {
 			MeterCommand.Reset, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Reset command (V6) should serialize correctly", async (t) => {
@@ -141,9 +138,7 @@ test("the Reset command (V6) should serialize correctly", async (t) => {
 			123, // 12.3
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command (V1) should be deserialized correctly", async (t) => {
@@ -155,10 +150,9 @@ test("the Report command (V1) should be deserialized correctly", async (t) => {
 			55, // value
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
 	t.expect(cc.constructor).toBe(MeterCCReport);
 
 	t.expect(cc.type).toBe(3);
@@ -180,10 +174,9 @@ test("the Report command (V2) should be deserialized correctly (no time delta)",
 			0,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
 	t.expect(cc.constructor).toBe(MeterCCReport);
 
 	t.expect(cc.type).toBe(3);
@@ -206,10 +199,9 @@ test("the Report command (V2) should be deserialized correctly (with time delta)
 			54, // previous value
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
 	t.expect(cc.constructor).toBe(MeterCCReport);
 
 	t.expect(cc.type).toBe(3);
@@ -232,10 +224,9 @@ test("the Report command (V3) should be deserialized correctly", async (t) => {
 			54, // previous value
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
 	t.expect(cc.constructor).toBe(MeterCCReport);
 
 	t.expect(cc.scale).toBe(6);
@@ -254,10 +245,9 @@ test("the Report command (V4) should be deserialized correctly", async (t) => {
 			0b01, // Scale2
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
 	t.expect(cc.constructor).toBe(MeterCCReport);
 
 	t.expect(cc.scale).toBe(8);
@@ -277,10 +267,9 @@ test("the Report command should validate that a known meter type is given", asyn
 		]),
 	);
 
-	const report = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCReport;
+	const report = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
 	t.expect(report.constructor).toBe(MeterCCReport);
 
 	// Meter type 31 (does not exist)
@@ -303,10 +292,9 @@ test("the Report command should validate that a known meter scale is given", asy
 		]),
 	);
 
-	const report = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCReport;
+	const report = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
 	t.expect(report.constructor).toBe(MeterCCReport);
 
 	// Meter type 4, Scale 8 (does not exist)
@@ -335,10 +323,9 @@ test("the SupportedReport command (V2/V3) should be deserialized correctly", asy
 			0b01101110, // supported scales
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCSupportedReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCSupportedReport;
 	t.expect(cc.constructor).toBe(MeterCCSupportedReport);
 
 	t.expect(cc.type).toBe(21);
@@ -358,10 +345,9 @@ test("the SupportedReport command (V4/V5) should be deserialized correctly", asy
 			1,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCCSupportedReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as MeterCCSupportedReport;
 	t.expect(cc.constructor).toBe(MeterCCSupportedReport);
 
 	t.expect(cc.type).toBe(21);
@@ -396,10 +382,9 @@ test("deserializing an unsupported command should return an unspecified version 
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as MeterCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as MeterCC;
 	t.expect(cc.constructor).toBe(MeterCC);
 });
 

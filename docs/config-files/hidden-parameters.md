@@ -89,7 +89,7 @@ When a parameter is marked as hidden:
 - No metadata will be created for the parameter
 - No values will be persisted for the parameter
 - The parameter will be invisible to:
-  - User interface parameter lists
-  - API responses that list available parameters
-  - Configuration exports
-  - All Z-Wave JS applications and integrations
+    - User interface parameter lists
+    - API responses that list available parameters
+    - Configuration exports
+    - All Z-Wave JS applications and integrations

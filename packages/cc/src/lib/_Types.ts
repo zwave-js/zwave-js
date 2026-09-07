@@ -805,23 +805,23 @@ export enum FirmwareDownloadStatus {
 
 export type FirmwareUpdateCapabilities =
 	| {
-		/** Indicates whether the node's firmware can be upgraded */
-		readonly firmwareUpgradable: false;
-	}
+			/** Indicates whether the node's firmware can be upgraded */
+			readonly firmwareUpgradable: false;
+	  }
 	| {
-		/** Indicates whether the node's firmware can be upgraded */
-		readonly firmwareUpgradable: true;
-		/** An array of firmware targets that can be upgraded */
-		readonly firmwareTargets: readonly number[];
-		/** Indicates whether the node continues to function normally during an upgrade */
-		readonly continuesToFunction: MaybeNotKnown<boolean>;
-		/** Indicates whether the node supports delayed activation of the new firmware */
-		readonly supportsActivation: MaybeNotKnown<boolean>;
-		/** Indicates whether the node supports resuming aborted firmware transfers */
-		readonly supportsResuming: MaybeNotKnown<boolean>;
-		/** Indicates whether the node supports non-secure firmware transfers */
-		readonly supportsNonSecureTransfer: MaybeNotKnown<boolean>;
-	};
+			/** Indicates whether the node's firmware can be upgraded */
+			readonly firmwareUpgradable: true;
+			/** An array of firmware targets that can be upgraded */
+			readonly firmwareTargets: readonly number[];
+			/** Indicates whether the node continues to function normally during an upgrade */
+			readonly continuesToFunction: MaybeNotKnown<boolean>;
+			/** Indicates whether the node supports delayed activation of the new firmware */
+			readonly supportsActivation: MaybeNotKnown<boolean>;
+			/** Indicates whether the node supports resuming aborted firmware transfers */
+			readonly supportsResuming: MaybeNotKnown<boolean>;
+			/** Indicates whether the node supports non-secure firmware transfers */
+			readonly supportsNonSecureTransfer: MaybeNotKnown<boolean>;
+	  };
 
 export interface FirmwareUpdateProgress {
 	/** Which part/file of the firmware update process is currently in progress. This is a number from 1 to `totalFiles` and can be used to display progress. */
@@ -872,10 +872,10 @@ export enum HumidityControlModeCommand {
 }
 
 export enum HumidityControlMode {
-	"Off" = 0x00,
-	"Humidify" = 0x01,
+	Off = 0x00,
+	Humidify = 0x01,
 	"De-humidify" = 0x02,
-	"Auto" = 0x03,
+	Auto = 0x03,
 }
 
 export enum HumidityControlOperatingStateCommand {
@@ -884,8 +884,8 @@ export enum HumidityControlOperatingStateCommand {
 }
 
 export enum HumidityControlOperatingState {
-	"Idle" = 0x00,
-	"Humidifying" = 0x01,
+	Idle = 0x00,
+	Humidifying = 0x01,
 	"De-humidifying" = 0x02,
 }
 
@@ -903,9 +903,9 @@ export enum HumidityControlSetpointCommand {
 
 export enum HumidityControlSetpointType {
 	"N/A" = 0x00,
-	"Humidifier" = 0x01, // CC v1
+	Humidifier = 0x01, // CC v1
 	"De-humidifier" = 0x02, // CC v1
-	"Auto" = 0x03, // CC v2
+	Auto = 0x03, // CC v2
 }
 
 export interface HumidityControlSetpointValue {
@@ -1144,8 +1144,8 @@ export enum MultilevelSwitchCommand {
 }
 
 export enum LevelChangeDirection {
-	"up" = 0b0,
-	"down" = 0b1,
+	up = 0b0,
+	down = 0b1,
 }
 
 export enum SwitchType {
@@ -1404,16 +1404,16 @@ export enum ThermostatFanModeCommand {
 
 export enum ThermostatFanMode {
 	"Auto low" = 0x00,
-	"Low" = 0x01,
+	Low = 0x01,
 	"Auto high" = 0x02,
-	"High" = 0x03,
+	High = 0x03,
 	"Auto medium" = 0x04,
-	"Medium" = 0x05,
-	"Circulation" = 0x06,
+	Medium = 0x05,
+	Circulation = 0x06,
 	"Humidity circulation" = 0x07,
 	"Left and right" = 0x08,
 	"Up and down" = 0x09,
-	"Quiet" = 0x0a,
+	Quiet = 0x0a,
 	"External circulation" = 0x0b,
 }
 
@@ -1443,20 +1443,20 @@ export enum ThermostatModeCommand {
 }
 
 export enum ThermostatMode {
-	"Off" = 0x00,
-	"Heat" = 0x01,
-	"Cool" = 0x02,
-	"Auto" = 0x03,
-	"Auxiliary" = 0x04,
+	Off = 0x00,
+	Heat = 0x01,
+	Cool = 0x02,
+	Auto = 0x03,
+	Auxiliary = 0x04,
 	"Resume (on)" = 0x05,
-	"Fan" = 0x06,
-	"Furnace" = 0x07,
-	"Dry" = 0x08,
-	"Moist" = 0x09,
+	Fan = 0x06,
+	Furnace = 0x07,
+	Dry = 0x08,
+	Moist = 0x09,
 	"Auto changeover" = 0x0a,
 	"Energy heat" = 0x0b,
 	"Energy cool" = 0x0c,
-	"Away" = 0x0d,
+	Away = 0x0d,
 	"Full power" = 0x0f,
 	"Manufacturer specific" = 0x1f,
 }
@@ -1471,9 +1471,9 @@ export enum ThermostatOperatingStateCommand {
 }
 
 export enum ThermostatOperatingState {
-	"Idle" = 0x00,
-	"Heating" = 0x01,
-	"Cooling" = 0x02,
+	Idle = 0x00,
+	Heating = 0x01,
+	Cooling = 0x02,
 	"Fan Only" = 0x03,
 	"Pending Heat" = 0x04,
 	"Pending Cool" = 0x05,
@@ -1529,9 +1529,9 @@ export enum ThermostatSetpointCommand {
 
 export enum ThermostatSetpointType {
 	"N/A" = 0x00,
-	"Heating" = 0x01, // CC v1
-	"Cooling" = 0x02, // CC v1
-	"Furnace" = 0x07, // CC v1
+	Heating = 0x01, // CC v1
+	Cooling = 0x02, // CC v1
+	Furnace = 0x07, // CC v1
 	"Dry Air" = 0x08, // CC v1
 	"Moist Air" = 0x09, // CC v1
 	"Auto Changeover" = 0x0a, // CC v1
@@ -1760,24 +1760,23 @@ export enum UserCredentialKeyLockerEntryType {
 	DESFireApplicationIdAndKey = 0x01,
 }
 
-export type UserCredentialCapability =
-	& {
-		numberOfCredentialSlots: number;
-		minCredentialLength: number;
-		maxCredentialLength: number;
-		maxCredentialHashLength: number;
-	}
-	& (
-		{
+export type UserCredentialCapability = {
+	numberOfCredentialSlots: number;
+	minCredentialLength: number;
+	maxCredentialLength: number;
+	maxCredentialHashLength: number;
+} & (
+	| {
 			supportsCredentialLearn: true;
 			credentialLearnRecommendedTimeout: number;
 			credentialLearnNumberOfSteps: number;
-		} | {
+	  }
+	| {
 			supportsCredentialLearn: false;
 			credentialLearnRecommendedTimeout?: undefined;
 			credentialLearnNumberOfSteps?: undefined;
-		}
-	);
+	  }
+);
 
 export interface UserCredentialKeyLockerEntryCapability {
 	numberOfEntrySlots: number;
@@ -1921,16 +1920,16 @@ export function dataRate2ZWaveDataRate(dataRate: DataRate): ZWaveDataRate {
 	return dataRate === 100000
 		? ZWaveDataRate["100k"]
 		: dataRate === 40000
-		? ZWaveDataRate["40k"]
-		: ZWaveDataRate["9k6"];
+			? ZWaveDataRate["40k"]
+			: ZWaveDataRate["9k6"];
 }
 
 export function ZWaveDataRate2DataRate(zdr: ZWaveDataRate): DataRate {
 	return zdr === ZWaveDataRate["100k"]
 		? 100000
 		: zdr === ZWaveDataRate["40k"]
-		? 40000
-		: 9600;
+			? 40000
+			: 9600;
 }
 
 export function parseWakeUpTime(value: number): WakeUpTime {

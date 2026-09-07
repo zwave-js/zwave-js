@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { SecurityCCNonceGet, SecurityCCNonceReport } from "@zwave-js/cc";
 import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import {
@@ -7,7 +9,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

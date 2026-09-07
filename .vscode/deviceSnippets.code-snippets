@@ -3,33 +3,33 @@
 		"scope": "json,jsonc",
 		"prefix": ["Insert Master Template Reference from Clipboard"],
 		"body": [
-			"\"\\$import\": \"~/templates/master_template.json#$CLIPBOARD\","
+			"\"\\$import\": \"~/templates/master_template.json#$CLIPBOARD\",",
 		],
-		"description": "Import reference for master template using the clipboard"
+		"description": "Import reference for master template using the clipboard",
 	},
 	"masterTemplate": {
 		"scope": "json,jsonc",
 		"prefix": ["Insert Master Template Reference"],
 		"body": [
-			"\"\\$import\": \"~/templates/master_template.json#${1:base_enable_disable}\","
+			"\"\\$import\": \"~/templates/master_template.json#${1:base_enable_disable}\",",
 		],
-		"description": "Import reference for master template"
+		"description": "Import reference for master template",
 	},
 	"manufacturerTemplate": {
 		"scope": "json,jsonc",
 		"prefix": ["Insert Manufacturer Template Reference"],
 		"body": [
-			"\"\\$import\": \"templates/${1:manufacturer}_template.json#${template}\","
+			"\"\\$import\": \"templates/${1:manufacturer}_template.json#${template}\",",
 		],
-		"description": "Import reference for master template"
+		"description": "Import reference for master template",
 	},
 	"manufacturerTemplateClipboard": {
 		"scope": "json,jsonc",
 		"prefix": ["Insert Manufacturer Template Reference from Clipboard"],
 		"body": [
-			"\"\\$import\": \"templates/${1:manufacturer}_template.json#$CLIPBOARD\","
+			"\"\\$import\": \"templates/${1:manufacturer}_template.json#$CLIPBOARD\",",
 		],
-		"description": "Import reference for master template using the clipboard"
+		"description": "Import reference for master template using the clipboard",
 	},
 	"allowManualEntryScaffold": {
 		"scope": "json,jsonc",
@@ -45,9 +45,9 @@
 			"\t\t\"label\": \"${2:Option Name}\",",
 			"\t\t\"value\": 1",
 			"\t}",
-			"]"
+			"]",
 		],
-		"description": "Insert allowManualEntry = false scaffold"
+		"description": "Insert allowManualEntry = false scaffold",
 	},
 	"helperOption": {
 		"scope": "json,jsonc",
@@ -58,9 +58,9 @@
 			"\t\t\"label\": \"${1:Disable}\",",
 			"\t\t\"value\": 0",
 			"\t}",
-			"]"
+			"]",
 		],
-		"description": "Insert allowManualEntry = false scaffold"
+		"description": "Insert allowManualEntry = false scaffold",
 	},
 	"newParameterDropdown": {
 		"scope": "json,jsonc",
@@ -82,9 +82,9 @@
 			"\t\t\t\"value\": 1",
 			"\t\t}",
 			"\t]",
-			"},"
+			"},",
 		],
-		"description": "Insert new paramter - no manual entry"
+		"description": "Insert new paramter - no manual entry",
 	},
 	"newParameterManual": {
 		"scope": "json,jsonc",
@@ -108,9 +108,9 @@
 			"\t\t\t\"value\": 1",
 			"\t\t}",
 			"\t]",
-			"},"
+			"},",
 		],
-		"description": "Insert new paramter - no manual entry"
+		"description": "Insert new paramter - no manual entry",
 	},
 	"deviceEntry": {
 		"scope": "json,jsonc",
@@ -119,15 +119,15 @@
 			"{",
 			"\t\"productType\": \"0x${1:0000}\",",
 			"\t\"productId\": \"0x${2:0000}\"",
-			"}"
+			"}",
 		],
-		"description": "Import reference for master template"
+		"description": "Import reference for master template",
 	},
 	"firmwareCondition": {
 		"scope": "json,jsonc",
 		"prefix": ["Insert Parameter Condition"],
 		"body": ["\"$if\": \"firmwareVersion >= ${1:1.0}\","],
-		"description": "Import parameter condition"
+		"description": "Import parameter condition",
 	},
 	"insertCompat": {
 		"scope": "json,jsonc",
@@ -136,9 +136,9 @@
 			"\"compat\": {",
 			"\t$LINE_COMMENT This device incorrectly ${1:[problem]}",
 			"\t\"${2|disableStrictEntryControlDataValidation,disableStrictMeasurementValidation,forceNotificationIdleReset,mapRootReportsToEndpoint,preserveRootApplicationCCValueIDs,skipConfigurationNameQuery,skipConfigurationInfoQuery,treatMultilevelSwitchSetAsEvent,treatSetAsReport,treatDestinationEndpointAsSource|}\": true",
-			"},"
+			"},",
 		],
-		"description": "Insert parameter condition"
+		"description": "Insert parameter condition",
 	},
 	"disableSupervision": {
 		"scope": "json,jsonc",
@@ -153,9 +153,9 @@
 			"\t\t\t}",
 			"\t\t}",
 			"\t}",
-			"}"
+			"}",
 		],
-		"description": "Disables Supverision CC via compat flag"
+		"description": "Disables Supverision CC via compat flag",
 	},
 	"removeCC": {
 		"scope": "json,jsonc",
@@ -170,9 +170,9 @@
 			"\t\t\t}",
 			"\t\t}",
 			"\t}",
-			"}"
+			"}",
 		],
-		"description": "Disables Supverision CC via compat flag"
+		"description": "Disables Supverision CC via compat flag",
 	},
 	"preserveEndpoints": {
 		"scope": "json,jsonc",
@@ -181,8 +181,8 @@
 			"\"compat\": {",
 			"\t$LINE_COMMENT The device seems to ${1:[Describe why the endpoint is being preserved]}",
 			"\t\"preserveEndpoints\": ${3:\"*\" or [0, 2]}",
-			"}"
+			"}",
 		],
-		"description": "Preserve endpoints via compat flag"
-	}
+		"description": "Preserve endpoints via compat flag",
+	},
 }

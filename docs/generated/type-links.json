@@ -45,7 +45,7 @@
 	},
 	"ConfigurationCCAPISetOptions": {
 		"href": "#/api/CCs/Configuration?id=configurationccapisetoptions",
-		"definition": "type ConfigurationCCAPISetOptions =\n\t& {\n\t\tparameter: number;\n\t}\n\t& (\n\t\t| {\n\t\t\t// Variant 1: Normal parameter, defined in a config file\n\t\t\tbitMask?: undefined;\n\t\t\tvalue: ConfigValue;\n\t\t}\n\t\t| {\n\t\t\t// Variant 2: Normal parameter, not defined in a config file\n\t\t\tbitMask?: undefined;\n\t\t\tvalue: ConfigValue;\n\t\t\tvalueSize: 1 | 2 | 4;\n\t\t\tvalueFormat: ConfigValueFormat;\n\t\t}\n\t\t| {\n\t\t\t// Variant 3: Partial parameter, must be defined in a config file\n\t\t\tbitMask: number;\n\t\t\tvalue: number;\n\t\t}\n\t);"
+		"definition": "type ConfigurationCCAPISetOptions = {\n\tparameter: number;\n} & (\n\t| {\n\t\t\t// Variant 1: Normal parameter, defined in a config file\n\t\t\tbitMask?: undefined;\n\t\t\tvalue: ConfigValue;\n\t  }\n\t| {\n\t\t\t// Variant 2: Normal parameter, not defined in a config file\n\t\t\tbitMask?: undefined;\n\t\t\tvalue: ConfigValue;\n\t\t\tvalueSize: 1 | 2 | 4;\n\t\t\tvalueFormat: ConfigValueFormat;\n\t  }\n\t| {\n\t\t\t// Variant 3: Partial parameter, must be defined in a config file\n\t\t\tbitMask: number;\n\t\t\tvalue: number;\n\t  }\n);"
 	},
 	"ConfigValue": {
 		"href": "#/api/CCs/Configuration?id=configvalue",
@@ -151,11 +151,11 @@
 	},
 	"HumidityControlMode": {
 		"href": "#/api/CCs/HumidityControlMode?id=humiditycontrolmode",
-		"definition": "enum HumidityControlMode {\n\t\"Off\" = 0x00,\n\t\"Humidify\" = 0x01,\n\t\"De-humidify\" = 0x02,\n\t\"Auto\" = 0x03,\n}"
+		"definition": "enum HumidityControlMode {\n\tOff = 0x00,\n\tHumidify = 0x01,\n\t\"De-humidify\" = 0x02,\n\tAuto = 0x03,\n}"
 	},
 	"HumidityControlOperatingState": {
 		"href": "#/api/CCs/HumidityControlOperatingState?id=humiditycontroloperatingstate",
-		"definition": "enum HumidityControlOperatingState {\n\t\"Idle\" = 0x00,\n\t\"Humidifying\" = 0x01,\n\t\"De-humidifying\" = 0x02,\n}"
+		"definition": "enum HumidityControlOperatingState {\n\tIdle = 0x00,\n\tHumidifying = 0x01,\n\t\"De-humidifying\" = 0x02,\n}"
 	},
 	"HumidityControlSetpointCapabilities": {
 		"href": "#/api/CCs/HumidityControlSetpoint?id=humiditycontrolsetpointcapabilities",
@@ -163,7 +163,7 @@
 	},
 	"HumidityControlSetpointType": {
 		"href": "#/api/CCs/HumidityControlSetpoint?id=humiditycontrolsetpointtype",
-		"definition": "enum HumidityControlSetpointType {\n\t\"N/A\" = 0x00,\n\t\"Humidifier\" = 0x01, // CC v1\n\t\"De-humidifier\" = 0x02, // CC v1\n\t\"Auto\" = 0x03, // CC v2\n}"
+		"definition": "enum HumidityControlSetpointType {\n\t\"N/A\" = 0x00,\n\tHumidifier = 0x01, // CC v1\n\t\"De-humidifier\" = 0x02, // CC v1\n\tAuto = 0x03, // CC v2\n}"
 	},
 	"HumidityControlSetpointValue": {
 		"href": "#/api/CCs/HumidityControlSetpoint?id=humiditycontrolsetpointvalue",
@@ -292,7 +292,7 @@
 	},
 	"SetbackSpecialState": {
 		"href": "#/api/CCs/ClimateControlSchedule?id=setbackspecialstate",
-		"definition": "type SetbackSpecialState =\n\t| \"Frost Protection\"\n\t| \"Energy Saving\"\n\t| \"Unused\";"
+		"definition": "type SetbackSpecialState = \"Frost Protection\" | \"Energy Saving\" | \"Unused\";"
 	},
 	"SetbackState": {
 		"href": "#/api/CCs/ClimateControlSchedule?id=setbackstate",
@@ -316,7 +316,7 @@
 	},
 	"SupervisionResult": {
 		"href": "#/api/shared-types?id=supervisionresult",
-		"definition": "type SupervisionResult =\n\t| {\n\t\tstatus:\n\t\t\t| SupervisionStatus.NoSupport\n\t\t\t| SupervisionStatus.Fail\n\t\t\t| SupervisionStatus.Success;\n\t\tremainingDuration?: undefined;\n\t}\n\t| {\n\t\tstatus: SupervisionStatus.Working;\n\t\tremainingDuration: Duration;\n\t};"
+		"definition": "type SupervisionResult =\n\t| {\n\t\t\tstatus:\n\t\t\t\t| SupervisionStatus.NoSupport\n\t\t\t\t| SupervisionStatus.Fail\n\t\t\t\t| SupervisionStatus.Success;\n\t\t\tremainingDuration?: undefined;\n\t  }\n\t| {\n\t\t\tstatus: SupervisionStatus.Working;\n\t\t\tremainingDuration: Duration;\n\t  };"
 	},
 	"SupervisionStatus": {
 		"href": "#/api/shared-types?id=supervisionstatus",
@@ -332,7 +332,7 @@
 	},
 	"ThermostatFanMode": {
 		"href": "#/api/CCs/ThermostatFanMode?id=thermostatfanmode",
-		"definition": "enum ThermostatFanMode {\n\t\"Auto low\" = 0x00,\n\t\"Low\" = 0x01,\n\t\"Auto high\" = 0x02,\n\t\"High\" = 0x03,\n\t\"Auto medium\" = 0x04,\n\t\"Medium\" = 0x05,\n\t\"Circulation\" = 0x06,\n\t\"Humidity circulation\" = 0x07,\n\t\"Left and right\" = 0x08,\n\t\"Up and down\" = 0x09,\n\t\"Quiet\" = 0x0a,\n\t\"External circulation\" = 0x0b,\n}"
+		"definition": "enum ThermostatFanMode {\n\t\"Auto low\" = 0x00,\n\tLow = 0x01,\n\t\"Auto high\" = 0x02,\n\tHigh = 0x03,\n\t\"Auto medium\" = 0x04,\n\tMedium = 0x05,\n\tCirculation = 0x06,\n\t\"Humidity circulation\" = 0x07,\n\t\"Left and right\" = 0x08,\n\t\"Up and down\" = 0x09,\n\tQuiet = 0x0a,\n\t\"External circulation\" = 0x0b,\n}"
 	},
 	"ThermostatFanState": {
 		"href": "#/api/CCs/ThermostatFanState?id=thermostatfanstate",
@@ -340,11 +340,11 @@
 	},
 	"ThermostatMode": {
 		"href": "#/api/CCs/ThermostatMode?id=thermostatmode",
-		"definition": "enum ThermostatMode {\n\t\"Off\" = 0x00,\n\t\"Heat\" = 0x01,\n\t\"Cool\" = 0x02,\n\t\"Auto\" = 0x03,\n\t\"Auxiliary\" = 0x04,\n\t\"Resume (on)\" = 0x05,\n\t\"Fan\" = 0x06,\n\t\"Furnace\" = 0x07,\n\t\"Dry\" = 0x08,\n\t\"Moist\" = 0x09,\n\t\"Auto changeover\" = 0x0a,\n\t\"Energy heat\" = 0x0b,\n\t\"Energy cool\" = 0x0c,\n\t\"Away\" = 0x0d,\n\t\"Full power\" = 0x0f,\n\t\"Manufacturer specific\" = 0x1f,\n}"
+		"definition": "enum ThermostatMode {\n\tOff = 0x00,\n\tHeat = 0x01,\n\tCool = 0x02,\n\tAuto = 0x03,\n\tAuxiliary = 0x04,\n\t\"Resume (on)\" = 0x05,\n\tFan = 0x06,\n\tFurnace = 0x07,\n\tDry = 0x08,\n\tMoist = 0x09,\n\t\"Auto changeover\" = 0x0a,\n\t\"Energy heat\" = 0x0b,\n\t\"Energy cool\" = 0x0c,\n\tAway = 0x0d,\n\t\"Full power\" = 0x0f,\n\t\"Manufacturer specific\" = 0x1f,\n}"
 	},
 	"ThermostatOperatingState": {
 		"href": "#/api/CCs/ThermostatOperatingState?id=thermostatoperatingstate",
-		"definition": "enum ThermostatOperatingState {\n\t\"Idle\" = 0x00,\n\t\"Heating\" = 0x01,\n\t\"Cooling\" = 0x02,\n\t\"Fan Only\" = 0x03,\n\t\"Pending Heat\" = 0x04,\n\t\"Pending Cool\" = 0x05,\n\t\"Vent/Economizer\" = 0x06,\n\t\"Aux Heating\" = 0x07,\n\t\"2nd Stage Heating\" = 0x08,\n\t\"2nd Stage Cooling\" = 0x09,\n\t\"2nd Stage Aux Heat\" = 0x0a,\n\t\"3rd Stage Aux Heat\" = 0x0b,\n}"
+		"definition": "enum ThermostatOperatingState {\n\tIdle = 0x00,\n\tHeating = 0x01,\n\tCooling = 0x02,\n\t\"Fan Only\" = 0x03,\n\t\"Pending Heat\" = 0x04,\n\t\"Pending Cool\" = 0x05,\n\t\"Vent/Economizer\" = 0x06,\n\t\"Aux Heating\" = 0x07,\n\t\"2nd Stage Heating\" = 0x08,\n\t\"2nd Stage Cooling\" = 0x09,\n\t\"2nd Stage Aux Heat\" = 0x0a,\n\t\"3rd Stage Aux Heat\" = 0x0b,\n}"
 	},
 	"ThermostatOperatingStateLoggingData": {
 		"href": "#/api/CCs/ThermostatOperatingState?id=thermostatoperatingstateloggingdata",
@@ -352,7 +352,7 @@
 	},
 	"ThermostatSetpointType": {
 		"href": "#/api/CCs/ThermostatSetpoint?id=thermostatsetpointtype",
-		"definition": "enum ThermostatSetpointType {\n\t\"N/A\" = 0x00,\n\t\"Heating\" = 0x01, // CC v1\n\t\"Cooling\" = 0x02, // CC v1\n\t\"Furnace\" = 0x07, // CC v1\n\t\"Dry Air\" = 0x08, // CC v1\n\t\"Moist Air\" = 0x09, // CC v1\n\t\"Auto Changeover\" = 0x0a, // CC v1\n\t\"Energy Save Heating\" = 0x0b, // CC v2\n\t\"Energy Save Cooling\" = 0x0c, // CC v2\n\t\"Away Heating\" = 0x0d, // CC v2\n\t\"Away Cooling\" = 0x0e, // CC v3\n\t\"Full Power\" = 0x0f, // CC v3\n\t// Update the interview procedure when adding new types\n}"
+		"definition": "enum ThermostatSetpointType {\n\t\"N/A\" = 0x00,\n\tHeating = 0x01, // CC v1\n\tCooling = 0x02, // CC v1\n\tFurnace = 0x07, // CC v1\n\t\"Dry Air\" = 0x08, // CC v1\n\t\"Moist Air\" = 0x09, // CC v1\n\t\"Auto Changeover\" = 0x0a, // CC v1\n\t\"Energy Save Heating\" = 0x0b, // CC v2\n\t\"Energy Save Cooling\" = 0x0c, // CC v2\n\t\"Away Heating\" = 0x0d, // CC v2\n\t\"Away Cooling\" = 0x0e, // CC v3\n\t\"Full Power\" = 0x0f, // CC v3\n\t// Update the interview procedure when adding new types\n}"
 	},
 	"Timeout": {
 		"href": "#/api/shared-types?id=timeout",
@@ -373,7 +373,7 @@
 	},
 	"UserCodeCCSetOptions": {
 		"href": "#/api/CCs/UserCode?id=usercodeccsetoptions",
-		"definition": "type UserCodeCCSetOptions =\n\t| {\n\t\tuserId: 0;\n\t\tuserIdStatus: UserIDStatus.Available;\n\t\tuserCode?: undefined;\n\t}\n\t| {\n\t\tuserId: number;\n\t\tuserIdStatus: UserIDStatus.Available;\n\t\tuserCode?: undefined;\n\t}\n\t| {\n\t\tuserId: number;\n\t\tuserIdStatus: Exclude<\n\t\t\tUserIDStatus,\n\t\t\tUserIDStatus.Available | UserIDStatus.StatusNotAvailable\n\t\t>;\n\t\tuserCode: string | BytesView;\n\t};"
+		"definition": "type UserCodeCCSetOptions =\n\t| {\n\t\t\tuserId: 0;\n\t\t\tuserIdStatus: UserIDStatus.Available;\n\t\t\tuserCode?: undefined;\n\t  }\n\t| {\n\t\t\tuserId: number;\n\t\t\tuserIdStatus: UserIDStatus.Available;\n\t\t\tuserCode?: undefined;\n\t  }\n\t| {\n\t\t\tuserId: number;\n\t\t\tuserIdStatus: Exclude<\n\t\t\t\tUserIDStatus,\n\t\t\t\tUserIDStatus.Available | UserIDStatus.StatusNotAvailable\n\t\t\t>;\n\t\t\tuserCode: string | BytesView;\n\t  };"
 	},
 	"UserCredentialAdminCodeOperationResult": {
 		"href": "#/api/CCs/UserCredential?id=usercredentialadmincodeoperationresult",
@@ -381,7 +381,7 @@
 	},
 	"UserCredentialCapability": {
 		"href": "#/api/CCs/UserCredential?id=usercredentialcapability",
-		"definition": "type UserCredentialCapability =\n\t& {\n\t\tnumberOfCredentialSlots: number;\n\t\tminCredentialLength: number;\n\t\tmaxCredentialLength: number;\n\t\tmaxCredentialHashLength: number;\n\t}\n\t& (\n\t\t{\n\t\t\tsupportsCredentialLearn: true;\n\t\t\tcredentialLearnRecommendedTimeout: number;\n\t\t\tcredentialLearnNumberOfSteps: number;\n\t\t} | {\n\t\t\tsupportsCredentialLearn: false;\n\t\t\tcredentialLearnRecommendedTimeout?: undefined;\n\t\t\tcredentialLearnNumberOfSteps?: undefined;\n\t\t}\n\t);"
+		"definition": "type UserCredentialCapability = {\n\tnumberOfCredentialSlots: number;\n\tminCredentialLength: number;\n\tmaxCredentialLength: number;\n\tmaxCredentialHashLength: number;\n} & (\n\t| {\n\t\t\tsupportsCredentialLearn: true;\n\t\t\tcredentialLearnRecommendedTimeout: number;\n\t\t\tcredentialLearnNumberOfSteps: number;\n\t  }\n\t| {\n\t\t\tsupportsCredentialLearn: false;\n\t\t\tcredentialLearnRecommendedTimeout?: undefined;\n\t\t\tcredentialLearnNumberOfSteps?: undefined;\n\t  }\n);"
 	},
 	"UserCredentialCCAssociationReport": {
 		"href": "#/api/CCs/UserCredential?id=usercredentialccassociationreport",
@@ -461,7 +461,7 @@
 	},
 	"ZWaveLibraryTypes": {
 		"href": "#/api/CCs/Version?id=zwavelibrarytypes",
-		"definition": "enum ZWaveLibraryTypes {\n\t\"Unknown\",\n\t\"Static Controller\",\n\t\"Controller\",\n\t\"Enhanced Slave\",\n\t\"Slave\",\n\t\"Installer\",\n\t\"Routing Slave\",\n\t\"Bridge Controller\",\n\t\"Device under Test\",\n\t\"N/A\",\n\t\"AV Remote\",\n\t\"AV Device\",\n}"
+		"definition": "enum ZWaveLibraryTypes {\n\tUnknown,\n\t\"Static Controller\",\n\tController,\n\t\"Enhanced Slave\",\n\tSlave,\n\tInstaller,\n\t\"Routing Slave\",\n\t\"Bridge Controller\",\n\t\"Device under Test\",\n\t\"N/A\",\n\t\"AV Remote\",\n\t\"AV Device\",\n}"
 	},
 	"ZWavePlusNodeType": {
 		"href": "#/api/CCs/ZWavePlus?id=zwaveplusnodetype",

@@ -10,18 +10,21 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Heat Alarm events 2 (Overheat) and 6 (Underheat) share the "Heat sensor status"
 // value. This value can be reset to its idle state.
 const HEAT_ALARM = 0x04;
 
-const heatSensorStatus = NotificationCCValues
-	.notificationVariable("Heat Alarm", "Heat sensor status")
-	.endpoint(0);
-const unknownHeatAlarm = NotificationCCValues
-	.unknownNotificationVariable(HEAT_ALARM, "Heat Alarm")
-	.endpoint(0);
+const heatSensorStatus = NotificationCCValues.notificationVariable(
+	"Heat Alarm",
+	"Heat sensor status",
+).endpoint(0);
+const unknownHeatAlarm = NotificationCCValues.unknownNotificationVariable(
+	HEAT_ALARM,
+	"Heat Alarm",
+).endpoint(0);
 
 const nodeCapabilities = {
 	commandClasses: [

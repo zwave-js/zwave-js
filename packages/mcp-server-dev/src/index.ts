@@ -6,6 +6,7 @@ import {
 	CallToolRequestSchema,
 	ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+
 import { McpToolRegistry } from "./registry.js";
 import type { ConsentPrompt, ElicitConsentFn } from "./semantic/embedding.js";
 import { SemanticSearchService } from "./semantic/service.js";
@@ -59,7 +60,8 @@ class DevMCPServer {
 		if (!this.server.getClientCapabilities()?.elicitation) return undefined;
 		return async (prompt: ConsentPrompt) => {
 			const result = await this.server.elicitInput({
-				message: `The local semantic search model "${prompt.modelId}" `
+				message:
+					`The local semantic search model "${prompt.modelId}" `
 					+ `(revision ${prompt.revision}) is not cached yet. Downloading `
 					+ `it from ${prompt.source} (license: ${prompt.license}) will `
 					+ `fetch approximately ${prompt.approxSizeMb} MB and store it `
@@ -86,10 +88,11 @@ class DevMCPServer {
 			});
 			if (result.action === "cancel") return { decision: "cancel" };
 			return {
-				decision: result.action === "accept"
-						&& result.content?.decision === "approve"
-					? "approve"
-					: "decline",
+				decision:
+					result.action === "accept"
+					&& result.content?.decision === "approve"
+						? "approve"
+						: "decline",
 			};
 		};
 	}

@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { logDict, logList, logText } from "./LogPayload.js";
 import { formatLogPayload } from "./formatPayload.js";
 
@@ -76,10 +77,7 @@ test("renders a tagged text with dict content", (t) => {
 				nested: logDict({ payload: "0x1234" }),
 			}),
 		),
-	).toStrictEqual([
-		"[RES] [GetControllerVersion]",
-		"  payload: 0x1234",
-	]);
+	).toStrictEqual(["[RES] [GetControllerVersion]", "  payload: 0x1234"]);
 });
 
 test("renders a CC tree with brackets and tree children", (t) => {

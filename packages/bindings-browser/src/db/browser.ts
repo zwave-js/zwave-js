@@ -56,8 +56,8 @@ class IndexedDBCache<V> implements Database<V> {
 
 		return new Promise((resolve, reject) => {
 			request.onsuccess = (event) => {
-				const cursor =
-					(event.target as IDBRequest<IDBCursorWithValue>).result;
+				const cursor = (event.target as IDBRequest<IDBCursorWithValue>)
+					.result;
 				if (cursor) {
 					if (cursor.value.filename === this.filename) {
 						this.cache.set(cursor.value.valueid, {
@@ -141,8 +141,8 @@ class IndexedDBCache<V> implements Database<V> {
 		const request = store.openCursor();
 
 		request.onsuccess = (event) => {
-			const cursor =
-				(event.target as IDBRequest<IDBCursorWithValue>).result;
+			const cursor = (event.target as IDBRequest<IDBCursorWithValue>)
+				.result;
 			if (cursor) {
 				if (cursor.value.filename === this.filename) {
 					cursor.delete();

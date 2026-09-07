@@ -94,10 +94,7 @@ export class SetLearnModeRequest extends SetLearnModeRequestBase {
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		this.assertCallbackId();
-		this.payload = Bytes.from([
-			this.intent,
-			this.callbackId,
-		]);
+		this.payload = Bytes.from([this.intent, this.callbackId]);
 
 		return super.serialize(ctx);
 	}
@@ -159,7 +156,8 @@ export interface SetLearnModeCallbackOptions {
 	statusMessage?: BytesView;
 }
 
-export class SetLearnModeCallback extends SetLearnModeRequestBase
+export class SetLearnModeCallback
+	extends SetLearnModeRequestBase
 	implements SuccessIndicator
 {
 	public constructor(

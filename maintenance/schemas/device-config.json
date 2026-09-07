@@ -177,10 +177,7 @@
 				}
 			},
 			"additionalProperties": false,
-			"required": [
-				"notificationType",
-				"notificationEvent"
-			]
+			"required": ["notificationType", "notificationEvent"]
 		},
 		"condition": {
 			"type": "string",

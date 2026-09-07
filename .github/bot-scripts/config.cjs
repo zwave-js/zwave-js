@@ -24,10 +24,7 @@ const STRING_KEYS = [
 	"evalCases.relatedPostsFile",
 	"redirects.issueTracker",
 ];
-const STRING_ARRAY_KEYS = [
-	"docs.questionCategorySlugs",
-	"users.authorized",
-];
+const STRING_ARRAY_KEYS = ["docs.questionCategorySlugs", "users.authorized"];
 // Present in zwave-js-ui (redirects mis-filed issues to the driver
 // repo); absent in zwave-js, which is that repo
 const OPTIONAL_GROUPS = new Set(["redirects"]);
@@ -48,7 +45,9 @@ function get(obj, path) {
 /** @param {any} parsed */
 function validate(parsed) {
 	if (
-		typeof parsed !== "object" || parsed === null || Array.isArray(parsed)
+		typeof parsed !== "object"
+		|| parsed === null
+		|| Array.isArray(parsed)
 	) {
 		throw new Error(`config root must be an object`);
 	}
@@ -62,7 +61,9 @@ function validate(parsed) {
 			throw new Error(`Unknown config key "${group}"`);
 		}
 		if (
-			typeof value !== "object" || value === null || Array.isArray(value)
+			typeof value !== "object"
+			|| value === null
+			|| Array.isArray(value)
 		) {
 			throw new Error(`config key "${group}" must be an object`);
 		}
@@ -86,7 +87,8 @@ function validate(parsed) {
 			throw new Error(`Missing config key "${path}"`);
 		}
 		if (STRING_ARRAY_KEYS.includes(path)) {
-			const ok = Array.isArray(value)
+			const ok =
+				Array.isArray(value)
 				&& value.length > 0
 				&& value.every((v) => typeof v === "string" && v.length > 0);
 			if (!ok) {

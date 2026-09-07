@@ -17,6 +17,7 @@ import {
 	ccCaps,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Regression test: a CredentialReport whose reportType is DuplicateCredential
@@ -67,8 +68,8 @@ integrationTest(
 					) {
 						const report = new UserCredentialCCCredentialReport({
 							nodeId: controller.ownNodeId,
-							reportType: UserCredentialCredentialReportType
-								.DuplicateCredential,
+							reportType:
+								UserCredentialCredentialReportType.DuplicateCredential,
 							userId: 1,
 							credentialType: receivedCC.credentialType,
 							credentialSlot: 1,

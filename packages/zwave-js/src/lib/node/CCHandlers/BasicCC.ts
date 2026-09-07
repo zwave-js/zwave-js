@@ -14,6 +14,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
+
 import type { DeviceClass } from "../DeviceClass.js";
 import type { ZWaveNode } from "../Node.js";
 
@@ -48,22 +49,20 @@ export function handleBasicCommand(
 	command: BasicCC,
 ): void {
 	// Retrieve the endpoint the command is coming from
-	const sourceEndpoint = node.getEndpoint(command.endpointIndex ?? 0)
-		?? node;
+	const sourceEndpoint = node.getEndpoint(command.endpointIndex ?? 0) ?? node;
 
 	// Depending on the generic device class, we may need to map the basic command to other CCs
 	const mappedTargetCCId = getBasicMappingTarget(sourceEndpoint.deviceClass);
 	let mappedTargetCC: CommandClass | undefined;
 	if (mappedTargetCCId != undefined) {
-		mappedTargetCC = sourceEndpoint.createCCInstanceUnsafe(
-			mappedTargetCCId,
-		);
+		mappedTargetCC =
+			sourceEndpoint.createCCInstanceUnsafe(mappedTargetCCId);
 	}
 
 	if (command instanceof BasicCCReport) {
 		// By default, map Basic CC Reports to a more appropriate CC, unless stated otherwise in a config file
-		const basicReportMapping = node.deviceConfig?.compat?.mapBasicReport
-			?? "auto";
+		const basicReportMapping =
+			node.deviceConfig?.compat?.mapBasicReport ?? "auto";
 
 		if (basicReportMapping === "Binary Sensor") {
 			// Treat the command as a BinarySensorCC Report, regardless of the device class
@@ -98,10 +97,12 @@ export function handleBasicCommand(
 				});
 			}
 		} else if (
-			basicReportMapping === "auto" || basicReportMapping === false
+			basicReportMapping === "auto"
+			|| basicReportMapping === false
 		) {
 			// Try to set the mapped value on the target CC
-			const didSetMappedValue = typeof command.currentValue === "number"
+			const didSetMappedValue =
+				typeof command.currentValue === "number"
 				// ... unless forbidden
 				&& basicReportMapping === "auto"
 				&& mappedTargetCC?.setMappedBasicValue(
@@ -117,8 +118,8 @@ export function handleBasicCommand(
 		}
 	} else if (command instanceof BasicCCSet) {
 		// By default, map Basic CC Set to Basic CC Report, unless stated otherwise in a config file
-		const basicSetMapping = node.deviceConfig?.compat?.mapBasicSet
-			?? "report";
+		const basicSetMapping =
+			node.deviceConfig?.compat?.mapBasicSet ?? "report";
 
 		if (basicSetMapping === "event") {
 			// Treat BasicCCSet as value events if desired
@@ -127,9 +128,7 @@ export function handleBasicCommand(
 				message: "treating BasicCC::Set as a value event",
 			});
 			node.valueDB.setValue(
-				BasicCCValues.compatEvent.endpoint(
-					command.endpointIndex,
-				),
+				BasicCCValues.compatEvent.endpoint(command.endpointIndex),
 				command.targetValue,
 				{
 					stateful: false,
@@ -146,10 +145,7 @@ export function handleBasicCommand(
 					message:
 						"treating BasicCC::Set as a BinarySensorCC::Report",
 				});
-				mappedTargetCC.setMappedBasicValue(
-					ctx,
-					command.targetValue,
-				);
+				mappedTargetCC.setMappedBasicValue(ctx, command.targetValue);
 			} else {
 				ctx.logNode(node.id, {
 					endpoint: command.endpointIndex,
@@ -160,23 +156,18 @@ export function handleBasicCommand(
 			}
 		} else if (
 			!node.deviceConfig?.compat?.mapBasicSet
-			&& !!(command.encapsulationFlags
-				& EncapsulationFlags.Supervision)
+			&& !!(command.encapsulationFlags & EncapsulationFlags.Supervision)
 		) {
 			// A controller MUST not support Basic CC per the specifications. While we can interpret its contents,
 			// we MUST respond to supervised Basic CC Set with "no support".
 			// All known devices that use BasicCCSet for reporting send it unsupervised, so this should be safe to do.
-			if (
-				command.encapsulationFlags & EncapsulationFlags.Supervision
-			) {
+			if (command.encapsulationFlags & EncapsulationFlags.Supervision) {
 				throw new ZWaveError(
 					"Basic CC is not supported",
 					ZWaveErrorCodes.CC_NotSupported,
 				);
 			}
-		} else if (
-			basicSetMapping === "auto" || basicSetMapping === "report"
-		) {
+		} else if (basicSetMapping === "auto" || basicSetMapping === "report") {
 			// Some devices send their current state using BasicCCSet to their associations
 			// instead of using reports. We still interpret them like reports
 			ctx.logNode(node.id, {
@@ -185,7 +176,8 @@ export function handleBasicCommand(
 			});
 
 			// In "auto" mode, try to set the mapped value on the target CC first
-			const didSetMappedValue = basicSetMapping === "auto"
+			const didSetMappedValue =
+				basicSetMapping === "auto"
 				&& !!mappedTargetCC?.setMappedBasicValue(
 					ctx,
 					command.targetValue,
@@ -195,9 +187,7 @@ export function handleBasicCommand(
 			if (!didSetMappedValue) {
 				// Basic Set commands cannot store their value automatically, so store the values manually
 				node.valueDB.setValue(
-					BasicCCValues.currentValue.endpoint(
-						command.endpointIndex,
-					),
+					BasicCCValues.currentValue.endpoint(command.endpointIndex),
 					command.targetValue,
 				);
 				// Since the node sent us a Basic Set, we are sure that it is at least controlled

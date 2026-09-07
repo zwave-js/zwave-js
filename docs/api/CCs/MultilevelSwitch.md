@@ -8,11 +8,12 @@
 
 ```ts
 async get(): Promise<
-	{
-		currentValue?: MaybeUnknown<number>;
-		duration?: Duration;
-		targetValue?: MaybeUnknown<number>;
-	} | undefined
+	| {
+			currentValue?: MaybeUnknown<number>;
+			duration?: Duration;
+			targetValue?: MaybeUnknown<number>;
+	  }
+	| undefined
 >;
 ```
 
@@ -35,25 +36,21 @@ Sets the switch to a new value.
 ### `startLevelChange`
 
 ```ts
-async startLevelChange(
-	options: {
-		direction: "up" | "down";
-		ignoreStartLevel: true;
-		startLevel?: number;
-		// Version >= 2:
-		duration?: Duration | string;
-	},
-): Promise<SupervisionResult | undefined>;
+async startLevelChange(options: {
+	direction: "up" | "down";
+	ignoreStartLevel: true;
+	startLevel?: number;
+	// Version >= 2:
+	duration?: Duration | string;
+}): Promise<SupervisionResult | undefined>;
 
-async startLevelChange(
-	options: {
-		direction: "up" | "down";
-		ignoreStartLevel: false;
-		startLevel: number;
-		// Version >= 2:
-		duration?: Duration | string;
-	},
-): Promise<SupervisionResult | undefined>;
+async startLevelChange(options: {
+	direction: "up" | "down";
+	ignoreStartLevel: false;
+	startLevel: number;
+	// Version >= 2:
+	duration?: Duration | string;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `stopLevelChange`

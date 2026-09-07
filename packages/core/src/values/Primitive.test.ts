@@ -1,7 +1,9 @@
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import {
 	UNKNOWN_STATE,
 	encodeBitMask,

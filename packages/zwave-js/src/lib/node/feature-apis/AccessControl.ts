@@ -26,6 +26,7 @@ import {
 	supervisedCommandSucceeded,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+
 import { FeatureAPI } from "./FeatureAPI.js";
 
 // Bulk deletions (all users, or all credentials matching a filter) can take
@@ -164,11 +165,9 @@ function u3cCredentialReportTypeToSetCredentialResult(
 		case UserCredentialCredentialReportType.CredentialDeleted:
 		case UserCredentialCredentialReportType.CredentialUnchanged:
 			return SetCredentialResult.OK;
-		case UserCredentialCredentialReportType
-			.CredentialAddRejectedLocationOccupied:
+		case UserCredentialCredentialReportType.CredentialAddRejectedLocationOccupied:
 			return SetCredentialResult.Error_AddRejectedLocationOccupied;
-		case UserCredentialCredentialReportType
-			.CredentialModifyRejectedLocationEmpty:
+		case UserCredentialCredentialReportType.CredentialModifyRejectedLocationEmpty:
 			return SetCredentialResult.Error_ModifyRejectedLocationEmpty;
 		case UserCredentialCredentialReportType.DuplicateCredential:
 			return SetCredentialResult.Error_DuplicateCredential;
@@ -203,10 +202,7 @@ function u3cAssociationStatusToAssignCredentialResult(
 }
 
 /** Packs a credential type and slot into the value DB property key */
-function credentialPropertyKey(
-	type: UserCredentialType,
-	slot: number,
-): number {
+function credentialPropertyKey(type: UserCredentialType, slot: number): number {
 	return UserCredentialCCValues.credential(type, slot).id.propertyKey;
 }
 
@@ -217,8 +213,10 @@ const NON_PIN_CHARS = /[^0-9]/;
  * When unknown (V1 nodes), defaults to PIN-only per the spec.
  */
 function supportsNonPINChars(supportedASCIIChars: string | undefined): boolean {
-	return supportedASCIIChars != undefined
-		&& NON_PIN_CHARS.test(supportedASCIIChars);
+	return (
+		supportedASCIIChars != undefined
+		&& NON_PIN_CHARS.test(supportedASCIIChars)
+	);
 }
 
 // Characters known to be used by nodes that obfuscate user codes in reports
@@ -258,8 +256,8 @@ function userCodeReadBackConfirmsSet(
 	// CC:0063.01.00.32.002  A controlling node SHOULD understand that a code has
 	// been set correctly but cannot be read back with such nodes.
 	if (version === 1 && typeof actual === "string" && actual.length > 0) {
-		return USER_CODE_OBFUSCATION_CHARS.some((char) =>
-			actual === char.repeat(actual.length)
+		return USER_CODE_OBFUSCATION_CHARS.some(
+			(char) => actual === char.repeat(actual.length),
 		);
 	}
 
@@ -280,11 +278,13 @@ export class AccessControlAPI extends FeatureAPI {
 		// node reports that (0) Users are supported.
 		//
 		// While that is unknown (interview incomplete), we default to U3C.
-		return this.getValue<number>(
-			UserCredentialCCValues.supportedUsers.endpoint(
-				this.endpoint.index,
-			),
-		) !== 0;
+		return (
+			this.getValue<number>(
+				UserCredentialCCValues.supportedUsers.endpoint(
+					this.endpoint.index,
+				),
+			) !== 0
+		);
 	}
 
 	/**
@@ -294,34 +294,39 @@ export class AccessControlAPI extends FeatureAPI {
 	public getUserCapabilitiesCached(): UserCapabilities {
 		if (this.#usesUserCredentialCC) {
 			return {
-				maxUsers: this.getValue<number>(
-					UserCredentialCCValues.supportedUsers.endpoint(
-						this.endpoint.index,
-					),
-				) ?? 0,
-				supportedUserTypes: this.getValue<UserCredentialUserType[]>(
-					UserCredentialCCValues.supportedUserTypes.endpoint(
-						this.endpoint.index,
-					),
-				) ?? [],
-				maxUserNameLength: this.getValue<number>(
-					UserCredentialCCValues.maxUserNameLength.endpoint(
-						this.endpoint.index,
-					),
-				) ?? undefined,
-				supportedCredentialRules: this.getValue<UserCredentialRule[]>(
-					UserCredentialCCValues.supportedCredentialRules.endpoint(
-						this.endpoint.index,
-					),
-				) ?? [],
+				maxUsers:
+					this.getValue<number>(
+						UserCredentialCCValues.supportedUsers.endpoint(
+							this.endpoint.index,
+						),
+					) ?? 0,
+				supportedUserTypes:
+					this.getValue<UserCredentialUserType[]>(
+						UserCredentialCCValues.supportedUserTypes.endpoint(
+							this.endpoint.index,
+						),
+					) ?? [],
+				maxUserNameLength:
+					this.getValue<number>(
+						UserCredentialCCValues.maxUserNameLength.endpoint(
+							this.endpoint.index,
+						),
+					) ?? undefined,
+				supportedCredentialRules:
+					this.getValue<UserCredentialRule[]>(
+						UserCredentialCCValues.supportedCredentialRules.endpoint(
+							this.endpoint.index,
+						),
+					) ?? [],
 				supportsUsersWithoutCredentials: true,
 			};
 		} else {
-			const supportedStatuses = this.getValue<UserIDStatus[]>(
-				UserCodeCCValues.supportedUserIDStatuses.endpoint(
-					this.endpoint.index,
-				),
-			) ?? [];
+			const supportedStatuses =
+				this.getValue<UserIDStatus[]>(
+					UserCodeCCValues.supportedUserIDStatuses.endpoint(
+						this.endpoint.index,
+					),
+				) ?? [];
 			const supportedUserTypes: UserCredentialUserType[] = [
 				UserCredentialUserType.General,
 			];
@@ -332,11 +337,12 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 
 			return {
-				maxUsers: this.getValue<number>(
-					UserCodeCCValues.supportedUsers.endpoint(
-						this.endpoint.index,
-					),
-				) ?? 0,
+				maxUsers:
+					this.getValue<number>(
+						UserCodeCCValues.supportedUsers.endpoint(
+							this.endpoint.index,
+						),
+					) ?? 0,
 				supportedUserTypes,
 				// User Code CC does not support user names or credential rules
 				maxUserNameLength: undefined,
@@ -352,11 +358,12 @@ export class AccessControlAPI extends FeatureAPI {
 	 */
 	public getCredentialCapabilitiesCached(): CredentialCapabilities {
 		if (this.#usesUserCredentialCC) {
-			const supportedTypes = this.getValue<UserCredentialType[]>(
-				UserCredentialCCValues.supportedCredentialTypes.endpoint(
-					this.endpoint.index,
-				),
-			) ?? [];
+			const supportedTypes =
+				this.getValue<UserCredentialType[]>(
+					UserCredentialCCValues.supportedCredentialTypes.endpoint(
+						this.endpoint.index,
+					),
+				) ?? [];
 
 			const credentialTypes = new Map<
 				UserCredentialType,
@@ -364,35 +371,39 @@ export class AccessControlAPI extends FeatureAPI {
 			>();
 			for (const type of supportedTypes) {
 				const cap = this.getValue<UserCredentialCapability>(
-					UserCredentialCCValues.credentialCapabilities(type)
-						.endpoint(
-							this.endpoint.index,
-						),
+					UserCredentialCCValues.credentialCapabilities(
+						type,
+					).endpoint(this.endpoint.index),
 				);
 				if (cap) credentialTypes.set(type, cap);
 			}
 
 			return {
 				supportedCredentialTypes: credentialTypes,
-				supportsAdminCode: this.getValue<boolean>(
-					UserCredentialCCValues.supportsAdminCode.endpoint(
-						this.endpoint.index,
-					),
-				) ?? false,
-				supportsAdminCodeDeactivation: this.getValue<boolean>(
-					UserCredentialCCValues.supportsAdminCodeDeactivation
-						.endpoint(this.endpoint.index),
-				) ?? false,
-				supportsCredentialAssignment: this.#u3cAPI().supportsCommand(
-					UserCredentialCommand.UserCredentialAssociationSet,
-				) === true,
+				supportsAdminCode:
+					this.getValue<boolean>(
+						UserCredentialCCValues.supportsAdminCode.endpoint(
+							this.endpoint.index,
+						),
+					) ?? false,
+				supportsAdminCodeDeactivation:
+					this.getValue<boolean>(
+						UserCredentialCCValues.supportsAdminCodeDeactivation.endpoint(
+							this.endpoint.index,
+						),
+					) ?? false,
+				supportsCredentialAssignment:
+					this.#u3cAPI().supportsCommand(
+						UserCredentialCommand.UserCredentialAssociationSet,
+					) === true,
 			};
 		} else {
-			const maxUsers = this.getValue<number>(
-				UserCodeCCValues.supportedUsers.endpoint(
-					this.endpoint.index,
-				),
-			) ?? 0;
+			const maxUsers =
+				this.getValue<number>(
+					UserCodeCCValues.supportedUsers.endpoint(
+						this.endpoint.index,
+					),
+				) ?? 0;
 
 			// User Code CC only supports a single credential per user
 			// with a length of 4-10 characters (CC:0063.01.01.11.006).
@@ -413,16 +424,18 @@ export class AccessControlAPI extends FeatureAPI {
 
 			return {
 				supportedCredentialTypes: credentialTypes,
-				supportsAdminCode: this.getValue<boolean>(
-					UserCodeCCValues.supportsAdminCode.endpoint(
-						this.endpoint.index,
-					),
-				) ?? false,
-				supportsAdminCodeDeactivation: this.getValue<boolean>(
-					UserCodeCCValues.supportsAdminCodeDeactivation.endpoint(
-						this.endpoint.index,
-					),
-				) ?? false,
+				supportsAdminCode:
+					this.getValue<boolean>(
+						UserCodeCCValues.supportsAdminCode.endpoint(
+							this.endpoint.index,
+						),
+					) ?? false,
+				supportsAdminCodeDeactivation:
+					this.getValue<boolean>(
+						UserCodeCCValues.supportsAdminCodeDeactivation.endpoint(
+							this.endpoint.index,
+						),
+					) ?? false,
 				// User Code CC has no equivalent to credential reassignment
 				supportsCredentialAssignment: false,
 			};
@@ -445,8 +458,8 @@ export class AccessControlAPI extends FeatureAPI {
 				userType: result.userType ?? UserCredentialUserType.General,
 				userName: result.userName ?? undefined,
 				credentialRule: result.credentialRule ?? undefined,
-				expiringTimeoutMinutes: result.expiringTimeoutMinutes
-					|| undefined,
+				expiringTimeoutMinutes:
+					result.expiringTimeoutMinutes || undefined,
 			};
 		} else {
 			const api = this.#ucAPI();
@@ -490,12 +503,11 @@ export class AccessControlAPI extends FeatureAPI {
 				users.push({
 					userId: result.userId,
 					active: result.active ?? false,
-					userType: result.userType
-						?? UserCredentialUserType.General,
+					userType: result.userType ?? UserCredentialUserType.General,
 					userName: result.userName ?? undefined,
 					credentialRule: result.credentialRule ?? undefined,
-					expiringTimeoutMinutes: result.expiringTimeoutMinutes
-						|| undefined,
+					expiringTimeoutMinutes:
+						result.expiringTimeoutMinutes || undefined,
 				});
 				nextUserId = result.nextUserId ?? 0;
 			} while (nextUserId > 0);
@@ -523,7 +535,7 @@ export class AccessControlAPI extends FeatureAPI {
 								this.#mapUserCodeStatusToUserData(
 									entry.userId,
 									entry.userIdStatus,
-								)
+								),
 							)
 							.filter((u) => u != undefined),
 					);
@@ -550,11 +562,12 @@ export class AccessControlAPI extends FeatureAPI {
 	 */
 	public getUsersCached(): UserData[] {
 		if (this.#usesUserCredentialCC) {
-			const maxUsers = this.getValue<number>(
-				UserCredentialCCValues.supportedUsers.endpoint(
-					this.endpoint.index,
-				),
-			) ?? 0;
+			const maxUsers =
+				this.getValue<number>(
+					UserCredentialCCValues.supportedUsers.endpoint(
+						this.endpoint.index,
+					),
+				) ?? 0;
 			const users: UserData[] = [];
 			for (let userId = 1; userId <= maxUsers; userId++) {
 				const user = this.#getUserCached_U3C(userId);
@@ -562,9 +575,12 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 			return users;
 		} else {
-			const maxUsers = this.getValue<number>(
-				UserCodeCCValues.supportedUsers.endpoint(this.endpoint.index),
-			) ?? 0;
+			const maxUsers =
+				this.getValue<number>(
+					UserCodeCCValues.supportedUsers.endpoint(
+						this.endpoint.index,
+					),
+				) ?? 0;
 			const users: UserData[] = [];
 			for (let userId = 1; userId <= maxUsers; userId++) {
 				const user = this.#getUserCached_UC(userId);
@@ -595,8 +611,7 @@ export class AccessControlAPI extends FeatureAPI {
 
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
-			const userType = options.userType
-				?? UserCredentialUserType.General;
+			const userType = options.userType ?? UserCredentialUserType.General;
 
 			let result: UserCredentialCCUserReport | undefined;
 			if (userType === UserCredentialUserType.Expiring) {
@@ -655,8 +670,7 @@ export class AccessControlAPI extends FeatureAPI {
 			this.#assertValidUCCredentialType(credential.type);
 
 			const active = options.active ?? true;
-			const userType = options.userType
-				?? UserCredentialUserType.General;
+			const userType = options.userType ?? UserCredentialUserType.General;
 
 			let status: UserIDStatus;
 			if (!active) {
@@ -668,14 +682,16 @@ export class AccessControlAPI extends FeatureAPI {
 			}
 
 			const api = this.#ucAPI();
-			const codeData = typeof credential.data === "string"
-				? credential.data
-				: Bytes.from(credential.data);
+			const codeData =
+				typeof credential.data === "string"
+					? credential.data
+					: Bytes.from(credential.data);
 			const result = await api.set(userId, status, codeData);
 			let succeeded: boolean;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				succeeded = verified?.userIdStatus === status
+				succeeded =
+					verified?.userIdStatus === status
 					&& userCodeReadBackConfirmsSet(
 						codeData,
 						verified?.userCode,
@@ -692,7 +708,8 @@ export class AccessControlAPI extends FeatureAPI {
 				// success. The obfuscation leniency does not apply here,
 				// since it would confirm the previous code.
 				const verified = await api.get(userId);
-				succeeded = verified?.userIdStatus === status
+				succeeded =
+					verified?.userIdStatus === status
 					&& userCodeEquals(codeData, verified.userCode);
 			}
 
@@ -700,30 +717,22 @@ export class AccessControlAPI extends FeatureAPI {
 				const node = this.endpoint.tryGetNode();
 				if (node) {
 					const userData: UserData = { userId, active, userType };
-					node.emit(
-						"user added",
-						this.endpoint as any,
-						userData,
-					);
-					node.emit(
-						"credential added",
-						this.endpoint as any,
-						{
-							userId,
-							credentialType: credential.type,
-							credentialSlot: userId,
-							data: credential.data,
-						},
-					);
+					node.emit("user added", this.endpoint as any, userData);
+					node.emit("credential added", this.endpoint as any, {
+						userId,
+						credentialType: credential.type,
+						credentialSlot: userId,
+						data: credential.data,
+					});
 				}
 			}
 
 			return succeeded
 				? { user: SetUserResult.OK, credential: SetCredentialResult.OK }
 				: {
-					user: SetUserResult.Error_Unknown,
-					credential: SetCredentialResult.Error_Unknown,
-				};
+						user: SetUserResult.Error_Unknown,
+						credential: SetCredentialResult.Error_Unknown,
+					};
 		}
 	}
 
@@ -742,7 +751,8 @@ export class AccessControlAPI extends FeatureAPI {
 				? UserCredentialOperationType.Modify
 				: UserCredentialOperationType.Add;
 
-			const userType = options.userType
+			const userType =
+				options.userType
 				?? existing?.userType
 				?? UserCredentialUserType.General;
 
@@ -753,11 +763,12 @@ export class AccessControlAPI extends FeatureAPI {
 					userId,
 					active: options.active ?? existing?.active ?? true,
 					userType,
-					expiringTimeoutMinutes: options.expiringTimeoutMinutes
+					expiringTimeoutMinutes:
+						options.expiringTimeoutMinutes
 						?? existing?.expiringTimeoutMinutes
 						?? 0,
-					credentialRule: options.credentialRule
-						?? existing?.credentialRule,
+					credentialRule:
+						options.credentialRule ?? existing?.credentialRule,
 					userName: options.userName ?? existing?.userName,
 				});
 			} else {
@@ -766,8 +777,8 @@ export class AccessControlAPI extends FeatureAPI {
 					userId,
 					active: options.active ?? existing?.active ?? true,
 					userType,
-					credentialRule: options.credentialRule
-						?? existing?.credentialRule,
+					credentialRule:
+						options.credentialRule ?? existing?.credentialRule,
 					userName: options.userName ?? existing?.userName,
 				});
 			}
@@ -784,7 +795,8 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 
 			const active = options.active ?? existing?.active ?? true;
-			const userType = options.userType
+			const userType =
+				options.userType
 				?? existing?.userType
 				?? UserCredentialUserType.General;
 
@@ -801,9 +813,7 @@ export class AccessControlAPI extends FeatureAPI {
 			// User Code CC requires sending the code along with every status
 			// change, so we re-send the existing code to preserve it
 			const existingCode = this.getValue<string>(
-				UserCodeCCValues.userCode(userId).endpoint(
-					this.endpoint.index,
-				),
+				UserCodeCCValues.userCode(userId).endpoint(this.endpoint.index),
 			);
 			if (!existingCode) {
 				throw new ZWaveError(
@@ -812,18 +822,15 @@ export class AccessControlAPI extends FeatureAPI {
 				);
 			}
 
-			const result = await api.set(
-				userId,
-				status,
-				existingCode,
-			);
+			const result = await api.set(userId, status, existingCode);
 			let succeeded: boolean;
 			let failure = SetUserResult.Error_Unknown;
 			if (result == undefined) {
 				// Unsupervised - verify the change
 				const verified = await api.get(userId);
 				const verifiedStatus = verified?.userIdStatus;
-				succeeded = verifiedStatus != undefined
+				succeeded =
+					verifiedStatus != undefined
 					&& verifiedStatus !== existingStatus
 					&& verifiedStatus !== UserIDStatus.Available;
 			} else if (supervisedCommandSucceeded(result)) {
@@ -864,9 +871,7 @@ export class AccessControlAPI extends FeatureAPI {
 	 * Deletes the user with the given ID and all of their credentials.
 	 * This communicates with the node.
 	 */
-	public async deleteUser(
-		userId: number,
-	): Promise<SetUserResult> {
+	public async deleteUser(userId: number): Promise<SetUserResult> {
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI();
 			const raw = await api.setUser({
@@ -934,8 +939,8 @@ export class AccessControlAPI extends FeatureAPI {
 			// Verifying all users being deleted is unrealistic
 			// since there can be up to 65535 users. So we just
 			// assume it worked when the command was not supervised.
-			const succeeded = result == undefined
-				|| supervisedCommandSucceeded(result);
+			const succeeded =
+				result == undefined || supervisedCommandSucceeded(result);
 			if (succeeded) {
 				this.#clearCachedUserCodes();
 			}
@@ -1096,11 +1101,7 @@ export class AccessControlAPI extends FeatureAPI {
 	 */
 	public async getAllCredentials(): Promise<CredentialData[]> {
 		if (this.#usesUserCredentialCC) {
-			return this.#queryCredentials_U3C(
-				0,
-				UserCredentialType.None,
-				0,
-			);
+			return this.#queryCredentials_U3C(0, UserCredentialType.None, 0);
 		} else {
 			return this.#getAllCredentials_UC();
 		}
@@ -1139,9 +1140,10 @@ export class AccessControlAPI extends FeatureAPI {
 				type,
 				slot,
 			);
-			const credentialData = typeof data === "string"
-				? Bytes.from(data, "utf-8")
-				: Bytes.from(data);
+			const credentialData =
+				typeof data === "string"
+					? Bytes.from(data, "utf-8")
+					: Bytes.from(data);
 			const raw = await api.setCredential({
 				operationType: existing
 					? UserCredentialOperationType.Modify
@@ -1169,31 +1171,22 @@ export class AccessControlAPI extends FeatureAPI {
 					this.endpoint.index,
 				),
 			);
-			const status = (
-					existingStatus == undefined
-					|| existingStatus === UserIDStatus.Available
-				)
-				? UserIDStatus.Enabled
-				: existingStatus;
+			const status =
+				existingStatus == undefined
+				|| existingStatus === UserIDStatus.Available
+					? UserIDStatus.Enabled
+					: existingStatus;
 
-			const existingCred = this.#getCredentialCached_UC(
-				type,
-				userId,
-			);
+			const existingCred = this.#getCredentialCached_UC(type, userId);
 
-			const codeData = typeof data === "string"
-				? data
-				: Bytes.from(data);
-			const result = await api.set(
-				userId,
-				status as number,
-				codeData,
-			);
+			const codeData = typeof data === "string" ? data : Bytes.from(data);
+			const result = await api.set(userId, status as number, codeData);
 			let succeeded: boolean;
 			let failure = SetCredentialResult.Error_Unknown;
 			if (result == undefined) {
 				const verified = await api.get(userId);
-				succeeded = verified?.userIdStatus === status
+				succeeded =
+					verified?.userIdStatus === status
 					&& userCodeReadBackConfirmsSet(
 						codeData,
 						verified?.userCode,
@@ -1210,7 +1203,8 @@ export class AccessControlAPI extends FeatureAPI {
 				// success. The obfuscation leniency does not apply here,
 				// since it would confirm the previous code.
 				const verified = await api.get(userId);
-				succeeded = verified?.userIdStatus === status
+				succeeded =
+					verified?.userIdStatus === status
 					&& userCodeEquals(codeData, verified.userCode);
 				if (
 					!succeeded
@@ -1218,8 +1212,8 @@ export class AccessControlAPI extends FeatureAPI {
 					&& verified?.userIdStatus === UserIDStatus.Available
 				) {
 					// There is no credential to modify on the device
-					failure = SetCredentialResult
-						.Error_ModifyRejectedLocationEmpty;
+					failure =
+						SetCredentialResult.Error_ModifyRejectedLocationEmpty;
 				}
 			}
 			if (succeeded) {
@@ -1239,9 +1233,7 @@ export class AccessControlAPI extends FeatureAPI {
 					);
 				}
 			}
-			return succeeded
-				? SetCredentialResult.OK
-				: failure;
+			return succeeded ? SetCredentialResult.OK : failure;
 		}
 	}
 
@@ -1306,10 +1298,8 @@ export class AccessControlAPI extends FeatureAPI {
 			this.#assertValidUCCredentialType(type);
 
 			// Only emit deleted events if we knew about the credential beforehand.
-			const existed = this.#getCredentialCached_UC(
-				type,
-				targetUserId,
-			) != undefined;
+			const existed =
+				this.#getCredentialCached_UC(type, targetUserId) != undefined;
 
 			const api = this.#ucAPI();
 			const result = await api.clear(targetUserId);
@@ -1352,8 +1342,8 @@ export class AccessControlAPI extends FeatureAPI {
 		options: DeleteCredentialsOptions = {},
 	): Promise<SetCredentialResult> {
 		const userId = options.userId ?? 0;
-		const credentialType = options.credentialType
-			?? UserCredentialType.None;
+		const credentialType =
+			options.credentialType ?? UserCredentialType.None;
 
 		if (this.#usesUserCredentialCC) {
 			const api = this.#u3cAPI().withOptions({
@@ -1380,9 +1370,10 @@ export class AccessControlAPI extends FeatureAPI {
 				// matches. Reject loudly so callers do not act on a fictional
 				// success.
 				throw new ZWaveError(
-					`Credential type ${
-						getEnumMemberName(UserCredentialType, credentialType)
-					} is not supported by this node`,
+					`Credential type ${getEnumMemberName(
+						UserCredentialType,
+						credentialType,
+					)} is not supported by this node`,
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
@@ -1390,9 +1381,10 @@ export class AccessControlAPI extends FeatureAPI {
 			// Only emit deleted events if we knew about the credential beforehand.
 			// The wildcard branch (userId === 0) always emits, since verifying
 			// the prior state across all users is unrealistic.
-			const existed = userId !== 0
-				? this.#getUserCached_UC(userId) != undefined
-				: true;
+			const existed =
+				userId !== 0
+					? this.#getUserCached_UC(userId) != undefined
+					: true;
 
 			const api = this.#ucAPI();
 			const result = await api.clear(userId);
@@ -1499,15 +1491,17 @@ export class AccessControlAPI extends FeatureAPI {
 			? UserCredentialOperationType.Modify
 			: UserCredentialOperationType.Add;
 
-		timeout ??= this.getCredentialCapabilitiesCached()
-			.supportedCredentialTypes
-			.get(type)?.credentialLearnRecommendedTimeout;
+		timeout ??=
+			this.getCredentialCapabilitiesCached().supportedCredentialTypes.get(
+				type,
+			)?.credentialLearnRecommendedTimeout;
 
 		if (timeout == undefined) {
 			throw new ZWaveError(
-				`Credential learning is not supported for credential type ${
-					getEnumMemberName(UserCredentialType, type)
-				}`,
+				`Credential learning is not supported for credential type ${getEnumMemberName(
+					UserCredentialType,
+					type,
+				)}`,
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
@@ -1571,8 +1565,9 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#ucAPI(): UserCodeCCAPI {
-		return this.endpoint
-			.commandClasses["User Code"] as unknown as UserCodeCCAPI;
+		return this.endpoint.commandClasses[
+			"User Code"
+		] as unknown as UserCodeCCAPI;
 	}
 
 	#u3cAPI(): UserCredentialCCAPI {
@@ -1582,9 +1577,9 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#supportsCredentialType(type: UserCredentialType): boolean {
-		return this.getCredentialCapabilitiesCached()
-			.supportedCredentialTypes
-			.has(type);
+		return this.getCredentialCapabilitiesCached().supportedCredentialTypes.has(
+			type,
+		);
 	}
 
 	/** The ASCII characters the node accepts in user codes, if known */
@@ -1670,14 +1665,12 @@ export class AccessControlAPI extends FeatureAPI {
 
 			const type = key >>> 16;
 			const slot = key & 0xffff;
-			for (
-				const valueId of [
-					UserCredentialCCValues.credential(type, slot),
-					UserCredentialCCValues.credentialOwner(type, slot),
-					UserCredentialCCValues.credentialModifierType(type, slot),
-					UserCredentialCCValues.credentialModifierNodeId(type, slot),
-				]
-			) {
+			for (const valueId of [
+				UserCredentialCCValues.credential(type, slot),
+				UserCredentialCCValues.credentialOwner(type, slot),
+				UserCredentialCCValues.credentialModifierType(type, slot),
+				UserCredentialCCValues.credentialModifierNodeId(type, slot),
+			]) {
 				valueDB.removeValue(valueId.endpoint(endpoint));
 			}
 		}
@@ -1721,9 +1714,7 @@ export class AccessControlAPI extends FeatureAPI {
 					|| UserCodeCCValues.userCode.is(vid)),
 		);
 		if (userId) {
-			values = values.filter(
-				(vid) => vid.propertyKey === userId,
-			);
+			values = values.filter((vid) => vid.propertyKey === userId);
 		}
 
 		for (const vid of values) {
@@ -1743,12 +1734,13 @@ export class AccessControlAPI extends FeatureAPI {
 			userId: result.userId,
 			type: result.credentialType,
 			slot: result.credentialSlot,
-			data: result.credentialData != undefined
-				? normalizeCredentialData(
-					result.credentialType,
-					result.credentialData,
-				)
-				: undefined,
+			data:
+				result.credentialData != undefined
+					? normalizeCredentialData(
+							result.credentialType,
+							result.credentialData,
+						)
+					: undefined,
 		};
 	}
 
@@ -1763,9 +1755,10 @@ export class AccessControlAPI extends FeatureAPI {
 		let queryType = startType;
 		let querySlot = startSlot;
 
-		const scopeEnd = filterType != undefined
-			? credentialPropertyKey(filterType + 1, 0)
-			: credentialPropertyKey(0xff + 1, 0);
+		const scopeEnd =
+			filterType != undefined
+				? credentialPropertyKey(filterType + 1, 0)
+				: credentialPropertyKey(0xff + 1, 0);
 
 		// U3C credential enumeration behaves like a cursor walk.
 		// The initial (userId, type, slot) triple may be exact or wildcarded,
@@ -1808,15 +1801,12 @@ export class AccessControlAPI extends FeatureAPI {
 
 			credentials.push(credential);
 
-			const nextType = result.nextCredentialType
-				?? UserCredentialType.None;
+			const nextType =
+				result.nextCredentialType ?? UserCredentialType.None;
 			const nextSlot = result.nextCredentialSlot ?? 0;
 			// A zero next pointer marks the end of the node's credential sequence,
 			// so purge all stale credentials after the last result
-			if (
-				nextType === UserCredentialType.None
-				&& nextSlot === 0
-			) {
+			if (nextType === UserCredentialType.None && nextSlot === 0) {
 				this.#purgeCachedCredentials(
 					userId,
 					credentialPropertyKey(credential.type, credential.slot + 1),
@@ -1921,9 +1911,7 @@ export class AccessControlAPI extends FeatureAPI {
 					UserCredentialCCValues.credentialOwner.is(vid)
 					&& vid.endpoint === this.endpoint.index,
 			)
-			.filter(
-				({ propertyKey }) => typeof propertyKey === "number",
-			)
+			.filter(({ propertyKey }) => typeof propertyKey === "number")
 			.toSorted(
 				(a, b) => (a.propertyKey as number) - (b.propertyKey as number),
 			)
@@ -1937,9 +1925,10 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#getAllCredentialsCached_UC(): CredentialData[] {
-		const maxUsers = this.getValue<number>(
-			UserCodeCCValues.supportedUsers.endpoint(this.endpoint.index),
-		) ?? 0;
+		const maxUsers =
+			this.getValue<number>(
+				UserCodeCCValues.supportedUsers.endpoint(this.endpoint.index),
+			) ?? 0;
 		const credentials: CredentialData[] = [];
 		// Cached User Code values are keyed by user slot, and the unified
 		// abstraction reuses that slot number as the credential slot.
@@ -1954,13 +1943,16 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#assertValidSlot(type: UserCredentialType, slot: number): void {
-		const caps = this.getCredentialCapabilitiesCached()
-			.supportedCredentialTypes.get(type);
+		const caps =
+			this.getCredentialCapabilitiesCached().supportedCredentialTypes.get(
+				type,
+			);
 		if (!caps || slot < 1 || slot > caps.numberOfCredentialSlots) {
 			throw new ZWaveError(
-				`Credential slot ${slot} is out of range for credential type ${
-					getEnumMemberName(UserCredentialType, type)
-				}`,
+				`Credential slot ${slot} is out of range for credential type ${getEnumMemberName(
+					UserCredentialType,
+					type,
+				)}`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -1987,9 +1979,10 @@ export class AccessControlAPI extends FeatureAPI {
 	#assertValidUCCredentialType(type: UserCredentialType): void {
 		if (type !== this.#ucCredentialType) {
 			throw new ZWaveError(
-				`Credential type ${
-					getEnumMemberName(UserCredentialType, type)
-				} is not supported by this node`,
+				`Credential type ${getEnumMemberName(
+					UserCredentialType,
+					type,
+				)} is not supported by this node`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -2005,27 +1998,31 @@ export class AccessControlAPI extends FeatureAPI {
 
 		return {
 			userId,
-			active: this.getValue<boolean>(
-				UserCredentialCCValues.userActive(userId).endpoint(
-					this.endpoint.index,
-				),
-			) ?? false,
+			active:
+				this.getValue<boolean>(
+					UserCredentialCCValues.userActive(userId).endpoint(
+						this.endpoint.index,
+					),
+				) ?? false,
 			userType,
-			userName: this.getValue<string>(
-				UserCredentialCCValues.userName(userId).endpoint(
-					this.endpoint.index,
-				),
-			) ?? undefined,
-			credentialRule: this.getValue<UserCredentialRule>(
-				UserCredentialCCValues.credentialRule(userId).endpoint(
-					this.endpoint.index,
-				),
-			) ?? undefined,
-			expiringTimeoutMinutes: this.getValue<number>(
-				UserCredentialCCValues.expiringTimeoutMinutes(userId).endpoint(
-					this.endpoint.index,
-				),
-			) || undefined,
+			userName:
+				this.getValue<string>(
+					UserCredentialCCValues.userName(userId).endpoint(
+						this.endpoint.index,
+					),
+				) ?? undefined,
+			credentialRule:
+				this.getValue<UserCredentialRule>(
+					UserCredentialCCValues.credentialRule(userId).endpoint(
+						this.endpoint.index,
+					),
+				) ?? undefined,
+			expiringTimeoutMinutes:
+				this.getValue<number>(
+					UserCredentialCCValues.expiringTimeoutMinutes(
+						userId,
+					).endpoint(this.endpoint.index),
+				) || undefined,
 		};
 	}
 
@@ -2070,9 +2067,7 @@ export class AccessControlAPI extends FeatureAPI {
 
 	#getUserCached_UC(userId: number): UserData | undefined {
 		const status = this.getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(userId).endpoint(
-				this.endpoint.index,
-			),
+			UserCodeCCValues.userIdStatus(userId).endpoint(this.endpoint.index),
 		);
 		if (status == undefined) return undefined;
 		return this.#mapUserCodeStatusToUserData(userId, status);
@@ -2085,9 +2080,7 @@ export class AccessControlAPI extends FeatureAPI {
 		if (type !== this.#ucCredentialType) return undefined;
 		// For User Code CC, credential slots and users are identical
 		const status = this.getValue<UserIDStatus>(
-			UserCodeCCValues.userIdStatus(slot).endpoint(
-				this.endpoint.index,
-			),
+			UserCodeCCValues.userIdStatus(slot).endpoint(this.endpoint.index),
 		);
 		if (
 			status == undefined

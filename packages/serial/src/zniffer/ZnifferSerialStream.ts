@@ -9,13 +9,15 @@
 // 0 -->               -->     Parsers     --> read
 // 1 └─────────────────┘ └─────────────────┘ └──
 
-import type { LogContainer } from "@zwave-js/core";
-import { type BytesView, noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
 	UnderlyingSink,
 	UnderlyingSource,
 } from "node:stream/web";
+
+import type { LogContainer } from "@zwave-js/core";
+import { type BytesView, noop } from "@zwave-js/shared";
+
 import { SerialLogger } from "../log/Logger.js";
 import { ZnifferParser } from "../parsers/ZnifferParser.js";
 import type { ZnifferSerialFrame } from "../parsers/ZnifferSerialFrame.js";
@@ -23,10 +25,7 @@ import type { ZWaveSerialBindingFactory } from "../serialport/ZWaveSerialStream.
 
 /** Re-usable stream factory to create new serial streams */
 export class ZnifferSerialStreamFactory {
-	constructor(
-		binding: ZWaveSerialBindingFactory,
-		loggers: LogContainer,
-	) {
+	constructor(binding: ZWaveSerialBindingFactory, loggers: LogContainer) {
 		this.binding = binding;
 		this.logger = new SerialLogger(loggers);
 	}
@@ -42,14 +41,12 @@ export class ZnifferSerialStreamFactory {
 }
 
 /** Single-use serial stream. Has to be re-created after being closed. */
-export class ZnifferSerialStream implements
-	ReadableWritablePair<
-		// The serial binding emits ZniferSerialFrames
-		ZnifferSerialFrame,
-		// and accepts binary data
-		BytesView
-	>
-{
+export class ZnifferSerialStream implements ReadableWritablePair<
+	// The serial binding emits ZniferSerialFrames
+	ZnifferSerialFrame,
+	// and accepts binary data
+	BytesView
+> {
 	constructor(
 		source: UnderlyingSource<BytesView>,
 		sink: UnderlyingSink<BytesView>,

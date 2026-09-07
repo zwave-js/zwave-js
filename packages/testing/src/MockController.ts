@@ -27,6 +27,7 @@ import {
 	isAbortError,
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
+
 import {
 	type MockControllerCapabilities,
 	getDefaultMockControllerCapabilities,
@@ -421,8 +422,7 @@ export class MockController {
 		const {
 			timeout = 5000,
 			preventDefault = false,
-			errorMessage =
-				"Host did not send the expected message within the provided timeout!",
+			errorMessage = "Host did not send the expected message within the provided timeout!",
 		} = options ?? {};
 		const expectation = new TimedExpectation<Message, Message>(
 			timeout,
@@ -460,18 +460,12 @@ export class MockController {
 		const {
 			timeout = 5000,
 			preventDefault = false,
-			errorMessage =
-				`Node ${node.id} did not send the expected frame within the provided timeout!`,
+			errorMessage = `Node ${node.id} did not send the expected frame within the provided timeout!`,
 		} = options ?? {};
 		const expectation = new TimedExpectation<
 			MockZWaveFrame,
 			MockZWaveFrame
-		>(
-			timeout,
-			predicate,
-			errorMessage,
-			preventDefault,
-		);
+		>(timeout, predicate, errorMessage, preventDefault);
 		try {
 			if (!this.expectedNodeFrames.has(node.id)) {
 				this.expectedNodeFrames.set(node.id, []);
@@ -594,9 +588,10 @@ export class MockController {
 		}
 
 		// Handle message buffer. Check for pending expectations first.
-		const handlers = this.expectedNodeFrames
-			.get(node.id)
-			?.filter((e) => !e.predicate || e.predicate(frame)) ?? [];
+		const handlers =
+			this.expectedNodeFrames
+				.get(node.id)
+				?.filter((e) => !e.predicate || e.predicate(frame)) ?? [];
 
 		// Resolve all matching expectations
 		for (const handler of handlers) {

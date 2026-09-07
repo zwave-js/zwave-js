@@ -150,10 +150,7 @@
 			"label": "Power Consumption Measurement Delay",
 			"valueSize": 1,
 			"unit": "0.1 seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [3, 50] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [3, 50] }],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -167,10 +164,7 @@
 			"label": "Motor Moving Time",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "range": [1, 32000] },
-				{ "value": 65000 }
-			],
+			"allowed": [{ "range": [1, 32000] }, { "value": 65000 }],
 			"defaultValue": 120,
 			"unsigned": true,
 			"options": [

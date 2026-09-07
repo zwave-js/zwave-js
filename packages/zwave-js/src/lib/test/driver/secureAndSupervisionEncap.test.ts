@@ -1,7 +1,9 @@
+import path from "node:path";
+
 import { SecurityCCNonceGet } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { isSendDataSinglecast } from "@zwave-js/serial/serialapi";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

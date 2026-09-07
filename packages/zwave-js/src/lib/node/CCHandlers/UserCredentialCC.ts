@@ -10,6 +10,7 @@ import {
 	type UserCredentialCCUserReport,
 	normalizeCredentialData,
 } from "@zwave-js/cc/UserCredentialCC";
+
 import type { ZWaveNode } from "../Node.js";
 
 function buildUserArgs(report: UserCredentialCCUserReport) {
@@ -83,16 +84,14 @@ export function handleUserCredentialCredentialReport(
 		case UserCredentialCredentialReportType.CredentialDeleted:
 		// The device rejected a Modify because the slot was empty, meaning
 		// our cache was stale. Notify applications that the credential is gone.
-		case UserCredentialCredentialReportType
-			.CredentialModifyRejectedLocationEmpty:
+		case UserCredentialCredentialReportType.CredentialModifyRejectedLocationEmpty:
 			node.emit("credential deleted", endpoint, {
 				userId: report.userId,
 				credentialType: report.credentialType,
 				credentialSlot: report.credentialSlot,
 			});
 			break;
-		case UserCredentialCredentialReportType
-			.CredentialAddRejectedLocationOccupied:
+		case UserCredentialCredentialReportType.CredentialAddRejectedLocationOccupied:
 			// The device rejected an Add because the slot was already occupied.
 			// When read-back is set, the report contains the actual credential
 			// data — notify applications about the previously-unknown credential.
@@ -134,7 +133,8 @@ export function handleUserCredentialCredentialLearnReport(
 	// Started and StepRetry are non-terminal statuses, but some devices
 	// incorrectly report 0 steps remaining alongside them. Trust the status
 	// over the steps count so we don't emit "completed" mid-process.
-	const inProgress = report.learnStatus === UserCredentialLearnStatus.Started
+	const inProgress =
+		report.learnStatus === UserCredentialLearnStatus.Started
 		|| report.learnStatus === UserCredentialLearnStatus.StepRetry
 		|| report.stepsRemaining > 0;
 

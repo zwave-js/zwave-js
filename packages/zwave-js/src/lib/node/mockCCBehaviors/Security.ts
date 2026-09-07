@@ -88,8 +88,7 @@ const respondToS0CommandsSupportedGet: MockNodeBehavior = {
 			const supportedCCs = [...self.implementedCCs.entries()]
 				.filter(
 					([cc, info]) =>
-						info.secure === true
-						&& !isEncapsulationCC(cc),
+						info.secure === true && !isEncapsulationCC(cc),
 				)
 				.map(([cc]) => cc);
 
@@ -151,7 +150,8 @@ const encapsulateS0CC: MockNodeBehavior = {
 				): resp is MockZWaveFrame & {
 					type: MockZWaveFrameType.Request;
 					payload: SecurityCCNonceReport;
-				} => resp.type === MockZWaveFrameType.Request
+				} =>
+					resp.type === MockZWaveFrameType.Request
 					&& resp.payload instanceof SecurityCCNonceReport,
 				{ timeout: 1000 },
 			);
@@ -172,9 +172,7 @@ const encapsulateS0CC: MockNodeBehavior = {
 	},
 };
 
-export const SecurityCCHooks = [
-	encapsulateS0CC,
-];
+export const SecurityCCHooks = [encapsulateS0CC];
 
 export const SecurityCCBehaviors = [
 	respondToSchemeGet,

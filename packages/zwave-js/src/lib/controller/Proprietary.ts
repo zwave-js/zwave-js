@@ -1,7 +1,9 @@
 import type { SetValueResult } from "@zwave-js/cc";
 import type { RFRegion, TranslatedValueID, ValueID } from "@zwave-js/core";
 import type { Message } from "@zwave-js/serial";
+
 import type { Driver } from "../driver/Driver.js";
+
 import type { ZWaveController } from "./Controller.js";
 import { ControllerProprietary_Aeotec } from "./proprietary/Aeotec.js";
 import { ControllerProprietary_NabuCasa } from "./proprietary/NabuCasa.js";

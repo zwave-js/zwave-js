@@ -1,6 +1,7 @@
 // oxlint-disable typescript/no-misused-spread
 
 import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
+
 import { BeamingInfo, MPDUHeaderType } from "../definitions/Frame.js";
 import {
 	ProtocolDataRate,
@@ -24,6 +25,7 @@ import {
 import type { MessageOrCCLogEntry } from "../log/shared.js";
 import { validatePayload } from "../util/misc.js";
 import { encodeNodeBitMask, parseBitMask } from "../values/Primitive.js";
+
 import { ExplorerFrameCommand } from "./_Types.js";
 import { getRouteTag, padNodeId } from "./utils.js";
 
@@ -75,9 +77,9 @@ export abstract class MPDU {
 		ctx: MPDUParsingContext,
 	): ZWaveMPDU | LongRangeMPDU {
 		validatePayload.withReason(
-			`Unsupported protocol/data rate ${ctx.protocolDataRate}. MPDU payload: ${
-				buffer2hex(data)
-			}`,
+			`Unsupported protocol/data rate ${ctx.protocolDataRate}. MPDU payload: ${buffer2hex(
+				data,
+			)}`,
 		)(supportedProtocolDataRates.has(ctx.protocolDataRate));
 
 		// The channels Long Range occupies depend on the channel configuration,
@@ -192,10 +194,7 @@ export class ZWaveMPDURaw {
 		this.payload = options.payload;
 	}
 
-	public static parse(
-		data: Bytes,
-		ctx: MPDUParsingContext,
-	): ZWaveMPDURaw {
+	public static parse(data: Bytes, ctx: MPDUParsingContext): ZWaveMPDURaw {
 		// FIXME: Parse Beams
 
 		const homeId = data.readUInt32BE(0);
@@ -300,12 +299,14 @@ export class ZWaveMPDU extends MPDU {
 		);
 		switch (headerFormat) {
 			case ProtocolHeaderFormat.Classic2Channel: {
-				const frameControl0 = (this.routed ? 0b1000_0000 : 0)
+				const frameControl0 =
+					(this.routed ? 0b1000_0000 : 0)
 					| (this.ackRequested ? 0b0100_0000 : 0)
 					| (this.lowPower ? 0b0010_0000 : 0)
 					| (this.speedModified ? 0b0001_0000 : 0)
 					| (this.headerType & 0b0000_1111);
-				const frameControl1 = ((this.beamingInfo << 5) & 0b0110_0000)
+				const frameControl1 =
+					((this.beamingInfo << 5) & 0b0110_0000)
 					| (this.sequenceNumber & 0b0000_1111);
 
 				header = new Bytes(8);
@@ -314,7 +315,8 @@ export class ZWaveMPDU extends MPDU {
 				break;
 			}
 			case ProtocolHeaderFormat.Classic3Channel: {
-				const frameControl0 = (this.ackRequested ? 0b1000_0000 : 0)
+				const frameControl0 =
+					(this.ackRequested ? 0b1000_0000 : 0)
 					| (this.lowPower ? 0b0100_0000 : 0)
 					| (this.headerType & 0b0000_1111);
 				const frameControl1 = (this.beamingInfo << 4) & 0b0111_0000;
@@ -338,15 +340,13 @@ export class ZWaveMPDU extends MPDU {
 		header.writeUInt32BE(this.homeId, 0);
 		header[4] = this.sourceNodeId;
 		// The length spans the entire MPDU, payload and the checksum (1 or 2 bytes)
-		const length = header.length
+		const length =
+			header.length
 			+ this.payload.length
 			+ (ctx.protocolDataRate < ProtocolDataRate.ZWave_100k ? 1 : 2);
 		header[7] = length;
 
-		this.payload = Bytes.concat([
-			header,
-			this.payload,
-		]);
+		this.payload = Bytes.concat([header, this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -357,7 +357,8 @@ export class ZWaveMPDU extends MPDU {
 		const message: MessageRecord = {
 			"sequence no.": this.sequenceNumber,
 			channel: ctx.channel,
-			"protocol/data rate": protocolDataRateToString(ctx.protocolDataRate)
+			"protocol/data rate":
+				protocolDataRateToString(ctx.protocolDataRate)
 				+ (this.speedModified ? " (reduced)" : ""),
 		};
 		if (ctx.rssi != undefined) {
@@ -373,9 +374,10 @@ export class ZWaveMPDU extends MPDU {
 	}
 }
 
-export interface SinglecastZWaveMPDUOptions
-	extends Omit<ZWaveMPDUOptions, "routed" | "headerType">
-{
+export interface SinglecastZWaveMPDUOptions extends Omit<
+	ZWaveMPDUOptions,
+	"routed" | "headerType"
+> {
 	destinationNodeId: number;
 }
 
@@ -406,10 +408,7 @@ export class SinglecastZWaveMPDU extends ZWaveMPDU {
 	public readonly destinationNodeId: number;
 
 	public serialize(ctx: MPDUEncodingContext): Bytes {
-		this.payload = Bytes.concat([
-			[this.destinationNodeId],
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[this.destinationNodeId], this.payload]);
 		return super.serialize(ctx);
 	}
 
@@ -435,9 +434,10 @@ export class SinglecastZWaveMPDU extends ZWaveMPDU {
 	}
 }
 
-export interface AckZWaveMPDUOptions
-	extends Omit<ZWaveMPDUOptions, "routed" | "headerType" | "ackRequested">
-{
+export interface AckZWaveMPDUOptions extends Omit<
+	ZWaveMPDUOptions,
+	"routed" | "headerType" | "ackRequested"
+> {
 	destinationNodeId: number;
 }
 
@@ -533,7 +533,7 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		// more sense to handle it here
 		const destinationNodeId = raw.payload[0];
 
-		const direction = (raw.payload[1] & 0b1) ? "inbound" : "outbound";
+		const direction = raw.payload[1] & 0b1 ? "inbound" : "outbound";
 		const routedAck = !!(raw.payload[1] & 0b10);
 		const routedError = !!(raw.payload[1] & 0b100);
 		const hasExtendedHeader = !!(raw.payload[1] & 0b1000);
@@ -582,11 +582,12 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			offset += headerLength;
 
 			if (headerType === 0x00) {
-				destinationWakeupType = header[0] & 0b0100_0000
-					? "1000ms"
-					: header[0] & 0b0010_0000
-					? "250ms"
-					: undefined;
+				destinationWakeupType =
+					header[0] & 0b0100_0000
+						? "1000ms"
+						: header[0] & 0b0010_0000
+							? "250ms"
+							: undefined;
 			} else if (headerType === 0x01) {
 				// Z-Wave and Z-Wave Long Range Network Layer Specification
 				// (2023.05.26), NWK:0030.1: "The length of this extension MUST
@@ -649,7 +650,8 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 
 		// The routing header has room for a single extension
 		if (
-			this.destinationWakeupType != undefined && this.repeaterRSSI?.length
+			this.destinationWakeupType != undefined
+			&& this.repeaterRSSI?.length
 		) {
 			throw new ZWaveError(
 				`A RoutedZWaveMPDU must not carry both the destination wakeup and the repeater RSSI extension.`,
@@ -675,7 +677,8 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			);
 		}
 
-		const hasExtendedHeader = this.destinationWakeupType != undefined
+		const hasExtendedHeader =
+			this.destinationWakeupType != undefined
 			|| !!this.repeaterRSSI?.length;
 
 		// Until the end of the repeater list, all channel configurations are
@@ -683,7 +686,8 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		// when the Repeaters field value is smaller
 		let header = new Bytes(3 + this.repeaters.length);
 		header[0] = this.destinationNodeId;
-		header[1] = (this.direction === "inbound" ? 0b1 : 0)
+		header[1] =
+			(this.direction === "inbound" ? 0b1 : 0)
 			| (this.routedAck ? 0b10 : 0)
 			| (this.routedError ? 0b100 : 0)
 			| (hasExtendedHeader ? 0b1000 : 0);
@@ -707,9 +711,7 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		// This means we need to undo the normalization here. NWK:001E.1: "When
 		// a routed frame returns to the source NodeID (e.g. a Routed Ack /
 		// Error), the Repeater 0 node shall set this field to 0x0F."
-		const hop = this.direction === "inbound"
-			? (this.hop - 1)
-			: this.hop;
+		const hop = this.direction === "inbound" ? this.hop - 1 : this.hop;
 		header[2] = ((this.repeaters.length & 0xf) << 4) | (hop & 0xf);
 		for (let i = 0; i < this.repeaters.length; i++) {
 			header[3 + i] = this.repeaters[i];
@@ -727,15 +729,13 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			// Add destination wakeup type extended header
 			const headerLength = 1;
 			const headerType = 0x00;
-			const headerBody = this.destinationWakeupType === "1000ms"
-				? 0b0100_0000
-				: 0b0010_0000; // 250ms
+			const headerBody =
+				this.destinationWakeupType === "1000ms"
+					? 0b0100_0000
+					: 0b0010_0000; // 250ms
 			header = Bytes.concat([
 				header,
-				[
-					(headerLength << 4) | headerType,
-					headerBody,
-				],
+				[(headerLength << 4) | headerType, headerBody],
 			]);
 		} else if (this.repeaterRSSI?.length) {
 			// Add repeater RSSI header. NWK:0030.1: "The length of this
@@ -747,9 +747,10 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 			for (let i = 0; i < headerBody.length; i++) {
 				// NWK:0031.1 requires the fields of unused hops to be set to
 				// 0x7F, so entries beyond the repeater count are ignored
-				headerBody[i] = i < this.repeaters.length
-					? (this.repeaterRSSI[i] ?? RssiError.NotAvailable)
-					: RssiError.NotAvailable;
+				headerBody[i] =
+					i < this.repeaters.length
+						? (this.repeaterRSSI[i] ?? RssiError.NotAvailable)
+						: RssiError.NotAvailable;
 			}
 			header = Bytes.concat([
 				header,
@@ -759,10 +760,7 @@ export class RoutedZWaveMPDU extends ZWaveMPDU {
 		}
 
 		// Include the actual payload
-		this.payload = Bytes.concat([
-			header,
-			this.payload,
-		]);
+		this.payload = Bytes.concat([header, this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -842,11 +840,7 @@ export class MulticastZWaveMPDU extends ZWaveMPDU {
 		// shall be set to 29"
 		const control = 29;
 		const mask = encodeNodeBitMask(this.destinationNodeIds);
-		this.payload = Bytes.concat([
-			[control],
-			mask,
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[control], mask, this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -988,20 +982,18 @@ export class ExplorerZWaveMPDU extends ZWaveMPDU {
 		const header = new Bytes(9);
 		header[0] = this.destinationNodeId;
 		header[1] = ((this.version & 0b111) << 5) | (this.command & 0b11111);
-		header[2] = (this.stop ? 0b100 : 0)
+		header[2] =
+			(this.stop ? 0b100 : 0)
 			| (this.direction === "inbound" ? 0b010 : 0)
 			| (this.sourceRouted ? 0b001 : 0);
 		header[3] = this.randomTXInterval;
-		header[4] = ((this.ttl & 0b1111) << 4)
-			| (this.repeaters.length & 0b1111);
+		header[4] =
+			((this.ttl & 0b1111) << 4) | (this.repeaters.length & 0b1111);
 		for (let i = 0; i < 4; i++) {
 			header[5 + i] = this.repeaters[i] ?? 0;
 		}
 
-		this.payload = Bytes.concat([
-			header,
-			this.payload,
-		]);
+		this.payload = Bytes.concat([header, this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -1031,9 +1023,7 @@ export class NormalExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 	}
 }
 
-export interface InclusionRequestExplorerZWaveMPDUOptions
-	extends ExplorerZWaveMPDUOptions
-{
+export interface InclusionRequestExplorerZWaveMPDUOptions extends ExplorerZWaveMPDUOptions {
 	networkHomeId: number;
 }
 
@@ -1064,10 +1054,7 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		const homeId = new Bytes(4);
 		homeId.writeUInt32BE(this.networkHomeId, 0);
 
-		this.payload = Bytes.concat([
-			homeId,
-			this.payload,
-		]);
+		this.payload = Bytes.concat([homeId, this.payload]);
 		return super.serialize(ctx);
 	}
 
@@ -1084,10 +1071,7 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		tags.unshift("INCL REQUEST");
 
 		const message = mergeLogDict(original, {
-			"network home ID": this.networkHomeId.toString(16).padStart(
-				8,
-				"0",
-			),
+			"network home ID": this.networkHomeId.toString(16).padStart(8, "0"),
 			payload: buffer2hex(this.payload),
 		});
 		return {
@@ -1097,9 +1081,7 @@ export class InclusionRequestExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 	}
 }
 
-export interface SearchResultExplorerZWaveMPDUOptions
-	extends ExplorerZWaveMPDUOptions
-{
+export interface SearchResultExplorerZWaveMPDUOptions extends ExplorerZWaveMPDUOptions {
 	searchingNodeId: number;
 	frameHandle: number;
 	resultTTL: number;
@@ -1123,9 +1105,7 @@ export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		const frameHandle = raw.payload[1];
 		const resultTTL = raw.payload[2] >>> 4;
 		const numRepeaters = raw.payload[2] & 0b1111;
-		const resultRepeaters = [
-			...raw.payload.subarray(3, 3 + numRepeaters),
-		];
+		const resultRepeaters = [...raw.payload.subarray(3, 3 + numRepeaters)];
 
 		return new this({
 			...raw,
@@ -1149,7 +1129,8 @@ export class SearchResultExplorerZWaveMPDU extends ExplorerZWaveMPDU {
 		const payload = new Bytes(7);
 		payload[0] = this.searchingNodeId;
 		payload[1] = this.frameHandle;
-		payload[2] = ((this.resultTTL & 0b1111) << 4)
+		payload[2] =
+			((this.resultTTL & 0b1111) << 4)
 			| (this.resultRepeaters.length & 0b1111);
 		for (let i = 0; i < 4; i++) {
 			payload[3 + i] = this.resultRepeaters[i] ?? 0;
@@ -1306,7 +1287,8 @@ export class LongRangeMPDU extends MPDU {
 		// plus 2 bytes for the checksum
 		header[7] = 12 + this.payload.length + 2;
 
-		const frameControl = (this.ackRequested ? 0b1000_0000 : 0)
+		const frameControl =
+			(this.ackRequested ? 0b1000_0000 : 0)
 			// | (this.hasExtendedHeader ? 0b0100_0000 : 0)
 			| (this.headerType & 0b0000_0111);
 		header[8] = frameControl;
@@ -1315,10 +1297,7 @@ export class LongRangeMPDU extends MPDU {
 		header.writeInt8(this.txPower, 11);
 		// TODO: Once extensions are defined, add them here
 
-		this.payload = Bytes.concat([
-			header,
-			this.payload,
-		]);
+		this.payload = Bytes.concat([header, this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -1366,10 +1345,10 @@ export class LongRangeMPDU extends MPDU {
 }
 
 // oxlint-disable-next-line typescript/no-empty-object-type
-export interface SinglecastLongRangeMPDUOptions
-	extends Omit<LongRangeMPDUOptions, "headerType">
-{
-}
+export interface SinglecastLongRangeMPDUOptions extends Omit<
+	LongRangeMPDUOptions,
+	"headerType"
+> {}
 
 export class SinglecastLongRangeMPDU extends LongRangeMPDU {
 	public constructor(options: SinglecastLongRangeMPDUOptions) {
@@ -1392,9 +1371,10 @@ export class SinglecastLongRangeMPDU extends LongRangeMPDU {
 	}
 }
 
-export interface AckLongRangeMPDUOptions
-	extends Omit<LongRangeMPDUOptions, "headerType" | "ackRequested">
-{
+export interface AckLongRangeMPDUOptions extends Omit<
+	LongRangeMPDUOptions,
+	"headerType" | "ackRequested"
+> {
 	incomingRSSI: RSSI;
 }
 

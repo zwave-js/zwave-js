@@ -367,24 +367,23 @@ Each entry in `supportedCredentialTypes` maps a `UserCredentialType` to its capa
 <!-- #import UserCredentialCapability from "@zwave-js/cc" -->
 
 ```ts
-type UserCredentialCapability =
-	& {
-		numberOfCredentialSlots: number;
-		minCredentialLength: number;
-		maxCredentialLength: number;
-		maxCredentialHashLength: number;
-	}
-	& (
-		{
+type UserCredentialCapability = {
+	numberOfCredentialSlots: number;
+	minCredentialLength: number;
+	maxCredentialLength: number;
+	maxCredentialHashLength: number;
+} & (
+	| {
 			supportsCredentialLearn: true;
 			credentialLearnRecommendedTimeout: number;
 			credentialLearnNumberOfSteps: number;
-		} | {
+	  }
+	| {
 			supportsCredentialLearn: false;
 			credentialLearnRecommendedTimeout?: undefined;
 			credentialLearnNumberOfSteps?: undefined;
-		}
-	);
+	  }
+);
 ```
 
 ### Managing users

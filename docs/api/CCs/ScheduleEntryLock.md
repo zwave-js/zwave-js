@@ -21,11 +21,12 @@ will be affected.
 
 ```ts
 async getNumSlots(): Promise<
-	{
-		numDailyRepeatingSlots?: number;
-		numWeekDaySlots: number;
-		numYearDaySlots: number;
-	} | undefined
+	| {
+			numDailyRepeatingSlots?: number;
+			numWeekDaySlots: number;
+			numYearDaySlots: number;
+	  }
+	| undefined
 >;
 ```
 

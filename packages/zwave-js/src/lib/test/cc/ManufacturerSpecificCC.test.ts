@@ -27,9 +27,7 @@ test("the Get command should serialize correctly", async (t) => {
 			ManufacturerSpecificCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command (v1) should be deserialized correctly", async (t) => {
@@ -44,10 +42,9 @@ test("the Report command (v1) should be deserialized correctly", async (t) => {
 			0x06,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as ManufacturerSpecificCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as ManufacturerSpecificCCReport;
 	t.expect(cc.constructor).toBe(ManufacturerSpecificCCReport);
 
 	t.expect(cc.manufacturerId).toBe(0x0102);
@@ -62,10 +59,9 @@ test("the Device Specific Get command should be deserialized correctly", async (
 			DeviceIdType.PseudoRandom,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as ManufacturerSpecificCCDeviceSpecificGet;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as ManufacturerSpecificCCDeviceSpecificGet;
 
 	t.expect(cc.constructor).toBe(ManufacturerSpecificCCDeviceSpecificGet);
 	t.expect(cc.deviceIdType).toBe(DeviceIdType.PseudoRandom);

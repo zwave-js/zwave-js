@@ -1,5 +1,6 @@
 import type { ClockCCReport, PersistValuesContext } from "@zwave-js/cc";
 import type { LogNode } from "@zwave-js/core";
+
 import type { ZWaveNode } from "../Node.js";
 
 export interface ClockHandlerStore {
@@ -55,11 +56,7 @@ export async function handleClockReport(
 		);
 		try {
 			store.busySettingClock = true;
-			await endpoint.commandClasses.Clock.set(
-				hours,
-				minutes,
-				weekday,
-			);
+			await endpoint.commandClasses.Clock.set(hours, minutes, weekday);
 		} catch {
 			// ignore
 		} finally {

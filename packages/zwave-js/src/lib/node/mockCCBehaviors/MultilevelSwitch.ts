@@ -21,6 +21,7 @@ import {
 	type MockNodeBehavior,
 	type MultilevelSwitchCCCapabilities,
 } from "@zwave-js/testing";
+
 import {
 	type MockTransition,
 	getTransitionCurrentValue,
@@ -45,9 +46,9 @@ const StateKeys = {
 function stopCurrentTransition(
 	self: MockNode,
 ): { wasSupervised: boolean } | undefined {
-	const existing = self.state.get(
-		StateKeys.transition,
-	) as MockTransition | undefined;
+	const existing = self.state.get(StateKeys.transition) as
+		| MockTransition
+		| undefined;
 	if (existing) {
 		const value = stopTransition(existing);
 		self.state.set(StateKeys.currentValue, value);
@@ -71,11 +72,9 @@ function beginTransition(
 ): number {
 	stopCurrentTransition(self);
 
-	const currentValue = (
-		self.state.get(StateKeys.currentValue)
-			?? defaultValue
-			?? 0
-	) as number;
+	const currentValue = (self.state.get(StateKeys.currentValue)
+		?? defaultValue
+		?? 0) as number;
 
 	const transition = startTransition({
 		currentValue,
@@ -131,9 +130,9 @@ const respondToMultilevelSwitchGet: MockNodeBehavior = {
 					receivedCC.endpointIndex,
 				),
 			};
-			const transition = self.state.get(
-				StateKeys.transition,
-			) as MockTransition | undefined;
+			const transition = self.state.get(StateKeys.transition) as
+				| MockTransition
+				| undefined;
 
 			let currentValue: MaybeUnknown<number>;
 			let targetValue: MaybeUnknown<number>;
@@ -144,11 +143,9 @@ const respondToMultilevelSwitchGet: MockNodeBehavior = {
 				targetValue = transition.targetValue;
 				duration = getTransitionRemainingDuration(transition);
 			} else {
-				currentValue = (
-					self.state.get(StateKeys.currentValue)
-						?? capabilities.defaultValue
-						?? UNKNOWN_STATE
-				) as MaybeUnknown<number>;
+				currentValue = (self.state.get(StateKeys.currentValue)
+					?? capabilities.defaultValue
+					?? UNKNOWN_STATE) as MaybeUnknown<number>;
 				targetValue = currentValue;
 				duration = new Duration(0, "seconds");
 			}
@@ -242,9 +239,8 @@ const respondToMultilevelSwitchStopLevelChange: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof MultilevelSwitchCCStopLevelChange) {
 			const stoppedTransition = stopCurrentTransition(self);
-			const currentValue = (
-				self.state.get(StateKeys.currentValue) ?? 0
-			) as number;
+			const currentValue = (self.state.get(StateKeys.currentValue)
+				?? 0) as number;
 
 			if (!stoppedTransition?.wasSupervised) {
 				// Send a delayed report with the final state

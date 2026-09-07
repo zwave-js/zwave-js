@@ -22,20 +22,18 @@ export enum KEXFailType {
 }
 
 /** @publicAPI */
-export const inclusionTimeouts = Object.freeze(
-	{
-		TA1: 10000,
-		TA2: 10000,
-		TA3: 10000,
-		TA4: 10000,
-		TA5: 10000,
-		TAI1: 240000,
-		TAI2: 240000,
-		TB1: 30000,
-		TB2: 240000,
-		TB3: 10000,
-		TB4: 10000,
-		TB5: 10000,
-		TBI1: 240000,
-	} as const,
-);
+export const inclusionTimeouts = Object.freeze({
+	TA1: 10000,
+	TA2: 10000,
+	TA3: 10000,
+	TA4: 10000,
+	TA5: 10000,
+	TAI1: 240000,
+	TAI2: 240000,
+	TB1: 30000,
+	TB2: 240000,
+	TB3: 10000,
+	TB4: 10000,
+	TB5: 10000,
+	TBI1: 240000,
+} as const);

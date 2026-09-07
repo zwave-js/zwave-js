@@ -75,7 +75,7 @@ tsConfig.fileNames
 					// If member is marked as public or protected and not a constructor
 					if (
 						(ts.getCombinedModifierFlags(member)
-								& ts.ModifierFlags.Public
+							& ts.ModifierFlags.Public
 							|| ts.getCombinedModifierFlags(member)
 								& ts.ModifierFlags.Protected)
 						&& member.kind !== ts.SyntaxKind.Constructor

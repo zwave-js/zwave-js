@@ -1,6 +1,6 @@
 {
 	"recommendations": [
-		"dprint.dprint",
+		"oxc.oxc-vscode",
 		"dbaeumer.vscode-eslint",
 		"EditorConfig.EditorConfig",
 		"amodio.toggle-excluded-files",

@@ -12,7 +12,9 @@ import {
 	parseNodeProtocolInfo,
 } from "@zwave-js/core";
 import { Bytes, type BytesView, pick } from "@zwave-js/shared";
+
 import type { NVM3Object } from "../object.js";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -29,9 +31,10 @@ const LR_NODEINFO_SIZE = 3;
 const EMPTY_NODEINFO_FILL = 0xff;
 const emptyNodeInfo = new Uint8Array(NODEINFO_SIZE).fill(EMPTY_NODEINFO_FILL);
 
-export interface NodeInfo
-	extends Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-{
+export interface NodeInfo extends Omit<
+	NodeProtocolInfo,
+	"hasSpecificDeviceClass"
+> {
 	nodeId: number;
 	genericDeviceClass: number;
 	specificDeviceClass?: number | null;
@@ -94,9 +97,10 @@ function encodeNodeInfo(nodeInfo: NodeInfo): Bytes {
 	return ret;
 }
 
-export interface LRNodeInfo
-	extends Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-{
+export interface LRNodeInfo extends Omit<
+	NodeProtocolInfo,
+	"hasSpecificDeviceClass"
+> {
 	nodeId: number;
 	genericDeviceClass: number;
 	specificDeviceClass?: number | null;
@@ -255,8 +259,8 @@ export class NodeInfoFileV1 extends NVMFile {
 		if (gotDeserializationOptions(options)) {
 			this.nodeInfos = [];
 			for (let i = 0; i < NODEINFOS_PER_FILE_V1; i++) {
-				const nodeId = (this.fileId - NodeInfoFileV1IDBase)
-						* NODEINFOS_PER_FILE_V1
+				const nodeId =
+					(this.fileId - NodeInfoFileV1IDBase) * NODEINFOS_PER_FILE_V1
 					+ 1
 					+ i;
 				const offset = i * NODEINFO_SIZE;
@@ -266,11 +270,7 @@ export class NodeInfoFileV1 extends NVMFile {
 				);
 				if (entry.equals(emptyNodeInfo)) continue;
 
-				const nodeInfo = parseNodeInfo(
-					nodeId,
-					entry,
-					0,
-				);
+				const nodeInfo = parseNodeInfo(nodeId, entry, 0);
 				this.nodeInfos.push(nodeInfo);
 			}
 		} else {
@@ -340,7 +340,8 @@ export class LRNodeInfoFileV5 extends NVMFile {
 		if (gotDeserializationOptions(options)) {
 			this.nodeInfos = [];
 			for (let i = 0; i < LR_NODEINFOS_PER_FILE_V5; i++) {
-				const nodeId = (this.fileId - LRNodeInfoFileV5IDBase)
+				const nodeId =
+					(this.fileId - LRNodeInfoFileV5IDBase)
 						* LR_NODEINFOS_PER_FILE_V5
 					+ 256
 					+ i;
@@ -351,11 +352,7 @@ export class LRNodeInfoFileV5 extends NVMFile {
 				);
 				if (entry.equals(emptyNodeInfo)) continue;
 
-				const nodeInfo = parseLRNodeInfo(
-					nodeId,
-					entry,
-					0,
-				);
+				const nodeInfo = parseLRNodeInfo(nodeId, entry, 0);
 				this.nodeInfos.push(nodeInfo);
 			}
 		} else {
@@ -371,8 +368,9 @@ export class LRNodeInfoFileV5 extends NVMFile {
 		const minNodeId = this.nodeInfos[0].nodeId;
 		this.fileId = nodeIdToLRNodeInfoFileIDV5(minNodeId);
 
-		this.payload = new Bytes(LR_NODEINFO_SIZE * LR_NODEINFOS_PER_FILE_V5)
-			.fill(EMPTY_NODEINFO_FILL);
+		this.payload = new Bytes(
+			LR_NODEINFO_SIZE * LR_NODEINFOS_PER_FILE_V5,
+		).fill(EMPTY_NODEINFO_FILL);
 
 		const minFileNodeId =
 			Math.floor((minNodeId - 256) / LR_NODEINFOS_PER_FILE_V5)

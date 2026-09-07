@@ -48,9 +48,9 @@ const respondToMeterGet: MockNodeBehavior = {
 					receivedCC.endpointIndex,
 				),
 			};
-			const scale = receivedCC.scale
-				?? capabilities.supportedScales[0];
-			const rateType = receivedCC.rateType
+			const scale = receivedCC.scale ?? capabilities.supportedScales[0];
+			const rateType =
+				receivedCC.rateType
 				?? capabilities.supportedRateTypes[0]
 				?? RateType.Consumed;
 
@@ -58,12 +58,13 @@ const respondToMeterGet: MockNodeBehavior = {
 				value: 0,
 				deltaTime: 0,
 			};
-			const normalizedValue = typeof value === "number"
-				? {
-					value,
-					deltaTime: 0,
-				}
-				: value;
+			const normalizedValue =
+				typeof value === "number"
+					? {
+							value,
+							deltaTime: 0,
+						}
+					: value;
 
 			const cc = new MeterCCReport({
 				nodeId: controller.ownNodeId,

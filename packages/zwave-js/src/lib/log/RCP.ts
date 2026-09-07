@@ -21,9 +21,7 @@ export interface RCPLogContext extends LogContext<"rcp"> {
 }
 
 export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
-	constructor(
-		loggers: LogContainer,
-	) {
+	constructor(loggers: LogContainer) {
 		super(loggers, RCP_LABEL);
 	}
 
@@ -76,9 +74,10 @@ export class RCPLogger extends ZWaveLoggerBase<RCPLogContext> {
 
 			this.logger.log({
 				level: RCP_LOGLEVEL,
-				secondaryTags: secondaryTags && secondaryTags.length > 0
-					? tagify(secondaryTags)
-					: undefined,
+				secondaryTags:
+					secondaryTags && secondaryTags.length > 0
+						? tagify(secondaryTags)
+						: undefined,
 				message: msg,
 				direction: getDirectionPrefix(direction),
 				context: { source: "rcp", direction },

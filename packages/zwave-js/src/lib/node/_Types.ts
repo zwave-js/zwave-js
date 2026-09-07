@@ -24,6 +24,7 @@ import type {
 	ValueUpdatedArgs,
 } from "@zwave-js/core";
 import type { AllOrNone, BytesView } from "@zwave-js/shared";
+
 import type { Endpoint } from "./Endpoint.js";
 import type { ZWaveNode } from "./Node.js";
 import type { RouteStatistics } from "./NodeStatistics.js";
@@ -44,27 +45,22 @@ export {
 	NodeStatus,
 } from "@zwave-js/core";
 
-export type NodeInterviewFailedEventArgs =
-	& {
-		errorMessage: string;
-		isFinal: boolean;
-	}
-	& AllOrNone<{
-		attempt: number;
-		maxAttempts: number;
-	}>;
+export type NodeInterviewFailedEventArgs = {
+	errorMessage: string;
+	isFinal: boolean;
+} & AllOrNone<{
+	attempt: number;
+	maxAttempts: number;
+}>;
 
 export type ZWaveNodeValueAddedArgs = ValueAddedArgs & TranslatedValueID;
-export type ZWaveNodeValueUpdatedArgs =
-	& Omit<ValueUpdatedArgs, "source">
+export type ZWaveNodeValueUpdatedArgs = Omit<ValueUpdatedArgs, "source">
 	& TranslatedValueID;
 export type ZWaveNodeValueRemovedArgs = ValueRemovedArgs & TranslatedValueID;
-export type ZWaveNodeValueNotificationArgs =
-	& ValueNotificationArgs
+export type ZWaveNodeValueNotificationArgs = ValueNotificationArgs
 	& TranslatedValueID;
 
-export type ZWaveNodeMetadataUpdatedArgs =
-	& MetadataUpdatedArgs
+export type ZWaveNodeMetadataUpdatedArgs = MetadataUpdatedArgs
 	& TranslatedValueID;
 
 export type ZWaveNodeValueAddedCallback = (
@@ -159,12 +155,15 @@ export interface ZWaveNotificationCapability_NotificationCC {
 	commandClass: CommandClasses.Notification;
 	endpoint: number;
 	/** A dictionary of supported event types and information */
-	supportedNotificationTypes: Record<number, {
-		/** The human-readable label for the notification type */
-		label: string;
-		/** A dictionary of supported events for this notification type and their human-readable labels */
-		supportedEvents: Record<number, string>;
-	}>;
+	supportedNotificationTypes: Record<
+		number,
+		{
+			/** The human-readable label for the notification type */
+			label: string;
+			/** A dictionary of supported events for this notification type and their human-readable labels */
+			supportedEvents: Record<number, string>;
+		}
+	>;
 }
 
 /**
@@ -221,7 +220,7 @@ export type ZWaveNotificationCallbackArgs_BatteryCC = {
  */
 export type ZWaveNotificationCallbackParams_BatteryCC = [
 	endpoint: Endpoint,
-	ccId: (typeof CommandClasses.Battery),
+	ccId: typeof CommandClasses.Battery,
 	args: ZWaveNotificationCallbackArgs_BatteryCC,
 ];
 
@@ -555,11 +554,10 @@ export interface LifelineRoutes {
 	nlwr?: RouteStatistics;
 }
 
-export type DateAndTime =
-	& AllOrNone<{
-		hour: number;
-		minute: number;
-	}>
+export type DateAndTime = AllOrNone<{
+	hour: number;
+	minute: number;
+}>
 	& (
 		| { weekday?: Weekday; second?: undefined }
 		| { weekday?: undefined; second?: number }

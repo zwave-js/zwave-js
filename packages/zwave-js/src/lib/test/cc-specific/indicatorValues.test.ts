@@ -1,6 +1,7 @@
 import { IndicatorCCValues } from "@zwave-js/cc";
 import { CommandClasses, Indicator } from "@zwave-js/core";
 import { pick } from "@zwave-js/shared";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -26,7 +27,7 @@ integrationTest(
 						[Indicator["Button 2 indication"]]: {
 							properties: [
 								0x01, // Multilevel
-								0x0A, // Timeout hours
+								0x0a, // Timeout hours
 							],
 						},
 						[Indicator["Button 3 indication"]]: {
@@ -41,27 +42,27 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const indicatorValueIds = node.getDefinedValueIDs()
+			const indicatorValueIds = node
+				.getDefinedValueIDs()
 				.filter((vid) => vid.commandClass === CommandClasses.Indicator)
 				// Ignore the "identify" value
 				.filter((vid) => vid.property !== "identify")
 				// Ignore the legacy v1 value
 				.filter((vid) => vid.property !== "value");
 
-			const humanReadable = indicatorValueIds.map((vid) => {
-				return pick(vid, [
-					"propertyName",
-					"propertyKeyName",
-				]);
-			}).toSorted((a, b) => {
-				let result = (a.propertyName ?? "").localeCompare(
-					b.propertyName ?? "",
-				);
-				result ||= (a.propertyKeyName ?? "").localeCompare(
-					b.propertyKeyName ?? "",
-				);
-				return result;
-			});
+			const humanReadable = indicatorValueIds
+				.map((vid) => {
+					return pick(vid, ["propertyName", "propertyKeyName"]);
+				})
+				.toSorted((a, b) => {
+					let result = (a.propertyName ?? "").localeCompare(
+						b.propertyName ?? "",
+					);
+					result ||= (a.propertyKeyName ?? "").localeCompare(
+						b.propertyKeyName ?? "",
+					);
+					return result;
+				});
 
 			// There should only be:
 			// - 3 binary/multilevel values

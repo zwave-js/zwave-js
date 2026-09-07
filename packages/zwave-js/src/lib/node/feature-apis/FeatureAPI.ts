@@ -1,4 +1,5 @@
 import { type MaybeNotKnown, type ValueID } from "@zwave-js/core";
+
 import type { EndpointBase } from "../endpoint-mixins/00_Base.js";
 
 /**

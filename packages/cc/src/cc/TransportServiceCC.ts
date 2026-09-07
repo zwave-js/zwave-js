@@ -8,6 +8,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
+
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
 	CCCommand,
@@ -40,7 +41,8 @@ export const TransportServiceTimeouts = {
 
 @commandClass(CommandClasses["Transport Service"])
 @implementedVersion(2)
-export class TransportServiceCC extends CommandClass
+export class TransportServiceCC
+	extends CommandClass
 	implements SinglecastCC<TransportServiceCC>
 {
 	declare ccCommand: TransportServiceCommand;
@@ -60,8 +62,7 @@ export function isTransportServiceEncapsulation(
 	command: CommandClass,
 ): command is
 	| TransportServiceCCFirstSegment
-	| TransportServiceCCSubsequentSegment
-{
+	| TransportServiceCCSubsequentSegment {
 	return (
 		command.ccId === CommandClasses["Transport Service"]
 		&& (command.ccCommand === TransportServiceCommand.FirstSegment
@@ -99,9 +100,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 		const ccBuffer = raw.payload.subarray(1, -2);
 		let expectedCRC = CRC16_CCITT(headerBuffer);
 		expectedCRC = CRC16_CCITT(ccBuffer, expectedCRC);
-		const actualCRC = raw.payload.readUInt16BE(
-			raw.payload.length - 2,
-		);
+		const actualCRC = raw.payload.readUInt16BE(raw.payload.length - 2);
 		validatePayload(expectedCRC === actualCRC);
 		const datagramSize = raw.payload.readUInt16BE(0);
 		const sessionId = raw.payload[2] >>> 4;
@@ -141,7 +140,8 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Transport Service re-uses the lower 3 bits of the ccCommand as payload
-		this.ccCommand = (this.ccCommand & 0b11111_000)
+		this.ccCommand =
+			(this.ccCommand & 0b11111_000)
 			| ((this.datagramSize >>> 8) & 0b111);
 
 		const ext = !!this.headerExtension && this.headerExtension.length >= 1;
@@ -198,9 +198,7 @@ export class TransportServiceCCFirstSegment extends TransportServiceCC {
 }
 
 // @publicAPI
-export interface TransportServiceCCSubsequentSegmentOptions
-	extends TransportServiceCCFirstSegmentOptions
-{
+export interface TransportServiceCCSubsequentSegmentOptions extends TransportServiceCCFirstSegmentOptions {
 	datagramOffset: number;
 }
 
@@ -235,14 +233,11 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 		const ccBuffer = raw.payload.subarray(1, -2);
 		let expectedCRC = CRC16_CCITT(headerBuffer);
 		expectedCRC = CRC16_CCITT(ccBuffer, expectedCRC);
-		const actualCRC = raw.payload.readUInt16BE(
-			raw.payload.length - 2,
-		);
+		const actualCRC = raw.payload.readUInt16BE(raw.payload.length - 2);
 		validatePayload(expectedCRC === actualCRC);
 		const datagramSize = raw.payload.readUInt16BE(0);
 		const sessionId = raw.payload[2] >>> 4;
-		const datagramOffset = ((raw.payload[2] & 0b111) << 8)
-			+ raw.payload[3];
+		const datagramOffset = ((raw.payload[2] & 0b111) << 8) + raw.payload[3];
 		let payloadOffset = 4;
 
 		// If there is a header extension, read it
@@ -278,15 +273,16 @@ export class TransportServiceCCSubsequentSegment extends TransportServiceCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		// Transport Service re-uses the lower 3 bits of the ccCommand as payload
-		this.ccCommand = (this.ccCommand & 0b11111_000)
+		this.ccCommand =
+			(this.ccCommand & 0b11111_000)
 			| ((this.datagramSize >>> 8) & 0b111);
 
 		const ext = !!this.headerExtension && this.headerExtension.length >= 1;
 		this.payload = Bytes.from([
 			this.datagramSize & 0xff,
 			((this.sessionId & 0b1111) << 4)
-			| (ext ? 0b1000 : 0)
-			| ((this.datagramOffset >>> 8) & 0b111),
+				| (ext ? 0b1000 : 0)
+				| ((this.datagramOffset >>> 8) & 0b111),
 			this.datagramOffset & 0xff,
 		]);
 		if (ext) {
@@ -362,8 +358,7 @@ export class TransportServiceCCSegmentRequest extends TransportServiceCC {
 	): TransportServiceCCSegmentRequest {
 		validatePayload(raw.payload.length >= 3);
 		const sessionId = raw.payload[1] >>> 4;
-		const datagramOffset = ((raw.payload[1] & 0b111) << 8)
-			+ raw.payload[2];
+		const datagramOffset = ((raw.payload[1] & 0b111) << 8) + raw.payload[2];
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -378,7 +373,7 @@ export class TransportServiceCCSegmentRequest extends TransportServiceCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			((this.sessionId & 0b1111) << 4)
-			| ((this.datagramOffset >>> 8) & 0b111),
+				| ((this.datagramOffset >>> 8) & 0b111),
 			this.datagramOffset & 0xff,
 		]);
 		return super.serialize(ctx);

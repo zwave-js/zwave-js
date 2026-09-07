@@ -31,9 +31,7 @@ test("the Get command should serialize correctly", async (t) => {
 			ThermostatOperatingStateCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command should be deserialized correctly", async (t) => {
@@ -43,10 +41,9 @@ test("the Report command should be deserialized correctly", async (t) => {
 			ThermostatOperatingState["Cooling"], // state
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatOperatingStateCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatOperatingStateCCReport;
 	t.expect(cc.constructor).toBe(ThermostatOperatingStateCCReport);
 
 	t.expect(cc.state).toBe(ThermostatOperatingState["Cooling"]);
@@ -59,10 +56,9 @@ test("the Report command should deserialize V2-only states", async (t) => {
 			ThermostatOperatingState["Aux Heating"],
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatOperatingStateCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatOperatingStateCCReport;
 	t.expect(cc.constructor).toBe(ThermostatOperatingStateCCReport);
 
 	t.expect(cc.state).toBe(ThermostatOperatingState["Aux Heating"]);
@@ -76,10 +72,7 @@ test("the Report command should reject invalid states during parsing", async (t)
 		]),
 	);
 
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	);
+	const cc = await CommandClass.parse(ccData, { sourceNodeId: 1 } as any);
 	t.expect(cc).toBeInstanceOf(InvalidCC);
 });
 
@@ -94,9 +87,7 @@ test("the Report command should serialize correctly", async (t) => {
 			ThermostatOperatingState["Heating"],
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Logging Supported Get command should serialize correctly", async (t) => {
@@ -104,13 +95,9 @@ test("the Logging Supported Get command should serialize correctly", async (t) =
 		nodeId: 1,
 	});
 	const expected = buildCCBuffer(
-		Uint8Array.from([
-			ThermostatOperatingStateCommand.LoggingSupportedGet,
-		]),
+		Uint8Array.from([ThermostatOperatingStateCommand.LoggingSupportedGet]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Logging Supported Report should be deserialized correctly", async (t) => {
@@ -121,10 +108,9 @@ test("the Logging Supported Report should be deserialized correctly", async (t) 
 			0x06,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatOperatingStateCCLoggingSupportedReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatOperatingStateCCLoggingSupportedReport;
 	t.expect(cc.constructor).toBe(
 		ThermostatOperatingStateCCLoggingSupportedReport,
 	);
@@ -145,14 +131,9 @@ test("the Logging Get command should serialize correctly", async (t) => {
 	});
 	// Bitmask: bit 1 = Heating, bit 2 = Cooling → 0b00000110 = 0x06
 	const expected = buildCCBuffer(
-		Uint8Array.from([
-			ThermostatOperatingStateCommand.LoggingGet,
-			0x06,
-		]),
+		Uint8Array.from([ThermostatOperatingStateCommand.LoggingGet, 0x06]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Logging Report should be deserialized correctly", async (t) => {
@@ -172,30 +153,31 @@ test("the Logging Report should be deserialized correctly", async (t) => {
 			0x2d, // usageYesterdayMinutes (45)
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatOperatingStateCCLoggingReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatOperatingStateCCLoggingReport;
 	t.expect(cc.constructor).toBe(ThermostatOperatingStateCCLoggingReport);
 
 	t.expect(cc.reportsToFollow).toBe(0);
 	t.expect(cc.loggingData.size).toBe(2);
 
-	t.expect(cc.loggingData.get(ThermostatOperatingState["Heating"]))
-		.toStrictEqual({
-			usageTodayHours: 5,
-			usageTodayMinutes: 30,
-			usageYesterdayHours: 8,
-			usageYesterdayMinutes: 0,
-		});
+	t.expect(
+		cc.loggingData.get(ThermostatOperatingState["Heating"]),
+	).toStrictEqual({
+		usageTodayHours: 5,
+		usageTodayMinutes: 30,
+		usageYesterdayHours: 8,
+		usageYesterdayMinutes: 0,
+	});
 
-	t.expect(cc.loggingData.get(ThermostatOperatingState["Cooling"]))
-		.toStrictEqual({
-			usageTodayHours: 2,
-			usageTodayMinutes: 15,
-			usageYesterdayHours: 3,
-			usageYesterdayMinutes: 45,
-		});
+	t.expect(
+		cc.loggingData.get(ThermostatOperatingState["Cooling"]),
+	).toStrictEqual({
+		usageTodayHours: 2,
+		usageTodayMinutes: 15,
+		usageYesterdayHours: 3,
+		usageYesterdayMinutes: 45,
+	});
 });
 
 test("the Logging Report should mask reserved bits in Operating State Log Type", async (t) => {
@@ -211,10 +193,9 @@ test("the Logging Report should mask reserved bits in Operating State Log Type",
 			0x04,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatOperatingStateCCLoggingReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatOperatingStateCCLoggingReport;
 
 	t.expect(cc.loggingData.has(ThermostatOperatingState["Heating"])).toBe(
 		true,
@@ -223,12 +204,15 @@ test("the Logging Report should mask reserved bits in Operating State Log Type",
 
 test("the Logging Report should serialize correctly", async (t) => {
 	const loggingData = new Map([
-		[ThermostatOperatingState["Heating"], {
-			usageTodayHours: 5,
-			usageTodayMinutes: 30,
-			usageYesterdayHours: 8,
-			usageYesterdayMinutes: 0,
-		}],
+		[
+			ThermostatOperatingState["Heating"],
+			{
+				usageTodayHours: 5,
+				usageTodayMinutes: 30,
+				usageYesterdayHours: 8,
+				usageYesterdayMinutes: 0,
+			},
+		],
 	]);
 	const cc = new ThermostatOperatingStateCCLoggingReport({
 		nodeId: 1,
@@ -246,18 +230,15 @@ test("the Logging Report should serialize correctly", async (t) => {
 			0x00,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("deserializing an unsupported command should return an unspecified version of ThermostatOperatingStateCC", async (t) => {
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as ThermostatOperatingStateCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as ThermostatOperatingStateCC;
 	t.expect(cc.constructor).toBe(ThermostatOperatingStateCC);
 });

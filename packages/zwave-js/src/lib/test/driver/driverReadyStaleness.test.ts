@@ -1,5 +1,6 @@
 import { Bytes } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
+
 import { DriverMode } from "../../driver/DriverMode.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -52,9 +53,7 @@ integrationTest(
 
 			mockController.serial.mode = undefined;
 
-			mockController.mockPort.emitData(
-				Bytes.from(">\r\n", "ascii"),
-			);
+			mockController.mockPort.emitData(Bytes.from(">\r\n", "ascii"));
 
 			await wait(100);
 

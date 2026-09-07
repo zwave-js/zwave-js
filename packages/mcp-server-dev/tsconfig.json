@@ -15,11 +15,6 @@
 			"path": "../shared/tsconfig.build.json"
 		}
 	],
-	"include": [
-		"src/**/*"
-	],
-	"exclude": [
-		"build/**/*",
-		"**/*.test.ts"
-	]
+	"include": ["src/**/*"],
+	"exclude": ["build/**/*", "**/*.test.ts"]
 }

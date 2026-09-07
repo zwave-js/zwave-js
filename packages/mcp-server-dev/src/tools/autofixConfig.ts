@@ -1,8 +1,10 @@
+import { readFile, writeFile } from "node:fs/promises";
+
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { clearTemplateCache } from "@zwave-js/config";
 import spawn from "nano-spawn";
-import { readFile, writeFile } from "node:fs/promises";
 import type { ASTNode } from "vscode-json-languageservice";
+
 import {
 	type ObjectPropertyASTNode,
 	tryExpandPropertyRange,
@@ -90,9 +92,9 @@ async function applyEslintFixes(filename: string): Promise<string[]> {
 		results = JSON.parse(eslintResult.stdout);
 	} catch (parseError) {
 		throw new Error(
-			`Failed to parse ESLint output: ${
-				String(parseError)
-			}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
+			`Failed to parse ESLint output: ${String(
+				parseError,
+			)}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
 		);
 	}
 
@@ -103,9 +105,7 @@ async function applyEslintFixes(filename: string): Promise<string[]> {
 	const fileResult = results[0];
 	const errorsWithSuggestions = fileResult.messages.filter(
 		(msg) =>
-			msg.severity === 2
-			&& msg.suggestions
-			&& msg.suggestions.length > 0,
+			msg.severity === 2 && msg.suggestions && msg.suggestions.length > 0,
 	);
 
 	if (errorsWithSuggestions.length === 0) return [];
@@ -124,7 +124,8 @@ async function applyEslintFixes(filename: string): Promise<string[]> {
 	for (const error of errorsWithSuggestions) {
 		const suggestion = error.suggestions![0]; // Use the first suggestion
 		const [start, end] = suggestion.fix.range;
-		modifiedContent = modifiedContent.slice(0, start)
+		modifiedContent =
+			modifiedContent.slice(0, start)
 			+ suggestion.fix.text
 			+ modifiedContent.slice(end);
 
@@ -250,9 +251,9 @@ async function handleAutofixConfig(
 			content: [
 				{
 					type: "text",
-					text: `Failed to fix import overrides in ${filename}: ${
-						String(error)
-					}`,
+					text: `Failed to fix import overrides in ${filename}: ${String(
+						error,
+					)}`,
 				},
 			],
 			isError: true,
@@ -279,9 +280,9 @@ async function handleAutofixConfig(
 	}
 	if (remainingIssues.length > 0) {
 		sections.push(
-			`Import-override issues requiring manual attention:\n${
-				remainingIssues.map((i) => `- ${i}`).join("\n")
-			}`,
+			`Import-override issues requiring manual attention:\n${remainingIssues
+				.map((i) => `- ${i}`)
+				.join("\n")}`,
 		);
 	}
 

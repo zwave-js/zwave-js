@@ -11,6 +11,7 @@ import {
 } from "@zwave-js/core";
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+
 import type { Driver } from "../../../driver/Driver.js";
 import type { ZWaveController } from "../../Controller.js";
 import type { ControllerProprietaryCommon } from "../../Proprietary.js";
@@ -73,22 +74,15 @@ export function rfRegionToZWaveMeRegion(
 }
 
 /** Whether the Serial API firmware supports reading the configured RF region */
-function supportsGetRegion(
-	firmwareVersion: MaybeNotKnown<string>,
-): boolean {
+function supportsGetRegion(firmwareVersion: MaybeNotKnown<string>): boolean {
 	return sdkVersionGte(firmwareVersion, REGION_GET_MIN_VERSION) ?? false;
 }
 
 /**
  * Proprietary Serial API support for Z-Wave.me controllers (UZB / Razberry up to Gen 5).
  */
-export class ControllerProprietary_ZWaveMe
-	implements ControllerProprietaryCommon
-{
-	constructor(
-		driver: Driver,
-		controller: ZWaveController,
-	) {
+export class ControllerProprietary_ZWaveMe implements ControllerProprietaryCommon {
+	constructor(driver: Driver, controller: ZWaveController) {
 		this.driver = driver;
 		this.controller = controller;
 	}
@@ -106,9 +100,10 @@ export class ControllerProprietary_ZWaveMe
 				this.controller.setCachedRFRegion(rfRegion);
 			}
 			this.driver.controllerLog.print(
-				`Z-Wave.me controller RF region: ${
-					getEnumMemberName(ZWaveMeRegion, region)
-				}`,
+				`Z-Wave.me controller RF region: ${getEnumMemberName(
+					ZWaveMeRegion,
+					region,
+				)}`,
 			);
 		} catch {
 			this.driver.controllerLog.print(
@@ -147,10 +142,12 @@ export class ControllerProprietary_ZWaveMe
 	 * so a short delay is expected before it becomes responsive again.
 	 */
 	public async setRegionProprietary(region: ZWaveMeRegion): Promise<void> {
-		const started = this.driver.waitForMessage(
-			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
-			SERIAL_API_STARTED_TIMEOUT,
-		).catch(() => undefined);
+		const started = this.driver
+			.waitForMessage(
+				(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+				SERIAL_API_STARTED_TIMEOUT,
+			)
+			.catch(() => undefined);
 
 		const cmd = new Message({
 			type: MessageType.Request,
@@ -190,9 +187,10 @@ export class ControllerProprietary_ZWaveMe
 		const zwRegion = rfRegionToZWaveMeRegion(region);
 		if (zwRegion == undefined) {
 			throw new ZWaveError(
-				`The region ${
-					getEnumMemberName(RFRegion, region)
-				} is not supported by this controller!`,
+				`The region ${getEnumMemberName(
+					RFRegion,
+					region,
+				)} is not supported by this controller!`,
 				ZWaveErrorCodes.Driver_NotSupported,
 			);
 		}

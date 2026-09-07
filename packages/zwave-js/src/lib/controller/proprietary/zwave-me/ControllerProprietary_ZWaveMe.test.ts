@@ -1,5 +1,6 @@
 import { RFRegion } from "@zwave-js/core";
 import { test } from "vitest";
+
 import {
 	ZWaveMeRegion,
 	rfRegionToZWaveMeRegion,

@@ -416,10 +416,7 @@
 		"unit": "0.1 seconds",
 		"valueSize": 1,
 		"defaultValue": 3,
-		"allowed": [
-			{ "value": 0 },
-			{ "range": [3, 50] }
-		],
+		"allowed": [{ "value": 0 }, { "range": [3, 50] }],
 		"options": [
 			{
 				"label": "Automatic time",
@@ -434,10 +431,7 @@
 		"valueSize": 2,
 		"defaultValue": 120,
 		"unsigned": true,
-		"allowed": [
-			{ "range": [1, 32000] },
-			{ "value": 65000 }
-		],
+		"allowed": [{ "range": [1, 32000] }, { "value": 65000 }],
 		"options": [
 			{
 				"label": "unlimited time",

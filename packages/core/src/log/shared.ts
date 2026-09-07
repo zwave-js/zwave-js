@@ -1,5 +1,6 @@
 import type { TransformableInfo } from "logform";
 import type Transport from "winston-transport";
+
 import type { LogPayload, MessageRecord } from "./LogPayload.js";
 import type { LogContainer } from "./traits.js";
 
@@ -19,8 +20,8 @@ export function getDirectionPrefix(direction: DataDirection) {
 	return direction === "inbound"
 		? "« "
 		: direction === "outbound"
-		? "» "
-		: "  ";
+			? "» "
+			: "  ";
 }
 /** The space the directional arrows, grouping brackets and padding occupies */
 export const CONTROL_CHAR_WIDTH = 2;
@@ -34,9 +35,9 @@ export const LOG_WIDTH = 80;
 /** The width of the columns containing the timestamp and channel */
 export const LOG_PREFIX_WIDTH = 20;
 
-export interface ZWaveLogInfo<TContext extends LogContext = LogContext>
-	extends Omit<TransformableInfo, "message">
-{
+export interface ZWaveLogInfo<
+	TContext extends LogContext = LogContext,
+> extends Omit<TransformableInfo, "message"> {
 	direction: string;
 	/** Primary tags are printed before the message and must fit into the first line.
 	 * They don't have to be enclosed in square brackets */

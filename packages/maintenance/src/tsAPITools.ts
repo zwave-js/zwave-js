@@ -1,6 +1,7 @@
-import { CommandClasses } from "@zwave-js/core";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { CommandClasses } from "@zwave-js/core";
 import ts from "typescript";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

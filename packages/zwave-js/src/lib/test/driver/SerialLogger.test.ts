@@ -1,3 +1,5 @@
+import { pseudoRandomBytes } from "node:crypto";
+
 import {
 	createDefaultTransportFormat,
 	log as createZWaveLogContainer,
@@ -6,7 +8,6 @@ import { SpyTransport, assertMessage } from "@zwave-js/core/test";
 import { SerialLogger } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import colors from "ansi-colors";
-import { pseudoRandomBytes } from "node:crypto";
 import { beforeEach, test as baseTest } from "vitest";
 
 interface LocalTestContext {
@@ -49,7 +50,10 @@ beforeEach<LocalTestContext>(({ context, expect }) => {
 	context.spyTransport.spy.resetHistory();
 });
 
-test.sequential("logs single-byte messages correctly: inbound ACK", ({ context, expect }) => {
+test.sequential("logs single-byte messages correctly: inbound ACK", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.ACK("inbound");
 	const alignRight = " ".repeat(80 - 14);
@@ -58,7 +62,10 @@ test.sequential("logs single-byte messages correctly: inbound ACK", ({ context, 
 	});
 });
 
-test.sequential("logs single-byte messages correctly: outbound ACK", ({ context, expect }) => {
+test.sequential("logs single-byte messages correctly: outbound ACK", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.ACK("outbound");
 	const alignRight = " ".repeat(80 - 14);
@@ -67,7 +74,10 @@ test.sequential("logs single-byte messages correctly: outbound ACK", ({ context,
 	});
 });
 
-test.sequential("logs single-byte messages correctly: inbound NAK", ({ context, expect }) => {
+test.sequential("logs single-byte messages correctly: inbound NAK", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.NAK("inbound");
 	const alignRight = " ".repeat(80 - 14);
@@ -76,7 +86,10 @@ test.sequential("logs single-byte messages correctly: inbound NAK", ({ context, 
 	});
 });
 
-test.sequential("logs single-byte messages correctly: outbound NAK", ({ context, expect }) => {
+test.sequential("logs single-byte messages correctly: outbound NAK", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.NAK("outbound");
 	const alignRight = " ".repeat(80 - 14);
@@ -85,7 +98,10 @@ test.sequential("logs single-byte messages correctly: outbound NAK", ({ context,
 	});
 });
 
-test.sequential("logs single-byte messages correctly: inbound CAN", ({ context, expect }) => {
+test.sequential("logs single-byte messages correctly: inbound CAN", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.CAN("inbound");
 	const alignRight = " ".repeat(80 - 14);
@@ -94,7 +110,10 @@ test.sequential("logs single-byte messages correctly: inbound CAN", ({ context, 
 	});
 });
 
-test.sequential("logs single-byte messages correctly: outbound CAN", ({ context, expect }) => {
+test.sequential("logs single-byte messages correctly: outbound CAN", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.CAN("outbound");
 	const alignRight = " ".repeat(80 - 14);
@@ -104,7 +123,10 @@ test.sequential("logs single-byte messages correctly: outbound CAN", ({ context,
 });
 
 for (const msg of ["ACK", "NAK", "CAN"] as const) {
-	test.sequential(`colors single-byte messages like tags: ${msg}`, ({ context, expect }) => {
+	test.sequential(`colors single-byte messages like tags: ${msg}`, ({
+		context,
+		expect,
+	}) => {
 		const { serialLogger, spyTransport } = context;
 		serialLogger[msg]("inbound");
 
@@ -118,7 +140,10 @@ for (const msg of ["ACK", "NAK", "CAN"] as const) {
 	});
 }
 
-test.sequential("logs raw data correctly: short buffer, inbound", ({ context, expect }) => {
+test.sequential("logs raw data correctly: short buffer, inbound", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.data("inbound", Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]));
 	const alignRight = " ".repeat(80 - 30);
@@ -127,7 +152,10 @@ test.sequential("logs raw data correctly: short buffer, inbound", ({ context, ex
 	});
 });
 
-test.sequential("logs raw data correctly: short buffer, outbound", ({ context, expect }) => {
+test.sequential("logs raw data correctly: short buffer, outbound", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	serialLogger.data("outbound", Uint8Array.from([0x55, 4, 3, 2, 1]));
 	const alignRight = " ".repeat(80 - 24);
@@ -136,7 +164,10 @@ test.sequential("logs raw data correctly: short buffer, outbound", ({ context, e
 	});
 });
 
-test.sequential("wraps longer buffers into multiple lines", ({ context, expect }) => {
+test.sequential("wraps longer buffers into multiple lines", ({
+	context,
+	expect,
+}) => {
 	const { serialLogger, spyTransport } = context;
 	// We have room for 67 chars in the first line
 	const expected = pseudoRandomBytes(39);
@@ -172,8 +203,7 @@ test.sequential("logs discarded data correctly", ({ context, expect }) => {
 	serialLogger.discarded(Bytes.from("02020202020202", "hex"));
 	const alignRight = " ".repeat(80 - 53);
 	assertMessage(expect, spyTransport, {
-		message:
-			`« [DISCARDED] invalid data 0x02020202020202 ${alignRight}(7 bytes)`,
+		message: `« [DISCARDED] invalid data 0x02020202020202 ${alignRight}(7 bytes)`,
 	});
 });
 
@@ -191,8 +221,7 @@ test.sequential("logs long messages correctly", ({ context, expect }) => {
 		"This is a very long message that should be broken into multiple lines maybe sometimes...",
 	);
 	assertMessage(expect, spyTransport, {
-		message:
-			`  This is a very long message that should be broken into multiple lines maybe so
+		message: `  This is a very long message that should be broken into multiple lines maybe so
   metimes...`,
 	});
 });

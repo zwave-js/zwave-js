@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import type { JSONCRule } from "../utils.js";
 
 function isSurroundedByWhitespace(str: string) {
@@ -31,8 +32,7 @@ export const noSurroundingWhitespace: JSONCRule.RuleModule = {
 	},
 	meta: {
 		docs: {
-			description:
-				`Prevents strings in configuration files to be surrounded by whitespace`,
+			description: `Prevents strings in configuration files to be surrounded by whitespace`,
 		},
 		fixable: "code",
 		schema: false,

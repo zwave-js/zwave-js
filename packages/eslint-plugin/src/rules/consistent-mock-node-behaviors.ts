@@ -67,7 +67,7 @@ export const consistentMockNodeBehaviors = ESLintUtils.RuleCreator.withoutDocs({
 			// Union types that include MockNodeResponse (e.g., MockNodeResponse | undefined)
 			if (returnType.type === AST_NODE_TYPES.TSUnionType) {
 				return returnType.types.some((t) =>
-					isMockNodeResponseReturnType(t)
+					isMockNodeResponseReturnType(t),
 				);
 			}
 

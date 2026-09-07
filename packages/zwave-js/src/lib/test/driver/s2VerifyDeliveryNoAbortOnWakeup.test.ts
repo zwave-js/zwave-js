@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCReport,
 	Security2CC,
@@ -21,7 +23,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -73,9 +75,9 @@ integrationTest(
 			// Sync the SPAN by sending a command to the node
 			node.markAsAwake();
 			mockNode.autoAckControllerFrames = true;
-			await node.commandClasses.Basic
-				.withOptions({ useSupervision: false })
-				.set(0);
+			await node.commandClasses.Basic.withOptions({
+				useSupervision: false,
+			}).set(0);
 			node.markAsAsleep();
 			mockNode.autoAckControllerFrames = false;
 
@@ -91,11 +93,13 @@ integrationTest(
 				nodeId: node.id,
 				currentValue: 99,
 			});
-			driver.sendCommand(cc, {
-				priority: MessagePriority.Immediate,
-				maxSendAttempts: 1,
-				transmitOptions: TransmitOptions.DEFAULT_NOACK,
-			}).catch(() => {});
+			driver
+				.sendCommand(cc, {
+					priority: MessagePriority.Immediate,
+					maxSendAttempts: 1,
+					transmitOptions: TransmitOptions.DEFAULT_NOACK,
+				})
+				.catch(() => {});
 
 			// Wait for the driver to process everything
 			// (S2 verify delivery + wakeup notification)
@@ -133,17 +137,15 @@ integrationTest(
 			t.expect(abortMessages.length).toBe(0);
 
 			// Assert: The BasicCCReport should not be re-transmitted.
-			const basicReports = mockController.receivedHostMessages
-				.filter(
-					(msg) =>
-						msg instanceof SendDataBridgeRequest
-						&& (msg.command instanceof BasicCCReport
-							|| (msg.command
-									instanceof Security2CCMessageEncapsulation
-								&& msg.command
-										.encapsulated
-									instanceof BasicCCReport)),
-				);
+			const basicReports = mockController.receivedHostMessages.filter(
+				(msg) =>
+					msg instanceof SendDataBridgeRequest
+					&& (msg.command instanceof BasicCCReport
+						|| (msg.command
+							instanceof Security2CCMessageEncapsulation
+							&& msg.command.encapsulated
+								instanceof BasicCCReport)),
+			);
 			t.expect(basicReports.length).toBe(1);
 
 			// The node should be sent to sleep again

@@ -58,9 +58,9 @@ function parseEnum<T extends string>(
 	if (value == undefined || value === "") return fallback;
 	if ((allowed as readonly string[]).includes(value)) return value as T;
 	throw new SemanticEnvError(
-		`Invalid value "${value}" for ${envVar}. Expected one of: ${
-			allowed.join(", ")
-		}`,
+		`Invalid value "${value}" for ${envVar}. Expected one of: ${allowed.join(
+			", ",
+		)}`,
 	);
 }
 
@@ -84,11 +84,14 @@ export function parseSemanticEnv(
 			["ask", "allow", "deny"] as const,
 			"ask",
 		),
-		modelCacheDir: env.ZWAVE_DEV_SEMANTIC_MODEL_CACHE_DIR?.trim()
+		modelCacheDir:
+			env.ZWAVE_DEV_SEMANTIC_MODEL_CACHE_DIR?.trim()
 			|| defaultModelCacheDir(env),
-		indexCacheDir: env.ZWAVE_DEV_SEMANTIC_INDEX_CACHE_DIR?.trim()
+		indexCacheDir:
+			env.ZWAVE_DEV_SEMANTIC_INDEX_CACHE_DIR?.trim()
 			|| defaultIndexCacheDir(env),
-		consentFile: env.ZWAVE_DEV_SEMANTIC_CONSENT_FILE?.trim()
+		consentFile:
+			env.ZWAVE_DEV_SEMANTIC_CONSENT_FILE?.trim()
 			|| defaultConsentFile(env),
 	};
 }

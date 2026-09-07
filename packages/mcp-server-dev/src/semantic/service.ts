@@ -1,8 +1,11 @@
-import { clearTemplateCache } from "@zwave-js/config";
 import { relative, resolve as resolvePath, sep } from "node:path";
+
+import { clearTemplateCache } from "@zwave-js/config";
 import PQueue from "p-queue";
+
 import { DEVICES_DIR } from "../configEnv.js";
 import { resolveParamsForFirmware } from "../tools/resolveParam.js";
+
 import {
 	buildCorpus,
 	buildSemanticText,
@@ -39,7 +42,10 @@ import type {
 } from "./types.js";
 
 export class SemanticSearchError extends Error {
-	constructor(message: string, public readonly code: string) {
+	constructor(
+		message: string,
+		public readonly code: string,
+	) {
 		super(message);
 		this.name = "SemanticSearchError";
 	}
@@ -70,12 +76,16 @@ const MODEL_INFO: ModelInfo = {
 	revision: EMBEDDING_CACHE_KEY.revision,
 };
 
-export type ParameterSearchResult =
-	& Omit<ParameterCorpusRecord, "id" | "semanticHash" | "semanticText">
+export type ParameterSearchResult = Omit<
+	ParameterCorpusRecord,
+	"id" | "semanticHash" | "semanticText"
+>
 	& RankedScores;
 
-export type TemplateSearchResult =
-	& Omit<TemplateCorpusRecord, "id" | "semanticHash" | "semanticText">
+export type TemplateSearchResult = Omit<
+	TemplateCorpusRecord,
+	"id" | "semanticHash" | "semanticText"
+>
 	& RankedScores;
 
 export interface SearchResponse {
@@ -122,13 +132,13 @@ export interface PurposeSuggestionResponse {
 	query:
 		| { text: string }
 		| {
-			file: string;
-			relativeFile: string;
-			parameterNumber: number;
-			valueBitMask?: number;
-			label?: string;
-			description?: string;
-		};
+				file: string;
+				relativeFile: string;
+				parameterNumber: number;
+				valueBitMask?: number;
+				label?: string;
+				description?: string;
+		  };
 	provider: ModelInfo;
 	suggestions: PurposeSuggestion[];
 }
@@ -199,14 +209,16 @@ export class SemanticSearchService {
 	private provider: LocalEmbeddingProvider | undefined;
 	private cache: EmbeddingCache | undefined;
 
-	constructor(options: {
-		env?: SemanticEnvConfig;
-		/** Getter for the elicitation callback: called lazily (only once a local
-		 * model download actually needs consent), so it can reflect client
-		 * capabilities discovered after this service is constructed. Return
-		 * `undefined` if the connected client does not support elicitation. */
-		getElicit?: () => ElicitConsentFn | undefined;
-	} = {}) {
+	constructor(
+		options: {
+			env?: SemanticEnvConfig;
+			/** Getter for the elicitation callback: called lazily (only once a local
+			 * model download actually needs consent), so it can reflect client
+			 * capabilities discovered after this service is constructed. Return
+			 * `undefined` if the connected client does not support elicitation. */
+			getElicit?: () => ElicitConsentFn | undefined;
+		} = {},
+	) {
 		this.env = options.env ?? parseSemanticEnv();
 		this.getElicit = options.getElicit;
 	}
@@ -251,9 +263,8 @@ export class SemanticSearchService {
 
 	private getPurposePrototypes(corpus: Corpus): Promise<PurposePrototype[]> {
 		const cache = this.getCache();
-		return buildPurposePrototypes(
-			corpus.parameters,
-			(hash) => cache.get(hash),
+		return buildPurposePrototypes(corpus.parameters, (hash) =>
+			cache.get(hash),
 		);
 	}
 
@@ -274,8 +285,10 @@ export class SemanticSearchService {
 		// thousands of small reads
 		const queue = new PQueue({ concurrency: 64 });
 		const probed = await queue.addAll(
-			[...textByHash].map(([hash, text]) => async () =>
-				(await cache.get(hash)) ? undefined : { hash, text }
+			[...textByHash].map(
+				([hash, text]) =>
+					async () =>
+						(await cache.get(hash)) ? undefined : { hash, text },
 			),
 		);
 		const missing = probed.filter((entry) => entry != undefined);
@@ -345,18 +358,14 @@ export class SemanticSearchService {
 		const [rankedParameters, rankedTemplates] = await Promise.all([
 			filters?.kind === "template"
 				? []
-				: this.rank(
-					corpus.parameters,
-					rankingQuery,
-					(r) => this.matchesFilters(filters, r.device, r.semantics),
-				),
+				: this.rank(corpus.parameters, rankingQuery, (r) =>
+						this.matchesFilters(filters, r.device, r.semantics),
+					),
 			filters?.kind === "parameter"
 				? []
-				: this.rank(
-					corpus.templates,
-					rankingQuery,
-					(r) => this.matchesFilters(filters, undefined, r.semantics),
-				),
+				: this.rank(corpus.templates, rankingQuery, (r) =>
+						this.matchesFilters(filters, undefined, r.semantics),
+					),
 		]);
 
 		return {
@@ -431,10 +440,12 @@ export class SemanticSearchService {
 			};
 		}
 
-		const matches = corpus.parameters.filter((p) =>
-			p.relativeFile === relativeFile
-			&& p.parameterNumber === parameter
-			&& (valueBitMask == undefined || p.valueBitMask === valueBitMask)
+		const matches = corpus.parameters.filter(
+			(p) =>
+				p.relativeFile === relativeFile
+				&& p.parameterNumber === parameter
+				&& (valueBitMask == undefined
+					|| p.valueBitMask === valueBitMask),
 		);
 		if (matches.length === 0) {
 			throw new SemanticSearchError(
@@ -448,7 +459,8 @@ export class SemanticSearchService {
 			if (valueBitMask == undefined && bitMasks.size > 1) {
 				throw ambiguousPartialParameterError(parameter, filename);
 			}
-			const conditions = matches.map((m) => m.condition ?? "(none)")
+			const conditions = matches
+				.map((m) => m.condition ?? "(none)")
 				.join(", ");
 			throw new SemanticSearchError(
 				`Parameter #${parameter} in ${filename} has ${matches.length} `
@@ -524,12 +536,12 @@ export class SemanticSearchService {
 				diffs: diffStructure(queryParam.structure, r.record.structure),
 			}));
 
-		const neighbors = rankedParameters.slice(0, NEIGHBOR_EVIDENCE_LIMIT)
+		const neighbors = rankedParameters
+			.slice(0, NEIGHBOR_EVIDENCE_LIMIT)
 			.filter((r) => r.score >= NEIGHBOR_EVIDENCE_MIN_SCORE);
 
-		const templateImportSuggestions = this.buildTemplateSuggestions(
-			neighbors,
-		);
+		const templateImportSuggestions =
+			this.buildTemplateSuggestions(neighbors);
 		const purposeSuggestions = this.buildPurposeSuggestions(
 			queryEmbedding,
 			await this.getPurposePrototypes(corpus),
@@ -601,10 +613,7 @@ export class SemanticSearchService {
 					purpose: prototype.purpose,
 					score,
 					sampleSize: prototype.sampleSize,
-					confidence: purposeConfidence(
-						score,
-						prototype.sampleSize,
-					),
+					confidence: purposeConfidence(score, prototype.sampleSize),
 					examples: prototype.examples.map((example) => ({
 						file: example.relativeFile,
 						line: example.line,

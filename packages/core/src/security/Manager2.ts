@@ -6,6 +6,7 @@ import {
 	createWrappingCounter,
 	getEnumMemberName,
 } from "@zwave-js/shared";
+
 import {
 	computeNoncePRK,
 	deriveMEI,
@@ -23,6 +24,7 @@ import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { deflateSync } from "../util/compression.js";
 import { highResTimestamp } from "../util/date.js";
 import { encodeBitMask } from "../values/Primitive.js";
+
 import {
 	MPANState,
 	type MPANTableEntry,
@@ -150,12 +152,10 @@ export class SecurityManager2 {
 		const keys = this.networkKeys.get(securityClass);
 		if (!keys) {
 			throw new ZWaveError(
-				`The network key for the security class ${
-					getEnumMemberName(
-						SecurityClass,
-						securityClass,
-					)
-				} has not been set up yet!`,
+				`The network key for the security class ${getEnumMemberName(
+					SecurityClass,
+					securityClass,
+				)} has not been set up yet!`,
 				ZWaveErrorCodes.Security2CC_NotInitialized,
 			);
 		}
@@ -303,9 +303,8 @@ export class SecurityManager2 {
 		sequenceNumber: number,
 	): boolean {
 		return (
-			this.peerSequenceNumbers
-				.get(peerNodeId)
-				?.includes(sequenceNumber) ?? false
+			this.peerSequenceNumbers.get(peerNodeId)?.includes(sequenceNumber)
+			?? false
 		);
 	}
 
@@ -369,9 +368,9 @@ export class SecurityManager2 {
 		const nonce = (await spanState.rng.generate(16)).subarray(0, 13);
 		spanState.currentSPAN = store
 			? {
-				nonce,
-				expires: highResTimestamp() + SINGLECAST_NONCE_EXPIRY_NS,
-			}
+					nonce,
+					expires: highResTimestamp() + SINGLECAST_NONCE_EXPIRY_NS,
+				}
 			: undefined;
 		return nonce;
 	}
@@ -430,8 +429,10 @@ export class SecurityManager2 {
 		// Compute the next MPAN
 		const stateN = this.mpanStates.get(groupId)!;
 		// The specs don't mention this step for multicast, but the IV for AES-CCM is limited to 13 bytes
-		const ret = (await encryptAES128ECB(stateN, keys.keyMPAN))
-			.subarray(0, 13);
+		const ret = (await encryptAES128ECB(stateN, keys.keyMPAN)).subarray(
+			0,
+			13,
+		);
 		// Increment the inner state
 		increment(stateN);
 
@@ -472,8 +473,10 @@ export class SecurityManager2 {
 		// Compute the next MPAN
 		const stateN = mpanState.currentMPAN;
 		// The specs don't mention this step for multicast, but the IV for AES-CCM is limited to 13 bytes
-		const ret = (await encryptAES128ECB(stateN, keys.keyMPAN))
-			.subarray(0, 13);
+		const ret = (await encryptAES128ECB(stateN, keys.keyMPAN)).subarray(
+			0,
+			13,
+		);
 		// Increment the inner state
 		increment(stateN);
 		return ret;

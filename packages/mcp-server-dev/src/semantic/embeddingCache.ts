@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+
 import { writeFileAtomic } from "./fsUtils.js";
 import { sha256Hex, stableStringify } from "./hash.js";
 
@@ -23,16 +24,18 @@ function isValidEntry(
 ): value is EmbeddingCacheEntry {
 	if (value == null || typeof value !== "object") return false;
 	const v = value as Record<string, unknown>;
-	return v.schemaVersion === key.schemaVersion
+	return (
+		v.schemaVersion === key.schemaVersion
 		&& v.model === key.model
 		&& v.revision === key.revision
 		&& v.dimensions === key.dimensions
 		&& v.semanticHash === semanticHash
 		&& Array.isArray(v.vector)
 		&& v.vector.length === key.dimensions
-		&& v.vector.every((entry) =>
-			typeof entry === "number" && Number.isFinite(entry)
-		);
+		&& v.vector.every(
+			(entry) => typeof entry === "number" && Number.isFinite(entry),
+		)
+	);
 }
 
 /**
@@ -45,7 +48,10 @@ export class EmbeddingCache {
 	private readonly namespaceDir: string;
 	private readonly memory = new Map<string, number[]>();
 
-	constructor(cacheDir: string, private readonly key: EmbeddingCacheKey) {
+	constructor(
+		cacheDir: string,
+		private readonly key: EmbeddingCacheKey,
+	) {
 		const namespace = sha256Hex(stableStringify(key)).slice(0, 16);
 		this.namespaceDir = join(cacheDir, namespace);
 	}
@@ -74,8 +80,8 @@ export class EmbeddingCache {
 	async set(semanticHash: string, vector: number[]): Promise<void> {
 		if (
 			vector.length !== this.key.dimensions
-			|| vector.some((entry) =>
-				typeof entry !== "number" || !Number.isFinite(entry)
+			|| vector.some(
+				(entry) => typeof entry !== "number" || !Number.isFinite(entry),
 			)
 		) {
 			throw new Error(

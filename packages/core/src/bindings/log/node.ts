@@ -5,6 +5,7 @@ import { configs } from "triple-beam";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import type Transport from "winston-transport";
+
 import { colorizer } from "../../log/Colorizer.js";
 import {
 	combine,
@@ -61,9 +62,7 @@ export function createDefaultTransportFormat(
 ): Format {
 	const formats = [
 		// overwrite the default timestamp format if necessary
-		shortTimestamps
-			? timestamp(timestampFormatShort)
-			: undefined,
+		shortTimestamps ? timestamp(timestampFormatShort) : undefined,
 		formatLogMessage,
 		colorize ? colorizer() : undefined,
 		printLogMessage(shortTimestamps),
@@ -141,16 +140,17 @@ class ZWaveLogContainer extends winston.Container implements LogContainer {
 				delete config[key];
 			}
 		}
-		const changedLoggingTarget = (config.logToFile != undefined
-			&& config.logToFile !== this.logConfig.logToFile)
+		const changedLoggingTarget =
+			(config.logToFile != undefined
+				&& config.logToFile !== this.logConfig.logToFile)
 			|| (config.forceConsole != undefined
 				&& config.forceConsole !== this.logConfig.forceConsole);
 
 		if (typeof config.level === "number") {
 			config.level = loglevelFromNumber(config.level);
 		}
-		const changedLogLevel = config.level != undefined
-			&& config.level !== this.logConfig.level;
+		const changedLogLevel =
+			config.level != undefined && config.level !== this.logConfig.level;
 
 		if (
 			config.filename != undefined
@@ -158,7 +158,8 @@ class ZWaveLogContainer extends winston.Container implements LogContainer {
 		) {
 			config.filename += "_%DATE%.log";
 		}
-		const changedFilename = config.filename != undefined
+		const changedFilename =
+			config.filename != undefined
 			&& config.filename !== this.logConfig.filename;
 
 		if (config.maxFiles != undefined) {
@@ -170,7 +171,8 @@ class ZWaveLogContainer extends winston.Container implements LogContainer {
 				delete config.maxFiles;
 			}
 		}
-		const changedMaxFiles = config.maxFiles != undefined
+		const changedMaxFiles =
+			config.maxFiles != undefined
 			&& config.maxFiles !== this.logConfig.maxFiles;
 
 		this.logConfig = Object.assign(this.logConfig, config);
@@ -183,8 +185,9 @@ class ZWaveLogContainer extends winston.Container implements LogContainer {
 		// When the log target (console, file, filename) was changed, recreate the internal transports
 		// because at least the filename does not update dynamically
 		// Also do this when configuring the logger for the first time
-		const recreateInternalTransports = (this.fileTransport == undefined
-			&& this.consoleTransport == undefined)
+		const recreateInternalTransports =
+			(this.fileTransport == undefined
+				&& this.consoleTransport == undefined)
 			|| changedLoggingTarget
 			|| changedFilename
 			|| changedMaxFiles;
@@ -199,7 +202,7 @@ class ZWaveLogContainer extends winston.Container implements LogContainer {
 		// When the internal transports or the custom transports were changed, we need to update the loggers
 		if (recreateInternalTransports || config.transports != undefined) {
 			this.loggers.forEach((logger) =>
-				logger.configure({ transports: this.getAllTransports() })
+				logger.configure({ transports: this.getAllTransports() }),
 			);
 		}
 	}
@@ -305,11 +308,9 @@ class ZWaveLogContainer extends winston.Container implements LogContainer {
 	private createFileTransport(): DailyRotateFile {
 		const ret = new DailyRotateFile({
 			filename: this.logConfig.filename,
-			auditFile: `${
-				this.logConfig.filename
-					.replace("_%DATE%", "_logrotate")
-					.replace(/\.log$/, "")
-			}.json`,
+			auditFile: `${this.logConfig.filename
+				.replace("_%DATE%", "_logrotate")
+				.replace(/\.log$/, "")}.json`,
 			datePattern: "YYYY-MM-DD",
 			createSymlink: true,
 			symlinkName: path

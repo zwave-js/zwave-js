@@ -1,19 +1,21 @@
 // @ts-check
-const { CommandClasses, ConfigValueFormat, SupervisionStatus } = require(
-	"@zwave-js/core",
-);
-const { ccCaps, MockZWaveFrameType, createMockZWaveRequestFrame } = require(
-	"@zwave-js/testing",
-);
+const {
+	CommandClasses,
+	ConfigValueFormat,
+	SupervisionStatus,
+} = require("@zwave-js/core");
+const {
+	ccCaps,
+	MockZWaveFrameType,
+	createMockZWaveRequestFrame,
+} = require("@zwave-js/testing");
 const { wait } = require("alcalzone-shared/async");
 const {
 	SupervisionCCGet,
 	SupervisionCCReport,
 	ConfigurationCCSet,
 	SwitchType,
-} = require(
-	"zwave-js",
-);
+} = require("zwave-js");
 
 /** @type {import("zwave-js/Testing").MockServerOptions["config"]} */
 module.exports.default = {

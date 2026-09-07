@@ -28,6 +28,7 @@ import {
 	getEnumMemberName,
 	pick,
 } from "@zwave-js/shared";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -60,18 +61,16 @@ import {
 	BatteryReplacementStatus,
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { NotificationCCValues } from "./NotificationCC.js";
 
 export const BatteryCCValues = V.defineCCValues(CommandClasses.Battery, {
-	...V.staticProperty(
-		"level",
-		{
-			...ValueMetadata.ReadOnlyUInt8,
-			max: 100,
-			unit: "%",
-			label: "Battery level",
-		},
-	),
+	...V.staticProperty("level", {
+		...ValueMetadata.ReadOnlyUInt8,
+		max: 100,
+		unit: "%",
+		label: "Battery level",
+	}),
 
 	...V.staticProperty(
 		"maximumCapacity",
@@ -206,7 +205,7 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: BatteryCCAPI, { property }) {
+		return async function (this: BatteryCCAPI, { property }) {
 			switch (property) {
 				case "level":
 				case "chargingStatus":
@@ -280,9 +279,7 @@ export class BatteryCCAPI extends PhysicalCCAPI {
 export class BatteryCC extends CommandClass {
 	declare ccCommand: BatteryCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -330,7 +327,7 @@ is disconnected:                 true`;
 level:                           ${
 					batteryStatus.level === 0xff
 						? "low"
-						: (batteryStatus.level + " %")
+						: batteryStatus.level + " %"
 				}`;
 			}
 			if (api.version >= 2) {
@@ -381,8 +378,7 @@ temperature:   ${batteryHealth.temperature} °C`;
 
 	public shouldRefreshValues(
 		this: SinglecastCC<this>,
-		ctx:
-			& GetValueDB
+		ctx: GetValueDB
 			& GetSupportedCCVersion
 			& GetDeviceConfig
 			& GetNode<
@@ -406,20 +402,18 @@ temperature:   ${batteryHealth.temperature} °C`;
 }
 
 // @publicAPI
-export type BatteryCCReportOptions =
-	& {
-		level: number | "low";
-	}
-	& AllOrNone<{
-		// V2+
-		chargingStatus: BatteryChargingStatus;
-		rechargeable: boolean;
-		backup: boolean;
-		overheating: boolean;
-		lowFluid: boolean;
-		rechargeOrReplace: BatteryReplacementStatus;
-		disconnected: boolean;
-	}>
+export type BatteryCCReportOptions = {
+	level: number | "low";
+} & AllOrNone<{
+	// V2+
+	chargingStatus: BatteryChargingStatus;
+	rechargeable: boolean;
+	backup: boolean;
+	overheating: boolean;
+	lowFluid: boolean;
+	rechargeOrReplace: BatteryReplacementStatus;
+	disconnected: boolean;
+}>
 	& AllOrNone<{
 		// V3+
 		lowTemperatureStatus: boolean;
@@ -436,9 +430,7 @@ export type BatteryCCReportOptions =
 @ccValueProperty("disconnected", BatteryCCValues.disconnected)
 @ccValueProperty("lowTemperatureStatus", BatteryCCValues.lowTemperatureStatus)
 export class BatteryCCReport extends BatteryCC {
-	public constructor(
-		options: WithAddress<BatteryCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<BatteryCCReportOptions>) {
 		super(options);
 
 		this.level = typeof options.level === "number" ? options.level : 0xff;
@@ -473,10 +465,11 @@ export class BatteryCCReport extends BatteryCC {
 			const backup = !!(raw.payload[1] & 0b0001_0000);
 			const overheating = !!(raw.payload[1] & 0b1000);
 			const lowFluid = !!(raw.payload[1] & 0b0100);
-			const rechargeOrReplace: BatteryReplacementStatus =
-				!!(raw.payload[1] & 0b10)
-					? BatteryReplacementStatus.Now
-					: !!(raw.payload[1] & 0b1)
+			const rechargeOrReplace: BatteryReplacementStatus = !!(
+				raw.payload[1] & 0b10
+			)
+				? BatteryReplacementStatus.Now
+				: !!(raw.payload[1] & 0b1)
 					? BatteryReplacementStatus.Soon
 					: BatteryReplacementStatus.No;
 			const lowTemperatureStatus = !!(raw.payload[2] & 0b10);
@@ -564,18 +557,14 @@ export class BatteryCCReport extends BatteryCC {
 				// but idling is not required
 				&& notificationCCVersion < 8
 			) {
-				const batteryLevelStatusValue = NotificationCCValues
-					.notificationVariable(
+				const batteryLevelStatusValue =
+					NotificationCCValues.notificationVariable(
 						"Power Management",
 						"Battery level status",
 					);
 				// If not undefined and not idle
 				if (this.getValue(ctx, batteryLevelStatusValue)) {
-					this.setValue(
-						ctx,
-						batteryLevelStatusValue,
-						0, /* idle */
-					);
+					this.setValue(ctx, batteryLevelStatusValue, 0 /* idle */);
 				}
 			}
 		}
@@ -604,10 +593,10 @@ export class BatteryCCReport extends BatteryCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		this.payload = Bytes.from([
 			this.disconnected
-				// CC:0080.02.03.11.010
-				// If this field is set to 1, the Battery Level field MUST
-				// be set to 0x00.
-				? 0
+				? // CC:0080.02.03.11.010
+					// If this field is set to 1, the Battery Level field MUST
+					// be set to 0x00.
+					0
 				: this.level,
 		]);
 		if (this.chargingStatus != undefined) {
@@ -615,18 +604,19 @@ export class BatteryCCReport extends BatteryCC {
 				this.payload,
 				[
 					(this.chargingStatus << 6)
-					+ (this.rechargeable ? 0b0010_0000 : 0)
-					+ (this.backup ? 0b0001_0000 : 0)
-					+ (this.overheating ? 0b1000 : 0)
-					+ (this.lowFluid ? 0b0100 : 0)
-					+ (this.rechargeOrReplace === BatteryReplacementStatus.Now
-						? 0b10
-						: this.rechargeOrReplace
-								=== BatteryReplacementStatus.Soon
-						? 0b1
-						: 0),
+						+ (this.rechargeable ? 0b0010_0000 : 0)
+						+ (this.backup ? 0b0001_0000 : 0)
+						+ (this.overheating ? 0b1000 : 0)
+						+ (this.lowFluid ? 0b0100 : 0)
+						+ (this.rechargeOrReplace
+						=== BatteryReplacementStatus.Now
+							? 0b10
+							: this.rechargeOrReplace
+								  === BatteryReplacementStatus.Soon
+								? 0b1
+								: 0),
 					(this.lowTemperatureStatus ? 0b10 : 0)
-					+ (this.disconnected ? 0b1 : 0),
+						+ (this.disconnected ? 0b1 : 0),
 				],
 			]);
 		}
@@ -693,9 +683,7 @@ export interface BatteryCCHealthReportOptions {
 @ccValueProperty("maximumCapacity", BatteryCCValues.maximumCapacity)
 @ccValueProperty("temperature", BatteryCCValues.temperature)
 export class BatteryCCHealthReport extends BatteryCC {
-	public constructor(
-		options: WithAddress<BatteryCCHealthReportOptions>,
-	) {
+	public constructor(options: WithAddress<BatteryCCHealthReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -712,13 +700,11 @@ export class BatteryCCHealthReport extends BatteryCC {
 		// Parse maximum capacity. 0xff means unknown
 		let maximumCapacity: number | undefined = raw.payload[0];
 		if (maximumCapacity === 0xff) maximumCapacity = undefined;
-		const {
-			value: temperature,
-			scale: temperatureScale,
-		} = parseFloatWithScale(
-			raw.payload.subarray(1),
-			true, // The temperature field may be omitted
-		);
+		const { value: temperature, scale: temperatureScale } =
+			parseFloatWithScale(
+				raw.payload.subarray(1),
+				true, // The temperature field may be omitted
+			);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -733,13 +719,14 @@ export class BatteryCCHealthReport extends BatteryCC {
 	private readonly temperatureScale: number | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const temperature = this.temperature != undefined
-			? encodeFloatWithScale(
-				this.temperature,
-				this.temperatureScale ?? 0x00,
-			)
-			// size, precision and scale must be 0 if the temperature is omitted
-			: Bytes.from([0x00]);
+		const temperature =
+			this.temperature != undefined
+				? encodeFloatWithScale(
+						this.temperature,
+						this.temperatureScale ?? 0x00,
+					)
+				: // size, precision and scale must be 0 if the temperature is omitted
+					Bytes.from([0x00]);
 
 		this.payload = Bytes.concat([
 			[this.maximumCapacity ?? 0xff],
@@ -752,12 +739,14 @@ export class BatteryCCHealthReport extends BatteryCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				temperature: this.temperature != undefined
-					? this.temperature
-					: "unknown",
-				"max capacity": this.maximumCapacity != undefined
-					? `${this.maximumCapacity} %`
-					: "unknown",
+				temperature:
+					this.temperature != undefined
+						? this.temperature
+						: "unknown",
+				"max capacity":
+					this.maximumCapacity != undefined
+						? `${this.maximumCapacity} %`
+						: "unknown",
 			},
 		};
 	}

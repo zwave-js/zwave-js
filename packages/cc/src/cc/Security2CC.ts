@@ -51,6 +51,7 @@ import {
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -82,6 +83,7 @@ import {
 } from "../lib/Security2/shared.js";
 import { Security2Command } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { CRC16CC } from "./CRC16CC.js";
 import { MultiChannelCC } from "./MultiChannelCC.js";
 import { SecurityCC } from "./SecurityCC.js";
@@ -120,9 +122,7 @@ function getAuthenticationData(
 		isLongRangeNodeId(sendingNodeId) || isLongRangeNodeId(destination)
 			? 2
 			: 1;
-	const ret = new Bytes(
-		2 * nodeIdSize + 6 + unencryptedPayload.length,
-	);
+	const ret = new Bytes(2 * nodeIdSize + 6 + unencryptedPayload.length);
 	let offset = 0;
 	ret.writeUIntBE(sendingNodeId, offset, nodeIdSize);
 	offset += nodeIdSize;
@@ -141,7 +141,8 @@ function getSecurityManager(
 	securityManagers: SecurityManagers,
 	otherNodeId: MulticastDestination | number,
 ): SecurityManager2 | undefined {
-	const longRange = isLongRangeNodeId(ownNodeId)
+	const longRange =
+		isLongRangeNodeId(ownNodeId)
 		|| isLongRangeNodeId(
 			isArray(otherNodeId) ? otherNodeId[0] : otherNodeId,
 		);
@@ -158,17 +159,9 @@ function validateSequenceNumber(
 ): number | undefined {
 	validatePayload.withReason(
 		`Duplicate command (sequence number ${sequenceNumber})`,
-	)(
-		!securityManager.isDuplicateSinglecast(
-			sourceNodeId,
-			sequenceNumber,
-		),
-	);
+	)(!securityManager.isDuplicateSinglecast(sourceNodeId, sequenceNumber));
 	// Not a duplicate, store it
-	return securityManager.storeSequenceNumber(
-		sourceNodeId,
-		sequenceNumber,
-	);
+	return securityManager.storeSequenceNumber(sourceNodeId, sequenceNumber);
 }
 
 const MAX_DECRYPT_ATTEMPTS_SINGLECAST = 5;
@@ -184,9 +177,7 @@ export interface DecryptionResult {
 	securityClass: SecurityClass | undefined;
 }
 
-function assertSecurityRX(
-	ctx: CCParsingContext,
-): SecurityManager2 {
+function assertSecurityRX(ctx: CCParsingContext): SecurityManager2 {
 	if (!ctx.ownNodeId) {
 		throw new ZWaveError(
 			`Secure commands (S2) can only be decoded when the controller's node id is known!`,
@@ -244,9 +235,7 @@ async function decryptSinglecast(
 	extensions: Security2Extension[],
 ): Promise<DecryptionResult> {
 	const decryptWithNonce = async (nonce: BytesView) => {
-		const { keyCCM: key } = securityManager.getKeysForNode(
-			sendingNodeId,
-		);
+		const { keyCCM: key } = securityManager.getKeysForNode(sendingNodeId);
 
 		const iv = nonce;
 
@@ -315,9 +304,7 @@ async function decryptSinglecast(
 		const receiverEI = spanState.receiverEI;
 
 		// How we do this depends on whether we know the security class of the other node
-		const isBootstrappingNode = securityManager.tempKeys.has(
-			sendingNodeId,
-		);
+		const isBootstrappingNode = securityManager.tempKeys.has(sendingNodeId);
 		if (isBootstrappingNode) {
 			// We're currently bootstrapping the node, it might be using a temporary key
 			await securityManager.initializeTempSPAN(
@@ -336,10 +323,7 @@ async function decryptSinglecast(
 			}
 
 			// Reset the SPAN state and try with the recently granted security class
-			securityManager.setSPANState(
-				sendingNodeId,
-				spanState,
-			);
+			securityManager.setSPANState(sendingNodeId, spanState);
 		}
 
 		// When ending up here, one of two situations has occured:
@@ -355,18 +339,12 @@ async function decryptSinglecast(
 		const possibleSecurityClasses = isBootstrappingNode
 			? [ctx.getHighestSecurityClass(sendingNodeId)!]
 			: securityClassOrder.filter(
-				(s) =>
-					ctx.hasSecurityClass(sendingNodeId, s)
-						!== false,
-			);
+					(s) => ctx.hasSecurityClass(sendingNodeId, s) !== false,
+				);
 
 		for (const secClass of possibleSecurityClasses) {
 			// Skip security classes we don't have keys for
-			if (
-				!securityManager.hasKeysForSecurityClass(
-					secClass,
-				)
-			) {
+			if (!securityManager.hasKeysForSecurityClass(secClass)) {
 				continue;
 			}
 
@@ -383,8 +361,7 @@ async function decryptSinglecast(
 			if (ret.authOK) {
 				// Also if we weren't sure before, we now know that the security class is granted
 				if (
-					ctx.hasSecurityClass(sendingNodeId, secClass)
-						=== undefined
+					ctx.hasSecurityClass(sendingNodeId, secClass) === undefined
 				) {
 					ctx.setSecurityClass(sendingNodeId, secClass, true);
 				}
@@ -394,10 +371,7 @@ async function decryptSinglecast(
 				};
 			} else {
 				// Reset the SPAN state and try with the next security class
-				securityManager.setSPANState(
-					sendingNodeId,
-					spanState,
-				);
+				securityManager.setSPANState(sendingNodeId, spanState);
 			}
 		}
 	}
@@ -418,29 +392,21 @@ async function decryptMulticast(
 	authData: BytesView,
 	authTag: BytesView,
 ): Promise<DecryptionResult> {
-	const iv = await securityManager.nextPeerMPAN(
-		sendingNodeId,
-		groupId,
-	);
-	const { keyCCM: key } = securityManager.getKeysForNode(
-		sendingNodeId,
-	);
+	const iv = await securityManager.nextPeerMPAN(sendingNodeId, groupId);
+	const { keyCCM: key } = securityManager.getKeysForNode(sendingNodeId);
 	return {
 		key,
 		iv,
-		...(await decryptAES128CCM(
-			ciphertext,
-			key,
-			iv,
-			authData,
-			authTag,
-		)),
+		...(await decryptAES128CCM(ciphertext, key, iv, authData, authTag)),
 		// The security class is irrelevant when decrypting multicast commands
 		securityClass: undefined,
 	};
 }
 
-function parseExtensions(buffer: BytesView, wasEncrypted: boolean): {
+function parseExtensions(
+	buffer: BytesView,
+	wasEncrypted: boolean,
+): {
 	extensions: Security2Extension[];
 	mustDiscardCommand: boolean;
 	bytesRead: number;
@@ -459,10 +425,7 @@ function parseExtensions(buffer: BytesView, wasEncrypted: boolean): {
 		// The length field could be too large, which would cause part of the actual ciphertext
 		// to be ignored. Try to avoid this for known extensions by checking the actual and expected length.
 		const { actual: actualLength, expected: expectedLength } =
-			Security2Extension
-				.getExtensionLength(
-					buffer.subarray(offset),
-				);
+			Security2Extension.getExtensionLength(buffer.subarray(offset));
 
 		// Parse the extension using the expected length if possible
 		const extensionLength = expectedLength ?? actualLength;
@@ -472,21 +435,16 @@ function parseExtensions(buffer: BytesView, wasEncrypted: boolean): {
 			break parsing;
 		} else if (
 			extensionLength
-				> buffer.length
-					- offset
-					- (wasEncrypted
-						? 0
-						: SECURITY_S2_AUTH_TAG_LENGTH)
+			> buffer.length
+				- offset
+				- (wasEncrypted ? 0 : SECURITY_S2_AUTH_TAG_LENGTH)
 		) {
 			// The supposed length is longer than the space the extensions may occupy
 			mustDiscardCommand = true;
 			break parsing;
 		}
 
-		const extensionData = buffer.subarray(
-			offset,
-			offset + extensionLength,
-		);
+		const extensionData = buffer.subarray(offset, offset + extensionLength);
 		offset += extensionLength;
 
 		const ext = Security2Extension.parse(extensionData);
@@ -557,17 +515,13 @@ function getDestinationIDRX(
 function getMulticastGroupId(
 	extensions: Security2Extension[],
 ): number | undefined {
-	const mgrpExtension = extensions.find(
-		(e) => e instanceof MGRPExtension,
-	);
+	const mgrpExtension = extensions.find((e) => e instanceof MGRPExtension);
 	return mgrpExtension?.groupId;
 }
 
 /** Returns the Sender's Entropy Input if this command contains an SPAN extension */
 function getSenderEI(extensions: Security2Extension[]): BytesView | undefined {
-	const spanExtension = extensions.find(
-		(e) => e instanceof SPANExtension,
-	);
+	const spanExtension = extensions.find((e) => e instanceof SPANExtension);
 	return spanExtension?.senderEI;
 }
 
@@ -623,8 +577,8 @@ export class Security2CCAPI extends CCAPI {
 			await this.host.sendCommand(cc, {
 				...this.commandOptions,
 				// Seems we need these options or some nodes won't accept the nonce
-				transmitOptions: TransmitOptions.ACK
-					| TransmitOptions.AutoRoute,
+				transmitOptions:
+					TransmitOptions.ACK | TransmitOptions.AutoRoute,
 				// Only try sending a nonce once
 				maxSendAttempts: 1,
 				// Nonce requests must be handled immediately
@@ -636,9 +590,7 @@ export class Security2CCAPI extends CCAPI {
 		} catch (e) {
 			if (isTransmissionError(e)) {
 				// The nonce could not be sent, invalidate it
-				securityManager.deleteNonce(
-					this.endpoint.nodeId,
-				);
+				securityManager.deleteNonce(this.endpoint.nodeId);
 				return false;
 			} else {
 				// Pass other errors through
@@ -668,8 +620,8 @@ export class Security2CCAPI extends CCAPI {
 			await this.host.sendCommand(cc, {
 				...this.commandOptions,
 				// Seems we need these options or some nodes won't accept the nonce
-				transmitOptions: TransmitOptions.ACK
-					| TransmitOptions.AutoRoute,
+				transmitOptions:
+					TransmitOptions.ACK | TransmitOptions.AutoRoute,
 				// Only try sending a nonce once
 				maxSendAttempts: 1,
 				// Nonce requests must be handled immediately
@@ -715,8 +667,8 @@ export class Security2CCAPI extends CCAPI {
 			await this.host.sendCommand(cc, {
 				...this.commandOptions,
 				// Seems we need these options or some nodes won't accept the nonce
-				transmitOptions: TransmitOptions.ACK
-					| TransmitOptions.AutoRoute,
+				transmitOptions:
+					TransmitOptions.ACK | TransmitOptions.AutoRoute,
 				// Only try sending a nonce once
 				maxSendAttempts: 1,
 				// Nonce requests must be handled immediately
@@ -763,26 +715,23 @@ export class Security2CCAPI extends CCAPI {
 				this.endpoint.nodeId as number,
 			);
 
-			cc = multiChannelCCVersion === 1
-				? MultiChannelCC.encapsulateV1(cc)
-				: MultiChannelCC.encapsulate(cc);
+			cc =
+				multiChannelCCVersion === 1
+					? MultiChannelCC.encapsulateV1(cc)
+					: MultiChannelCC.encapsulate(cc);
 		}
-		cc = Security2CC.encapsulate(
-			cc,
-			this.host.ownNodeId,
-			this.host,
-			{ securityClass },
-		);
+		cc = Security2CC.encapsulate(cc, this.host.ownNodeId, this.host, {
+			securityClass,
+		});
 
-		const response = await this.host.sendCommand<
-			Security2CCCommandsSupportedReport
-		>(
-			cc,
-			{
-				...this.commandOptions,
-				autoEncapsulate: false,
-			},
-		);
+		const response =
+			await this.host.sendCommand<Security2CCCommandsSupportedReport>(
+				cc,
+				{
+					...this.commandOptions,
+					autoEncapsulate: false,
+				},
+			);
 		return response?.supportedCCs;
 	}
 
@@ -881,10 +830,7 @@ export class Security2CCAPI extends CCAPI {
 	public async confirmGrantedKeys(
 		params: Omit<Security2CCKEXSetOptions, "echo">,
 	): Promise<Security2CCKEXReport | Security2CCKEXFail | undefined> {
-		this.assertSupportsCommand(
-			Security2Command,
-			Security2Command.KEXSet,
-		);
+		this.assertSupportsCommand(Security2Command, Security2Command.KEXSet);
 
 		const cc = new Security2CCKEXSet({
 			nodeId: this.endpoint.nodeId,
@@ -1012,9 +958,7 @@ export class Security2CCAPI extends CCAPI {
 export class Security2CC extends CommandClass {
 	declare ccCommand: Security2Command;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const securityManager = getSecurityManager(
 			ctx.ownNodeId,
 			ctx,
@@ -1051,8 +995,7 @@ export class Security2CC extends CommandClass {
 			// For endpoint interviews, the security class MUST be known
 			ctx.logNode(node.id, {
 				endpoint: endpoint.index,
-				message:
-					`Cannot query securely supported commands for endpoint because the node's security class isn't known...`,
+				message: `Cannot query securely supported commands for endpoint because the node's security class isn't known...`,
 				level: "error",
 			});
 			return;
@@ -1070,17 +1013,13 @@ export class Security2CC extends CommandClass {
 			if (node.hasSecurityClass(secClass) === false) continue;
 
 			// If no key is configured for this security class, skip it
-			if (
-				!securityManager?.hasKeysForSecurityClass(secClass)
-			) {
+			if (!securityManager?.hasKeysForSecurityClass(secClass)) {
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message: `Cannot query securely supported commands (${
-						getEnumMemberName(
-							SecurityClass,
-							secClass,
-						)
-					}) - network key is not configured...`,
+					message: `Cannot query securely supported commands (${getEnumMemberName(
+						SecurityClass,
+						secClass,
+					)}) - network key is not configured...`,
 					level: "warn",
 				});
 				continue;
@@ -1088,12 +1027,10 @@ export class Security2CC extends CommandClass {
 
 			ctx.logNode(node.id, {
 				endpoint: endpoint.index,
-				message: `Querying securely supported commands (${
-					getEnumMemberName(
-						SecurityClass,
-						secClass,
-					)
-				})...`,
+				message: `Querying securely supported commands (${getEnumMemberName(
+					SecurityClass,
+					secClass,
+				)})...`,
 				direction: "outbound",
 			});
 
@@ -1125,12 +1062,10 @@ export class Security2CC extends CommandClass {
 						// We definitely know the highest security class
 						ctx.logNode(node.id, {
 							endpoint: endpoint.index,
-							message: `Querying securely supported commands (${
-								getEnumMemberName(
-									SecurityClass,
-									secClass,
-								)
-							}), attempt ${attempts}/${MAX_ATTEMPTS} failed. Retrying in 500ms...`,
+							message: `Querying securely supported commands (${getEnumMemberName(
+								SecurityClass,
+								secClass,
+							)}), attempt ${attempts}/${MAX_ATTEMPTS} failed. Retrying in 500ms...`,
 							level: "warn",
 						});
 						await wait(500);
@@ -1138,12 +1073,10 @@ export class Security2CC extends CommandClass {
 					} else if (endpoint.index > 0) {
 						ctx.logNode(node.id, {
 							endpoint: endpoint.index,
-							message: `Querying securely supported commands (${
-								getEnumMemberName(
-									SecurityClass,
-									secClass,
-								)
-							}) failed. Assuming the endpoint supports all its mandatory CCs securely...`,
+							message: `Querying securely supported commands (${getEnumMemberName(
+								SecurityClass,
+								secClass,
+							)}) failed. Assuming the endpoint supports all its mandatory CCs securely...`,
 							level: "warn",
 						});
 
@@ -1157,12 +1090,10 @@ export class Security2CC extends CommandClass {
 					} else {
 						ctx.logNode(node.id, {
 							endpoint: endpoint.index,
-							message: `Querying securely supported commands (${
-								getEnumMemberName(
-									SecurityClass,
-									secClass,
-								)
-							}) failed. Let's hope for the best...`,
+							message: `Querying securely supported commands (${getEnumMemberName(
+								SecurityClass,
+								secClass,
+							)}) failed. Let's hope for the best...`,
 							level: "warn",
 						});
 						break;
@@ -1183,12 +1114,10 @@ export class Security2CC extends CommandClass {
 					node.setSecurityClass(secClass, false);
 
 					ctx.logNode(node.id, {
-						message: `The node was NOT granted the security class ${
-							getEnumMemberName(
-								SecurityClass,
-								secClass,
-							)
-						}`,
+						message: `The node was NOT granted the security class ${getEnumMemberName(
+							SecurityClass,
+							secClass,
+						)}`,
 						direction: "inbound",
 					});
 				}
@@ -1200,12 +1129,10 @@ export class Security2CC extends CommandClass {
 				node.setSecurityClass(secClass, true);
 
 				ctx.logNode(node.id, {
-					message: `The node was granted the security class ${
-						getEnumMemberName(
-							SecurityClass,
-							secClass,
-						)
-					}`,
+					message: `The node was granted the security class ${getEnumMemberName(
+						SecurityClass,
+						secClass,
+					)}`,
 					direction: "inbound",
 				});
 			}
@@ -1215,19 +1142,20 @@ export class Security2CC extends CommandClass {
 
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message: logText([
-						`received secure commands (${
-							getEnumMemberName(
+					message: logText(
+						[
+							`received secure commands (${getEnumMemberName(
 								SecurityClass,
 								secClass,
-							)
-						})`,
-						"supported CCs:",
-					], {
-						nested: logList(
-							supportedCCs.map((cc) => getCCName(cc)),
-						),
-					}),
+							)})`,
+							"supported CCs:",
+						],
+						{
+							nested: logList(
+								supportedCCs.map((cc) => getCCName(cc)),
+							),
+						},
+					),
 					direction: "inbound",
 				});
 
@@ -1349,8 +1277,8 @@ export class Security2CC extends CommandClass {
 
 		// Copy the encapsulation flags from the encapsulated command
 		// but omit Security, since we're doing that right now
-		ret.encapsulationFlags = cc.encapsulationFlags
-			& ~EncapsulationFlags.Security;
+		ret.encapsulationFlags =
+			cc.encapsulationFlags & ~EncapsulationFlags.Security;
 
 		return ret;
 	}
@@ -1367,13 +1295,13 @@ function failNoMPAN(): never {
 // @publicAPI
 export type MulticastContext =
 	| {
-		isMulticast: true;
-		groupId: number;
-	}
+			isMulticast: true;
+			groupId: number;
+	  }
 	| {
-		isMulticast: false;
-		groupId?: number;
-	};
+			isMulticast: false;
+			groupId?: number;
+	  };
 
 // @publicAPI
 export interface Security2CCMessageEncapsulationOptions {
@@ -1478,9 +1406,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 
 		// Ensure the node has a security class
 		validatePayload.withReason("No security class granted")(
-			ctx.getHighestSecurityClass(
-				ctx.sourceNodeId,
-			) !== SecurityClass.None,
+			ctx.getHighestSecurityClass(ctx.sourceNodeId)
+				!== SecurityClass.None,
 		);
 
 		const hasExtensions = !!(raw.payload[1] & 0b1);
@@ -1503,7 +1430,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		const mcctx = ((): MulticastContext => {
 			const multicastGroupId = getMulticastGroupId(extensions);
 			if (
-				ctx.frameType === "multicast" || ctx.frameType === "broadcast"
+				ctx.frameType === "multicast"
+				|| ctx.frameType === "broadcast"
 			) {
 				if (multicastGroupId == undefined) {
 					validatePayload.fail(
@@ -1530,15 +1458,11 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			} else {
 				await securityManager.nextNonce(ctx.sourceNodeId);
 			}
-			validatePayload.fail(
-				"Invalid S2 extension",
-			);
+			validatePayload.fail("Invalid S2 extension");
 		}
 
 		let prevSequenceNumber: number | undefined;
-		let mpanState:
-			| ReturnType<SecurityManager2["getPeerMPAN"]>
-			| undefined;
+		let mpanState: ReturnType<SecurityManager2["getPeerMPAN"]> | undefined;
 		if (mcctx.isMulticast) {
 			mpanState = securityManager.getPeerMPAN(
 				ctx.sourceNodeId,
@@ -1555,9 +1479,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			// When a node receives a singlecast message after a multicast group was marked out of sync,
 			// it must forget about the group.
 			if (mcctx.groupId == undefined) {
-				securityManager.resetOutOfSyncMPANs(
-					ctx.sourceNodeId,
-				);
+				securityManager.resetOutOfSyncMPANs(ctx.sourceNodeId);
 			}
 		}
 
@@ -1584,11 +1506,9 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			// For incoming multicast commands, make sure we have an MPAN
 			if (mpanState?.type !== MPANState.MPAN) {
 				// If we don't, mark the MPAN as out of sync, so we can respond accordingly on the singlecast followup
-				securityManager.storePeerMPAN(
-					ctx.sourceNodeId,
-					mcctx.groupId,
-					{ type: MPANState.OutOfSync },
-				);
+				securityManager.storePeerMPAN(ctx.sourceNodeId, mcctx.groupId, {
+					type: MPANState.OutOfSync,
+				});
 				failNoMPAN();
 			}
 
@@ -1603,9 +1523,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				);
 		} else {
 			// Decrypt payload and verify integrity
-			const spanState = securityManager.getSPANState(
-				ctx.sourceNodeId,
-			);
+			const spanState = securityManager.getSPANState(ctx.sourceNodeId);
 
 			// If we are not able to establish an SPAN yet, fail the decryption
 			if (spanState.type === SPANState.None) {
@@ -1647,8 +1565,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		const decryptAttempts = mcctx.isMulticast
 			? MAX_DECRYPT_ATTEMPTS_MULTICAST
 			: mcctx.groupId != undefined
-			? MAX_DECRYPT_ATTEMPTS_SC_FOLLOWUP
-			: MAX_DECRYPT_ATTEMPTS_SINGLECAST;
+				? MAX_DECRYPT_ATTEMPTS_SC_FOLLOWUP
+				: MAX_DECRYPT_ATTEMPTS_SINGLECAST;
 
 		for (let i = 0; i < decryptAttempts; i++) {
 			({
@@ -1668,18 +1586,14 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		if (!authOK || !plaintext) {
 			if (mcctx.isMulticast) {
 				// Mark the MPAN as out of sync
-				securityManager.storePeerMPAN(
-					ctx.sourceNodeId,
-					mcctx.groupId,
-					{ type: MPANState.OutOfSync },
-				);
+				securityManager.storePeerMPAN(ctx.sourceNodeId, mcctx.groupId, {
+					type: MPANState.OutOfSync,
+				});
 				validatePayload.fail(
 					ZWaveErrorCodes.Security2CC_CannotDecodeMulticast,
 				);
 			} else {
-				validatePayload.fail(
-					ZWaveErrorCodes.Security2CC_CannotDecode,
-				);
+				validatePayload.fail(ZWaveErrorCodes.Security2CC_CannotDecode);
 			}
 		} else if (!mcctx.isMulticast && mcctx.groupId != undefined) {
 			// After reception of a singlecast followup, the MPAN state must be increased
@@ -1707,8 +1621,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		}
 
 		// The MPAN and MGRP extensions must not be sent together
-		const mpanExtension = extensions.find((e) =>
-			e instanceof MPANExtension
+		const mpanExtension = extensions.find(
+			(e) => e instanceof MPANExtension,
 		);
 		if (mcctx.groupId != undefined && mpanExtension) {
 			validatePayload.fail("Invalid combination of extensions");
@@ -1716,8 +1630,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 
 		// If the MPAN extension was received, store the MPAN
 		if (!mcctx.isMulticast) {
-			const mpanExtension = extensions.find((e) =>
-				e instanceof MPANExtension
+			const mpanExtension = extensions.find(
+				(e) => e instanceof MPANExtension,
 			);
 			if (mpanExtension) {
 				securityManager.storePeerMPAN(
@@ -1784,10 +1698,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				);
 			} else {
 				const groupId = getDestinationIDTX.call(this);
-				this.sequenceNumber = securityManager
-					.nextMulticastSequenceNumber(
-						groupId,
-					);
+				this.sequenceNumber =
+					securityManager.nextMulticastSequenceNumber(groupId);
 			}
 		}
 	}
@@ -1795,9 +1707,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 	public encapsulated?: CommandClass;
 	public extensions: Security2Extension[];
 
-	protected override determineRelation(
-		other: CommandClass,
-	): CommandRelation {
+	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (!(other instanceof Security2CCMessageEncapsulation)) {
 			return CommandRelation.Unrelated;
 		}
@@ -1815,7 +1725,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		// commands only match within the same group (or none at all)
 		if (
 			getMulticastGroupId(this.extensions)
-				!== getMulticastGroupId(other.extensions)
+			!== getMulticastGroupId(other.extensions)
 		) {
 			return CommandRelation.Unrelated;
 		}
@@ -1825,8 +1735,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		const hasMOSExtension = (
 			cc: Security2CCMessageEncapsulation,
 		): boolean =>
-			cc.extensions.some((extension) =>
-				extension instanceof MOSExtension
+			cc.extensions.some(
+				(extension) => extension instanceof MOSExtension,
 			);
 		if (hasMOSExtension(this) !== hasMOSExtension(other)) {
 			return CommandRelation.Unrelated;
@@ -1835,13 +1745,15 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		// Commands that establish or repair synchronization (SPAN/MPAN)
 		// must each be transmitted
 		if (
-			this.extensions.some((extension) =>
-				extension instanceof SPANExtension
-				|| extension instanceof MPANExtension
+			this.extensions.some(
+				(extension) =>
+					extension instanceof SPANExtension
+					|| extension instanceof MPANExtension,
 			)
-			|| other.extensions.some((extension) =>
-				extension instanceof SPANExtension
-				|| extension instanceof MPANExtension
+			|| other.extensions.some(
+				(extension) =>
+					extension instanceof SPANExtension
+					|| extension instanceof MPANExtension,
 			)
 		) {
 			return CommandRelation.Unrelated;
@@ -1882,9 +1794,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		if (!this.isSinglecast()) return;
 
 		const receiverNodeId: number = this.nodeId;
-		const spanState = securityManager.getSPANState(
-			receiverNodeId,
-		);
+		const spanState = securityManager.getSPANState(receiverNodeId);
 
 		if (
 			spanState.type === SPANState.None
@@ -1898,9 +1808,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		} else if (spanState.type === SPANState.RemoteEI) {
 			// We have the receiver's EI, generate our input and send it over
 			// With both, we can create an SPAN
-			const senderEI = await securityManager.generateNonce(
-				undefined,
-			);
+			const senderEI = await securityManager.generateNonce(undefined);
 			const receiverEI = spanState.receiverEI;
 
 			// While bootstrapping a node, prefer the temporary key, unless the
@@ -1915,7 +1823,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 					receiverEI,
 				);
 			} else {
-				const securityClass = this.securityClass
+				const securityClass =
+					this.securityClass
 					?? ctx.getHighestSecurityClass(receiverNodeId);
 
 				if (securityClass == undefined) {
@@ -1956,24 +1865,24 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			(e) => !e.isEncrypted(),
 		);
 		const encryptedExtensions = this.extensions.filter((e) =>
-			e.isEncrypted()
+			e.isEncrypted(),
 		);
 
 		const unencryptedPayload = Bytes.concat([
 			[
 				this.sequenceNumber,
 				(encryptedExtensions.length > 0 ? 0b10 : 0)
-				| (unencryptedExtensions.length > 0 ? 1 : 0),
+					| (unencryptedExtensions.length > 0 ? 1 : 0),
 			],
 			...unencryptedExtensions.map((e, index) =>
-				e.serialize(index < unencryptedExtensions.length - 1)
+				e.serialize(index < unencryptedExtensions.length - 1),
 			),
 		]);
-		const serializedCC = (await this.encapsulated?.serialize(ctx))
-			?? new Bytes();
+		const serializedCC =
+			(await this.encapsulated?.serialize(ctx)) ?? new Bytes();
 		const plaintextPayload = Bytes.concat([
 			...encryptedExtensions.map((e, index) =>
-				e.serialize(index < encryptedExtensions.length - 1)
+				e.serialize(index < encryptedExtensions.length - 1),
 			),
 			serializedCC,
 		]);
@@ -1982,8 +1891,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		const destinationTag = getDestinationIDTX.call(
 			this as Security2CCMessageEncapsulation,
 		);
-		const messageLength = this.computeEncapsulationOverhead()
-			+ serializedCC.length;
+		const messageLength =
+			this.computeEncapsulationOverhead() + serializedCC.length;
 		const authData = getAuthenticationData(
 			ctx.ownNodeId,
 			destinationTag,
@@ -2004,15 +1913,14 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 				// Prefer the overridden security class if it was given
 				this.securityClass != undefined
 					? securityManager.getKeysForSecurityClass(
-						this.securityClass,
-					)
+							this.securityClass,
+						)
 					: securityManager.getKeysForNode(this.nodeId);
 			key = keyCCM;
 		} else {
 			// Multicast:
-			const keyAndIV = await securityManager.getMulticastKeyAndIV(
-				destinationTag,
-			);
+			const keyAndIV =
+				await securityManager.getMulticastKeyAndIV(destinationTag);
 			key = keyAndIV.key;
 			iv = keyAndIV.iv;
 		}
@@ -2105,28 +2013,24 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 }
 
 // @publicAPI
-export type Security2CCNonceReportOptions =
-	& {
-		sequenceNumber?: number;
-	}
-	& (
-		| {
+export type Security2CCNonceReportOptions = {
+	sequenceNumber?: number;
+} & (
+	| {
 			MOS: boolean;
 			SOS: true;
 			receiverEI: BytesView;
-		}
-		| {
+	  }
+	| {
 			MOS: true;
 			SOS: false;
 			receiverEI?: undefined;
-		}
-	);
+	  }
+);
 
 @CCCommand(Security2Command.NonceReport)
 export class Security2CCNonceReport extends Security2CC {
-	public constructor(
-		options: WithAddress<Security2CCNonceReportOptions>,
-	) {
+	public constructor(options: WithAddress<Security2CCNonceReportOptions>) {
 		super(options);
 
 		this.SOS = options.SOS;
@@ -2161,10 +2065,7 @@ export class Security2CCNonceReport extends Security2CC {
 
 			// In that case we also need to store it, so the next sent command
 			// can use it for encryption
-			securityManager.storeRemoteEI(
-				ctx.sourceNodeId,
-				receiverEI,
-			);
+			securityManager.storeRemoteEI(ctx.sourceNodeId, receiverEI);
 
 			return new this({
 				nodeId: ctx.sourceNodeId,
@@ -2243,9 +2144,7 @@ export class Security2CCNonceGet extends Security2CC {
 	// TODO: A node sending this command MUST accept a delay up to <Previous Round-trip-time to peer node> +
 	// 250 ms before receiving the Security 2 Nonce Report Command.
 
-	public constructor(
-		options: WithAddress<Security2CCNonceGetOptions>,
-	) {
+	public constructor(options: WithAddress<Security2CCNonceGetOptions>) {
 		super(options);
 		this.sequenceNumber = options.sequenceNumber;
 	}
@@ -2312,9 +2211,7 @@ export interface Security2CCKEXReportOptions {
 
 @CCCommand(Security2Command.KEXReport)
 export class Security2CCKEXReport extends Security2CC {
-	public constructor(
-		options: WithAddress<Security2CCKEXReportOptions>,
-	) {
+	public constructor(options: WithAddress<Security2CCKEXReportOptions>) {
 		super(options);
 		this.requestCSA = options.requestCSA;
 		this.echo = options.echo;
@@ -2371,8 +2268,8 @@ export class Security2CCKEXReport extends Security2CC {
 		this.payload = Bytes.concat([
 			[
 				this._reserved
-				+ (this.requestCSA ? 0b10 : 0)
-				+ (this.echo ? 0b1 : 0),
+					+ (this.requestCSA ? 0b10 : 0)
+					+ (this.echo ? 0b1 : 0),
 			],
 			// The bit mask starts at 0, but bit 0 is not used
 			encodeBitMask(this.supportedKEXSchemes, 7, 0),
@@ -2397,18 +2294,18 @@ export class Security2CCKEXReport extends Security2CC {
 				echo: this.echo,
 				"supported schemes": logList(
 					this.supportedKEXSchemes.map((s) =>
-						getEnumMemberName(KEXSchemes, s)
+						getEnumMemberName(KEXSchemes, s),
 					),
 				),
 				"supported ECDH profiles": logList(
 					this.supportedECDHProfiles.map((s) =>
-						getEnumMemberName(ECDHProfiles, s)
+						getEnumMemberName(ECDHProfiles, s),
 					),
 				),
 				"CSA requested": this.requestCSA,
 				"requested security classes": logList(
 					this.requestedKeys.map((s) =>
-						getEnumMemberName(SecurityClass, s)
+						getEnumMemberName(SecurityClass, s),
 					),
 				),
 			},
@@ -2458,9 +2355,7 @@ function testExpectedResponseForKEXSet(
 @CCCommand(Security2Command.KEXSet)
 @expectedCCResponse(getExpectedResponseForKEXSet, testExpectedResponseForKEXSet)
 export class Security2CCKEXSet extends Security2CC {
-	public constructor(
-		options: WithAddress<Security2CCKEXSetOptions>,
-	) {
+	public constructor(options: WithAddress<Security2CCKEXSetOptions>) {
 		super(options);
 		this.permitCSA = options.permitCSA;
 		this.echo = options.echo;
@@ -2516,8 +2411,8 @@ export class Security2CCKEXSet extends Security2CC {
 		this.payload = Bytes.concat([
 			[
 				this._reserved
-				+ (this.permitCSA ? 0b10 : 0)
-				+ (this.echo ? 0b1 : 0),
+					+ (this.permitCSA ? 0b10 : 0)
+					+ (this.echo ? 0b1 : 0),
 			],
 			// The bit mask starts at 0, but bit 0 is not used
 			encodeBitMask([this.selectedKEXScheme], 7, 0),
@@ -2551,7 +2446,7 @@ export class Security2CCKEXSet extends Security2CC {
 				"CSA permitted": this.permitCSA,
 				"granted security classes": logList(
 					this.grantedKeys.map((s) =>
-						getEnumMemberName(SecurityClass, s)
+						getEnumMemberName(SecurityClass, s),
 					),
 				),
 			},
@@ -2566,9 +2461,7 @@ export interface Security2CCKEXFailOptions {
 
 @CCCommand(Security2Command.KEXFail)
 export class Security2CCKEXFail extends Security2CC {
-	public constructor(
-		options: WithAddress<Security2CCKEXFailOptions>,
-	) {
+	public constructor(options: WithAddress<Security2CCKEXFailOptions>) {
 		super(options);
 		this.failType = options.failType;
 	}
@@ -2720,9 +2613,7 @@ export interface Security2CCNetworkKeyGetOptions {
 // Don't expect a response - we need to distinguish between Report and Fail
 // FIXME: maybe use the dynamic @expectedCCResponse instead?
 export class Security2CCNetworkKeyGet extends Security2CC {
-	public constructor(
-		options: WithAddress<Security2CCNetworkKeyGetOptions>,
-	) {
+	public constructor(options: WithAddress<Security2CCNetworkKeyGetOptions>) {
 		super(options);
 		this.requestedKey = options.requestedKey;
 	}
@@ -2774,9 +2665,7 @@ export interface Security2CCTransferEndOptions {
 
 @CCCommand(Security2Command.TransferEnd)
 export class Security2CCTransferEnd extends Security2CC {
-	public constructor(
-		options: WithAddress<Security2CCTransferEndOptions>,
-	) {
+	public constructor(options: WithAddress<Security2CCTransferEndOptions>) {
 		super(options);
 		this.keyVerified = options.keyVerified;
 		this.keyRequestComplete = options.keyRequestComplete;

@@ -1,5 +1,7 @@
 import { MESSAGE } from "triple-beam";
+
 import { formatDate } from "../util/date.js";
+
 import {
 	CONTROL_CHAR_WIDTH,
 	LOG_WIDTH,
@@ -55,7 +57,8 @@ export const formatLogMessage: LogFormat = {
 	transform: (info: ZWaveLogInfo) => {
 		const messageLines = messageToLines(info.message);
 		const firstMessageLineLength = messageLines[0].length;
-		info.multiline = messageLines.length > 1
+		info.multiline =
+			messageLines.length > 1
 			|| !messageFitsIntoOneLine(info, info.message.length);
 		// Align postfixes to the right
 		if (info.secondaryTags) {
@@ -121,8 +124,7 @@ export function printLogMessage(shortTimestamps: boolean): LogFormat {
 				.join(" ");
 			// The directional arrows and the optional grouping lines must be prepended
 			// without adding spaces
-			firstLine =
-				`${info.timestamp} ${info.label} ${info.direction}${firstLine}`;
+			firstLine = `${info.timestamp} ${info.label} ${info.direction}${firstLine}`;
 			const lines = [firstLine];
 			if (info.multiline) {
 				// Format all message lines but the first

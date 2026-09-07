@@ -2,14 +2,15 @@
  * This method returns the original source code for an interface or type so it can be put into documentation
  */
 
-import { CommandClasses, getCCName } from "@zwave-js/core";
-import { num2hex } from "@zwave-js/shared";
-import c from "ansi-colors";
-import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
+
+import { CommandClasses, getCCName } from "@zwave-js/core";
+import { num2hex } from "@zwave-js/shared";
+import c from "ansi-colors";
+import esMain from "es-main";
 import { Piscina } from "piscina";
 import {
 	type JSDocTagStructure,
@@ -22,12 +23,16 @@ import {
 	TypeFormatFlags,
 	type ts,
 } from "ts-morph";
-import { formatWithDprint } from "../dprint.js";
+// Support directly loading this file in a worker
+import { register } from "tsx/esm/api";
+
+import { formatWithOxfmt } from "../oxfmt.js";
 import {
 	getCommandClassFromClassDeclaration,
 	projectRoot,
 	tsConfigFilePathForDocs as tsConfigFilePath,
 } from "../tsAPITools.js";
+
 import {
 	type EmbeddedType,
 	collectTypeNamesFromText,
@@ -39,14 +44,12 @@ import {
 	formatTransformedSignature,
 	getJsDocDescription,
 	renderEmbeddedTypesSection,
+	resolveEmbeddedTypes,
 	resolveDeclByName,
 	transformSignature,
 	tryDistributeCompoundParameter,
 	typeRegistry,
 } from "./renderTypes.js";
-
-// Support directly loading this file in a worker
-import { register } from "tsx/esm/api";
 register();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -81,7 +84,7 @@ Context: ${context}`,
 
 const docsDir = path.join(projectRoot, "docs");
 const ccDocsDir = path.join(docsDir, "api/CCs");
-const formattedValueTypeCache = new Map<string, string>();
+const formattedValueTypeCache = new Map<string, Promise<string>>();
 
 function fixPrinterErrors(text: string): string {
 	// The text includes one too many tabs at the start of each line
@@ -94,10 +97,11 @@ function printMethodDeclaration(method: MethodDeclaration): string {
 	method.getDecorators().forEach((d) => d.remove());
 	const start = method.getStart();
 	const end = method.getBody()!.getStart();
-	const ret = method
-		.getText()
-		.slice(0, end - start)
-		.trim() + ";";
+	const ret =
+		method
+			.getText()
+			.slice(0, end - start)
+			.trim() + ";";
 	return fixPrinterErrors(ret);
 }
 
@@ -138,11 +142,9 @@ async function processCCDocFile(
 
 ?> CommandClass ID: \`${num2hex((CommandClasses as any)[ccName])}\`
 `;
-	const generatedIndex = `\n- [${ccName} CC](api/CCs/${filename}) · \`${
-		num2hex(
-			(CommandClasses as any)[ccName],
-		)
-	}\``;
+	const generatedIndex = `\n- [${ccName} CC](api/CCs/${filename}) · \`${num2hex(
+		(CommandClasses as any)[ccName],
+	)}\``;
 	const generatedSidebar = `\n\t- [${ccName} CC](api/CCs/${filename})`;
 
 	const pageRoute = `api/CCs/${filename.replace(/\.md$/, "")}`;
@@ -153,10 +155,7 @@ async function processCCDocFile(
 	);
 
 	// Enumerate all useful public methods
-	const ignoredMethods = new Set([
-		"supportsCommand",
-		"isSetValueOptimistic",
-	]);
+	const ignoredMethods = new Set(["supportsCommand", "isSetValueOptimistic"]);
 	const methods = APIClass.getInstanceMethods()
 		.filter((m) => m.hasModifier(SyntaxKind.PublicKeyword))
 		.filter((m) => !ignoredMethods.has(m.getName()));
@@ -168,28 +167,29 @@ async function processCCDocFile(
 	for (const method of methods) {
 		const signatures = method.getOverloads();
 		const targets = signatures.length > 0 ? signatures : [method];
-		const print = signatures.length > 0
-			? printOverload
-			: printMethodDeclaration;
+		const print =
+			signatures.length > 0 ? printOverload : printMethodDeclaration;
 
 		let printed: string[];
 
 		// Compound options parameters read better as one overload per variant.
 		// Hand-written overloads take precedence.
-		const distribution = signatures.length === 0
-			? (() => {
-				try {
-					return tryDistributeCompoundParameter(method, ctx);
-				} catch {
-					return undefined;
-				}
-			})()
-			: undefined;
+		const distribution =
+			signatures.length === 0
+				? (() => {
+						try {
+							return tryDistributeCompoundParameter(method, ctx);
+						} catch {
+							return undefined;
+						}
+					})()
+				: undefined;
 
 		if (distribution) {
-			printed = distribution.variants.map((variant) => {
-				const param = method
-					.getParameters()[distribution.parameterIndex];
+			printed = [];
+			for (const variant of distribution.variants) {
+				const param =
+					method.getParameters()[distribution.parameterIndex];
 				let removedParam:
 					| ReturnType<typeof param.getStructure>
 					| undefined;
@@ -204,7 +204,7 @@ async function processCCDocFile(
 						.replaceWithText(variant.typeText);
 				}
 				transformSignature(method, ctx);
-				const signature = formatTransformedSignature(
+				const signature = await formatTransformedSignature(
 					printMethodDeclaration(method),
 				);
 				if (removedParam) {
@@ -213,12 +213,15 @@ async function processCCDocFile(
 						removedParam,
 					);
 				}
-				return variant.promotedComments.length
-					? variant.promotedComments.join("\n") + "\n" + signature
-					: signature;
-			});
+				printed.push(
+					variant.promotedComments.length
+						? variant.promotedComments.join("\n") + "\n" + signature
+						: signature,
+				);
+			}
 		} else {
-			printed = targets.map((target) => {
+			printed = [];
+			for (const target of targets) {
 				// Capture the unprocessed signature so transform failures
 				// degrade to today's output instead of breaking the page
 				const verbatim = print(target);
@@ -226,19 +229,23 @@ async function processCCDocFile(
 					const { changed } = transformSignature(target, ctx);
 					// Overlong single lines (e.g. from inferred return types)
 					// deserve wrapping even without a transformation
-					const needsFormatting = changed
-						|| verbatim.split("\n").some((line) =>
-							line.length > 80
-						);
-					if (!needsFormatting) return verbatim;
-					return formatTransformedSignature(print(target));
+					const needsFormatting =
+						changed
+						|| verbatim
+							.split("\n")
+							.some((line) => line.length > 80);
+					printed.push(
+						needsFormatting
+							? await formatTransformedSignature(print(target))
+							: verbatim,
+					);
 				} catch (e: any) {
 					ctx.warnings.push(
 						`Falling back to unprocessed signature for ${ccName}.${method.getName()}: ${e.message}`,
 					);
-					return verbatim;
+					printed.push(verbatim);
 				}
-			});
+			}
 		}
 
 		text += `### \`${method.getName()}\`
@@ -265,8 +272,8 @@ ${printed.join("\n\n")}
 							t,
 						): t is OptionalKind<JSDocTagStructure> & {
 							text: string;
-						} => t.tagName === "param"
-							&& typeof t.text === "string",
+						} =>
+							t.tagName === "param" && typeof t.text === "string",
 					)
 					.map((t) => {
 						const firstSpace = t.text.indexOf(" ");
@@ -307,30 +314,34 @@ ${printed.join("\n\n")}
 		let hasPrintedHeader = false;
 
 		const type = valueIDsConst.getType();
-		const formatValueType = (type: Type<ts.Type>): string => {
+		const formatValueType = (type: Type<ts.Type>): Promise<string> => {
 			const typeText = type.getText(
 				valueIDsConst,
 				TypeFormatFlags.NoTruncation,
 			);
-			if (formattedValueTypeCache.has(typeText)) {
-				return formattedValueTypeCache.get(typeText)!;
+			let formattedValueType = formattedValueTypeCache.get(typeText);
+			if (!formattedValueType) {
+				formattedValueType = (async () => {
+					const prefix = "type _ = ";
+					let ret = (
+						await formatWithOxfmt("type.ts", prefix + typeText)
+					)
+						.trim()
+						.slice(prefix.length, -1);
+
+					// There is probably an official way to do this, but I can't find it
+					ret = ret
+						.replaceAll(
+							/\(?typeof CommandClasses\)?/g,
+							"CommandClasses",
+						)
+						.replaceAll(/^(\s+)readonly /gm, "$1")
+						.replaceAll(/;$/gm, ",");
+					return ret;
+				})();
+				formattedValueTypeCache.set(typeText, formattedValueType);
 			}
-			const prefix = "type _ = ";
-			let ret = formatWithDprint(
-				"type.ts",
-				prefix + typeText,
-			)
-				.trim()
-				.slice(prefix.length, -1);
-
-			// There is probably an official way to do this, but I can't find it
-			ret = ret
-				.replaceAll(/\(?typeof CommandClasses\)?/g, "CommandClasses")
-				.replaceAll(/^(\s+)readonly /gm, "$1")
-				.replaceAll(/;$/gm, ",");
-
-			formattedValueTypeCache.set(typeText, ret);
-			return ret;
+			return formattedValueType;
 		};
 
 		const sortedProperties = type
@@ -359,11 +370,9 @@ ${printed.join("\n\n")}
 			if (valueType.getCallSignatures().length === 1) {
 				const signature = valueType.getCallSignatures()[0];
 
-				callSignature = `(${
-					signature.compilerSignature
-						.declaration!.parameters.map((p) => p.getText())
-						.join(", ")
-				})`;
+				callSignature = `(${signature.compilerSignature
+					.declaration!.parameters.map((p) => p.getText())
+					.join(", ")})`;
 
 				// This used to be true. leaving it here in case it becomes true again
 				// // The call signature has a single argument
@@ -418,7 +427,7 @@ ${printed.join("\n\n")}
 				hasPrintedHeader = true;
 			}
 
-			const formattedValueType = formatValueType(idType);
+			const formattedValueType = await formatValueType(idType);
 			collectTypeNamesFromText(callSignature, ctx);
 			collectTypeNamesFromText(formattedValueType, ctx);
 
@@ -490,14 +499,15 @@ ${formattedValueType}
 		}
 	}
 
-	text += renderEmbeddedTypesSection(ctx);
+	const embeds = await resolveEmbeddedTypes(ctx);
+	text += renderEmbeddedTypesSection(embeds);
 
 	for (const warning of ctx.warnings) {
 		console.warn(c.yellow(`${ccName} CC: ${warning}`));
 	}
 
 	text = text.replaceAll("\r\n", "\n");
-	text = formatWithDprint(filename, text);
+	text = await formatWithOxfmt(filename, text);
 
 	await fsp.writeFile(path.join(ccDocsDir, filename), text, "utf8");
 
@@ -505,7 +515,7 @@ ${formattedValueType}
 		generatedIndex,
 		generatedSidebar,
 		pageRoute,
-		embeds: [...ctx.embeds.values()],
+		embeds,
 		referenced: [...ctx.referenced.keys()],
 		unresolved: Object.fromEntries(ctx.unresolved),
 	};
@@ -541,14 +551,11 @@ function collectLinkTargets(
 		/^#{2,4}\s+(?<heading>.+?)\s*$\r?\n+(?:\s*<!-- #import (?<symbol>\w+) from ".*?".*?-->\s*\r?\n+)?(?:`{3,4}ts\r?\n(?<fence>[\s\S]*?)\r?\n`{3,4})?/gm;
 
 	for (const [file, content] of apiPages) {
-		const pagePath = path
-			.relative(docsDir, file)
-			.replaceAll(path.sep, "/");
+		const pagePath = path.relative(docsDir, file).replaceAll(path.sep, "/");
 		for (const match of content.matchAll(headingDefinitionRegex)) {
 			const { heading, symbol, fence } = match.groups!;
 			if (!symbol && !fence) continue;
-			const name = symbol
-				?? heading.replaceAll("`", "").trim();
+			const name = symbol ?? heading.replaceAll("`", "").trim();
 			// Method and property headings also precede code fences; only
 			// PascalCase headings above an actual type definition count
 			if (!/^[A-Z][$\w]*$/.test(name)) continue;
@@ -581,9 +588,11 @@ function collectLinkTargets(
 		} else {
 			console.warn(
 				c.yellow(
-					`Type ${symbol} is documented on multiple pages (${
-						entries.map((e) => e.route).join(", ")
-					}) and will not be linked. Move it to the shared types page to disambiguate.`,
+					`Type ${symbol} is documented on multiple pages (${entries
+						.map((e) => e.route)
+						.join(
+							", ",
+						)}) and will not be linked. Move it to the shared types page to disambiguate.`,
 				),
 			);
 		}
@@ -625,7 +634,7 @@ function auditSharedTypes(
 
 		const ccCount = ccPageRefCount.get(name) ?? 0;
 		const apiCount = apiContents.filter((text) =>
-			wordRegex.test(text)
+			wordRegex.test(text),
 		).length;
 		if (
 			ccCount < SHARED_TYPE_MIN_PAGES
@@ -692,7 +701,7 @@ async function generateCCDocs(
 		piscina.run(
 			{ filename: f.getFilePath(), linkTargets: linkTargetRoutes },
 			{ name: "processCC" },
-		)
+		),
 	);
 	const results: (CCDocFileResult | undefined)[] = await Promise.all(tasks);
 
@@ -783,13 +792,10 @@ async function generateCCDocs(
 
 	// Frequently used types must be documented somewhere
 	let hasErrors = false;
-	for (
-		const [name, { pages, declPath }] of [...unresolvedPages].toSorted(
-			(a, b) => b[1].pages.length - a[1].pages.length,
-		)
-	) {
-		const message =
-			`Type ${name} (${declPath}) is referenced on ${pages.length} CC page(s) but has no documented definition. Add it to docs/api/shared-types.md or the type registry.`;
+	for (const [name, { pages, declPath }] of [...unresolvedPages].toSorted(
+		(a, b) => b[1].pages.length - a[1].pages.length,
+	)) {
+		const message = `Type ${name} (${declPath}) is referenced on ${pages.length} CC page(s) but has no documented definition. Add it to docs/api/shared-types.md or the type registry.`;
 		if (pages.length >= UNRESOLVED_PAGE_THRESHOLD) {
 			console.error(c.red(message));
 			hasErrors = true;
@@ -799,11 +805,10 @@ async function generateCCDocs(
 	}
 
 	// Write the generated index file and sidebar
-	indexFileContent = indexFileContent.slice(
-		0,
-		indexAutoGenStart + indexAutoGenToken.length,
-	) + generatedIndex;
-	indexFileContent = formatWithDprint("index.md", indexFileContent);
+	indexFileContent =
+		indexFileContent.slice(0, indexAutoGenStart + indexAutoGenToken.length)
+		+ generatedIndex;
+	indexFileContent = await formatWithOxfmt("index.md", indexFileContent);
 	await fsp.writeFile(indexFilename, indexFileContent, "utf8");
 
 	const sidebarInputFilename = path.join(docsDir, "_sidebar.md");
@@ -816,12 +821,16 @@ async function generateCCDocs(
 		);
 		return false;
 	}
-	sidebarFileContent = sidebarFileContent.slice(0, sidebarAutoGenStart)
+	sidebarFileContent =
+		sidebarFileContent.slice(0, sidebarAutoGenStart)
 		+ generatedSidebar
 		+ sidebarFileContent.slice(
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
-	sidebarFileContent = formatWithDprint("_sidebar.md", sidebarFileContent);
+	sidebarFileContent = await formatWithOxfmt(
+		"_sidebar.md",
+		sidebarFileContent,
+	);
 	await fsp.writeFile(
 		path.join(ccDocsDir, "_sidebar.md"),
 		sidebarFileContent,
@@ -855,9 +864,10 @@ function getProgram(): Project {
 	return _program;
 }
 
-export async function processCC(
-	task: { filename: string; linkTargets: Record<string, string> },
-): Promise<CCDocFileResult | undefined> {
+export async function processCC(task: {
+	filename: string;
+	linkTargets: Record<string, string>;
+}): Promise<CCDocFileResult | undefined> {
 	const program = getProgram();
 	const sourceFile = program.getSourceFileOrThrow(task.filename);
 	try {

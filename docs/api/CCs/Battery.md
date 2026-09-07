@@ -8,17 +8,18 @@
 
 ```ts
 async get(): Promise<
-	{
-		backup?: boolean;
-		chargingStatus?: BatteryChargingStatus;
-		disconnected?: boolean;
-		level: number;
-		lowFluid?: boolean;
-		lowTemperatureStatus?: boolean;
-		overheating?: boolean;
-		rechargeable?: boolean;
-		rechargeOrReplace?: BatteryReplacementStatus;
-	} | undefined
+	| {
+			backup?: boolean;
+			chargingStatus?: BatteryChargingStatus;
+			disconnected?: boolean;
+			level: number;
+			lowFluid?: boolean;
+			lowTemperatureStatus?: boolean;
+			overheating?: boolean;
+			rechargeable?: boolean;
+			rechargeOrReplace?: BatteryReplacementStatus;
+	  }
+	| undefined
 >;
 ```
 
@@ -26,10 +27,11 @@ async get(): Promise<
 
 ```ts
 async getHealth(): Promise<
-	{
-		maximumCapacity?: number;
-		temperature?: number;
-	} | undefined
+	| {
+			maximumCapacity?: number;
+			temperature?: number;
+	  }
+	| undefined
 >;
 ```
 

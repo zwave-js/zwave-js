@@ -1,6 +1,7 @@
-import { isObject } from "alcalzone-shared/typeguards";
 import type { EventEmitter } from "node:events";
 import type { Duplex } from "node:stream";
+
+import { isObject } from "alcalzone-shared/typeguards";
 
 export function isZWaveSerialPortImplementation(
 	obj: unknown,

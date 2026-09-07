@@ -44,6 +44,7 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -90,17 +91,13 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 	...V.staticProperty("supportedRateTypes", undefined, {
 		internal: true,
 	}),
-	...V.staticPropertyWithName(
-		"resetAll",
-		"reset",
-		{
-			...ValueMetadata.WriteOnlyBoolean,
-			label: `Reset accumulated values`,
-			states: {
-				true: "Reset",
-			},
+	...V.staticPropertyWithName("resetAll", "reset", {
+		...ValueMetadata.WriteOnlyBoolean,
+		label: `Reset accumulated values`,
+		states: {
+			true: "Reset",
 		},
-	),
+	}),
 	...V.dynamicPropertyAndKeyWithName(
 		"resetSingle",
 		"reset",
@@ -115,8 +112,8 @@ export const MeterCCValues = V.defineCCValues(CommandClasses.Meter, {
 				rateType === RateType.Consumed
 					? "Consumption, "
 					: rateType === RateType.Produced
-					? "Production, "
-					: ""
+						? "Production, "
+						: ""
 			}${num2hex(scale)})`,
 			states: {
 				true: "Reset",
@@ -165,8 +162,9 @@ function getValueLabel(
 	suffix?: string,
 ): string {
 	let ret = getMeterName(meterType);
-	const scaleLabel =
-		(getMeterScale(meterType, scale) ?? getUnknownMeterScale(scale)).label;
+	const scaleLabel = (
+		getMeterScale(meterType, scale) ?? getUnknownMeterScale(scale)
+	).label;
 	switch (rateType) {
 		case RateType.Consumed:
 			ret += ` Consumption [${scaleLabel}]`;
@@ -183,7 +181,10 @@ function getValueLabel(
 	return ret;
 }
 
-function parseMeterValueAndInfo(data: BytesView, offset: number): {
+function parseMeterValueAndInfo(
+	data: BytesView,
+	offset: number,
+): {
 	type: number;
 	rateType: RateType;
 	scale1: number;
@@ -226,16 +227,11 @@ function encodeMeterValueAndInfo(
 	const scale1Bit2 = scale1 >>> 2;
 	const scale2 = scale >= 7 ? scale - 7 : undefined;
 
-	const typeByte = (type & 0b0_00_11111)
-		| ((rateType & 0b11) << 5)
-		| (scale1Bit2 << 7);
+	const typeByte =
+		(type & 0b0_00_11111) | ((rateType & 0b11) << 5) | (scale1Bit2 << 7);
 
 	const floatParams = getFloatParameters(value);
-	const valueBytes = encodeFloatWithScale(
-		value,
-		scale1Bits10,
-		floatParams,
-	);
+	const valueBytes = encodeFloatWithScale(value, scale1Bits10, floatParams);
 
 	return {
 		data: Bytes.concat([[typeByte], valueBytes]),
@@ -258,10 +254,7 @@ function parseScale(
 	}
 }
 
-export function isAccumulatedValue(
-	meterType: number,
-	scale: number,
-): boolean {
+export function isAccumulatedValue(meterType: number, scale: number): boolean {
 	// FIXME: We should probably move the meter definitions into code
 	switch (meterType) {
 		case 0x01: // Electric
@@ -321,7 +314,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: MeterCCAPI, { property, propertyKey }) {
+		return async function (this: MeterCCAPI, { property, propertyKey }) {
 			switch (property) {
 				case "value":
 				case "previousValue":
@@ -368,7 +361,8 @@ export class MeterCCAPI extends PhysicalCCAPI {
 		if (response) {
 			return {
 				type: response.type,
-				scale: getMeterScale(response.type, response.scale)
+				scale:
+					getMeterScale(response.type, response.scale)
 					?? getUnknownMeterScale(response.scale),
 				...pick(response, [
 					"value",
@@ -404,14 +398,16 @@ export class MeterCCAPI extends PhysicalCCAPI {
 			const meterType = valueDB?.getValue<number>(
 				MeterCCValues.type.endpoint(this.endpoint.index),
 			);
-			const supportedScales = valueDB?.getValue<number[]>(
-				MeterCCValues.supportedScales.endpoint(this.endpoint.index),
-			) ?? [];
-			const supportedRateTypes = valueDB?.getValue<RateType[]>(
-				MeterCCValues.supportedRateTypes.endpoint(
-					this.endpoint.index,
-				),
-			) ?? [];
+			const supportedScales =
+				valueDB?.getValue<number[]>(
+					MeterCCValues.supportedScales.endpoint(this.endpoint.index),
+				) ?? [];
+			const supportedRateTypes =
+				valueDB?.getValue<RateType[]>(
+					MeterCCValues.supportedRateTypes.endpoint(
+						this.endpoint.index,
+					),
+				) ?? [];
 
 			const rateTypes = supportedRateTypes.length
 				? supportedRateTypes
@@ -451,9 +447,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			MeterCCSupportedReport
-		>(
+		const response = await this.host.sendCommand<MeterCCSupportedReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -496,7 +490,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: MeterCCAPI,
 			{ property, propertyKey },
 			value,
@@ -518,9 +512,8 @@ export class MeterCCAPI extends PhysicalCCAPI {
 			}
 
 			if (typeof propertyKey === "number") {
-				const { meterType, scale, rateType } = splitPropertyKey(
-					propertyKey,
-				);
+				const { meterType, scale, rateType } =
+					splitPropertyKey(propertyKey);
 				return this.reset({
 					type: meterType,
 					scale,
@@ -542,9 +535,8 @@ export class MeterCCAPI extends PhysicalCCAPI {
 
 		if (typeof propertyKey === "number") {
 			// Reset single
-			const { meterType, rateType, scale } = splitPropertyKey(
-				propertyKey,
-			);
+			const { meterType, rateType, scale } =
+				splitPropertyKey(propertyKey);
 			const readingValueId = MeterCCValues.value(
 				meterType,
 				rateType,
@@ -563,21 +555,22 @@ export class MeterCCAPI extends PhysicalCCAPI {
 					if (!valueDB) return;
 
 					if (isAccumulatedValue(meterType, scale)) {
-						valueDB.setValue({
-							commandClass: this.ccId,
-							endpoint: this.endpoint.index,
-							property,
-							propertyKey,
-						}, 0);
+						valueDB.setValue(
+							{
+								commandClass: this.ccId,
+								endpoint: this.endpoint.index,
+								property,
+								propertyKey,
+							},
+							0,
+						);
 					}
 				},
 
 				verifyChanges: () => {
-					this.schedulePoll(
-						readingValueId,
-						0,
-						{ transition: "fast" },
-					);
+					this.schedulePoll(readingValueId, 0, {
+						transition: "fast",
+					});
 				},
 			};
 		} else {
@@ -585,15 +578,18 @@ export class MeterCCAPI extends PhysicalCCAPI {
 			const valueDB = this.tryGetValueDB();
 			if (!valueDB) return;
 
-			const accumulatedValues = valueDB.findValues((vid) =>
-				vid.commandClass === this.ccId
-				&& vid.endpoint === this.endpoint.index
-				&& MeterCCValues.value.is(vid)
-			).filter(({ propertyKey }) => {
-				if (typeof propertyKey !== "number") return false;
-				const { meterType, scale } = splitPropertyKey(propertyKey);
-				return isAccumulatedValue(meterType, scale);
-			});
+			const accumulatedValues = valueDB
+				.findValues(
+					(vid) =>
+						vid.commandClass === this.ccId
+						&& vid.endpoint === this.endpoint.index
+						&& MeterCCValues.value.is(vid),
+				)
+				.filter(({ propertyKey }) => {
+					if (typeof propertyKey !== "number") return false;
+					const { meterType, scale } = splitPropertyKey(propertyKey);
+					return isAccumulatedValue(meterType, scale);
+				});
 
 			return {
 				optimisticallyUpdateRelatedValues: (
@@ -611,11 +607,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 				verifyChanges: () => {
 					// Poll all accumulated values, unless they were updated by the device
 					for (const valueID of accumulatedValues) {
-						this.schedulePoll(
-							valueID,
-							0,
-							{ transition: "fast" },
-						);
+						this.schedulePoll(valueID, 0, { transition: "fast" });
 					}
 				},
 			};
@@ -629,9 +621,7 @@ export class MeterCCAPI extends PhysicalCCAPI {
 export class MeterCC extends CommandClass {
 	declare ccCommand: MeterCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -666,13 +656,15 @@ export class MeterCC extends CommandClass {
 							"supported scales": logList(
 								suppResp.supportedScales.map(
 									(s) =>
-										(getMeterScale(suppResp.type, s)
-											?? getUnknownMeterScale(s)).label,
+										(
+											getMeterScale(suppResp.type, s)
+											?? getUnknownMeterScale(s)
+										).label,
 								),
 							),
 							"supported rate types": logList(
 								suppResp.supportedRateTypes.map((rt) =>
-									getEnumMemberName(RateType, rt)
+									getEnumMemberName(RateType, rt),
 								),
 							),
 							"supports reset": suppResp.supportsReset,
@@ -725,8 +717,7 @@ export class MeterCC extends CommandClass {
 			});
 			await api.get();
 		} else {
-			const type: number = this.getValue(ctx, MeterCCValues.type)
-				?? 0;
+			const type: number = this.getValue(ctx, MeterCCValues.type) ?? 0;
 
 			const supportedScales: readonly number[] =
 				this.getValue(ctx, MeterCCValues.supportedScales) ?? [];
@@ -743,19 +734,19 @@ export class MeterCC extends CommandClass {
 				for (const scale of supportedScales) {
 					ctx.logNode(node.id, {
 						endpoint: this.endpointIndex,
-						message: `querying meter value (type = ${
-							getMeterName(type)
-						}, scale = ${
-							(getMeterScale(type, scale)
-								?? getUnknownMeterScale(scale)).label
+						message: `querying meter value (type = ${getMeterName(
+							type,
+						)}, scale = ${
+							(
+								getMeterScale(type, scale)
+								?? getUnknownMeterScale(scale)
+							).label
 						}${
 							rateType != undefined
-								? `, rate type = ${
-									getEnumMemberName(
+								? `, rate type = ${getEnumMemberName(
 										RateType,
 										rateType,
-									)
-								}`
+									)}`
 								: ""
 						})...`,
 						direction: "outbound",
@@ -770,8 +761,7 @@ export class MeterCC extends CommandClass {
 
 	public shouldRefreshValues(
 		this: SinglecastCC<this>,
-		ctx:
-			& GetValueDB
+		ctx: GetValueDB
 			& GetSupportedCCVersion
 			& GetDeviceConfig
 			& GetNode<
@@ -785,7 +775,7 @@ export class MeterCC extends CommandClass {
 		if (!valueDB) return true;
 
 		const values = this.getDefinedValueIDs(ctx).filter((v) =>
-			MeterCCValues.value.is(v)
+			MeterCCValues.value.is(v),
 		);
 		return values.every((v) => {
 			const lastUpdated = valueDB.getTimestamp(v);
@@ -856,14 +846,15 @@ export class MeterCC extends CommandClass {
 		propertyKey: string | number,
 	): string | undefined {
 		if (property === "value" && typeof propertyKey === "number") {
-			const { meterType, rateType, scale } = splitPropertyKey(
-				propertyKey,
-			);
+			const { meterType, rateType, scale } =
+				splitPropertyKey(propertyKey);
 			let ret: string;
 			if (meterType !== 0) {
 				ret = `${getMeterName(meterType)}_${
-					(getMeterScale(meterType, scale)
-						?? getUnknownMeterScale(scale)).label
+					(
+						getMeterScale(meterType, scale)
+						?? getUnknownMeterScale(scale)
+					).label
 				}`;
 			} else {
 				ret = "default";
@@ -891,9 +882,7 @@ export interface MeterCCReportOptions {
 
 @CCCommand(MeterCommand.Report)
 export class MeterCCReport extends MeterCC {
-	public constructor(
-		options: WithAddress<MeterCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<MeterCCReportOptions>) {
 		super(options);
 
 		this.type = options.type;
@@ -962,7 +951,8 @@ export class MeterCCReport extends MeterCC {
 		const scaleNumber = ccVersion >= 3 ? this.scale : this.scale & 0b11;
 
 		const meter = getMeter(this.type);
-		const scale = getMeterScale(this.type, scaleNumber)
+		const scale =
+			getMeterScale(this.type, scaleNumber)
 			?? getUnknownMeterScale(scaleNumber);
 
 		// Filter out unknown meter types and scales, unless the strict validation is disabled
@@ -1006,12 +996,10 @@ export class MeterCCReport extends MeterCC {
 				);
 				if (supportedRateTypes?.length) {
 					validatePayload.withReason(
-						`Unsupported rate type ${
-							getEnumMemberName(
-								RateType,
-								rateType,
-							)
-						} or corrupted data`,
+						`Unsupported rate type ${getEnumMemberName(
+							RateType,
+							rateType,
+						)} or corrupted data`,
 					)(supportedRateTypes.includes(rateType));
 				}
 			}
@@ -1045,22 +1033,22 @@ export class MeterCCReport extends MeterCC {
 	public deltaTime: MaybeUnknown<number>;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const { data: typeAndValue, floatParams, scale2 } =
-			encodeMeterValueAndInfo(
-				this.type,
-				this.rateType,
-				this.scale,
-				this.value,
-			);
+		const {
+			data: typeAndValue,
+			floatParams,
+			scale2,
+		} = encodeMeterValueAndInfo(
+			this.type,
+			this.rateType,
+			this.scale,
+			this.value,
+		);
 
 		const deltaTime = this.deltaTime ?? 0xffff;
 		const deltaTimeBytes = new Bytes(2);
 		deltaTimeBytes.writeUInt16BE(deltaTime, 0);
 
-		this.payload = Bytes.concat([
-			typeAndValue,
-			deltaTimeBytes,
-		]);
+		this.payload = Bytes.concat([typeAndValue, deltaTimeBytes]);
 
 		if (this.deltaTime !== 0 && this.previousValue != undefined) {
 			// Encode the float, but only keep the value bytes
@@ -1070,24 +1058,19 @@ export class MeterCCReport extends MeterCC {
 				floatParams,
 			).subarray(1);
 
-			this.payload = Bytes.concat([
-				this.payload,
-				prevValueBytes,
-			]);
+			this.payload = Bytes.concat([this.payload, prevValueBytes]);
 		}
 
 		if (scale2 != undefined) {
-			this.payload = Bytes.concat([
-				this.payload,
-				[scale2],
-			]);
+			this.payload = Bytes.concat([this.payload, [scale2]]);
 		}
 
 		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
-		const scale = getMeterScale(this.type, this.scale)
+		const scale =
+			getMeterScale(this.type, this.scale)
 			?? getUnknownMeterScale(this.scale);
 
 		const message: MessageRecord = {
@@ -1127,9 +1110,7 @@ export interface MeterCCGetOptions {
 @CCCommand(MeterCommand.Get)
 @expectedCCResponse(MeterCCReport, testResponseForMeterGet)
 export class MeterCCGet extends MeterCC {
-	public constructor(
-		options: WithAddress<MeterCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<MeterCCGetOptions>) {
 		super(options);
 		this.rateType = options.rateType;
 		this.scale = options.scale;
@@ -1203,8 +1184,10 @@ export class MeterCCGet extends MeterCC {
 				// Try to lookup the meter type to translate the scale
 				const type = this.getValue<number>(ctx, MeterCCValues.type);
 				if (type != undefined) {
-					message.scale = (getMeterScale(type, this.scale)
-						?? getUnknownMeterScale(this.scale)).label;
+					message.scale = (
+						getMeterScale(type, this.scale)
+						?? getUnknownMeterScale(this.scale)
+					).label;
 				}
 			} else {
 				message.scale = this.scale;
@@ -1231,9 +1214,7 @@ export interface MeterCCSupportedReportOptions {
 @ccValueProperty("supportedScales", MeterCCValues.supportedScales)
 @ccValueProperty("supportedRateTypes", MeterCCValues.supportedRateTypes)
 export class MeterCCSupportedReport extends MeterCC {
-	public constructor(
-		options: WithAddress<MeterCCSupportedReportOptions>,
-	) {
+	public constructor(options: WithAddress<MeterCCSupportedReportOptions>) {
 		super(options);
 
 		this.type = options.type;
@@ -1268,10 +1249,7 @@ export class MeterCCSupportedReport extends MeterCC {
 			).map((scale) => (scale >= 8 ? scale - 1 : scale));
 		} else {
 			// only 7 bits in the bitmask. Bit 7 is 0, so no need to mask it out
-			supportedScales = parseBitMask(
-				Bytes.from([raw.payload[1]]),
-				0,
-			);
+			supportedScales = parseBitMask(Bytes.from([raw.payload[1]]), 0);
 		}
 		// This is only present in V4+
 		const supportedRateTypes: RateType[] = parseBitMask(
@@ -1318,13 +1296,11 @@ export class MeterCCSupportedReport extends MeterCC {
 					);
 					this.ensureMetadata(ctx, resetSingleValue, {
 						...resetSingleValue.meta,
-						label: `Reset ${
-							getValueLabel(
-								this.type,
-								scale,
-								rateType,
-							)
-						}`,
+						label: `Reset ${getValueLabel(
+							this.type,
+							scale,
+							rateType,
+						)}`,
 					});
 				}
 			}
@@ -1333,7 +1309,8 @@ export class MeterCCSupportedReport extends MeterCC {
 	}
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const typeByte = (this.type & 0b0_00_11111)
+		const typeByte =
+			(this.type & 0b0_00_11111)
 			| (this.supportedRateTypes.includes(RateType.Consumed)
 				? 0b0_01_00000
 				: 0)
@@ -1349,13 +1326,11 @@ export class MeterCCSupportedReport extends MeterCC {
 			// the first byte one to the right
 			-1,
 		);
-		const scalesByte1 = (supportedScales[0] >>> 1)
+		const scalesByte1 =
+			(supportedScales[0] >>> 1)
 			| (supportedScales.length > 1 ? 0b1000_0000 : 0);
 
-		this.payload = Bytes.from([
-			typeByte,
-			scalesByte1,
-		]);
+		this.payload = Bytes.from([typeByte, scalesByte1]);
 		if (supportedScales.length > 1) {
 			this.payload = Bytes.concat([
 				this.payload,
@@ -1374,8 +1349,10 @@ export class MeterCCSupportedReport extends MeterCC {
 			"supported scales": logList(
 				this.supportedScales.map(
 					(scale) =>
-						(getMeterScale(this.type, scale)
-							?? getUnknownMeterScale(scale)).label,
+						(
+							getMeterScale(this.type, scale)
+							?? getUnknownMeterScale(scale)
+						).label,
 				),
 			),
 			"supported rate types": this.supportedRateTypes
@@ -1404,9 +1381,7 @@ export type MeterCCResetOptions = AllOrNone<{
 @CCCommand(MeterCommand.Reset)
 @useSupervision()
 export class MeterCCReset extends MeterCC {
-	public constructor(
-		options: WithAddress<MeterCCResetOptions>,
-	) {
+	public constructor(options: WithAddress<MeterCCResetOptions>) {
 		super(options);
 		this.type = options.type;
 		this.scale = options.scale;
@@ -1461,10 +1436,7 @@ export class MeterCCReset extends MeterCC {
 			this.payload = typeAndValue;
 
 			if (scale2 != undefined) {
-				this.payload = Bytes.concat([
-					this.payload,
-					[scale2],
-				]);
+				this.payload = Bytes.concat([this.payload, [scale2]]);
 			}
 		}
 		return super.serialize(ctx);
@@ -1479,8 +1451,10 @@ export class MeterCCReset extends MeterCC {
 			message["rate type"] = getEnumMemberName(RateType, this.rateType);
 		}
 		if (this.type != undefined && this.scale != undefined) {
-			message.scale = (getMeterScale(this.type, this.scale)
-				?? getUnknownMeterScale(this.scale)).label;
+			message.scale = (
+				getMeterScale(this.type, this.scale)
+				?? getUnknownMeterScale(this.scale)
+			).label;
 		}
 		if (this.targetValue != undefined) {
 			message["target value"] = this.targetValue;

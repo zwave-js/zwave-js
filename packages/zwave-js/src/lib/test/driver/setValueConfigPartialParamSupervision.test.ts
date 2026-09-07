@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	ConfigurationCCSet,
 	ConfigurationCCValues,
@@ -9,7 +11,7 @@ import {
 	ConfigValueFormat,
 } from "@zwave-js/core";
 import { type MockNodeBehavior, ccCaps } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

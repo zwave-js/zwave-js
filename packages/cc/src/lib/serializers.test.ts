@@ -1,6 +1,7 @@
 import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import {
 	decodeSetbackState,
 	decodeSwitchpoint,
@@ -10,14 +11,12 @@ import {
 } from "./serializers.js";
 
 test("encodeSetbackState() should return the defined values for the special states", (t) => {
-	for (
-		const state of Object.keys(
-			setbackSpecialStateValues,
-		) as (keyof typeof setbackSpecialStateValues)[]
-	) {
-		t.expect(
-			encodeSetbackState(state as any)[0],
-		).toBe(setbackSpecialStateValues[state]);
+	for (const state of Object.keys(
+		setbackSpecialStateValues,
+	) as (keyof typeof setbackSpecialStateValues)[]) {
+		t.expect(encodeSetbackState(state as any)[0]).toBe(
+			setbackSpecialStateValues[state],
+		);
 	}
 });
 
@@ -30,11 +29,9 @@ test("encodeSetbackState() should return the value times 10 otherwise", (t) => {
 });
 
 test("decodeSetbackState() should return the defined values for the special states", (t) => {
-	for (
-		const state of Object.keys(
-			setbackSpecialStateValues,
-		) as (keyof typeof setbackSpecialStateValues)[]
-	) {
+	for (const state of Object.keys(
+		setbackSpecialStateValues,
+	) as (keyof typeof setbackSpecialStateValues)[]) {
 		const raw = Uint8Array.from([setbackSpecialStateValues[state]]);
 		t.expect(decodeSetbackState(raw)).toBe(state);
 	}

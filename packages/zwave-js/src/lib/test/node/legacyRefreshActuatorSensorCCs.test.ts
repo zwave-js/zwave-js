@@ -10,6 +10,7 @@ import {
 	MockZWaveFrameType,
 	type MockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

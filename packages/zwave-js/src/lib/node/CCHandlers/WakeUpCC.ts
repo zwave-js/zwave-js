@@ -12,6 +12,7 @@ import {
 } from "@zwave-js/core";
 import { getErrorMessage } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
+
 import type { ZWaveNode } from "../Node.js";
 
 /** Handles the receipt of a Wake Up notification */
@@ -82,25 +83,19 @@ async function compatDoWakeupQueries(
 		direction: "none",
 	});
 
-	for (
-		const [ccName, apiMethod, ...args] of node.deviceConfig.compat
-			.queryOnWakeup
-	) {
+	for (const [ccName, apiMethod, ...args] of node.deviceConfig.compat
+		.queryOnWakeup) {
 		ctx.logNode(node.id, {
-			message: `compat query "${ccName}"::${apiMethod}(${
-				args
-					.map((arg) => JSON.stringify(arg))
-					.join(", ")
-			})`,
+			message: `compat query "${ccName}"::${apiMethod}(${args
+				.map((arg) => JSON.stringify(arg))
+				.join(", ")})`,
 			direction: "none",
 		});
 
 		// Try to access the API - if it doesn't work, skip this option
 		let API: CCAPI;
 		try {
-			API = (
-				(node.commandClasses as any)[ccName] as CCAPI
-			).withOptions({
+			API = ((node.commandClasses as any)[ccName] as CCAPI).withOptions({
 				// Tag the resulting transactions as compat queries
 				tag: "compat",
 				// Do not retry them or they may cause congestion if the node is asleep again

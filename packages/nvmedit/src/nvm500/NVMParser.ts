@@ -1,4 +1,5 @@
 import type { CommandClasses } from "@zwave-js/core";
+
 import type { Route } from "../lib/common/routeCache.js";
 import type { SUCUpdateEntry } from "../lib/common/sucUpdateEntry.js";
 import type { NVM500NodeInfo } from "../lib/nvm500/EntryParsers.js";

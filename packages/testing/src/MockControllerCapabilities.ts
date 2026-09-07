@@ -24,9 +24,9 @@ export interface MockControllerCapabilities {
 	zwaveChipType?:
 		| string
 		| {
-			type: number;
-			version: number;
-		};
+				type: number;
+				version: number;
+		  };
 
 	supportsLongRange: boolean;
 	watchdogEnabled: boolean;

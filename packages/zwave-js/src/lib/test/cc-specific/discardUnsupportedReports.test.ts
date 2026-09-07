@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	type CommandClass,
 	MeterCCReport,
@@ -9,7 +11,7 @@ import {
 } from "@zwave-js/cc";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -89,12 +91,9 @@ integrationTest(
 
 			await wait(200);
 
-			const sensorValue = MultilevelSensorCCValues.value(
-				"Air temperature",
-			);
-			const temperature0 = node.getValue(
-				sensorValue.id,
-			);
+			const sensorValue =
+				MultilevelSensorCCValues.value("Air temperature");
+			const temperature0 = node.getValue(sensorValue.id);
 			t.expect(temperature0).toBeUndefined();
 
 			const temperature1 = node.getValue(sensorValue.endpoint(1));

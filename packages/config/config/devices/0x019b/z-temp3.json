@@ -64,10 +64,7 @@
 			"label": "Update Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [150, 65535] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [150, 65535] }],
 			"defaultValue": 3600,
 			"unsigned": true,
 			"options": [

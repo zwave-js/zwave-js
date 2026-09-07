@@ -9,12 +9,15 @@ import {
 	securityClassOrder,
 } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
+
 import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
+
 import { NetworkRoleMixin } from "./01_NetworkRole.js";
 
-export abstract class NodeSecurityMixin extends NetworkRoleMixin
+export abstract class NodeSecurityMixin
+	extends NetworkRoleMixin
 	implements QuerySecurityClasses, SetSecurityClass
 {
 	public constructor(
@@ -83,10 +86,10 @@ export abstract class NodeSecurityMixin extends NetworkRoleMixin
 	 * This will skip the interview process (see `Driver.interviewNodeInternal` method).
 	 */
 	public get failedS2Bootstrapping(): boolean {
-		return this.driver.cacheGet(
-			cacheKeys.node(this.id).failedS2Bootstrapping,
-		)
-			?? false;
+		return (
+			this.driver.cacheGet(cacheKeys.node(this.id).failedS2Bootstrapping)
+			?? false
+		);
 	}
 	public set failedS2Bootstrapping(value: boolean) {
 		this.driver.cacheSet(

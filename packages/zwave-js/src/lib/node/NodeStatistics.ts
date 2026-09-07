@@ -5,6 +5,7 @@ import {
 	type RSSI,
 	isLongRangeNodeId,
 } from "@zwave-js/core";
+
 import { StatisticsHost } from "../driver/Statistics.js";
 
 export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
@@ -31,8 +32,8 @@ export class NodeStatisticsHost extends StatisticsHost<NodeStatistics> {
 		}
 
 		// lastSeen may already be known from the cache
-		const lastSeen =
-			(this as unknown as { lastSeen: MaybeNotKnown<Date> }).lastSeen;
+		const lastSeen = (this as unknown as { lastSeen: MaybeNotKnown<Date> })
+			.lastSeen;
 		if (lastSeen) {
 			stats.lastSeen = lastSeen;
 		}

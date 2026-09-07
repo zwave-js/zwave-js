@@ -16,7 +16,9 @@ import {
 	compareNumberOrString,
 } from "alcalzone-shared/comparable";
 import type { DeferredPromise } from "alcalzone-shared/deferred-promise";
+
 import { NodeStatus } from "../node/_Types.js";
+
 import type { Driver } from "./Driver.js";
 
 export interface MessageGenerator {
@@ -131,7 +133,7 @@ class TransactionLifecycle {
 			caller.listener?.({
 				state: TransactionState.Failed,
 				reason: error.message,
-			})
+			}),
 		);
 		caller.promise.reject(error);
 		return this.callers.size === 0;
@@ -176,7 +178,8 @@ class TransactionLifecycle {
 	public adoptCallersFrom(source: TransactionLifecycle): void {
 		if (source === this) return;
 		const targetProgress = this.progress;
-		const replayTargetProgress = targetProgress != undefined
+		const replayTargetProgress =
+			targetProgress != undefined
 			&& source.progress?.state !== targetProgress.state;
 		for (const caller of source.callers) {
 			source.callers.delete(caller);
@@ -244,8 +247,8 @@ export class Transaction implements Comparable<Transaction> {
 		this.priority = options.priority;
 		this.parts = options.parts;
 		this.preventDeduplication = options.preventDeduplication ?? false;
-		this.lifecycle = lifecycle
-			?? new TransactionLifecycle(options.onSettled);
+		this.lifecycle =
+			lifecycle ?? new TransactionLifecycle(options.onSettled);
 
 		// We need create the stack on a temporary object or the Error
 		// class will try to print the message
@@ -257,18 +260,16 @@ export class Transaction implements Comparable<Transaction> {
 	/** Creates a copy of this transaction that shares its lifecycle. */
 	public clone(): Transaction {
 		const ret = new Transaction(this.driver, this.options, this.lifecycle);
-		for (
-			const prop of [
-				"_stack",
-				"creationTimestamp",
-				"changeNodeStatusOnTimeout",
-				"pauseSendThread",
-				"priority",
-				"tag",
-				"requestWakeUpOnDemand",
-				"requestStatusUpdates",
-			] as const
-		) {
+		for (const prop of [
+			"_stack",
+			"creationTimestamp",
+			"changeNodeStatusOnTimeout",
+			"pauseSendThread",
+			"priority",
+			"tag",
+			"requestWakeUpOnDemand",
+			"requestStatusUpdates",
+		] as const) {
 			(ret as any)[prop] = this[prop];
 		}
 
@@ -470,10 +471,10 @@ export class Transaction implements Comparable<Transaction> {
 			const otherNode = _other.message.tryGetNode(this.driver);
 			if (thisNode && otherNode) {
 				// Both nodes exist
-				const thisListening = thisNode.isListening
-					|| thisNode.isFrequentListening;
-				const otherListening = otherNode.isListening
-					|| otherNode.isFrequentListening;
+				const thisListening =
+					thisNode.isListening || thisNode.isFrequentListening;
+				const otherListening =
+					otherNode.isListening || otherNode.isFrequentListening;
 				// prioritize (-1) the one node that is listening when the other is not
 				if (thisListening && !otherListening) return -1;
 				if (!thisListening && otherListening) return 1;

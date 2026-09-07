@@ -1,5 +1,6 @@
 import type { AllowedValue } from "@zwave-js/core";
 import type { AST } from "jsonc-eslint-parser";
+
 import { type JSONCRule, isValueAllowed, parseAllowedField } from "../utils.js";
 
 function getAllowedEntriesAndRange(node: AST.JSONObjectExpression): {
@@ -110,10 +111,8 @@ export const noDisallowedDefaultValue: JSONCRule.RuleModule = {
 		},
 		schema: false,
 		messages: {
-			"default-value-not-allowed":
-				`Default value {{value}} is not in the allowed values.`,
-			"default-value-outside-range":
-				`Default value {{value}} is outside of the min/max value range {{min}}...{{max}}.`,
+			"default-value-not-allowed": `Default value {{value}} is not in the allowed values.`,
+			"default-value-outside-range": `Default value {{value}} is outside of the min/max value range {{min}}...{{max}}.`,
 		},
 		type: "problem",
 	},
@@ -167,13 +166,14 @@ export const noDisallowedOptionValues: JSONCRule.RuleModule = {
 						) {
 							const optionValue = optionValueProp.value.value;
 							if (!isValueAllowed(optionValue, allowedEntries)) {
-								const label = optionLabelProp
-										&& optionLabelProp.value.type
-											=== "JSONLiteral"
-										&& typeof optionLabelProp.value.value
-											=== "string"
-									? optionLabelProp.value.value
-									: undefined;
+								const label =
+									optionLabelProp
+									&& optionLabelProp.value.type
+										=== "JSONLiteral"
+									&& typeof optionLabelProp.value.value
+										=== "string"
+										? optionLabelProp.value.value
+										: undefined;
 								if (hasExplicitAllowed) {
 									context.report({
 										loc: optionValueProp.loc,
@@ -209,10 +209,8 @@ export const noDisallowedOptionValues: JSONCRule.RuleModule = {
 		},
 		schema: false,
 		messages: {
-			"option-value-not-allowed":
-				`Option value {{value}}{{label}} is not in the allowed values.`,
-			"option-value-outside-range":
-				`Option value {{value}}{{label}} is outside of the min/max value range {{min}}...{{max}}.`,
+			"option-value-not-allowed": `Option value {{value}}{{label}} is not in the allowed values.`,
+			"option-value-outside-range": `Option value {{value}}{{label}} is outside of the min/max value range {{min}}...{{max}}.`,
 		},
 		type: "problem",
 	},

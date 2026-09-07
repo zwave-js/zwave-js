@@ -7,6 +7,7 @@ import {
 	isUint8Array,
 	num2hex,
 } from "@zwave-js/shared";
+
 import {
 	FragmentType,
 	NVM3_MAX_OBJ_SIZE_SMALL,
@@ -82,9 +83,10 @@ export class NVMFile {
 			key: this.fileId,
 			data: this.payload,
 			// We only support large and small data objects for now
-			type: this.payload.length <= NVM3_MAX_OBJ_SIZE_SMALL
-				? ObjectType.DataSmall
-				: ObjectType.DataLarge,
+			type:
+				this.payload.length <= NVM3_MAX_OBJ_SIZE_SMALL
+					? ObjectType.DataSmall
+					: ObjectType.DataLarge,
 			// By default output unfragmented objects, they will be split later
 			fragmentType: FragmentType.None,
 		};
@@ -92,9 +94,9 @@ export class NVMFile {
 
 	public toJSON(): Record<string, any> {
 		return {
-			"file ID": `0x${
-				this.fileId.toString(16)
-			} (${this.constructor.name})`,
+			"file ID": `0x${this.fileId.toString(
+				16,
+			)} (${this.constructor.name})`,
 		};
 	}
 }
@@ -131,15 +133,14 @@ export function nvmFileID<Class extends typeof NVMFile>(
 /**
  * Retrieves the file ID defined for a NVM file class
  */
-export function getNVMFileID(
-	id: NVMFile,
-): number | ((id: number) => boolean) {
+export function getNVMFileID(id: NVMFile): number | ((id: number) => boolean) {
 	// get the class constructor
 	const constr = id.constructor;
 	// retrieve the current metadata
-	const ret: number | undefined = id instanceof NVMFile
-		? Reflect.getMetadata(METADATA_nvmFileID, constr)
-		: undefined;
+	const ret: number | undefined =
+		id instanceof NVMFile
+			? Reflect.getMetadata(METADATA_nvmFileID, constr)
+			: undefined;
 	if (ret == undefined) {
 		throw new ZWaveError(
 			`No NVM file ID defined for ${constr.name}!`,
@@ -213,9 +214,9 @@ export function getNVMSectionByFileID(fileId: number): NVMSection {
 	if (ret) return ret;
 
 	throw new ZWaveError(
-		`NVM section for file with ID ${
-			num2hex(fileId)
-		} could not be determined`,
+		`NVM section for file with ID ${num2hex(
+			fileId,
+		)} could not be determined`,
 		ZWaveErrorCodes.Argument_Invalid,
 	);
 }

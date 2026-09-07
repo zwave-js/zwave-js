@@ -3,6 +3,7 @@ import { CommandClasses } from "@zwave-js/core";
 import { ccCaps } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { describe } from "vitest";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 describe("SoundSwitchCC", () => {

@@ -8,11 +8,12 @@
 
 ```ts
 async getTime(): Promise<
-	{
-		hour: number;
-		minute: number;
-		second: number;
-	} | undefined
+	| {
+			hour: number;
+			minute: number;
+			second: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -30,11 +31,12 @@ async reportTime(
 
 ```ts
 async getDate(): Promise<
-	{
-		day: number;
-		month: number;
-		year: number;
-	} | undefined
+	| {
+			day: number;
+			month: number;
+			year: number;
+	  }
+	| undefined
 >;
 ```
 

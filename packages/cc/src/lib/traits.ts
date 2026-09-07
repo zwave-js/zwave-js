@@ -132,8 +132,7 @@ export interface ReportInterviewProgress {
 
 /** Additional context needed for deserializing CCs */
 export interface CCParsingContext
-	extends Readonly<SecurityManagers>, GetDeviceConfig, HostIDs
-{
+	extends Readonly<SecurityManagers>, GetDeviceConfig, HostIDs {
 	sourceNodeId: number;
 	__internalIsMockNode?: boolean;
 
@@ -161,8 +160,7 @@ export interface CCEncodingContext
 		Readonly<SecurityManagers>,
 		GetDeviceConfig,
 		HostIDs,
-		GetSupportedCCVersion
-{
+		GetSupportedCCVersion {
 	getHighestSecurityClass(nodeId: number): MaybeNotKnown<SecurityClass>;
 
 	hasSecurityClass(

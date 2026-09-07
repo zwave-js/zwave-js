@@ -1,9 +1,11 @@
 import { AssociationCCValues } from "@zwave-js/cc/AssociationCC";
 import { CommandClasses } from "@zwave-js/core";
 import { test as baseTest } from "vitest";
+
 import type { Driver } from "../driver/Driver.js";
 import { ZWaveNode } from "../node/Node.js";
 import { createEmptyMockDriver } from "../test/mocks.js";
+
 import { ZWaveController } from "./Controller.js";
 
 interface LocalTestContext {
@@ -30,7 +32,10 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("should respect the endpoint definition format when AGI is supported", async ({ context, expect }) => {
+test("should respect the endpoint definition format when AGI is supported", async ({
+	context,
+	expect,
+}) => {
 	const { fakeDriver } = context;
 
 	const ctrl = new ZWaveController(fakeDriver);
@@ -61,7 +66,10 @@ test("should respect the endpoint definition format when AGI is supported", asyn
 	).toBe("Button 1 (Multilevel Set)");
 });
 
-test("should respect the endpoint definition format when AGI is not supported", async ({ context, expect }) => {
+test("should respect the endpoint definition format when AGI is not supported", async ({
+	context,
+	expect,
+}) => {
 	const { fakeDriver } = context;
 
 	const ctrl = new ZWaveController(fakeDriver);

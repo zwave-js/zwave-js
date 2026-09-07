@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import type { JSONCRule } from "../utils.js";
 
 interface CommonError {
@@ -15,9 +16,10 @@ const commonErrors: CommonError[] = [
 
 function fixCommonErrors(str: string): string {
 	for (const { pattern, fixed } of commonErrors) {
-		const regex = typeof pattern === "string"
-			? new RegExp(`\\b${pattern}\\b`, "gi")
-			: pattern;
+		const regex =
+			typeof pattern === "string"
+				? new RegExp(`\\b${pattern}\\b`, "gi")
+				: pattern;
 		str = str.replaceAll(regex, fixed);
 	}
 	return str;
@@ -38,7 +40,8 @@ export const noMisspelledNames: JSONCRule.RuleModule = {
 				if (
 					node.value.type !== "JSONLiteral"
 					|| typeof node.value.value !== "string"
-				) return;
+				)
+					return;
 
 				const fixed = fixCommonErrors(node.value.raw);
 				if (fixed === node.value.raw) return;
@@ -55,8 +58,7 @@ export const noMisspelledNames: JSONCRule.RuleModule = {
 	},
 	meta: {
 		docs: {
-			description:
-				`Prevents some common misspellings in labels and descriptions`,
+			description: `Prevents some common misspellings in labels and descriptions`,
 		},
 		fixable: "code",
 		schema: false,

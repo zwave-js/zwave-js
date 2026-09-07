@@ -23,10 +23,7 @@ export enum Operator {
 	GreaterThanOrEqual,
 }
 
-export type Expression =
-	| Or
-	| And
-	| Comparison;
+export type Expression = Or | And | Comparison;
 
 type Or = {
 	kind: SyntaxKind.Or;
@@ -42,9 +39,7 @@ type Comparison = {
 	kind: SyntaxKind.Comparison;
 	left: Identifier;
 	operator: Operator;
-	right:
-		| NumberLiteral
-		| Version;
+	right: NumberLiteral | Version;
 };
 
 type Identifier = {
@@ -240,9 +235,10 @@ export function parse(input: string): Expression | undefined {
 	if (state.pos < tokens.length) {
 		const token = tokens[state.pos];
 		throw new Error(
-			`Unexpected token ${
-				getEnumMemberName(TokenKind, token.kind)
-			} at position ` + token.start,
+			`Unexpected token ${getEnumMemberName(
+				TokenKind,
+				token.kind,
+			)} at position ` + token.start,
 		);
 	}
 
@@ -380,9 +376,8 @@ function parseComparison(s: ParserState): Comparison | undefined {
 		s.pos = startPos;
 		return;
 	}
-	const right = parseVersion(s)
-		|| parseNumberLiteral(s)
-		|| parseIdentifier(s);
+	const right =
+		parseVersion(s) || parseNumberLiteral(s) || parseIdentifier(s);
 	if (!right) {
 		s.pos = startPos;
 		return;

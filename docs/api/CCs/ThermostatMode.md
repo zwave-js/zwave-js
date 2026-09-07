@@ -8,10 +8,11 @@
 
 ```ts
 async get(): Promise<
-	{
-		manufacturerData?: BytesView;
-		mode: ThermostatMode;
-	} | undefined
+	| {
+			manufacturerData?: BytesView;
+			mode: ThermostatMode;
+	  }
+	| undefined
 >;
 ```
 
@@ -85,20 +86,20 @@ async getSupportedModes(): Promise<
 
 ```ts
 enum ThermostatMode {
-	"Off" = 0x00,
-	"Heat" = 0x01,
-	"Cool" = 0x02,
-	"Auto" = 0x03,
-	"Auxiliary" = 0x04,
+	Off = 0x00,
+	Heat = 0x01,
+	Cool = 0x02,
+	Auto = 0x03,
+	Auxiliary = 0x04,
 	"Resume (on)" = 0x05,
-	"Fan" = 0x06,
-	"Furnace" = 0x07,
-	"Dry" = 0x08,
-	"Moist" = 0x09,
+	Fan = 0x06,
+	Furnace = 0x07,
+	Dry = 0x08,
+	Moist = 0x09,
 	"Auto changeover" = 0x0a,
 	"Energy heat" = 0x0b,
 	"Energy cool" = 0x0c,
-	"Away" = 0x0d,
+	Away = 0x0d,
 	"Full power" = 0x0f,
 	"Manufacturer specific" = 0x1f,
 }

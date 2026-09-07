@@ -63,10 +63,7 @@
 	},
 	{
 		"question": "How to create associations\n\nHow do I associate two devices with each other so one directly controls the other?",
-		"expectedFiles": [
-			"api/controller.md",
-			"api/CCs/Association.md"
-		]
+		"expectedFiles": ["api/controller.md", "api/CCs/Association.md"]
 	},
 	{
 		"question": "Heal network\n\nHow can I rebuild the routes of my devices after moving the controller?",
@@ -74,17 +71,11 @@
 	},
 	{
 		"question": "Sniffing Z-Wave traffic\n\nHow can I capture and inspect the raw Z-Wave radio traffic in my network?",
-		"expectedFiles": [
-			"api/zniffer.md",
-			"troubleshooting/zniffer.md"
-		]
+		"expectedFiles": ["api/zniffer.md", "troubleshooting/zniffer.md"]
 	},
 	{
 		"question": "Minimal example\n\nWhat is the minimal code needed to start the driver and control a device?",
-		"expectedFiles": [
-			"getting-started/quickstart.md",
-			"api/driver.md"
-		]
+		"expectedFiles": ["getting-started/quickstart.md", "api/driver.md"]
 	},
 	{
 		"question": "Custom device config files\n\nHow can I load my own device configuration files that are not part of zwave-js?",
@@ -102,10 +93,7 @@
 	},
 	{
 		"question": "Controlling multiple devices at once\n\nCan I send a command to several nodes at the same time using multicast?",
-		"expectedFiles": [
-			"api/virtual-node-endpoint.md",
-			"api/controller.md"
-		]
+		"expectedFiles": ["api/virtual-node-endpoint.md", "api/controller.md"]
 	},
 	{
 		"question": "What is a value ID?\n\nThe docs keep mentioning ValueID. What does it consist of and how do I use it?",

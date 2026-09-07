@@ -1,6 +1,8 @@
+import path from "node:path";
+
 import { BasicCCValues } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -37,8 +39,7 @@ integrationTest(
 
 		async testBody(t, driver, node, mockController, mockNode) {
 			// Make sure the custom config is loaded
-			const mapBasicSet = node.deviceConfig?.compat
-				?.mapBasicSet;
+			const mapBasicSet = node.deviceConfig?.compat?.mapBasicSet;
 			t.expect(mapBasicSet).toBe("event");
 
 			const valueIDs = node.getDefinedValueIDs();
@@ -98,8 +99,7 @@ integrationTest(
 
 		async testBody(t, driver, node, mockController, mockNode) {
 			// Make sure the custom config is loaded
-			const mapBasicSet = node.deviceConfig?.compat
-				?.mapBasicSet;
+			const mapBasicSet = node.deviceConfig?.compat?.mapBasicSet;
 			t.expect(mapBasicSet).toBe("event");
 
 			const valueIDs = node.getDefinedValueIDs();

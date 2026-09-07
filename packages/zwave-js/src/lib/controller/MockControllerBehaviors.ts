@@ -77,7 +77,9 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { createDefaultMockNodeBehaviors } from "../../Testing.js";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerInclusionState,
@@ -213,7 +215,8 @@ const respondToGetSerialApiInitData: MockControllerBehavior = {
 				isPrimary: !controller.capabilities.isSecondary,
 				nodeType: NodeType.Controller,
 				supportsTimers: controller.capabilities.supportsTimers,
-				isSIS: controller.capabilities.isSISPresent
+				isSIS:
+					controller.capabilities.isSISPresent
 					&& controller.capabilities.isStaticUpdateController,
 				nodeIds: [...nodeIds],
 				zwaveChipType: controller.capabilities.zwaveChipType,
@@ -334,8 +337,7 @@ const handleSendData: MockControllerBehavior = {
 						if (
 							isZWaveError(e)
 							&& e.code
-								=== ZWaveErrorCodes
-									.Deserialization_NotImplemented
+								=== ZWaveErrorCodes.Deserialization_NotImplemented
 						) {
 							console.error(e.message);
 							throw e;
@@ -437,8 +439,7 @@ const handleSendDataMulticast: MockControllerBehavior = {
 						if (
 							isZWaveError(e)
 							&& e.code
-								=== ZWaveErrorCodes
-									.Deserialization_NotImplemented
+								=== ZWaveErrorCodes.Deserialization_NotImplemented
 						) {
 							console.error(e.message);
 							throw e;
@@ -535,8 +536,7 @@ const handleSendDataBridge: MockControllerBehavior = {
 						if (
 							isZWaveError(e)
 							&& e.code
-								=== ZWaveErrorCodes
-									.Deserialization_NotImplemented
+								=== ZWaveErrorCodes.Deserialization_NotImplemented
 						) {
 							console.error(e.message);
 							throw e;
@@ -638,8 +638,7 @@ const handleSendDataMulticastBridge: MockControllerBehavior = {
 						if (
 							isZWaveError(e)
 							&& e.code
-								=== ZWaveErrorCodes
-									.Deserialization_NotImplemented
+								=== ZWaveErrorCodes.Deserialization_NotImplemented
 						) {
 							console.error(e.message);
 							throw e;
@@ -932,9 +931,7 @@ const handleAddNode: MockControllerBehavior = {
 
 			const expectCallback = msg.callbackId !== 0;
 			let cb: AddNodeToNetworkRequestStatusReport | undefined;
-			if (
-				state === MockControllerInclusionState.AddingNode
-			) {
+			if (state === MockControllerInclusionState.AddingNode) {
 				// While adding, only accept stop commands
 				if (msg.addNodeType === AddNodeType.Stop) {
 					controller.state.set(
@@ -999,8 +996,8 @@ const handleAddNode: MockControllerBehavior = {
 					testSpecificSetup?.(node);
 
 					const supportedCCs = [...node.implementedCCs]
-						.filter(([, info]) =>
-							info.isSupported && info.version > 0
+						.filter(
+							([, info]) => info.isSupported && info.version > 0,
 						)
 						.map(([cc]) => cc);
 
@@ -1066,9 +1063,7 @@ const handleRemoveNode: MockControllerBehavior = {
 
 			const expectCallback = msg.callbackId !== 0;
 			let cb: RemoveNodeFromNetworkRequestStatusReport | undefined;
-			if (
-				state === MockControllerInclusionState.RemovingNode
-			) {
+			if (state === MockControllerInclusionState.RemovingNode) {
 				// While removing, only accept stop commands
 				if (msg.removeNodeType === RemoveNodeType.Stop) {
 					controller.state.set(
@@ -1149,10 +1144,7 @@ const forwardUnsolicitedNIF: MockControllerBehavior = {
 				},
 			});
 			// Simulate a serialized frame being transmitted via radio before receiving it
-			await controller.sendMessageToHost(
-				updateRequest,
-				node,
-			);
+			await controller.sendMessageToHost(updateRequest, node);
 			return true;
 		}
 	},

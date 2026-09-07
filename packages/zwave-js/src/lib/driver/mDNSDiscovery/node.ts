@@ -1,5 +1,6 @@
 import { Bytes, isUint8Array } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import type { RemoteSerialPort } from "../mDNSDiscovery.js";
 
 const domain = "_zwave._tcp.local";
@@ -27,16 +28,20 @@ export async function discoverRemoteSerialPorts(
 				)
 				.map(({ data }) => {
 					return {
-						txt: resp.answers.find(
-							(n) => n.type === "TXT" && n.name === data,
-						) ?? resp.additionals.find(
-							(n) => n.type === "TXT" && n.name === data,
-						),
-						srv: resp.answers.find(
-							(n) => n.type === "SRV" && n.name === data,
-						) ?? resp.additionals.find(
-							(n) => n.type === "SRV" && n.name === data,
-						),
+						txt:
+							resp.answers.find(
+								(n) => n.type === "TXT" && n.name === data,
+							)
+							?? resp.additionals.find(
+								(n) => n.type === "TXT" && n.name === data,
+							),
+						srv:
+							resp.answers.find(
+								(n) => n.type === "SRV" && n.name === data,
+							)
+							?? resp.additionals.find(
+								(n) => n.type === "SRV" && n.name === data,
+							),
 					};
 				})
 				.filter(
@@ -60,9 +65,10 @@ export async function discoverRemoteSerialPorts(
 						}
 					}
 					const addr = srv!.data as { target: string; port: number };
-					const protocol = info.protocol?.toLowerCase() === "esphome"
-						? "esphome"
-						: "tcp";
+					const protocol =
+						info.protocol?.toLowerCase() === "esphome"
+							? "esphome"
+							: "tcp";
 					const port = `${protocol}://${addr.target}:${addr.port}`;
 
 					return {

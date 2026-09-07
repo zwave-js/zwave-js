@@ -16,11 +16,12 @@ async getSupported(): Promise<
 
 ```ts
 async get(component: ColorComponent): Promise<
-	{
-		currentValue: number;
-		duration?: Duration;
-		targetValue?: number;
-	} | undefined
+	| {
+			currentValue: number;
+			duration?: Duration;
+			targetValue?: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -33,38 +34,32 @@ async set(
 	},
 ): Promise<SupervisionResult | undefined>;
 
-async set(
-	options: {
-		hexColor: string;
-		duration?: Duration | string;
-	},
-): Promise<SupervisionResult | undefined>;
+async set(options: {
+	hexColor: string;
+	duration?: Duration | string;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `startLevelChange`
 
 ```ts
-async startLevelChange(
-	options: {
-		colorComponent: ColorComponent;
-		direction: "up" | "down";
-		ignoreStartLevel: true;
-		startLevel?: number;
-		// Version >= 3:
-		duration?: Duration | string;
-	},
-): Promise<SupervisionResult | undefined>;
+async startLevelChange(options: {
+	colorComponent: ColorComponent;
+	direction: "up" | "down";
+	ignoreStartLevel: true;
+	startLevel?: number;
+	// Version >= 3:
+	duration?: Duration | string;
+}): Promise<SupervisionResult | undefined>;
 
-async startLevelChange(
-	options: {
-		colorComponent: ColorComponent;
-		direction: "up" | "down";
-		ignoreStartLevel: false;
-		startLevel: number;
-		// Version >= 3:
-		duration?: Duration | string;
-	},
-): Promise<SupervisionResult | undefined>;
+async startLevelChange(options: {
+	colorComponent: ColorComponent;
+	direction: "up" | "down";
+	ignoreStartLevel: false;
+	startLevel: number;
+	// Version >= 3:
+	duration?: Duration | string;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `stopLevelChange`
@@ -225,6 +220,5 @@ This type is used to accept both the kebabCase names and numeric components as t
 
 ```ts
 type ColorTable =
-	| Partial<Record<ColorKey, number>>
-	| Partial<Record<ColorComponent, number>>;
+	Partial<Record<ColorKey, number>> | Partial<Record<ColorComponent, number>>;
 ```

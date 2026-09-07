@@ -1,4 +1,5 @@
 import { isObject } from "alcalzone-shared/typeguards";
+
 import { Duration } from "../values/Duration.js";
 
 export enum SupervisionStatus {
@@ -10,16 +11,16 @@ export enum SupervisionStatus {
 
 export type SupervisionResult =
 	| {
-		status:
-			| SupervisionStatus.NoSupport
-			| SupervisionStatus.Fail
-			| SupervisionStatus.Success;
-		remainingDuration?: undefined;
-	}
+			status:
+				| SupervisionStatus.NoSupport
+				| SupervisionStatus.Fail
+				| SupervisionStatus.Success;
+			remainingDuration?: undefined;
+	  }
 	| {
-		status: SupervisionStatus.Working;
-		remainingDuration: Duration;
-	};
+			status: SupervisionStatus.Working;
+			remainingDuration: Duration;
+	  };
 
 export type SupervisionUpdateHandler = (update: SupervisionResult) => void;
 
@@ -60,9 +61,8 @@ export function isUnsupervisedOrSucceeded(
 ): result is
 	| undefined
 	| (SupervisionResult & {
-		status: SupervisionStatus.Success | SupervisionStatus.Working;
-	})
-{
+			status: SupervisionStatus.Success | SupervisionStatus.Working;
+	  }) {
 	return !result || supervisedCommandSucceeded(result);
 }
 
@@ -90,10 +90,11 @@ export function mergeSupervisionResults(
 	);
 	if (working.length > 0) {
 		const durations = working.map((r) =>
-			r.remainingDuration.serializeSet()
+			r.remainingDuration.serializeSet(),
 		);
-		const maxDuration = (durations.length > 0
-			&& Duration.parseReport(Math.max(...durations)))
+		const maxDuration =
+			(durations.length > 0
+				&& Duration.parseReport(Math.max(...durations)))
 			|| Duration.unknown();
 		return {
 			status: SupervisionStatus.Working,

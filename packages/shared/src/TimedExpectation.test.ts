@@ -1,5 +1,6 @@
 import sinon from "sinon";
 import { test } from "vitest";
+
 import { TimedExpectation } from "./TimedExpectation.js";
 
 test("resolves to the given value", async (t) => {

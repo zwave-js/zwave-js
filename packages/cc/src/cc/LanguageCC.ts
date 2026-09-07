@@ -14,6 +14,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -37,20 +38,14 @@ import { LanguageCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const LanguageCCValues = V.defineCCValues(CommandClasses.Language, {
-	...V.staticProperty(
-		"language",
-		{
-			...ValueMetadata.ReadOnlyString,
-			label: "Language code",
-		},
-	),
-	...V.staticProperty(
-		"country",
-		{
-			...ValueMetadata.ReadOnlyString,
-			label: "Country code",
-		},
-	),
+	...V.staticProperty("language", {
+		...ValueMetadata.ReadOnlyString,
+		label: "Language code",
+	}),
+	...V.staticProperty("country", {
+		...ValueMetadata.ReadOnlyString,
+		label: "Country code",
+	}),
 });
 
 // @noSetValueAPI It doesn't make sense
@@ -107,9 +102,7 @@ export class LanguageCCAPI extends CCAPI {
 export class LanguageCC extends CommandClass {
 	declare ccCommand: LanguageCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -166,9 +159,7 @@ export interface LanguageCCSetOptions {
 @CCCommand(LanguageCommand.Set)
 @useSupervision()
 export class LanguageCCSet extends LanguageCC {
-	public constructor(
-		options: WithAddress<LanguageCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<LanguageCCSetOptions>) {
 		super(options);
 		// Populate properties from options object
 		this._language = options.language;
@@ -251,9 +242,7 @@ export interface LanguageCCReportOptions {
 @ccValueProperty("language", LanguageCCValues.language)
 @ccValueProperty("country", LanguageCCValues.country)
 export class LanguageCCReport extends LanguageCC {
-	public constructor(
-		options: WithAddress<LanguageCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<LanguageCCReportOptions>) {
 		super(options);
 		this.language = options.language;
 		this.country = options.country;

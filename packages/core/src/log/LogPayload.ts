@@ -36,23 +36,14 @@ export interface LogPayloadList {
 	items: string[];
 }
 
-export type LogPayloadDictValue =
-	| string
-	| number
-	| boolean
-	| LogPayloadList;
+export type LogPayloadDictValue = string | number | boolean | LogPayloadList;
 
 /** Entries with `undefined` values are skipped, so optional entries can be included inline */
-export type MessageRecord = Record<
-	string,
-	LogPayloadDictValue | undefined
->;
+export type MessageRecord = Record<string, LogPayloadDictValue | undefined>;
 
 export function isLogPayload(value: unknown): value is LogPayload {
 	return (
-		typeof value === "object"
-		&& value != null
-		&& logPayloadBrand in value
+		typeof value === "object" && value != null && logPayloadBrand in value
 	);
 }
 
@@ -67,9 +58,12 @@ export function logText(
 		[logPayloadBrand]: true,
 		type: "text",
 		tags: options?.tags,
-		lines: typeof lines === "string"
-			? (lines ? lines.split("\n") : [])
-			: lines,
+		lines:
+			typeof lines === "string"
+				? lines
+					? lines.split("\n")
+					: []
+				: lines,
 		nested: options?.nested,
 	};
 }
@@ -91,9 +85,7 @@ export function logDict(
 	};
 }
 
-export function logList(
-	items: Iterable<string | number>,
-): LogPayloadList {
+export function logList(items: Iterable<string | number>): LogPayloadList {
 	return {
 		[logPayloadBrand]: true,
 		type: "list",
@@ -115,9 +107,7 @@ export function logBuffer(buffer: BytesView): string | undefined {
 }
 
 /** Normalizes the message of a log entry, which may be given as a bare object literal */
-export function toLogPayload(
-	message: LogPayload | MessageRecord,
-): LogPayload {
+export function toLogPayload(message: LogPayload | MessageRecord): LogPayload {
 	return isLogPayload(message) ? message : logDict(message);
 }
 

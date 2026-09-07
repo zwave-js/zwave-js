@@ -1,5 +1,7 @@
 import { type JSONObject, pick } from "@zwave-js/shared";
+
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type ConditionalItem,
 	conditionApplies,
@@ -7,9 +9,7 @@ import {
 } from "./ConditionalItem.js";
 import type { DeviceID } from "./shared.js";
 
-export class ConditionalAssociationConfig
-	implements ConditionalItem<AssociationConfig>
-{
+export class ConditionalAssociationConfig implements ConditionalItem<AssociationConfig> {
 	public constructor(
 		filename: string,
 		groupId: number,

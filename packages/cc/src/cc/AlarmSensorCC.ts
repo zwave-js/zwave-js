@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, isEnumMember, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -154,12 +155,11 @@ export class AlarmSensorCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			AlarmSensorCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<AlarmSensorCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) return response.supportedSensorTypes;
 	}
 }
@@ -170,9 +170,7 @@ export class AlarmSensorCCAPI extends PhysicalCCAPI {
 export class AlarmSensorCC extends CommandClass {
 	declare ccCommand: AlarmSensorCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 
@@ -186,8 +184,7 @@ export class AlarmSensorCC extends CommandClass {
 		) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`${this.constructor.name}: skipping interview because Notification CC is supported...`,
+				message: `${this.constructor.name}: skipping interview because Notification CC is supported...`,
 				direction: "none",
 			});
 			this.setInterviewComplete(ctx, true);
@@ -222,7 +219,7 @@ export class AlarmSensorCC extends CommandClass {
 				message: logText("received supported sensor types:", {
 					nested: logList(
 						supportedSensorTypes.map((type) =>
-							getEnumMemberName(AlarmSensorType, type)
+							getEnumMemberName(AlarmSensorType, type),
 						),
 					),
 				}),
@@ -261,8 +258,7 @@ export class AlarmSensorCC extends CommandClass {
 		});
 
 		const supportedSensorTypes: readonly AlarmSensorType[] =
-			this.getValue(ctx, AlarmSensorCCValues.supportedSensorTypes)
-				?? [];
+			this.getValue(ctx, AlarmSensorCCValues.supportedSensorTypes) ?? [];
 
 		// Always query (all of) the sensor's current value(s)
 		for (const type of supportedSensorTypes) {
@@ -339,9 +335,7 @@ export interface AlarmSensorCCReportOptions {
 
 @CCCommand(AlarmSensorCommand.Report)
 export class AlarmSensorCCReport extends AlarmSensorCC {
-	public constructor(
-		options: WithAddress<AlarmSensorCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<AlarmSensorCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -436,9 +430,7 @@ export interface AlarmSensorCCGetOptions {
 @CCCommand(AlarmSensorCommand.Get)
 @expectedCCResponse(AlarmSensorCCReport, testResponseForAlarmSensorGet)
 export class AlarmSensorCCGet extends AlarmSensorCC {
-	public constructor(
-		options: WithAddress<AlarmSensorCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<AlarmSensorCCGetOptions>) {
 		super(options);
 		this.sensorType = options.sensorType ?? AlarmSensorType.Any;
 	}

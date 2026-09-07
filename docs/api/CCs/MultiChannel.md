@@ -8,12 +8,13 @@
 
 ```ts
 async getEndpoints(): Promise<
-	{
-		isDynamicEndpointCount: boolean;
-		identicalCapabilities: boolean;
-		individualEndpointCount: number;
-		aggregatedEndpointCount: MaybeNotKnown<number>;
-	} | undefined
+	| {
+			isDynamicEndpointCount: boolean;
+			identicalCapabilities: boolean;
+			individualEndpointCount: number;
+			aggregatedEndpointCount: MaybeNotKnown<number>;
+	  }
+	| undefined
 >;
 ```
 
@@ -45,12 +46,10 @@ async getAggregatedMembers(
 ### `sendEncapsulated`
 
 ```ts
-async sendEncapsulated(
-	options: {
-		encapsulated: CommandClass;
-		destination: MultiChannelCCDestination;
-	},
-): Promise<void>;
+async sendEncapsulated(options: {
+	encapsulated: CommandClass;
+	destination: MultiChannelCCDestination;
+}): Promise<void>;
 ```
 
 ### `getEndpointCountV1`

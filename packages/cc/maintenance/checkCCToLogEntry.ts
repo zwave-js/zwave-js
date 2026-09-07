@@ -2,9 +2,10 @@
  * This scripts checks which CCs have `toLogEntry` implemented
  */
 
+import * as path from "node:path";
+
 import { loadTSConfig, projectRoot } from "@zwave-js/maintenance";
 import esMain from "es-main";
-import * as path from "node:path";
 import ts from "typescript";
 
 export function checkCCToLogEntry(): void {
@@ -87,10 +88,10 @@ export function checkCCToLogEntry(): void {
 				checkResult === "empty"
 					? " _(empty CC)_"
 					: checkResult === "constructor"
-					? " **(constructor only)**"
-					: checkResult === "ignored"
-					? " _(ignored with comment)_"
-					: ""
+						? " **(constructor only)**"
+						: checkResult === "ignored"
+							? " _(ignored with comment)_"
+							: ""
 			}`,
 		);
 	}

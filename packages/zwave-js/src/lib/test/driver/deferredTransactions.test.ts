@@ -6,6 +6,7 @@ import {
 } from "@zwave-js/cc";
 import { TransactionState, ZWaveErrorCodes } from "@zwave-js/core";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+
 import { RemoveNodeReason } from "../../controller/Inclusion.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -104,65 +105,59 @@ integrationTest.sequential(
 	},
 );
 
-integrationTest.sequential(
-	"Node removal rejects deferred transactions",
-	{
-		...testOptions,
-		testBody: async (t, driver, node) => {
-			driver["pauseSendQueue"]();
-			const queued = createDeferredPromise<void>();
-			const command = driver.sendCommand(createGet(), {
-				...commandOptions,
-				onProgress: ({ state }) => {
-					if (state === TransactionState.Queued) queued.resolve();
-				},
-			});
-			const result = command.catch((error) => error);
-			await queued;
-			await driver.delayTransactionsForNode(2, 3600);
+integrationTest.sequential("Node removal rejects deferred transactions", {
+	...testOptions,
+	testBody: async (t, driver, node) => {
+		driver["pauseSendQueue"]();
+		const queued = createDeferredPromise<void>();
+		const command = driver.sendCommand(createGet(), {
+			...commandOptions,
+			onProgress: ({ state }) => {
+				if (state === TransactionState.Queued) queued.resolve();
+			},
+		});
+		const result = command.catch((error) => error);
+		await queued;
+		await driver.delayTransactionsForNode(2, 3600);
 
-			driver["onNodeRemoved"](node, RemoveNodeReason.Excluded);
+		driver["onNodeRemoved"](node, RemoveNodeReason.Excluded);
 
-			t.expect(await result).toMatchObject({
-				code: ZWaveErrorCodes.Controller_NodeRemoved,
-			});
-		},
+		t.expect(await result).toMatchObject({
+			code: ZWaveErrorCodes.Controller_NodeRemoved,
+		});
 	},
-);
+});
 
-integrationTest.sequential(
-	"Redundant commands join deferred transactions",
-	{
-		...testOptions,
-		testBody: async (t, driver) => {
-			driver["pauseSendQueue"]();
-			const queued = createDeferredPromise<void>();
-			const first = driver.sendCommand(createGet(), {
-				...commandOptions,
-				onProgress: ({ state }) => {
-					if (state === TransactionState.Queued) queued.resolve();
-				},
-			});
-			const firstResult = first.catch((error) => error);
-			await queued;
-			await driver.delayTransactionsForNode(2, 3600);
+integrationTest.sequential("Redundant commands join deferred transactions", {
+	...testOptions,
+	testBody: async (t, driver) => {
+		driver["pauseSendQueue"]();
+		const queued = createDeferredPromise<void>();
+		const first = driver.sendCommand(createGet(), {
+			...commandOptions,
+			onProgress: ({ state }) => {
+				if (state === TransactionState.Queued) queued.resolve();
+			},
+		});
+		const firstResult = first.catch((error) => error);
+		await queued;
+		await driver.delayTransactionsForNode(2, 3600);
 
-			const second = driver.sendCommand(createGet(), commandOptions);
-			const secondResult = second.catch((error) => error);
+		const second = driver.sendCommand(createGet(), commandOptions);
+		const secondResult = second.catch((error) => error);
 
-			// The duplicate waits for the deferred transaction instead of queueing
-			t.expect(driver["queue"].transactions.length).toBe(0);
+		// The duplicate waits for the deferred transaction instead of queueing
+		t.expect(driver["queue"].transactions.length).toBe(0);
 
-			await driver.destroy();
-			t.expect(await firstResult).toMatchObject({
-				code: ZWaveErrorCodes.Driver_Destroyed,
-			});
-			t.expect(await secondResult).toMatchObject({
-				code: ZWaveErrorCodes.Driver_Destroyed,
-			});
-		},
+		await driver.destroy();
+		t.expect(await firstResult).toMatchObject({
+			code: ZWaveErrorCodes.Driver_Destroyed,
+		});
+		t.expect(await secondResult).toMatchObject({
+			code: ZWaveErrorCodes.Driver_Destroyed,
+		});
 	},
-);
+});
 
 integrationTest.sequential(
 	"Superseding commands reject deferred transactions",

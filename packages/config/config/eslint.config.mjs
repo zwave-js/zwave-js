@@ -14,10 +14,11 @@
 
 // @ts-check
 
-import zjs from "@zwave-js/eslint-plugin";
-import jsoncPlugin from "eslint-plugin-jsonc";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import zjs from "@zwave-js/eslint-plugin";
+import jsoncPlugin from "eslint-plugin-jsonc";
 
 // Figure out the files glob depending on where ESLint is executed from
 const __dirname = dirname(fileURLToPath(import.meta.url));

@@ -8,12 +8,13 @@
 
 ```ts
 async get(): Promise<
-	{
-		firmwareVersions: string[];
-		hardwareVersion?: number;
-		libraryType: ZWaveLibraryTypes;
-		protocolVersion: string;
-	} | undefined
+	| {
+			firmwareVersions: string[];
+			hardwareVersion?: number;
+			libraryType: ZWaveLibraryTypes;
+			protocolVersion: string;
+	  }
+	| undefined
 >;
 ```
 
@@ -49,9 +50,10 @@ async reportCCVersion(
 
 ```ts
 async getCapabilities(): Promise<
-	{
-		supportsZWaveSoftwareGet: boolean;
-	} | undefined
+	| {
+			supportsZWaveSoftwareGet: boolean;
+	  }
+	| undefined
 >;
 ```
 
@@ -65,17 +67,18 @@ async reportCapabilities(): Promise<void>;
 
 ```ts
 async getZWaveSoftware(): Promise<
-	{
-		applicationBuildNumber: number;
-		applicationFrameworkAPIVersion: string;
-		applicationFrameworkBuildNumber: number;
-		applicationVersion: string;
-		hostInterfaceBuildNumber: number;
-		hostInterfaceVersion: string;
-		sdkVersion: string;
-		zWaveProtocolBuildNumber: number;
-		zWaveProtocolVersion: string;
-	} | undefined
+	| {
+			applicationBuildNumber: number;
+			applicationFrameworkAPIVersion: string;
+			applicationFrameworkBuildNumber: number;
+			applicationVersion: string;
+			hostInterfaceBuildNumber: number;
+			hostInterfaceVersion: string;
+			sdkVersion: string;
+			zWaveProtocolBuildNumber: number;
+			zWaveProtocolVersion: string;
+	  }
+	| undefined
 >;
 ```
 
@@ -321,12 +324,12 @@ async getZWaveSoftware(): Promise<
 
 ```ts
 enum ZWaveLibraryTypes {
-	"Unknown",
+	Unknown,
 	"Static Controller",
-	"Controller",
+	Controller,
 	"Enhanced Slave",
-	"Slave",
-	"Installer",
+	Slave,
+	Installer,
 	"Routing Slave",
 	"Bridge Controller",
 	"Device under Test",

@@ -67,6 +67,4 @@ const encapsulateSupervisionCC: MockNodeBehavior = {
 	},
 };
 
-export const SupervisionCCHooks = [
-	encapsulateSupervisionCC,
-];
+export const SupervisionCCHooks = [encapsulateSupervisionCC];

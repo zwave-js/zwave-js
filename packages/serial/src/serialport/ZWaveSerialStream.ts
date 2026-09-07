@@ -9,17 +9,20 @@
 // 0 -->               -->     Parsers     --> read
 // 1 └─────────────────┘ └─────────────────┘ └──
 
-import type { LogContainer } from "@zwave-js/core";
-import { type BytesView, noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
 	UnderlyingSink,
 	UnderlyingSource,
 } from "node:stream/web";
+
+import type { LogContainer } from "@zwave-js/core";
+import { type BytesView, noop } from "@zwave-js/shared";
+
 import { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
 import type { ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
 import { ZWaveSerialParser } from "../plumbing/ZWaveSerialParser.js";
+
 import { ZWaveSerialMode } from "./definitions.js";
 
 /** The low level bindings used by ZWaveSerialStream.
@@ -41,10 +44,7 @@ export function isZWaveSerialBindingFactory(
 
 /** Re-usable stream factory to create new serial streams */
 export class ZWaveSerialStreamFactory {
-	constructor(
-		binding: ZWaveSerialBindingFactory,
-		loggers: LogContainer,
-	) {
+	constructor(binding: ZWaveSerialBindingFactory, loggers: LogContainer) {
 		this.binding = binding;
 		this.logger = new SerialLogger(loggers);
 	}
@@ -60,14 +60,12 @@ export class ZWaveSerialStreamFactory {
 }
 
 /** Single-use serial stream. Has to be re-created after being closed. */
-export class ZWaveSerialStream implements
-	ReadableWritablePair<
-		// The serial binding emits ZWaveSerialFrames
-		ZWaveSerialFrame,
-		// and accepts binary data
-		BytesView
-	>
-{
+export class ZWaveSerialStream implements ReadableWritablePair<
+	// The serial binding emits ZWaveSerialFrames
+	ZWaveSerialFrame,
+	// and accepts binary data
+	BytesView
+> {
 	constructor(
 		source: UnderlyingSource<BytesView>,
 		sink: UnderlyingSink<BytesView>,
@@ -90,11 +88,13 @@ export class ZWaveSerialStream implements
 		this.parser = new ZWaveSerialParser(logger, this.#abort.signal);
 		this.readable = this.parser.readable;
 		const sourceStream = new ReadableStream(source);
-		void sourceStream.pipeTo(this.parser.writable, {
-			signal: this.#abort.signal,
-		}).catch((_e) => {
-			this._isOpen = false;
-		});
+		void sourceStream
+			.pipeTo(this.parser.writable, {
+				signal: this.#abort.signal,
+			})
+			.catch((_e) => {
+				this._isOpen = false;
+			});
 	}
 
 	protected logger: SerialLogger;

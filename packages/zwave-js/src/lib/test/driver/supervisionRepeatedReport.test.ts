@@ -1,7 +1,9 @@
+import path from "node:path";
+
 import { MultilevelSwitchCCValues, SupervisionCommand } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import type { MockNodeBehavior } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

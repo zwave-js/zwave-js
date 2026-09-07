@@ -16,8 +16,7 @@ async get(): Promise<HumidityControlOperatingState | undefined>;
 
 ```ts
 {
-	commandClass:
-		CommandClasses["Humidity Control Operating State"],
+	commandClass: CommandClasses["Humidity Control Operating State"],
 	endpoint: number,
 	property: "state",
 }
@@ -39,8 +38,8 @@ async get(): Promise<HumidityControlOperatingState | undefined>;
 
 ```ts
 enum HumidityControlOperatingState {
-	"Idle" = 0x00,
-	"Humidifying" = 0x01,
+	Idle = 0x00,
+	Humidifying = 0x01,
 	"De-humidifying" = 0x02,
 }
 ```

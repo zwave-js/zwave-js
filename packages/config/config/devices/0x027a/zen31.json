@@ -88,9 +88,7 @@
 			"label": "Power (W) Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "range": [0, 32400], "step": 30 }
-			],
+			"allowed": [{ "range": [0, 32400], "step": 30 }],
 			"defaultValue": 3600
 		},
 		{
@@ -113,9 +111,7 @@
 			"label": "Analog Sensor Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "range": [0, 32400], "step": 30 }
-			],
+			"allowed": [{ "range": [0, 32400], "step": 30 }],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -141,9 +137,7 @@
 			"label": "Energy (kWh) Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "range": [0, 32400], "step": 30 }
-			],
+			"allowed": [{ "range": [0, 32400], "step": 30 }],
 			"defaultValue": 3600
 		},
 		{
@@ -203,10 +197,7 @@
 			"label": "Single Click ON Trigger for Associated Devices (Red)",
 			"valueSize": 4,
 			"unit": "%",
-			"allowed": [
-				{ "range": [0, 99] },
-				{ "value": 255 }
-			],
+			"allowed": [{ "range": [0, 99] }, { "value": 255 }],
 			"defaultValue": 255,
 			"unsigned": true,
 			"options": [

@@ -6,6 +6,7 @@ import {
 	rssiToString,
 } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,

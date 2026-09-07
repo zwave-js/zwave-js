@@ -38,10 +38,9 @@ test("serialization and deserialization should be compatible", async (t) => {
 	t.expect(crc16.encapsulated).toBe(basicCCSet);
 	const serialized = await crc16.serialize({} as any);
 
-	const deserialized = await CommandClass.parse(
-		serialized,
-		{ sourceNodeId: basicCCSet.nodeId as number } as any,
-	);
+	const deserialized = await CommandClass.parse(serialized, {
+		sourceNodeId: basicCCSet.nodeId as number,
+	} as any);
 	t.expect(deserialized.nodeId).toBe(basicCCSet.nodeId);
 	const deserializedPayload = (deserialized as CRC16CCCommandEncapsulation)
 		.encapsulated as BasicCCSet;
@@ -61,9 +60,8 @@ test("deserializing a CC with a wrong checksum should result in an invalid CC", 
 	const serialized = await crc16.serialize({} as any);
 	serialized[serialized.length - 1] ^= 0xff;
 
-	const deserialized = await CommandClass.parse(
-		serialized,
-		{ sourceNodeId: basicCCSet.nodeId as number } as any,
-	);
+	const deserialized = await CommandClass.parse(serialized, {
+		sourceNodeId: basicCCSet.nodeId as number,
+	} as any);
 	t.expect(deserialized instanceof InvalidCC).toBe(true);
 });

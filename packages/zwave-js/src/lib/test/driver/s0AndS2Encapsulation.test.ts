@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	InvalidCC,
 	Security2CCNonceGet,
@@ -14,7 +16,7 @@ import {
 	securityClassOrder as allSecurityClasses,
 } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("S0 commands are S0-encapsulated, even when S2 is supported", {

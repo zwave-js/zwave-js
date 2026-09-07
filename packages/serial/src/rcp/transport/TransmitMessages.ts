@@ -4,6 +4,7 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -178,7 +179,8 @@ export class TransmitRequest extends RCPMessage {
 		);
 		header[0] = this.channel;
 		header.writeInt16BE(encodeTxPower(this.txPower), 1);
-		header[3] = (this.withCCA ? TransmitFlags.CCA : 0)
+		header[3] =
+			(this.withCCA ? TransmitFlags.CCA : 0)
 			| (replacements.length > 0 ? TransmitFlags.Replacements : 0);
 		if (replacements.length > 0) {
 			header[4] = replacements.length;
@@ -188,10 +190,7 @@ export class TransmitRequest extends RCPMessage {
 			}
 		}
 
-		this.payload = Bytes.concat([
-			header,
-			this.data,
-		]);
+		this.payload = Bytes.concat([header, this.data]);
 
 		return super.serialize(ctx);
 	}
@@ -204,10 +203,12 @@ export class TransmitRequest extends RCPMessage {
 		};
 		if (this.replacements?.length) {
 			message.replacements = this.replacements
-				.map(({ offset, source }) =>
-					`${
-						getEnumMemberName(TransmitReplacementSource, source)
-					} @ ${offset}`
+				.map(
+					({ offset, source }) =>
+						`${getEnumMemberName(
+							TransmitReplacementSource,
+							source,
+						)} @ ${offset}`,
 				)
 				.join(", ");
 		}

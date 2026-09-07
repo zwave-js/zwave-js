@@ -45,31 +45,25 @@ When the node does not respond due to a timeout, the `value` in the returned arr
 
 ```ts
 // Variant 1: Normal parameter, defined in a config file
-async set(
-	options: {
-		parameter: number;
-		value: ConfigValue;
-	},
-): Promise<SupervisionResult | undefined>;
+async set(options: {
+	parameter: number;
+	value: ConfigValue;
+}): Promise<SupervisionResult | undefined>;
 
 // Variant 2: Normal parameter, not defined in a config file
-async set(
-	options: {
-		parameter: number;
-		value: ConfigValue;
-		valueSize: 1 | 2 | 4;
-		valueFormat: ConfigValueFormat;
-	},
-): Promise<SupervisionResult | undefined>;
+async set(options: {
+	parameter: number;
+	value: ConfigValue;
+	valueSize: 1 | 2 | 4;
+	valueFormat: ConfigValueFormat;
+}): Promise<SupervisionResult | undefined>;
 
 // Variant 3: Partial parameter, must be defined in a config file
-async set(
-	options: {
-		parameter: number;
-		bitMask: number;
-		value: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async set(options: {
+	parameter: number;
+	bitMask: number;
+	value: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 Sets a new value for a given config parameter of the device.
@@ -120,18 +114,19 @@ Resets all configuration parameters to their default value.
 
 ```ts
 async getProperties(parameter: number): Promise<
-	{
-		altersCapabilities: MaybeNotKnown<boolean>;
-		defaultValue: MaybeNotKnown<number>;
-		isAdvanced: MaybeNotKnown<boolean>;
-		isReadonly: MaybeNotKnown<boolean>;
-		maxValue: MaybeNotKnown<number>;
-		minValue: MaybeNotKnown<number>;
-		nextParameter: number;
-		noBulkSupport: MaybeNotKnown<boolean>;
-		valueFormat: ConfigValueFormat;
-		valueSize: number;
-	} | undefined
+	| {
+			altersCapabilities: MaybeNotKnown<boolean>;
+			defaultValue: MaybeNotKnown<number>;
+			isAdvanced: MaybeNotKnown<boolean>;
+			isReadonly: MaybeNotKnown<boolean>;
+			maxValue: MaybeNotKnown<number>;
+			minValue: MaybeNotKnown<number>;
+			nextParameter: number;
+			noBulkSupport: MaybeNotKnown<boolean>;
+			valueFormat: ConfigValueFormat;
+			valueSize: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -192,29 +187,27 @@ WARNING: On nodes implementing V2, all parameters after 255 will be ignored.
 ### `ConfigurationCCAPISetOptions`
 
 ```ts
-type ConfigurationCCAPISetOptions =
-	& {
-		parameter: number;
-	}
-	& (
-		| {
+type ConfigurationCCAPISetOptions = {
+	parameter: number;
+} & (
+	| {
 			// Variant 1: Normal parameter, defined in a config file
 			bitMask?: undefined;
 			value: ConfigValue;
-		}
-		| {
+	  }
+	| {
 			// Variant 2: Normal parameter, not defined in a config file
 			bitMask?: undefined;
 			value: ConfigValue;
 			valueSize: 1 | 2 | 4;
 			valueFormat: ConfigValueFormat;
-		}
-		| {
+	  }
+	| {
 			// Variant 3: Partial parameter, must be defined in a config file
 			bitMask: number;
 			value: number;
-		}
-	);
+	  }
+);
 ```
 
 ### `ConfigValue`

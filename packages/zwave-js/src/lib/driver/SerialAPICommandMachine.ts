@@ -21,17 +21,17 @@ export type SerialAPICommandState<T extends SerialAPICommand> =
 	| { value: "waitingForACK" }
 	| { value: "waitingForResponse" }
 	| {
-		value: "waitingForCallback";
-		responseTimedOut?: boolean;
-	}
+			value: "waitingForCallback";
+			responseTimedOut?: boolean;
+	  }
 	| {
-		value: "success";
-		result?: T;
-		done: true;
-	}
+			value: "success";
+			result?: T;
+			done: true;
+	  }
 	| ({
-		value: "failure";
-	} & SerialAPICommandMachineFailure<T>);
+			value: "failure";
+	  } & SerialAPICommandMachineFailure<T>);
 
 export type SerialAPICommandMachineFailure<T extends SerialAPICommand> =
 	| { reason: "ACK timeout"; result?: undefined }

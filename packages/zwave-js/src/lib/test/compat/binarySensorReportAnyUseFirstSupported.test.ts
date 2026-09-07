@@ -6,6 +6,7 @@ import {
 } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { type MockNodeBehavior, ccCaps } from "@zwave-js/testing";
+
 import { defaultCapabilities } from "../../node/mockCCBehaviors/UserCode.js";
 import { integrationTest } from "../integrationTestSuite.js";
 

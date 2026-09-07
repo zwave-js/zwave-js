@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
 	DeviceConfig,
@@ -8,9 +10,10 @@ import {
 import { tryParseParamNumber } from "@zwave-js/core";
 import { num2hex } from "@zwave-js/shared";
 import { parse as parseJsonC } from "jsonc-parser";
-import { readFile } from "node:fs/promises";
+
 import { DEVICES_DIR, fs } from "../configEnv.js";
 import type { ToolHandler } from "../types.js";
+
 import { errorResult, jsonResult } from "./results.js";
 
 export const TOOL_NAME = "resolve_config_param";
@@ -52,11 +55,11 @@ export async function resolveParamsForFirmware(
 		rootDir: DEVICES_DIR,
 		deviceId,
 	});
-	return [...(config.paramInformation?.values() ?? [])]
-		.filter((p) =>
+	return [...(config.paramInformation?.values() ?? [])].filter(
+		(p) =>
 			p.parameterNumber === parameter
-			&& (valueBitMask == undefined || p.valueBitMask === valueBitMask)
-		);
+			&& (valueBitMask == undefined || p.valueBitMask === valueBitMask),
+	);
 }
 
 async function handleResolveConfigParam(
@@ -82,9 +85,10 @@ async function handleResolveConfigParam(
 			);
 			if (matches.length === 0) {
 				return errorResult(
-					`No parameter ${
-						paramLabel(parameter, valueBitMask)
-					} found in ${filename} for firmware ${firmwareVersion}.`,
+					`No parameter ${paramLabel(
+						parameter,
+						valueBitMask,
+					)} found in ${filename} for firmware ${firmwareVersion}.`,
 				);
 			}
 			return jsonResult(matches.length === 1 ? matches[0] : matches);
@@ -102,15 +106,18 @@ async function handleResolveConfigParam(
 				const key = (p as Record<string, unknown>)["#"];
 				if (typeof key !== "string") return false;
 				const parsed = tryParseParamNumber(key);
-				return parsed?.parameter === parameter
+				return (
+					parsed?.parameter === parameter
 					&& (valueBitMask == undefined
-						|| parsed.valueBitMask === valueBitMask);
+						|| parsed.valueBitMask === valueBitMask)
+				);
 			});
 			if (matches.length === 0) {
 				return errorResult(
-					`No parameter ${
-						paramLabel(parameter, valueBitMask)
-					} found in ${filename}.`,
+					`No parameter ${paramLabel(
+						parameter,
+						valueBitMask,
+					)} found in ${filename}.`,
 				);
 			}
 			return jsonResult(matches.length === 1 ? matches[0] : matches);
@@ -148,7 +155,7 @@ export const resolveParamTool: ToolHandler<ResolveConfigParamArgs> = {
 			firmwareVersion: {
 				type: "string",
 				description:
-					"Optional firmware version (e.g. \"1.5\") to fully evaluate "
+					'Optional firmware version (e.g. "1.5") to fully evaluate '
 					+ "$if conditionals instead of preserving them",
 			},
 		},

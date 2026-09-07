@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-import { validateArgs } from "@zwave-js/transformers";
 import assert from "node:assert";
 
-export type Foo =
-	& {
-		groupId: number;
-	}
-	& (
-		| { nodeIds: number[] }
-		| { endpoints: string[] }
-		| { nodeIds: number[]; endpoints: string[] }
-	);
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+import { validateArgs } from "@zwave-js/transformers";
+
+export type Foo = {
+	groupId: number;
+} & (
+	| { nodeIds: number[] }
+	| { endpoints: string[] }
+	| { nodeIds: number[]; endpoints: string[] }
+);
 
 class Test {
 	@validateArgs()

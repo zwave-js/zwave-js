@@ -1,4 +1,3 @@
-import { configDir } from "#config_dir";
 import {
 	ZWaveError,
 	ZWaveErrorCodes,
@@ -31,9 +30,13 @@ import { isArray, isObject } from "alcalzone-shared/typeguards";
 import JSON5 from "json5";
 import path from "pathe";
 import semverGt from "semver/functions/gt.js";
+
+import { configDir } from "#config_dir";
+
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
 import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,
@@ -160,9 +163,8 @@ async function generateIndex<T extends Record<string, unknown>>(
 	);
 
 	// Add the embedded devices dir as a fallback if necessary
-	const fallbackDirs = devicesDir !== embeddedDevicesDir
-		? [embeddedDevicesDir]
-		: undefined;
+	const fallbackDirs =
+		devicesDir !== embeddedDevicesDir ? [embeddedDevicesDir] : undefined;
 
 	for (const file of configFiles) {
 		const relativePath = path
@@ -170,16 +172,11 @@ async function generateIndex<T extends Record<string, unknown>>(
 			.replaceAll("\\", "/");
 		// Try parsing the file
 		try {
-			const config = await DeviceConfig.from(
-				fs,
-				file,
-				isEmbedded,
-				{
-					rootDir: devicesDir,
-					fallbackDirs,
-					relative: true,
-				},
-			);
+			const config = await DeviceConfig.from(fs, file, isEmbedded, {
+				rootDir: devicesDir,
+				fallbackDirs,
+				relative: true,
+			});
 			// Add the file to the index
 			index.push(
 				...extractIndexEntries(config).map((entry) => {
@@ -441,8 +438,7 @@ const deflateDict = Bytes.from(
 		`"endpoints":`,
 		`"hours"`,
 		`"multiChannel":`,
-	]
-		.join(""),
+	].join(""),
 	"utf8",
 );
 
@@ -463,14 +459,10 @@ export class ConditionalDeviceConfig {
 		const relativePath = relative
 			? path.relative(rootDir, filename).replaceAll("\\", "/")
 			: filename;
-		const json = await readJsonWithTemplate(
-			fs,
-			filename,
-			[
-				options.rootDir,
-				...(options.fallbackDirs ?? []),
-			],
-		);
+		const json = await readJsonWithTemplate(fs, filename, [
+			options.rootDir,
+			...(options.fallbackDirs ?? []),
+		]);
 		return new ConditionalDeviceConfig(relativePath, isEmbedded, json);
 	}
 
@@ -595,11 +587,9 @@ found non-numeric endpoint index "${key}" in endpoints`,
 associations is not an object`,
 				);
 			}
-			for (
-				const [key, assocDefinition] of Object.entries(
-					definition.associations,
-				)
-			) {
+			for (const [key, assocDefinition] of Object.entries(
+				definition.associations,
+			)) {
 				if (!/^[1-9][0-9]*$/.test(key)) {
 					throwInvalidConfig(
 						`device`,
@@ -685,10 +675,7 @@ metadata is not an object`,
 		}
 
 		if (definition.scenes != undefined) {
-			const scenes = new Map<
-				number,
-				ConditionalSceneConfig
-			>();
+			const scenes = new Map<number, ConditionalSceneConfig>();
 			if (!isObject(definition.scenes)) {
 				throwInvalidConfig(
 					`device`,
@@ -696,11 +683,9 @@ metadata is not an object`,
 scenes is not an object`,
 				);
 			}
-			for (
-				const [key, sceneDefinition] of Object.entries(
-					definition.scenes,
-				)
-			) {
+			for (const [key, sceneDefinition] of Object.entries(
+				definition.scenes,
+			)) {
 				if (!/^[1-9][0-9]*$/.test(key)) {
 					throwInvalidConfig(
 						`device`,
@@ -887,7 +872,7 @@ export class DeviceConfig {
 			// The root endpoint's associations may be configured separately or as part of "endpoints"
 			return (
 				this.associations?.get(group)
-					?? this.endpoints?.get(0)?.associations?.get(group)
+				?? this.endpoints?.get(0)?.associations?.get(group)
 			);
 		} else {
 			// The other endpoints can only have a configuration as part of "endpoints"
@@ -946,7 +931,7 @@ export class DeviceConfig {
 				}`;
 			target.paramInformation = [...map.values()]
 				.toSorted((a, b) =>
-					getParamKey(a).localeCompare(getParamKey(b))
+					getParamKey(a).localeCompare(getParamKey(b)),
 				)
 				.map((p) => cloneDeep(p));
 		};
@@ -990,17 +975,15 @@ export class DeviceConfig {
 			let c: Record<string, any> = {};
 
 			// Copy some simple flags over
-			for (
-				const prop of [
-					"forceSceneControllerGroupCount",
-					"mapRootReportsToEndpoint",
-					"mapBasicSet",
-					"preserveRootApplicationCCValueIDs",
-					"preserveEndpoints",
-					"removeEndpoints",
-					"treatMultilevelSwitchSetAsEvent",
-				] as const
-			) {
+			for (const prop of [
+				"forceSceneControllerGroupCount",
+				"mapRootReportsToEndpoint",
+				"mapBasicSet",
+				"preserveRootApplicationCCValueIDs",
+				"preserveEndpoints",
+				"removeEndpoints",
+				"treatMultilevelSwitchSetAsEvent",
+			] as const) {
 				if (this.compat[prop] != undefined) {
 					c[prop] = this.compat[prop];
 				}
@@ -1024,8 +1007,9 @@ export class DeviceConfig {
 				c.removeCCs = Object.fromEntries(this.compat.removeCCs);
 			}
 			if (this.compat.treatSetAsReport) {
-				c.treatSetAsReport = [...this.compat.treatSetAsReport]
-					.toSorted();
+				c.treatSetAsReport = [
+					...this.compat.treatSetAsReport,
+				].toSorted();
 			}
 
 			c = sortObject(c);
@@ -1036,11 +1020,9 @@ export class DeviceConfig {
 
 		if (version >= 2) {
 			// From version 2 and on, we ignore labels, descriptions and $purpose, and load them dynamically
-			for (
-				const ep of Object.values<Record<string, any>>(
-					hashable.endpoints ?? {},
-				)
-			) {
+			for (const ep of Object.values<Record<string, any>>(
+				hashable.endpoints ?? {},
+			)) {
 				for (const param of ep.paramInformation ?? []) {
 					delete param.label;
 					delete param.description;
@@ -1056,11 +1038,9 @@ export class DeviceConfig {
 			// Version 3 added the `allowed` field. When targeting older versions
 			// and the allowed field only has a single range, replace it with
 			// minValue/maxValue for compatibility
-			for (
-				const ep of Object.values<Record<string, any>>(
-					hashable.endpoints ?? {},
-				)
-			) {
+			for (const ep of Object.values<Record<string, any>>(
+				hashable.endpoints ?? {},
+			)) {
 				for (const param of ep.paramInformation ?? []) {
 					if (
 						isArray(param.allowed)
@@ -1086,11 +1066,9 @@ export class DeviceConfig {
 			// From version 4 and on, all param information is applied dynamically
 			// so it does not need to be part of the hash anymore.
 			if (hashable.endpoints) {
-				for (
-					const [key, ep] of Object.entries<Record<string, any>>(
-						hashable.endpoints,
-					)
-				) {
+				for (const [key, ep] of Object.entries<Record<string, any>>(
+					hashable.endpoints,
+				)) {
 					delete ep.paramInformation;
 					if (Object.keys(ep).length === 0) {
 						delete hashable.endpoints[key];
@@ -1180,10 +1158,11 @@ export class DeviceConfig {
 		let hashable: Record<string, any>;
 		try {
 			hashable = JSON.parse(
-				Bytes.view(inflateSync(
-					Bytes.view(cached.hashData),
-					{ dictionary: deflateDict },
-				)).toString("utf8"),
+				Bytes.view(
+					inflateSync(Bytes.view(cached.hashData), {
+						dictionary: deflateDict,
+					}),
+				).toString("utf8"),
 			);
 		} catch {
 			return false;
@@ -1207,10 +1186,12 @@ export class DeviceConfig {
 	}
 }
 
-function parseHash(hash: BytesView): {
-	version: number;
-	hashData: BytesView;
-} | undefined {
+function parseHash(hash: BytesView):
+	| {
+			version: number;
+			hashData: BytesView;
+	  }
+	| undefined {
 	const hashString = Bytes.view(hash).toString("utf8");
 	const versionMatch = hashString.match(/^\$v(\d+)\$/);
 	if (versionMatch) {
@@ -1256,11 +1237,9 @@ function fixBrokenV2Hashable(
 ): void {
 	if (version !== 2) return;
 
-	for (
-		const ep of Object.values<Record<string, any>>(
-			hashable.endpoints ?? {},
-		)
-	) {
+	for (const ep of Object.values<Record<string, any>>(
+		hashable.endpoints ?? {},
+	)) {
 		for (const param of ep.paramInformation ?? []) {
 			if (param.hidden === false) {
 				delete param.hidden;
@@ -1281,11 +1260,9 @@ function upgradeHashable(
 	if (fromVersion >= targetVersion) return;
 
 	if (targetVersion >= 4 && fromVersion < 4 && hashable.endpoints) {
-		for (
-			const [key, ep] of Object.entries<Record<string, any>>(
-				hashable.endpoints,
-			)
-		) {
+		for (const [key, ep] of Object.entries<Record<string, any>>(
+			hashable.endpoints,
+		)) {
 			delete ep.paramInformation;
 			if (Object.keys(ep).length === 0) {
 				delete hashable.endpoints[key];

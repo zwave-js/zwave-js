@@ -1,6 +1,8 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { buffer2hex, num2hex } from "@zwave-js/shared";
+
 import type { NVM3 } from "../NVM3.js";
+
 import { FragmentType, ObjectType, PageStatus } from "./consts.js";
 import { NVMFile } from "./files/NVMFile.js";
 import type { NVM3Object } from "./object.js";
@@ -112,9 +114,9 @@ function dumpObject(
 	console.log(`${prefix}  fragment type: ${FragmentType[obj.fragmentType]}`);
 	if (obj.data) {
 		console.log(
-			`${prefix}  data: ${
-				buffer2hex(obj.data)
-			} (${obj.data.length} bytes)`,
+			`${prefix}  data: ${buffer2hex(
+				obj.data,
+			)} (${obj.data.length} bytes)`,
 		);
 	}
 	console.log();
@@ -140,16 +142,20 @@ export async function dumpNVM(nvm: NVM3): Promise<void> {
 				console.log(`  raw objects:`);
 
 				for (const objectHeader of page.objects) {
-					const objectData = objectHeader.type !== ObjectType.Deleted
-						? await nvm.readObjectData(objectHeader)
-						: undefined;
-					dumpObject({
-						offset: objectHeader.offset,
-						key: objectHeader.key,
-						type: objectHeader.type,
-						fragmentType: objectHeader.fragmentType,
-						data: objectData,
-					}, false);
+					const objectData =
+						objectHeader.type !== ObjectType.Deleted
+							? await nvm.readObjectData(objectHeader)
+							: undefined;
+					dumpObject(
+						{
+							offset: objectHeader.offset,
+							key: objectHeader.key,
+							type: objectHeader.type,
+							fragmentType: objectHeader.fragmentType,
+							data: objectData,
+						},
+						false,
+					);
 				}
 			}
 		}
@@ -166,13 +172,16 @@ export async function dumpNVM(nvm: NVM3): Promise<void> {
 			if (!objectHeader) continue;
 			const objectData = await nvm.get(fileId, section);
 
-			dumpObject({
-				offset: objectHeader.offset,
-				key: fileId,
-				type: objectHeader.type,
-				fragmentType: FragmentType.None,
-				data: objectData,
-			}, true);
+			dumpObject(
+				{
+					offset: objectHeader.offset,
+					key: fileId,
+					type: objectHeader.type,
+					fragmentType: FragmentType.None,
+					data: objectData,
+				},
+				true,
+			);
 		}
 
 		console.log();

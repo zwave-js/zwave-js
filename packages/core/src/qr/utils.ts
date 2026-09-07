@@ -1,7 +1,9 @@
 import { Bytes } from "@zwave-js/shared";
+
 import { Protocols } from "../definitions/Protocol.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { parseBitMask } from "../values/Primitive.js";
+
 import {
 	ProvisioningInformationType,
 	type ProvisioningInformation_MaxInclusionRequestInterval,
@@ -103,10 +105,10 @@ export function parseTLVData(type: ProvisioningInformationType, data: string) {
 				data.length === 2
 					? readLevel(data, 0)
 					: data.length === 3
-					? readUInt8(data, 0)
-					: data.length === 5
-					? readUInt16(data, 0)
-					: 0,
+						? readUInt8(data, 0)
+						: data.length === 5
+							? readUInt16(data, 0)
+							: 0,
 			]);
 			const supportedProtocols = parseBitMask(bitMask, Protocols.ZWave);
 			const ret: ProvisioningInformation_SupportedProtocols = {

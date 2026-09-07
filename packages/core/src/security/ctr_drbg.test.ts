@@ -1,16 +1,19 @@
-import { type BytesView, hexToUint8Array } from "@zwave-js/shared";
 import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { type BytesView, hexToUint8Array } from "@zwave-js/shared";
 import { test, vi } from "vitest";
+
 import { CtrDRBG } from "./ctr_drbg.js";
 
 const seenArguments: [plaintext: BytesView, key: BytesView][] = [];
 
 vi.mock("../crypto/index.js", async () => {
-	const actual = await vi.importActual<
-		typeof import("../crypto/index.js")
-	>("../crypto/index.js");
+	const actual =
+		await vi.importActual<typeof import("../crypto/index.js")>(
+			"../crypto/index.js",
+		);
 	return {
 		...actual,
 		encryptAES128ECB(plaintext: BytesView, key: BytesView) {
@@ -62,32 +65,21 @@ for (const id of ["AES-128"]) {
 	const vectors = getVectors(name);
 
 	for (const [i, vector] of vectors.entries()) {
-		test(
-			`CtrDRBG -> should pass ${name} NIST vector #${
-				i + 1
-			} (ctr,df=false)`,
-			async (t) => {
-				const drbg = new CtrDRBG();
+		test(`CtrDRBG -> should pass ${name} NIST vector #${
+			i + 1
+		} (ctr,df=false)`, async (t) => {
+			const drbg = new CtrDRBG();
 
-				await drbg.init(
-					vector.EntropyInput,
-				);
+			await drbg.init(vector.EntropyInput);
 
-				await drbg["reseed"](
-					vector.EntropyInputReseed,
-				);
+			await drbg["reseed"](vector.EntropyInputReseed);
 
-				await drbg.generate(
-					vector.ReturnedBits.byteLength,
-				);
+			await drbg.generate(vector.ReturnedBits.byteLength);
 
-				const result = await drbg.generate(
-					vector.ReturnedBits.byteLength,
-				);
+			const result = await drbg.generate(vector.ReturnedBits.byteLength);
 
-				t.expect(result).toStrictEqual(vector.ReturnedBits);
-			},
-		);
+			t.expect(result).toStrictEqual(vector.ReturnedBits);
+		});
 	}
 }
 

@@ -13,6 +13,7 @@ import { type ChannelInfo, TransmitCallbackStatus } from "@zwave-js/serial";
 import { Bytes, type BytesView, TypedEventTarget } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 import { afterEach, expect, test, vi } from "vitest";
+
 import type {
 	MpduRxInfo,
 	PHYLayer,
@@ -47,7 +48,8 @@ interface FakePHYOptions {
 }
 
 /** A PHY layer that records transmits for the test to inspect */
-class FakePHY extends TypedEventTarget<PHYLayerEventCallbacks>
+class FakePHY
+	extends TypedEventTarget<PHYLayerEventCallbacks>
 	implements PHYLayer
 {
 	public constructor(private options: FakePHYOptions = {}) {
@@ -96,8 +98,10 @@ class FakePHY extends TypedEventTarget<PHYLayerEventCallbacks>
 				await Promise.resolve();
 			}
 			this.options.onTransmit?.(frame, options);
-			return this.options.results?.[attempt]
-				?? TransmitCallbackStatus.Completed;
+			return (
+				this.options.results?.[attempt]
+				?? TransmitCallbackStatus.Completed
+			);
 		} finally {
 			this.concurrent--;
 		}
@@ -206,9 +210,7 @@ function routedAck(sequenceNumber: number): RoutedZWaveMPDU {
 	});
 }
 
-async function createController(
-	phy: FakePHY,
-): Promise<ProtocolController> {
+async function createController(phy: FakePHY): Promise<ProtocolController> {
 	const controller = new ProtocolController({
 		phy: () => Promise.resolve(phy),
 		logConfig: { enabled: false },
@@ -387,7 +389,7 @@ test("a routed frame is acknowledged by the silent ack and the routed ack", asyn
 			phy.receive(silentAck(sent.sequenceNumber));
 			// The destination answers once the frame has travelled the route
 			void wait(5).then(() =>
-				phy.receive(routedAck(sent.sequenceNumber))
+				phy.receive(routedAck(sent.sequenceNumber)),
 			);
 		},
 	});

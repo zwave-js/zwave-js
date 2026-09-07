@@ -98,7 +98,8 @@ export interface AssignReturnRouteResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.AssignReturnRoute)
-export class AssignReturnRouteResponse extends Message
+export class AssignReturnRouteResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
@@ -144,8 +145,7 @@ export class AssignReturnRouteRequestTransmitReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& AssignReturnRouteRequestTransmitReportOptions
+		options: AssignReturnRouteRequestTransmitReportOptions
 			& MessageBaseOptions,
 	) {
 		super(options);

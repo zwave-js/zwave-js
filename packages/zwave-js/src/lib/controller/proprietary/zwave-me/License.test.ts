@@ -1,5 +1,6 @@
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import {
 	LICENSE_BLOCK_SIZE,
 	ZWaveMeLicenseFlag,

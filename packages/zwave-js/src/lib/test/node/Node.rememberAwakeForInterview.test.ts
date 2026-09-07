@@ -1,7 +1,9 @@
+import path from "node:path";
+
 import { CommandClasses } from "@zwave-js/core";
 import { wait } from "alcalzone-shared/async";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -18,9 +20,7 @@ integrationTest(
 			isListening: false,
 			isFrequentListening: false,
 
-			commandClasses: [
-				CommandClasses["Manufacturer Specific"],
-			],
+			commandClasses: [CommandClasses["Manufacturer Specific"]],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
@@ -57,9 +57,7 @@ integrationTest(
 			isListening: false,
 			isFrequentListening: false,
 
-			commandClasses: [
-				CommandClasses["Manufacturer Specific"],
-			],
+			commandClasses: [CommandClasses["Manufacturer Specific"]],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
@@ -99,9 +97,7 @@ integrationTest(
 			isListening: false,
 			isFrequentListening: false,
 
-			commandClasses: [
-				CommandClasses["Manufacturer Specific"],
-			],
+			commandClasses: [CommandClasses["Manufacturer Specific"]],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
@@ -138,9 +134,7 @@ integrationTest(
 			isListening: false,
 			isFrequentListening: false,
 
-			commandClasses: [
-				CommandClasses["Manufacturer Specific"],
-			],
+			commandClasses: [CommandClasses["Manufacturer Specific"]],
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {

@@ -7,31 +7,27 @@
 ### `sendReport`
 
 ```ts
-async sendReport(
-	options: {
-		moreUpdatesFollow: boolean;
-		requestWakeUpOnDemand?: boolean;
-		sessionId: number;
-		status: SupervisionStatus.Working;
-		duration: Duration;
-		encapsulationFlags?: EncapsulationFlags;
-		lowPriority?: boolean;
-	},
-): Promise<void>;
+async sendReport(options: {
+	moreUpdatesFollow: boolean;
+	requestWakeUpOnDemand?: boolean;
+	sessionId: number;
+	status: SupervisionStatus.Working;
+	duration: Duration;
+	encapsulationFlags?: EncapsulationFlags;
+	lowPriority?: boolean;
+}): Promise<void>;
 
-async sendReport(
-	options: {
-		moreUpdatesFollow: boolean;
-		requestWakeUpOnDemand?: boolean;
-		sessionId: number;
-		status:
-			| SupervisionStatus.NoSupport
-			| SupervisionStatus.Fail
-			| SupervisionStatus.Success;
-		encapsulationFlags?: EncapsulationFlags;
-		lowPriority?: boolean;
-	},
-): Promise<void>;
+async sendReport(options: {
+	moreUpdatesFollow: boolean;
+	requestWakeUpOnDemand?: boolean;
+	sessionId: number;
+	status:
+		| SupervisionStatus.NoSupport
+		| SupervisionStatus.Fail
+		| SupervisionStatus.Success;
+	encapsulationFlags?: EncapsulationFlags;
+	lowPriority?: boolean;
+}): Promise<void>;
 ```
 
 ## Related types

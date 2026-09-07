@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { ConsentRequiredError } from "../semantic/consent.js";
 import type { SemanticSearchService } from "../semantic/service.js";
+
 import { createSearchParameterDefinitionsTool } from "./searchParameterDefinitions.js";
 
 function fakeService(
@@ -112,12 +114,14 @@ describe("createSearchParameterDefinitionsTool", () => {
 
 	it("translates a thrown consent-required error into a structured response, not a crash", async () => {
 		const service = fakeService({
-			search: vi.fn().mockRejectedValue(
-				new ConsentRequiredError(
-					"/cache/models",
-					"/cache/consent.json",
+			search: vi
+				.fn()
+				.mockRejectedValue(
+					new ConsentRequiredError(
+						"/cache/models",
+						"/cache/consent.json",
+					),
 				),
-			),
 		} as any);
 		const tool = createSearchParameterDefinitionsTool(service);
 		const result = await tool.handler({ query: "ramp rate" } as any);

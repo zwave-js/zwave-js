@@ -128,10 +128,7 @@
 			"label": "Voltage Overload Protection",
 			"valueSize": 1,
 			"unit": "V",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [95, 255] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [95, 255] }],
 			"defaultValue": 135,
 			"unsigned": true,
 			"options": [
@@ -260,11 +257,7 @@
 			"label": "Alarm Disable Setting",
 			"valueSize": 1,
 			"unit": "seconds",
-			"allowed": [
-				{ "range": [0, 2] },
-				{ "value": 4 },
-				{ "range": [5, 255] }
-			],
+			"allowed": [{ "range": [0, 2] }, { "value": 4 }, { "range": [5, 255] }],
 			"defaultValue": 1,
 			"unsigned": true,
 			"options": [

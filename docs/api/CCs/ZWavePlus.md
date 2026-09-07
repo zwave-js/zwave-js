@@ -8,13 +8,14 @@
 
 ```ts
 async get(): Promise<
-	{
-		installerIcon: number;
-		nodeType: ZWavePlusNodeType;
-		roleType: ZWavePlusRoleType;
-		userIcon: number;
-		zwavePlusVersion: number;
-	} | undefined
+	| {
+			installerIcon: number;
+			nodeType: ZWavePlusNodeType;
+			roleType: ZWavePlusRoleType;
+			userIcon: number;
+			zwavePlusVersion: number;
+	  }
+	| undefined
 >;
 ```
 

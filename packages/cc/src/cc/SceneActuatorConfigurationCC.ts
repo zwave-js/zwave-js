@@ -15,6 +15,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -90,7 +91,7 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: SceneActuatorConfigurationCCAPI,
 			{ property, propertyKey },
 			value,
@@ -118,11 +119,11 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 				// 3. default
 				const dimmingDuration =
 					Duration.from(options?.transitionDuration)
-						?? this.tryGetValueDB()?.getValue<Duration>(
-							SceneActuatorConfigurationCCValues.dimmingDuration(
-								propertyKey,
-							).endpoint(this.endpoint.index),
-						);
+					?? this.tryGetValueDB()?.getValue<Duration>(
+						SceneActuatorConfigurationCCValues.dimmingDuration(
+							propertyKey,
+						).endpoint(this.endpoint.index),
+					);
 				return this.set(propertyKey, dimmingDuration, value);
 			} else if (property === "dimmingDuration") {
 				if (typeof value !== "string" && !Duration.isDuration(value)) {
@@ -137,15 +138,11 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 				const dimmingDuration = Duration.from(value);
 				if (dimmingDuration == undefined) {
 					throw new ZWaveError(
-						`${
-							getCCName(
-								this.ccId,
-							)
-						}: "${property}" could not be set. ${
-							JSON.stringify(
-								value,
-							)
-						} is not a valid duration.`,
+						`${getCCName(
+							this.ccId,
+						)}: "${property}" could not be set. ${JSON.stringify(
+							value,
+						)} is not a valid duration.`,
 						ZWaveErrorCodes.Argument_Invalid,
 					);
 				}
@@ -167,7 +164,7 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: SceneActuatorConfigurationCCAPI,
 			{ property, propertyKey },
 		) {
@@ -209,8 +206,8 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 			sceneId,
-			dimmingDuration: Duration.from(dimmingDuration)
-				?? new Duration(0, "seconds"),
+			dimmingDuration:
+				Duration.from(dimmingDuration) ?? new Duration(0, "seconds"),
 			level,
 		});
 
@@ -235,12 +232,11 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			sceneId: 0,
 		});
-		const response = await this.host.sendCommand<
-			SceneActuatorConfigurationCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SceneActuatorConfigurationCCReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (response) {
 			return pick(response, ["sceneId", "level", "dimmingDuration"]);
@@ -275,12 +271,11 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			sceneId: sceneId,
 		});
-		const response = await this.host.sendCommand<
-			SceneActuatorConfigurationCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<SceneActuatorConfigurationCCReport>(
+				cc,
+				this.commandOptions,
+			);
 
 		if (response) {
 			return pick(response, ["level", "dimmingDuration"]);
@@ -294,9 +289,7 @@ export class SceneActuatorConfigurationCCAPI extends CCAPI {
 export class SceneActuatorConfigurationCC extends CommandClass {
 	declare ccCommand: SceneActuatorConfigurationCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -306,13 +299,12 @@ export class SceneActuatorConfigurationCC extends CommandClass {
 
 		// Create Metadata for all scenes
 		for (let sceneId = 1; sceneId <= 255; sceneId++) {
-			const levelValue = SceneActuatorConfigurationCCValues.level(
-				sceneId,
-			);
+			const levelValue =
+				SceneActuatorConfigurationCCValues.level(sceneId);
 			this.ensureMetadata(ctx, levelValue);
 
-			const dimmingDurationValue = SceneActuatorConfigurationCCValues
-				.dimmingDuration(sceneId);
+			const dimmingDurationValue =
+				SceneActuatorConfigurationCCValues.dimmingDuration(sceneId);
 			this.ensureMetadata(ctx, dimmingDurationValue);
 		}
 
@@ -349,9 +341,7 @@ export interface SceneActuatorConfigurationCCSetOptions {
 
 @CCCommand(SceneActuatorConfigurationCommand.Set)
 @useSupervision()
-export class SceneActuatorConfigurationCCSet
-	extends SceneActuatorConfigurationCC
-{
+export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationCC {
 	public constructor(
 		options: WithAddress<SceneActuatorConfigurationCCSetOptions>,
 	) {
@@ -420,9 +410,7 @@ export interface SceneActuatorConfigurationCCReportOptions {
 }
 
 @CCCommand(SceneActuatorConfigurationCommand.Report)
-export class SceneActuatorConfigurationCCReport
-	extends SceneActuatorConfigurationCC
-{
+export class SceneActuatorConfigurationCCReport extends SceneActuatorConfigurationCC {
 	public constructor(
 		options: WithAddress<SceneActuatorConfigurationCCReportOptions>,
 	) {
@@ -445,8 +433,8 @@ export class SceneActuatorConfigurationCCReport
 		let dimmingDuration: Duration | undefined;
 		if (sceneId !== 0) {
 			level = raw.payload[1];
-			dimmingDuration = Duration.parseReport(raw.payload[2])
-				?? Duration.unknown();
+			dimmingDuration =
+				Duration.parseReport(raw.payload[2]) ?? Duration.unknown();
 		}
 
 		return new this({
@@ -478,8 +466,8 @@ export class SceneActuatorConfigurationCCReport
 		);
 		this.ensureMetadata(ctx, levelValue);
 
-		const dimmingDurationValue = SceneActuatorConfigurationCCValues
-			.dimmingDuration(this.sceneId);
+		const dimmingDurationValue =
+			SceneActuatorConfigurationCCValues.dimmingDuration(this.sceneId);
 		this.ensureMetadata(ctx, dimmingDurationValue);
 
 		this.setValue(ctx, levelValue, this.level);
@@ -525,9 +513,7 @@ export interface SceneActuatorConfigurationCCGetOptions {
 	SceneActuatorConfigurationCCReport,
 	testResponseForSceneActuatorConfigurationGet,
 )
-export class SceneActuatorConfigurationCCGet
-	extends SceneActuatorConfigurationCC
-{
+export class SceneActuatorConfigurationCCGet extends SceneActuatorConfigurationCC {
 	public constructor(
 		options: WithAddress<SceneActuatorConfigurationCCGetOptions>,
 	) {

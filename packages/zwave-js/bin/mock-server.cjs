@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 // @ts-check
-const { MockServer, createMockNodeOptionsFromDump } = require(
-	"../build/cjs/mockServer.js",
-);
+const {
+	MockServer,
+	createMockNodeOptionsFromDump,
+} = require("../build/cjs/mockServer.js");
 const { readFileSync, statSync, readdirSync } = require("fs");
 const path = require("path");
 
@@ -97,12 +98,7 @@ function getConfig(filename) {
 		return JSON.parse(readFileSync(filename, "utf8"));
 	} else if (filename.endsWith(".dump")) {
 		const node = createMockNodeOptionsFromDump(
-			JSON.parse(
-				readFileSync(
-					filename,
-					"utf8",
-				),
-			),
+			JSON.parse(readFileSync(filename, "utf8")),
 		);
 		return { nodes: [node] };
 	}

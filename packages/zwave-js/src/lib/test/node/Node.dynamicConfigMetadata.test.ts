@@ -1,5 +1,7 @@
-import { CommandClasses, type ConfigurationMetadata } from "@zwave-js/core";
 import path from "node:path";
+
+import { CommandClasses, type ConfigurationMetadata } from "@zwave-js/core";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // The cache was populated with the "before" device config:
@@ -105,10 +107,12 @@ integrationTest(
 			t.expect(meta1.default).toBe(75);
 			t.expect(meta1.unit).toBe("minutes");
 			// Value should still be available (was queried during original interview)
-			t.expect(node.getValue({
-				commandClass: CC,
-				property: 1,
-			})).toBe(50);
+			t.expect(
+				node.getValue({
+					commandClass: CC,
+					property: 1,
+				}),
+			).toBe(50);
 
 			// --- Param 2: removed from config ---
 			const meta2 = node.getValueMetadata({
@@ -147,10 +151,12 @@ integrationTest(
 			}) as ConfigurationMetadata;
 			t.expect(meta4.label).toBe("Param staying visible");
 			t.expect(meta4.max).toBe(1000);
-			t.expect(node.getValue({
-				commandClass: CC,
-				property: 4,
-			})).toBe(100);
+			t.expect(
+				node.getValue({
+					commandClass: CC,
+					property: 4,
+				}),
+			).toBe(100);
 
 			// --- Param 5: was hidden, now visible ---
 			const meta5 = node.getValueMetadata({
@@ -272,10 +278,12 @@ integrationTest(
 			t.expect(meta1.default).toBe(75);
 			t.expect(meta1.unit).toBe("minutes");
 			// Value should still be available from the original interview
-			t.expect(node.getValue({
-				commandClass: CC,
-				property: 1,
-			})).toBe(50);
+			t.expect(
+				node.getValue({
+					commandClass: CC,
+					property: 1,
+				}),
+			).toBe(50);
 
 			// --- Param 2: removed from config ---
 			const meta2 = node.getValueMetadata({
@@ -304,10 +312,12 @@ integrationTest(
 			}) as ConfigurationMetadata;
 			t.expect(meta4.label).toBe("Param staying visible");
 			t.expect(meta4.max).toBe(1000);
-			t.expect(node.getValue({
-				commandClass: CC,
-				property: 4,
-			})).toBe(100);
+			t.expect(
+				node.getValue({
+					commandClass: CC,
+					property: 4,
+				}),
+			).toBe(100);
 
 			// --- Param 5: was hidden, now visible ---
 			const meta5 = node.getValueMetadata({

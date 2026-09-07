@@ -8,6 +8,7 @@ import { DoorLockCCValues } from "@zwave-js/cc/DoorLockCC";
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

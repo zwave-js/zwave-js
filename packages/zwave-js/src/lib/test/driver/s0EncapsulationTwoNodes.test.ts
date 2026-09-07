@@ -12,6 +12,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuiteMulti.js";
 
 integrationTest(
@@ -105,7 +106,8 @@ integrationTest(
 					): resp is MockZWaveFrame & {
 						type: MockZWaveFrameType.Request;
 						payload: SecurityCCNonceReport;
-					} => resp.type === MockZWaveFrameType.Request
+					} =>
+						resp.type === MockZWaveFrameType.Request
 						&& resp.payload instanceof SecurityCCNonceReport,
 					{ timeout: 250 },
 				)

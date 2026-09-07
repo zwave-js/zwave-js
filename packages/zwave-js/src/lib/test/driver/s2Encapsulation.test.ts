@@ -1,6 +1,7 @@
 import { BasicCCGet, BasicCCReport } from "@zwave-js/cc";
 import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import { type MockNodeBehavior } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Communication via Security S2 works", {
@@ -23,9 +24,7 @@ integrationTest("Communication via Security S2 works", {
 		let queryCount = 0;
 		const respondToBasicGet: MockNodeBehavior = {
 			async handleCC(controller, self, receivedCC) {
-				if (
-					receivedCC instanceof BasicCCGet
-				) {
+				if (receivedCC instanceof BasicCCGet) {
 					const response = new BasicCCReport({
 						nodeId: controller.ownNodeId,
 						currentValue: ++queryCount,

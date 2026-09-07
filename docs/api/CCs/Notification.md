@@ -7,72 +7,66 @@
 ### `getInternal`
 
 ```ts
-async getInternal(
-	options: {
-		alarmType: number;
-	},
-): Promise<NotificationCCReport | undefined>;
+async getInternal(options: {
+	alarmType: number;
+}): Promise<NotificationCCReport | undefined>;
 
-async getInternal(
-	options: {
-		notificationType: number;
-		notificationEvent?: number;
-	},
-): Promise<NotificationCCReport | undefined>;
+async getInternal(options: {
+	notificationType: number;
+	notificationEvent?: number;
+}): Promise<NotificationCCReport | undefined>;
 ```
 
-.
+Queries the current status of a notification type and persists changes if needed.
 
 ### `sendReport`
 
 ```ts
-async sendReport(
-	options: {
-		alarmType?: number;
-		alarmLevel?: number;
-		notificationType?: number;
-		notificationEvent?: number;
-		notificationStatus?: number;
-		eventParameters?: BytesView;
-		sequenceNumber?: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendReport(options: {
+	alarmType?: number;
+	alarmLevel?: number;
+	notificationType?: number;
+	notificationEvent?: number;
+	notificationStatus?: number;
+	eventParameters?: BytesView;
+	sequenceNumber?: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `get`
 
 ```ts
-async get(options: {
-	alarmType: number;
-}): Promise<
-	{
-		alarmLevel?: number;
-		eventParameters?:
-			| number
-			| BytesView
-			| Duration
-			| Record<string, number>;
-		notificationEvent?: number;
-		notificationStatus?: number | boolean;
-		sequenceNumber?: number;
-	} | undefined
+async get(options: { alarmType: number }): Promise<
+	| {
+			alarmLevel?: number;
+			eventParameters?:
+				| number
+				| BytesView
+				| Duration
+				| Record<string, number>;
+			notificationEvent?: number;
+			notificationStatus?: number | boolean;
+			sequenceNumber?: number;
+	  }
+	| undefined
 >;
 
 async get(options: {
 	notificationType: number;
 	notificationEvent?: number;
 }): Promise<
-	{
-		alarmLevel?: number;
-		eventParameters?:
-			| number
-			| BytesView
-			| Duration
-			| Record<string, number>;
-		notificationEvent?: number;
-		notificationStatus?: number | boolean;
-		sequenceNumber?: number;
-	} | undefined
+	| {
+			alarmLevel?: number;
+			eventParameters?:
+				| number
+				| BytesView
+				| Duration
+				| Record<string, number>;
+			notificationEvent?: number;
+			notificationStatus?: number | boolean;
+			sequenceNumber?: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -89,10 +83,11 @@ async set(
 
 ```ts
 async getSupported(): Promise<
-	{
-		supportedNotificationTypes: number[];
-		supportsV1Alarm: boolean;
-	} | undefined
+	| {
+			supportedNotificationTypes: number[];
+			supportsV1Alarm: boolean;
+	  }
+	| undefined
 >;
 ```
 

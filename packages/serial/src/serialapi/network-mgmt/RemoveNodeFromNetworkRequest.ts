@@ -93,9 +93,7 @@ function testCallbackForRemoveNodeRequest(
 }
 
 @expectedCallback(testCallbackForRemoveNodeRequest)
-export class RemoveNodeFromNetworkRequest
-	extends RemoveNodeFromNetworkRequestBase
-{
+export class RemoveNodeFromNetworkRequest extends RemoveNodeFromNetworkRequestBase {
 	public constructor(
 		options: RemoveNodeFromNetworkRequestOptions & MessageBaseOptions,
 	) {
@@ -142,27 +140,28 @@ export class RemoveNodeFromNetworkRequest
 	}
 }
 
-export type RemoveNodeFromNetworkRequestStatusReportOptions = {
-	status:
-		| RemoveNodeStatus.Ready
-		| RemoveNodeStatus.NodeFound
-		| RemoveNodeStatus.Failed
-		| RemoveNodeStatus.Reserved_0x05
-		| RemoveNodeStatus.Done;
-} | {
-	status:
-		| RemoveNodeStatus.RemovingController
-		| RemoveNodeStatus.RemovingSlave;
-	nodeId: number;
-};
+export type RemoveNodeFromNetworkRequestStatusReportOptions =
+	| {
+			status:
+				| RemoveNodeStatus.Ready
+				| RemoveNodeStatus.NodeFound
+				| RemoveNodeStatus.Failed
+				| RemoveNodeStatus.Reserved_0x05
+				| RemoveNodeStatus.Done;
+	  }
+	| {
+			status:
+				| RemoveNodeStatus.RemovingController
+				| RemoveNodeStatus.RemovingSlave;
+			nodeId: number;
+	  };
 
 export class RemoveNodeFromNetworkRequestStatusReport
 	extends RemoveNodeFromNetworkRequestBase
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& RemoveNodeFromNetworkRequestStatusReportOptions
+		options: RemoveNodeFromNetworkRequestStatusReportOptions
 			& MessageBaseOptions,
 	) {
 		super(options);

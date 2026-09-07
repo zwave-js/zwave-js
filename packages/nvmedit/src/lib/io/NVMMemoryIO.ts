@@ -1,5 +1,6 @@
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import type { BytesView } from "@zwave-js/shared";
+
 import { NVMAccess, type NVMIO } from "../common/definitions.js";
 
 /** An im-memory implementation of NVMIO */

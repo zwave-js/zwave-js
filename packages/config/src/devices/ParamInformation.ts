@@ -7,7 +7,9 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type ConditionalItem,
 	conditionApplies,
@@ -17,9 +19,7 @@ import {
 import type { ConditionalDeviceConfig } from "./DeviceConfig.js";
 import type { DeviceID } from "./shared.js";
 
-export class ConditionalParamInformation
-	implements ConditionalItem<ParamInformation>
-{
+export class ConditionalParamInformation implements ConditionalItem<ParamInformation> {
 	public constructor(
 		parent: ConditionalDeviceConfig,
 		parameterNumber: number,
@@ -204,10 +204,11 @@ Parameter #${parameterNumber}: options is malformed!`,
 			);
 		}
 
-		this.options = definition.options?.map(
-			(opt: any) =>
-				new ConditionalConfigOption(opt.value, opt.label, opt.$if),
-		) ?? [];
+		this.options =
+			definition.options?.map(
+				(opt: any) =>
+					new ConditionalConfigOption(opt.value, opt.label, opt.$if),
+			) ?? [];
 
 		if (
 			definition.hidden != undefined
@@ -464,22 +465,20 @@ Parameter #${this.parameterNumber} is missing required property "maxValue"!`,
 	}
 }
 
-export type ParamInformation =
-	& Omit<
-		ConditionalParamInformation,
-		| "condition"
-		| "evaluateCondition"
-		| "options"
-		| "minValue"
-		| "maxValue"
-		| "allowed"
-	>
-	& {
-		options: readonly ConfigOption[];
-		minValue: NonNullable<ConditionalParamInformation["minValue"]>;
-		maxValue: NonNullable<ConditionalParamInformation["maxValue"]>;
-		allowed: NonNullable<ConditionalParamInformation["allowed"]>;
-	};
+export type ParamInformation = Omit<
+	ConditionalParamInformation,
+	| "condition"
+	| "evaluateCondition"
+	| "options"
+	| "minValue"
+	| "maxValue"
+	| "allowed"
+> & {
+	options: readonly ConfigOption[];
+	minValue: NonNullable<ConditionalParamInformation["minValue"]>;
+	maxValue: NonNullable<ConditionalParamInformation["maxValue"]>;
+	allowed: NonNullable<ConditionalParamInformation["allowed"]>;
+};
 
 export class ConditionalConfigOption implements ConditionalItem<ConfigOption> {
 	public constructor(

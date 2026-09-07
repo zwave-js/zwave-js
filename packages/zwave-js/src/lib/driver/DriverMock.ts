@@ -1,3 +1,6 @@
+import net from "node:net";
+import { tmpdir } from "node:os";
+
 import {
 	SerialAPIParser,
 	type ZWaveSerialBindingFactory,
@@ -8,9 +11,8 @@ import { MockPort } from "@zwave-js/serial/mock";
 import { noop } from "@zwave-js/shared";
 import type { FileSystem } from "@zwave-js/shared/bindings";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
-import net from "node:net";
-import { tmpdir } from "node:os";
 import path from "pathe";
+
 import { Driver } from "./Driver.js";
 import type { PartialZWaveOptions, ZWaveOptions } from "./ZWaveOptions.js";
 
@@ -41,13 +43,15 @@ async function serveMockPortViaTCP(mockPort: MockPort): Promise<net.Server> {
 	let socket: net.Socket | undefined;
 
 	// Forward data from the mock controller to the connected socket
-	void new ReadableStream(binding.source).pipeTo(
-		new WritableStream({
-			write(chunk) {
-				socket?.write(chunk);
-			},
-		}),
-	).catch(noop);
+	void new ReadableStream(binding.source)
+		.pipeTo(
+			new WritableStream({
+				write(chunk) {
+					socket?.write(chunk);
+				},
+			}),
+		)
+		.catch(noop);
 
 	const sinkWriter = new WritableStream(binding.sink).getWriter();
 
@@ -59,17 +63,21 @@ async function serveMockPortViaTCP(mockPort: MockPort): Promise<net.Server> {
 		// Serial API frames before passing them on.
 		const parser = new SerialAPIParser();
 		const parserWriter = parser.writable.getWriter();
-		void parser.readable.pipeTo(
-			new WritableStream({
-				write(frame) {
-					if (frame.type !== ZWaveSerialFrameType.SerialAPI) return;
-					const data = typeof frame.data === "number"
-						? Uint8Array.from([frame.data])
-						: frame.data;
-					void sinkWriter.write(data).catch(noop);
-				},
-			}),
-		).catch(noop);
+		void parser.readable
+			.pipeTo(
+				new WritableStream({
+					write(frame) {
+						if (frame.type !== ZWaveSerialFrameType.SerialAPI)
+							return;
+						const data =
+							typeof frame.data === "number"
+								? Uint8Array.from([frame.data])
+								: frame.data;
+						void sinkWriter.write(data).catch(noop);
+					},
+				}),
+			)
+			.catch(noop);
 
 		sock.on("data", (chunk) => {
 			void parserWriter.write(chunk).catch(noop);
@@ -90,8 +98,7 @@ async function serveMockPortViaTCP(mockPort: MockPort): Promise<net.Server> {
 
 /** Creates a real driver instance with a mocked serial port to enable end to end tests */
 export async function createAndStartDriverWithMockPort(
-	options:
-		& Partial<CreateAndStartDriverWithMockPortOptions>
+	options: Partial<CreateAndStartDriverWithMockPortOptions>
 		& PartialZWaveOptions = {},
 ): Promise<CreateAndStartDriverWithMockPortResult> {
 	const { connectViaTCP = false, ...driverOptions } = options;
@@ -111,9 +118,7 @@ export async function createAndStartDriverWithMockPort(
 		let driver: Driver;
 
 		// This will be called when the driver has opened the serial port
-		const onSerialPortOpen = (
-			serial: ZWaveSerialStream,
-		): Promise<void> => {
+		const onSerialPortOpen = (serial: ZWaveSerialStream): Promise<void> => {
 			// Return the info to the calling code, giving it control over
 			// continuing the driver startup.
 			const continuePromise = createDeferredPromise();
@@ -184,8 +189,7 @@ export interface CreateAndStartTestingDriverOptions {
 }
 
 export async function createAndStartTestingDriver(
-	options:
-		& Partial<CreateAndStartTestingDriverOptions>
+	options: Partial<CreateAndStartTestingDriverOptions>
 		& PartialZWaveOptions = {},
 ): Promise<CreateAndStartTestingDriverResult> {
 	const {
