@@ -246,7 +246,12 @@
 		},
 		{
 			"#": "23",
-			"$import": "~/0x0086/templates/aeotec_template.json#reporting_threshold.low_battery",
+			"$purpose": "reporting_threshold.low_battery",
+			"label": "Low Battery Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 10,
+			"maxValue": 50,
 			"defaultValue": 20
 		},
 		{
@@ -288,8 +293,7 @@
 			"#": "64",
 			// Other regions:
 			"$import": "~/0x0086/templates/aeotec_template.json#celsius_fahrenheit_0",
-			"valueSize": 1,
-			"defaultValue": 0
+			"valueSize": 1
 		}
 	],
 	"metadata": {
