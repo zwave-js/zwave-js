@@ -1,14 +1,6 @@
 // @ts-check
-const {
-	CommandClasses,
-	ConfigValueFormat,
-	SupervisionStatus,
-} = require("@zwave-js/core");
-const {
-	ccCaps,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} = require("@zwave-js/testing");
+const { CommandClasses } = require("@zwave-js/core");
+const { ccCaps } = require("@zwave-js/testing");
 const { wait } = require("alcalzone-shared/async");
 const {
 	SupervisionCCGet,
