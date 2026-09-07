@@ -125,10 +125,10 @@ Example:
 
 ```json
 {
-  "#": "28",
-  "$if": "firmwareVersion >= 1.11 && firmwareVersion < 2.0 || firmwareVersion >= 2.11 && firmwareVersion < 3.0 || firmwareVersion >= 3.10",
-  "label": "Dimmer Scene Control",
-  "$import": "~/templates/master_template.json#base_enable_disable_inverted"
+	"#": "28",
+	"$if": "firmwareVersion >= 1.11 && firmwareVersion < 2.0 || firmwareVersion >= 2.11 && firmwareVersion < 3.0 || firmwareVersion >= 3.10",
+	"label": "Dimmer Scene Control",
+	"$import": "~/templates/master_template.json#base_enable_disable_inverted"
 }
 ```
 

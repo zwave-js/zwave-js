@@ -93,7 +93,8 @@ type InclusionOptions =
 	  }
 	| {
 			strategy:
-				InclusionStrategy.Insecure | InclusionStrategy.Security_S0;
+				| InclusionStrategy.Insecure
+				| InclusionStrategy.Security_S0;
 	  };
 ```
 
@@ -498,17 +499,18 @@ type ReplaceNodeOptions =
 	// We don't know which security CCs a node supports when it is a replacement
 	// we we need the user to specify how the node should be included
 	| {
-			strategy: InclusionStrategy.Security_S2;
-			userCallbacks: InclusionUserCallbacks;
-	  }
+		strategy: InclusionStrategy.Security_S2;
+		userCallbacks: InclusionUserCallbacks;
+	}
 	| {
-			strategy: InclusionStrategy.Security_S2;
-			provisioning: PlannedProvisioningEntry;
-	  }
+		strategy: InclusionStrategy.Security_S2;
+		provisioning: PlannedProvisioningEntry;
+	}
 	| {
-			strategy:
-				InclusionStrategy.Insecure | InclusionStrategy.Security_S0;
-	  };
+		strategy:
+			| InclusionStrategy.Insecure
+			| InclusionStrategy.Security_S0;
+	};
 ```
 
 ### Managing routes
@@ -849,19 +851,19 @@ Configure or read the RF region from the Z-Wave API Module. The possible regions
 
 ```ts
 export enum RFRegion {
-	Europe = 0x00,
-	USA = 0x01,
+	"Europe" = 0x00,
+	"USA" = 0x01,
 	"Australia/New Zealand" = 0x02,
 	"Hong Kong" = 0x03,
-	India = 0x05,
-	Israel = 0x06,
-	Russia = 0x07,
-	China = 0x08,
+	"India" = 0x05,
+	"Israel" = 0x06,
+	"Russia" = 0x07,
+	"China" = 0x08,
 	"USA (Long Range)" = 0x09,
 	"Europe (Long Range)" = 0x0b,
-	Japan = 0x20,
-	Korea = 0x21,
-	Unknown = 0xfe,
+	"Japan" = 0x20,
+	"Korea" = 0x21,
+	"Unknown" = 0xfe,
 	"Default (EU)" = 0xff,
 }
 ```

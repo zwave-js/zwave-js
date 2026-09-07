@@ -1202,7 +1202,9 @@ interface ZWaveOptions {
 		 * Auto may be unsupported by the controller and will be ignored in that case.
 		 */
 		longRangeChannel?:
-			LongRangeChannel.A | LongRangeChannel.B | LongRangeChannel.Auto;
+			| LongRangeChannel.A
+			| LongRangeChannel.B
+			| LongRangeChannel.Auto;
 	};
 
 	apiKeys?: {

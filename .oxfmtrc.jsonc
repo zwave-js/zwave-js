@@ -52,6 +52,7 @@
 			"options": {
 				"useTabs": false,
 				"tabWidth": 2,
+				"embeddedLanguageFormatting": "off",
 			},
 		},
 		{

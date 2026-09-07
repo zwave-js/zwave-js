@@ -257,18 +257,18 @@ The `scenes` property allows defining custom labels and descriptions for Central
 
 ```json
 {
-  "scenes": {
-    "1": {
-      "label": "Upper Paddle"
-    },
-    "2": {
-      "label": "Lower Paddle"
-    },
-    "3": {
-      "label": "External Switch",
-      "description": "Only available on some devices"
-    }
-  }
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		},
+		"3": {
+			"label": "External Switch",
+			"description": "Only available on some devices"
+		}
+	}
 }
 ```
 
@@ -307,8 +307,8 @@ Example:
 
 ```json
 {
-  "$if": "firmwareVersion >= 1.0 && productType === 0x1234",
-  "value": "Conditional value"
+	"$if": "firmwareVersion >= 1.0 && productType === 0x1234",
+	"value": "Conditional value"
 }
 ```
 
@@ -387,10 +387,10 @@ Example:
 
 ```json
 {
-  "compat": {
-    // The device is a Binary Sensor, but uses Basic Sets to report its status
-    "mapBasicSet": "auto"
-  }
+	"compat": {
+		// The device is a Binary Sensor, but uses Basic Sets to report its status
+		"mapBasicSet": "auto"
+	}
 }
 ```
 
@@ -400,14 +400,14 @@ Example:
 
   ```json
   {
-    // rest of the file
-    "metadata": {
-      "wakeup": "How to wake up the device manually",
-      "inclusion": "How to include this device",
-      "exclusion": "How to exclude this device",
-      "reset": "How to factory-reset this device",
-      "manual": "A link to the device manual"
-    }
+  	// rest of the file
+  	"metadata": {
+  		"wakeup": "How to wake up the device manually",
+  		"inclusion": "How to include this device",
+  		"exclusion": "How to exclude this device",
+  		"reset": "How to factory-reset this device",
+  		"manual": "A link to the device manual"
+  	}
   }
   ```
 

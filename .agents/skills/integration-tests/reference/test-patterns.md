@@ -25,26 +25,26 @@ import { ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
-  "SoundSwitch toneId value has correct change options after interview",
-  {
-    nodeCapabilities: {
-      commandClasses: [
-        ccCaps({
-          ccId: CommandClasses["Sound Switch"],
-          isSupported: true,
-          defaultToneId: 1,
-          defaultVolume: 0,
-          tones: [{ duration: 20, name: "Test Tone 1" }],
-        }),
-      ],
-    },
+	"SoundSwitch toneId value has correct change options after interview",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				ccCaps({
+					ccId: CommandClasses["Sound Switch"],
+					isSupported: true,
+					defaultToneId: 1,
+					defaultVolume: 0,
+					tones: [{ duration: 20, name: "Test Tone 1" }],
+				}),
+			],
+		},
 
-    testBody: async (t, driver, node, _mockController, _mockNode) => {
-      const toneIdValue = SoundSwitchCCValues.toneId;
-      const meta = node.getValueMetadata(toneIdValue.id);
-      t.expect(meta.valueChangeOptions).toStrictEqual(["volume"]);
-    },
-  },
+		testBody: async (t, driver, node, _mockController, _mockNode) => {
+			const toneIdValue = SoundSwitchCCValues.toneId;
+			const meta = node.getValueMetadata(toneIdValue.id);
+			t.expect(meta.valueChangeOptions).toStrictEqual(["volume"]);
+		},
+	},
 );
 ```
 
@@ -58,61 +58,59 @@ Use `clearMessageStatsBeforeTest: false` to inspect interview frames:
 
 ```typescript
 import {
-  UserCredentialCCCredentialCapabilitiesGet,
-  UserCredentialCCUserCapabilitiesGet,
+	UserCredentialCCCredentialCapabilitiesGet,
+	UserCredentialCCUserCapabilitiesGet,
 } from "@zwave-js/cc/UserCredentialCC";
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
-  "User Credential CC interview queries capabilities in correct order",
-  {
-    clearMessageStatsBeforeTest: false,
+	"User Credential CC interview queries capabilities in correct order",
+	{
+		clearMessageStatsBeforeTest: false,
 
-    nodeCapabilities: {
-      commandClasses: [
-        ccCaps({
-          ccId: CommandClasses["User Credential"],
-          isSupported: true,
-          numberOfSupportedUsers: 1,
-          supportedCredentialTypes: new Map([
-            [
-              1,
-              {
-                numberOfCredentialSlots: 1,
-                minCredentialLength: 4,
-                maxCredentialLength: 10,
-                maxCredentialHashLength: 0,
-                supportsCredentialLearn: false,
-              },
-            ],
-          ]),
-        }),
-      ],
-    },
+		nodeCapabilities: {
+			commandClasses: [
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					numberOfSupportedUsers: 1,
+					supportedCredentialTypes: new Map([[1, {
+						numberOfCredentialSlots: 1,
+						minCredentialLength: 4,
+						maxCredentialLength: 10,
+						maxCredentialHashLength: 0,
+						supportsCredentialLearn: false,
+					}]]),
+				}),
+			],
+		},
 
-    testBody: async (t, driver, node, mockController, mockNode) => {
-      mockNode.assertReceivedControllerFrame(
-        (frame) =>
-          frame.type === MockZWaveFrameType.Request
-          && frame.payload instanceof UserCredentialCCUserCapabilitiesGet,
-        {
-          errorMessage: "Should have sent UserCapabilitiesGet during interview",
-        },
-      );
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload
+						instanceof UserCredentialCCUserCapabilitiesGet,
+				{
+					errorMessage:
+						"Should have sent UserCapabilitiesGet during interview",
+				},
+			);
 
-      mockNode.assertReceivedControllerFrame(
-        (frame) =>
-          frame.type === MockZWaveFrameType.Request
-          && frame.payload instanceof UserCredentialCCCredentialCapabilitiesGet,
-        {
-          errorMessage:
-            "Should have sent CredentialCapabilitiesGet during interview",
-        },
-      );
-    },
-  },
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload
+						instanceof UserCredentialCCCredentialCapabilitiesGet,
+				{
+					errorMessage:
+						"Should have sent CredentialCapabilitiesGet during interview",
+				},
+			);
+		},
+	},
 );
 ```
 
@@ -129,45 +127,51 @@ import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest("UserCodeCCAPI.set uses Extended User Code Set on V2 nodes", {
-  nodeCapabilities: {
-    commandClasses: [
-      ccCaps({
-        ccId: CommandClasses["User Code"],
-        version: 2,
-        numUsers: 10,
-        supportedASCIIChars: "0123456789",
-        supportedUserIDStatuses: [UserIDStatus.Available, UserIDStatus.Enabled],
-      }),
-    ],
-  },
+integrationTest(
+	"UserCodeCCAPI.set uses Extended User Code Set on V2 nodes",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				ccCaps({
+					ccId: CommandClasses["User Code"],
+					version: 2,
+					numUsers: 10,
+					supportedASCIIChars: "0123456789",
+					supportedUserIDStatuses: [
+						UserIDStatus.Available,
+						UserIDStatus.Enabled,
+					],
+				}),
+			],
+		},
 
-  testBody: async (t, driver, node, mockController, mockNode) => {
-    const api = node.commandClasses["User Code"];
-    await api.set(1, UserIDStatus.Enabled, "1234");
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			const api = node.commandClasses["User Code"];
+			await api.set(1, UserIDStatus.Enabled, "1234");
 
-    // Should use the V2 command
-    mockNode.assertReceivedControllerFrame(
-      (frame) =>
-        frame.type === MockZWaveFrameType.Request
-        && frame.payload instanceof UserCodeCCExtendedUserCodeSet,
-      {
-        errorMessage: "Should have used ExtendedUserCodeSet",
-      },
-    );
+			// Should use the V2 command
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet,
+				{
+					errorMessage: "Should have used ExtendedUserCodeSet",
+				},
+			);
 
-    // Should NOT use the V1 command
-    mockNode.assertReceivedControllerFrame(
-      (frame) =>
-        frame.type === MockZWaveFrameType.Request
-        && frame.payload instanceof UserCodeCCSet,
-      {
-        noMatch: true,
-        errorMessage: "Should NOT have used legacy UserCodeCCSet",
-      },
-    );
-  },
-});
+			// Should NOT use the V1 command
+			mockNode.assertReceivedControllerFrame(
+				(frame) =>
+					frame.type === MockZWaveFrameType.Request
+					&& frame.payload instanceof UserCodeCCSet,
+				{
+					noMatch: true,
+					errorMessage: "Should NOT have used legacy UserCodeCCSet",
+				},
+			);
+		},
+	},
+);
 ```
 
 ---
@@ -178,11 +182,11 @@ Use `customSetup` to seed mock node state before the interview discovers it:
 
 ```typescript
 import {
-  UserCredentialModifierType,
-  UserCredentialNameEncoding,
-  UserCredentialRule,
-  UserCredentialType,
-  UserCredentialUserType,
+	UserCredentialModifierType,
+	UserCredentialNameEncoding,
+	UserCredentialRule,
+	UserCredentialType,
+	UserCredentialUserType,
 } from "@zwave-js/cc";
 import { UserCredentialCCValues } from "@zwave-js/cc/UserCredentialCC";
 import { CommandClasses } from "@zwave-js/core";
@@ -190,71 +194,71 @@ import { Bytes } from "@zwave-js/shared";
 import { ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest("Interview discovers pre-existing users and credentials", {
-  nodeCapabilities: {
-    commandClasses: [
-      ccCaps({
-        ccId: CommandClasses["User Credential"],
-        isSupported: true,
-        numberOfSupportedUsers: 10,
-        supportedCredentialRules: [UserCredentialRule.Single],
-        supportsAllUsersChecksum: false,
-        supportsAdminCode: false,
-        supportedCredentialTypes: new Map([
-          [
-            UserCredentialType.PINCode,
-            {
-              numberOfCredentialSlots: 10,
-              minCredentialLength: 4,
-              maxCredentialLength: 10,
-              maxCredentialHashLength: 0,
-              supportsCredentialLearn: false,
-            },
-          ],
-        ]),
-      }),
-    ],
-  },
+integrationTest(
+	"Interview discovers pre-existing users and credentials",
+	{
+		nodeCapabilities: {
+			commandClasses: [
+				ccCaps({
+					ccId: CommandClasses["User Credential"],
+					isSupported: true,
+					numberOfSupportedUsers: 10,
+					supportedCredentialRules: [UserCredentialRule.Single],
+					supportsAllUsersChecksum: false,
+					supportsAdminCode: false,
+					supportedCredentialTypes: new Map([
+						[UserCredentialType.PINCode, {
+							numberOfCredentialSlots: 10,
+							minCredentialLength: 4,
+							maxCredentialLength: 10,
+							maxCredentialHashLength: 0,
+							supportsCredentialLearn: false,
+						}],
+					]),
+				}),
+			],
+		},
 
-  customSetup: async (driver, controller, mockNode) => {
-    // Pre-populate user 1
-    mockNode.state.set("UserCredential_user_1", {
-      userType: UserCredentialUserType.General,
-      active: true,
-      credentialRule: UserCredentialRule.Single,
-      expiringTimeoutMinutes: 0,
-      nameEncoding: UserCredentialNameEncoding.ASCII,
-      userName: "Test User",
-      modifierType: UserCredentialModifierType.Locally,
-      modifierNodeId: 0,
-    });
+		customSetup: async (driver, controller, mockNode) => {
+			// Pre-populate user 1
+			mockNode.state.set("UserCredential_user_1", {
+				userType: UserCredentialUserType.General,
+				active: true,
+				credentialRule: UserCredentialRule.Single,
+				expiringTimeoutMinutes: 0,
+				nameEncoding: UserCredentialNameEncoding.ASCII,
+				userName: "Test User",
+				modifierType: UserCredentialModifierType.Locally,
+				modifierNodeId: 0,
+			});
 
-    // Pre-populate a PIN code credential for user 1
-    mockNode.state.set("UserCredential_cred_1_1_1", {
-      credentialData: Bytes.from("1234", "ascii"),
-      modifierType: UserCredentialModifierType.Locally,
-      modifierNodeId: 0,
-    });
-  },
+			// Pre-populate a PIN code credential for user 1
+			mockNode.state.set("UserCredential_cred_1_1_1", {
+				credentialData: Bytes.from("1234", "ascii"),
+				modifierType: UserCredentialModifierType.Locally,
+				modifierNodeId: 0,
+			});
+		},
 
-  testBody: async (t, driver, node, mockController, mockNode) => {
-    // The interview should have discovered the user
-    const userType = node.getValue(
-      UserCredentialCCValues.userType(1).endpoint(0),
-    );
-    t.expect(userType).toBe(UserCredentialUserType.General);
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The interview should have discovered the user
+			const userType = node.getValue(
+				UserCredentialCCValues.userType(1).endpoint(0),
+			);
+			t.expect(userType).toBe(UserCredentialUserType.General);
 
-    // And the credential
-    const credential = node.getValue(
-      UserCredentialCCValues.credential(
-        1,
-        UserCredentialType.PINCode,
-        1,
-      ).endpoint(0),
-    );
-    t.expect(credential).toBeDefined();
-  },
-});
+			// And the credential
+			const credential = node.getValue(
+				UserCredentialCCValues.credential(
+					1,
+					UserCredentialType.PINCode,
+					1,
+				).endpoint(0),
+			);
+			t.expect(credential).toBeDefined();
+		},
+	},
+);
 ```
 
 **State key conventions** for UserCredential CC:

@@ -70,9 +70,9 @@ For a headless local setup that may download the pinned model:
 
 ```json
 {
-  "env": {
-    "ZWAVE_DEV_SEMANTIC_LOCAL_DOWNLOAD": "allow"
-  }
+	"env": {
+		"ZWAVE_DEV_SEMANTIC_LOCAL_DOWNLOAD": "allow"
+	}
 }
 ```
 
@@ -84,8 +84,8 @@ To disable semantic discovery without affecting other MCP tools:
 
 ```json
 {
-  "env": {
-    "ZWAVE_DEV_SEMANTIC_ENABLED": "false"
-  }
+	"env": {
+		"ZWAVE_DEV_SEMANTIC_ENABLED": "false"
+	}
 }
 ```

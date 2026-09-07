@@ -19,12 +19,14 @@ export async function formatWithOxfmt(
 	sourceText: string,
 	options?: Partial<FormatConfig>,
 ): Promise<string> {
-	const fileOptions: FormatConfig = filename.endsWith("_sidebar.md")
-		? {
-				useTabs: false,
-				tabWidth: 2,
-			}
-		: {};
+	const fileOptions: FormatConfig = {};
+	if (filename.endsWith(".md")) {
+		fileOptions.embeddedLanguageFormatting = "off";
+	}
+	if (filename.endsWith("_sidebar.md")) {
+		fileOptions.useTabs = false;
+		fileOptions.tabWidth = 2;
+	}
 	const { code, errors } = await format(filename, sourceText, {
 		...defaultOptions,
 		...fileOptions,

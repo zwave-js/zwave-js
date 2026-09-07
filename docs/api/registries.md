@@ -235,7 +235,7 @@ Z-Wave devices have a basic, generic and optionally a specific device class. The
 
 ```ts
 enum BasicDeviceClass {
-	Controller = 0x01,
+	"Controller" = 0x01,
 	"Static Controller" = 0x02,
 	"End Node" = 0x03,
 	"Routing End Node" = 0x04,

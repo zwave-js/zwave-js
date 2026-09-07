@@ -220,5 +220,6 @@ This type is used to accept both the kebabCase names and numeric components as t
 
 ```ts
 type ColorTable =
-	Partial<Record<ColorKey, number>> | Partial<Record<ColorComponent, number>>;
+	| Partial<Record<ColorKey, number>>
+	| Partial<Record<ColorComponent, number>>;
 ```

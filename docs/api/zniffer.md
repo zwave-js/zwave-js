@@ -131,10 +131,8 @@ await zniffer.saveCaptureToFile("/path/to/file.zlf", (frame) => {
 });
 await zniffer.getCaptureAsZLFBuffer((frame) => {
 	// Only include ZWLR frames
-	return (
-		"protocol" in f.parsedFrame
-		&& f.parsedFrame.protocol === Protocols.ZWaveLongRange
-	);
+	return "protocol" in f.parsedFrame
+		&& f.parsedFrame.protocol === Protocols.ZWaveLongRange;
 });
 ```
 
@@ -357,28 +355,30 @@ type LongRangeFrame =
 		homeId: number;
 		sourceNodeId: number;
 		destinationNodeId: number;
-	} & ( // Different kinds of Long Range frames:
-		| {
-				// Singlecast frame
-				type: LongRangeFrameType.Singlecast;
-				ackRequested: boolean;
-				payload: BytesView | CommandClass;
-		  }
-		| {
-				// Broadcast frame. This is technically a singlecast frame,
-				// but the destination node ID is always 4095
-				type: LongRangeFrameType.Broadcast;
-				destinationNodeId: typeof NODE_ID_BROADCAST_LR;
-				ackRequested: boolean;
-				payload: BytesView | CommandClass;
-		  }
-		| {
-				// Acknowledgement frame
-				type: LongRangeFrameType.Ack;
-				incomingRSSI: RSSI;
-				payload: BytesView;
-		  }
-	);
+	}
+		// Different kinds of Long Range frames:
+		& (
+			| {
+					// Singlecast frame
+					type: LongRangeFrameType.Singlecast;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Broadcast frame. This is technically a singlecast frame,
+					// but the destination node ID is always 4095
+					type: LongRangeFrameType.Broadcast;
+					destinationNodeId: typeof NODE_ID_BROADCAST_LR;
+					ackRequested: boolean;
+					payload: BytesView | CommandClass;
+			  }
+			| {
+					// Acknowledgement frame
+					type: LongRangeFrameType.Ack;
+					incomingRSSI: RSSI;
+					payload: BytesView;
+			  }
+		);
 ```
 
 <!-- #import BeamFrame from "zwave-js" -->
@@ -388,46 +388,48 @@ type BeamFrame =
 	// Common fields for all Beam frames
 	{
 		channel: number;
-	} & ( // Different types of beam frames:
-		| {
-				// Z-Wave Classic
-				protocol: Protocols.ZWave;
-				type: ZWaveFrameType.BeamStart;
+	}
+		// Different types of beam frames:
+		& (
+			| {
+					// Z-Wave Classic
+					protocol: Protocols.ZWave;
+					type: ZWaveFrameType.BeamStart;
 
-				protocolDataRate: ZnifferProtocolDataRate;
-				rssiRaw: number;
-				rssi?: RSSI;
-				region: ZnifferRegion;
+					protocolDataRate: ZnifferProtocolDataRate;
+					rssiRaw: number;
+					rssi?: RSSI;
+					region: ZnifferRegion;
 
-				homeIdHash?: number;
-				destinationNodeId: number;
-		  }
-		| {
-				// Z-Wave Long Range
-				protocol: Protocols.ZWaveLongRange;
-				type: LongRangeFrameType.BeamStart;
+					homeIdHash?: number;
+					destinationNodeId: number;
+			  }
+			| {
+					// Z-Wave Long Range
+					protocol: Protocols.ZWaveLongRange;
+					type: LongRangeFrameType.BeamStart;
 
-				protocolDataRate: ZnifferProtocolDataRate;
-				rssiRaw: number;
-				rssi?: RSSI;
-				region: ZnifferRegion;
+					protocolDataRate: ZnifferProtocolDataRate;
+					rssiRaw: number;
+					rssi?: RSSI;
+					region: ZnifferRegion;
 
-				txPower: number;
-				homeIdHash: number;
-				destinationNodeId: number;
-		  }
-		// The Zniffer sends the same command for the beam ending for both
-		// Z-Wave Classic and Long Range. To make testing the frame type more
-		// consistent with the other frames, two different values are used
-		| {
-				protocol: Protocols.ZWave;
-				type: ZWaveFrameType.BeamStop;
-		  }
-		| {
-				protocol: Protocols.ZWaveLongRange;
-				type: LongRangeFrameType.BeamStop;
-		  }
-	);
+					txPower: number;
+					homeIdHash: number;
+					destinationNodeId: number;
+			  }
+			// The Zniffer sends the same command for the beam ending for both
+			// Z-Wave Classic and Long Range. To make testing the frame type more
+			// consistent with the other frames, two different values are used
+			| {
+					protocol: Protocols.ZWave;
+					type: ZWaveFrameType.BeamStop;
+			  }
+			| {
+					protocol: Protocols.ZWaveLongRange;
+					type: LongRangeFrameType.BeamStop;
+			  }
+		);
 ```
 
 ## Type definitions

@@ -887,7 +887,8 @@ Returns the ID this node has been assigned by the controller. This is a number b
 ### `name`
 
 ```ts
-name: string | undefined;
+name:
+string | undefined;
 ```
 
 The user-defined name of this node. Uses the value reported by `Node Naming and Location CC` if it exists.
@@ -898,7 +899,8 @@ The user-defined name of this node. Uses the value reported by `Node Naming and 
 ### `location`
 
 ```ts
-location: string | undefined;
+location:
+string | undefined;
 ```
 
 The user-defined location of this node. Uses the value reported by `Node Naming and Location CC` if it exists.
@@ -1242,7 +1244,8 @@ The URL to the device in the device database.
 ### `keepAwake`
 
 ```ts
-keepAwake: boolean;
+keepAwake:
+boolean;
 ```
 
 In order to save energy, battery powered devices should go back to sleep after they no longer need to communicate with the controller. This library honors this requirement by sending nodes back to sleep as soon as there are no more pending messages.
@@ -1262,7 +1265,8 @@ This can be done using the `defaultTransitionDuration` property. It accepts a du
 ### `defaultVolume`
 
 ```ts
-defaultVolume: number | undefined;
+defaultVolume:
+number | undefined;
 ```
 
 While the volume for sound switch commands can be provided on a per-command basis as part of the [`setValue`](#setvalue) method, it may be desirable to configure a persistent default for a node.

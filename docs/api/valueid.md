@@ -100,7 +100,8 @@ interface ValueMetadataNumeric extends ValueMetadataAny {
 
 ```ts
 type AllowedValue =
-	{ value: number } | { from: number; to: number; step?: number };
+	| { value: number }
+	| { from: number; to: number; step?: number };
 ```
 
 - `min`: The minimum value that can be assigned to this value
