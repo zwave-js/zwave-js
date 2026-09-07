@@ -829,6 +829,10 @@ async function generateCCDocs(
 		+ sidebarFileContent.slice(
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
+	sidebarFileContent = await formatWithOxfmt(
+		"_sidebar.md",
+		sidebarFileContent,
+	);
 	await fsp.writeFile(
 		path.join(ccDocsDir, "_sidebar.md"),
 		sidebarFileContent,

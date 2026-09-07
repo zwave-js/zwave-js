@@ -98,6 +98,10 @@ async function generateExamples(): Promise<boolean> {
 		+ sidebarFileContent.slice(
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
+	sidebarFileContent = await formatWithOxfmt(
+		"_sidebar.md",
+		sidebarFileContent,
+	);
 	await fsp.writeFile(
 		path.join(examplesDocsDir, "_sidebar.md"),
 		sidebarFileContent,
