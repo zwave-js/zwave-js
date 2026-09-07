@@ -87,7 +87,11 @@
 			"label": "Watts Auto-Report Period",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [60, 32767] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [60, 32767] }
+			],
 			"defaultValue": 300,
 			"options": [
 				{
@@ -101,7 +105,11 @@
 			"label": "Kwh Auto-Report Period",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [60, 32767] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [60, 32767] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{

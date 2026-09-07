@@ -26,9 +26,11 @@
 		"editor.defaultFormatter": "oxc.oxc-vscode"
 	},
 	"[javascript]": {
+		// Not sure why this is needed, but it is
 		"editor.defaultFormatter": "oxc.oxc-vscode"
 	},
 	"[typescript]": {
+		// Not sure why this is needed, but it is
 		"editor.defaultFormatter": "oxc.oxc-vscode",
 		"editor.autoClosingBrackets": "languageDefined"
 	},

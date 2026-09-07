@@ -180,7 +180,11 @@
 			"#": "37[0xff0000]",
 			"label": "Brightness",
 			"valueSize": 4,
-			"allowed": [{ "range": [1, 99] }, { "value": 255 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 1,
 			"unsigned": true,
 			"options": [

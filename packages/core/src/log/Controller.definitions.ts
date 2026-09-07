@@ -22,15 +22,24 @@ export interface Interviewable {
 // FIXME: Do we need this to be a separate type?
 export type NodeLogContext = LogContext & { nodeId: number; type: "node" };
 
-export type ControllerNodeLogContext = LogContext<"controller">
-	& NodeLogContext & { endpoint?: number; direction: string };
+// oxfmt-ignore
+export type ControllerNodeLogContext =
+	& LogContext<"controller">
+	& NodeLogContext
+	& { endpoint?: number; direction: string };
 
 // FIXME: Do we need this to be a separate type?
-export type ValueLogContext = LogContext
-	& ValueID & { nodeId: number; type: "value" };
+// oxfmt-ignore
+export type ValueLogContext =
+	& LogContext
+	& ValueID
+	& { nodeId: number; type: "value" };
 
-export type ControllerValueLogContext = LogContext<"controller">
-	& ValueLogContext & {
+// oxfmt-ignore
+export type ControllerValueLogContext =
+	& LogContext<"controller">
+	& ValueLogContext
+	& {
 		direction?: string;
 		change?: "added" | "updated" | "removed" | "notification";
 		internal?: boolean;

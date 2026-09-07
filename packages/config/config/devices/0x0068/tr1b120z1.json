@@ -20,7 +20,11 @@
 			"label": "LED Light Up Time",
 			"valueSize": 1,
 			"unit": "seconds",
-			"allowed": [{ "range": [1, 100] }, { "value": 127 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [1, 100] },
+				{ "value": 127 }
+			],
 			"defaultValue": 127,
 			"options": [
 				{

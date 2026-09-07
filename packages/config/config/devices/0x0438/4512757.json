@@ -171,7 +171,10 @@
 			"label": "LCD Backlight Standby",
 			"valueSize": 4,
 			"unit": "%",
-			"allowed": [{ "range": [10, 100], "step": 10 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [10, 100], "step": 10 }
+			],
 			"defaultValue": 10
 		},
 		{
@@ -179,7 +182,10 @@
 			"label": "LCD Backlight Work",
 			"valueSize": 4,
 			"unit": "%",
-			"allowed": [{ "range": [10, 100], "step": 10 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [10, 100], "step": 10 }
+			],
 			"defaultValue": 100
 		},
 		{
@@ -187,7 +193,10 @@
 			"label": "Regulator Percentage",
 			"valueSize": 4,
 			"unit": "%",
-			"allowed": [{ "range": [0, 100], "step": 10 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [0, 100], "step": 10 }
+			],
 			"defaultValue": 20
 		},
 		{
@@ -195,7 +204,10 @@
 			"label": "Differential (Celsius)",
 			"valueSize": 4,
 			"unit": "°C",
-			"allowed": [{ "range": [5, 100], "step": 5 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [5, 100], "step": 5 }
+			],
 			"defaultValue": 10
 		},
 		{
@@ -203,7 +215,10 @@
 			"label": "Differential (Fahrenheit)",
 			"valueSize": 4,
 			"unit": "°C",
-			"allowed": [{ "range": [10, 180], "step": 10 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [10, 180], "step": 10 }
+			],
 			"defaultValue": 20
 		},
 		{
@@ -211,7 +226,10 @@
 			"label": "Frost (Celsius)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
-			"allowed": [{ "range": [50, 100], "step": 10 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [50, 100], "step": 10 }
+			],
 			"defaultValue": 50
 		},
 		{
@@ -219,6 +237,7 @@
 			"label": "Frost (Fahrenheit)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
+			// oxfmt-ignore
 			"allowed": [
 				// Documentation says step size 20, but that cannot work
 				{ "range": [410, 500], "step": 10 }
@@ -230,7 +249,10 @@
 			"label": "Dry",
 			"valueSize": 4,
 			"unit": "minutes",
-			"allowed": [{ "range": [0, 120], "step": 5 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [0, 120], "step": 5 }
+			],
 			"defaultValue": 30
 		},
 		{
@@ -238,7 +260,10 @@
 			"label": "Floor Limit Temp (Celsius)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
-			"allowed": [{ "range": [50, 600], "step": 5 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [50, 600], "step": 5 }
+			],
 			"defaultValue": 270
 		},
 		{
@@ -246,7 +271,10 @@
 			"label": "Floor Limit Temp (Fahrenheit)",
 			"valueSize": 4,
 			"unit": "0.1 °C",
-			"allowed": [{ "range": [410, 1400], "step": 10 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [410, 1400], "step": 10 }
+			],
 			"defaultValue": 810
 		},
 		{

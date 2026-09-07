@@ -56,23 +56,23 @@ import { ccCaps } from "@zwave-js/testing";
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Description of what is being tested", {
-	// debug: true,  // Uncomment for driver logs in temp dir
+  // debug: true,  // Uncomment for driver logs in temp dir
 
-	nodeCapabilities: {
-		commandClasses: [
-			ccCaps({
-				ccId: CommandClasses["My CC"],
-				isSupported: true,
-				version: 2,
-				// CC-specific capabilities (type-checked via CCIdToCapabilities)
-				someCapability: true,
-			}),
-		],
-	},
+  nodeCapabilities: {
+    commandClasses: [
+      ccCaps({
+        ccId: CommandClasses["My CC"],
+        isSupported: true,
+        version: 2,
+        // CC-specific capabilities (type-checked via CCIdToCapabilities)
+        someCapability: true,
+      }),
+    ],
+  },
 
-	testBody: async (t, driver, node, mockController, mockNode) => {
-		// Test assertions go here
-	},
+  testBody: async (t, driver, node, mockController, mockNode) => {
+    // Test assertions go here
+  },
 });
 ```
 
@@ -98,7 +98,7 @@ Opt a single test out with `integrationTest.sequential(...)` (also `.sequential.
 ```typescript
 // Runs alone, not overlapped with the other tests in this file
 integrationTest.sequential("retries SendData up to 3 times", {
-	// ...
+  // ...
 });
 ```
 
@@ -112,15 +112,15 @@ For tests requiring multiple mock nodes, use `integrationTestSuiteMulti.ts`:
 import { integrationTest } from "../integrationTestSuiteMulti.js";
 
 integrationTest("Multi-node test", {
-	nodeCapabilities: [
-		{ id: 2, capabilities: { commandClasses: [/* ... */] } },
-		{ id: 3, capabilities: { commandClasses: [/* ... */] } },
-	],
+  nodeCapabilities: [
+    { id: 2, capabilities: { commandClasses: [/* ... */] } },
+    { id: 3, capabilities: { commandClasses: [/* ... */] } },
+  ],
 
-	testBody: async (t, driver, nodes, mockController, mockNodes) => {
-		// nodes[0] = ZWaveNode for id 2, nodes[1] = ZWaveNode for id 3
-		// mockNodes[0] = MockNode for id 2, etc.
-	},
+  testBody: async (t, driver, nodes, mockController, mockNodes) => {
+    // nodes[0] = ZWaveNode for id 2, nodes[1] = ZWaveNode for id 3
+    // mockNodes[0] = MockNode for id 2, etc.
+  },
 });
 ```
 
@@ -203,30 +203,30 @@ Three pieces have to line up:
 import path from "node:path";
 
 integrationTest("compat flag removes Window Covering CC", {
-	nodeCapabilities: {
-		manufacturerId: 0x1234,
-		productType: 0x5678,
-		productId: 0x9abc,
-		commandClasses: [
-			CommandClasses["Manufacturer Specific"],
-			CommandClasses.Version,
-			ccCaps({
-				ccId: CommandClasses["Window Covering"],
-				isSupported: true,
-			}),
-		],
-	},
+  nodeCapabilities: {
+    manufacturerId: 0x1234,
+    productType: 0x5678,
+    productId: 0x9abc,
+    commandClasses: [
+      CommandClasses["Manufacturer Specific"],
+      CommandClasses.Version,
+      ccCaps({
+        ccId: CommandClasses["Window Covering"],
+        isSupported: true,
+      }),
+    ],
+  },
 
-	additionalDriverOptions: {
-		storage: {
-			deviceConfigPriorityDir: path.join(__dirname, "fixtures/myDevice"),
-		},
-	},
+  additionalDriverOptions: {
+    storage: {
+      deviceConfigPriorityDir: path.join(__dirname, "fixtures/myDevice"),
+    },
+  },
 
-	testBody: async (t, driver, node, mockController, mockNode) => {
-		// deviceConfig is now loaded and compat flags applied
-		t.expect(node.deviceConfig?.label).toBe("Test Device");
-	},
+  testBody: async (t, driver, node, mockController, mockNode) => {
+    // deviceConfig is now loaded and compat flags applied
+    t.expect(node.deviceConfig?.label).toBe("Test Device");
+  },
 });
 ```
 
@@ -234,17 +234,17 @@ integrationTest("compat flag removes Window Covering CC", {
 
 ```json
 {
-	"manufacturer": "Test Manufacturer",
-	"manufacturerId": "0x1234",
-	"label": "Test Device",
-	"description": "Device used by the integration test",
-	"devices": [{ "productType": "0x5678", "productId": "0x9abc" }],
-	"firmwareVersion": { "min": "0.0", "max": "255.255" },
-	"compat": {
-		"commandClasses": {
-			"remove": { "0x6a": { "endpoints": "*" } }
-		}
-	}
+  "manufacturer": "Test Manufacturer",
+  "manufacturerId": "0x1234",
+  "label": "Test Device",
+  "description": "Device used by the integration test",
+  "devices": [{ "productType": "0x5678", "productId": "0x9abc" }],
+  "firmwareVersion": { "min": "0.0", "max": "255.255" },
+  "compat": {
+    "commandClasses": {
+      "remove": { "0x6a": { "endpoints": "*" } }
+    }
+  }
 }
 ```
 
@@ -360,31 +360,31 @@ Set `clearMessageStatsBeforeTest: false` to preserve interview frames:
 
 ```typescript
 integrationTest("Interview sends the expected commands", {
-	clearMessageStatsBeforeTest: false,
-	nodeCapabilities: {/* ... */},
+  clearMessageStatsBeforeTest: false,
+  nodeCapabilities: {/* ... */},
 
-	testBody: async (t, driver, node, mockController, mockNode) => {
-		// Assert a specific command WAS sent
-		mockNode.assertReceivedControllerFrame(
-			(frame) =>
-				frame.type === MockZWaveFrameType.Request
-				&& frame.payload instanceof UserCredentialCCUserCapabilitiesGet,
-			{
-				errorMessage: "Should have sent UserCapabilitiesGet",
-			},
-		);
+  testBody: async (t, driver, node, mockController, mockNode) => {
+    // Assert a specific command WAS sent
+    mockNode.assertReceivedControllerFrame(
+      (frame) =>
+        frame.type === MockZWaveFrameType.Request
+        && frame.payload instanceof UserCredentialCCUserCapabilitiesGet,
+      {
+        errorMessage: "Should have sent UserCapabilitiesGet",
+      },
+    );
 
-		// Assert a specific command was NOT sent
-		mockNode.assertReceivedControllerFrame(
-			(frame) =>
-				frame.type === MockZWaveFrameType.Request
-				&& frame.payload instanceof SomeUnexpectedCommand,
-			{
-				noMatch: true,
-				errorMessage: "Should NOT have sent this command",
-			},
-		);
-	},
+    // Assert a specific command was NOT sent
+    mockNode.assertReceivedControllerFrame(
+      (frame) =>
+        frame.type === MockZWaveFrameType.Request
+        && frame.payload instanceof SomeUnexpectedCommand,
+      {
+        noMatch: true,
+        errorMessage: "Should NOT have sent this command",
+      },
+    );
+  },
 });
 ```
 
@@ -460,9 +460,9 @@ import { CommandClasses } from "@zwave-js/core";
 
 // Testing utilities
 import {
-	MockZWaveFrameType,
-	ccCaps,
-	createMockZWaveRequestFrame,
+  MockZWaveFrameType,
+  ccCaps,
+  createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 
@@ -498,23 +498,23 @@ Examples:
 ## Checklist for New Integration Test
 
 1. **Determine what to test**
-    - [ ] Interview behavior (commands sent, values stored)
-    - [ ] Post-interview API behavior
-    - [ ] Unsolicited report handling
-    - [ ] Edge cases (timeouts, missing capabilities, version differences)
+   - [ ] Interview behavior (commands sent, values stored)
+   - [ ] Post-interview API behavior
+   - [ ] Unsolicited report handling
+   - [ ] Edge cases (timeouts, missing capabilities, version differences)
 
 2. **Set up the test**
-    - [ ] Choose single-node or multi-node harness
-    - [ ] Define `nodeCapabilities` with `ccCaps()` for type safety
-    - [ ] Add `customSetup` if mock node state needs pre-population
-    - [ ] Set `clearMessageStatsBeforeTest: false` if verifying interview frames
-    - [ ] Use `integrationTest.sequential(...)` only if the test asserts on timing, retry counts, or ordering
+   - [ ] Choose single-node or multi-node harness
+   - [ ] Define `nodeCapabilities` with `ccCaps()` for type safety
+   - [ ] Add `customSetup` if mock node state needs pre-population
+   - [ ] Set `clearMessageStatsBeforeTest: false` if verifying interview frames
+   - [ ] Use `integrationTest.sequential(...)` only if the test asserts on timing, retry counts, or ordering
 
 3. **Write assertions**
-    - [ ] Use `node.getValue()` / `node.getValueMetadata()` for value checks
-    - [ ] Use `mockNode.assertReceivedControllerFrame()` for command checks
-    - [ ] Use `createMockZWaveRequestFrame()` + `mockNode.sendToController()` for unsolicited reports
+   - [ ] Use `node.getValue()` / `node.getValueMetadata()` for value checks
+   - [ ] Use `mockNode.assertReceivedControllerFrame()` for command checks
+   - [ ] Use `createMockZWaveRequestFrame()` + `mockNode.sendToController()` for unsolicited reports
 
 4. **Run and validate**
-    - [ ] `yarn test:ts <test-file-path>`
-    - [ ] `yarn fmt`
+   - [ ] `yarn test:ts <test-file-path>`
+   - [ ] `yarn fmt`

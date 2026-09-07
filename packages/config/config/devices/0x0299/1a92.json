@@ -27,7 +27,11 @@
 			"description": "Allowable range: 3-8640 (30 seconds to 1 day)",
 			"valueSize": 2,
 			"unit": "10s",
-			"allowed": [{ "value": 0 }, { "range": [3, 8640] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [3, 8640] }
+			],
 			"defaultValue": 3,
 			"options": [
 				{
@@ -43,7 +47,11 @@
 			"description": "Allowable range: 10-30240 (10 minutes to 3 weeks)",
 			"valueSize": 2,
 			"unit": "minutes",
-			"allowed": [{ "value": 0 }, { "range": [10, 30240] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [10, 30240] }
+			],
 			"defaultValue": 60,
 			"options": [
 				{

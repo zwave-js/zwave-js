@@ -80,7 +80,11 @@
 			"label": "Current (A) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [30, 2678400] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 2678400] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{
@@ -113,7 +117,11 @@
 			"label": "Voltage (V) Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [30, 2678400] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 2678400] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{

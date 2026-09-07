@@ -54,7 +54,11 @@
 			"label": "Dimming Speed - Up (Remote)",
 			"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 			"valueSize": 1,
-			"allowed": [{ "value": 0 }, { "range": [5, 254] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [5, 254] }
+			],
 			"defaultValue": 25,
 			"unsigned": true,
 			"options": [
@@ -203,7 +207,11 @@
 			"label": "Power & Energy Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [30, 32767] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 32767] }
+			],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -643,7 +651,11 @@
 			"label": "Temperature Min Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [30, 65535] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 65535] }
+			],
 			"defaultValue": 60,
 			"unsigned": true,
 			"options": [
@@ -660,7 +672,11 @@
 			"label": "Temperature Max Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [30, 65535] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 65535] }
+			],
 			"defaultValue": 3600,
 			"unsigned": true,
 			"options": [
@@ -693,7 +709,11 @@
 			"label": "Humidity Min Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [30, 65535] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 65535] }
+			],
 			"defaultValue": 60,
 			"unsigned": true,
 			"options": [
@@ -710,7 +730,11 @@
 			"label": "Humidity Max Report Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [30, 65535] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [30, 65535] }
+			],
 			"defaultValue": 3600,
 			"unsigned": true,
 			"options": [

@@ -3,7 +3,11 @@
 		"valueSize": 1,
 		"defaultValue": 255,
 		"unsigned": true,
-		"allowed": [{ "range": [0, 99] }, { "value": 255 }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "range": [0, 99] },
+			{ "value": 255 }
+		],
 		"options": [
 			{
 				"label": "Value of parameter 2 (Basic Set Value)",

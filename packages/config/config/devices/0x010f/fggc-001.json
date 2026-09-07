@@ -274,7 +274,11 @@
 			"description": "How long the hand has to be held near the center of the pad after the AirWheel gesture for the associated devices to reach their maximum/minimum level",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "range": [0, 10] }, { "value": 255 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [0, 10] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"options": [
 				{

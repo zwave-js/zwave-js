@@ -507,8 +507,9 @@ export interface ZWaveOptions {
 	};
 }
 
+// oxfmt-ignore
 export type PartialZWaveOptions = Expand<
-	DeepPartial<
+	& DeepPartial<
 		Omit<
 			ZWaveOptions,
 			| "inclusionUserCallbacks"
@@ -518,11 +519,19 @@ export type PartialZWaveOptions = Expand<
 			| "host"
 		>
 	>
-		& Partial<Pick<ZWaveOptions, "testingHooks" | "vendor" | "host">> & {
-			inclusionUserCallbacks?: ZWaveOptions["inclusionUserCallbacks"];
-			joinNetworkUserCallbacks?: ZWaveOptions["joinNetworkUserCallbacks"];
-			logConfig?: Partial<LogConfig>;
-		}
+	& Partial<
+		Pick<
+			ZWaveOptions,
+			| "testingHooks"
+			| "vendor"
+			| "host"
+		>
+	>
+	& {
+		inclusionUserCallbacks?: ZWaveOptions["inclusionUserCallbacks"];
+		joinNetworkUserCallbacks?: ZWaveOptions["joinNetworkUserCallbacks"];
+		logConfig?: Partial<LogConfig>;
+	}
 >;
 
 export type EditableZWaveOptions = Expand<

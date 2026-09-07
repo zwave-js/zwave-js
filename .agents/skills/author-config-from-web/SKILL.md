@@ -85,17 +85,17 @@ For each parameter found on the website:
 **ALWAYS verify template compatibility before using any template:**
 
 1. **Resolve the actual template definition** with the `resolve_config_import` tool (or `find_template_definition` to open it) to understand:
-    - Value ranges (minValue, maxValue)
-    - Default values
-    - Option labels and values
-    - Data types and units
-    - After importing, use `resolve_config_param` to confirm the fully resolved parameter (template plus your overrides) matches the documented behavior
+   - Value ranges (minValue, maxValue)
+   - Default values
+   - Option labels and values
+   - Data types and units
+   - After importing, use `resolve_config_param` to confirm the fully resolved parameter (template plus your overrides) matches the documented behavior
 
 2. **Compare with website parameter description** to ensure exact match:
-    - Value mappings must be identical
-    - Option labels may be reworded but must have the same meaning as in the manufacturer's documentation
-    - Default values must match
-    - Units and ranges must be compatible
+   - Value mappings must be identical
+   - Option labels may be reworded but must have the same meaning as in the manufacturer's documentation
+   - Default values must match
+   - Units and ranges must be compatible
 
 3. **Never assume template compatibility** based on similar names or descriptions
 
@@ -125,10 +125,10 @@ Example:
 
 ```json
 {
-	"#": "28",
-	"$if": "firmwareVersion >= 1.11 && firmwareVersion < 2.0 || firmwareVersion >= 2.11 && firmwareVersion < 3.0 || firmwareVersion >= 3.10",
-	"label": "Dimmer Scene Control",
-	"$import": "~/templates/master_template.json#base_enable_disable_inverted"
+  "#": "28",
+  "$if": "firmwareVersion >= 1.11 && firmwareVersion < 2.0 || firmwareVersion >= 2.11 && firmwareVersion < 3.0 || firmwareVersion >= 3.10",
+  "label": "Dimmer Scene Control",
+  "$import": "~/templates/master_template.json#base_enable_disable_inverted"
 }
 ```
 
@@ -139,12 +139,12 @@ Example:
 - Use `allowManualEntry: false` only when predefined options are the only valid values
 - Convert units to proper symbols (%, °C, W, V, A, seconds, minutes, etc.)
 - **CRITICAL**: Always validate template compatibility by comparing actual template definitions with website descriptions:
-    - Read the template file to understand exact value mappings, ranges, defaults, and options
-    - Ensure website parameter behavior exactly matches template behavior
-    - Never use templates based on name similarity alone - verify actual compatibility
-    - For enable/disable parameters: verify value mapping (0=disable/1=enable vs 0=enable/1=disable)
-    - For range parameters: verify min/max values and units match
-    - For option parameters: verify option values and labels are compatible
+  - Read the template file to understand exact value mappings, ranges, defaults, and options
+  - Ensure website parameter behavior exactly matches template behavior
+  - Never use templates based on name similarity alone - verify actual compatibility
+  - For enable/disable parameters: verify value mapping (0=disable/1=enable vs 0=enable/1=disable)
+  - For range parameters: verify min/max values and units match
+  - For option parameters: verify option values and labels are compatible
 
 ## Quality Assurance
 
@@ -154,7 +154,13 @@ After creating the configuration file, you MUST validate it using the following 
 2. **Check for Remaining Issues**: Use the `lint_config` tool with the configuration file path to detect any remaining semantic errors or issues that require manual investigation and fixing
 3. **Format Files**: Use the `format` tool to ensure all files in the project match the required formatting standards (only needs to be called once at the end)
 
-Additional validation steps: 4. **Validate Structure**: Ensure proper JSON5 formatting and property ordering per the instructions 5. **Review Consistency**: Compare with similar devices from same manufacturer 6. **Verify Templates**: Ensure all `$import` references are valid and templates exist 7. **Validate Template Compatibility**: Cross-check that each imported template's actual definition matches the parameter behavior described on the manufacturer website 8. **Check Logic**: Verify conditional statements and parameter relationships are correct
+<!-- prettier-ignore -->
+Additional validation steps:
+4. **Validate Structure**: Ensure proper JSON5 formatting and property ordering per the instructions
+5. **Review Consistency**: Compare with similar devices from same manufacturer
+6. **Verify Templates**: Ensure all `$import` references are valid and templates exist
+7. **Validate Template Compatibility**: Cross-check that each imported template's actual definition matches the parameter behavior described on the manufacturer website
+8. **Check Logic**: Verify conditional statements and parameter relationships are correct
 
 **CRITICAL**: Do not provide the final configuration file to the user until all validation tools pass without errors.
 

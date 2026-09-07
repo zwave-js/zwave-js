@@ -124,7 +124,11 @@
 		"unit": "0.1 °F/C",
 		"defaultValue": 5,
 		"unsigned": true,
-		"allowed": [{ "value": 0 }, { "range": [3, 255] }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [3, 255] }
+		],
 		"options": [
 			{
 				"label": "Disable",

@@ -145,11 +145,24 @@ export interface RCPHostOptions {
 	};
 }
 
+// oxfmt-ignore
 export type PartialRCPHostOptions = Expand<
-	DeepPartial<Omit<RCPHostOptions, "logConfig" | "host">>
-		& Partial<Pick<RCPHostOptions, "host">> & {
-			logConfig?: Partial<LogConfig>;
-		}
+	& DeepPartial<
+		Omit<
+			RCPHostOptions,
+			| "logConfig"
+			| "host"
+		>
+	>
+	& Partial<
+		Pick<
+			RCPHostOptions,
+			"host"
+		>
+	>
+	& {
+		logConfig?: Partial<LogConfig>;
+	}
 >;
 
 const defaultOptions: RCPHostOptions = {

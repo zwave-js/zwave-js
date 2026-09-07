@@ -62,7 +62,11 @@
 	"dimming_speed_0_255_sync_1": {
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
-		"allowed": [{ "value": 0 }, { "range": [5, 255] }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [5, 255] }
+		],
 		"defaultValue": 255,
 		"unsigned": true,
 		"options": [
@@ -95,7 +99,11 @@
 	"dimming_speed_0_255_sync_2": {
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
-		"allowed": [{ "value": 0 }, { "range": [5, 255] }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [5, 255] }
+		],
 		"defaultValue": 255,
 		"unsigned": true,
 		"options": [
@@ -128,7 +136,11 @@
 	"dimming_speed_0_255_sync_3": {
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
-		"allowed": [{ "value": 0 }, { "range": [5, 255] }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [5, 255] }
+		],
 		"defaultValue": 255,
 		"unsigned": true,
 		"options": [
@@ -161,7 +173,11 @@
 	"dimming_speed_0_255_sync_4": {
 		"description": "5-100 = 100 ms (500 ms - 10 seconds); 101-160 = seconds (minus 100); 161-254 = minutes (minus 160)",
 		"valueSize": 1,
-		"allowed": [{ "value": 0 }, { "range": [5, 255] }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "value": 0 },
+			{ "range": [5, 255] }
+		],
 		"defaultValue": 255,
 		"unsigned": true,
 		"options": [

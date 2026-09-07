@@ -122,7 +122,11 @@
 			"description": "Sets the method to disable the alarm or alarm duration",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "range": [0, 1] }, { "range": [10, 255] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [0, 1] },
+				{ "range": [10, 255] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{

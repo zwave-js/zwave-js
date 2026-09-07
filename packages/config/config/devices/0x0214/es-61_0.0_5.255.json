@@ -23,7 +23,11 @@
 			"label": "Basic Set",
 			"description": "send BASIC Set = Value command",
 			"valueSize": 1,
-			"allowed": [{ "range": [1, 99] }, { "value": 255 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [1, 99] },
+				{ "value": 255 }
+			],
 			"defaultValue": 255,
 			"unsigned": true
 		},

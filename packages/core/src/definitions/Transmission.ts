@@ -95,9 +95,12 @@ export type SendCommandSecurityS2Options = {
 	s2MulticastGroupId?: number;
 };
 
-export type SendCommandOptions = SendMessageOptions
+// oxfmt-ignore
+export type SendCommandOptions =
+	& SendMessageOptions
 	& SupervisionOptions
-	& SendCommandSecurityS2Options & {
+	& SendCommandSecurityS2Options
+	& {
 		/** How many times the driver should try to send the message. Defaults to the configured Driver option */
 		maxSendAttempts?: number;
 		/** Whether the driver should automatically handle the encapsulation. Default: true */

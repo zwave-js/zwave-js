@@ -85,7 +85,11 @@
 			"label": "Automatic Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [{ "value": 0 }, { "range": [900, 65535] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [900, 65535] }
+			],
 			"defaultValue": 43200,
 			"unsigned": true,
 			"options": [
@@ -121,7 +125,11 @@
 			"label": "Low Temperature Basic Set Threshold",
 			"valueSize": 2,
 			"unit": "0.1 °(C/F)",
-			"allowed": [{ "value": 0 }, { "range": [200, 1000] }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "value": 0 },
+				{ "range": [200, 1000] }
+			],
 			"defaultValue": 0,
 			"options": [
 				{

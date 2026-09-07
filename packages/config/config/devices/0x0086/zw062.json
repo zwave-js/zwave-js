@@ -233,7 +233,11 @@
 			"#": "43",
 			"label": "Demo Sound Selection",
 			"valueSize": 1,
-			"allowed": [{ "range": [0, 100] }, { "value": 255 }],
+			// oxfmt-ignore
+			"allowed": [
+				{ "range": [0, 100] },
+				{ "value": 255 }
+			],
 			"defaultValue": 1,
 			"unsigned": true,
 			"options": [

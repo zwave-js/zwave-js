@@ -48,10 +48,30 @@
 
 	"overrides": [
 		{
+			"files": ["**/*.md"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2,
+			},
+		},
+		{
+			"files": ["docs/**/*.md"],
+			"options": {
+				"useTabs": true,
+				"tabWidth": 4,
+			},
+		},
+		{
 			"files": ["**/_sidebar.md"],
 			"options": {
 				"useTabs": false,
 				"tabWidth": 2,
+			},
+		},
+		{
+			"files": [".vscode/*.code-snippets"],
+			"options": {
+				"trailingComma": "none",
 			},
 		},
 		{

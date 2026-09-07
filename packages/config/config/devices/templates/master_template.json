@@ -70,7 +70,11 @@
 		// The default value needs to be set per device/parameter
 		"valueSize": 1,
 		"unsigned": true,
-		"allowed": [{ "range": [0, 99] }, { "value": 255 }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "range": [0, 99] },
+			{ "value": 255 }
+		],
 		"options": [
 			{
 				"label": "Off",
@@ -89,7 +93,11 @@
 		// The default value needs to be set per device/parameter
 		"valueSize": 1,
 		"unsigned": true,
-		"allowed": [{ "range": [1, 99] }, { "value": 255 }],
+		// oxfmt-ignore
+		"allowed": [
+			{ "range": [1, 99] },
+			{ "value": 255 }
+		],
 		"options": [
 			{
 				"label": "On / Previous state",
