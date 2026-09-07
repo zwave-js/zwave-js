@@ -10372,7 +10372,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		const assertInitializationCanContinue = () => {
 			if (canceled) {
 				throw new ZWaveError(
-					"Driver destroyed during network joining",
+					"Controller destroyed during network joining",
 					ZWaveErrorCodes.Driver_Destroyed,
 				);
 			}
