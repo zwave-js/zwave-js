@@ -1,46 +1,46 @@
 {
-	"name": "@zwave-js/eslint-plugin",
-	"version": "15.28.0",
-	"private": true,
-	"description": "zwave-js: custom ESLint rules",
-	"keywords": [],
-	"homepage": "https://github.com/zwave-js/zwave-js#readme",
-	"bugs": {
-		"url": "https://github.com/zwave-js/zwave-js/issues"
-	},
-	"license": "MIT",
-	"author": {
-		"name": "AlCalzone",
-		"email": "d.griesel@gmx.net"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/zwave-js/zwave-js.git"
-	},
-	"funding": {
-		"url": "https://github.com/sponsors/AlCalzone/"
-	},
-	"files": [
-		"build/**/*.js",
-		"build/**/package.json"
-	],
-	"type": "module",
-	"main": "build/index.js",
-	"module": "build/index.js",
-	"scripts": {
-		"build": "tsgo -b tsconfig.build.json --pretty",
-		"bootstrap": "yarn build",
-		"clean": "del-cli build/ \"*.tsbuildinfo\""
-	},
-	"devDependencies": {
-		"@alcalzone/esm2cjs": "^1.4.2",
-		"@typescript-eslint/utils": "^8.65.0",
-		"@typescript/native-preview": "7.0.0-dev.20260423.1",
-		"@zwave-js/core": "workspace:*",
-		"eslint-plugin-jsonc": "^3.1.2",
-		"typescript": "6.0.3"
-	},
-	"engines": {
-		"node": ">= 20"
-	}
+  "name": "@zwave-js/eslint-plugin",
+  "version": "15.28.0",
+  "description": "zwave-js: custom ESLint rules",
+  "private": true,
+  "keywords": [],
+  "type": "module",
+  "main": "build/index.js",
+  "module": "build/index.js",
+  "files": [
+    "build/**/*.js",
+    "build/**/package.json"
+  ],
+  "author": {
+    "name": "AlCalzone",
+    "email": "d.griesel@gmx.net"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/zwave-js/zwave-js#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zwave-js/zwave-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zwave-js/zwave-js/issues"
+  },
+  "funding": {
+    "url": "https://github.com/sponsors/AlCalzone/"
+  },
+  "engines": {
+    "node": ">= 20"
+  },
+  "scripts": {
+    "build": "tsgo -b tsconfig.build.json --pretty",
+    "bootstrap": "yarn build",
+    "clean": "del-cli build/ \"*.tsbuildinfo\""
+  },
+  "devDependencies": {
+    "@alcalzone/esm2cjs": "^1.4.2",
+    "@typescript-eslint/utils": "^8.65.0",
+    "@typescript/native-preview": "7.0.0-dev.20260423.1",
+    "@zwave-js/core": "workspace:*",
+    "eslint-plugin-jsonc": "^3.1.2",
+    "typescript": "6.0.3"
+  }
 }

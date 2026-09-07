@@ -27,7 +27,7 @@
 		],
 	},
 
-	"sortPackageJson": true,
+	"sortPackageJson": false,
 
 	"ignorePatterns": [
 		"**/build/**",
@@ -73,6 +73,13 @@
 			"files": [".vscode/*.code-snippets"],
 			"options": {
 				"trailingComma": "none",
+			},
+		},
+		{
+			"files": ["**/package.json"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2,
 			},
 		},
 		{
