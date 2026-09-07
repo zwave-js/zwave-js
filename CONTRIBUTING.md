@@ -4,6 +4,13 @@ First of all, welcome!
 
 We're happy that you're considering helping us out. Although the goal of this project is to be(come) the best Z-Wave driver out there, it is developed in our free time. So every bit of support helps. There are many ways to contribute, but also a few rules to follow, so we can use our precious time to make `zwave-js` better instead of wading through issues in GitHub.
 
+## AI policy
+
+This project follows the [Z-Wave JS AI Policy](AI_POLICY.md). In short, AI tools
+are welcome as an aid, but you must fully understand and be able to explain
+every change you submit. Contributions made by autonomous agents are not
+accepted.
+
 ## Do you have a problem? Something not working? Configuration missing?
 
 Please read the [troubleshooting](https://zwave-js.github.io/zwave-js/#/troubleshooting/index) section of the documentation. Your problem might already be answered there.
