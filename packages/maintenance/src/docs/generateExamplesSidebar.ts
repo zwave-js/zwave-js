@@ -62,7 +62,7 @@ async function generateExamples(): Promise<boolean> {
 		processedExamples.push({
 			position,
 			index: `\n\n**[${title}](examples/${filename})**`,
-			sidebar: `\t- [${title}](examples/${filename})\n`,
+			sidebar: `    - [${title}](examples/${filename})\n`,
 		});
 	}
 
@@ -90,16 +90,14 @@ async function generateExamples(): Promise<boolean> {
 		);
 		return false;
 	}
+	const sidebarAutoGenLineStart =
+		sidebarFileContent.lastIndexOf("\n", sidebarAutoGenStart) + 1;
 	sidebarFileContent =
-		sidebarFileContent.slice(0, sidebarAutoGenStart)
+		sidebarFileContent.slice(0, sidebarAutoGenLineStart)
 		+ generatedSidebar
 		+ sidebarFileContent.slice(
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
-	sidebarFileContent = await formatWithOxfmt(
-		"_sidebar.md",
-		sidebarFileContent,
-	);
 	await fsp.writeFile(
 		path.join(examplesDocsDir, "_sidebar.md"),
 		sidebarFileContent,

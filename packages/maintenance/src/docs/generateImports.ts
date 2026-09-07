@@ -184,7 +184,10 @@ async function processImports(piscina: Piscina): Promise<boolean> {
 		fs,
 		path.join(projectRoot, "docs"),
 		(f) =>
-			!f.includes("/CCs/") && !f.includes("\\CCs\\") && f.endsWith(".md"),
+			!f.includes("/CCs/")
+			&& !f.includes("\\CCs\\")
+			&& !f.endsWith("_sidebar.md")
+			&& f.endsWith(".md"),
 	);
 
 	const transformedSourcesByFile = await collectTransformedSources(

@@ -145,7 +145,7 @@ async function processCCDocFile(
 	const generatedIndex = `\n- [${ccName} CC](api/CCs/${filename}) · \`${num2hex(
 		(CommandClasses as any)[ccName],
 	)}\``;
-	const generatedSidebar = `\n\t- [${ccName} CC](api/CCs/${filename})`;
+	const generatedSidebar = `\n    - [${ccName} CC](api/CCs/${filename})`;
 
 	const pageRoute = `api/CCs/${filename.replace(/\.md$/, "")}`;
 	const ctx = createTypeRenderContext(
@@ -821,16 +821,14 @@ async function generateCCDocs(
 		);
 		return false;
 	}
+	const sidebarAutoGenLineStart =
+		sidebarFileContent.lastIndexOf("\n", sidebarAutoGenStart) + 1;
 	sidebarFileContent =
-		sidebarFileContent.slice(0, sidebarAutoGenStart)
+		sidebarFileContent.slice(0, sidebarAutoGenLineStart)
 		+ generatedSidebar
 		+ sidebarFileContent.slice(
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
-	sidebarFileContent = await formatWithOxfmt(
-		"_sidebar.md",
-		sidebarFileContent,
-	);
 	await fsp.writeFile(
 		path.join(ccDocsDir, "_sidebar.md"),
 		sidebarFileContent,
