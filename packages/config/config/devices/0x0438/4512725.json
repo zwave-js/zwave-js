@@ -59,10 +59,7 @@
 			"label": "Overheat Protection",
 			"valueSize": 1,
 			"unit": "°C",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 60] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 60] }],
 			"defaultValue": 36,
 			"options": [
 				{
@@ -77,10 +74,7 @@
 			"label": "Automatic Reporting: Temperature Change Threshold",
 			"valueSize": 1,
 			"unit": "0.1 °C",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [2, 50] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [2, 50] }],
 			"defaultValue": 5,
 			"options": [
 				{
@@ -95,10 +89,7 @@
 			"label": "Automatic Reporting: Temperature Reporting Interval",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [10, 65535] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [10, 65535] }],
 			"defaultValue": 300,
 			"unsigned": true,
 			"options": [
@@ -164,10 +155,7 @@
 			"label": "Automatic Reporting: Reporting Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [60, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [60, 2678400] }],
 			"defaultValue": 600,
 			"options": [
 				{
@@ -193,10 +181,7 @@
 			"label": "Overcurrent Protection",
 			"valueSize": 1,
 			"unit": "A",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [10, 16] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [10, 16] }],
 			"defaultValue": 16,
 			"options": [
 				{

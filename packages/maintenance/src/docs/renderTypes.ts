@@ -18,7 +18,9 @@ import {
 	type TypeReferenceNode,
 	ts,
 } from "ts-morph";
-import { formatWithDprint } from "../dprint.js";
+
+import { formatWithOxfmt } from "../oxfmt.js";
+
 import {
 	findSourceNode,
 	getJsDocTagNames,
@@ -79,9 +81,7 @@ export function docsifySlugify(heading: string): string {
 /** Converts a docs-relative page path plus optional heading into a docsify route */
 export function docsifyRoute(pagePath: string, heading?: string): string {
 	const page = pagePath.replace(/\.md$/, "");
-	return heading
-		? `#/${page}?id=${docsifySlugify(heading)}`
-		: `#/${page}`;
+	return heading ? `#/${page}?id=${docsifySlugify(heading)}` : `#/${page}`;
 }
 
 export interface EmbeddedType {
@@ -91,6 +91,10 @@ export interface EmbeddedType {
 	description?: string;
 }
 
+interface PendingEmbeddedType extends Omit<EmbeddedType, "definition"> {
+	definition: Promise<string>;
+}
+
 export interface TypeRenderContext {
 	program: Project;
 	/** Docsify route of the page currently being generated, e.g. "api/CCs/Basic" */
@@ -98,7 +102,7 @@ export interface TypeRenderContext {
 	/** typeName → docsify route, auto-detected from hand-written docs */
 	linkTargets: ReadonlyMap<string, string>;
 	/** Types to define on the current page, in insertion order */
-	embeds: Map<string, EmbeddedType>;
+	embeds: Map<string, PendingEmbeddedType>;
 	/** All documentable types referenced on the current page → docsify route */
 	referenced: Map<string, string>;
 	/** Referenced types with no known documentation → declaring file path */
@@ -200,10 +204,12 @@ export function getJsDocDescription(node: Node): string | undefined {
 	if (!docs.length) return undefined;
 	const description = docs.at(-1)!.getDescription().trim();
 	if (!description) return undefined;
-	return description
-		.split(/\n\s*\n/)[0]
-		.replaceAll(/\s*\n\s*/g, " ")
-		.trim() || undefined;
+	return (
+		description
+			.split(/\n\s*\n/)[0]
+			.replaceAll(/\s*\n\s*/g, " ")
+			.trim() || undefined
+	);
 }
 
 export function fixTypePrinterErrors(text: string): string {
@@ -246,10 +252,12 @@ function printObjectShape(
 		const declB = b.getValueDeclaration();
 		if (declA && declB) {
 			return (
-				declA.getSourceFile().getFilePath().localeCompare(
-					declB.getSourceFile().getFilePath(),
-				)
-			) || declA.getStart() - declB.getStart();
+				declA
+					.getSourceFile()
+					.getFilePath()
+					.localeCompare(declB.getSourceFile().getFilePath())
+				|| declA.getStart() - declB.getStart()
+			);
 		}
 		return a.getName().localeCompare(b.getName());
 	});
@@ -259,10 +267,7 @@ function printObjectShape(
 	for (const prop of props) {
 		const decl = prop.getValueDeclaration();
 		if (
-			isInternalMember(
-				prop.getName(),
-				decl ? getJsDocTagNames(decl) : [],
-			)
+			isInternalMember(prop.getName(), decl ? getJsDocTagNames(decl) : [])
 		) {
 			continue;
 		}
@@ -329,12 +334,13 @@ function expandUtilityType(
 	const hasTypeParameter = typeArgs.some((arg) =>
 		[arg, ...arg.getDescendants()]
 			.filter(Node.isIdentifier)
-			.some((id) =>
-				id
-					.getSymbol()
-					?.getDeclarations()
-					.some(Node.isTypeParameterDeclaration) ?? false
-			)
+			.some(
+				(id) =>
+					id
+						.getSymbol()
+						?.getDeclarations()
+						.some(Node.isTypeParameterDeclaration) ?? false,
+			),
 	);
 	if (hasTypeParameter) return undefined;
 
@@ -369,7 +375,7 @@ export function transformSignature(
 	// References that failed their guards; keyed by text to survive node invalidation
 	const skipped = new Set<string>();
 
-	for (let i = 0;; i++) {
+	for (let i = 0; ; i++) {
 		if (i >= MAX_TRANSFORM_ITERATIONS) {
 			ctx.warnings.push(
 				`Transformation of ${method.getName()} did not settle after ${MAX_TRANSFORM_ITERATIONS} iterations`,
@@ -408,12 +414,13 @@ export function transformSignature(
 			.map((p) => p.getTypeNode())
 			.filter((n) => n != undefined)
 			.filter(Node.isTypeReference)
-			.find((ref) =>
-				OPTIONS_TYPE_NAME.test(
-					getLeftmostIdentifier(ref.getTypeName()).getText(),
-				)
-				&& !ref.getTypeArguments().length
-				&& !skipped.has(ref.getText())
+			.find(
+				(ref) =>
+					OPTIONS_TYPE_NAME.test(
+						getLeftmostIdentifier(ref.getTypeName()).getText(),
+					)
+					&& !ref.getTypeArguments().length
+					&& !skipped.has(ref.getText()),
 			);
 		if (optionsTarget) {
 			const replacement = printObjectShape(optionsTarget, ctx);
@@ -433,10 +440,11 @@ export function transformSignature(
 				...(Node.isTypeOperatorTypeNode(root) ? [root] : []),
 				...root.getDescendantsOfKind(SyntaxKind.TypeOperator),
 			])
-			.find((op) =>
-				op.getOperator() === SyntaxKind.KeyOfKeyword
-				&& op.getTypeNode().getKind() === SyntaxKind.TypeQuery
-				&& !skipped.has(op.getText())
+			.find(
+				(op) =>
+					op.getOperator() === SyntaxKind.KeyOfKeyword
+					&& op.getTypeNode().getKind() === SyntaxKind.TypeQuery
+					&& !skipped.has(op.getText()),
 			);
 		if (keyofTarget) {
 			const resolved = fixTypePrinterErrors(
@@ -567,8 +575,8 @@ function addEmbed(
 			const typeNode = Node.isGetAccessorDeclaration(prop)
 				? prop.getReturnTypeNode()
 				: Node.isSetAccessorDeclaration(prop)
-				? prop.getParameters()[0]?.getTypeNode()
-				: prop.getTypeNode();
+					? prop.getParameters()[0]?.getTypeNode()
+					: prop.getTypeNode();
 			if (typeNode) {
 				collectReferencesFromNode(typeNode, ctx, depth + 1);
 			}
@@ -590,12 +598,12 @@ const MAX_DISTRIBUTED_LENGTH = 2000;
 
 type Atom =
 	| {
-		kind: "literal";
-		node: TypeLiteralNode;
-		// Set for literals that are a union member: their leading comment
-		// describes the whole variant
-		variantRoot?: boolean;
-	}
+			kind: "literal";
+			node: TypeLiteralNode;
+			// Set for literals that are a union member: their leading comment
+			// describes the whole variant
+			variantRoot?: boolean;
+	  }
 	// Named types and anything else that stays as written
 	| { kind: "ref"; text: string };
 
@@ -649,9 +657,7 @@ function distributeTypeNode(
 			const inner = distributeTypeNode(member, ctx, depth);
 			if (!inner) return undefined;
 			for (const variant of inner) {
-				const firstLiteral = variant.find(
-					(a) => a.kind === "literal",
-				);
+				const firstLiteral = variant.find((a) => a.kind === "literal");
 				if (firstLiteral && firstLiteral.kind === "literal") {
 					firstLiteral.variantRoot = true;
 				}
@@ -703,9 +709,9 @@ function distributeTypeNode(
 				&& alias.getTypeNode()
 				&& (Node.isTypeLiteral(alias.getTypeNodeOrThrow())
 					|| alias
-							.getTypeNodeOrThrow()
-							.getDescendantsOfKind(SyntaxKind.TypeLiteral)
-							.length > 0)
+						.getTypeNodeOrThrow()
+						.getDescendantsOfKind(SyntaxKind.TypeLiteral).length
+						> 0)
 			) {
 				return distributeTypeNode(
 					alias.getTypeNodeOrThrow(),
@@ -829,16 +835,10 @@ export function tryDistributeCompoundParameter(
 		if (rendered.some((v) => v == undefined)) continue;
 		// An empty variant is rendered by omitting the parameter, which only
 		// works when the parameter is optional
-		if (
-			rendered.some((v) => v!.empty)
-			&& !param.hasQuestionToken()
-		) {
+		if (rendered.some((v) => v!.empty) && !param.hasQuestionToken()) {
 			continue;
 		}
-		const total = rendered.reduce(
-			(sum, v) => sum + v!.typeText.length,
-			0,
-		);
+		const total = rendered.reduce((sum, v) => sum + v!.typeText.length, 0);
 		if (total > MAX_DISTRIBUTED_LENGTH) {
 			ctx.warnings.push(
 				`Not distributing parameter ${param.getName()} of ${method.getName()} into overloads: the result would be too long`,
@@ -865,8 +865,7 @@ let ccIndexExportNames: ReadonlySet<string> | undefined;
 
 function getCCIndexExportNames(program: Project): ReadonlySet<string> {
 	ccIndexExportNames ??= new Set(
-		program.getSourceFile(CC_INDEX)?.getExportedDeclarations().keys()
-			?? [],
+		program.getSourceFile(CC_INDEX)?.getExportedDeclarations().keys() ?? [],
 	);
 	return ccIndexExportNames;
 }
@@ -880,7 +879,7 @@ export function collectTypeNamesFromText(
 	ctx: TypeRenderContext,
 ): void {
 	// Strip string literals so their contents aren't matched as type names
-	const withoutStrings = text.replaceAll(/"(?:[^"\\]|\\.)*"/g, "\"\"");
+	const withoutStrings = text.replaceAll(/"(?:[^"\\]|\\.)*"/g, '""');
 	const ccExports = getCCIndexExportNames(ctx.program);
 	for (const match of withoutStrings.matchAll(/\b[A-Z]\w*\b/g)) {
 		const name = match[0];
@@ -896,30 +895,44 @@ export function collectTypeNamesFromText(
 	}
 }
 
-const formattedSignatureCache = new Map<string, string>();
+const formattedSignatureCache = new Map<string, Promise<string>>();
 
-/** Re-formats a transformed signature with dprint */
-export function formatTransformedSignature(signature: string): string {
-	if (formattedSignatureCache.has(signature)) {
-		return formattedSignatureCache.get(signature)!;
+export function formatTransformedSignature(signature: string): Promise<string> {
+	let formattedSignature = formattedSignatureCache.get(signature);
+	if (!formattedSignature) {
+		formattedSignature = (async () => {
+			const wrapped = `class __C {\n${signature}\n}`;
+			const formatted = (
+				await formatWithOxfmt("signature.ts", wrapped)
+			).trim();
+			return formatted
+				.split("\n")
+				.slice(1, -1)
+				.map((line) => line.replace(/^\t/, ""))
+				.join("\n");
+		})();
+		formattedSignatureCache.set(signature, formattedSignature);
 	}
-	const wrapped = `class __C {\n${signature}\n}`;
-	const formatted = formatWithDprint("signature.ts", wrapped).trim();
-	const inner = formatted
-		.split("\n")
-		.slice(1, -1)
-		.map((line) => line.replace(/^\t/, ""))
-		.join("\n");
-	formattedSignatureCache.set(signature, inner);
-	return inner;
+	return formattedSignature;
+}
+
+export async function resolveEmbeddedTypes(
+	ctx: TypeRenderContext,
+): Promise<EmbeddedType[]> {
+	return Promise.all(
+		[...ctx.embeds.values()].map(async (embed) => ({
+			...embed,
+			definition: await embed.definition,
+		})),
+	);
 }
 
 /** Renders the "Related types" section for all types embedded on a page */
-export function renderEmbeddedTypesSection(ctx: TypeRenderContext): string {
-	if (!ctx.embeds.size) return "";
-	const sorted = [...ctx.embeds.values()].toSorted((a, b) =>
-		a.name.localeCompare(b.name)
-	);
+export function renderEmbeddedTypesSection(
+	embeds: readonly EmbeddedType[],
+): string {
+	if (!embeds.length) return "";
+	const sorted = embeds.toSorted((a, b) => a.name.localeCompare(b.name));
 	let text = "## Related types\n\n";
 	for (const embed of sorted) {
 		text += `### \`${embed.name}\`\n\n`;

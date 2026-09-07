@@ -75,14 +75,17 @@ export const defaultCapabilities: UserCredentialCCCapabilities = {
 	supportsAdminCode: true,
 	supportsAdminCodeDeactivation: true,
 	supportedCredentialTypes: new Map([
-		[UserCredentialType.PINCode, {
-			numberOfCredentialSlots: 10,
-			minCredentialLength: 4,
-			maxCredentialLength: 10,
-			// CC:0083.01.04.11.019: CRB MUST be 1 when max hash length is 0
-			maxCredentialHashLength: 0,
-			supportsCredentialLearn: false,
-		}],
+		[
+			UserCredentialType.PINCode,
+			{
+				numberOfCredentialSlots: 10,
+				minCredentialLength: 4,
+				maxCredentialLength: 10,
+				// CC:0083.01.04.11.019: CRB MUST be 1 when max hash length is 0
+				maxCredentialHashLength: 0,
+				supportsCredentialLearn: false,
+			},
+		],
 	]),
 };
 
@@ -93,10 +96,8 @@ export const defaultCapabilities: UserCredentialCCCapabilities = {
 const STATE_KEY_PREFIX = "UserCredential_";
 const StateKeys = {
 	user: (userId: number) => `${STATE_KEY_PREFIX}user_${userId}`,
-	credential: (
-		credentialType: UserCredentialType,
-		credentialSlot: number,
-	) => `${STATE_KEY_PREFIX}cred_${credentialType}_${credentialSlot}`,
+	credential: (credentialType: UserCredentialType, credentialSlot: number) =>
+		`${STATE_KEY_PREFIX}cred_${credentialType}_${credentialSlot}`,
 	adminPinCode: `${STATE_KEY_PREFIX}adminPinCode`,
 	keyLockerEntry: (
 		entryType: UserCredentialKeyLockerEntryType,
@@ -148,25 +149,15 @@ function getCapabilities(
 // State access helpers
 // =============================================================================
 
-function getUser(
-	self: MockNode,
-	userId: number,
-): UserState | undefined {
+function getUser(self: MockNode, userId: number): UserState | undefined {
 	return self.state.get(StateKeys.user(userId)) as UserState | undefined;
 }
 
-function setUser(
-	self: MockNode,
-	userId: number,
-	data: UserState,
-): void {
+function setUser(self: MockNode, userId: number, data: UserState): void {
 	self.state.set(StateKeys.user(userId), data);
 }
 
-function deleteUser(
-	self: MockNode,
-	userId: number,
-): void {
+function deleteUser(self: MockNode, userId: number): void {
 	self.state.delete(StateKeys.user(userId));
 }
 
@@ -202,13 +193,10 @@ function setCredential(
 	credentialSlot: number,
 	data: Omit<CredentialState, "userId">,
 ): void {
-	self.state.set(
-		StateKeys.credential(credentialType, credentialSlot),
-		{
-			userId,
-			...data,
-		},
-	);
+	self.state.set(StateKeys.credential(credentialType, credentialSlot), {
+		userId,
+		...data,
+	});
 }
 
 function deleteCredential(
@@ -218,8 +206,7 @@ function deleteCredential(
 	credentialSlot: number,
 ): void {
 	if (
-		getCredential(self, userId, credentialType, credentialSlot)
-			== undefined
+		getCredential(self, userId, credentialType, credentialSlot) == undefined
 	) {
 		return;
 	}
@@ -272,10 +259,10 @@ function getAllCredentials(
 	capabilities: UserCredentialCCCapabilities,
 ): CredentialRef[] {
 	const result: CredentialRef[] = [];
-	for (
-		const [credentialType, typeCapabilities] of capabilities
-			.supportedCredentialTypes
-	) {
+	for (const [
+		credentialType,
+		typeCapabilities,
+	] of capabilities.supportedCredentialTypes) {
 		for (
 			let slot = 1;
 			slot <= typeCapabilities.numberOfCredentialSlots;
@@ -393,9 +380,10 @@ function findNextCredential(
 	capabilities: UserCredentialCCCapabilities,
 	forUserId?: number,
 ): { nextCredentialType: UserCredentialType; nextCredentialSlot: number } {
-	const creds = forUserId !== undefined
-		? getCredentialsForUser(self, forUserId, capabilities)
-		: getAllCredentials(self, capabilities);
+	const creds =
+		forUserId !== undefined
+			? getCredentialsForUser(self, forUserId, capabilities)
+			: getAllCredentials(self, capabilities);
 
 	for (const ref of creds) {
 		if (
@@ -484,8 +472,9 @@ function buildCredentialChecksumData(
 	credentialType: UserCredentialType,
 	capabilities: UserCredentialCCCapabilities,
 ): Bytes {
-	const allCreds = getAllCredentials(self, capabilities)
-		.filter((c) => c.credentialType === credentialType);
+	const allCreds = getAllCredentials(self, capabilities).filter(
+		(c) => c.credentialType === credentialType,
+	);
 
 	const parts: Bytes[] = [];
 	for (const ref of allCreds) {
@@ -542,9 +531,7 @@ function isDuplicateCredential(
 		if (
 			existing
 			&& existing.credentialData.length === credentialData.length
-			&& existing.credentialData.every(
-				(b, i) => b === credentialData[i],
-			)
+			&& existing.credentialData.every((b, i) => b === credentialData[i])
 		) {
 			return true;
 		}
@@ -591,19 +578,21 @@ const respondToUserCapabilitiesGet: MockNodeBehavior = {
 				supportedCredentialRules: capabilities.supportedCredentialRules,
 				// CC:0083.01.02.11.019: Max User Name length MUST be even (UTF-16)
 				maxUserNameLength: capabilities.maxUserNameLength,
-				supportsUserSchedule: capabilities.supportsUserSchedule
-					?? false,
-				supportsAllUsersChecksum: capabilities.supportsAllUsersChecksum
-					?? false,
-				supportsUserChecksum: capabilities.supportsUserChecksum
-					?? false,
+				supportsUserSchedule:
+					capabilities.supportsUserSchedule ?? false,
+				supportsAllUsersChecksum:
+					capabilities.supportsAllUsersChecksum ?? false,
+				supportsUserChecksum:
+					capabilities.supportsUserChecksum ?? false,
 				// CC:0083.01.02.11.026: At least one encoding MUST be supported
 				supportedUserNameEncodings:
-					capabilities.supportedUserNameEncodings
-						?? [UserCredentialNameEncoding.ASCII],
+					capabilities.supportedUserNameEncodings ?? [
+						UserCredentialNameEncoding.ASCII,
+					],
 				// CC:0083.01.02.11.017: MUST support at least one User Type
-				supportedUserTypes: capabilities.supportedUserTypes
-					?? [UserCredentialUserType.General],
+				supportedUserTypes: capabilities.supportedUserTypes ?? [
+					UserCredentialUserType.General,
+				],
 			});
 			return { action: "sendCC", cc };
 		}
@@ -618,9 +607,7 @@ const respondToUserCapabilitiesGet: MockNodeBehavior = {
 // in response to this command.
 const respondToCredentialCapabilitiesGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
-		if (
-			receivedCC instanceof UserCredentialCCCredentialCapabilitiesGet
-		) {
+		if (receivedCC instanceof UserCredentialCCCredentialCapabilitiesGet) {
 			const capabilities = getCapabilities(
 				self,
 				receivedCC.endpointIndex,
@@ -647,17 +634,15 @@ const respondToCredentialCapabilitiesGet: MockNodeBehavior = {
 // in response to this command.
 const respondToKeyLockerCapabilitiesGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
-		if (
-			receivedCC instanceof UserCredentialCCKeyLockerCapabilitiesGet
-		) {
+		if (receivedCC instanceof UserCredentialCCKeyLockerCapabilitiesGet) {
 			const capabilities = getCapabilities(
 				self,
 				receivedCC.endpointIndex,
 			);
 			const cc = new UserCredentialCCKeyLockerCapabilitiesReport({
 				nodeId: controller.ownNodeId,
-				keyLockerCapabilities: capabilities.supportedKeyLockerEntryTypes
-					?? new Map(),
+				keyLockerCapabilities:
+					capabilities.supportedKeyLockerEntryTypes ?? new Map(),
 			});
 			return { action: "sendCC", cc };
 		}
@@ -846,24 +831,22 @@ const respondToUserSet: MockNodeBehavior = {
 		// CC:0083.01.05.11.030: If User Type not advertised as supported,
 		// MUST ignore
 		const userType = setCC.userType ?? UserCredentialUserType.General;
-		if (
-			!(capabilities.supportedUserTypes ?? []).includes(userType)
-		) {
+		if (!(capabilities.supportedUserTypes ?? []).includes(userType)) {
 			return { action: "fail" };
 		}
 
 		// CC:0083.01.05.11.039: If Credential Rule not advertised as
 		// supported, MUST ignore
-		const credentialRule = setCC.credentialRule
-			?? UserCredentialRule.Single;
+		const credentialRule =
+			setCC.credentialRule ?? UserCredentialRule.Single;
 		if (!capabilities.supportedCredentialRules.includes(credentialRule)) {
 			return { action: "fail" };
 		}
 
 		// CC:0083.01.05.11.056: If User Name Encoding is not advertised as
 		// supported, MUST ignore
-		const nameEncoding = setCC.nameEncoding
-			?? UserCredentialNameEncoding.ASCII;
+		const nameEncoding =
+			setCC.nameEncoding ?? UserCredentialNameEncoding.ASCII;
 		if (
 			!(capabilities.supportedUserNameEncodings ?? []).includes(
 				nameEncoding,
@@ -879,8 +862,8 @@ const respondToUserSet: MockNodeBehavior = {
 				// User already occupied — reject with UserAddRejectedLocationOccupied
 				const report = new UserCredentialCCUserReport({
 					nodeId: controller.ownNodeId,
-					reportType: UserCredentialUserReportType
-						.UserAddRejectedLocationOccupied,
+					reportType:
+						UserCredentialUserReportType.UserAddRejectedLocationOccupied,
 					userId,
 					modifierType: existingUser.modifierType,
 					modifierNodeId: existingUser.modifierNodeId,
@@ -903,8 +886,8 @@ const respondToUserSet: MockNodeBehavior = {
 				// User empty — reject with UserModifyRejectedLocationEmpty
 				const report = new UserCredentialCCUserReport({
 					nodeId: controller.ownNodeId,
-					reportType: UserCredentialUserReportType
-						.UserModifyRejectedLocationEmpty,
+					reportType:
+						UserCredentialUserReportType.UserModifyRejectedLocationEmpty,
 					userId,
 					modifierType: UserCredentialModifierType.DoesNotExist,
 					modifierNodeId: 0,
@@ -926,8 +909,7 @@ const respondToUserSet: MockNodeBehavior = {
 
 		// CC:0083.01.05.11.042: If User Type is Expiring, Expiring Timeout
 		// Minutes MUST be non-zero.
-		const active = setCC.active
-			?? true;
+		const active = setCC.active ?? true;
 		let expiringTimeoutMinutes = setCC.expiringTimeoutMinutes ?? 0;
 		if (
 			userType === UserCredentialUserType.Expiring
@@ -935,21 +917,22 @@ const respondToUserSet: MockNodeBehavior = {
 		) {
 			const report = new UserCredentialCCUserReport({
 				nodeId: controller.ownNodeId,
-				reportType: UserCredentialUserReportType
-					.ZeroExpiringMinutesInvalid,
+				reportType:
+					UserCredentialUserReportType.ZeroExpiringMinutesInvalid,
 				userId,
-				modifierType: existingUser?.modifierType
+				modifierType:
+					existingUser?.modifierType
 					?? UserCredentialModifierType.DoesNotExist,
 				modifierNodeId: existingUser?.modifierNodeId ?? 0,
-				userType: existingUser?.userType
-					?? UserCredentialUserType.General,
-				active: existingUser?.active
-					?? false,
-				credentialRule: existingUser?.credentialRule
-					?? UserCredentialRule.Single,
-				expiringTimeoutMinutes: existingUser?.expiringTimeoutMinutes
-					?? 0,
-				nameEncoding: existingUser?.nameEncoding
+				userType:
+					existingUser?.userType ?? UserCredentialUserType.General,
+				active: existingUser?.active ?? false,
+				credentialRule:
+					existingUser?.credentialRule ?? UserCredentialRule.Single,
+				expiringTimeoutMinutes:
+					existingUser?.expiringTimeoutMinutes ?? 0,
+				nameEncoding:
+					existingUser?.nameEncoding
 					?? UserCredentialNameEncoding.ASCII,
 				userName: existingUser?.userName ?? "",
 			});
@@ -1028,13 +1011,14 @@ const respondToUserSet: MockNodeBehavior = {
 
 		setUser(self, userId, newUser);
 
-		const reportType = operationType === UserCredentialOperationType.Add
-			// CC:0083.01.05.11.011: User Report with Type "User Added" MUST be
-			// returned to sender and sent to lifeline.
-			? UserCredentialUserReportType.UserAdded
-			// CC:0083.01.05.11.012: User Report with Type "User Modified" MUST
-			// be returned to sender and sent to lifeline.
-			: UserCredentialUserReportType.UserModified;
+		const reportType =
+			operationType === UserCredentialOperationType.Add
+				? // CC:0083.01.05.11.011: User Report with Type "User Added" MUST be
+					// returned to sender and sent to lifeline.
+					UserCredentialUserReportType.UserAdded
+				: // CC:0083.01.05.11.012: User Report with Type "User Modified" MUST
+					// be returned to sender and sent to lifeline.
+					UserCredentialUserReportType.UserModified;
 
 		const report = new UserCredentialCCUserReport({
 			nodeId: controller.ownNodeId,
@@ -1076,12 +1060,9 @@ const respondToCredentialGet: MockNodeBehavior = {
 			// Determine Credential Read-Back flag for a given type
 			// CC:0083.01.0C.11.021: If max hash length is 0, CRB MUST be 1
 			// CC:0083.01.0C.11.001: CRB MUST always be same within a type
-			const getCRB = (
-				credentialType: UserCredentialType,
-			): boolean => {
-				const typeCaps = capabilities.supportedCredentialTypes.get(
-					credentialType,
-				);
+			const getCRB = (credentialType: UserCredentialType): boolean => {
+				const typeCaps =
+					capabilities.supportedCredentialTypes.get(credentialType);
 				if (!typeCaps) return false;
 				return typeCaps.maxCredentialHashLength === 0;
 			};
@@ -1104,9 +1085,9 @@ const respondToCredentialGet: MockNodeBehavior = {
 					credentialSlot,
 					...(credentialReadBack
 						? {
-							credentialReadBack: true,
-							credentialData: new Bytes(),
-						}
+								credentialReadBack: true,
+								credentialData: new Bytes(),
+							}
 						: { credentialReadBack: false }),
 					modifierType: UserCredentialModifierType.DoesNotExist,
 					modifierNodeId: 0,
@@ -1134,9 +1115,9 @@ const respondToCredentialGet: MockNodeBehavior = {
 					credentialSlot: ref.credentialSlot,
 					...(credentialReadBack
 						? {
-							credentialReadBack: true,
-							credentialData: credState.credentialData,
-						}
+								credentialReadBack: true,
+								credentialData: credState.credentialData,
+							}
 						: { credentialReadBack: false }),
 					modifierType: credState.modifierType,
 					modifierNodeId: credState.modifierNodeId,
@@ -1154,21 +1135,14 @@ const respondToCredentialGet: MockNodeBehavior = {
 
 			// Determine scoping for next-credential iteration based on
 			// whether the request specified a user
-			const scopedUserId = reqUserId !== 0
-				? reqUserId
-				: undefined;
+			const scopedUserId = reqUserId !== 0 ? reqUserId : undefined;
 
 			// 7 cases based on userId/type/slot being zero or non-zero
 			// CC:0083.01.0B.11.006: Other combinations are invalid → ignore
 
 			if (reqUserId !== 0 && reqType !== 0 && reqSlot !== 0) {
 				// CC:0083.01.0B.11.003: All non-zero → return specific credential
-				const cred = getCredential(
-					self,
-					reqUserId,
-					reqType,
-					reqSlot,
-				);
+				const cred = getCredential(self, reqUserId, reqType, reqSlot);
 				const next = findNextCredential(
 					self,
 					reqType,
@@ -1250,8 +1224,7 @@ const respondToCredentialGet: MockNodeBehavior = {
 				// first credential for user+type
 				const ref = findFirst(
 					(r) =>
-						r.userId === reqUserId
-						&& r.credentialType === reqType,
+						r.userId === reqUserId && r.credentialType === reqType,
 				);
 				if (!ref) {
 					// CC:0083.01.0B.11.012: No credential → length zero
@@ -1260,16 +1233,16 @@ const respondToCredentialGet: MockNodeBehavior = {
 					const userExists = getUser(self, reqUserId) !== undefined;
 					const next = userExists
 						? findNextCredential(
-							self,
-							reqType,
-							0,
-							capabilities,
-							scopedUserId,
-						)
+								self,
+								reqType,
+								0,
+								capabilities,
+								scopedUserId,
+							)
 						: {
-							nextCredentialType: UserCredentialType.None,
-							nextCredentialSlot: 0,
-						};
+								nextCredentialType: UserCredentialType.None,
+								nextCredentialSlot: 0,
+							};
 					return {
 						action: "sendCC",
 						cc: emptyReport(
@@ -1311,16 +1284,16 @@ const respondToCredentialGet: MockNodeBehavior = {
 					const userExists = getUser(self, reqUserId) !== undefined;
 					const next = userExists
 						? findNextCredential(
-							self,
-							UserCredentialType.None,
-							0,
-							capabilities,
-							scopedUserId,
-						)
+								self,
+								UserCredentialType.None,
+								0,
+								capabilities,
+								scopedUserId,
+							)
 						: {
-							nextCredentialType: UserCredentialType.None,
-							nextCredentialSlot: 0,
-						};
+								nextCredentialType: UserCredentialType.None,
+								nextCredentialSlot: 0,
+							};
 					return {
 						action: "sendCC",
 						cc: emptyReport(
@@ -1399,9 +1372,7 @@ const respondToCredentialGet: MockNodeBehavior = {
 						next.nextCredentialSlot,
 					),
 				};
-			} else if (
-				reqUserId === 0 && reqType === 0 && reqSlot === 0
-			) {
+			} else if (reqUserId === 0 && reqType === 0 && reqSlot === 0) {
 				// CC:0083.01.0B.11.011: All zero → first credential overall
 				const ref = findFirst(() => true);
 				if (!ref) {
@@ -1462,9 +1433,8 @@ const respondToCredentialSet: MockNodeBehavior = {
 		const credentialData = setCC.credentialData ?? new Bytes();
 
 		// CC:0083.01.0C.11.021: CRB based on maxCredentialHashLength
-		const typeCaps = capabilities.supportedCredentialTypes.get(
-			credentialType,
-		);
+		const typeCaps =
+			capabilities.supportedCredentialTypes.get(credentialType);
 		const getCRB = (type: UserCredentialType): boolean => {
 			const tc = capabilities.supportedCredentialTypes.get(type);
 			return tc ? tc.maxCredentialHashLength === 0 : false;
@@ -1505,21 +1475,23 @@ const respondToCredentialSet: MockNodeBehavior = {
 				// Delete ALL credentials for all users
 				deleteAllCredentials(self, capabilities);
 			} else if (
-				userId === 0 && credentialType !== 0 && credentialSlot === 0
+				userId === 0
+				&& credentialType !== 0
+				&& credentialSlot === 0
 			) {
 				// Delete all credentials of type for all users
-				deleteCredentialsForType(
-					self,
-					credentialType,
-					capabilities,
-				);
+				deleteCredentialsForType(self, credentialType, capabilities);
 			} else if (
-				userId !== 0 && credentialType === 0 && credentialSlot === 0
+				userId !== 0
+				&& credentialType === 0
+				&& credentialSlot === 0
 			) {
 				// Delete all credentials for user
 				deleteCredentialsForUser(self, userId, capabilities);
 			} else if (
-				userId !== 0 && credentialType !== 0 && credentialSlot === 0
+				userId !== 0
+				&& credentialType !== 0
+				&& credentialSlot === 0
 			) {
 				// Delete all credentials of type for user
 				deleteCredentialsForUserAndType(
@@ -1529,15 +1501,12 @@ const respondToCredentialSet: MockNodeBehavior = {
 					capabilities,
 				);
 			} else if (
-				userId !== 0 && credentialType !== 0 && credentialSlot !== 0
+				userId !== 0
+				&& credentialType !== 0
+				&& credentialSlot !== 0
 			) {
 				// Delete specific credential
-				deleteCredential(
-					self,
-					userId,
-					credentialType,
-					credentialSlot,
-				);
+				deleteCredential(self, userId, credentialType, credentialSlot);
 			} else {
 				// Invalid combination for delete
 				return { action: "fail" };
@@ -1637,8 +1606,7 @@ const respondToCredentialSet: MockNodeBehavior = {
 			if (occupiedCred) {
 				// Slot occupied — reject
 				const report = makeReport(
-					UserCredentialCredentialReportType
-						.CredentialAddRejectedLocationOccupied,
+					UserCredentialCredentialReportType.CredentialAddRejectedLocationOccupied,
 					occupiedCred.userId,
 					credentialType,
 					credentialSlot,
@@ -1657,8 +1625,7 @@ const respondToCredentialSet: MockNodeBehavior = {
 			if (!occupiedCred) {
 				// Slot empty — reject
 				const report = makeReport(
-					UserCredentialCredentialReportType
-						.CredentialModifyRejectedLocationEmpty,
+					UserCredentialCredentialReportType.CredentialModifyRejectedLocationEmpty,
 					userId,
 					credentialType,
 					credentialSlot,
@@ -1675,8 +1642,7 @@ const respondToCredentialSet: MockNodeBehavior = {
 			}
 			if (occupiedCred.userId !== userId) {
 				const report = makeReport(
-					UserCredentialCredentialReportType
-						.WrongUserUniqueIdentifier,
+					UserCredentialCredentialReportType.WrongUserUniqueIdentifier,
 					occupiedCred.userId,
 					credentialType,
 					credentialSlot,
@@ -1787,11 +1753,12 @@ const respondToCredentialSet: MockNodeBehavior = {
 		};
 		setCredential(self, userId, credentialType, credentialSlot, newCred);
 
-		const reportType = operationType === UserCredentialOperationType.Add
-			// CC:0083.01.0A.11.011: Credential Report "Credential Added"
-			? UserCredentialCredentialReportType.CredentialAdded
-			// CC:0083.01.0A.11.012: Credential Report "Credential Modified"
-			: UserCredentialCredentialReportType.CredentialModified;
+		const reportType =
+			operationType === UserCredentialOperationType.Add
+				? // CC:0083.01.0A.11.011: Credential Report "Credential Added"
+					UserCredentialCredentialReportType.CredentialAdded
+				: // CC:0083.01.0A.11.012: Credential Report "Credential Modified"
+					UserCredentialCredentialReportType.CredentialModified;
 
 		const report = makeReport(
 			reportType,
@@ -1828,8 +1795,8 @@ const respondToAdminPinCodeGet: MockNodeBehavior = {
 				return { action: "stop" };
 			}
 
-			const adminCode = self.state.get(StateKeys.adminPinCode) as string
-				?? "";
+			const adminCode =
+				(self.state.get(StateKeys.adminPinCode) as string) ?? "";
 
 			// CC:0083.01.1B.11.001: Admin PIN Code Report with appropriate
 			// Result Code MUST be returned.
@@ -1901,8 +1868,8 @@ const respondToAdminPinCodeSet: MockNodeBehavior = {
 		}
 
 		// CC:0083.01.1A.13.004: Identical to current → Unmodified
-		const currentCode = self.state.get(StateKeys.adminPinCode) as string
-			?? "";
+		const currentCode =
+			(self.state.get(StateKeys.adminPinCode) as string) ?? "";
 		if (pinCode === currentCode) {
 			const report = new UserCredentialCCAdminPinCodeReport({
 				nodeId: controller.ownNodeId,
@@ -1931,8 +1898,8 @@ const respondToAdminPinCodeSet: MockNodeBehavior = {
 		) {
 			const report = new UserCredentialCCAdminPinCodeReport({
 				nodeId: controller.ownNodeId,
-				operationResult: UserCredentialAdminCodeOperationResult
-					.FailDuplicateCredential,
+				operationResult:
+					UserCredentialAdminCodeOperationResult.FailDuplicateCredential,
 				pinCode: currentCode,
 			});
 			await self.sendToController(
@@ -2001,16 +1968,11 @@ const respondToAllUsersChecksumGet: MockNodeBehavior = {
 					userId,
 					capabilities,
 				);
-				checksumData = Bytes.concat([
-					checksumData,
-					uuidBuf,
-					userData,
-				]);
+				checksumData = Bytes.concat([checksumData, uuidBuf, userData]);
 			}
 
-			const checksum = checksumData.length > 0
-				? CRC16_CCITT(checksumData)
-				: 0x0000;
+			const checksum =
+				checksumData.length > 0 ? CRC16_CCITT(checksumData) : 0x0000;
 
 			const cc = new UserCredentialCCAllUsersChecksumReport({
 				nodeId: controller.ownNodeId,
@@ -2054,9 +2016,7 @@ const respondToUserChecksumGet: MockNodeBehavior = {
 
 			// CC:0083.01.17.11.000: CRC-CCITT with init 0x1D0F, poly 0x1021
 			const data = buildUserChecksumData(self, userId, capabilities);
-			const checksum = data.length > 0
-				? CRC16_CCITT(data)
-				: 0x0000;
+			const checksum = data.length > 0 ? CRC16_CCITT(data) : 0x0000;
 
 			const cc = new UserCredentialCCUserChecksumReport({
 				nodeId: controller.ownNodeId,
@@ -2096,9 +2056,7 @@ const respondToCredentialChecksumGet: MockNodeBehavior = {
 			);
 
 			// CC:0083.01.19.11.006: No credentials → 0x0000
-			const checksum = data.length > 0
-				? CRC16_CCITT(data)
-				: 0x0000;
+			const checksum = data.length > 0 ? CRC16_CCITT(data) : 0x0000;
 
 			const cc = new UserCredentialCCCredentialChecksumReport({
 				nodeId: controller.ownNodeId,
@@ -2116,10 +2074,7 @@ const respondToCredentialChecksumGet: MockNodeBehavior = {
 
 const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 	async handleCC(controller, self, receivedCC) {
-		if (
-			!(receivedCC
-				instanceof UserCredentialCCAssociationSet)
-		) return;
+		if (!(receivedCC instanceof UserCredentialCCAssociationSet)) return;
 
 		const setCC = receivedCC;
 		const capabilities = getCapabilities(self, setCC.endpointIndex);
@@ -2146,9 +2101,8 @@ const respondToUserCredentialAssociationSet: MockNodeBehavior = {
 		}
 
 		// Validate credential slot range
-		const typeCaps = capabilities.supportedCredentialTypes.get(
-			credentialType,
-		)!;
+		const typeCaps =
+			capabilities.supportedCredentialTypes.get(credentialType)!;
 		if (
 			credentialSlot === 0
 			|| credentialSlot > typeCaps.numberOfCredentialSlots
@@ -2395,8 +2349,7 @@ const respondToKeyLockerEntryGet: MockNodeBehavior = {
 			// data; 0 if it does not.
 			const cc = new UserCredentialCCKeyLockerEntryReport({
 				nodeId: controller.ownNodeId,
-				occupied: entryData !== undefined
-					&& entryData.length > 0,
+				occupied: entryData !== undefined && entryData.length > 0,
 				entryType,
 				entrySlot,
 			});
@@ -2438,25 +2391,22 @@ const respondToKeyLockerEntrySet: MockNodeBehavior = {
 
 			if ((entryType as number) === 0 && entrySlot === 0) {
 				// Delete all entries in the entire Key Locker
-				for (
-					const [type, typeCaps] of capabilities
-						.supportedKeyLockerEntryTypes
-				) {
+				for (const [
+					type,
+					typeCaps,
+				] of capabilities.supportedKeyLockerEntryTypes) {
 					for (
 						let slot = 1;
 						slot <= typeCaps.numberOfEntrySlots;
 						slot++
 					) {
-						self.state.delete(
-							StateKeys.keyLockerEntry(type, slot),
-						);
+						self.state.delete(StateKeys.keyLockerEntry(type, slot));
 					}
 				}
 			} else if ((entryType as number) !== 0 && entrySlot === 0) {
 				// Delete all entries of the given type
-				const typeCaps = capabilities.supportedKeyLockerEntryTypes.get(
-					entryType,
-				);
+				const typeCaps =
+					capabilities.supportedKeyLockerEntryTypes.get(entryType);
 				if (typeCaps) {
 					for (
 						let slot = 1;
@@ -2479,8 +2429,9 @@ const respondToKeyLockerEntrySet: MockNodeBehavior = {
 			const report = new UserCredentialCCKeyLockerEntryReport({
 				nodeId: controller.ownNodeId,
 				occupied: false,
-				entryType: entryType || UserCredentialKeyLockerEntryType
-					.DESFireApplicationIdAndKey,
+				entryType:
+					entryType
+					|| UserCredentialKeyLockerEntryType.DESFireApplicationIdAndKey,
 				entrySlot: entrySlot || 1,
 			});
 			await self.sendToController(
@@ -2494,9 +2445,8 @@ const respondToKeyLockerEntrySet: MockNodeBehavior = {
 		// --- Add / Modify validation ---
 
 		// CC:0083.02.1F.11.002: If Entry Type not supported, MUST ignore
-		const typeCaps = capabilities.supportedKeyLockerEntryTypes.get(
-			entryType,
-		);
+		const typeCaps =
+			capabilities.supportedKeyLockerEntryTypes.get(entryType);
 		if (!typeCaps) {
 			return { action: "fail" };
 		}
@@ -2524,8 +2474,8 @@ const respondToKeyLockerEntrySet: MockNodeBehavior = {
 		const existingEntry = self.state.get(
 			StateKeys.keyLockerEntry(entryType, entrySlot),
 		) as Bytes | undefined;
-		const isOccupied = existingEntry !== undefined
-			&& existingEntry.length > 0;
+		const isOccupied =
+			existingEntry !== undefined && existingEntry.length > 0;
 
 		if (operationType === UserCredentialOperationType.Add) {
 			// CC:0083.02.1F.11.008: Adds to Occupied Entries MUST be rejected.

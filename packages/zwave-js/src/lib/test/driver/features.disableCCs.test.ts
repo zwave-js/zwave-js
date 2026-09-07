@@ -8,6 +8,7 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -17,9 +18,7 @@ integrationTest(
 
 		additionalDriverOptions: {
 			features: {
-				disableCommandClasses: [
-					CommandClasses["Binary Switch"],
-				],
+				disableCommandClasses: [CommandClasses["Binary Switch"]],
 			},
 		},
 
@@ -28,9 +27,11 @@ integrationTest(
 				nodeId: node.id,
 				requestedCC: CommandClasses["Binary Switch"],
 			});
-			await mockNode.sendToController(createMockZWaveRequestFrame(ccGet, {
-				ackRequested: false,
-			}));
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(ccGet, {
+					ackRequested: false,
+				}),
+			);
 
 			await mockNode.expectControllerFrame(
 				(frame): frame is MockZWaveRequestFrame =>

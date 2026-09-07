@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { BasicCCGet, BasicCCSet } from "@zwave-js/cc";
 import {
 	CommandClasses,
@@ -9,17 +11,14 @@ import {
 	MockZWaveFrameType,
 	type MockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"When a node does not respond because it is dead, the sendCommand() Promise and all pending commands get rejected (maxSendAttempts: 1)",
 	{
 		// debug: true,
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/nodeDeadReject",
-		),
+		provisioningDirectory: path.join(__dirname, "fixtures/nodeDeadReject"),
 
 		testBody: async (t, driver, node2, mockController, mockNode) => {
 			node2.markAsAlive();
@@ -34,11 +33,13 @@ integrationTest(
 			const basicSetPromise = driver.sendCommand(command1, {
 				maxSendAttempts: 1,
 			});
-			basicSetPromise.then(() => {
-				driver.driverLog.print("basicSetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicSetPromise rejected");
-			}); // Don't throw here, do it below
+			basicSetPromise
+				.then(() => {
+					driver.driverLog.print("basicSetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicSetPromise rejected");
+				}); // Don't throw here, do it below
 
 			const command2 = new BasicCCGet({
 				nodeId: 2,
@@ -46,11 +47,13 @@ integrationTest(
 			const basicGetPromise = driver.sendCommand(command2, {
 				maxSendAttempts: 1,
 			});
-			basicGetPromise.then(() => {
-				driver.driverLog.print("basicGetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicGetPromise rejected");
-			}); // Don't throw here, do it below
+			basicGetPromise
+				.then(() => {
+					driver.driverLog.print("basicGetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicGetPromise rejected");
+				}); // Don't throw here, do it below
 
 			// The node should have received the first command
 			await mockNode.expectControllerFrame(
@@ -84,10 +87,7 @@ integrationTest(
 	"When a node does not respond because it is dead, the sendCommand() Promise and all pending commands get rejected (maxSendAttempts: 2)",
 	{
 		// debug: true,
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/nodeDeadReject",
-		),
+		provisioningDirectory: path.join(__dirname, "fixtures/nodeDeadReject"),
 
 		testBody: async (t, driver, node2, mockController, mockNode) => {
 			node2.markAsAlive();
@@ -102,11 +102,13 @@ integrationTest(
 			const basicSetPromise = driver.sendCommand(command1, {
 				maxSendAttempts: 2,
 			});
-			basicSetPromise.then(() => {
-				driver.driverLog.print("basicSetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicSetPromise rejected");
-			});
+			basicSetPromise
+				.then(() => {
+					driver.driverLog.print("basicSetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicSetPromise rejected");
+				});
 
 			const command2 = new BasicCCGet({
 				nodeId: 2,
@@ -114,11 +116,13 @@ integrationTest(
 			const basicGetPromise = driver.sendCommand(command2, {
 				maxSendAttempts: 2,
 			});
-			basicGetPromise.then(() => {
-				driver.driverLog.print("basicGetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicGetPromise rejected");
-			});
+			basicGetPromise
+				.then(() => {
+					driver.driverLog.print("basicGetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicGetPromise rejected");
+				});
 
 			// The node should have received the first command
 			await mockNode.expectControllerFrame(
@@ -152,10 +156,7 @@ integrationTest(
 	"When a node does not respond because it is dead, commands sent via the commandClasses API beforehand get rejected",
 	{
 		// debug: true,
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/nodeDeadReject",
-		),
+		provisioningDirectory: path.join(__dirname, "fixtures/nodeDeadReject"),
 
 		testBody: async (t, driver, node2, mockController, mockNode) => {
 			node2.markAsAlive();
@@ -164,17 +165,21 @@ integrationTest(
 			t.expect(node2.status).toBe(NodeStatus.Alive);
 
 			const basicSetPromise = node2.commandClasses.Basic.set(99);
-			basicSetPromise.then(() => {
-				driver.driverLog.print("basicSetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicSetPromise rejected");
-			});
+			basicSetPromise
+				.then(() => {
+					driver.driverLog.print("basicSetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicSetPromise rejected");
+				});
 			const basicGetPromise = node2.commandClasses.Basic.get();
-			basicGetPromise.then(() => {
-				driver.driverLog.print("basicGetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicGetPromise rejected");
-			});
+			basicGetPromise
+				.then(() => {
+					driver.driverLog.print("basicGetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicGetPromise rejected");
+				});
 
 			// The node should have received the first command
 			await mockNode.expectControllerFrame(
@@ -206,10 +211,7 @@ integrationTest(
 	"When a node does not respond because it is dead, commands sent via the commandClasses API afterwards are still attempted",
 	{
 		// debug: true,
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/nodeDeadReject",
-		),
+		provisioningDirectory: path.join(__dirname, "fixtures/nodeDeadReject"),
 		// Opt out of the default Basic CC support so the node stays dead
 		nodeCapabilities: {
 			commandClasses: [
@@ -224,11 +226,13 @@ integrationTest(
 			t.expect(node2.status).toBe(NodeStatus.Alive);
 
 			const basicSetPromise = node2.commandClasses.Basic.set(99);
-			basicSetPromise.then(() => {
-				driver.driverLog.print("basicSetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicSetPromise rejected");
-			});
+			basicSetPromise
+				.then(() => {
+					driver.driverLog.print("basicSetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicSetPromise rejected");
+				});
 
 			// The node should have received the first command
 			await mockNode.expectControllerFrame(
@@ -249,11 +253,13 @@ integrationTest(
 			t.expect(node2.status).toBe(NodeStatus.Dead);
 
 			const basicGetPromise = node2.commandClasses.Basic.get();
-			basicGetPromise.then(() => {
-				driver.driverLog.print("basicGetPromise resolved");
-			}).catch(() => {
-				driver.driverLog.print("basicGetPromise rejected");
-			});
+			basicGetPromise
+				.then(() => {
+					driver.driverLog.print("basicGetPromise resolved");
+				})
+				.catch(() => {
+					driver.driverLog.print("basicGetPromise rejected");
+				});
 
 			// The node should have received the second command
 			await mockNode.expectControllerFrame(

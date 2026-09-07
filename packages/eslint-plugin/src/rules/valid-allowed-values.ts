@@ -1,6 +1,7 @@
 /* oxlint-disable typescript/no-unnecessary-type-assertion */
 
 import type { AST } from "jsonc-eslint-parser";
+
 import {
 	type JSONCRule,
 	removeJSONArrayElement,
@@ -32,8 +33,10 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 			"JSONProperty[key.value='paramInformation'] > JSONArrayExpression > JSONObjectExpression"(
 				node: AST.JSONObjectExpression,
 			) {
-				const allowedProperty = node.properties.find((p) =>
-					p.key.type === "JSONLiteral" && p.key.value === "allowed"
+				const allowedProperty = node.properties.find(
+					(p) =>
+						p.key.type === "JSONLiteral"
+						&& p.key.value === "allowed",
 				);
 
 				if (
@@ -57,11 +60,12 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 				// Note: minValue/maxValue conflict is handled by no-unnecessary-min-max-value rule
 
 				// Check mutual exclusivity with allowManualEntry: false
-				const allowManualEntry = node.properties.find((p) =>
-					p.key.type === "JSONLiteral"
-					&& p.key.value === "allowManualEntry"
-					&& p.value.type === "JSONLiteral"
-					&& p.value.value === false
+				const allowManualEntry = node.properties.find(
+					(p) =>
+						p.key.type === "JSONLiteral"
+						&& p.key.value === "allowManualEntry"
+						&& p.value.type === "JSONLiteral"
+						&& p.value.value === false,
 				);
 				if (allowManualEntry) {
 					context.report({
@@ -84,11 +88,15 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						continue;
 					}
 
-					const hasValue = element.properties.some((p) =>
-						p.key.type === "JSONLiteral" && p.key.value === "value"
+					const hasValue = element.properties.some(
+						(p) =>
+							p.key.type === "JSONLiteral"
+							&& p.key.value === "value",
 					);
-					const hasRange = element.properties.some((p) =>
-						p.key.type === "JSONLiteral" && p.key.value === "range"
+					const hasRange = element.properties.some(
+						(p) =>
+							p.key.type === "JSONLiteral"
+							&& p.key.value === "range",
 					);
 
 					// Must have either value OR range, but not both
@@ -112,9 +120,10 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 
 					// If it has a value property, check it's a number
 					if (hasValue) {
-						const valueProp = element.properties.find((p) =>
-							p.key.type === "JSONLiteral"
-							&& p.key.value === "value"
+						const valueProp = element.properties.find(
+							(p) =>
+								p.key.type === "JSONLiteral"
+								&& p.key.value === "value",
 						);
 						if (
 							valueProp
@@ -130,9 +139,10 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 
 					// If it has a range property, validate it
 					if (hasRange) {
-						const rangeProp = element.properties.find((p) =>
-							p.key.type === "JSONLiteral"
-							&& p.key.value === "range"
+						const rangeProp = element.properties.find(
+							(p) =>
+								p.key.type === "JSONLiteral"
+								&& p.key.value === "range",
 						);
 
 						if (!rangeProp) continue;
@@ -188,9 +198,10 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						}
 
 						// If step property exists, validate it's a number and positive
-						const stepProp = element.properties.find((p) =>
-							p.key.type === "JSONLiteral"
-							&& p.key.value === "step"
+						const stepProp = element.properties.find(
+							(p) =>
+								p.key.type === "JSONLiteral"
+								&& p.key.value === "step",
 						);
 						let stepValue: number | undefined;
 						let stepValid = true;
@@ -259,17 +270,19 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 				type ParsedEntry =
 					| { type: "value"; value: number }
 					| {
-						type: "range";
-						from: number;
-						to: number;
-						step: number | undefined;
-					};
+							type: "range";
+							from: number;
+							to: number;
+							step: number | undefined;
+					  };
 
 				const parseEntry = (
 					element: AST.JSONObjectExpression,
 				): ParsedEntry | undefined => {
-					const valueProp = element.properties.find((p) =>
-						p.key.type === "JSONLiteral" && p.key.value === "value"
+					const valueProp = element.properties.find(
+						(p) =>
+							p.key.type === "JSONLiteral"
+							&& p.key.value === "value",
 					);
 					if (valueProp) {
 						const num = getNumericValue(valueProp.value);
@@ -278,8 +291,10 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						}
 					}
 
-					const rangeProp = element.properties.find((p) =>
-						p.key.type === "JSONLiteral" && p.key.value === "range"
+					const rangeProp = element.properties.find(
+						(p) =>
+							p.key.type === "JSONLiteral"
+							&& p.key.value === "range",
 					);
 					if (
 						rangeProp
@@ -290,9 +305,10 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 						const fromNum = getNumericValue(from);
 						const toNum = getNumericValue(to);
 						if (fromNum !== undefined && toNum !== undefined) {
-							const stepProp = element.properties.find((p) =>
-								p.key.type === "JSONLiteral"
-								&& p.key.value === "step"
+							const stepProp = element.properties.find(
+								(p) =>
+									p.key.type === "JSONLiteral"
+									&& p.key.value === "step",
 							);
 							let step: number | undefined;
 							if (stepProp) {
@@ -409,7 +425,7 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 				for (let i = 1; i < entries.length; i++) {
 					if (
 						getStart(entries[i - 1].parsed)
-							>= getStart(entries[i].parsed)
+						>= getStart(entries[i].parsed)
 					) {
 						isSorted = false;
 						break;
@@ -445,12 +461,11 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 							const sourceCode = context.sourceCode;
 							const fullText = sourceCode.getText();
 							// Get the text of each element using range
-							const sortedTexts = sortedEntries.map(
-								(e) =>
-									fullText.slice(
-										e.element.range![0],
-										e.element.range![1],
-									),
+							const sortedTexts = sortedEntries.map((e) =>
+								fullText.slice(
+									e.element.range![0],
+									e.element.range![1],
+								),
 							);
 							// Find indentation from first element
 							const firstElemStart =
@@ -459,17 +474,15 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 								line: firstElemStart.line,
 								column: 0,
 							});
-							const elemStart = sourceCode.getIndexFromLoc(
-								firstElemStart,
-							);
+							const elemStart =
+								sourceCode.getIndexFromLoc(firstElemStart);
 							const indent = fullText.slice(lineStart, elemStart);
 
 							const newContent = sortedTexts.join(",\n" + indent);
 							return fixer.replaceTextRange(
 								[
 									allowedArray.elements[0]!.range![0],
-									allowedArray
-										.elements.at(-1)!.range![1],
+									allowedArray.elements.at(-1)!.range![1],
 								],
 								newContent,
 							);
@@ -516,36 +529,21 @@ export const validAllowedValues: JSONCRule.RuleModule = {
 		fixable: "code",
 		schema: false,
 		messages: {
-			"empty-allowed-array":
-				`The "allowed" array must contain at least one entry.`,
-			"allowed-conflicts-with-allow-manual-entry":
-				`The "allowed" field cannot be used with "allowManualEntry: false".`,
-			"allowed-element-not-object":
-				`Element at index {{index}} must be an object.`,
-			"allowed-element-missing-value-or-range":
-				`Element at index {{index}} must have either a "value" or "range" property.`,
-			"allowed-element-both-value-and-range":
-				`Element at index {{index}} cannot have both "value" and "range" properties.`,
-			"allowed-element-value-not-number":
-				`Element at index {{index}}: "value" property must be a number.`,
-			"allowed-element-range-not-array":
-				`Element at index {{index}}: "range" property must be an array.`,
-			"allowed-element-range-wrong-length":
-				`Element at index {{index}}: "range" array must have exactly 2 elements [from, to].`,
-			"allowed-element-range-element-not-number":
-				`Element at index {{index}}: range[{{rangeIndex}}] must be a number.`,
-			"allowed-element-step-not-number":
-				`Element at index {{index}}: "step" property must be a number.`,
-			"allowed-element-step-not-positive":
-				`Element at index {{index}}: "step" must be positive (got {{step}}).`,
-			"allowed-element-range-inverted":
-				`Element at index {{index}}: range "from" ({{from}}) must be <= "to" ({{to}}).`,
-			"allowed-element-step-not-divisible":
-				`Element at index {{index}}: (to - from) must be evenly divisible by step. Range: {{from}}-{{to}}, step: {{step}}.`,
-			"allowed-entries-not-sorted":
-				`Entries in "allowed" must be sorted. {{prev}} must come after {{curr}}.`,
-			"allowed-entries-not-sorted-fixable":
-				`Entries in "allowed" must be sorted.`,
+			"empty-allowed-array": `The "allowed" array must contain at least one entry.`,
+			"allowed-conflicts-with-allow-manual-entry": `The "allowed" field cannot be used with "allowManualEntry: false".`,
+			"allowed-element-not-object": `Element at index {{index}} must be an object.`,
+			"allowed-element-missing-value-or-range": `Element at index {{index}} must have either a "value" or "range" property.`,
+			"allowed-element-both-value-and-range": `Element at index {{index}} cannot have both "value" and "range" properties.`,
+			"allowed-element-value-not-number": `Element at index {{index}}: "value" property must be a number.`,
+			"allowed-element-range-not-array": `Element at index {{index}}: "range" property must be an array.`,
+			"allowed-element-range-wrong-length": `Element at index {{index}}: "range" array must have exactly 2 elements [from, to].`,
+			"allowed-element-range-element-not-number": `Element at index {{index}}: range[{{rangeIndex}}] must be a number.`,
+			"allowed-element-step-not-number": `Element at index {{index}}: "step" property must be a number.`,
+			"allowed-element-step-not-positive": `Element at index {{index}}: "step" must be positive (got {{step}}).`,
+			"allowed-element-range-inverted": `Element at index {{index}}: range "from" ({{from}}) must be <= "to" ({{to}}).`,
+			"allowed-element-step-not-divisible": `Element at index {{index}}: (to - from) must be evenly divisible by step. Range: {{from}}-{{to}}, step: {{step}}.`,
+			"allowed-entries-not-sorted": `Entries in "allowed" must be sorted. {{prev}} must come after {{curr}}.`,
+			"allowed-entries-not-sorted-fixable": `Entries in "allowed" must be sorted.`,
 			"allowed-entries-overlap": `{{curr}} overlaps with {{prev}}.`,
 			"allowed-entries-duplicate": `Duplicate value {{value}}.`,
 		},

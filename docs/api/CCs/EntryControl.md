@@ -14,14 +14,15 @@ async getSupportedKeys(): Promise<readonly number[] | undefined>;
 
 ```ts
 async getEventCapabilities(): Promise<
-	{
-		maxKeyCacheSize: number;
-		maxKeyCacheTimeout: number;
-		minKeyCacheSize: number;
-		minKeyCacheTimeout: number;
-		supportedDataTypes: readonly EntryControlDataTypes[];
-		supportedEventTypes: readonly EntryControlEventTypes[];
-	} | undefined
+	| {
+			maxKeyCacheSize: number;
+			maxKeyCacheTimeout: number;
+			minKeyCacheSize: number;
+			minKeyCacheTimeout: number;
+			supportedDataTypes: readonly EntryControlDataTypes[];
+			supportedEventTypes: readonly EntryControlEventTypes[];
+	  }
+	| undefined
 >;
 ```
 
@@ -29,10 +30,11 @@ async getEventCapabilities(): Promise<
 
 ```ts
 async getConfiguration(): Promise<
-	{
-		keyCacheSize: number;
-		keyCacheTimeout: number;
-	} | undefined
+	| {
+			keyCacheSize: number;
+			keyCacheTimeout: number;
+	  }
+	| undefined
 >;
 ```
 

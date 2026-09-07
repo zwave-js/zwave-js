@@ -1,6 +1,7 @@
 import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
+
 import {
 	TransmitReplacementSource,
 	TransmitRequest,
@@ -123,10 +124,12 @@ describe("TransmitRequest", () => {
 			channel: 2,
 			txPower: -10,
 			withCCA: true,
-			replacements: [{
-				offset: 1,
-				source: TransmitReplacementSource.NoiseFloor,
-			}],
+			replacements: [
+				{
+					offset: 1,
+					source: TransmitReplacementSource.NoiseFloor,
+				},
+			],
 			data: Bytes.from([0xaa, 0xbb]),
 		});
 
@@ -167,10 +170,12 @@ describe("TransmitRequest", () => {
 		const msg = new TransmitRequest({
 			channel: 0,
 			withCCA: false,
-			replacements: [{
-				offset: 2,
-				source: TransmitReplacementSource.NoiseFloor,
-			}],
+			replacements: [
+				{
+					offset: 2,
+					source: TransmitReplacementSource.NoiseFloor,
+				},
+			],
 			data: Bytes.from([0xaa, 0xbb]),
 		});
 

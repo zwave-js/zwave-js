@@ -8,16 +8,17 @@
 
 ```ts
 async getUserCapabilities(): Promise<
-	{
-		maxUserNameLength: number;
-		numberOfSupportedUsers: number;
-		supportedCredentialRules: UserCredentialRule[];
-		supportedUserNameEncodings: UserCredentialNameEncoding[];
-		supportedUserTypes: UserCredentialUserType[];
-		supportsAllUsersChecksum: boolean;
-		supportsUserChecksum: boolean;
-		supportsUserSchedule: boolean;
-	} | undefined
+	| {
+			maxUserNameLength: number;
+			numberOfSupportedUsers: number;
+			supportedCredentialRules: UserCredentialRule[];
+			supportedUserNameEncodings: UserCredentialNameEncoding[];
+			supportedUserTypes: UserCredentialUserType[];
+			supportsAllUsersChecksum: boolean;
+			supportsUserChecksum: boolean;
+			supportsUserSchedule: boolean;
+	  }
+	| undefined
 >;
 ```
 
@@ -25,12 +26,16 @@ async getUserCapabilities(): Promise<
 
 ```ts
 async getCredentialCapabilities(): Promise<
-	{
-		credentialTypes: Map<UserCredentialType, UserCredentialCapability>;
-		supportsAdminCode: boolean;
-		supportsAdminCodeDeactivation: boolean;
-		supportsCredentialChecksum: boolean;
-	} | undefined
+	| {
+			credentialTypes: Map<
+				UserCredentialType,
+				UserCredentialCapability
+			>;
+			supportsAdminCode: boolean;
+			supportsAdminCodeDeactivation: boolean;
+			supportsCredentialChecksum: boolean;
+	  }
+	| undefined
 >;
 ```
 
@@ -38,54 +43,49 @@ async getCredentialCapabilities(): Promise<
 
 ```ts
 async getKeyLockerCapabilities(): Promise<
-	Map<
-		UserCredentialKeyLockerEntryType,
-		UserCredentialKeyLockerEntryCapability
-	> | undefined
+	| Map<
+			UserCredentialKeyLockerEntryType,
+			UserCredentialKeyLockerEntryCapability
+	  >
+	| undefined
 >;
 ```
 
 ### `setUser`
 
 ```ts
-async setUser(
-	options: {
-		userId: number;
-		operationType:
-			| UserCredentialOperationType.Add
-			| UserCredentialOperationType.Modify;
-		active?: boolean;
-		credentialRule?: UserCredentialRule;
-		nameEncoding?: UserCredentialNameEncoding;
-		userName?: string;
-		userType: UserCredentialUserType.Expiring;
-		expiringTimeoutMinutes: number;
-	},
-): Promise<UserCredentialCCUserReport | undefined>;
+async setUser(options: {
+	userId: number;
+	operationType:
+		| UserCredentialOperationType.Add
+		| UserCredentialOperationType.Modify;
+	active?: boolean;
+	credentialRule?: UserCredentialRule;
+	nameEncoding?: UserCredentialNameEncoding;
+	userName?: string;
+	userType: UserCredentialUserType.Expiring;
+	expiringTimeoutMinutes: number;
+}): Promise<UserCredentialCCUserReport | undefined>;
 
-async setUser(
-	options: {
-		userId: number;
-		operationType:
-			| UserCredentialOperationType.Add
-			| UserCredentialOperationType.Modify;
-		active?: boolean;
-		credentialRule?: UserCredentialRule;
-		nameEncoding?: UserCredentialNameEncoding;
-		userName?: string;
-		userType?: Exclude<
-			UserCredentialUserType,
-			UserCredentialUserType.Expiring
-		>;
-	},
-): Promise<UserCredentialCCUserReport | undefined>;
+async setUser(options: {
+	userId: number;
+	operationType:
+		| UserCredentialOperationType.Add
+		| UserCredentialOperationType.Modify;
+	active?: boolean;
+	credentialRule?: UserCredentialRule;
+	nameEncoding?: UserCredentialNameEncoding;
+	userName?: string;
+	userType?: Exclude<
+		UserCredentialUserType,
+		UserCredentialUserType.Expiring
+	>;
+}): Promise<UserCredentialCCUserReport | undefined>;
 
-async setUser(
-	options: {
-		userId: number;
-		operationType: UserCredentialOperationType.Delete;
-	},
-): Promise<UserCredentialCCUserReport | undefined>;
+async setUser(options: {
+	userId: number;
+	operationType: UserCredentialOperationType.Delete;
+}): Promise<UserCredentialCCUserReport | undefined>;
 ```
 
 Applications should not use this method directly. Prefer the
@@ -105,26 +105,22 @@ Applications should not use this method directly. Prefer the
 ### `setCredential`
 
 ```ts
-async setCredential(
-	options: {
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		operationType:
-			| UserCredentialOperationType.Add
-			| UserCredentialOperationType.Modify;
-		credentialData: Bytes;
-	},
-): Promise<UserCredentialCCCredentialReport | undefined>;
+async setCredential(options: {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	operationType:
+		| UserCredentialOperationType.Add
+		| UserCredentialOperationType.Modify;
+	credentialData: Bytes;
+}): Promise<UserCredentialCCCredentialReport | undefined>;
 
-async setCredential(
-	options: {
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		operationType: UserCredentialOperationType.Delete;
-	},
-): Promise<UserCredentialCCCredentialReport | undefined>;
+async setCredential(options: {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	operationType: UserCredentialOperationType.Delete;
+}): Promise<UserCredentialCCCredentialReport | undefined>;
 ```
 
 Applications should not use this method directly. Prefer the
@@ -146,15 +142,13 @@ Applications should not use this method directly. Prefer the
 ### `startCredentialLearn`
 
 ```ts
-async startCredentialLearn(
-	options: {
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		operationType: UserCredentialOperationType;
-		learnTimeout: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async startCredentialLearn(options: {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	operationType: UserCredentialOperationType;
+	learnTimeout: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `cancelCredentialLearn`
@@ -168,13 +162,11 @@ async cancelCredentialLearn(): Promise<
 ### `setUserCredentialAssociation`
 
 ```ts
-async setUserCredentialAssociation(
-	options: {
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		destinationUserId: number;
-	},
-): Promise<UserCredentialCCAssociationReport | undefined>;
+async setUserCredentialAssociation(options: {
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	destinationUserId: number;
+}): Promise<UserCredentialCCAssociationReport | undefined>;
 ```
 
 Applications should not use this method directly. Prefer the
@@ -189,9 +181,7 @@ async getAllUsersChecksum(): Promise<number | undefined>;
 ### `getUserChecksum`
 
 ```ts
-async getUserChecksum(
-	userId: number,
-): Promise<number | undefined>;
+async getUserChecksum(userId: number): Promise<number | undefined>;
 ```
 
 ### `getCredentialChecksum`
@@ -205,11 +195,9 @@ async getCredentialChecksum(
 ### `setAdminPinCode`
 
 ```ts
-async setAdminPinCode(
-	options: {
-		pinCode: string;
-	},
-): Promise<SupervisionResult | undefined>;
+async setAdminPinCode(options: {
+	pinCode: string;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getAdminPinCode`
@@ -221,24 +209,20 @@ async getAdminPinCode(): Promise<string | undefined>;
 ### `setKeyLockerEntry`
 
 ```ts
-async setKeyLockerEntry(
-	options: {
-		entryType: UserCredentialKeyLockerEntryType;
-		entrySlot: number;
-		operationType:
-			| UserCredentialOperationType.Add
-			| UserCredentialOperationType.Modify;
-		entryData: Bytes;
-	},
-): Promise<SupervisionResult | undefined>;
+async setKeyLockerEntry(options: {
+	entryType: UserCredentialKeyLockerEntryType;
+	entrySlot: number;
+	operationType:
+		| UserCredentialOperationType.Add
+		| UserCredentialOperationType.Modify;
+	entryData: Bytes;
+}): Promise<SupervisionResult | undefined>;
 
-async setKeyLockerEntry(
-	options: {
-		entryType: UserCredentialKeyLockerEntryType;
-		entrySlot: number;
-		operationType: UserCredentialOperationType.Delete;
-	},
-): Promise<SupervisionResult | undefined>;
+async setKeyLockerEntry(options: {
+	entryType: UserCredentialKeyLockerEntryType;
+	entrySlot: number;
+	operationType: UserCredentialOperationType.Delete;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getKeyLockerEntry`
@@ -248,239 +232,208 @@ async getKeyLockerEntry(
 	entryType: UserCredentialKeyLockerEntryType,
 	entrySlot: number,
 ): Promise<
-	{
-		entrySlot: number;
-		entryType: UserCredentialKeyLockerEntryType;
-		occupied: boolean;
-	} | undefined
+	| {
+			entrySlot: number;
+			entryType: UserCredentialKeyLockerEntryType;
+			occupied: boolean;
+	  }
+	| undefined
 >;
 ```
 
 ### `sendUserCapabilitiesReport`
 
 ```ts
-async sendUserCapabilitiesReport(
-	options: {
-		numberOfSupportedUsers: number;
-		supportedCredentialRules: UserCredentialRule[];
-		maxUserNameLength: number;
-		supportsUserSchedule: boolean;
-		supportsAllUsersChecksum: boolean;
-		supportsUserChecksum: boolean;
-		supportedUserNameEncodings: UserCredentialNameEncoding[];
-		supportedUserTypes: UserCredentialUserType[];
-	},
-): Promise<SupervisionResult | undefined>;
+async sendUserCapabilitiesReport(options: {
+	numberOfSupportedUsers: number;
+	supportedCredentialRules: UserCredentialRule[];
+	maxUserNameLength: number;
+	supportsUserSchedule: boolean;
+	supportsAllUsersChecksum: boolean;
+	supportsUserChecksum: boolean;
+	supportedUserNameEncodings: UserCredentialNameEncoding[];
+	supportedUserTypes: UserCredentialUserType[];
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendCredentialCapabilitiesReport`
 
 ```ts
-async sendCredentialCapabilitiesReport(
-	options: {
-		supportsCredentialChecksum: boolean;
-		supportsAdminCode: boolean;
-		supportsAdminCodeDeactivation: boolean;
-		credentialTypes: Map<UserCredentialType, UserCredentialCapability>;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendCredentialCapabilitiesReport(options: {
+	supportsCredentialChecksum: boolean;
+	supportsAdminCode: boolean;
+	supportsAdminCodeDeactivation: boolean;
+	credentialTypes: Map<UserCredentialType, UserCredentialCapability>;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendKeyLockerCapabilitiesReport`
 
 ```ts
-async sendKeyLockerCapabilitiesReport(
-	options: {
-		keyLockerCapabilities: Map<
-			UserCredentialKeyLockerEntryType,
-			UserCredentialKeyLockerEntryCapability
-		>;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendKeyLockerCapabilitiesReport(options: {
+	keyLockerCapabilities: Map<
+		UserCredentialKeyLockerEntryType,
+		UserCredentialKeyLockerEntryCapability
+	>;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendUserReport`
 
 ```ts
-async sendUserReport(
-	options: {
-		modifierType: UserCredentialModifierType;
-		modifierNodeId: number;
-		userId: number;
-		userType: UserCredentialUserType;
-		active: boolean;
-		credentialRule: UserCredentialRule;
-		expiringTimeoutMinutes: number;
-		nameEncoding: UserCredentialNameEncoding;
-		userName: string;
-		reportType: UserCredentialUserReportType.ResponseToGet;
-		nextUserId: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendUserReport(options: {
+	modifierType: UserCredentialModifierType;
+	modifierNodeId: number;
+	userId: number;
+	userType: UserCredentialUserType;
+	active: boolean;
+	credentialRule: UserCredentialRule;
+	expiringTimeoutMinutes: number;
+	nameEncoding: UserCredentialNameEncoding;
+	userName: string;
+	reportType: UserCredentialUserReportType.ResponseToGet;
+	nextUserId: number;
+}): Promise<SupervisionResult | undefined>;
 
-async sendUserReport(
-	options: {
-		modifierType: UserCredentialModifierType;
-		modifierNodeId: number;
-		userId: number;
-		userType: UserCredentialUserType;
-		active: boolean;
-		credentialRule: UserCredentialRule;
-		expiringTimeoutMinutes: number;
-		nameEncoding: UserCredentialNameEncoding;
-		userName: string;
-		reportType: Exclude<
-			UserCredentialUserReportType,
-			UserCredentialUserReportType.ResponseToGet
-		>;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendUserReport(options: {
+	modifierType: UserCredentialModifierType;
+	modifierNodeId: number;
+	userId: number;
+	userType: UserCredentialUserType;
+	active: boolean;
+	credentialRule: UserCredentialRule;
+	expiringTimeoutMinutes: number;
+	nameEncoding: UserCredentialNameEncoding;
+	userName: string;
+	reportType: Exclude<
+		UserCredentialUserReportType,
+		UserCredentialUserReportType.ResponseToGet
+	>;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendCredentialReport`
 
 ```ts
-async sendCredentialReport(
-	options: {
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		modifierType: UserCredentialModifierType;
-		modifierNodeId: number;
-		credentialReadBack: true;
-		credentialData: Bytes;
-		reportType: UserCredentialCredentialReportType.ResponseToGet;
-		nextCredentialType: UserCredentialType;
-		nextCredentialSlot: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendCredentialReport(options: {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	modifierType: UserCredentialModifierType;
+	modifierNodeId: number;
+	credentialReadBack: true;
+	credentialData: Bytes;
+	reportType: UserCredentialCredentialReportType.ResponseToGet;
+	nextCredentialType: UserCredentialType;
+	nextCredentialSlot: number;
+}): Promise<SupervisionResult | undefined>;
 
-async sendCredentialReport(
-	options: {
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		modifierType: UserCredentialModifierType;
-		modifierNodeId: number;
-		credentialReadBack: true;
-		credentialData: Bytes;
-		reportType: Exclude<
-			UserCredentialCredentialReportType,
-			UserCredentialCredentialReportType.ResponseToGet
-		>;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendCredentialReport(options: {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	modifierType: UserCredentialModifierType;
+	modifierNodeId: number;
+	credentialReadBack: true;
+	credentialData: Bytes;
+	reportType: Exclude<
+		UserCredentialCredentialReportType,
+		UserCredentialCredentialReportType.ResponseToGet
+	>;
+}): Promise<SupervisionResult | undefined>;
 
-async sendCredentialReport(
-	options: {
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		modifierType: UserCredentialModifierType;
-		modifierNodeId: number;
-		credentialReadBack: false;
-		reportType: UserCredentialCredentialReportType.ResponseToGet;
-		nextCredentialType: UserCredentialType;
-		nextCredentialSlot: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendCredentialReport(options: {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	modifierType: UserCredentialModifierType;
+	modifierNodeId: number;
+	credentialReadBack: false;
+	reportType: UserCredentialCredentialReportType.ResponseToGet;
+	nextCredentialType: UserCredentialType;
+	nextCredentialSlot: number;
+}): Promise<SupervisionResult | undefined>;
 
-async sendCredentialReport(
-	options: {
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		modifierType: UserCredentialModifierType;
-		modifierNodeId: number;
-		credentialReadBack: false;
-		reportType: Exclude<
-			UserCredentialCredentialReportType,
-			UserCredentialCredentialReportType.ResponseToGet
-		>;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendCredentialReport(options: {
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	modifierType: UserCredentialModifierType;
+	modifierNodeId: number;
+	credentialReadBack: false;
+	reportType: Exclude<
+		UserCredentialCredentialReportType,
+		UserCredentialCredentialReportType.ResponseToGet
+	>;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendCredentialLearnReport`
 
 ```ts
-async sendCredentialLearnReport(
-	options: {
-		learnStatus: UserCredentialLearnStatus;
-		userId: number;
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		stepsRemaining: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendCredentialLearnReport(options: {
+	learnStatus: UserCredentialLearnStatus;
+	userId: number;
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	stepsRemaining: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendUserCredentialAssociationReport`
 
 ```ts
-async sendUserCredentialAssociationReport(
-	options: {
-		credentialType: UserCredentialType;
-		credentialSlot: number;
-		destinationUserId: number;
-		status: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendUserCredentialAssociationReport(options: {
+	credentialType: UserCredentialType;
+	credentialSlot: number;
+	destinationUserId: number;
+	status: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendAllUsersChecksumReport`
 
 ```ts
-async sendAllUsersChecksumReport(
-	options: {
-		checksum: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendAllUsersChecksumReport(options: {
+	checksum: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendUserChecksumReport`
 
 ```ts
-async sendUserChecksumReport(
-	options: {
-		userId: number;
-		checksum: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendUserChecksumReport(options: {
+	userId: number;
+	checksum: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendCredentialChecksumReport`
 
 ```ts
-async sendCredentialChecksumReport(
-	options: {
-		credentialType: UserCredentialType;
-		checksum: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendCredentialChecksumReport(options: {
+	credentialType: UserCredentialType;
+	checksum: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendAdminPinCodeReport`
 
 ```ts
-async sendAdminPinCodeReport(
-	options: {
-		operationResult: UserCredentialAdminCodeOperationResult;
-		pinCode: string;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendAdminPinCodeReport(options: {
+	operationResult: UserCredentialAdminCodeOperationResult;
+	pinCode: string;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `sendKeyLockerEntryReport`
 
 ```ts
-async sendKeyLockerEntryReport(
-	options: {
-		occupied: boolean;
-		entryType: UserCredentialKeyLockerEntryType;
-		entrySlot: number;
-	},
-): Promise<SupervisionResult | undefined>;
+async sendKeyLockerEntryReport(options: {
+	occupied: boolean;
+	entryType: UserCredentialKeyLockerEntryType;
+	entrySlot: number;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ## Related types
@@ -503,24 +456,23 @@ enum UserCredentialAdminCodeOperationResult {
 ### `UserCredentialCapability`
 
 ```ts
-type UserCredentialCapability =
-	& {
-		numberOfCredentialSlots: number;
-		minCredentialLength: number;
-		maxCredentialLength: number;
-		maxCredentialHashLength: number;
-	}
-	& (
-		{
+type UserCredentialCapability = {
+	numberOfCredentialSlots: number;
+	minCredentialLength: number;
+	maxCredentialLength: number;
+	maxCredentialHashLength: number;
+} & (
+	| {
 			supportsCredentialLearn: true;
 			credentialLearnRecommendedTimeout: number;
 			credentialLearnNumberOfSteps: number;
-		} | {
+	  }
+	| {
 			supportsCredentialLearn: false;
 			credentialLearnRecommendedTimeout?: undefined;
 			credentialLearnNumberOfSteps?: undefined;
-		}
-	);
+	  }
+);
 ```
 
 ### `UserCredentialCCAssociationReport`

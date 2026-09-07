@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { EndDeviceCLI } from "./EndDeviceCLI.js";
 
 test("executeCommand accepts supported commands with arguments", async (t) => {
@@ -30,10 +31,9 @@ test("executeCommand trims the command before validating and matching echoes", a
 		async () => "set_region EU\r\n[I] OK",
 	);
 
-	(cli as any)._commands = new Map([[
-		"set_region",
-		"Set the current region",
-	]]);
+	(cli as any)._commands = new Map([
+		["set_region", "Set the current region"],
+	]);
 
 	const response = await cli.executeCommand("  set_region EU  ");
 

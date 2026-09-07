@@ -26,14 +26,12 @@ import { createThrowingMap } from "@zwave-js/shared";
 
 export interface CreateTestingHostOptions extends HostIDs, GetDeviceConfig {}
 
-export type BaseTestEndpoint =
-	& EndpointId
+export type BaseTestEndpoint = EndpointId
 	& SupportsCC
 	& ControlsCC
 	& IsCCSecure;
 
-export type BaseTestNode =
-	& BaseTestEndpoint
+export type BaseTestNode = BaseTestEndpoint
 	& NodeId
 	& ListenBehavior
 	& QuerySecurityClasses
@@ -51,8 +49,7 @@ export interface TestingHost
 		GetAllNodes<BaseTestNode>,
 		GetNode<BaseTestNode>,
 		GetDeviceConfig,
-		LogNode
-{
+		LogNode {
 	setNode(nodeId: number, node: BaseTestNode): void;
 }
 
@@ -88,9 +85,12 @@ export function createTestingHost(
 			nodes.set(nodeId, node);
 		},
 		getSupportedCCVersion: (cc, nodeId, endpoint) => {
-			return nodes.get(nodeId)?.getEndpoint(endpoint ?? 0)?.getCCVersion(
-				cc,
-			) ?? 0;
+			return (
+				nodes
+					.get(nodeId)
+					?.getEndpoint(endpoint ?? 0)
+					?.getCCVersion(cc) ?? 0
+			);
 		},
 		getValueDB: (nodeId) => {
 			if (!valueDBCache.has(nodeId)) {

@@ -1,7 +1,9 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+
 import { SerialPort } from "serialport";
+
 import type { EnumeratedPort, Serial } from "../serialport/Bindings.js";
 import { createESPHomeFactory } from "../serialport/ESPHomeSocket.js";
 import { createNodeSerialPortFactory } from "../serialport/NodeSerialPort.js";
@@ -28,11 +30,7 @@ export const serial: Serial = {
 				encryptionKey,
 			});
 		} else {
-			return createNodeSerialPortFactory(
-				path,
-				undefined,
-				options,
-			);
+			return createNodeSerialPortFactory(path, undefined, options);
 		}
 	},
 
@@ -46,10 +44,7 @@ export const serial: Serial = {
 			for (const l of symlinks) {
 				try {
 					const fullPath = path.join(dir, l);
-					const target = path.join(
-						dir,
-						await fs.readlink(fullPath),
-					);
+					const target = path.join(dir, await fs.readlink(fullPath));
 					if (!target.startsWith("/dev/tty")) continue;
 
 					ret.push({
@@ -64,10 +59,12 @@ export const serial: Serial = {
 
 		// Then the actual serial ports
 		const ports = await SerialPort.list();
-		ret.push(...ports.map((port) => ({
-			type: "tty" as const,
-			path: port.path,
-		})));
+		ret.push(
+			...ports.map((port) => ({
+				type: "tty" as const,
+				path: port.path,
+			})),
+		);
 
 		return ret;
 	},

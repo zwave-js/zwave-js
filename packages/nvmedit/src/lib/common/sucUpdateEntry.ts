@@ -6,6 +6,7 @@ import {
 	parseCCList,
 } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import {
 	SUC_UPDATE_ENTRY_SIZE,
 	SUC_UPDATE_NODEPARM_MAX,
@@ -39,9 +40,7 @@ export function parseSUCUpdateEntry(
 	};
 }
 
-export function encodeSUCUpdateEntry(
-	entry: SUCUpdateEntry | undefined,
-): Bytes {
+export function encodeSUCUpdateEntry(entry: SUCUpdateEntry | undefined): Bytes {
 	const ret = new Bytes(SUC_UPDATE_ENTRY_SIZE).fill(0);
 	if (entry) {
 		ret[0] = entry.nodeId;

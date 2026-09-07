@@ -4,7 +4,8 @@
 	"label": "ZWA046",
 	"description": "Home Energy Meter 8",
 	"devices": [
-		{ // ZWA046 1-Phase EU
+		{
+			// ZWA046 1-Phase EU
 			"productType": "0x0003",
 			"productId": "0x0033",
 			"zwaveAllianceId": 5113

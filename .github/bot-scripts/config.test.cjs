@@ -1,6 +1,7 @@
 // @ts-check
 
 import { describe, expect, it } from "vitest";
+
 import { config, excludedUsers, loadConfig } from "./config.cjs";
 
 // config.cjs loads and validates this repo's zwave-js-bot.config.json at

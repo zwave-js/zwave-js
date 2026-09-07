@@ -1,4 +1,5 @@
 import type { Bytes, BytesView } from "@zwave-js/shared";
+
 import type { MessageHeaders } from "../message/MessageHeaders.js";
 
 export enum RCPSerialFrameType {
@@ -6,15 +7,14 @@ export enum RCPSerialFrameType {
 	Discarded = 0xff,
 }
 
-export type RCPSerialFrame = {
-	type: RCPSerialFrameType.RCP;
-	data: RCPChunk;
-} | {
-	type: RCPSerialFrameType.Discarded;
-	data: BytesView;
-};
+export type RCPSerialFrame =
+	| {
+			type: RCPSerialFrameType.RCP;
+			data: RCPChunk;
+	  }
+	| {
+			type: RCPSerialFrameType.Discarded;
+			data: BytesView;
+	  };
 
-export type RCPChunk =
-	| Bytes
-	| MessageHeaders.ACK
-	| MessageHeaders.NAK;
+export type RCPChunk = Bytes | MessageHeaders.ACK | MessageHeaders.NAK;

@@ -10,6 +10,7 @@ import {
 	type LogNode,
 	getDSTInfo,
 } from "@zwave-js/core";
+
 import type { ZWaveNode } from "../Node.js";
 
 export async function handleTimeGet(
@@ -27,14 +28,12 @@ export async function handleTimeGet(
 	try {
 		// We are being queried, so the device may actually not support the CC, just control it.
 		// Using the commandClasses property would throw in that case
-		const api = endpoint
-			.createAPI(CommandClasses.Time, false)
-			.withOptions({
-				// Answer with the same encapsulation as asked, but omit
-				// Supervision as it shouldn't be used for Get-Report flows
-				encapsulationFlags: command.encapsulationFlags
-					& ~EncapsulationFlags.Supervision,
-			});
+		const api = endpoint.createAPI(CommandClasses.Time, false).withOptions({
+			// Answer with the same encapsulation as asked, but omit
+			// Supervision as it shouldn't be used for Get-Report flows
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
+		});
 		await api.reportTime(hours, minutes, seconds);
 	} catch (e: any) {
 		ctx.logNode(node.id, {
@@ -60,14 +59,12 @@ export async function handleDateGet(
 	try {
 		// We are being queried, so the device may actually not support the CC, just control it.
 		// Using the commandClasses property would throw in that case
-		const api = endpoint
-			.createAPI(CommandClasses.Time, false)
-			.withOptions({
-				// Answer with the same encapsulation as asked, but omit
-				// Supervision as it shouldn't be used for Get-Report flows
-				encapsulationFlags: command.encapsulationFlags
-					& ~EncapsulationFlags.Supervision,
-			});
+		const api = endpoint.createAPI(CommandClasses.Time, false).withOptions({
+			// Answer with the same encapsulation as asked, but omit
+			// Supervision as it shouldn't be used for Get-Report flows
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
+		});
 		await api.reportDate(year, month, day);
 	} catch (e: any) {
 		ctx.logNode(node.id, {
@@ -90,14 +87,12 @@ export async function handleTimeOffsetGet(
 	try {
 		// We are being queried, so the device may actually not support the CC, just control it.
 		// Using the commandClasses property would throw in that case
-		const api = endpoint
-			.createAPI(CommandClasses.Time, false)
-			.withOptions({
-				// Answer with the same encapsulation as asked, but omit
-				// Supervision as it shouldn't be used for Get-Report flows
-				encapsulationFlags: command.encapsulationFlags
-					& ~EncapsulationFlags.Supervision,
-			});
+		const api = endpoint.createAPI(CommandClasses.Time, false).withOptions({
+			// Answer with the same encapsulation as asked, but omit
+			// Supervision as it shouldn't be used for Get-Report flows
+			encapsulationFlags:
+				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
+		});
 		await api.reportTimezone(timezone);
 	} catch {
 		// ignore

@@ -4,6 +4,7 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { Bytes, type BytesView, getEnumMemberName } from "@zwave-js/shared";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -15,6 +16,7 @@ import {
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
 import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
+
 import {
 	TransmitCallbackStatus,
 	TransmitResponseStatus,
@@ -137,10 +139,7 @@ export class TransmitBeamRequest extends RCPMessage {
 		header[7] = this.channels.length;
 		header.set(this.channels, 8);
 
-		this.payload = Bytes.concat([
-			header,
-			this.data,
-		]);
+		this.payload = Bytes.concat([header, this.data]);
 
 		return super.serialize(ctx);
 	}
@@ -165,7 +164,8 @@ export interface TransmitBeamResponseOptions {
 }
 
 @rcpMessageTypes(RCPMessageType.Response, RCPFunctionType.TransmitBeam)
-export class TransmitBeamResponse extends RCPMessage
+export class TransmitBeamResponse
+	extends RCPMessage
 	implements SuccessIndicator
 {
 	public constructor(
@@ -208,7 +208,8 @@ export interface TransmitBeamCallbackOptions {
 }
 
 @rcpMessageTypes(RCPMessageType.Callback, RCPFunctionType.TransmitBeam)
-export class TransmitBeamCallback extends RCPMessage
+export class TransmitBeamCallback
+	extends RCPMessage
 	implements SuccessIndicator
 {
 	public constructor(

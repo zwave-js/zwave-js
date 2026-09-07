@@ -90,9 +90,10 @@ export function encodeNoiseFrame(payload: BytesView): Bytes {
  * Decode a Noise frame, extracting the payload
  * Returns the payload and number of bytes consumed
  */
-export function decodeNoiseFrame(
-	data: BytesView,
-): { payload: Bytes; bytesRead: number } {
+export function decodeNoiseFrame(data: BytesView): {
+	payload: Bytes;
+	bytesRead: number;
+} {
 	if (data.length < 3) {
 		throw new ZWaveError(
 			"Noise frame too short",
@@ -102,9 +103,9 @@ export function decodeNoiseFrame(
 
 	if (data[0] !== NOISE_INDICATOR) {
 		throw new ZWaveError(
-			`Invalid Noise frame indicator: expected 0x01, got 0x${
-				data[0].toString(16).padStart(2, "0")
-			}`,
+			`Invalid Noise frame indicator: expected 0x01, got 0x${data[0]
+				.toString(16)
+				.padStart(2, "0")}`,
 			ZWaveErrorCodes.PacketFormat_Invalid,
 		);
 	}
@@ -140,19 +141,13 @@ async function hkdf(
 
 	// HKDF-Expand
 	const output1 = await hmacSHA256(tempKey, Bytes.from([0x01]));
-	const output2 = await hmacSHA256(
-		tempKey,
-		Bytes.concat([output1, [0x02]]),
-	);
+	const output2 = await hmacSHA256(tempKey, Bytes.concat([output1, [0x02]]));
 
 	if (numOutputs === 2) {
 		return [output1, output2];
 	}
 
-	const output3 = await hmacSHA256(
-		tempKey,
-		Bytes.concat([output2, [0x03]]),
-	);
+	const output3 = await hmacSHA256(tempKey, Bytes.concat([output2, [0x03]]));
 	return [output1, output2, output3];
 }
 
@@ -396,9 +391,8 @@ export class NoiseHandshakeState {
 	 * Initialize the handshake state (must be called before writeMessage/readMessage)
 	 */
 	async initialize(): Promise<void> {
-		this.symmetricState = await NoiseSymmetricState.initialize(
-			NOISE_PROTOCOL_NAME,
-		);
+		this.symmetricState =
+			await NoiseSymmetricState.initialize(NOISE_PROTOCOL_NAME);
 		await this.symmetricState.mixHash(NOISE_PROLOGUE);
 		this.initialized = true;
 	}
@@ -427,9 +421,8 @@ export class NoiseHandshakeState {
 		await this.symmetricState.mixKey(this.e.publicKey);
 
 		// Encrypt and send payload
-		const encryptedPayload = await this.symmetricState.encryptAndHash(
-			payload,
-		);
+		const encryptedPayload =
+			await this.symmetricState.encryptAndHash(payload);
 
 		this.messageIndex++;
 
@@ -480,9 +473,8 @@ export class NoiseHandshakeState {
 
 		// Decrypt payload
 		const encryptedPayload = message.subarray(32);
-		const payload = await this.symmetricState.decryptAndHash(
-			encryptedPayload,
-		);
+		const payload =
+			await this.symmetricState.decryptAndHash(encryptedPayload);
 
 		this.messageIndex++;
 

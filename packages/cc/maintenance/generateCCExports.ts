@@ -2,9 +2,10 @@
  * This script generates the exports for all utility types from `src/lib/commandclass/*CC.ts`
  */
 
-import { formatWithDprint, hasComment } from "@zwave-js/maintenance";
-import { compareStrings } from "@zwave-js/shared";
 import path from "node:path";
+
+import { formatWithOxfmt, hasComment } from "@zwave-js/maintenance";
+import { compareStrings } from "@zwave-js/shared";
 import { type SourceFile } from "ts-morph";
 import ts from "typescript";
 
@@ -146,7 +147,7 @@ export async function generateCCExportsFile(
 					&& (hasPublicAPIComment(node, sourceFile)
 						// and the xyzCCValues const
 						|| node.declarationList.declarations.some((d) =>
-							d.name.getText().endsWith("CCValues")
+							d.name.getText().endsWith("CCValues"),
 						))
 				) {
 					for (const variable of node.declarationList.declarations) {
@@ -173,11 +174,9 @@ export async function generateCCExportsFile(
 	let registerFunctionContent = ``;
 
 	// Generate type and value exports for all found symbols
-	for (
-		const [filename, fileExports] of [...ccExports.entries()].toSorted(
-			([fileA], [fileB]) => compareStrings(fileA, fileB),
-		)
-	) {
+	for (const [filename, fileExports] of [...ccExports.entries()].toSorted(
+		([fileA], [fileB]) => compareStrings(fileA, fileB),
+	)) {
 		const relativePath = path
 			.relative(indexFilePath, filename)
 			// normalize to slashes
@@ -189,28 +188,21 @@ export async function generateCCExportsFile(
 
 		const typeExports = fileExports.filter((e) => e.typeOnly);
 		if (typeExports.length) {
-			fileContent += `export type { ${
-				typeExports
-					.map((e) => e.name)
-					.join(", ")
-			} } from "${relativePath}"\n`;
+			fileContent += `export type { ${typeExports
+				.map((e) => e.name)
+				.join(", ")} } from "${relativePath}"\n`;
 		}
 		const valueExports = fileExports.filter((e) => !e.typeOnly);
 		if (valueExports.length) {
-			fileContent += `import { ${
-				valueExports
-					.map((e) => e.name)
-					.join(", ")
-			} } from "${relativePath}";\n`;
-			fileContent += `export { ${
-				valueExports
-					.map((e) => e.name)
-					.join(", ")
-			} };\n`;
+			fileContent += `import { ${valueExports
+				.map((e) => e.name)
+				.join(", ")} } from "${relativePath}";\n`;
+			fileContent += `export { ${valueExports
+				.map((e) => e.name)
+				.join(", ")} };\n`;
 
-			registerFunctionContent += valueExports
-				.map((e) => `void ${e.name};`)
-				.join("\n") + "\n";
+			registerFunctionContent +=
+				valueExports.map((e) => `void ${e.name};`).join("\n") + "\n";
 		}
 	}
 
@@ -220,8 +212,7 @@ ${registerFunctionContent}
 }
 `;
 
-	return new Map([[
-		"cc/index.ts",
-		formatWithDprint(indexFilePath, fileContent),
-	]]);
+	return new Map([
+		["cc/index.ts", await formatWithOxfmt(indexFilePath, fileContent)],
+	]);
 }

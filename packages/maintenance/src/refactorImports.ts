@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
-import { Project, SyntaxKind } from "ts-morph";
 
+import { Project, SyntaxKind } from "ts-morph";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -40,26 +40,28 @@ async function main() {
 	});
 	// project.addSourceFilesAtPaths("packages/cc/src/cc/**/*CC.ts");
 
-	const sourceFiles = project.getSourceFiles() /*.filter((file) =>
+	const sourceFiles = project.getSourceFiles(); /*.filter((file) =>
 		file.getBaseNameWithoutExtension().endsWith("CC")
-	)*/;
+	)*/
 	for (const file of sourceFiles) {
 		// const filePath = path.relative(process.cwd(), file.getFilePath());
 
 		// Move import to the correct statements
-		const importToMove = file.getImportDeclarations().map(
-			(decl) =>
-				decl.getNamedImports().find((imp) =>
-					imp.getName() === args.import
-				),
-		).find((imp) => !!imp);
+		const importToMove = file
+			.getImportDeclarations()
+			.map((decl) =>
+				decl
+					.getNamedImports()
+					.find((imp) => imp.getName() === args.import),
+			)
+			.find((imp) => !!imp);
 
 		if (!importToMove) {
 			continue;
 		}
 
 		let targetImport = file.getImportDeclaration((decl) =>
-			decl.getModuleSpecifierValue().startsWith(args.module)
+			decl.getModuleSpecifierValue().startsWith(args.module),
 		);
 		if (!targetImport) {
 			targetImport = file.addImportDeclaration({

@@ -10,12 +10,10 @@ function assertBufferEquals(
 	expect(Uint8Array.from(actual)).toStrictEqual(Uint8Array.from(expected));
 }
 
-for (
-	const primitives of [
-		"./primitives.browser.js",
-		"./primitives.node.js",
-	] as const
-) {
+for (const primitives of [
+	"./primitives.browser.js",
+	"./primitives.node.js",
+] as const) {
 	const {
 		decryptAES128OFB,
 		encryptAES128ECB,
@@ -368,9 +366,9 @@ test("ECDH key pairs have the same size in all implementations", async (t) => {
 		generateECDHKeyPair: generateECDHKeyPairBrowser,
 	}: CryptoPrimitives = (await import("./primitives.browser.js")).primitives;
 
-	const {
-		generateECDHKeyPair: generateECDHKeyPairNode,
-	}: CryptoPrimitives = (await import("./primitives.node.js")).primitives;
+	const { generateECDHKeyPair: generateECDHKeyPairNode }: CryptoPrimitives = (
+		await import("./primitives.node.js")
+	).primitives;
 
 	const keyPairBrowser = await generateECDHKeyPairBrowser();
 	const keyPairNode = await generateECDHKeyPairNode();

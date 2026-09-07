@@ -15,6 +15,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -49,15 +50,11 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 export const ThermostatOperatingStateCCValues = V.defineCCValues(
 	CommandClasses["Thermostat Operating State"],
 	{
-		...V.staticPropertyWithName(
-			"operatingState",
-			"state",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Operating state",
-				states: enumValuesToMetadataStates(ThermostatOperatingState),
-			},
-		),
+		...V.staticPropertyWithName("operatingState", "state", {
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Operating state",
+			states: enumValuesToMetadataStates(ThermostatOperatingState),
+		}),
 	},
 );
 
@@ -79,7 +76,7 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: ThermostatOperatingStateCCAPI,
 			{ property },
 		) {
@@ -102,12 +99,11 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatOperatingStateCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ThermostatOperatingStateCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.state;
 	}
 
@@ -123,12 +119,11 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatOperatingStateCCLoggingSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ThermostatOperatingStateCCLoggingSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedLoggingTypes;
 	}
 
@@ -153,12 +148,11 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			requestedStates: states,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatOperatingStateCCLoggingReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ThermostatOperatingStateCCLoggingReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.loggingData;
 	}
 }
@@ -169,9 +163,7 @@ export class ThermostatOperatingStateCCAPI extends PhysicalCCAPI {
 export class ThermostatOperatingStateCC extends CommandClass {
 	declare ccCommand: ThermostatOperatingStateCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -210,12 +202,10 @@ export class ThermostatOperatingStateCC extends CommandClass {
 		if (state != undefined) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: `received current thermostat operating state: ${
-					getEnumMemberName(
-						ThermostatOperatingState,
-						state,
-					)
-				}`,
+				message: `received current thermostat operating state: ${getEnumMemberName(
+					ThermostatOperatingState,
+					state,
+				)}`,
 				direction: "inbound",
 			});
 		}
@@ -229,9 +219,7 @@ export interface ThermostatOperatingStateCCReportOptions {
 
 @CCCommand(ThermostatOperatingStateCommand.Report)
 @ccValueProperty("state", ThermostatOperatingStateCCValues.operatingState)
-export class ThermostatOperatingStateCCReport
-	extends ThermostatOperatingStateCC
-{
+export class ThermostatOperatingStateCCReport extends ThermostatOperatingStateCC {
 	public constructor(
 		options: WithAddress<ThermostatOperatingStateCCReportOptions>,
 	) {
@@ -283,13 +271,9 @@ export interface ThermostatOperatingStateCCLoggingSupportedReportOptions {
 }
 
 @CCCommand(ThermostatOperatingStateCommand.LoggingSupportedReport)
-export class ThermostatOperatingStateCCLoggingSupportedReport
-	extends ThermostatOperatingStateCC
-{
+export class ThermostatOperatingStateCCLoggingSupportedReport extends ThermostatOperatingStateCC {
 	public constructor(
-		options: WithAddress<
-			ThermostatOperatingStateCCLoggingSupportedReportOptions
-		>,
+		options: WithAddress<ThermostatOperatingStateCCLoggingSupportedReportOptions>,
 	) {
 		super(options);
 		this.supportedLoggingTypes = options.supportedLoggingTypes;
@@ -318,9 +302,7 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const supportedLoggingTypes = this.supportedLoggingTypes
 			// Bit 0 MUST be set to zero, so we filter it out
-			.filter(
-				(t) => t !== ThermostatOperatingState.Idle,
-			);
+			.filter((t) => t !== ThermostatOperatingState.Idle);
 		this.payload = encodeBitMask(
 			supportedLoggingTypes,
 			undefined,
@@ -335,7 +317,7 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 			message: {
 				"supported logging types": logList(
 					this.supportedLoggingTypes.map((t) =>
-						getEnumMemberName(ThermostatOperatingState, t)
+						getEnumMemberName(ThermostatOperatingState, t),
 					),
 				),
 			},
@@ -345,9 +327,7 @@ export class ThermostatOperatingStateCCLoggingSupportedReport
 
 @CCCommand(ThermostatOperatingStateCommand.LoggingSupportedGet)
 @expectedCCResponse(ThermostatOperatingStateCCLoggingSupportedReport)
-export class ThermostatOperatingStateCCLoggingSupportedGet
-	extends ThermostatOperatingStateCC
-{}
+export class ThermostatOperatingStateCCLoggingSupportedGet extends ThermostatOperatingStateCC {}
 
 // @publicAPI
 export interface ThermostatOperatingStateCCLoggingReportOptions {
@@ -359,9 +339,7 @@ export interface ThermostatOperatingStateCCLoggingReportOptions {
 }
 
 @CCCommand(ThermostatOperatingStateCommand.LoggingReport)
-export class ThermostatOperatingStateCCLoggingReport
-	extends ThermostatOperatingStateCC
-{
+export class ThermostatOperatingStateCCLoggingReport extends ThermostatOperatingStateCC {
 	public constructor(
 		options: WithAddress<ThermostatOperatingStateCCLoggingReportOptions>,
 	) {
@@ -385,8 +363,8 @@ export class ThermostatOperatingStateCCLoggingReport
 		>();
 		let offset = 1;
 		while (offset + 5 <= raw.payload.length) {
-			const state: ThermostatOperatingState = raw.payload[offset++]
-				& 0b1111;
+			const state: ThermostatOperatingState =
+				raw.payload[offset++] & 0b1111;
 			loggingData.set(state, {
 				usageTodayHours: raw.payload[offset++],
 				usageTodayMinutes: raw.payload[offset++],
@@ -479,9 +457,7 @@ export interface ThermostatOperatingStateCCLoggingGetOptions {
 
 @CCCommand(ThermostatOperatingStateCommand.LoggingGet)
 @expectedCCResponse(ThermostatOperatingStateCCLoggingReport)
-export class ThermostatOperatingStateCCLoggingGet
-	extends ThermostatOperatingStateCC
-{
+export class ThermostatOperatingStateCCLoggingGet extends ThermostatOperatingStateCC {
 	public constructor(
 		options: WithAddress<ThermostatOperatingStateCCLoggingGetOptions>,
 	) {

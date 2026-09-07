@@ -9,16 +9,16 @@ The following types are accepted or returned by many different Command Class API
 ```ts
 type SupervisionResult =
 	| {
-		status:
-			| SupervisionStatus.NoSupport
-			| SupervisionStatus.Fail
-			| SupervisionStatus.Success;
-		remainingDuration?: undefined;
-	}
+			status:
+				| SupervisionStatus.NoSupport
+				| SupervisionStatus.Fail
+				| SupervisionStatus.Success;
+			remainingDuration?: undefined;
+	  }
 	| {
-		status: SupervisionStatus.Working;
-		remainingDuration: Duration;
-	};
+			status: SupervisionStatus.Working;
+			remainingDuration: Duration;
+	  };
 ```
 
 Commands that support _Supervision_ resolve with a `SupervisionResult` (or `undefined` if the command was not supervised or the node did not respond). It indicates whether the node succeeded in executing the command.

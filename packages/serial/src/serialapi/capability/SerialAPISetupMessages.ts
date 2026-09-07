@@ -103,9 +103,7 @@ export class SerialAPISetupRequest extends Message {
 		const command: SerialAPISetupCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
-		const CommandConstructor = getSubCommandRequestConstructor(
-			command,
-		);
+		const CommandConstructor = getSubCommandRequestConstructor(command);
 		if (CommandConstructor) {
 			return CommandConstructor.from(
 				raw.withPayload(payload),
@@ -123,10 +121,7 @@ export class SerialAPISetupRequest extends Message {
 	public command: SerialAPISetupCommand;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([
-			[this.command],
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[this.command], this.payload]);
 
 		return super.serialize(ctx);
 	}
@@ -162,9 +157,7 @@ export class SerialAPISetupResponse extends Message {
 		const command: SerialAPISetupCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
-		const CommandConstructor = getSubCommandResponseConstructor(
-			command,
-		);
+		const CommandConstructor = getSubCommandResponseConstructor(command);
 		if (CommandConstructor) {
 			return CommandConstructor.from(
 				raw.withPayload(payload),
@@ -197,12 +190,9 @@ export interface SerialAPISetup_CommandUnsupportedResponseOptions {
 }
 
 @subCommandResponse(0x00)
-export class SerialAPISetup_CommandUnsupportedResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_CommandUnsupportedResponseOptions
+		options: SerialAPISetup_CommandUnsupportedResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -227,10 +217,7 @@ export class SerialAPISetup_CommandUnsupportedResponse
 			...ret,
 			message: mergeLogDict(ret.message, {
 				error: "unsupported command",
-				command: getEnumMemberName(
-					SerialAPISetupCommand,
-					this.command,
-				),
+				command: getEnumMemberName(SerialAPISetupCommand, this.command),
 				payload: undefined,
 			}),
 		};
@@ -240,21 +227,16 @@ export class SerialAPISetup_CommandUnsupportedResponse
 // =============================================================================
 
 @subCommandRequest(SerialAPISetupCommand.GetSupportedCommands)
-export class SerialAPISetup_GetSupportedCommandsRequest
-	extends SerialAPISetupRequest
-{}
+export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetSupportedCommandsResponseOptions {
 	supportedCommands: SerialAPISetupCommand[];
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetSupportedCommands)
-export class SerialAPISetup_GetSupportedCommandsResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetSupportedCommandsResponseOptions
+		options: SerialAPISetup_GetSupportedCommandsResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -282,18 +264,16 @@ export class SerialAPISetup_GetSupportedCommandsResponse
 		} else {
 			// This module only uses the single byte power-of-2 bitmask. Decode it manually
 			supportedCommands = [];
-			for (
-				const cmd of [
-					SerialAPISetupCommand.GetSupportedCommands,
-					SerialAPISetupCommand.SetTxStatusReport,
-					SerialAPISetupCommand.SetPowerlevel,
-					SerialAPISetupCommand.GetPowerlevel,
-					SerialAPISetupCommand.GetMaximumPayloadSize,
-					SerialAPISetupCommand.GetRFRegion,
-					SerialAPISetupCommand.SetRFRegion,
-					SerialAPISetupCommand.SetNodeIDType,
-				] as const
-			) {
+			for (const cmd of [
+				SerialAPISetupCommand.GetSupportedCommands,
+				SerialAPISetupCommand.SetTxStatusReport,
+				SerialAPISetupCommand.SetPowerlevel,
+				SerialAPISetupCommand.GetPowerlevel,
+				SerialAPISetupCommand.GetMaximumPayloadSize,
+				SerialAPISetupCommand.GetRFRegion,
+				SerialAPISetupCommand.SetRFRegion,
+				SerialAPISetupCommand.SetNodeIDType,
+			] as const) {
 				if (!!(raw.payload[0] & cmd)) supportedCommands.push(cmd);
 			}
 		}
@@ -325,9 +305,7 @@ export interface SerialAPISetup_SetTXStatusReportOptions {
 }
 
 @subCommandRequest(SerialAPISetupCommand.SetTxStatusReport)
-export class SerialAPISetup_SetTXStatusReportRequest
-	extends SerialAPISetupRequest
-{
+export class SerialAPISetup_SetTXStatusReportRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetTXStatusReportOptions & MessageBaseOptions,
 	) {
@@ -376,8 +354,7 @@ export class SerialAPISetup_SetTXStatusReportResponse
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& SerialAPISetup_SetTXStatusReportResponseOptions
+		options: SerialAPISetup_SetTXStatusReportResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -453,9 +430,8 @@ export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
 		return {
 			...ret,
 			message: mergeLogDict(ret.message, {
-				"node ID type": this.nodeIdType === NodeIDType.Short
-					? "8 bit"
-					: "16 bit",
+				"node ID type":
+					this.nodeIdType === NodeIDType.Short ? "8 bit" : "16 bit",
 				payload: undefined,
 			}),
 		};
@@ -467,12 +443,12 @@ export interface SerialAPISetup_SetNodeIDTypeResponseOptions {
 }
 
 @subCommandResponse(SerialAPISetupCommand.SetNodeIDType)
-export class SerialAPISetup_SetNodeIDTypeResponse extends SerialAPISetupResponse
+export class SerialAPISetup_SetNodeIDTypeResponse
+	extends SerialAPISetupResponse
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& SerialAPISetup_SetNodeIDTypeResponseOptions
+		options: SerialAPISetup_SetNodeIDTypeResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -601,7 +577,8 @@ export interface SerialAPISetup_SetRFRegionResponseOptions {
 }
 
 @subCommandResponse(SerialAPISetupCommand.SetRFRegion)
-export class SerialAPISetup_SetRFRegionResponse extends SerialAPISetupResponse
+export class SerialAPISetup_SetRFRegionResponse
+	extends SerialAPISetupResponse
 	implements SuccessIndicator
 {
 	public constructor(
@@ -643,9 +620,7 @@ export class SerialAPISetup_SetRFRegionResponse extends SerialAPISetupResponse
 // =============================================================================
 
 @subCommandRequest(SerialAPISetupCommand.GetPowerlevel)
-export class SerialAPISetup_GetPowerlevelRequest
-	extends SerialAPISetupRequest
-{}
+export class SerialAPISetup_GetPowerlevelRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetPowerlevelResponseOptions {
 	powerlevel: number;
@@ -653,12 +628,9 @@ export interface SerialAPISetup_GetPowerlevelResponseOptions {
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetPowerlevel)
-export class SerialAPISetup_GetPowerlevelResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetPowerlevelResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetPowerlevelResponseOptions
+		options: SerialAPISetup_GetPowerlevelResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -771,12 +743,12 @@ export interface SerialAPISetup_SetPowerlevelResponseOptions {
 }
 
 @subCommandResponse(SerialAPISetupCommand.SetPowerlevel)
-export class SerialAPISetup_SetPowerlevelResponse extends SerialAPISetupResponse
+export class SerialAPISetup_SetPowerlevelResponse
+	extends SerialAPISetupResponse
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& SerialAPISetup_SetPowerlevelResponseOptions
+		options: SerialAPISetup_SetPowerlevelResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -815,9 +787,7 @@ export class SerialAPISetup_SetPowerlevelResponse extends SerialAPISetupResponse
 // =============================================================================
 
 @subCommandRequest(SerialAPISetupCommand.GetPowerlevel16Bit)
-export class SerialAPISetup_GetPowerlevel16BitRequest
-	extends SerialAPISetupRequest
-{}
+export class SerialAPISetup_GetPowerlevel16BitRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetPowerlevel16BitResponseOptions {
 	powerlevel: number;
@@ -825,12 +795,9 @@ export interface SerialAPISetup_GetPowerlevel16BitResponseOptions {
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetPowerlevel16Bit)
-export class SerialAPISetup_GetPowerlevel16BitResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetPowerlevel16BitResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetPowerlevel16BitResponseOptions
+		options: SerialAPISetup_GetPowerlevel16BitResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -879,9 +846,7 @@ export interface SerialAPISetup_SetPowerlevel16BitOptions {
 }
 
 @subCommandRequest(SerialAPISetupCommand.SetPowerlevel16Bit)
-export class SerialAPISetup_SetPowerlevel16BitRequest
-	extends SerialAPISetupRequest
-{
+export class SerialAPISetup_SetPowerlevel16BitRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetPowerlevel16BitOptions & MessageBaseOptions,
 	) {
@@ -950,8 +915,7 @@ export class SerialAPISetup_SetPowerlevel16BitResponse
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& SerialAPISetup_SetPowerlevel16BitResponseOptions
+		options: SerialAPISetup_SetPowerlevel16BitResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -990,21 +954,16 @@ export class SerialAPISetup_SetPowerlevel16BitResponse
 // =============================================================================
 
 @subCommandRequest(SerialAPISetupCommand.GetLongRangeMaximumTxPower)
-export class SerialAPISetup_GetLongRangeMaximumTxPowerRequest
-	extends SerialAPISetupRequest
-{}
+export class SerialAPISetup_GetLongRangeMaximumTxPowerRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetLongRangeMaximumTxPowerResponseOptions {
 	limit: number;
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetLongRangeMaximumTxPower)
-export class SerialAPISetup_GetLongRangeMaximumTxPowerResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetLongRangeMaximumTxPowerResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetLongRangeMaximumTxPowerResponseOptions
+		options: SerialAPISetup_GetLongRangeMaximumTxPowerResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -1046,12 +1005,9 @@ export interface SerialAPISetup_SetLongRangeMaximumTxPowerOptions {
 }
 
 @subCommandRequest(SerialAPISetupCommand.SetLongRangeMaximumTxPower)
-export class SerialAPISetup_SetLongRangeMaximumTxPowerRequest
-	extends SerialAPISetupRequest
-{
+export class SerialAPISetup_SetLongRangeMaximumTxPowerRequest extends SerialAPISetupRequest {
 	public constructor(
-		options:
-			& SerialAPISetup_SetLongRangeMaximumTxPowerOptions
+		options: SerialAPISetup_SetLongRangeMaximumTxPowerOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -1111,8 +1067,7 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerResponse
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& SerialAPISetup_SetLongRangeMaximumTxPowerResponseOptions
+		options: SerialAPISetup_SetLongRangeMaximumTxPowerResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -1151,21 +1106,16 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerResponse
 // =============================================================================
 
 @subCommandRequest(SerialAPISetupCommand.GetMaximumPayloadSize)
-export class SerialAPISetup_GetMaximumPayloadSizeRequest
-	extends SerialAPISetupRequest
-{}
+export class SerialAPISetup_GetMaximumPayloadSizeRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetMaximumPayloadSizeResponseOptions {
 	maxPayloadSize: number;
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetMaximumPayloadSize)
-export class SerialAPISetup_GetMaximumPayloadSizeResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetMaximumPayloadSizeResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetMaximumPayloadSizeResponseOptions
+		options: SerialAPISetup_GetMaximumPayloadSizeResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -1200,21 +1150,16 @@ export class SerialAPISetup_GetMaximumPayloadSizeResponse
 // =============================================================================
 
 @subCommandRequest(SerialAPISetupCommand.GetLongRangeMaximumPayloadSize)
-export class SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest
-	extends SerialAPISetupRequest
-{}
+export class SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetLongRangeMaximumPayloadSizeResponseOptions {
 	maxPayloadSize: number;
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetLongRangeMaximumPayloadSize)
-export class SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetLongRangeMaximumPayloadSizeResponseOptions
+		options: SerialAPISetup_GetLongRangeMaximumPayloadSizeResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -1249,21 +1194,16 @@ export class SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse
 // =============================================================================
 
 @subCommandRequest(SerialAPISetupCommand.GetSupportedRegions)
-export class SerialAPISetup_GetSupportedRegionsRequest
-	extends SerialAPISetupRequest
-{}
+export class SerialAPISetup_GetSupportedRegionsRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetSupportedRegionsResponseOptions {
 	supportedRegions: RFRegion[];
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetSupportedRegions)
-export class SerialAPISetup_GetSupportedRegionsResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetSupportedRegionsResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetSupportedRegionsResponseOptions
+		options: SerialAPISetup_GetSupportedRegionsResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -1342,12 +1282,9 @@ export interface SerialAPISetup_GetRegionInfoResponseOptions {
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetRegionInfo)
-export class SerialAPISetup_GetRegionInfoResponse
-	extends SerialAPISetupResponse
-{
+export class SerialAPISetup_GetRegionInfoResponse extends SerialAPISetupResponse {
 	public constructor(
-		options:
-			& SerialAPISetup_GetRegionInfoResponseOptions
+		options: SerialAPISetup_GetRegionInfoResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -1393,9 +1330,10 @@ export class SerialAPISetup_GetRegionInfoResponse
 				region: getEnumMemberName(RFRegion, this.region),
 				"supports Z-Wave": this.supportsZWave,
 				"supports Long Range": this.supportsLongRange,
-				"includes region": this.includesRegion != undefined
-					? getEnumMemberName(RFRegion, this.includesRegion)
-					: undefined,
+				"includes region":
+					this.includesRegion != undefined
+						? getEnumMemberName(RFRegion, this.includesRegion)
+						: undefined,
 				payload: undefined,
 			}),
 		};

@@ -36,11 +36,7 @@ export class GetSUCNodeIdResponse extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): GetSUCNodeIdResponse {
-		const sucNodeId = parseNodeID(
-			raw.payload,
-			ctx.nodeIdType,
-			0,
-		).nodeId;
+		const sucNodeId = parseNodeID(raw.payload, ctx.nodeIdType, 0).nodeId;
 
 		return new this({
 			sucNodeId,

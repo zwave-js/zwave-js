@@ -4,6 +4,7 @@ import type {
 } from "@zwave-js/cc";
 import type { LogNode } from "@zwave-js/core";
 import { getErrorMessage } from "@zwave-js/shared";
+
 import type { ZWaveController } from "../../controller/Controller.js";
 import { RemoveNodeReason } from "../../controller/Inclusion.js";
 import type { ZWaveNode } from "../Node.js";
@@ -17,8 +18,7 @@ export function handleDeviceResetLocallyNotification(
 	if (cmd.endpointIndex !== 0) {
 		// The notification MUST be issued by the root device, otherwise it is likely a corrupted message
 		ctx.logNode(node.id, {
-			message:
-				`Received reset locally notification from non-root endpoint - ignoring it...`,
+			message: `Received reset locally notification from non-root endpoint - ignoring it...`,
 			direction: "inbound",
 		});
 		return;
@@ -41,11 +41,7 @@ export function handleDeviceResetLocallyNotification(
 			);
 		} catch (e) {
 			ctx.logNode(node.id, {
-				message: `removing the node failed: ${
-					getErrorMessage(
-						e,
-					)
-				}`,
+				message: `removing the node failed: ${getErrorMessage(e)}`,
 				level: "error",
 			});
 		}

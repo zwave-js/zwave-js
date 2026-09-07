@@ -4,15 +4,18 @@ import {
 	type StateMachineTransition,
 } from "@zwave-js/core";
 
-export type NodeReadyState = {
-	value: "notReady";
-	maybeDead: boolean;
-} | {
-	value: "readyIfNotDead";
-} | {
-	value: "ready";
-	done: true;
-};
+export type NodeReadyState =
+	| {
+			value: "notReady";
+			maybeDead: boolean;
+	  }
+	| {
+			value: "readyIfNotDead";
+	  }
+	| {
+			value: "ready";
+			done: true;
+	  };
 
 export type NodeReadyMachineInput = {
 	value: "NOT_DEAD" | "MAYBE_DEAD" | "RESTART_FROM_CACHE" | "INTERVIEW_DONE";

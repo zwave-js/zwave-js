@@ -1,5 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import spawn from "nano-spawn";
+
 import { REPO_ROOT } from "../configEnv.js";
 import type { ToolHandler } from "../types.js";
 
@@ -19,12 +20,7 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 	try {
 		await spawn(
 			"yarn",
-			[
-				"workspace",
-				"@zwave-js/config",
-				"run",
-				"lint:config:custom",
-			],
+			["workspace", "@zwave-js/config", "run", "lint:config:custom"],
 			{
 				cwd: REPO_ROOT,
 				stdio: "pipe",
@@ -35,14 +31,9 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 			content: [
 				{
 					type: "text",
-					text:
-						`Semantic check failed: ${error.message}\n\nOutput:\n${
-							error.stdout || ""
-						}${
-							error.stderr
-								? `\nStderr:\n${error.stderr}`
-								: ""
-						}`,
+					text: `Semantic check failed: ${error.message}\n\nOutput:\n${
+						error.stdout || ""
+					}${error.stderr ? `\nStderr:\n${error.stderr}` : ""}`,
 				},
 			],
 			isError: true,
@@ -93,9 +84,9 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 			content: [
 				{
 					type: "text",
-					text: `Failed to parse ESLint output: ${
-						String(parseError)
-					}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
+					text: `Failed to parse ESLint output: ${String(
+						parseError,
+					)}\n\nRaw output:\n${eslintResult.stdout}\n\nStderr:\n${eslintResult.stderr}`,
 				},
 			],
 			isError: true,
@@ -129,10 +120,13 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 		content: [
 			{
 				type: "text",
-				text: `Linting issues found in ${filename}:\n\n`
-					+ issues.map((issue) => {
-						return `- ${issue.message} (line ${issue.line}, column ${issue.column})`;
-					}).join("\n"),
+				text:
+					`Linting issues found in ${filename}:\n\n`
+					+ issues
+						.map((issue) => {
+							return `- ${issue.message} (line ${issue.line}, column ${issue.column})`;
+						})
+						.join("\n"),
 			},
 		],
 		isError: true,

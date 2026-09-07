@@ -9,11 +9,7 @@
 			"request": "launch",
 			"name": "Debug current test",
 			"runtimeExecutable": "yarn",
-			"runtimeArgs": [
-				"test",
-				"--async-stack-traces",
-				"${file}"
-			],
+			"runtimeArgs": ["test", "--async-stack-traces", "${file}"],
 			"env": {
 				"NODE_ENV": "development"
 				// "NO_CACHE": "true"

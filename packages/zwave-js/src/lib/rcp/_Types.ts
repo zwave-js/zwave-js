@@ -80,22 +80,20 @@ export interface MACTransmitOptions {
 	};
 }
 
-export type MACTransmitAckOptions =
-	& {
-		// TODO: Make home id and node id optional
-		homeId: number;
-		sourceNodeId: number;
-		destinationNodeId: number;
-		channel: number;
-		sequenceNumber: number;
-		/** Radio TX power in dBm */
-		txPower: number;
-	}
-	& (
-		| {
+export type MACTransmitAckOptions = {
+	// TODO: Make home id and node id optional
+	homeId: number;
+	sourceNodeId: number;
+	destinationNodeId: number;
+	channel: number;
+	sequenceNumber: number;
+	/** Radio TX power in dBm */
+	txPower: number;
+} & (
+	| {
 			protocol: Protocols.ZWave;
-		}
-		| {
+	  }
+	| {
 			protocol: Protocols.ZWaveLongRange;
 			/**
 			 * The RSSI measured while receiving the frame this acknowledges.
@@ -113,8 +111,8 @@ export type MACTransmitAckOptions =
 				/** LR MPDU Noise Floor field. Default: "RSSI not available". */
 				noiseFloor?: number;
 			};
-		}
-	);
+	  }
+);
 
 export enum MACTransmitKind {
 	Singlecast,
@@ -122,12 +120,15 @@ export enum MACTransmitKind {
 	Broadcast,
 }
 
-export type MACTransmitDestination = {
-	kind: MACTransmitKind.Singlecast;
-	nodeId: number;
-} | {
-	kind: MACTransmitKind.Multicast;
-	nodeIds: number[];
-} | {
-	kind: MACTransmitKind.Broadcast;
-};
+export type MACTransmitDestination =
+	| {
+			kind: MACTransmitKind.Singlecast;
+			nodeId: number;
+	  }
+	| {
+			kind: MACTransmitKind.Multicast;
+			nodeIds: number[];
+	  }
+	| {
+			kind: MACTransmitKind.Broadcast;
+	  };

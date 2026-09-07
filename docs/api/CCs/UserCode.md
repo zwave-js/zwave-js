@@ -74,16 +74,17 @@ Clears one or all user code.
 
 ```ts
 async getCapabilities(): Promise<
-	{
-		supportedASCIIChars: string;
-		supportedKeypadModes: readonly KeypadMode[];
-		supportedUserIDStatuses: readonly UserIDStatus[];
-		supportsAdminCode: boolean;
-		supportsAdminCodeDeactivation: boolean;
-		supportsMultipleUserCodeReport: boolean;
-		supportsMultipleUserCodeSet: boolean;
-		supportsUserCodeChecksum: boolean;
-	} | undefined
+	| {
+			supportedASCIIChars: string;
+			supportedKeypadModes: readonly KeypadMode[];
+			supportedUserIDStatuses: readonly UserIDStatus[];
+			supportsAdminCode: boolean;
+			supportsAdminCodeDeactivation: boolean;
+			supportsMultipleUserCodeReport: boolean;
+			supportsMultipleUserCodeSet: boolean;
+			supportsUserCodeChecksum: boolean;
+	  }
+	| undefined
 >;
 ```
 
@@ -226,23 +227,23 @@ interface UserCode {
 ```ts
 type UserCodeCCSetOptions =
 	| {
-		userId: 0;
-		userIdStatus: UserIDStatus.Available;
-		userCode?: undefined;
-	}
+			userId: 0;
+			userIdStatus: UserIDStatus.Available;
+			userCode?: undefined;
+	  }
 	| {
-		userId: number;
-		userIdStatus: UserIDStatus.Available;
-		userCode?: undefined;
-	}
+			userId: number;
+			userIdStatus: UserIDStatus.Available;
+			userCode?: undefined;
+	  }
 	| {
-		userId: number;
-		userIdStatus: Exclude<
-			UserIDStatus,
-			UserIDStatus.Available | UserIDStatus.StatusNotAvailable
-		>;
-		userCode: string | BytesView;
-	};
+			userId: number;
+			userIdStatus: Exclude<
+				UserIDStatus,
+				UserIDStatus.Available | UserIDStatus.StatusNotAvailable
+			>;
+			userCode: string | BytesView;
+	  };
 ```
 
 ### `UserIDStatus`

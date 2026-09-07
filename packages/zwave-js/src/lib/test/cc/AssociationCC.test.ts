@@ -30,9 +30,7 @@ test("the SupportedGroupingsGet command should serialize correctly", async (t) =
 			AssociationCommand.SupportedGroupingsGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the SupportedGroupingsReport command should be deserialized correctly", async (t) => {
@@ -42,10 +40,9 @@ test("the SupportedGroupingsReport command should be deserialized correctly", as
 			7, // # of groups
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as AssociationCCSupportedGroupingsReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as AssociationCCSupportedGroupingsReport;
 	t.expect(cc.constructor).toBe(AssociationCCSupportedGroupingsReport);
 
 	t.expect(cc.groupCount).toBe(7);
@@ -67,9 +64,7 @@ test("the Set command should serialize correctly", async (t) => {
 			5,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 test("the Get command should serialize correctly", async (t) => {
 	const cc = new AssociationCCGet({
@@ -82,9 +77,7 @@ test("the Get command should serialize correctly", async (t) => {
 			9, // group ID
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command should be deserialized correctly", async (t) => {
@@ -100,10 +93,9 @@ test("the Report command should be deserialized correctly", async (t) => {
 			5,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as AssociationCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as AssociationCCReport;
 	t.expect(cc.constructor).toBe(AssociationCCReport);
 
 	t.expect(cc.groupId).toBe(5);
@@ -128,9 +120,7 @@ test("the Remove command should serialize correctly", async (t) => {
 			5,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Remove command should serialize correctly (empty node list)", async (t) => {
@@ -144,9 +134,7 @@ test("the Remove command should serialize correctly (empty node list)", async (t
 			5, // group id
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 // test("deserializing an unsupported command should return an unspecified version of AssociationCC", (t) => {

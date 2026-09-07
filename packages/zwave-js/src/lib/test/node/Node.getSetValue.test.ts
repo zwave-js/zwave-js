@@ -5,6 +5,7 @@ import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import sinon from "sinon";
 import { type TaskContext, test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -51,7 +52,10 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test.sequential("getValue() returns the values stored in the value DB", ({ context, expect }) => {
+test.sequential("getValue() returns the values stored in the value DB", ({
+	context,
+	expect,
+}) => {
 	const { driver } = context;
 
 	const node = new ZWaveNode(1, driver);
@@ -68,7 +72,10 @@ test.sequential("getValue() returns the values stored in the value DB", ({ conte
 	node.destroy();
 });
 
-test.sequential("setValue() issues the correct xyzCCSet command", async ({ context, expect }) => {
+test.sequential("setValue() issues the correct xyzCCSet command", async ({
+	context,
+	expect,
+}) => {
 	const { driver } = context;
 
 	// We test with a BasicCC
@@ -106,27 +113,25 @@ test.sequential("setValue() issues the correct xyzCCSet command", async ({ conte
 	node.destroy();
 });
 
-test.sequential(
-	"setValue() returns false if the CC is not implemented",
-	async ({ context, expect }) => {
-		const { driver } = context;
+test.sequential("setValue() returns false if the CC is not implemented", async ({
+	context,
+	expect,
+}) => {
+	const { driver } = context;
 
-		const node = new ZWaveNode(1, driver);
-		const result = await node.setValue(
-			{
-				// @ts-expect-error
-				commandClass: 0xbada55, // this is guaranteed to not be implemented
-				property: "test",
-			},
-			1,
-		);
-		expect(result.status).toBe(SetValueStatus.NotImplemented);
-		expect(result.message).toMatch(
-			/Command Class 12245589 is not implemented/,
-		);
-		node.destroy();
-	},
-);
+	const node = new ZWaveNode(1, driver);
+	const result = await node.setValue(
+		{
+			// @ts-expect-error
+			commandClass: 0xbada55, // this is guaranteed to not be implemented
+			property: "test",
+		},
+		1,
+	);
+	expect(result.status).toBe(SetValueStatus.NotImplemented);
+	expect(result.message).toMatch(/Command Class 12245589 is not implemented/);
+	node.destroy();
+});
 
 {
 	const valueDefinition = BasicCCValues.currentValue;
@@ -146,58 +151,61 @@ test.sequential(
 		return node;
 	}
 
-	test.sequential(
-		"getValueMetadata() returns the defined metadata for the given value",
-		({ context, expect, onTestFinished }) => {
-			const node = prepareTest({ onTestFinished, context });
-			// We test this with the BasicCC
-			// currentValue is readonly, 0-99
-			const currentValueMeta = node.getValueMetadata(valueId);
-			expect(currentValueMeta).toMatchObject({
-				readable: true,
-				writeable: false,
-				min: 0,
-				max: 99,
-				// Nothing special about this value, so we should get the default secret/stateful flags:
-				secret: false,
-				stateful: true,
-			});
-		},
-	);
+	test.sequential("getValueMetadata() returns the defined metadata for the given value", ({
+		context,
+		expect,
+		onTestFinished,
+	}) => {
+		const node = prepareTest({ onTestFinished, context });
+		// We test this with the BasicCC
+		// currentValue is readonly, 0-99
+		const currentValueMeta = node.getValueMetadata(valueId);
+		expect(currentValueMeta).toMatchObject({
+			readable: true,
+			writeable: false,
+			min: 0,
+			max: 99,
+			// Nothing special about this value, so we should get the default secret/stateful flags:
+			secret: false,
+			stateful: true,
+		});
+	});
 
-	test.sequential(
-		"writing to the value DB with setValueMetadata() overwrites the statically defined metadata",
-		({ context, expect, onTestFinished }) => {
-			const node = prepareTest({ onTestFinished, context });
-			// Create dynamic metadata
-			node.valueDB.setMetadata(valueId, ValueMetadata.WriteOnlyInt32);
+	test.sequential("writing to the value DB with setValueMetadata() overwrites the statically defined metadata", ({
+		context,
+		expect,
+		onTestFinished,
+	}) => {
+		const node = prepareTest({ onTestFinished, context });
+		// Create dynamic metadata
+		node.valueDB.setMetadata(valueId, ValueMetadata.WriteOnlyInt32);
 
-			const currentValueMeta = node.getValueMetadata(valueId);
+		const currentValueMeta = node.getValueMetadata(valueId);
 
-			expect(currentValueMeta).toStrictEqual({
-				...ValueMetadata.WriteOnlyInt32,
-				secret: valueDefinition.options.secret,
-				stateful: valueDefinition.options.stateful,
-			});
-		},
-	);
+		expect(currentValueMeta).toStrictEqual({
+			...ValueMetadata.WriteOnlyInt32,
+			secret: valueDefinition.options.secret,
+			stateful: valueDefinition.options.stateful,
+		});
+	});
 
-	test.sequential(
-		"writing to the value DB with setValueMetadata() preserves the secret/stateful flags",
-		({ context, expect, onTestFinished }) => {
-			const node = prepareTest({ onTestFinished, context });
-			// Create dynamic metadata
-			node.valueDB.setMetadata(valueId, {
-				...ValueMetadata.WriteOnlyInt32,
-				secret: !valueDefinition.options.secret,
-				stateful: !valueDefinition.options.stateful,
-			});
+	test.sequential("writing to the value DB with setValueMetadata() preserves the secret/stateful flags", ({
+		context,
+		expect,
+		onTestFinished,
+	}) => {
+		const node = prepareTest({ onTestFinished, context });
+		// Create dynamic metadata
+		node.valueDB.setMetadata(valueId, {
+			...ValueMetadata.WriteOnlyInt32,
+			secret: !valueDefinition.options.secret,
+			stateful: !valueDefinition.options.stateful,
+		});
 
-			const currentValueMeta = node.getValueMetadata(valueId);
-			expect(currentValueMeta).toMatchObject({
-				secret: valueDefinition.options.secret,
-				stateful: valueDefinition.options.stateful,
-			});
-		},
-	);
+		const currentValueMeta = node.getValueMetadata(valueId);
+		expect(currentValueMeta).toMatchObject({
+			secret: valueDefinition.options.secret,
+			stateful: valueDefinition.options.stateful,
+		});
+	});
 }

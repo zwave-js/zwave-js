@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	NotificationCCReport,
 	NotificationCCValues,
@@ -5,17 +7,14 @@ import {
 import { Bytes } from "@zwave-js/shared";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
 	"A Notification Report with an oversized value event parameter is discarded instead of crashing the driver",
 	{
 		// The node supports Notification CC; see the fixture
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/notificationCC",
-		),
+		provisioningDirectory: path.join(__dirname, "fixtures/notificationCC"),
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			// A "value"-type event parameter is decoded via Buffer.readUIntBE,

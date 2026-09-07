@@ -33,18 +33,14 @@ async getPowerlevel(): Promise<
 ### `reportPowerlevel`
 
 ```ts
-async reportPowerlevel(
-	options: {
-		powerlevel: typeof Powerlevel["Normal Power"];
-	},
-): Promise<void>;
+async reportPowerlevel(options: {
+	powerlevel: (typeof Powerlevel)["Normal Power"];
+}): Promise<void>;
 
-async reportPowerlevel(
-	options: {
-		powerlevel: Exclude<Powerlevel, typeof Powerlevel["Normal Power"]>;
-		timeout: number;
-	},
-): Promise<void>;
+async reportPowerlevel(options: {
+	powerlevel: Exclude<Powerlevel, (typeof Powerlevel)["Normal Power"]>;
+	timeout: number;
+}): Promise<void>;
 ```
 
 ### `startNodeTest`
@@ -61,26 +57,22 @@ async startNodeTest(
 
 ```ts
 async getNodeTestStatus(): Promise<
-	MaybeNotKnown<
-		{
-			acknowledgedFrames: number;
-			status: PowerlevelTestStatus;
-			testNodeId: number;
-		}
-	>
+	MaybeNotKnown<{
+		acknowledgedFrames: number;
+		status: PowerlevelTestStatus;
+		testNodeId: number;
+	}>
 >;
 ```
 
 ### `sendNodeTestReport`
 
 ```ts
-async sendNodeTestReport(
-	options: {
-		testNodeId: number;
-		status: PowerlevelTestStatus;
-		acknowledgedFrames: number;
-	},
-): Promise<void>;
+async sendNodeTestReport(options: {
+	testNodeId: number;
+	status: PowerlevelTestStatus;
+	acknowledgedFrames: number;
+}): Promise<void>;
 ```
 
 ## Related types

@@ -3,6 +3,7 @@ import type {
 	PersistValuesContext,
 } from "@zwave-js/cc";
 import type { LogNode } from "@zwave-js/core";
+
 import type { Driver } from "../../driver/Driver.js";
 import type { ZWaveNode } from "../Node.js";
 
@@ -17,8 +18,7 @@ export async function handleApplicationBusy(
 	const waitTimeSeconds = Math.min(command.waitTime ?? 1, 30);
 
 	ctx.logNode(node.id, {
-		message:
-			`Node is busy, re-queueing commands after ${waitTimeSeconds} second(s)...`,
+		message: `Node is busy, re-queueing commands after ${waitTimeSeconds} second(s)...`,
 		direction: "inbound",
 	});
 

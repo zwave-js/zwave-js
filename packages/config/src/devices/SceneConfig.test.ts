@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import { ConditionalDeviceConfig } from "./DeviceConfig.js";
 
 test("parses a device config with scenes", (t) => {
@@ -108,8 +109,9 @@ test("throws for invalid scenes - non-object", (t) => {
 		scenes: "invalid",
 	};
 
-	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow("scenes is not an object");
+	t.expect(
+		() => new ConditionalDeviceConfig("test.json", true, json),
+	).toThrow("scenes is not an object");
 });
 
 test("throws for invalid scenes - non-numeric scene id", (t) => {
@@ -135,10 +137,11 @@ test("throws for invalid scenes - non-numeric scene id", (t) => {
 		},
 	};
 
-	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow(
-			"invalid scene id \"abc\" in scenes - must be a positive integer (1-255)",
-		);
+	t.expect(
+		() => new ConditionalDeviceConfig("test.json", true, json),
+	).toThrow(
+		'invalid scene id "abc" in scenes - must be a positive integer (1-255)',
+	);
 });
 
 test("throws for invalid scenes - scene number 0", (t) => {
@@ -164,10 +167,11 @@ test("throws for invalid scenes - scene number 0", (t) => {
 		},
 	};
 
-	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow(
-			"invalid scene id \"0\" in scenes - must be a positive integer (1-255)",
-		);
+	t.expect(
+		() => new ConditionalDeviceConfig("test.json", true, json),
+	).toThrow(
+		'invalid scene id "0" in scenes - must be a positive integer (1-255)',
+	);
 });
 
 test("throws for invalid scenes - scene number > 255", (t) => {
@@ -193,8 +197,9 @@ test("throws for invalid scenes - scene number > 255", (t) => {
 		},
 	};
 
-	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow("scene number 256 must be between 1 and 255");
+	t.expect(
+		() => new ConditionalDeviceConfig("test.json", true, json),
+	).toThrow("scene number 256 must be between 1 and 255");
 });
 
 test("throws for invalid scenes - missing label", (t) => {
@@ -220,8 +225,9 @@ test("throws for invalid scenes - missing label", (t) => {
 		},
 	};
 
-	t.expect(() => new ConditionalDeviceConfig("test.json", true, json))
-		.toThrow("Scene 1 has a non-string label");
+	t.expect(
+		() => new ConditionalDeviceConfig("test.json", true, json),
+	).toThrow("Scene 1 has a non-string label");
 });
 
 test("supports conditional scenes", (t) => {

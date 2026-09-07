@@ -1,7 +1,10 @@
-import { Bytes, type BytesView, num2hex } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
+
+import { Bytes, type BytesView, num2hex } from "@zwave-js/shared";
+
 import type { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
+
 import {
 	type SerialAPIChunk,
 	type ZWaveSerialFrame,
@@ -22,9 +25,7 @@ function getMessageLength(data: BytesView): number {
 }
 
 type SerialAPIParserTransformerOutput = ZWaveSerialFrame & {
-	type:
-		| ZWaveSerialFrameType.SerialAPI
-		| ZWaveSerialFrameType.Discarded;
+	type: ZWaveSerialFrameType.SerialAPI | ZWaveSerialFrameType.Discarded;
 };
 
 function wrapSerialAPIChunk(
@@ -36,12 +37,10 @@ function wrapSerialAPIChunk(
 	};
 }
 
-class SerialAPIParserTransformer implements
-	Transformer<
-		BytesView,
-		SerialAPIParserTransformerOutput
-	>
-{
+class SerialAPIParserTransformer implements Transformer<
+	BytesView,
+	SerialAPIParserTransformerOutput
+> {
 	constructor(private logger?: SerialLogger) {}
 
 	private receiveBuffer = new Bytes();
@@ -51,9 +50,7 @@ class SerialAPIParserTransformer implements
 
 	transform(
 		chunk: BytesView,
-		controller: TransformStreamDefaultController<
-			SerialAPIParserTransformerOutput
-		>,
+		controller: TransformStreamDefaultController<SerialAPIParserTransformerOutput>,
 	) {
 		this.receiveBuffer = Bytes.concat([this.receiveBuffer, chunk]);
 
@@ -97,9 +94,9 @@ class SerialAPIParserTransformer implements
 								=== MessageHeaders.ACK
 						) {
 							this.logger?.message(
-								`received corrupted ACK: ${
-									num2hex(this.receiveBuffer[0])
-								}`,
+								`received corrupted ACK: ${num2hex(
+									this.receiveBuffer[0],
+								)}`,
 							);
 							this.logger?.ACK("inbound");
 							controller.enqueue(
@@ -153,9 +150,7 @@ class SerialAPIParserTransformer implements
 	}
 }
 export class SerialAPIParser extends TransformStream {
-	constructor(
-		logger?: SerialLogger,
-	) {
+	constructor(logger?: SerialLogger) {
 		const transformer = new SerialAPIParserTransformer(logger);
 		super(transformer);
 		this.#transformer = transformer;

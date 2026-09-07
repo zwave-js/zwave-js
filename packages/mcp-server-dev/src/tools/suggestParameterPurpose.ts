@@ -1,6 +1,8 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+
 import type { SemanticSearchService } from "../semantic/service.js";
 import type { ToolHandler } from "../types.js";
+
 import { clampLimit, invalidArgument, jsonResult } from "./results.js";
 import { handleSemanticError } from "./semanticErrors.js";
 
@@ -24,9 +26,10 @@ export function createSuggestParameterPurposeTool(
 	async function handle(
 		args: SuggestParameterPurposeArgs = {},
 	): Promise<CallToolResult> {
-		const hasQuery = typeof args.query === "string"
-			&& args.query.trim().length > 0;
-		const hasParameter = typeof args.filename === "string"
+		const hasQuery =
+			typeof args.query === "string" && args.query.trim().length > 0;
+		const hasParameter =
+			typeof args.filename === "string"
 			&& args.filename.length > 0
 			&& typeof args.parameter === "number";
 		if (hasQuery === hasParameter) {
@@ -40,12 +43,12 @@ export function createSuggestParameterPurposeTool(
 			const result = hasQuery
 				? await service.suggestPurposesForText(args.query!, limit)
 				: await service.suggestPurposesForParameter(
-					args.filename!,
-					args.parameter!,
-					args.valueBitMask,
-					args.firmwareVersion,
-					limit,
-				);
+						args.filename!,
+						args.parameter!,
+						args.valueBitMask,
+						args.firmwareVersion,
+						limit,
+					);
 			return jsonResult(result);
 		} catch (error) {
 			return handleSemanticError(error);
@@ -54,7 +57,8 @@ export function createSuggestParameterPurposeTool(
 
 	return {
 		name: TOOL_NAME,
-		description: "Suggest existing $purpose values from prototypes "
+		description:
+			"Suggest existing $purpose values from prototypes "
 			+ "learned from tagged config parameters. Use this when authoring or "
 			+ "reviewing a parameter whose semantic purpose is unknown. Accepts "
 			+ "either a free-text description or a concrete config parameter. "
@@ -91,8 +95,7 @@ export function createSuggestParameterPurposeTool(
 				},
 				limit: {
 					type: "number",
-					description:
-						`Maximum suggestions (default ${DEFAULT_LIMIT}, max ${MAX_LIMIT})`,
+					description: `Maximum suggestions (default ${DEFAULT_LIMIT}, max ${MAX_LIMIT})`,
 				},
 			},
 		},

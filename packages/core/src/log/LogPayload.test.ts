@@ -1,4 +1,5 @@
 import { test } from "vitest";
+
 import {
 	isLogPayload,
 	logDict,
@@ -31,10 +32,7 @@ test("toLogPayload passes payloads through and converts records to dicts", (t) =
 });
 
 test("mergeLogDict overrides entries in place and appends new ones", (t) => {
-	const merged = mergeLogDict(
-		{ a: 1, b: 2 },
-		{ b: 3, c: 4 },
-	);
+	const merged = mergeLogDict({ a: 1, b: 2 }, { b: 3, c: 4 });
 	t.expect(merged.entries).toStrictEqual([
 		["a", "1"],
 		["b", "3"],

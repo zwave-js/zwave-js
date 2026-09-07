@@ -102,11 +102,12 @@ export function getPropertyDefinitionFromObject(
 }
 
 export function isJSONDifferentToAST(json: unknown, ast: ASTNode): boolean {
-	const jsonType = typeof json === "object"
-		? Array.isArray(json)
-			? "array"
-			: "object"
-		: typeof json;
+	const jsonType =
+		typeof json === "object"
+			? Array.isArray(json)
+				? "array"
+				: "object"
+			: typeof json;
 
 	// If the property is undefined in the JSON but present in the AST it will return here
 	if (jsonType !== ast.type) {
@@ -169,6 +170,8 @@ export function positionBeforeOrEqual(a: Position, b: Position): boolean {
 
 /** Whether the `inner` range lies completely within the `outer` range */
 export function rangeContains(outer: Range, inner: Range): boolean {
-	return positionBeforeOrEqual(outer.start, inner.start)
-		&& positionBeforeOrEqual(inner.end, outer.end);
+	return (
+		positionBeforeOrEqual(outer.start, inner.start)
+		&& positionBeforeOrEqual(inner.end, outer.end)
+	);
 }

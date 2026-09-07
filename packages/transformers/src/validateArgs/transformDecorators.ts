@@ -6,6 +6,7 @@
  */
 
 import path from "node:path";
+
 import ts from "typescript";
 
 /**
@@ -14,9 +15,7 @@ import ts from "typescript";
  * - Strips decorator arguments (options are baked into the generated validator)
  * - Replaces the @zwave-js/transformers import with the generated ._validateArgs.js import
  */
-export function createValidateArgsTransformer(): ts.TransformerFactory<
-	ts.SourceFile
-> {
+export function createValidateArgsTransformer(): ts.TransformerFactory<ts.SourceFile> {
 	return (context: ts.TransformationContext) => (file: ts.SourceFile) => {
 		// Bail early if there is no import for "@zwave-js/transformers"
 		if (!file.getFullText().includes("@zwave-js/transformers")) {
@@ -79,18 +78,19 @@ export function createValidateArgsTransformer(): ts.TransformerFactory<
 					i.moduleSpecifier
 						.getText(file)
 						.replaceAll(/^["']|["']$/g, "")
-						=== "@zwave-js/transformers",
+					=== "@zwave-js/transformers",
 			);
 
 		// Create replacement import
 		const extension = file.fileName.match(/\.[mc]?[jt]s$/)?.[0];
 		const fileNameOnly = path.basename(file.fileName, extension);
 		// Use the appropriate JS extension based on the source file extension
-		const jsExtension = extension === ".mts"
-			? ".mjs"
-			: extension === ".cts"
-			? ".cjs"
-			: ".js";
+		const jsExtension =
+			extension === ".mts"
+				? ".mjs"
+				: extension === ".cts"
+					? ".cjs"
+					: ".js";
 		const newImport = f.createImportDeclaration(
 			undefined,
 			f.createImportClause(
@@ -117,7 +117,7 @@ export function createValidateArgsTransformer(): ts.TransformerFactory<
 									undefined,
 									d,
 									undefined,
-								)
+								),
 							),
 						),
 						undefined,

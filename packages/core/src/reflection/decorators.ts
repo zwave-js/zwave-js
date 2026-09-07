@@ -1,5 +1,6 @@
-import type { TypedClassDecorator } from "@zwave-js/shared";
 import "reflect-metadata";
+
+import type { TypedClassDecorator } from "@zwave-js/shared";
 
 type Constructor<T> = new (...args: any[]) => T;
 
@@ -80,8 +81,8 @@ export function createReflectionDecorator<
 				Reflect.defineMetadata(key, value, target);
 
 				if (constructorLookupKey === false) return;
-				const reverseLookupKey = constructorLookupKey?.(target, ...args)
-					?? String(value);
+				const reverseLookupKey =
+					constructorLookupKey?.(target, ...args) ?? String(value);
 
 				// Store the constructor on the reverse lookup target
 				const map: Map<string, TConstructor> =
@@ -134,15 +135,13 @@ export function createReflectionDecorator<
 	};
 
 	// Rename the decorator functions so they are easier to identify in stack traces
-	for (
-		const property of [
-			"decorator",
-			"lookupValue",
-			"lookupValueStatic",
-			"lookupConstructorByValue",
-			"lookupConstructorByKey",
-		] as const
-	) {
+	for (const property of [
+		"decorator",
+		"lookupValue",
+		"lookupValueStatic",
+		"lookupConstructorByValue",
+		"lookupConstructorByKey",
+	] as const) {
 		grp[property] = Object.defineProperty(grp[property], "name", {
 			value: `${property}_${name}`,
 		}) as any;
@@ -239,9 +238,7 @@ export function createValuelessReflectionDecorator<
 	TBase extends abstract new (...args: any) => any,
 >({
 	name,
-}: CreateValuelessReflectionDecoratorOptions): ValuelessReflectionDecorator<
-	TBase
-> {
+}: CreateValuelessReflectionDecoratorOptions): ValuelessReflectionDecorator<TBase> {
 	const decorator = createReflectionDecorator<TBase, [], boolean>({
 		name,
 		valueFromArgs: () => true,

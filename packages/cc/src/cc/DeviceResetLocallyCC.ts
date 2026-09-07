@@ -4,6 +4,7 @@ import {
 	TransmitOptions,
 	validatePayload,
 } from "@zwave-js/core";
+
 import { CCAPI } from "../lib/API.js";
 import { type CCRaw, CommandClass } from "../lib/CommandClass.js";
 import {
@@ -46,8 +47,8 @@ export class DeviceResetLocallyCCAPI extends CCAPI {
 			await this.host.sendCommand(cc, {
 				...this.commandOptions,
 				// Do not fall back to explorer frames
-				transmitOptions: TransmitOptions.ACK
-					| TransmitOptions.AutoRoute,
+				transmitOptions:
+					TransmitOptions.ACK | TransmitOptions.AutoRoute,
 				// Only try sending once
 				maxSendAttempts: 1,
 				// We don't want failures causing us to treat the node as asleep or dead

@@ -47,8 +47,8 @@ export const noUnnecessaryBytesFrom = ESLintUtils.RuleCreator.withoutDocs({
 										messageId: "no-unnecessary-bytes-from",
 										fix(fixer) {
 											// Get the source text of the array argument
-											const arraySource = context
-												.sourceCode.getText(
+											const arraySource =
+												context.sourceCode.getText(
 													element.arguments[0],
 												);
 											return fixer.replaceText(

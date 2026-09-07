@@ -1,6 +1,8 @@
 import type { JSONObject } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
+
 import { throwInvalidConfig } from "../utils_safe.js";
+
 import {
 	type AssociationConfig,
 	ConditionalAssociationConfig,
@@ -19,9 +21,7 @@ import {
 } from "./ParamInformation.js";
 import type { DeviceID } from "./shared.js";
 
-export class ConditionalEndpointConfig
-	implements ConditionalItem<EndpointConfig>
-{
+export class ConditionalEndpointConfig implements ConditionalItem<EndpointConfig> {
 	public constructor(
 		parent: ConditionalDeviceConfig,
 		index: number,
@@ -60,11 +60,9 @@ Endpoint ${index}: label is not a string`,
 Endpoint ${index}: associations is not an object`,
 				);
 			}
-			for (
-				const [key, assocDefinition] of Object.entries(
-					definition.associations,
-				)
-			) {
+			for (const [key, assocDefinition] of Object.entries(
+				definition.associations,
+			)) {
 				if (!/^[1-9][0-9]*$/.test(key)) {
 					throwInvalidConfig(
 						`device`,
@@ -122,12 +120,10 @@ Endpoint ${index}: found non-numeric group id "${key}" in associations`,
 	}
 }
 
-export type EndpointConfig =
-	& Omit<
-		ConditionalEndpointConfig,
-		"condition" | "evaluateCondition" | "associations" | "paramInformation"
-	>
-	& {
-		associations?: Map<number, AssociationConfig> | undefined;
-		paramInformation?: ParamInfoMap;
-	};
+export type EndpointConfig = Omit<
+	ConditionalEndpointConfig,
+	"condition" | "evaluateCondition" | "associations" | "paramInformation"
+> & {
+	associations?: Map<number, AssociationConfig> | undefined;
+	paramInformation?: ParamInfoMap;
+};

@@ -1,6 +1,8 @@
-import { pathExists } from "@zwave-js/shared";
 import { readFile } from "node:fs/promises";
+
+import { pathExists } from "@zwave-js/shared";
 import { test, vi } from "vitest";
+
 import { ConfigManager } from "./ConfigManager.js";
 
 vi.mock("node:fs/promises");
@@ -27,26 +29,16 @@ const pathExistsStub = vi.mocked(pathExists);
 		return configManager;
 	}
 
-	test.sequential(
-		"lookupManufacturer (with missing file) does not throw",
-		async (t) => {
-			const configManager = await prepareTest();
-			t.expect(() => configManager.lookupManufacturer(0)).not.toThrow();
-		},
-		// Loading configuration may take a while on CI
-		30000,
-	);
+	test.sequential("lookupManufacturer (with missing file) does not throw", async (t) => {
+		const configManager = await prepareTest();
+		t.expect(() => configManager.lookupManufacturer(0)).not.toThrow();
+	}, 30000); // Loading configuration may take a while on CI
 
-	test.sequential(
-		"lookupManufacturer (with missing file) returns undefined",
-		async (t) => {
-			const configManager = await prepareTest();
-			t.expect(configManager.lookupManufacturer(0x0e)).toBeUndefined();
-			t.expect(configManager.lookupManufacturer(0xff)).toBeUndefined();
-		},
-		// Loading configuration may take a while on CI
-		30000,
-	);
+	test.sequential("lookupManufacturer (with missing file) returns undefined", async (t) => {
+		const configManager = await prepareTest();
+		t.expect(configManager.lookupManufacturer(0x0e)).toBeUndefined();
+		t.expect(configManager.lookupManufacturer(0xff)).toBeUndefined();
+	}, 30000); // Loading configuration may take a while on CI
 }
 
 {
@@ -54,35 +46,22 @@ const pathExistsStub = vi.mocked(pathExists);
 		pathExistsStub.mockClear();
 		readFileStub.mockClear();
 		pathExistsStub.mockResolvedValue(true);
-		readFileStub.mockResolvedValue(
-			Buffer.from(`{"0x000e": `, "utf8"),
-		);
+		readFileStub.mockResolvedValue(Buffer.from(`{"0x000e": `, "utf8"));
 
 		const configManager = new ConfigManager();
 		await configManager.loadManufacturers();
 		return configManager;
 	}
 
-	test.sequential(
-		"lookupManufacturer (with invalid file) does not throw",
-		async (t) => {
-			const configManager = await prepareTest();
-			t.expect(() => configManager.lookupManufacturer(0x0e)).not
-				.toThrow();
-		},
-		// Loading configuration may take a while on CI
-		30000,
-	);
+	test.sequential("lookupManufacturer (with invalid file) does not throw", async (t) => {
+		const configManager = await prepareTest();
+		t.expect(() => configManager.lookupManufacturer(0x0e)).not.toThrow();
+	}, 30000); // Loading configuration may take a while on CI
 
-	test.sequential(
-		"lookupManufacturer (with invalid file) returns undefined",
-		async (t) => {
-			const configManager = await prepareTest();
-			t.expect(configManager.lookupManufacturer(0x0e)).toBeUndefined();
-		},
-		// Loading configuration may take a while on CI
-		30000,
-	);
+	test.sequential("lookupManufacturer (with invalid file) returns undefined", async (t) => {
+		const configManager = await prepareTest();
+		t.expect(configManager.lookupManufacturer(0x0e)).toBeUndefined();
+	}, 30000); // Loading configuration may take a while on CI
 }
 
 {
@@ -104,14 +83,9 @@ const pathExistsStub = vi.mocked(pathExists);
 		return configManager;
 	}
 
-	test.sequential(
-		"lookupManufacturer() returns the name belonging to the manufacturer ID if it is defined",
-		async (t) => {
-			const configManager = await prepareTest();
-			t.expect(configManager.lookupManufacturer(0x0e)).toBe("Test");
-			t.expect(configManager.lookupManufacturer(0xff)).toBeUndefined();
-		},
-		// Loading configuration may take a while on CI
-		30000,
-	);
+	test.sequential("lookupManufacturer() returns the name belonging to the manufacturer ID if it is defined", async (t) => {
+		const configManager = await prepareTest();
+		t.expect(configManager.lookupManufacturer(0x0e)).toBe("Test");
+		t.expect(configManager.lookupManufacturer(0xff)).toBeUndefined();
+	}, 30000); // Loading configuration may take a while on CI
 }

@@ -27,6 +27,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+
 import {
 	SetCredentialResult,
 	SetUserResult,
@@ -110,8 +111,8 @@ integrationTest(
 			t.expect(userCaps.supportsUsersWithoutCredentials).toBe(true);
 
 			// Credential capabilities
-			const credCaps = node.accessControl!
-				.getCredentialCapabilitiesCached();
+			const credCaps =
+				node.accessControl!.getCredentialCapabilitiesCached();
 			t.expect(credCaps).toBeDefined();
 			t.expect(credCaps.supportsAdminCode).toBe(true);
 			t.expect(credCaps.supportsAdminCodeDeactivation).toBe(true);
@@ -280,9 +281,7 @@ integrationTest(
 
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(2),
-			).toStrictEqual(
-				[],
-			);
+			).toStrictEqual([]);
 		},
 	},
 );
@@ -330,9 +329,8 @@ integrationTest(
 			await secondUserCreated;
 
 			const firstCredentialCreated = createDeferredPromise<void>();
-			node.once(
-				"credential added",
-				() => firstCredentialCreated.resolve(),
+			node.once("credential added", () =>
+				firstCredentialCreated.resolve(),
 			);
 			await node.accessControl!.setCredential(
 				1,
@@ -506,14 +504,17 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userTypeValueId = UserCredentialCCValues.userType(3)
-				.endpoint(0);
+			const userTypeValueId =
+				UserCredentialCCValues.userType(3).endpoint(0);
 			const credentialValueId = UserCredentialCCValues.credential(
 				UserCredentialType.PINCode,
 				1,
 			).endpoint(0);
-			const credentialOwnerValueId = UserCredentialCCValues
-				.credentialOwner(UserCredentialType.PINCode, 1).endpoint(0);
+			const credentialOwnerValueId =
+				UserCredentialCCValues.credentialOwner(
+					UserCredentialType.PINCode,
+					1,
+				).endpoint(0);
 			node.valueDB.setValue(
 				userTypeValueId,
 				UserCredentialUserType.General,
@@ -530,8 +531,8 @@ integrationTest(
 				userEvent.resolve({
 					args,
 					user: node.accessControl!.getUserCached(3),
-					credentials: node.accessControl!
-						.getCredentialsForUserCached(3),
+					credentials:
+						node.accessControl!.getCredentialsForUserCached(3),
 				});
 			});
 
@@ -591,12 +592,14 @@ integrationTest(
 					UserCredentialCCValues.userType(userId).endpoint(0),
 					UserCredentialCCValues.userActive(userId).endpoint(0),
 					UserCredentialCCValues.credentialRule(userId).endpoint(0),
-					UserCredentialCCValues.expiringTimeoutMinutes(userId)
-						.endpoint(0),
+					UserCredentialCCValues.expiringTimeoutMinutes(
+						userId,
+					).endpoint(0),
 					UserCredentialCCValues.userName(userId).endpoint(0),
 					UserCredentialCCValues.userModifierType(userId).endpoint(0),
-					UserCredentialCCValues.userModifierNodeId(userId)
-						.endpoint(0),
+					UserCredentialCCValues.userModifierNodeId(userId).endpoint(
+						0,
+					),
 					UserCredentialCCValues.userChecksum(userId).endpoint(0),
 					UserCredentialCCValues.credential(
 						UserCredentialType.PINCode,
@@ -695,9 +698,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential added",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential added", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			const cc = new UserCredentialCCCredentialReport({
@@ -749,9 +751,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential modified",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential modified", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			const cc = new UserCredentialCCCredentialReport({
@@ -804,9 +805,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential deleted", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			const cc = new UserCredentialCCCredentialReport({
@@ -868,8 +868,8 @@ integrationTest(
 					) {
 						const report = new UserCredentialCCUserReport({
 							nodeId: controller.ownNodeId,
-							reportType: UserCredentialUserReportType
-								.UserAddRejectedLocationOccupied,
+							reportType:
+								UserCredentialUserReportType.UserAddRejectedLocationOccupied,
 							modifierType: UserCredentialModifierType.ZWave,
 							modifierNodeId: 1,
 							userId: receivedCC.userId,
@@ -1012,8 +1012,8 @@ integrationTest(
 					) {
 						const report = new UserCredentialCCCredentialReport({
 							nodeId: controller.ownNodeId,
-							reportType: UserCredentialCredentialReportType
-								.CredentialAddRejectedLocationOccupied,
+							reportType:
+								UserCredentialCredentialReportType.CredentialAddRejectedLocationOccupied,
 							userId: receivedCC.userId,
 							credentialType: receivedCC.credentialType,
 							credentialSlot: receivedCC.credentialSlot,
@@ -1036,9 +1036,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential added",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential added", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			// Driver cache is empty, so this sends Add
@@ -1098,8 +1097,8 @@ integrationTest(
 					) {
 						const report = new UserCredentialCCCredentialReport({
 							nodeId: controller.ownNodeId,
-							reportType: UserCredentialCredentialReportType
-								.CredentialAddRejectedLocationOccupied,
+							reportType:
+								UserCredentialCredentialReportType.CredentialAddRejectedLocationOccupied,
 							userId: receivedCC.userId,
 							credentialType: receivedCC.credentialType,
 							credentialSlot: receivedCC.credentialSlot,
@@ -1181,8 +1180,8 @@ integrationTest(
 					) {
 						const report = new UserCredentialCCCredentialReport({
 							nodeId: controller.ownNodeId,
-							reportType: UserCredentialCredentialReportType
-								.CredentialModifyRejectedLocationEmpty,
+							reportType:
+								UserCredentialCredentialReportType.CredentialModifyRejectedLocationEmpty,
 							userId: receivedCC.userId,
 							credentialType: receivedCC.credentialType,
 							credentialSlot: receivedCC.credentialSlot,
@@ -1234,9 +1233,8 @@ integrationTest(
 			).toBeDefined();
 
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential deleted", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			await node.accessControl!.setCredential(
@@ -1265,124 +1263,118 @@ integrationTest(
 // Set-type commands use correct CC commands
 // =============================================================================
 
-integrationTest(
-	"setUser sends UserSet with Add operationType for new users",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[UserCredentialType.PINCode, defaultPINCapability],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.setUser(1, {
-				active: true,
-				userType: UserCredentialUserType.General,
-				userName: "Charlie",
-			});
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCredentialCCUserSet
-					&& frame.payload.operationType
-						=== UserCredentialOperationType.Add
-					&& frame.payload.userId === 1,
-				{
-					errorMessage: "Should have sent UserSet with Add operation",
-				},
-			);
-		},
+integrationTest("setUser sends UserSet with Add operationType for new users", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[UserCredentialType.PINCode, defaultPINCapability],
+				]),
+			}),
+		],
 	},
-);
 
-integrationTest(
-	"addUser without credential sends only UserSet (Add) on U3C",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 32,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[UserCredentialType.PINCode, defaultPINCapability],
-					]),
-				}),
-			],
-		},
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.setUser(1, {
+			active: true,
+			userType: UserCredentialUserType.General,
+			userName: "Charlie",
+		});
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const userEvent = createDeferredPromise<unknown>();
-			node.on("user added", (_node, args) => userEvent.resolve(args));
-			let credEmitted = false;
-			node.on("credential added", () => {
-				credEmitted = true;
-			});
-
-			const result = await node.accessControl!.addUser(1, {
-				active: true,
-				userType: UserCredentialUserType.General,
-				userName: "Alice",
-			});
-
-			t.expect(result.user).toBe(SetUserResult.OK);
-			t.expect(result.credential).toBeUndefined();
-
-			t.expect(await userEvent).toMatchObject({
-				userId: 1,
-				active: true,
-				userType: UserCredentialUserType.General,
-				userName: "Alice",
-			});
-			t.expect(credEmitted).toBe(false);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCredentialCCUserSet
-					&& frame.payload.operationType
-						=== UserCredentialOperationType.Add
-					&& frame.payload.userId === 1,
-				{
-					errorMessage: "Should have sent UserSet with Add operation",
-				},
-			);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCredentialCCCredentialSet,
-				{
-					noMatch: true,
-					errorMessage:
-						"Should not have sent a CredentialSet when no credential was provided",
-				},
-			);
-		},
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCUserSet
+				&& frame.payload.operationType
+					=== UserCredentialOperationType.Add
+				&& frame.payload.userId === 1,
+			{
+				errorMessage: "Should have sent UserSet with Add operation",
+			},
+		);
 	},
-);
+});
+
+integrationTest("addUser without credential sends only UserSet (Add) on U3C", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 32,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[UserCredentialType.PINCode, defaultPINCapability],
+				]),
+			}),
+		],
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		const userEvent = createDeferredPromise<unknown>();
+		node.on("user added", (_node, args) => userEvent.resolve(args));
+		let credEmitted = false;
+		node.on("credential added", () => {
+			credEmitted = true;
+		});
+
+		const result = await node.accessControl!.addUser(1, {
+			active: true,
+			userType: UserCredentialUserType.General,
+			userName: "Alice",
+		});
+
+		t.expect(result.user).toBe(SetUserResult.OK);
+		t.expect(result.credential).toBeUndefined();
+
+		t.expect(await userEvent).toMatchObject({
+			userId: 1,
+			active: true,
+			userType: UserCredentialUserType.General,
+			userName: "Alice",
+		});
+		t.expect(credEmitted).toBe(false);
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCUserSet
+				&& frame.payload.operationType
+					=== UserCredentialOperationType.Add
+				&& frame.payload.userId === 1,
+			{
+				errorMessage: "Should have sent UserSet with Add operation",
+			},
+		);
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCCredentialSet,
+			{
+				noMatch: true,
+				errorMessage:
+					"Should not have sent a CredentialSet when no credential was provided",
+			},
+		);
+	},
+});
 
 integrationTest(
 	"addUser with credential sends UserSet (Add) then CredentialSet (Add) on U3C",
@@ -1411,9 +1403,8 @@ integrationTest(
 			const userEvent = createDeferredPromise<unknown>();
 			const credEvent = createDeferredPromise<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
-			node.on(
-				"credential added",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential added", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			const result = await node.accessControl!.addUser(
@@ -1527,47 +1518,43 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"deleteUser sends UserSet with Delete operationType",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 0,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: false,
-					supportedCredentialTypes: new Map([
-						[UserCredentialType.PINCode, defaultPINCapability],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.deleteUser(5);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCredentialCCUserSet
-					&& frame.payload.operationType
-						=== UserCredentialOperationType.Delete
-					&& frame.payload.userId === 5,
-				{
-					errorMessage:
-						"Should have sent UserSet with Delete operation",
-				},
-			);
-		},
+integrationTest("deleteUser sends UserSet with Delete operationType", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 0,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: false,
+				supportedCredentialTypes: new Map([
+					[UserCredentialType.PINCode, defaultPINCapability],
+				]),
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.deleteUser(5);
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCUserSet
+				&& frame.payload.operationType
+					=== UserCredentialOperationType.Delete
+				&& frame.payload.userId === 5,
+			{
+				errorMessage: "Should have sent UserSet with Delete operation",
+			},
+		);
+	},
+});
 
 integrationTest(
 	"deleteAllUsers sends UserSet with Delete operationType and userId 0",
@@ -1659,83 +1646,75 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"setAdminCode sends AdminPinCodeSet",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 0,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: true,
-					supportedCredentialTypes: new Map([
-						[UserCredentialType.PINCode, defaultPINCapability],
-					]),
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.setAdminCode("9876");
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCAdminPinCodeSet,
-				{
-					errorMessage: "Should have sent AdminPinCodeSet",
-				},
-			);
-		},
+integrationTest("setAdminCode sends AdminPinCodeSet", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 0,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: true,
+				supportedCredentialTypes: new Map([
+					[UserCredentialType.PINCode, defaultPINCapability],
+				]),
+			}),
+		],
 	},
-);
 
-integrationTest(
-	"getAdminCode sends AdminPinCodeGet",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Credential"],
-					isSupported: true,
-					version: 1,
-					numberOfSupportedUsers: 10,
-					supportedCredentialRules: [UserCredentialRule.Single],
-					maxUserNameLength: 0,
-					supportsAllUsersChecksum: false,
-					supportsUserChecksum: false,
-					supportsAdminCode: true,
-					supportedCredentialTypes: new Map([
-						[UserCredentialType.PINCode, defaultPINCapability],
-					]),
-				}),
-			],
-		},
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.setAdminCode("9876");
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.getAdminCode();
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof UserCredentialCCAdminPinCodeGet,
-				{
-					errorMessage: "Should have sent AdminPinCodeGet",
-				},
-			);
-		},
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCAdminPinCodeSet,
+			{
+				errorMessage: "Should have sent AdminPinCodeSet",
+			},
+		);
 	},
-);
+});
+
+integrationTest("getAdminCode sends AdminPinCodeGet", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Credential"],
+				isSupported: true,
+				version: 1,
+				numberOfSupportedUsers: 10,
+				supportedCredentialRules: [UserCredentialRule.Single],
+				maxUserNameLength: 0,
+				supportsAllUsersChecksum: false,
+				supportsUserChecksum: false,
+				supportsAdminCode: true,
+				supportedCredentialTypes: new Map([
+					[UserCredentialType.PINCode, defaultPINCapability],
+				]),
+			}),
+		],
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.getAdminCode();
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCredentialCCAdminPinCodeGet,
+			{
+				errorMessage: "Should have sent AdminPinCodeGet",
+			},
+		);
+	},
+});
 
 const defaultDeleteTestCaps = {
 	ccId: CommandClasses["User Credential"],
@@ -1814,41 +1793,31 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"deleteUser purges cached credentials (unsupervised)",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps(defaultDeleteTestCaps),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await populateUserAndCredential(node);
-
-			// Verify data is cached
-			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
-			t.expect(
-				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				1,
-			);
-
-			const deleted = createDeferredPromise<void>();
-			node.once("user deleted", () => deleted.resolve());
-			await node.accessControl!.deleteUser(1);
-			await deleted;
-
-			t.expect(node.accessControl!.getUserCached(1)).toBeUndefined();
-			t.expect(
-				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				0,
-			);
-		},
+integrationTest("deleteUser purges cached credentials (unsupervised)", {
+	nodeCapabilities: {
+		commandClasses: [CommandClasses.Version, ccCaps(defaultDeleteTestCaps)],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await populateUserAndCredential(node);
+
+		// Verify data is cached
+		t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
+		t.expect(
+			node.accessControl!.getCredentialsForUserCached(1).length,
+		).toBe(1);
+
+		const deleted = createDeferredPromise<void>();
+		node.once("user deleted", () => deleted.resolve());
+		await node.accessControl!.deleteUser(1);
+		await deleted;
+
+		t.expect(node.accessControl!.getUserCached(1)).toBeUndefined();
+		t.expect(
+			node.accessControl!.getCredentialsForUserCached(1).length,
+		).toBe(0);
+	},
+});
 
 integrationTest(
 	"deleteUser does not purge cached credentials when the node does not respond",
@@ -1884,9 +1853,7 @@ integrationTest(
 			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				1,
-			);
+			).toBe(1);
 
 			const result = await node.accessControl!.deleteUser(1);
 			t.expect(result).toBe(SetUserResult.Error_Unknown);
@@ -1895,9 +1862,7 @@ integrationTest(
 			t.expect(node.accessControl!.getUserCached(1)).toBeDefined();
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				1,
-			);
+			).toBe(1);
 		},
 	},
 );
@@ -1918,9 +1883,7 @@ integrationTest(
 			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				1,
-			);
+			).toBe(1);
 
 			const cacheAtEvent = createDeferredPromise<{
 				users: number;
@@ -1962,9 +1925,7 @@ integrationTest(
 			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				1,
-			);
+			).toBe(1);
 
 			// deleteAllUsers returns after the API call completes;
 			// the purge happens synchronously before returning
@@ -1973,9 +1934,7 @@ integrationTest(
 			t.expect(node.accessControl!.getUsersCached().length).toBe(0);
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				0,
-			);
+			).toBe(0);
 		},
 	},
 );
@@ -2011,9 +1970,7 @@ integrationTest(
 			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				1,
-			);
+			).toBe(1);
 
 			const result = await node.accessControl!.deleteAllUsers();
 			t.expect(result).toBe(SetUserResult.Error_Unknown);
@@ -2022,9 +1979,7 @@ integrationTest(
 			t.expect(node.accessControl!.getUsersCached().length).toBe(1);
 			t.expect(
 				node.accessControl!.getCredentialsForUserCached(1).length,
-			).toBe(
-				1,
-			);
+			).toBe(1);
 		},
 	},
 );
@@ -2086,11 +2041,14 @@ integrationTest(
 			}
 
 			const fresh = await node.accessControl!.getAllCredentials();
-			t.expect(fresh.map((c) => c.slot).toSorted((a, b) => a - b))
-				.toStrictEqual([2, 4]);
+			t.expect(
+				fresh.map((c) => c.slot).toSorted((a, b) => a - b),
+			).toStrictEqual([2, 4]);
 
 			t.expect(
-				node.accessControl!.getAllCredentialsCached().map((c) => c.slot)
+				node
+					.accessControl!.getAllCredentialsCached()
+					.map((c) => c.slot)
 					.toSorted((a, b) => a - b),
 			).toStrictEqual([2, 4]);
 			for (const slot of [1, 3, 5]) {
@@ -2139,14 +2097,12 @@ integrationTest(
 			});
 			await userCreated;
 
-			for (
-				const [type, slot] of [
-					[UserCredentialType.PINCode, 1],
-					[UserCredentialType.PINCode, 2],
-					[UserCredentialType.Password, 1],
-					[UserCredentialType.Password, 2],
-				] as const
-			) {
+			for (const [type, slot] of [
+				[UserCredentialType.PINCode, 1],
+				[UserCredentialType.PINCode, 2],
+				[UserCredentialType.Password, 1],
+				[UserCredentialType.Password, 2],
+			] as const) {
 				const added = createDeferredPromise<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
@@ -2224,9 +2180,11 @@ integrationTest(
 			}
 
 			// user 1 owns slots 1 and 3; user 2 owns slot 2, sitting in user 1's gap.
-			for (
-				const [userId, slot] of [[1, 1], [2, 2], [1, 3]] as const
-			) {
+			for (const [userId, slot] of [
+				[1, 1],
+				[2, 2],
+				[1, 3],
+			] as const) {
 				const added = createDeferredPromise<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
@@ -2297,14 +2255,12 @@ integrationTest(
 			});
 			await userCreated;
 
-			for (
-				const [type, slot] of [
-					[UserCredentialType.PINCode, 1],
-					[UserCredentialType.PINCode, 2],
-					[UserCredentialType.PINCode, 3],
-					[UserCredentialType.Password, 1],
-				] as const
-			) {
+			for (const [type, slot] of [
+				[UserCredentialType.PINCode, 1],
+				[UserCredentialType.PINCode, 2],
+				[UserCredentialType.PINCode, 3],
+				[UserCredentialType.Password, 1],
+			] as const) {
 				const added = createDeferredPromise<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
@@ -2377,13 +2333,11 @@ integrationTest(
 			});
 			await userCreated;
 
-			for (
-				const [type, slot] of [
-					[UserCredentialType.PINCode, 1],
-					[UserCredentialType.PINCode, 2],
-					[UserCredentialType.Password, 1],
-				] as const
-			) {
+			for (const [type, slot] of [
+				[UserCredentialType.PINCode, 1],
+				[UserCredentialType.PINCode, 2],
+				[UserCredentialType.Password, 1],
+			] as const) {
 				const added = createDeferredPromise<void>();
 				node.once("credential added", () => added.resolve());
 				await node.accessControl!.setCredential(
@@ -2478,10 +2432,9 @@ integrationTest(
 
 			const fresh = await node.accessControl!.getAllCredentials();
 			t.expect(fresh).toStrictEqual([]);
-			t.expect(node.accessControl!.getAllCredentialsCached())
-				.toStrictEqual(
-					[],
-				);
+			t.expect(
+				node.accessControl!.getAllCredentialsCached(),
+			).toStrictEqual([]);
 		},
 	},
 );

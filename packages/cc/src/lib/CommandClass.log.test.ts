@@ -1,8 +1,10 @@
 import { formatLogPayload, logDict, logText } from "@zwave-js/core";
 import { test } from "vitest";
+
 import { BinarySwitchCCSet } from "../cc/BinarySwitchCC.js";
 import { MultiChannelCCCommandEncapsulation } from "../cc/MultiChannelCC.js";
 import { SupervisionCCGet } from "../cc/SupervisionCC.js";
+
 import { ccToLogPayload } from "./CommandClass.js";
 
 test("a single CC renders as a tree child with its dict content", (t) => {

@@ -2,24 +2,19 @@
  * This scripts helps find certain code patterns via the CLI
  */
 
+import path from "node:path";
+
 import c from "ansi-colors";
 import { fromJson as themeFromJson, highlight } from "cli-highlight";
 import esMain from "es-main";
 import globrex from "globrex";
-import path from "node:path";
 import ts from "typescript";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { loadTSConfig, projectRoot } from "./tsAPITools.js";
 
-const {
-	blueBright,
-	bold,
-	gray,
-	greenBright,
-	redBright,
-	yellow,
-} = c;
+const { blueBright, bold, gray, greenBright, redBright, yellow } = c;
 
 function relativeToProject(filename: string): string {
 	return path.relative(projectRoot, filename).replaceAll("\\", "/");
@@ -91,7 +86,8 @@ function formatResult(
 		const prefix = `${i + 1}`.padStart(lineIndicatorLength);
 		if (i === result.line) {
 			ret = `${bold(greenBright(prefix))} | ${ret}`;
-			ret += "\n"
+			ret +=
+				"\n"
 				+ " ".repeat(prefix.length)
 				+ " | "
 				// Leading tabs are counted as a single character by TS, but we want to
@@ -203,7 +199,7 @@ export function codefind(query: CodeFindQuery): Result[] {
 		if (
 			query.filePatterns
 			&& !query.filePatterns.some((pattern) =>
-				relativePathMatchesPattern(pattern)
+				relativePathMatchesPattern(pattern),
 			)
 		) {
 			continue;
@@ -212,7 +208,7 @@ export function codefind(query: CodeFindQuery): Result[] {
 		if (
 			query.excludeFilePatterns
 			&& query.excludeFilePatterns.some((pattern) =>
-				relativePathMatchesPattern(pattern)
+				relativePathMatchesPattern(pattern),
 			)
 		) {
 			continue;
@@ -243,7 +239,7 @@ export function codefind(query: CodeFindQuery): Result[] {
 				const fullPath = path.join("/");
 				if (
 					excludeCodePatterns?.some((pattern) =>
-						pattern.test(fullPath)
+						pattern.test(fullPath),
 					)
 				) {
 					// This code pattern is excluded
@@ -273,9 +269,8 @@ export function codefind(query: CodeFindQuery): Result[] {
 					} else {
 						// no match, but new path segment to remember
 						// Iterate through children
-						ts.forEachChild(
-							node,
-							(member) => visit(member, newPath),
+						ts.forEachChild(node, (member) =>
+							visit(member, newPath),
 						);
 					}
 				} else {
@@ -298,10 +293,10 @@ export function codefind(query: CodeFindQuery): Result[] {
 				let foundIndex = -1;
 				while (
 					((foundIndex = text.indexOf(query.search, startIndex)),
-						foundIndex !== -1)
+					foundIndex !== -1)
 				) {
-					const matchPosition = node.getStart(sourceFile)
-						+ foundIndex;
+					const matchPosition =
+						node.getStart(sourceFile) + foundIndex;
 					const location = ts.getLineAndCharacterOfPosition(
 						sourceFile,
 						matchPosition,
@@ -330,8 +325,8 @@ export function codefind(query: CodeFindQuery): Result[] {
 				// Find all occurrences of regex in the node
 				const matches = text.matchAll(query.search);
 				for (const match of matches) {
-					const matchPosition = node.getStart(sourceFile)
-						+ match.index;
+					const matchPosition =
+						node.getStart(sourceFile) + match.index;
 					const location = ts.getLineAndCharacterOfPosition(
 						sourceFile,
 						matchPosition,
@@ -433,11 +428,9 @@ if (esMain(import.meta)) {
 	console.log();
 	for (const result of results) {
 		console.log(
-			`${blueBright(bold(result.file))}:${
-				yellow(
-					(result.line + 1).toString(),
-				)
-			}:${yellow((result.character + 1).toString())}`,
+			`${blueBright(bold(result.file))}:${yellow(
+				(result.line + 1).toString(),
+			)}:${yellow((result.character + 1).toString())}`,
 		);
 		console.log(redBright(bold(`⤷ ${result.codePath}`)));
 		console.log(result.formatted);

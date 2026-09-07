@@ -14,10 +14,11 @@ async getToneCount(): Promise<MaybeNotKnown<number>>;
 
 ```ts
 async getToneInfo(toneId: number): Promise<
-	{
-		duration: number;
-		name: string;
-	} | undefined
+	| {
+			duration: number;
+			name: string;
+	  }
+	| undefined
 >;
 ```
 
@@ -39,10 +40,11 @@ async setConfiguration(
 
 ```ts
 async getConfiguration(): Promise<
-	{
-		defaultToneId: number;
-		defaultVolume: number;
-	} | undefined
+	| {
+			defaultToneId: number;
+			defaultVolume: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -65,10 +67,11 @@ async stopPlaying(): Promise<SupervisionResult | undefined>;
 
 ```ts
 async getPlaying(): Promise<
-	{
-		toneId: number;
-		volume?: number;
-	} | undefined
+	| {
+			toneId: number;
+			volume?: number;
+	  }
+	| undefined
 >;
 ```
 

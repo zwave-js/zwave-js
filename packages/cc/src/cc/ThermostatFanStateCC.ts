@@ -11,6 +11,7 @@ import {
 	validatePayload,
 } from "@zwave-js/core";
 import { getEnumMemberName } from "@zwave-js/shared";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -43,15 +44,11 @@ import type { CCParsingContext } from "../lib/traits.js";
 export const ThermostatFanStateCCValues = V.defineCCValues(
 	CommandClasses["Thermostat Fan State"],
 	{
-		...V.staticPropertyWithName(
-			"fanState",
-			"state",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				states: enumValuesToMetadataStates(ThermostatFanState),
-				label: "Thermostat fan state",
-			},
-		),
+		...V.staticPropertyWithName("fanState", "state", {
+			...ValueMetadata.ReadOnlyUInt8,
+			states: enumValuesToMetadataStates(ThermostatFanState),
+			label: "Thermostat fan state",
+		}),
 	},
 );
 
@@ -68,7 +65,7 @@ export class ThermostatFanStateCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: ThermostatFanStateCCAPI, { property }) {
+		return async function (this: ThermostatFanStateCCAPI, { property }) {
 			switch (property) {
 				case "state":
 					return this.get();
@@ -90,12 +87,11 @@ export class ThermostatFanStateCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ThermostatFanStateCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ThermostatFanStateCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return response?.state;
 		}
@@ -108,9 +104,7 @@ export class ThermostatFanStateCCAPI extends CCAPI {
 export class ThermostatFanStateCC extends CommandClass {
 	declare ccCommand: ThermostatFanStateCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -150,7 +144,8 @@ export class ThermostatFanStateCC extends CommandClass {
 		if (currentStatus) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: "received current thermostat fan state: "
+				message:
+					"received current thermostat fan state: "
 					+ getEnumMemberName(ThermostatFanState, currentStatus),
 				direction: "inbound",
 			});

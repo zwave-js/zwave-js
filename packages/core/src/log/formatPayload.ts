@@ -20,9 +20,7 @@ export function formatLogPayload(
 	return ret;
 }
 
-function asArray(
-	nested: LogPayload | LogPayload[] | undefined,
-): LogPayload[] {
+function asArray(nested: LogPayload | LogPayload[] | undefined): LogPayload[] {
 	if (nested == undefined) return [];
 	return Array.isArray(nested) ? nested : [nested];
 }
@@ -111,9 +109,12 @@ function renderText(
 				contentPad + (isLast ? child[0] : "├─" + child[0].slice(2)),
 			);
 			out.push(
-				...child.slice(1).map((line) =>
-					contentPad + (isLast ? line : "│ " + line.slice(2))
-				),
+				...child
+					.slice(1)
+					.map(
+						(line) =>
+							contentPad + (isLast ? line : "│ " + line.slice(2)),
+					),
 			);
 		} else {
 			const content: string[] = [];
@@ -137,9 +138,8 @@ function renderDict(
 	const stringKeyLengths = entries
 		.filter(([, value]) => typeof value === "string")
 		.map(([key]) => key.length);
-	const maxKeyLength = stringKeyLengths.length > 0
-		? Math.max(...stringKeyLengths)
-		: 0;
+	const maxKeyLength =
+		stringKeyLengths.length > 0 ? Math.max(...stringKeyLengths) : 0;
 	// All values start in the same column, one space after the longest key
 	const valuePad = pad + " ".repeat(maxKeyLength + 2);
 	const valueWidth = Math.max(width - valuePad.length, 16);
@@ -149,11 +149,13 @@ function renderDict(
 				.split("\n")
 				.flatMap((line) => wrap(line, valueWidth));
 			out.push(
-				(pad
+				(
+					pad
 					+ key
 					+ ":"
 					+ " ".repeat(maxKeyLength - key.length + 1)
-					+ first).trimEnd(),
+					+ first
+				).trimEnd(),
 			);
 			out.push(...rest.map((line) => (valuePad + line).trimEnd()));
 		} else {

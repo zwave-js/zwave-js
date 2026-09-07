@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -55,14 +56,11 @@ import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 export const HumidityControlModeCCValues = V.defineCCValues(
 	CommandClasses["Humidity Control Mode"],
 	{
-		...V.staticProperty(
-			"mode",
-			{
-				...ValueMetadata.UInt8,
-				states: enumValuesToMetadataStates(HumidityControlMode),
-				label: "Humidity control mode",
-			},
-		),
+		...V.staticProperty("mode", {
+			...ValueMetadata.UInt8,
+			states: enumValuesToMetadataStates(HumidityControlMode),
+			label: "Humidity control mode",
+		}),
 		...V.staticProperty("supportedModes", undefined, { internal: true }),
 	},
 );
@@ -83,7 +81,7 @@ export class HumidityControlModeCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: HumidityControlModeCCAPI,
 			{ property },
 			value,
@@ -113,7 +111,7 @@ export class HumidityControlModeCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: HumidityControlModeCCAPI, { property }) {
+		return async function (this: HumidityControlModeCCAPI, { property }) {
 			switch (property) {
 				case "mode":
 					return this.get();
@@ -134,12 +132,11 @@ export class HumidityControlModeCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			HumidityControlModeCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<HumidityControlModeCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return response?.mode;
 		}
@@ -174,12 +171,11 @@ export class HumidityControlModeCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			HumidityControlModeCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<HumidityControlModeCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedModes;
 	}
 }
@@ -190,9 +186,7 @@ export class HumidityControlModeCCAPI extends CCAPI {
 export class HumidityControlModeCC extends CommandClass {
 	declare ccCommand: HumidityControlModeCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -221,16 +215,13 @@ export class HumidityControlModeCC extends CommandClass {
 		if (supportedModes) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: logText(
-					"received supported humidity control modes:",
-					{
-						nested: logList(
-							supportedModes.map((mode) =>
-								getEnumMemberName(HumidityControlMode, mode)
-							),
+				message: logText("received supported humidity control modes:", {
+					nested: logList(
+						supportedModes.map((mode) =>
+							getEnumMemberName(HumidityControlMode, mode),
 						),
-					},
-				),
+					),
+				}),
 				direction: "inbound",
 			});
 		} else {
@@ -274,7 +265,8 @@ export class HumidityControlModeCC extends CommandClass {
 		if (currentMode) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: "received current humidity control mode: "
+				message:
+					"received current humidity control mode: "
 					+ getEnumMemberName(HumidityControlMode, currentMode),
 				direction: "inbound",
 			});
@@ -290,9 +282,7 @@ export interface HumidityControlModeCCSetOptions {
 @CCCommand(HumidityControlModeCommand.Set)
 @useSupervision()
 export class HumidityControlModeCCSet extends HumidityControlModeCC {
-	public constructor(
-		options: WithAddress<HumidityControlModeCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<HumidityControlModeCCSetOptions>) {
 		super(options);
 		this.mode = options.mode;
 	}
@@ -382,9 +372,7 @@ export interface HumidityControlModeCCSupportedReportOptions {
 
 @CCCommand(HumidityControlModeCommand.SupportedReport)
 @ccValueProperty("supportedModes", HumidityControlModeCCValues.supportedModes)
-export class HumidityControlModeCCSupportedReport
-	extends HumidityControlModeCC
-{
+export class HumidityControlModeCCSupportedReport extends HumidityControlModeCC {
 	public constructor(
 		options: WithAddress<HumidityControlModeCCSupportedReportOptions>,
 	) {
@@ -437,7 +425,7 @@ export class HumidityControlModeCCSupportedReport
 			message: {
 				"supported modes": logList(
 					this.supportedModes.map((mode) =>
-						getEnumMemberName(HumidityControlMode, mode)
+						getEnumMemberName(HumidityControlMode, mode),
 					),
 				),
 			},

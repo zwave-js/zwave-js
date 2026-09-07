@@ -1,4 +1,5 @@
 import { type BytesView, noop } from "@zwave-js/shared";
+
 import type { SerialLogger } from "../log/Logger.js";
 import {
 	BootloaderParser,
@@ -8,6 +9,7 @@ import { CLIParser } from "../parsers/CLIParser.js";
 import { SerialAPIParser } from "../parsers/SerialAPIParser.js";
 import type { ZWaveSerialFrame } from "../parsers/ZWaveSerialFrame.js";
 import type { ZWaveSerialMode } from "../serialport/definitions.js";
+
 import { mergeReadableStreams } from "./Merge.js";
 import { SerialModeSwitch } from "./SerialModeSwitch.js";
 
@@ -23,9 +25,7 @@ export class ZWaveSerialParser {
 
 		// -> Bootloader mode
 		// This one looks for NUL chars which terminate each bootloader output screen
-		const bootloaderScreenParser = new BootloaderScreenParser(
-			logger,
-		);
+		const bootloaderScreenParser = new BootloaderScreenParser(logger);
 		// This one parses the bootloader output into a more usable format
 		const bootloaderParser = new BootloaderParser();
 

@@ -16,10 +16,12 @@ import {
 	getCCName,
 } from "@zwave-js/core";
 import { pick } from "@zwave-js/shared";
+
 import type { Driver } from "../../driver/Driver.js";
 import type { DeviceClass } from "../DeviceClass.js";
 import type { ZWaveNodeValueEventCallbacks } from "../_Types.js";
 import * as nodeUtils from "../utils.js";
+
 import { NodeWakeupMixin } from "./30_Wakeup.js";
 
 /** Defines functionality of Z-Wave nodes related to the value DB */
@@ -48,7 +50,8 @@ export interface NodeValues {
 	getValueMetadata(valueId: ValueID): ValueMetadata;
 }
 
-export abstract class NodeValuesMixin extends NodeWakeupMixin
+export abstract class NodeValuesMixin
+	extends NodeWakeupMixin
 	implements NodeValues
 {
 	public constructor(
@@ -61,19 +64,17 @@ export abstract class NodeValuesMixin extends NodeWakeupMixin
 	) {
 		// Define this node's intrinsic endpoint as the root device (0)
 		super(nodeId, driver, endpointIndex, deviceClass, supportedCCs);
-		this._valueDB = valueDB
-			?? new ValueDB(nodeId, driver.valueDB!, driver.metadataDB!);
+		this._valueDB =
+			valueDB ?? new ValueDB(nodeId, driver.valueDB!, driver.metadataDB!);
 
 		// Pass value events to our listeners
-		for (
-			const event of [
-				"value added",
-				"value updated",
-				"value removed",
-				"value notification",
-				"metadata updated",
-			] as const
-		) {
+		for (const event of [
+			"value added",
+			"value updated",
+			"value removed",
+			"value notification",
+			"metadata updated",
+		] as const) {
 			this._valueDB.on(event, this.translateValueEvent.bind(this, event));
 		}
 	}
@@ -98,8 +99,9 @@ export abstract class NodeValuesMixin extends NodeWakeupMixin
 		let valueOptions: Required<CCValueOptions> | undefined;
 		let meta: ValueMetadata | undefined;
 		if (definedCCValues) {
-			const value = Object.values(definedCCValues)
-				.find((v) => v?.is(valueId));
+			const value = Object.values(definedCCValues).find((v) =>
+				v?.is(valueId),
+			);
 			if (value) {
 				if (typeof value !== "function") {
 					meta = value.meta;
@@ -134,8 +136,8 @@ export abstract class NodeValuesMixin extends NodeWakeupMixin
 
 		// If this is a metadata event, make sure we return the merged metadata
 		if ("metadata" in outArg) {
-			(outArg as unknown as MetadataUpdatedArgs).metadata = this
-				.getValueMetadata(arg);
+			(outArg as unknown as MetadataUpdatedArgs).metadata =
+				this.getValueMetadata(arg);
 		}
 
 		const ccInstance = CommandClass.createInstanceUnchecked(
@@ -190,12 +192,10 @@ export abstract class NodeValuesMixin extends NodeWakeupMixin
 				message: `[translateValueEvent: ${eventName}]
   is root endpoint:        ${!arg.endpoint}
   is application CC:       ${applicationCCs.includes(arg.commandClass)}
-  should hide root values: ${
-					nodeUtils.shouldHideRootApplicationCCValues(
-						this.driver,
-						this.id,
-					)
-				}`,
+  should hide root values: ${nodeUtils.shouldHideRootApplicationCCValues(
+		this.driver,
+		this.id,
+  )}`,
 				level: "silly",
 			});
 		}
@@ -211,12 +211,10 @@ export abstract class NodeValuesMixin extends NodeWakeupMixin
 		) {
 			// Iterate through all possible non-root endpoints of this node and
 			// check if there is a value ID that mirrors root endpoint functionality
-			for (
-				const endpoint of nodeUtils.getEndpointIndizes(
-					this.driver,
-					this.id,
-				)
-			) {
+			for (const endpoint of nodeUtils.getEndpointIndizes(
+				this.driver,
+				this.id,
+			)) {
 				const possiblyMirroredValueID: ValueID = {
 					// same CC, property and key
 					...pick(arg, ["commandClass", "property", "propertyKey"]),
@@ -226,8 +224,7 @@ export abstract class NodeValuesMixin extends NodeWakeupMixin
 				if (this.valueDB.hasValue(possiblyMirroredValueID)) {
 					if (loglevel === "silly") {
 						this.driver.controllerLog.logNode(this.id, {
-							message:
-								`[translateValueEvent: ${eventName}] found mirrored value ID on different endpoint, ignoring event:
+							message: `[translateValueEvent: ${eventName}] found mirrored value ID on different endpoint, ignoring event:
   commandClass: ${getCCName(possiblyMirroredValueID.commandClass)}
   endpoint:     ${possiblyMirroredValueID.endpoint}
   property:     ${possiblyMirroredValueID.property}

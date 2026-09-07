@@ -22,6 +22,7 @@ import {
 } from "@zwave-js/serial";
 import { containsCC } from "@zwave-js/serial/serialapi";
 import { getEnumMemberName } from "@zwave-js/shared";
+
 import type { Driver } from "../driver/Driver.js";
 import type { TransactionQueue } from "../driver/Queue.js";
 import type { Transaction } from "../driver/Transaction.js";
@@ -64,9 +65,10 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 
 		this.logger.log({
 			level: actualLevel,
-			message: typeof message === "string"
-				? message
-				: formatLogPayload(message),
+			message:
+				typeof message === "string"
+					? message
+					: formatLogPayload(message),
 			direction: getDirectionPrefix("none"),
 			context: { source: "driver", direction: "none" },
 		});
@@ -129,7 +131,8 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 		if (!this.isDriverLogVisible()) return;
 		if (nodeId == undefined) nodeId = message.getNodeId();
 		if (
-			nodeId != undefined && !this.container.isNodeLoggingVisible(nodeId)
+			nodeId != undefined
+			&& !this.container.isNodeLoggingVisible(nodeId)
 		) {
 			return;
 		}
@@ -142,9 +145,10 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 			this.logger.log({
 				level: DRIVER_LOGLEVEL,
 				primaryTags: tagify(logEntry.tags),
-				secondaryTags: secondaryTags && secondaryTags.length > 0
-					? tagify(secondaryTags)
-					: undefined,
+				secondaryTags:
+					secondaryTags && secondaryTags.length > 0
+						? tagify(secondaryTags)
+						: undefined,
 				message: JSON.stringify(logEntry),
 				// Since we are programming a controller, responses are always inbound
 				// (not to confuse with the message type, which may be Request or Response)
@@ -182,9 +186,10 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 
 			this.logger.log({
 				level: DRIVER_LOGLEVEL,
-				secondaryTags: secondaryTags && secondaryTags.length > 0
-					? tagify(secondaryTags)
-					: undefined,
+				secondaryTags:
+					secondaryTags && secondaryTags.length > 0
+						? tagify(secondaryTags)
+						: undefined,
 				message: msg,
 				// Since we are programming a controller, responses are always inbound
 				// (not to confuse with the message type, which may be Request or Response)
@@ -207,26 +212,27 @@ export class DriverLogger extends ZWaveLoggerBase<DriverLogContext> {
 				for (const trns of queue.transactions) {
 					// TODO: This formatting should be shared with the other logging methods
 					const node = trns.message.tryGetNode(this.driver);
-					const prefix = trns.message.type === MessageType.Request
-						? "[REQ]"
-						: "[RES]";
-					const postfix = node != undefined
-						? ` [Node ${node.id}, ${
-							getEnumMemberName(
-								NodeStatus,
-								node.status,
-							)
-						}]`
-						: "";
+					const prefix =
+						trns.message.type === MessageType.Request
+							? "[REQ]"
+							: "[RES]";
+					const postfix =
+						node != undefined
+							? ` [Node ${node.id}, ${getEnumMemberName(
+									NodeStatus,
+									node.status,
+								)}]`
+							: "";
 					const command = containsCC(trns.message)
 						? `: ${trns.message.command.constructor.name}`
 						: "";
 					items.push(
 						`${prefix} ${
 							FunctionType[trns.message.functionType]
-						}${command}${postfix} (P: ${
-							getEnumMemberName(MessagePriority, trns.priority)
-						})`,
+						}${command}${postfix} (P: ${getEnumMemberName(
+							MessagePriority,
+							trns.priority,
+						)})`,
 					);
 				}
 			} else {

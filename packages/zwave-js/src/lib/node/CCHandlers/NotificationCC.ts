@@ -38,10 +38,9 @@ import {
 	setTimer,
 	stringify,
 } from "@zwave-js/shared";
+
 import type { ZWaveNode } from "../Node.js";
-import type {
-	ZWaveNotificationCallbackArgs_NotificationCC,
-} from "../_Types.js";
+import type { ZWaveNotificationCallbackArgs_NotificationCC } from "../_Types.js";
 import type { NodeValues } from "../mixins/40_Values.js";
 
 export interface NotificationHandlerStore {
@@ -64,11 +63,9 @@ export function handleNotificationReport(
 	if (command.notificationType == undefined) {
 		if (command.alarmType == undefined) {
 			ctx.logNode(node.id, {
-				message: `received unsupported notification ${
-					stringify(
-						command,
-					)
-				}`,
+				message: `received unsupported notification ${stringify(
+					command,
+				)}`,
 				direction: "inbound",
 			});
 		}
@@ -103,18 +100,17 @@ export function handleNotificationReport(
 					);
 					if (targetValueConfig?.type !== "state") continue;
 
-					const valueId = NotificationCCValues
-						.notificationVariable(
-							targetNotification.name,
-							targetValueConfig.variableName,
-						).endpoint(command.endpointIndex);
+					const valueId = NotificationCCValues.notificationVariable(
+						targetNotification.name,
+						targetValueConfig.variableName,
+					).endpoint(command.endpointIndex);
 
 					if (match.action.type === "clear") {
 						// Only clear if the variable currently reflects this specific event,
 						// to avoid spurious updates when multiple targets share the same variable.
 						if (
 							node.valueDB.getValue(valueId)
-								=== target.notificationEvent
+							=== target.notificationEvent
 						) {
 							node.valueDB.setValue(valueId, UNKNOWN_STATE);
 						}
@@ -126,12 +122,13 @@ export function handleNotificationReport(
 							&& (target.notificationEvent === 0x16
 								|| target.notificationEvent === 0x17)
 						) {
-							const simpleDoorStateId = NotificationCCValues
-								.deprecated_doorStateSimple
-								.endpoint(command.endpointIndex);
+							const simpleDoorStateId =
+								NotificationCCValues.deprecated_doorStateSimple.endpoint(
+									command.endpointIndex,
+								);
 							if (
 								node.valueDB.getValue(simpleDoorStateId)
-									=== target.notificationEvent
+								=== target.notificationEvent
 							) {
 								node.valueDB.setValue(
 									simpleDoorStateId,
@@ -164,8 +161,7 @@ export function handleNotificationReport(
 		const notificationName = notification.name;
 
 		ctx.logNode(node.id, {
-			message:
-				`[handleNotificationReport] notificationName: ${notificationName}`,
+			message: `[handleNotificationReport] notificationName: ${notificationName}`,
 			level: "silly",
 		});
 
@@ -183,8 +179,8 @@ export function handleNotificationReport(
 
 		const setUnknownStateIdle = (prevValue?: number) => {
 			// Find the value for the unknown notification variable bucket
-			const unknownNotificationVariableValueId = NotificationCCValues
-				.unknownNotificationVariable(
+			const unknownNotificationVariableValueId =
+				NotificationCCValues.unknownNotificationVariable(
 					command.notificationType!,
 					notificationName,
 				).endpoint(command.endpointIndex);
@@ -197,7 +193,7 @@ export function handleNotificationReport(
 			if (prevValue == undefined || currentValue === prevValue) {
 				node.valueDB.setValue(
 					unknownNotificationVariableValueId,
-					0, /* idle */
+					0 /* idle */,
 				);
 			}
 		};
@@ -239,11 +235,11 @@ export function handleNotificationReport(
 				message: `[handleNotificationReport] valueConfig:
   label: ${valueConfig.label}
   ${
-					valueConfig.type === "event"
-						? "type: event"
-						: `type: state
+		valueConfig.type === "event"
+			? "type: event"
+			: `type: state
   variableName: ${valueConfig.variableName}`
-				}`,
+  }`,
 				level: "silly",
 			});
 		} else {
@@ -264,8 +260,7 @@ export function handleNotificationReport(
 			allowIdleReset = valueConfig.idle;
 		} else {
 			// This is an event
-			const endpoint = node.getEndpoint(command.endpointIndex)
-				?? node;
+			const endpoint = node.getEndpoint(command.endpointIndex) ?? node;
 
 			// Build the notification event args
 			const eventArgs: ZWaveNotificationCallbackArgs_NotificationCC = {
@@ -356,8 +351,8 @@ export function handleNotificationReport(
 			);
 		} else {
 			// Collect unknown values in an "unknown" bucket
-			const unknownValue = NotificationCCValues
-				.unknownNotificationVariable(
+			const unknownValue =
+				NotificationCCValues.unknownNotificationVariable(
 					command.notificationType,
 					notificationName,
 				);
@@ -374,18 +369,16 @@ export function handleNotificationReport(
 			// we may need to set "fake" values for these to distinguish them
 			// from states without enum values
 			const enumBehavior = valueConfig
-				? getNotificationEnumBehavior(
-					notification,
-					valueConfig,
-				)
+				? getNotificationEnumBehavior(notification, valueConfig)
 				: "extend";
 
-			const valueWithEnum = enumBehavior === "replace"
-				? command.eventParameters
-				: getNotificationStateValueWithEnum(
-					value,
-					command.eventParameters,
-				);
+			const valueWithEnum =
+				enumBehavior === "replace"
+					? command.eventParameters
+					: getNotificationStateValueWithEnum(
+							value,
+							command.eventParameters,
+						);
 			node.valueDB.setValue(valueId, valueWithEnum);
 		} else {
 			node.valueDB.setValue(valueId, value);
@@ -403,10 +396,8 @@ export function handleNotificationReport(
 				message: `[handleNotificationReport] scheduling idle reset`,
 				level: "silly",
 			});
-			scheduleNotificationIdleReset(
-				store,
-				valueId,
-				() => setStateIdle(value),
+			scheduleNotificationIdleReset(store, valueId, () =>
+				setStateIdle(value),
 			);
 		}
 	} else {
@@ -438,11 +429,9 @@ function handleKnownNotification(
 	const unlockEvents = new Set([0x02, 0x04, 0x06]);
 	const doorStatusEvents = [
 		// Actual status
-		0x16,
-		0x17,
+		0x16, 0x17,
 		// Synthetic status with enum (deprecated)
-		0x1600,
-		0x1601,
+		0x1600, 0x1601,
 	];
 	if (
 		// Access Control, manual/keypad/rf/auto (un)lock operation
@@ -457,16 +446,12 @@ function handleKnownNotification(
 		// different key. This way the device can notify devices which don't belong
 		// to the S2 Access Control key group of changes in its state.
 
-		const isLocked = lockEvents.has(
-			command.notificationEvent as number,
-		);
+		const isLocked = lockEvents.has(command.notificationEvent as number);
 
 		// Update the current lock status
 		if (node.supportsCC(CommandClasses["Door Lock"])) {
 			node.valueDB.setValue(
-				DoorLockCCValues.currentMode.endpoint(
-					command.endpointIndex,
-				),
+				DoorLockCCValues.currentMode.endpoint(command.endpointIndex),
 				isLocked ? DoorLockMode.Secured : DoorLockMode.Unsecured,
 			);
 		}
@@ -488,7 +473,8 @@ function handleKnownNotification(
 
 		// To work around this, we synthesize a stable door/window state that only
 		// exposes tilt after we've actually seen a tilted notification.
-		const isTilted = command.notificationEvent === 0x16
+		const isTilted =
+			command.notificationEvent === 0x16
 			&& command.eventParameters === 0x01;
 		const openingStateValue = NotificationCCValues.openingState;
 		const openingStateValueId = openingStateValue.endpoint(
@@ -535,10 +521,7 @@ function handleKnownNotification(
 			tiltValueWasCreated = true;
 		}
 		if (tiltValueWasCreated) {
-			node.valueDB.setValue(
-				tiltValueId,
-				isTilted ? 0x01 : 0x00,
-			);
+			node.valueDB.setValue(tiltValueId, isTilted ? 0x01 : 0x00);
 		}
 	} else if (
 		// Access Control, all user codes deleted

@@ -2,17 +2,18 @@ import {
 	type DeferredPromise,
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
+
 import { type Timer, setTimer } from "./Timers.js";
 
 /** Allows waiting for something for a given amount of time, after which the expectation will automatically be rejected. */
-export class TimedExpectation<TResult = void, TPredicate = never>
-	implements PromiseLike<TResult>
-{
+export class TimedExpectation<
+	TResult = void,
+	TPredicate = never,
+> implements PromiseLike<TResult> {
 	public constructor(
 		timeoutMs: number,
 		predicate?: (input: TPredicate) => boolean,
-		timeoutErrorMessage: string =
-			"Expectation was not fulfilled within the timeout",
+		timeoutErrorMessage: string = "Expectation was not fulfilled within the timeout",
 		preventDefault: boolean = false,
 	) {
 		this.promise = createDeferredPromise<TResult>();

@@ -16,6 +16,7 @@ import {
 } from "@zwave-js/core";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 class RelatedBasicCCGet extends BasicCCGet {
@@ -90,10 +91,7 @@ integrationTest.sequential(
 	"Command relations deduplicate physical transmissions through the Driver",
 	{
 		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Basic,
-				CommandClasses.Supervision,
-			],
+			commandClasses: [CommandClasses.Basic, CommandClasses.Supervision],
 		},
 		additionalDriverOptions: {
 			testingHooks: {
@@ -143,11 +141,12 @@ integrationTest.sequential(
 			const createSet = (
 				targetValue: number,
 				endpointIndex: number = 0,
-			) => new RelatedBasicCCSet({
-				nodeId: 2,
-				endpointIndex,
-				targetValue,
-			});
+			) =>
+				new RelatedBasicCCSet({
+					nodeId: 2,
+					endpointIndex,
+					targetValue,
+				});
 
 			// Exercise in-flight attachment replay and independent expiry
 			blockNextGet();
@@ -166,8 +165,9 @@ integrationTest.sequential(
 				onProgress: ({ state }) => lateProgress.push(state),
 			});
 
-			await t.expect(late, "redundant caller expiry").rejects
-				.toMatchObject({
+			await t
+				.expect(late, "redundant caller expiry")
+				.rejects.toMatchObject({
 					code: ZWaveErrorCodes.Controller_MessageExpired,
 				});
 			t.expect(driver["queue"].currentTransaction?.priority).toBe(
@@ -209,8 +209,7 @@ integrationTest.sequential(
 			);
 			control.release.resolve();
 			const [successfulFirstResult, successfulSecondResult] =
-				await Promise
-					.all([successfulFirst, successfulSecond]);
+				await Promise.all([successfulFirst, successfulSecond]);
 			t.expect(successfulFirstResult).toBe(successfulSecondResult);
 			t.expect(control.getCount).toBe(successfulCount + 1);
 
@@ -226,29 +225,24 @@ integrationTest.sequential(
 				...commandOptions,
 				priority: MessagePriority.Poll,
 			});
-			const rejectedSecond = driver.sendCommand(
-				createGet(2),
-				{
-					...commandOptions,
-					priority: MessagePriority.Poll,
-				},
-			);
+			const rejectedSecond = driver.sendCommand(createGet(2), {
+				...commandOptions,
+				priority: MessagePriority.Poll,
+			});
 			await driver.rejectTransactions(
 				(transaction) => transaction.priority === MessagePriority.Poll,
 				"rejected for testing",
 			);
-			await t.expect(
-				rejectedFirst,
-				"first attached physical failure",
-			).rejects.toMatchObject({
-				code: ZWaveErrorCodes.Controller_MessageDropped,
-			});
-			await t.expect(
-				rejectedSecond,
-				"second attached physical failure",
-			).rejects.toMatchObject({
-				code: ZWaveErrorCodes.Controller_MessageDropped,
-			});
+			await t
+				.expect(rejectedFirst, "first attached physical failure")
+				.rejects.toMatchObject({
+					code: ZWaveErrorCodes.Controller_MessageDropped,
+				});
+			await t
+				.expect(rejectedSecond, "second attached physical failure")
+				.rejects.toMatchObject({
+					code: ZWaveErrorCodes.Controller_MessageDropped,
+				});
 			control.release.resolve();
 			await rejectionBlocker;
 			t.expect(control.getCount).toBe(rejectedCount + 1);
@@ -277,12 +271,7 @@ integrationTest.sequential(
 				priority: MessagePriority.Controller,
 			});
 			control.release.resolve();
-			await Promise.all([
-				blocker,
-				unrelated,
-				queuedFirst,
-				queuedSecond,
-			]);
+			await Promise.all([blocker, unrelated, queuedFirst, queuedSecond]);
 			t.expect(control.setValues).toEqual([1, 10]);
 
 			// Supersede a queued command before transmission
@@ -293,10 +282,7 @@ integrationTest.sequential(
 				commandOptions,
 			);
 			await control.started;
-			const superseded = driver.sendCommand(
-				createSet(1),
-				commandOptions,
-			);
+			const superseded = driver.sendCommand(createSet(1), commandOptions);
 			const supersededResult = superseded.catch((error) => error);
 			const superseding = driver.sendCommand(
 				createSet(2),
@@ -358,11 +344,7 @@ integrationTest.sequential(
 				commandOptions,
 			);
 			control.release.resolve();
-			await Promise.all([
-				protectedBlocker,
-				protectedOlder,
-				enabledNewer,
-			]);
+			await Promise.all([protectedBlocker, protectedOlder, enabledNewer]);
 			t.expect(control.setValues).toEqual([3]);
 
 			blockNextGet();
@@ -616,10 +598,7 @@ integrationTest.sequential(
 				),
 			]);
 			control.release.resolve();
-			await Promise.all([
-				concreteBlocker,
-				concrete,
-			]);
+			await Promise.all([concreteBlocker, concrete]);
 			t.expect(control.setValues).toEqual([9, 9, 11, 11, 12]);
 
 			// Exclude completed transactions from synchronous deduplication
@@ -664,9 +643,7 @@ integrationTest.sequential(
 					}
 				},
 			});
-			const failedOriginalResult = failedOriginal.catch(
-				(error) => error,
-			);
+			const failedOriginalResult = failedOriginal.catch((error) => error);
 			await driver.rejectTransactions(
 				(transaction) => transaction.priority === MessagePriority.Poll,
 				"rejected for retry test",

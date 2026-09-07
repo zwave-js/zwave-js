@@ -23,7 +23,7 @@ tasks:
 # Auto-install VSCode extensions
 vscode:
   extensions:
-    - dprint.dprint
+    - oxc.oxc-vscode
     - dbaeumer.vscode-eslint
     - EditorConfig.EditorConfig
     - zwave-js.config-editor

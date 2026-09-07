@@ -9,7 +9,7 @@ export function combinations(...fragments: string[][]): string[] {
 		for (const fragment of fragments[i]) {
 			recurse(
 				i + 1,
-				current + ((current && fragment) ? " " : "") + fragment,
+				current + (current && fragment ? " " : "") + fragment,
 			);
 		}
 	};
@@ -42,8 +42,7 @@ const ccAndCommandNames = combinations(
 			["", "Set", "Report", "Set/Get", "Get/Set", "Get"],
 		),
 	],
-)
-	.filter((w) => w.includes(" "));
+).filter((w) => w.includes(" "));
 
 export const fixedMultiWordNames = [
 	...ccAndCommandNames,
@@ -189,12 +188,7 @@ export function isEndOfSentence(suffix: string, strict: boolean): boolean {
 	}
 	if (suffix === " - " || suffix === " / ") return true;
 	suffix = suffix.trim();
-	return [
-		".",
-		":",
-		";",
-		"(",
-	].some((c) => suffix.endsWith(c));
+	return [".", ":", ";", "("].some((c) => suffix.endsWith(c));
 }
 
 export function isHyphenatedWord(str: string): boolean {

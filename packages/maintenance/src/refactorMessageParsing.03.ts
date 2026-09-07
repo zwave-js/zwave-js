@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+
 import { Project, SyntaxKind } from "ts-morph";
 
 async function main() {
@@ -6,9 +7,9 @@ async function main() {
 		tsConfigFilePath: "packages/zwave-js/tsconfig.json",
 	});
 
-	const sourceFiles = project.getSourceFiles().filter((file) =>
-		file.getFilePath().includes("lib/serialapi/")
-	);
+	const sourceFiles = project
+		.getSourceFiles()
+		.filter((file) => file.getFilePath().includes("lib/serialapi/"));
 	for (const file of sourceFiles) {
 		const fromImplsReturningSelf = file
 			.getDescendantsOfKind(SyntaxKind.MethodDeclaration)
@@ -31,11 +32,13 @@ async function main() {
 				return method
 					.getDescendantsOfKind(SyntaxKind.ReturnStatement)
 					.map((ret) =>
-						ret.getExpressionIfKind(SyntaxKind.NewExpression)
+						ret.getExpressionIfKind(SyntaxKind.NewExpression),
 					)
-					.filter((newexp) =>
-						newexp?.getExpressionIfKind(SyntaxKind.Identifier)
-							?.getText() === clsName
+					.filter(
+						(newexp) =>
+							newexp
+								?.getExpressionIfKind(SyntaxKind.Identifier)
+								?.getText() === clsName,
 					)
 					.filter((n) => n != undefined);
 			},

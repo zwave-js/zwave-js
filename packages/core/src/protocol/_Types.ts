@@ -5,7 +5,7 @@ export enum ExplorerFrameCommand {
 }
 
 export enum ChannelConfiguration {
-	"Classic" = 0,
+	Classic = 0,
 	"Classic & LR A" = 1,
 	"Classic & LR B" = 2,
 	"LR A & B" = 3,

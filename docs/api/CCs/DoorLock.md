@@ -8,19 +8,20 @@
 
 ```ts
 async getCapabilities(): Promise<
-	{
-		autoRelockSupported: boolean;
-		blockToBlockSupported: boolean;
-		boltSupported: boolean;
-		doorSupported: boolean;
-		holdAndReleaseSupported: boolean;
-		latchSupported: boolean;
-		supportedDoorLockModes: readonly DoorLockMode[];
-		supportedInsideHandles: DoorHandleStatus;
-		supportedOperationTypes: readonly DoorLockOperationType[];
-		supportedOutsideHandles: DoorHandleStatus;
-		twistAssistSupported: boolean;
-	} | undefined
+	| {
+			autoRelockSupported: boolean;
+			blockToBlockSupported: boolean;
+			boltSupported: boolean;
+			doorSupported: boolean;
+			holdAndReleaseSupported: boolean;
+			latchSupported: boolean;
+			supportedDoorLockModes: readonly DoorLockMode[];
+			supportedInsideHandles: DoorHandleStatus;
+			supportedOperationTypes: readonly DoorLockOperationType[];
+			supportedOutsideHandles: DoorHandleStatus;
+			twistAssistSupported: boolean;
+	  }
+	| undefined
 >;
 ```
 
@@ -28,17 +29,18 @@ async getCapabilities(): Promise<
 
 ```ts
 async get(): Promise<
-	{
-		boltStatus?: "locked" | "unlocked";
-		currentMode: DoorLockMode;
-		doorStatus?: "open" | "closed";
-		duration?: Duration;
-		insideHandlesCanOpenDoor: DoorHandleStatus;
-		latchStatus?: "open" | "closed";
-		lockTimeout?: number;
-		outsideHandlesCanOpenDoor: DoorHandleStatus;
-		targetMode?: DoorLockMode;
-	} | undefined
+	| {
+			boltStatus?: "locked" | "unlocked";
+			currentMode: DoorLockMode;
+			doorStatus?: "open" | "closed";
+			duration?: Duration;
+			insideHandlesCanOpenDoor: DoorHandleStatus;
+			latchStatus?: "open" | "closed";
+			lockTimeout?: number;
+			outsideHandlesCanOpenDoor: DoorHandleStatus;
+			targetMode?: DoorLockMode;
+	  }
+	| undefined
 >;
 ```
 
@@ -53,48 +55,45 @@ async set(
 ### `setConfiguration`
 
 ```ts
-async setConfiguration(
-	configuration: {
-		operationType: DoorLockOperationType.Timed;
-		lockTimeoutConfiguration: number;
-		outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		// V4+
-		autoRelockTime?: number;
-		holdAndReleaseTime?: number;
-		twistAssist?: boolean;
-		blockToBlock?: boolean;
-	},
-): Promise<SupervisionResult | undefined>;
+async setConfiguration(configuration: {
+	operationType: DoorLockOperationType.Timed;
+	lockTimeoutConfiguration: number;
+	outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+	insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+	// V4+
+	autoRelockTime?: number;
+	holdAndReleaseTime?: number;
+	twistAssist?: boolean;
+	blockToBlock?: boolean;
+}): Promise<SupervisionResult | undefined>;
 
-async setConfiguration(
-	configuration: {
-		operationType: DoorLockOperationType.Constant;
-		outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		// V4+
-		autoRelockTime?: number;
-		holdAndReleaseTime?: number;
-		twistAssist?: boolean;
-		blockToBlock?: boolean;
-	},
-): Promise<SupervisionResult | undefined>;
+async setConfiguration(configuration: {
+	operationType: DoorLockOperationType.Constant;
+	outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+	insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+	// V4+
+	autoRelockTime?: number;
+	holdAndReleaseTime?: number;
+	twistAssist?: boolean;
+	blockToBlock?: boolean;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getConfiguration`
 
 ```ts
 async getConfiguration(): Promise<
-	{
-		autoRelockTime?: number;
-		blockToBlock?: boolean;
-		holdAndReleaseTime?: number;
-		insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		lockTimeoutConfiguration?: number;
-		operationType: DoorLockOperationType;
-		outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
-		twistAssist?: boolean;
-	} | undefined
+	| {
+			autoRelockTime?: number;
+			blockToBlock?: boolean;
+			holdAndReleaseTime?: number;
+			insideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+			lockTimeoutConfiguration?: number;
+			operationType: DoorLockOperationType;
+			outsideHandlesCanOpenDoorConfiguration: DoorHandleStatus;
+			twistAssist?: boolean;
+	  }
+	| undefined
 >;
 ```
 

@@ -1,4 +1,5 @@
 import type { InterviewStage, ValueID } from "../index_browser.js";
+
 import type { LogPayload, MessageRecord } from "./LogPayload.js";
 import type { DataDirection, LogContext } from "./shared.js";
 
@@ -21,17 +22,20 @@ export interface Interviewable {
 // FIXME: Do we need this to be a separate type?
 export type NodeLogContext = LogContext & { nodeId: number; type: "node" };
 
+// oxfmt-ignore
 export type ControllerNodeLogContext =
 	& LogContext<"controller">
 	& NodeLogContext
 	& { endpoint?: number; direction: string };
 
 // FIXME: Do we need this to be a separate type?
+// oxfmt-ignore
 export type ValueLogContext =
 	& LogContext
 	& ValueID
 	& { nodeId: number; type: "value" };
 
+// oxfmt-ignore
 export type ControllerValueLogContext =
 	& LogContext<"controller">
 	& ValueLogContext

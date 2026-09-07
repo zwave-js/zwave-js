@@ -15,10 +15,7 @@ export class DeviceClass {
 	) {
 		this.basic = basic;
 		this.generic = getGenericDeviceClass(generic);
-		this.specific = getSpecificDeviceClass(
-			generic,
-			specific,
-		);
+		this.specific = getSpecificDeviceClass(generic, specific);
 	}
 
 	public readonly basic: BasicDeviceClass;

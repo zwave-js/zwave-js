@@ -1,9 +1,11 @@
 import { Bytes } from "@zwave-js/shared";
+
 import { digest } from "../crypto/index.js";
 import { SecurityClass } from "../definitions/SecurityClass.js";
 import { dskToString } from "../dsk/index.js";
 import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { parseBitMask } from "../values/Primitive.js";
+
 import {
 	ProvisioningInformationType,
 	QRCodeVersion,
@@ -43,7 +45,7 @@ async function parseQRCodeStringInternal(
 	const expectedChecksum = readUInt16(qr, 4);
 	if (!parseSubsets) {
 		// If we are not parsing subsets, just validate the checksum for the entire QR code
-		if (await computeChecksum(qr, qr.length) !== expectedChecksum) {
+		if ((await computeChecksum(qr, qr.length)) !== expectedChecksum) {
 			fail("invalid checksum");
 		}
 	}
@@ -100,7 +102,7 @@ async function parseQRCodeStringInternal(
 			parseSubsets
 			&& hasProductID
 			&& hasProductType
-			&& await computeChecksum(qr, offset) === expectedChecksum
+			&& (await computeChecksum(qr, offset)) === expectedChecksum
 		) {
 			return ret;
 		}
@@ -112,7 +114,7 @@ async function parseQRCodeStringInternal(
 	}
 
 	// Final checksum validation
-	if (await computeChecksum(qr, offset) !== expectedChecksum) {
+	if ((await computeChecksum(qr, offset)) !== expectedChecksum) {
 		fail("invalid checksum");
 	}
 

@@ -42,10 +42,7 @@
 			"label": "Motion Sensitivity",
 			"description": "8 = high; 255 = low",
 			"valueSize": 2,
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [8, 255] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [8, 255] }],
 			"defaultValue": 15,
 			"options": [
 				{
@@ -262,10 +259,7 @@
 			"label": "Brightness Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 2678400] }],
 			"defaultValue": 3600,
 			"options": [
 				{
@@ -301,10 +295,7 @@
 			"label": "Temperature/Humidity Report Interval",
 			"valueSize": 4,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 2678400] }],
 			"defaultValue": 3600,
 			"options": [
 				{

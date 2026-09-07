@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import { CONFIG_OPTION } from "../jsonSelectors.js";
 import { type JSONCRule, getJSONNumber } from "../utils.js";
 
@@ -20,7 +21,8 @@ export const noValueInOptionLabel: JSONCRule.RuleModule = {
 				if (
 					node.value.type !== "JSONLiteral"
 					|| typeof node.value.value !== "string"
-				) return;
+				)
+					return;
 
 				const value = node.value.value;
 				if (
@@ -29,8 +31,10 @@ export const noValueInOptionLabel: JSONCRule.RuleModule = {
 				) {
 					// Allow fully-numeric options that are different from their value
 					if (isOnlyNumeric.test(value)) {
-						const optionValue = getJSONNumber(node.parent, "value")
-							?.value;
+						const optionValue = getJSONNumber(
+							node.parent,
+							"value",
+						)?.value;
 						if (optionValue !== parseFloat(value)) return;
 					}
 

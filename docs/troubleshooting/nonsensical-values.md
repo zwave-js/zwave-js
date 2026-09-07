@@ -57,6 +57,6 @@ All of these will automatically be dropped/ignored by Z-Wave JS. Unfortunately, 
 1. Check the background noise in your network, near the controller and reporting nodes. If that's high, find countermeasures. **Z-Wave JS UI** for example has [some tools](https://zwave-js.github.io/zwave-js-ui/#/usage/nodes_healthcheck) to do this.
 1. [Reduce the reporting frequency of devices](troubleshooting/network-health.md#optimizing-the-reporting-configuration). Less noise and less packets that can be corrupted.
 1. Include problematic devices with encryption. This will make sure that the payload is unchanged, and since the encryption is node-specific this will also prevent commands being attributed to other nodes, simply because it cannot be decrypted in that case:
-   - Prefer `Security S2` if supported by the device (Z-Wave JS automatically chooses this when using the default inclusion method)
-   - Otherwise, use `Security S0`. Note that this isn't generally recommended due to the communication overhead, but it can help in this case.
+    - Prefer `Security S2` if supported by the device (Z-Wave JS automatically chooses this when using the default inclusion method)
+    - Otherwise, use `Security S0`. Note that this isn't generally recommended due to the communication overhead, but it can help in this case.
 1. As an alternative to encryption, configure supporting devices to use the `CRC16 CC` for transmitting. That adds an additional checksum which should spot errors inside the payload. It won't detect cases where only the node ID and other protocol bytes get scrambled though.

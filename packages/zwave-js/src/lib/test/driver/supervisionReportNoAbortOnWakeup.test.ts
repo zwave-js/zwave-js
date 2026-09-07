@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	BasicCCReport,
 	Security2CC,
@@ -17,7 +19,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -70,9 +72,9 @@ integrationTest(
 			// Sync the SPAN by sending a command to the node
 			node.markAsAwake();
 			mockNode.autoAckControllerFrames = true;
-			await node.commandClasses.Basic
-				.withOptions({ useSupervision: false })
-				.set(0);
+			await node.commandClasses.Basic.withOptions({
+				useSupervision: false,
+			}).set(0);
 			node.markAsAsleep();
 			mockNode.autoAckControllerFrames = false;
 
@@ -135,13 +137,12 @@ integrationTest(
 
 			// Assert: The SupervisionCCReport should not be re-transmitted.
 			// The command is S2-wrapped, so check for the inner CC.
-			const supervisionReports = mockController.receivedHostMessages
-				.filter(
+			const supervisionReports =
+				mockController.receivedHostMessages.filter(
 					(msg) =>
 						msg instanceof SendDataBridgeRequest
 						&& (msg.command instanceof SupervisionCCReport
-							|| msg.command
-									?.encapsulated
+							|| msg.command?.encapsulated
 								instanceof SupervisionCCReport),
 				);
 			t.expect(supervisionReports.length).toBe(1);

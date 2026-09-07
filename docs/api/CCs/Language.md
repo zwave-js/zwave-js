@@ -8,10 +8,11 @@
 
 ```ts
 async get(): Promise<
-	{
-		country: MaybeNotKnown<string>;
-		language: string;
-	} | undefined
+	| {
+			country: MaybeNotKnown<string>;
+			language: string;
+	  }
+	| undefined
 >;
 ```
 

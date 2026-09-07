@@ -64,10 +64,11 @@ async verifyNetworkKey(): Promise<void>;
 
 ```ts
 async getSupportedCommands(): Promise<
-	{
-		controlledCCs: CommandClasses[];
-		supportedCCs: CommandClasses[];
-	} | undefined
+	| {
+			controlledCCs: CommandClasses[];
+			supportedCCs: CommandClasses[];
+	  }
+	| undefined
 >;
 ```
 

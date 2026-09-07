@@ -8,10 +8,11 @@
 
 ```ts
 async get(): Promise<
-	{
-		setbackState: SetbackState;
-		setbackType: SetbackType;
-	} | undefined
+	| {
+			setbackState: SetbackState;
+			setbackType: SetbackType;
+	  }
+	| undefined
 >;
 ```
 
@@ -29,10 +30,7 @@ async set(
 ### `SetbackSpecialState`
 
 ```ts
-type SetbackSpecialState =
-	| "Frost Protection"
-	| "Energy Saving"
-	| "Unused";
+type SetbackSpecialState = "Frost Protection" | "Energy Saving" | "Unused";
 ```
 
 ### `SetbackState`

@@ -39,8 +39,9 @@ export function getProtocolDataRateOrThrow(
 	channels: MaybeNotKnown<readonly ChannelInfo[]>,
 	channel: number,
 ): ProtocolDataRate {
-	const protocolDataRate = channels?.find((ch) => ch.channel === channel)
-		?.dataRate;
+	const protocolDataRate = channels?.find(
+		(ch) => ch.channel === channel,
+	)?.dataRate;
 	if (protocolDataRate == undefined) {
 		throw new ZWaveError(
 			`The channel ${channel} is not supported in the current region`,

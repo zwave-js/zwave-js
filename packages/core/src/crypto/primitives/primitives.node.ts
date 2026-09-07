@@ -1,6 +1,8 @@
+import crypto from "node:crypto";
+
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { CryptoPrimitives, KeyPair } from "@zwave-js/shared/bindings";
-import crypto from "node:crypto";
+
 import {
 	BLOCK_SIZE,
 	decodeX25519KeyDER,
@@ -83,14 +85,7 @@ function encryptAES128OFB(
 	iv: BytesView,
 ): Promise<BytesView> {
 	return Promise.resolve(
-		encrypt(
-			"aes-128-ofb",
-			BLOCK_SIZE,
-			true,
-			plaintext,
-			key,
-			iv,
-		),
+		encrypt("aes-128-ofb", BLOCK_SIZE, true, plaintext, key, iv),
 	);
 }
 
@@ -101,14 +96,7 @@ function decryptAES128OFB(
 	iv: BytesView,
 ): Promise<BytesView> {
 	return Promise.resolve(
-		decrypt(
-			"aes-128-ofb",
-			BLOCK_SIZE,
-			true,
-			ciphertext,
-			key,
-			iv,
-		),
+		decrypt("aes-128-ofb", BLOCK_SIZE, true, ciphertext, key, iv),
 	);
 }
 
@@ -119,14 +107,7 @@ function encryptAES256OFB(
 	iv: BytesView,
 ): Promise<BytesView> {
 	return Promise.resolve(
-		encrypt(
-			"aes-256-ofb",
-			BLOCK_SIZE,
-			true,
-			plaintext,
-			key,
-			iv,
-		),
+		encrypt("aes-256-ofb", BLOCK_SIZE, true, plaintext, key, iv),
 	);
 }
 
@@ -137,14 +118,7 @@ function decryptAES256OFB(
 	iv: BytesView,
 ): Promise<BytesView> {
 	return Promise.resolve(
-		decrypt(
-			"aes-256-ofb",
-			BLOCK_SIZE,
-			true,
-			ciphertext,
-			key,
-			iv,
-		),
+		decrypt("aes-256-ofb", BLOCK_SIZE, true, ciphertext, key, iv),
 	);
 }
 
@@ -154,14 +128,7 @@ function encryptAES128CBC(
 	iv: BytesView,
 ): Promise<BytesView> {
 	return Promise.resolve(
-		encrypt(
-			"aes-128-cbc",
-			BLOCK_SIZE,
-			false,
-			plaintext,
-			key,
-			iv,
-		),
+		encrypt("aes-128-cbc", BLOCK_SIZE, false, plaintext, key, iv),
 	);
 }
 
@@ -172,14 +139,7 @@ function decryptAES256CBC(
 	iv: BytesView,
 ): Promise<BytesView> {
 	return Promise.resolve(
-		decrypt(
-			"aes-256-cbc",
-			BLOCK_SIZE,
-			true,
-			ciphertext,
-			key,
-			iv,
-		),
+		decrypt("aes-256-cbc", BLOCK_SIZE, true, ciphertext, key, iv),
 	);
 }
 
@@ -236,20 +196,18 @@ function digest(
 	data: BytesView,
 ): Promise<BytesView> {
 	// Node.js uses slightly different algorithm names than WebCrypto
-	const nodeAlgorithm = algorithm === "sha-1"
-		? "sha1"
-		: algorithm === "sha-256"
-		? "sha256"
-		: algorithm;
+	const nodeAlgorithm =
+		algorithm === "sha-1"
+			? "sha1"
+			: algorithm === "sha-256"
+				? "sha256"
+				: algorithm;
 	const hash = crypto.createHash(nodeAlgorithm);
 	hash.update(data);
 	return Promise.resolve(hash.digest());
 }
 
-function hmacSHA256(
-	key: BytesView,
-	data: BytesView,
-): Promise<BytesView> {
+function hmacSHA256(key: BytesView, data: BytesView): Promise<BytesView> {
 	const hmac = crypto.createHmac("sha256", key);
 	hmac.update(data);
 	return Promise.resolve(hmac.digest());
@@ -261,12 +219,9 @@ function encryptChaCha20Poly1305(
 	additionalData: BytesView,
 	plaintext: BytesView,
 ): Promise<{ ciphertext: BytesView; authTag: BytesView }> {
-	const cipher = crypto.createCipheriv(
-		"chacha20-poly1305",
-		key,
-		nonce,
-		{ authTagLength: 16 },
-	);
+	const cipher = crypto.createCipheriv("chacha20-poly1305", key, nonce, {
+		authTagLength: 16,
+	});
 	cipher.setAAD(additionalData, { plaintextLength: plaintext.length });
 
 	const ciphertext = Bytes.concat([cipher.update(plaintext), cipher.final()]);
@@ -282,12 +237,9 @@ function decryptChaCha20Poly1305(
 	ciphertext: BytesView,
 	authTag: BytesView,
 ): Promise<{ plaintext: BytesView; authOK: boolean }> {
-	const decipher = crypto.createDecipheriv(
-		"chacha20-poly1305",
-		key,
-		nonce,
-		{ authTagLength: 16 },
-	);
+	const decipher = crypto.createDecipheriv("chacha20-poly1305", key, nonce, {
+		authTagLength: 16,
+	});
 	decipher.setAAD(additionalData, { plaintextLength: ciphertext.length });
 	decipher.setAuthTag(authTag);
 
@@ -307,9 +259,7 @@ function decryptChaCha20Poly1305(
 }
 
 /** Takes an ECDH public KeyObject and returns the raw key as a buffer */
-function extractRawECDHPublicKey(
-	publicKey: crypto.KeyObject,
-): BytesView {
+function extractRawECDHPublicKey(publicKey: crypto.KeyObject): BytesView {
 	return decodeX25519KeyDER(
 		publicKey.export({
 			type: "spki",
@@ -319,9 +269,7 @@ function extractRawECDHPublicKey(
 }
 
 /** Converts a raw public key to an ECDH KeyObject */
-function importRawECDHPublicKey(
-	publicKey: BytesView,
-): crypto.KeyObject {
+function importRawECDHPublicKey(publicKey: BytesView): crypto.KeyObject {
 	return crypto.createPublicKey({
 		// oxlint-disable-next-line eslint/no-restricted-globals -- crypto API requires Buffer instances
 		key: Buffer.from(encodeX25519KeyDERSPKI(publicKey).buffer),
@@ -331,9 +279,7 @@ function importRawECDHPublicKey(
 }
 
 /** Takes an ECDH private KeyObject and returns the raw key as a buffer */
-function extractRawECDHPrivateKey(
-	privateKey: crypto.KeyObject,
-): BytesView {
+function extractRawECDHPrivateKey(privateKey: crypto.KeyObject): BytesView {
 	return decodeX25519KeyDER(
 		privateKey.export({
 			type: "pkcs8",
@@ -343,9 +289,7 @@ function extractRawECDHPrivateKey(
 }
 
 /** Converts a raw private key to an ECDH KeyObject */
-function importRawECDHPrivateKey(
-	privateKey: BytesView,
-): crypto.KeyObject {
+function importRawECDHPrivateKey(privateKey: BytesView): crypto.KeyObject {
 	return crypto.createPrivateKey({
 		// oxlint-disable-next-line eslint/no-restricted-globals -- crypto API requires Buffer instances
 		key: Buffer.from(encodeX25519KeyDERPKCS8(privateKey).buffer),
@@ -363,9 +307,7 @@ function generateECDHKeyPair(): Promise<KeyPair> {
 	return Promise.resolve({ publicKey, privateKey });
 }
 
-function keyPairFromRawECDHPrivateKey(
-	privateKey: BytesView,
-): Promise<KeyPair> {
+function keyPairFromRawECDHPrivateKey(privateKey: BytesView): Promise<KeyPair> {
 	const privateKeyObject = importRawECDHPrivateKey(privateKey);
 	const publicKeyObject = crypto.createPublicKey(privateKeyObject);
 	const publicKey = extractRawECDHPublicKey(publicKeyObject);

@@ -22,6 +22,7 @@ import {
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import sinon from "sinon";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,
@@ -272,8 +273,8 @@ integrationTest.sequential(
 			// After soft-resetting (done automatically), the controller should be sending normally again
 			await promise;
 			// And the controller should have been soft-reset
-			mockController.assertReceivedHostMessage((msg) =>
-				msg.functionType === FunctionType.SoftReset
+			mockController.assertReceivedHostMessage(
+				(msg) => msg.functionType === FunctionType.SoftReset,
 			);
 
 			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);

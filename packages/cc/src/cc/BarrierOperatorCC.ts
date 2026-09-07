@@ -29,6 +29,7 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -68,6 +69,7 @@ import {
 	SubsystemType,
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { ApplicationStatusCCRejectedRequest } from "./ApplicationStatusCC.js";
 
 export const BarrierOperatorCCValues = V.defineCCValues(
@@ -77,36 +79,27 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 			internal: true,
 		}),
 
-		...V.staticProperty(
-			"position",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Barrier Position",
-				unit: "%",
-				max: 100,
-			},
-		),
+		...V.staticProperty("position", {
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Barrier Position",
+			unit: "%",
+			max: 100,
+		}),
 
-		...V.staticProperty(
-			"targetState",
-			{
-				...ValueMetadata.UInt8,
-				label: "Target Barrier State",
-				states: enumValuesToMetadataStates(BarrierState, [
-					BarrierState.Open,
-					BarrierState.Closed,
-				]),
-			},
-		),
+		...V.staticProperty("targetState", {
+			...ValueMetadata.UInt8,
+			label: "Target Barrier State",
+			states: enumValuesToMetadataStates(BarrierState, [
+				BarrierState.Open,
+				BarrierState.Closed,
+			]),
+		}),
 
-		...V.staticProperty(
-			"currentState",
-			{
-				...ValueMetadata.ReadOnlyUInt8,
-				label: "Current Barrier State",
-				states: enumValuesToMetadataStates(BarrierState),
-			},
-		),
+		...V.staticProperty("currentState", {
+			...ValueMetadata.ReadOnlyUInt8,
+			label: "Current Barrier State",
+			states: enumValuesToMetadataStates(BarrierState),
+		}),
 
 		...V.dynamicPropertyAndKeyWithName(
 			"signalingState",
@@ -117,12 +110,10 @@ export const BarrierOperatorCCValues = V.defineCCValues(
 				&& typeof propertyKey === "number",
 			(subsystemType: SubsystemType) => ({
 				...ValueMetadata.UInt8,
-				label: `Signaling State (${
-					getEnumMemberName(
-						SubsystemType,
-						subsystemType,
-					)
-				})`,
+				label: `Signaling State (${getEnumMemberName(
+					SubsystemType,
+					subsystemType,
+				)})`,
 				states: enumValuesToMetadataStates(SubsystemState),
 			}),
 		),
@@ -156,9 +147,7 @@ export class BarrierOperatorCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			BarrierOperatorCCReport
-		>(
+		const response = await this.host.sendCommand<BarrierOperatorCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -197,12 +186,11 @@ export class BarrierOperatorCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			BarrierOperatorCCSignalingCapabilitiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<BarrierOperatorCCSignalingCapabilitiesReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedSubsystemTypes;
 	}
 
@@ -220,12 +208,11 @@ export class BarrierOperatorCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			subsystemType,
 		});
-		const response = await this.host.sendCommand<
-			BarrierOperatorCCEventSignalingReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<BarrierOperatorCCEventSignalingReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.subsystemState;
 	}
 
@@ -250,7 +237,7 @@ export class BarrierOperatorCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: BarrierOperatorCCAPI,
 			{ property, propertyKey },
 			value,
@@ -265,9 +252,10 @@ export class BarrierOperatorCCAPI extends CCAPI {
 					);
 				}
 
-				const targetValue = value === BarrierState.Closed
-					? BarrierState.Closed
-					: BarrierState.Open;
+				const targetValue =
+					value === BarrierState.Closed
+						? BarrierState.Closed
+						: BarrierState.Open;
 				return this.set(targetValue);
 			} else if (property === "signalingState") {
 				if (propertyKey == undefined) {
@@ -306,14 +294,15 @@ export class BarrierOperatorCCAPI extends CCAPI {
 		};
 
 		if (BarrierOperatorCCValues.targetState.is(valueId)) {
-			const currentStateValueId = BarrierOperatorCCValues.currentState
-				.endpoint(
+			const currentStateValueId =
+				BarrierOperatorCCValues.currentState.endpoint(
 					this.endpoint.index,
 				);
 
-			const targetValue = value === BarrierState.Closed
-				? BarrierState.Closed
-				: BarrierState.Open;
+			const targetValue =
+				value === BarrierState.Closed
+					? BarrierState.Closed
+					: BarrierState.Open;
 
 			return {
 				// This is the target value for a split target/current state pair.
@@ -350,11 +339,11 @@ export class BarrierOperatorCCAPI extends CCAPI {
 						);
 					} else if (this.isMulticast()) {
 						// Figure out which nodes were affected by this command
-						const affectedNodes = this.endpoint.node.physicalNodes
-							.filter((node) =>
+						const affectedNodes =
+							this.endpoint.node.physicalNodes.filter((node) =>
 								node
 									.getEndpoint(this.endpoint.index)
-									?.supportsCC(this.ccId)
+									?.supportsCC(this.ccId),
 							);
 						// and optimistically update the currentValue
 						for (const node of affectedNodes) {
@@ -376,8 +365,8 @@ export class BarrierOperatorCCAPI extends CCAPI {
 			};
 		} else if (BarrierOperatorCCValues.signalingState.is(valueId)) {
 			const subsystemType = propertyKey as SubsystemType;
-			const signalingStateValueId = BarrierOperatorCCValues
-				.signalingState(subsystemType).endpoint(
+			const signalingStateValueId =
+				BarrierOperatorCCValues.signalingState(subsystemType).endpoint(
 					this.endpoint.index,
 				);
 
@@ -395,7 +384,7 @@ export class BarrierOperatorCCAPI extends CCAPI {
 	};
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: BarrierOperatorCCAPI,
 			{ property, propertyKey },
 		) {
@@ -427,9 +416,7 @@ export class BarrierOperatorCCAPI extends CCAPI {
 export class BarrierOperatorCC extends CommandClass {
 	declare ccCommand: BarrierOperatorCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -472,15 +459,14 @@ export class BarrierOperatorCC extends CommandClass {
 				if (!isEnumMember(SubsystemType, subsystemType)) continue;
 
 				ctx.logNode(node.id, {
-					message: `Enabling subsystem ${
-						getEnumMemberName(
-							SubsystemType,
-							subsystemType,
-						)
-					}...`,
+					message: `Enabling subsystem ${getEnumMemberName(
+						SubsystemType,
+						subsystemType,
+					)}...`,
 					direction: "outbound",
 				});
-				await api.setEventSignaling(subsystemType, SubsystemState.On)
+				await api
+					.setEventSignaling(subsystemType, SubsystemState.On)
 					.catch(noop);
 			}
 		}
@@ -506,10 +492,9 @@ export class BarrierOperatorCC extends CommandClass {
 			tag: options?.tag,
 		});
 
-		const supportedSubsystems: SubsystemType[] = this.getValue(
-			ctx,
-			BarrierOperatorCCValues.supportedSubsystemTypes,
-		) ?? [];
+		const supportedSubsystems: SubsystemType[] =
+			this.getValue(ctx, BarrierOperatorCCValues.supportedSubsystemTypes)
+			?? [];
 
 		for (const subsystemType of supportedSubsystems) {
 			// Some devices report invalid subsystem types, but the CC API checks
@@ -517,23 +502,19 @@ export class BarrierOperatorCC extends CommandClass {
 			if (!isEnumMember(SubsystemType, subsystemType)) continue;
 
 			ctx.logNode(node.id, {
-				message: `Querying event signaling state for subsystem ${
-					getEnumMemberName(
-						SubsystemType,
-						subsystemType,
-					)
-				}...`,
+				message: `Querying event signaling state for subsystem ${getEnumMemberName(
+					SubsystemType,
+					subsystemType,
+				)}...`,
 				direction: "outbound",
 			});
 			const state = await api.getEventSignaling(subsystemType);
 			if (state != undefined) {
 				ctx.logNode(node.id, {
-					message: `Subsystem ${
-						getEnumMemberName(
-							SubsystemType,
-							subsystemType,
-						)
-					} has state ${getEnumMemberName(SubsystemState, state)}`,
+					message: `Subsystem ${getEnumMemberName(
+						SubsystemType,
+						subsystemType,
+					)} has state ${getEnumMemberName(SubsystemState, state)}`,
 					direction: "inbound",
 				});
 			}
@@ -562,9 +543,9 @@ function getCCResponseForBarrierOperatorCCSet(
 	if (
 		sent.isSinglecast()
 		&& !sent.isEncapsulatedWith(CommandClasses.Supervision)
-		&& ctx.getNode(sent.nodeId)?.supportsCC(
-			CommandClasses["Application Status"],
-		)
+		&& ctx
+			.getNode(sent.nodeId)
+			?.supportsCC(CommandClasses["Application Status"])
 	) {
 		return ApplicationStatusCCRejectedRequest;
 	}
@@ -574,9 +555,7 @@ function getCCResponseForBarrierOperatorCCSet(
 @expectedCCResponse(getCCResponseForBarrierOperatorCCSet)
 @useSupervision()
 export class BarrierOperatorCCSet extends BarrierOperatorCC {
-	public constructor(
-		options: WithAddress<BarrierOperatorCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<BarrierOperatorCCSetOptions>) {
 		super(options);
 		this.targetState = options.targetState;
 	}
@@ -620,9 +599,7 @@ export interface BarrierOperatorCCReportOptions {
 @ccValueProperty("currentState", BarrierOperatorCCValues.currentState)
 @ccValueProperty("position", BarrierOperatorCCValues.position)
 export class BarrierOperatorCCReport extends BarrierOperatorCC {
-	public constructor(
-		options: WithAddress<BarrierOperatorCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<BarrierOperatorCCReportOptions>) {
 		super(options);
 
 		// TODO: Check implementation:
@@ -680,9 +657,10 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
 			...super.toLogEntry(ctx),
 			message: {
 				"barrier position": maybeUnknownToString(this.position),
-				"barrier state": this.currentState != undefined
-					? getEnumMemberName(BarrierState, this.currentState)
-					: "unknown",
+				"barrier state":
+					this.currentState != undefined
+						? getEnumMemberName(BarrierState, this.currentState)
+						: "unknown",
 			},
 		};
 	}
@@ -702,13 +680,9 @@ export interface BarrierOperatorCCSignalingCapabilitiesReportOptions {
 	"supportedSubsystemTypes",
 	BarrierOperatorCCValues.supportedSubsystemTypes,
 )
-export class BarrierOperatorCCSignalingCapabilitiesReport
-	extends BarrierOperatorCC
-{
+export class BarrierOperatorCCSignalingCapabilitiesReport extends BarrierOperatorCC {
 	public constructor(
-		options: WithAddress<
-			BarrierOperatorCCSignalingCapabilitiesReportOptions
-		>,
+		options: WithAddress<BarrierOperatorCCSignalingCapabilitiesReportOptions>,
 	) {
 		super(options);
 
@@ -739,7 +713,7 @@ export class BarrierOperatorCCSignalingCapabilitiesReport
 			message: {
 				"supported types": logList(
 					this.supportedSubsystemTypes.map((t) =>
-						getEnumMemberName(SubsystemType, t)
+						getEnumMemberName(SubsystemType, t),
 					),
 				),
 			},
@@ -749,9 +723,7 @@ export class BarrierOperatorCCSignalingCapabilitiesReport
 
 @CCCommand(BarrierOperatorCommand.SignalingCapabilitiesGet)
 @expectedCCResponse(BarrierOperatorCCSignalingCapabilitiesReport)
-export class BarrierOperatorCCSignalingCapabilitiesGet
-	extends BarrierOperatorCC
-{}
+export class BarrierOperatorCCSignalingCapabilitiesGet extends BarrierOperatorCC {}
 
 // @publicAPI
 export interface BarrierOperatorCCEventSignalingSetOptions {

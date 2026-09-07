@@ -1,4 +1,5 @@
 import { CommandClasses } from "@zwave-js/core";
+
 import { CommandClass } from "../lib/CommandClass.js";
 import {
 	commandClass,

@@ -11,16 +11,17 @@ import {
 	type ReturnTypeOrStatic,
 	evalOrStatic,
 } from "@zwave-js/shared";
-import type { ValueIDProperties } from "./API.js";
 
 import { CCValues } from "../cc/_CCValues.generated.js";
+
+import type { ValueIDProperties } from "./API.js";
 
 function defineCCValues<T extends CommandClasses>(
 	commandClass: T,
 	_: Record<string, CCValueBlueprint | DynamicCCValueBlueprint<any[]>>,
 	// oxlint-disable-next-line typescript/ban-ts-comment
 	// @ts-ignore I know what I'm doing!
-): typeof import("../cc/_CCValues.generated.js").CCValues[T] {
+): (typeof import("../cc/_CCValues.generated.js").CCValues)[T] {
 	// oxlint-disable-next-line typescript/ban-ts-comment
 	// @ts-ignore I know what I'm doing!
 	return CCValues[commandClass];
@@ -61,9 +62,9 @@ export interface CCValueOptions {
 	autoCreate?:
 		| boolean
 		| ((
-			ctx: GetValueDB & GetDeviceConfig,
-			endpoint: EndpointId,
-		) => boolean);
+				ctx: GetValueDB & GetDeviceConfig,
+				endpoint: EndpointId,
+		  ) => boolean);
 }
 
 export const defaultCCValueOptions = {
@@ -79,45 +80,46 @@ export const defaultCCValueOptions = {
 export type ExpandRecursively<T> =
 	// Split functions with properties into the function and object parts
 	T extends (...args: infer A) => infer R
-		? [keyof T] extends [never] ? (...args: A) => ExpandRecursively<R>
-		:
-			& ((...args: A) => ExpandRecursively<R>)
-			& {
-				[P in keyof T]: ExpandRecursively<T[P]>;
-			}
-		// Expand object types
-		: T extends object
-			? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> }
-			: never
-		// Fallback to the type itself if no match
-		: T;
+		? [keyof T] extends [never]
+			? (...args: A) => ExpandRecursively<R>
+			: ((...args: A) => ExpandRecursively<R>) & {
+					[P in keyof T]: ExpandRecursively<T[P]>;
+				}
+		: // Expand object types
+			T extends object
+			? T extends infer O
+				? { [K in keyof O]: ExpandRecursively<O[K]> }
+				: never
+			: // Fallback to the type itself if no match
+				T;
 
 export type ExpandRecursivelySkipMeta<T> =
 	// Split functions with properties into the function and object parts
 	T extends (...args: infer A) => infer R
 		? [keyof T] extends [never]
 			? (...args: A) => ExpandRecursivelySkipMeta<R>
-		:
-			& ((...args: A) => ExpandRecursivelySkipMeta<R>)
-			& {
-				[P in keyof T]: ExpandRecursivelySkipMeta<T[P]>;
-			}
-		// Ignore the ValueMetadata type
-		: T extends ValueMetadata ? T
-		// Expand object types
-		: T extends object
-			? T extends infer O
-				? { [K in keyof O]: ExpandRecursivelySkipMeta<O[K]> }
-			: never
-		// Fallback to the type itself if no match
-		: T;
+			: ((...args: A) => ExpandRecursivelySkipMeta<R>) & {
+					[P in keyof T]: ExpandRecursivelySkipMeta<T[P]>;
+				}
+		: // Ignore the ValueMetadata type
+			T extends ValueMetadata
+			? T
+			: // Expand object types
+				T extends object
+				? T extends infer O
+					? { [K in keyof O]: ExpandRecursivelySkipMeta<O[K]> }
+					: never
+				: // Fallback to the type itself if no match
+					T;
 
 type InferArgs<T extends FnOrStatic<any, any>[]> = T extends [
 	(...args: infer A) => any,
 	...any,
-] ? A
-	: T extends [any, ...infer R] ? InferArgs<R>
-	: [];
+]
+	? A
+	: T extends [any, ...infer R]
+		? InferArgs<R>
+		: [];
 
 // Namespace for utilities to define CC values
 export const V = {
@@ -310,8 +312,7 @@ export interface StaticCCValue extends CCValue {
 }
 
 export type DynamicCCValue<TArgs extends any[] = any[]> =
-	& ExpandRecursivelySkipMeta<(...args: TArgs) => CCValue>
-	& {
+	ExpandRecursivelySkipMeta<(...args: TArgs) => CCValue> & {
 		/** Whether the given value ID matches this value definition */
 		is: CCValuePredicate;
 		readonly options: Required<CCValueOptions>;

@@ -20,6 +20,7 @@ import {
 } from "@zwave-js/core";
 import type { ZnifferDataMessage, ZnifferFrameInfo } from "@zwave-js/serial";
 import { buffer2hex, num2hex } from "@zwave-js/shared";
+
 import {
 	type BeamStop,
 	type LongRangeBeamStart,
@@ -60,18 +61,16 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 
 		this.logger.log({
 			level: actualLevel,
-			message: typeof message === "string"
-				? message
-				: formatLogPayload(message),
+			message:
+				typeof message === "string"
+					? message
+					: formatLogPayload(message),
 			direction: getDirectionPrefix("none"),
 			context: { source: "zniffer", direction: "none" },
 		});
 	}
 
-	public crcError(
-		frame: ZnifferDataMessage,
-		rssi?: RSSI,
-	): void {
+	public crcError(frame: ZnifferDataMessage, rssi?: RSSI): void {
 		if (!this.isLogVisible()) return;
 
 		const logEntry: MessageOrCCLogEntry = {
@@ -81,17 +80,20 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 				"protocol/data rate": znifferProtocolDataRateToString(
 					frame.protocolDataRate,
 				),
-				RSSI: rssi != undefined
-					? rssiToString(rssi)
-					: frame.rssiRaw.toString(),
+				RSSI:
+					rssi != undefined
+						? rssiToString(rssi)
+						: frame.rssiRaw.toString(),
 				payload: buffer2hex(frame.payload),
 			},
 		};
 
-		const msg = formatLogPayload(logText([], {
-			tags: logEntry.tags,
-			nested: toLogPayload(logEntry.message!),
-		}));
+		const msg = formatLogPayload(
+			logText([], {
+				tags: logEntry.tags,
+				nested: toLogPayload(logEntry.message!),
+			}),
+		);
 
 		try {
 			// If possible, include information about the CCs
@@ -140,7 +142,9 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 				logText([], { tags: logEntry.tags, nested }),
 			);
 
-			const homeId = mpdu.homeId.toString(16).padStart(8, "0")
+			const homeId = mpdu.homeId
+				.toString(16)
+				.padStart(8, "0")
 				.toLowerCase();
 
 			this.logger.log({
@@ -163,10 +167,12 @@ export class ZnifferLogger extends ZWaveLoggerBase<ZnifferLogContext> {
 			znifferFrameInfoToMPDULogContext(frameInfo),
 		);
 
-		const msg = formatLogPayload(logText([], {
-			tags: logEntry.tags,
-			nested: logEntry.message && toLogPayload(logEntry.message),
-		}));
+		const msg = formatLogPayload(
+			logText([], {
+				tags: logEntry.tags,
+				nested: logEntry.message && toLogPayload(logEntry.message),
+			}),
+		);
 
 		try {
 			// If possible, include information about the CCs

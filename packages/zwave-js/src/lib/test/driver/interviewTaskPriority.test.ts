@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { type CommandClass, WakeUpCCWakeUpNotification } from "@zwave-js/cc";
 import { CommandClasses, InterviewStage, NodeStatus } from "@zwave-js/core";
 import {
@@ -6,7 +8,7 @@ import {
 	MockZWaveFrameType,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
-import path from "node:path";
+
 import type { ZWaveNode } from "../../node/Node.js";
 import {
 	type IntegrationTestOptions,
@@ -31,10 +33,7 @@ const nodeCapabilities: IntegrationTestOptions["nodeCapabilities"] = [
 		capabilities: {
 			isListening: false,
 			isFrequentListening: false,
-			commandClasses: [
-				CommandClasses["Wake Up"],
-				CommandClasses.Version,
-			],
+			commandClasses: [CommandClasses["Wake Up"], CommandClasses.Version],
 		},
 	},
 	{
@@ -42,17 +41,12 @@ const nodeCapabilities: IntegrationTestOptions["nodeCapabilities"] = [
 		capabilities: {
 			isListening: true,
 			isFrequentListening: false,
-			commandClasses: [
-				CommandClasses.Version,
-			],
+			commandClasses: [CommandClasses.Version],
 		},
 	},
 ];
 
-const fixtureDir = path.join(
-	__dirname,
-	"fixtures/interviewTaskPriority",
-);
+const fixtureDir = path.join(__dirname, "fixtures/interviewTaskPriority");
 
 integrationTest(
 	"a sleeping node's interview is paused while asleep, and the listening node's interview proceeds",

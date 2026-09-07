@@ -1,6 +1,9 @@
 import { join } from "node:path";
+
 import { describe, expect, it, vi } from "vitest";
+
 import { DEVICES_DIR } from "../configEnv.js";
+
 import { SemanticSearchService } from "./service.js";
 import type { ParameterCorpusRecord } from "./types.js";
 

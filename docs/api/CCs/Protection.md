@@ -8,10 +8,11 @@
 
 ```ts
 async get(): Promise<
-	{
-		local: LocalProtectionState;
-		rf?: RFProtectionState;
-	} | undefined
+	| {
+			local: LocalProtectionState;
+			rf?: RFProtectionState;
+	  }
+	| undefined
 >;
 ```
 
@@ -28,12 +29,13 @@ async set(
 
 ```ts
 async getSupported(): Promise<
-	{
-		supportedLocalStates: LocalProtectionState[];
-		supportedRFStates: RFProtectionState[];
-		supportsExclusiveControl: boolean;
-		supportsTimeout: boolean;
-	} | undefined
+	| {
+			supportedLocalStates: LocalProtectionState[];
+			supportedRFStates: RFProtectionState[];
+			supportsExclusiveControl: boolean;
+			supportsTimeout: boolean;
+	  }
+	| undefined
 >;
 ```
 

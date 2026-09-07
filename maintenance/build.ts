@@ -40,13 +40,7 @@ async function main() {
 	console.log("Building maintenance project...");
 	await spawn(
 		"yarn",
-		[
-			"workspace",
-			"@zwave-js/maintenance",
-			"run",
-			"build",
-			...buildArgs,
-		],
+		["workspace", "@zwave-js/maintenance", "run", "build", ...buildArgs],
 		execOptions,
 	);
 
@@ -58,13 +52,7 @@ async function main() {
 	console.log("Building transformers...");
 	await spawn(
 		"yarn",
-		[
-			"workspace",
-			"@zwave-js/transformers",
-			"run",
-			"build",
-			...buildArgs,
-		],
+		["workspace", "@zwave-js/transformers", "run", "build", ...buildArgs],
 		execOptions,
 	);
 
@@ -110,13 +98,7 @@ async function main() {
 			console.log(`Building ${project}...`);
 			await spawn(
 				"yarn",
-				[
-					"workspace",
-					project,
-					"run",
-					"build",
-					...buildArgs,
-				],
+				["workspace", project, "run", "build", ...buildArgs],
 				execOptions,
 			);
 		}

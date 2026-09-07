@@ -3,6 +3,7 @@ import {
 	ApplicationUpdateTypes,
 } from "@zwave-js/serial/serialapi";
 import { Bytes } from "@zwave-js/shared";
+
 import { RemoveNodeReason } from "../../controller/Inclusion.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
@@ -27,9 +28,9 @@ integrationTest(
 				}),
 			);
 
-			await t.expect(nodeRemoved).resolves.toBe(
-				RemoveNodeReason.ProxyExcluded,
-			);
+			await t
+				.expect(nodeRemoved)
+				.resolves.toBe(RemoveNodeReason.ProxyExcluded);
 			t.expect(driver.controller.nodes.has(node.id)).toBe(false);
 		},
 	},

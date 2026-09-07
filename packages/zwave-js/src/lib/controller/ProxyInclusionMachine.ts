@@ -5,50 +5,54 @@ import {
 	StateMachine,
 	type StateMachineTransition,
 } from "@zwave-js/core";
+
 import type { ZWaveNode } from "../node/Node.js";
 
 export type ProxyInclusionState =
 	| {
-		value: "initial";
-	}
+			value: "initial";
+	  }
 	| {
-		value: "hasNIF";
-		nodeInfo: NodeUpdatePayload;
-		newNode: ZWaveNode;
-	}
+			value: "hasNIF";
+			nodeInfo: NodeUpdatePayload;
+			newNode: ZWaveNode;
+	  }
 	| {
-		value: "hasInitiate";
-		inclusionControllerNodeId: number;
-		includedNodeId: number;
-		step: InclusionControllerStep;
-	}
+			value: "hasInitiate";
+			inclusionControllerNodeId: number;
+			includedNodeId: number;
+			step: InclusionControllerStep;
+	  }
 	| {
-		value: "bootstrapping";
-		inclusionControllerNodeId: number;
-		includedNodeId: number;
-		step: InclusionControllerStep;
-		nodeInfo?: NodeUpdatePayload;
-		newNode?: ZWaveNode;
-		done: true;
-	}
+			value: "bootstrapping";
+			inclusionControllerNodeId: number;
+			includedNodeId: number;
+			step: InclusionControllerStep;
+			nodeInfo?: NodeUpdatePayload;
+			newNode?: ZWaveNode;
+			done: true;
+	  }
 	| {
-		value: "interview";
-		newNode: ZWaveNode;
-		done: true;
-	};
+			value: "interview";
+			newNode: ZWaveNode;
+			done: true;
+	  };
 
-export type ProxyInclusionMachineInput = {
-	value: "NIF";
-	nodeInfo: NodeUpdatePayload;
-	newNode: ZWaveNode;
-} | {
-	value: "INITIATE";
-	inclusionControllerNodeId: number;
-	includedNodeId: number;
-	step: InclusionControllerStep;
-} | {
-	value: "INITIATE_TIMEOUT" | "NIF_TIMEOUT";
-};
+export type ProxyInclusionMachineInput =
+	| {
+			value: "NIF";
+			nodeInfo: NodeUpdatePayload;
+			newNode: ZWaveNode;
+	  }
+	| {
+			value: "INITIATE";
+			inclusionControllerNodeId: number;
+			includedNodeId: number;
+			step: InclusionControllerStep;
+	  }
+	| {
+			value: "INITIATE_TIMEOUT" | "NIF_TIMEOUT";
+	  };
 
 export type ProxyInclusionMachine = StateMachine<
 	ProxyInclusionState,

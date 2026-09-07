@@ -106,9 +106,9 @@ interface HumidityControlSetpointCapabilities {
 ```ts
 enum HumidityControlSetpointType {
 	"N/A" = 0x00,
-	"Humidifier" = 0x01, // CC v1
+	Humidifier = 0x01, // CC v1
 	"De-humidifier" = 0x02, // CC v1
-	"Auto" = 0x03, // CC v2
+	Auto = 0x03, // CC v2
 }
 ```
 

@@ -1,0 +1,100 @@
+{
+	"printWidth": 80,
+	"tabWidth": 4,
+	"useTabs": true,
+	"semi": true,
+	"singleQuote": false,
+	"quoteProps": "as-needed",
+	"jsxSingleQuote": false,
+	"trailingComma": "all",
+	"bracketSpacing": true,
+	"arrowParens": "always",
+	"endOfLine": "lf",
+	"proseWrap": "preserve",
+	"experimentalOperatorPosition": "start",
+
+	"sortImports": {
+		"ignoreCase": false,
+		"order": "asc",
+		"groups": [
+			["side_effect"],
+			["builtin"],
+			["external", "type-external"],
+			["internal", "type-internal"],
+			["parent", "type-parent"],
+			["sibling", "type-sibling"],
+			["index", "type-index"],
+		],
+	},
+
+	"sortPackageJson": false,
+
+	"ignorePatterns": [
+		"**/build/**",
+		"**/node_modules/**",
+		"**/*-lock.json",
+		".github/workflows/**",
+		".github/prompts/**",
+		".github/aw/imports/**",
+		".yarn/plugins/**",
+		".yarn/releases/**",
+		".tmp/**",
+		".vscode/extensions/**",
+		"cache/**",
+		"packages/*/*.api.md",
+		"CHANGELOG*.md",
+		".yarnrc.yml",
+	],
+
+	"overrides": [
+		{
+			"files": ["**/*.md"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2,
+				"embeddedLanguageFormatting": "off",
+			},
+		},
+		{
+			"files": ["docs/**/*.md"],
+			"options": {
+				"useTabs": true,
+				"tabWidth": 4,
+			},
+		},
+		{
+			"files": ["**/_sidebar.md"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2,
+			},
+		},
+		{
+			"files": [".vscode/*.code-snippets"],
+			"options": {
+				"trailingComma": "none",
+			},
+		},
+		{
+			"files": ["**/package.json"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2,
+			},
+		},
+		{
+			"files": ["packages/config/config/**/*.json"],
+			"options": {
+				"printWidth": 120,
+			},
+		},
+		{
+			"files": ["**/*.yml", "**/*.yaml"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2,
+				"singleQuote": true,
+			},
+		},
+	],
+}

@@ -3,6 +3,7 @@ import { readJSON, writeTextFile } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import {
 	type MigrateNVMOptions,
 	json500To700,

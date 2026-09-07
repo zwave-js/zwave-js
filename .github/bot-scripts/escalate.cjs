@@ -49,8 +49,7 @@ async function main(param) {
 
 		// Create a new issue referencing the original discussion using GitHub's template
 		const issueTitle = context.payload.discussion.title;
-		const issueBody =
-			`### Discussed in https://github.com/${context.repo.owner}/${context.repo.repo}/discussions/${context.payload.discussion.number}
+		const issueBody = `### Discussed in https://github.com/${context.repo.owner}/${context.repo.repo}/discussions/${context.payload.discussion.number}
 
 <div type='discussions-op-text'>
 

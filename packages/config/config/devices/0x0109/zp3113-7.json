@@ -46,10 +46,7 @@
 			"label": "Humidity Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 50] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 50] }],
 			"defaultValue": 20,
 			"options": [
 				{
@@ -64,10 +61,7 @@
 			"label": "Light Reporting Threshold",
 			"valueSize": 1,
 			"unit": "%",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [5, 50] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [5, 50] }],
 			"defaultValue": 25,
 			"options": [
 				{

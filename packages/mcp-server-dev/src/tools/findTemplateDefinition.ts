@@ -1,11 +1,14 @@
+import { readFile } from "node:fs/promises";
+
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { clearTemplateCache, resolveImportPath } from "@zwave-js/config";
 import { tryParseParamNumber } from "@zwave-js/core";
 import { parse as parseJsonC } from "jsonc-parser";
-import { readFile } from "node:fs/promises";
+
 import { parseSymbols } from "../configDoc/configDocument.js";
 import { DEVICES_DIR, fs } from "../configEnv.js";
 import type { ToolHandler } from "../types.js";
+
 import { errorResult, textResult } from "./results.js";
 
 export const TOOL_NAME = "find_template_definition";
@@ -75,9 +78,8 @@ async function handleFindTemplateDefinition(
 		}
 
 		const hashIndex = specifier.indexOf("#");
-		const templateKey = hashIndex >= 0
-			? specifier.slice(hashIndex + 1)
-			: undefined;
+		const templateKey =
+			hashIndex >= 0 ? specifier.slice(hashIndex + 1) : undefined;
 
 		if (!templateKey) {
 			return textResult(
@@ -107,36 +109,36 @@ async function handleFindTemplateDefinition(
 	}
 }
 
-export const findTemplateDefinitionTool: ToolHandler<
-	FindTemplateDefinitionArgs
-> = {
-	name: TOOL_NAME,
-	description:
-		"Navigate to where an imported template is defined. Given a config file "
-		+ "and either an $import specifier or a parameter number that uses "
-		+ "$import, returns the target file and the line/column of the "
-		+ "definition (file start if the specifier has no #key).",
-	inputSchema: {
-		type: "object",
-		properties: {
-			filename: {
-				type: "string",
-				description:
-					"Absolute path to the config file the import appears in",
+export const findTemplateDefinitionTool: ToolHandler<FindTemplateDefinitionArgs> =
+	{
+		name: TOOL_NAME,
+		description:
+			"Navigate to where an imported template is defined. Given a config file "
+			+ "and either an $import specifier or a parameter number that uses "
+			+ "$import, returns the target file and the line/column of the "
+			+ "definition (file start if the specifier has no #key).",
+		inputSchema: {
+			type: "object",
+			properties: {
+				filename: {
+					type: "string",
+					description:
+						"Absolute path to the config file the import appears in",
+				},
+				specifier: {
+					type: "string",
+					description:
+						"The $import specifier to resolve, e.g. "
+						+ '"~/templates/master_template.json#base_enable_disable"',
+				},
+				parameter: {
+					type: "number",
+					description:
+						"Alternatively, a parameter number whose $import should be "
+						+ "resolved (used when specifier is omitted)",
+				},
 			},
-			specifier: {
-				type: "string",
-				description: "The $import specifier to resolve, e.g. "
-					+ "\"~/templates/master_template.json#base_enable_disable\"",
-			},
-			parameter: {
-				type: "number",
-				description:
-					"Alternatively, a parameter number whose $import should be "
-					+ "resolved (used when specifier is omitted)",
-			},
+			required: ["filename"],
 		},
-		required: ["filename"],
-	},
-	handler: handleFindTemplateDefinition,
-};
+		handler: handleFindTemplateDefinition,
+	};

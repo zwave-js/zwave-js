@@ -13,12 +13,14 @@ import {
 	tryParseRSSI,
 } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import { AssignPriorityReturnRouteRequestTransmitReport } from "../network-mgmt/AssignPriorityReturnRouteMessages.js";
 import { AssignPrioritySUCReturnRouteRequestTransmitReport } from "../network-mgmt/AssignPrioritySUCReturnRouteMessages.js";
 import { AssignReturnRouteRequestTransmitReport } from "../network-mgmt/AssignReturnRouteMessages.js";
 import { AssignSUCReturnRouteRequestTransmitReport } from "../network-mgmt/AssignSUCReturnRouteMessages.js";
 import { DeleteReturnRouteRequestTransmitReport } from "../network-mgmt/DeleteReturnRouteMessages.js";
 import { DeleteSUCReturnRouteRequestTransmitReport } from "../network-mgmt/DeleteSUCReturnRouteMessages.js";
+
 import {
 	SendDataBridgeRequest,
 	SendDataBridgeRequestTransmitReport,
@@ -89,11 +91,11 @@ export function parseTXReport(
 		ackRSSI: includeACK ? parseRSSI(buffer, 3) : undefined,
 		ackRepeaterRSSI: includeACK
 			? [
-				parseRSSI(buffer, 4),
-				parseRSSI(buffer, 5),
-				parseRSSI(buffer, 6),
-				parseRSSI(buffer, 7),
-			]
+					parseRSSI(buffer, 4),
+					parseRSSI(buffer, 5),
+					parseRSSI(buffer, 6),
+					parseRSSI(buffer, 7),
+				]
 			: undefined,
 		ackChannelNo: includeACK ? buffer[8] : undefined,
 		txChannelNo: buffer[9],
@@ -118,15 +120,9 @@ export function parseTXReport(
 		}
 	}
 	// Remove unused repeaters from arrays
-	ret.repeaterNodeIds = ret.repeaterNodeIds.slice(
-		0,
-		numRepeaters,
-	) as any;
+	ret.repeaterNodeIds = ret.repeaterNodeIds.slice(0, numRepeaters) as any;
 	if (ret.ackRepeaterRSSI) {
-		ret.ackRepeaterRSSI = ret.ackRepeaterRSSI.slice(
-			0,
-			numRepeaters,
-		) as any;
+		ret.ackRepeaterRSSI = ret.ackRepeaterRSSI.slice(0, numRepeaters) as any;
 	}
 	// Remove ACK RSSI if not available
 	if (ret.ackRSSI === RssiError.NotAvailable) {
@@ -182,7 +178,8 @@ export function encodeTXReport(report: SerializableTXReport): BytesView {
 	ret[12] = report.repeaterNodeIds?.[1] ?? 0;
 	ret[13] = report.repeaterNodeIds?.[2] ?? 0;
 	ret[14] = report.repeaterNodeIds?.[3] ?? 0;
-	ret[15] = (report.beam1000ms ? 0b0100_0000 : 0)
+	ret[15] =
+		(report.beam1000ms ? 0b0100_0000 : 0)
 		| (report.beam250ms ? 0b0010_0000 : 0)
 		| report.routeSpeed;
 	ret[16] = report.routingAttempts ?? 1;
@@ -210,21 +207,22 @@ export function txReportToLogDict(report: TXReport): MessageRecord {
 		// repeaters: report.numRepeaters,
 		...(report.repeaterNodeIds.length
 			? {
-				"repeater node IDs": report.repeaterNodeIds.join(", "),
-			}
+					"repeater node IDs": report.repeaterNodeIds.join(", "),
+				}
 			: {}),
 		"routing attempts": report.routingAttempts,
 		"protocol & route speed": protocolDataRateToString(report.routeSpeed),
 		"routing scheme": routingSchemeToString(report.routeSchemeState),
-		"ACK RSSI": report.ackRSSI != undefined
-			? rssiToString(report.ackRSSI)
-			: undefined,
+		"ACK RSSI":
+			report.ackRSSI != undefined
+				? rssiToString(report.ackRSSI)
+				: undefined,
 		...(report.ackRepeaterRSSI?.length
 			? {
-				"ACK RSSI on repeaters": report.ackRepeaterRSSI
-					.map((rssi) => rssiToString(rssi!))
-					.join(", "),
-			}
+					"ACK RSSI on repeaters": report.ackRepeaterRSSI
+						.map((rssi) => rssiToString(rssi!))
+						.join(", "),
+				}
 			: {}),
 		"ACK channel no.": report.ackChannelNo,
 		"TX channel no.": report.txChannelNo,
@@ -233,16 +231,15 @@ export function txReportToLogDict(report: TXReport): MessageRecord {
 		beam: report.beam1000ms
 			? "1000 ms"
 			: report.beam250ms
-			? "250 ms"
-			: undefined,
+				? "250 ms"
+				: undefined,
 	});
 	if (
 		report.failedRouteLastFunctionalNodeId
 		&& report.failedRouteFirstNonFunctionalNodeId
 	) {
-		ret[
-			"route failed here"
-		] = `${report.failedRouteLastFunctionalNodeId} -> ${report.failedRouteFirstNonFunctionalNodeId}`;
+		ret["route failed here"] =
+			`${report.failedRouteLastFunctionalNodeId} -> ${report.failedRouteFirstNonFunctionalNodeId}`;
 	}
 	if (report.txPower != undefined) ret["TX power"] = `${report.txPower} dBm`;
 	if (
@@ -252,9 +249,8 @@ export function txReportToLogDict(report: TXReport): MessageRecord {
 		ret["measured noise floor"] = rssiToString(report.measuredNoiseFloor);
 	}
 	if (report.destinationAckTxPower != undefined) {
-		ret[
-			"ACK TX power by destination"
-		] = `${report.destinationAckTxPower} dBm`;
+		ret["ACK TX power by destination"] =
+			`${report.destinationAckTxPower} dBm`;
 	}
 	if (
 		report.destinationAckMeasuredRSSI != undefined
@@ -343,13 +339,10 @@ export function isTransmitReport(msg: unknown): msg is TransmitReport {
 
 export function hasTXReport(
 	msg: unknown,
-): msg is
-	& (
-		| SendDataRequestTransmitReport
-		| SendDataBridgeRequestTransmitReport
-	)
-	& { txReport: TXReport }
-{
+): msg is (
+	| SendDataRequestTransmitReport
+	| SendDataBridgeRequestTransmitReport
+) & { txReport: TXReport } {
 	if (!msg) return false;
 	return (
 		(msg instanceof SendDataRequestTransmitReport

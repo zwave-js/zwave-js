@@ -2,32 +2,36 @@
 
 import {
 	CommandClasses,
-	type EndpointId,
-	type GetValueDB,
-	MAX_NODES,
 	type ValueID,
 	ValueMetadata,
-	ZWaveLibraryTypes,
+	type GetValueDB,
+	type EndpointId,
 	enumValuesToMetadataStates,
+	MAX_NODES,
+	ZWaveLibraryTypes,
 } from "@zwave-js/core";
 import { getEnumMemberName, num2hex } from "@zwave-js/shared";
+
 import {
 	irrigationValveIdToMetadataPrefix,
 	meterTypesToPropertyKey,
-	multilevelSwitchTypeProperties,
 	multilevelSwitchTypeToActions,
-	windowCoveringParameterToLevelChangeLabel,
+	multilevelSwitchTypeProperties,
 	windowCoveringParameterToMetadataStates,
+	windowCoveringParameterToLevelChangeLabel,
 } from "../lib/CCValueUtils.js";
 import { type CCValueOptions } from "../lib/Values.js";
 import {
 	AlarmSensorType,
 	BarrierState,
+	SubsystemType,
+	SubsystemState,
 	BatteryChargingStatus,
 	BatteryReplacementStatus,
 	BinarySensorType,
+	ScheduleOverrideType,
+	Weekday,
 	ColorComponent,
-	DeviceIdType,
 	DoorLockMode,
 	DoorLockOperationType,
 	EnergyProductionParameter,
@@ -35,23 +39,20 @@ import {
 	HumidityControlOperatingState,
 	HumidityControlSetpointType,
 	IrrigationSensorPolarity,
+	type ValveId,
+	DeviceIdType,
+	RateType,
+	SwitchType,
 	LocalProtectionState,
 	RFProtectionState,
-	RateType,
 	type ScheduleEntryLockScheduleKind,
-	ScheduleOverrideType,
-	SubsystemState,
-	SubsystemType,
-	SwitchType,
 	ThermostatFanMode,
 	ThermostatFanState,
 	ThermostatMode,
 	ThermostatOperatingState,
 	ThermostatSetpointType,
-	type UserCredentialKeyLockerEntryType,
 	type UserCredentialType,
-	type ValveId,
-	Weekday,
+	type UserCredentialKeyLockerEntryType,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
 
@@ -67,12 +68,13 @@ export const AlarmSensorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Alarm Sensor"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Alarm Sensor"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					const alarmName = getEnumMemberName(
 						AlarmSensorType,
@@ -89,10 +91,12 @@ export const AlarmSensorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Alarm Sensor"]
+				return (
+					valueId.commandClass === CommandClasses["Alarm Sensor"]
 					&& (({ property, propertyKey }) =>
 						property === "state"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -115,12 +119,13 @@ export const AlarmSensorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Alarm Sensor"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Alarm Sensor"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					const alarmName = getEnumMemberName(
 						AlarmSensorType,
@@ -139,10 +144,12 @@ export const AlarmSensorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Alarm Sensor"]
+				return (
+					valueId.commandClass === CommandClasses["Alarm Sensor"]
 					&& (({ property, propertyKey }) =>
 						property === "severity"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -165,12 +172,13 @@ export const AlarmSensorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Alarm Sensor"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Alarm Sensor"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					const alarmName = getEnumMemberName(
 						AlarmSensorType,
@@ -188,10 +196,12 @@ export const AlarmSensorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Alarm Sensor"]
+				return (
+					valueId.commandClass === CommandClasses["Alarm Sensor"]
 					&& (({ property, propertyKey }) =>
 						property === "duration"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -208,15 +218,18 @@ export const AlarmSensorCCValues = Object.freeze({
 			commandClass: CommandClasses["Alarm Sensor"],
 			property: "supportedSensorTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Alarm Sensor"],
-			endpoint,
-			property: "supportedSensorTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Alarm Sensor"],
+				endpoint,
+				property: "supportedSensorTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Alarm Sensor"]
+			return (
+				valueId.commandClass === CommandClasses["Alarm Sensor"]
 				&& valueId.property === "supportedSensorTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -238,15 +251,18 @@ export const AssociationCCValues = Object.freeze({
 			commandClass: CommandClasses.Association,
 			property: "hasLifeline",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Association,
-			endpoint,
-			property: "hasLifeline",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Association,
+				endpoint,
+				property: "hasLifeline",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Association
+			return (
+				valueId.commandClass === CommandClasses.Association
 				&& valueId.property === "hasLifeline"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -265,15 +281,18 @@ export const AssociationCCValues = Object.freeze({
 			commandClass: CommandClasses.Association,
 			property: "groupCount",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Association,
-			endpoint,
-			property: "groupCount",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Association,
+				endpoint,
+				property: "groupCount",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Association
+			return (
+				valueId.commandClass === CommandClasses.Association
 				&& valueId.property === "groupCount"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -298,12 +317,13 @@ export const AssociationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Association,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Association,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -311,10 +331,12 @@ export const AssociationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Association
+				return (
+					valueId.commandClass === CommandClasses.Association
 					&& (({ property, propertyKey }) =>
 						property === "maxNodes"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -337,12 +359,13 @@ export const AssociationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Association,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Association,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -350,10 +373,12 @@ export const AssociationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Association
+				return (
+					valueId.commandClass === CommandClasses.Association
 					&& (({ property, propertyKey }) =>
 						property === "nodeIds"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -373,16 +398,19 @@ export const AssociationGroupInfoCCValues = Object.freeze({
 			commandClass: CommandClasses["Association Group Information"],
 			property: "hasDynamicInfo",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Association Group Information"],
-			endpoint,
-			property: "hasDynamicInfo",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Association Group Information"],
+				endpoint,
+				property: "hasDynamicInfo",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Association Group Information"]
 				&& valueId.property === "hasDynamicInfo"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -408,13 +436,14 @@ export const AssociationGroupInfoCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass:
-						CommandClasses["Association Group Information"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Association Group Information"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -422,12 +451,14 @@ export const AssociationGroupInfoCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Association Group Information"]
 					&& (({ property, propertyKey }) =>
 						property === "name" && typeof propertyKey === "number")(
-							valueId,
-						);
+						valueId,
+					)
+				);
 			},
 			options: {
 				internal: true,
@@ -451,13 +482,14 @@ export const AssociationGroupInfoCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass:
-						CommandClasses["Association Group Information"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Association Group Information"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -465,12 +497,14 @@ export const AssociationGroupInfoCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Association Group Information"]
 					&& (({ property, propertyKey }) =>
 						property === "info" && typeof propertyKey === "number")(
-							valueId,
-						);
+						valueId,
+					)
+				);
 			},
 			options: {
 				internal: true,
@@ -494,13 +528,14 @@ export const AssociationGroupInfoCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass:
-						CommandClasses["Association Group Information"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Association Group Information"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -508,11 +543,13 @@ export const AssociationGroupInfoCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Association Group Information"]
 					&& (({ property, propertyKey }) =>
 						property === "issuedCommands"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -532,15 +569,18 @@ export const BarrierOperatorCCValues = Object.freeze({
 			commandClass: CommandClasses["Barrier Operator"],
 			property: "supportedSubsystemTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Barrier Operator"],
-			endpoint,
-			property: "supportedSubsystemTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Barrier Operator"],
+				endpoint,
+				property: "supportedSubsystemTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Barrier Operator"]
+			return (
+				valueId.commandClass === CommandClasses["Barrier Operator"]
 				&& valueId.property === "supportedSubsystemTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -559,15 +599,18 @@ export const BarrierOperatorCCValues = Object.freeze({
 			commandClass: CommandClasses["Barrier Operator"],
 			property: "position",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Barrier Operator"],
-			endpoint,
-			property: "position",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Barrier Operator"],
+				endpoint,
+				property: "position",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Barrier Operator"]
+			return (
+				valueId.commandClass === CommandClasses["Barrier Operator"]
 				&& valueId.property === "position"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -591,15 +634,18 @@ export const BarrierOperatorCCValues = Object.freeze({
 			commandClass: CommandClasses["Barrier Operator"],
 			property: "targetState",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Barrier Operator"],
-			endpoint,
-			property: "targetState",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Barrier Operator"],
+				endpoint,
+				property: "targetState",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Barrier Operator"]
+			return (
+				valueId.commandClass === CommandClasses["Barrier Operator"]
 				&& valueId.property === "targetState"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -625,15 +671,18 @@ export const BarrierOperatorCCValues = Object.freeze({
 			commandClass: CommandClasses["Barrier Operator"],
 			property: "currentState",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Barrier Operator"],
-			endpoint,
-			property: "currentState",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Barrier Operator"],
+				endpoint,
+				property: "currentState",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Barrier Operator"]
+			return (
+				valueId.commandClass === CommandClasses["Barrier Operator"]
 				&& valueId.property === "currentState"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -662,21 +711,20 @@ export const BarrierOperatorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Barrier Operator"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Barrier Operator"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.UInt8,
-						label: `Signaling State (${
-							getEnumMemberName(
-								SubsystemType,
-								subsystemType,
-							)
-						})`,
+						label: `Signaling State (${getEnumMemberName(
+							SubsystemType,
+							subsystemType,
+						)})`,
 						states: enumValuesToMetadataStates(SubsystemState),
 					} as const;
 				},
@@ -684,11 +732,12 @@ export const BarrierOperatorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Barrier Operator"]
+				return (
+					valueId.commandClass === CommandClasses["Barrier Operator"]
 					&& (({ property, propertyKey }) =>
 						property === "signalingState"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -708,15 +757,18 @@ export const BasicCCValues = Object.freeze({
 			commandClass: CommandClasses.Basic,
 			property: "currentValue",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Basic,
-			endpoint,
-			property: "currentValue",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Basic,
+				endpoint,
+				property: "currentValue",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Basic
+			return (
+				valueId.commandClass === CommandClasses.Basic
 				&& valueId.property === "currentValue"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -738,15 +790,18 @@ export const BasicCCValues = Object.freeze({
 			commandClass: CommandClasses.Basic,
 			property: "targetValue",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Basic,
-			endpoint,
-			property: "targetValue",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Basic,
+				endpoint,
+				property: "targetValue",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Basic
+			return (
+				valueId.commandClass === CommandClasses.Basic
 				&& valueId.property === "targetValue"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -768,15 +823,18 @@ export const BasicCCValues = Object.freeze({
 			commandClass: CommandClasses.Basic,
 			property: "duration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Basic,
-			endpoint,
-			property: "duration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Basic,
+				endpoint,
+				property: "duration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Basic
+			return (
+				valueId.commandClass === CommandClasses.Basic
 				&& valueId.property === "duration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -798,15 +856,18 @@ export const BasicCCValues = Object.freeze({
 			commandClass: CommandClasses.Basic,
 			property: "restorePrevious",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Basic,
-			endpoint,
-			property: "restorePrevious",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Basic,
+				endpoint,
+				property: "restorePrevious",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Basic
+			return (
+				valueId.commandClass === CommandClasses.Basic
 				&& valueId.property === "restorePrevious"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -831,15 +892,18 @@ export const BasicCCValues = Object.freeze({
 			commandClass: CommandClasses.Basic,
 			property: "event",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Basic,
-			endpoint,
-			property: "event",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Basic,
+				endpoint,
+				property: "event",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Basic
+			return (
+				valueId.commandClass === CommandClasses.Basic
 				&& valueId.property === "event"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -864,16 +928,18 @@ export const BasicWindowCoveringCCValues = Object.freeze({
 			commandClass: CommandClasses["Basic Window Covering"],
 			property: "levelChangeUp",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Basic Window Covering"],
-			endpoint,
-			property: "levelChangeUp",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Basic Window Covering"],
+				endpoint,
+				property: "levelChangeUp",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Basic Window Covering"]
+			return (
+				valueId.commandClass === CommandClasses["Basic Window Covering"]
 				&& valueId.property === "levelChangeUp"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -899,16 +965,18 @@ export const BasicWindowCoveringCCValues = Object.freeze({
 			commandClass: CommandClasses["Basic Window Covering"],
 			property: "levelChangeDown",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Basic Window Covering"],
-			endpoint,
-			property: "levelChangeDown",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Basic Window Covering"],
+				endpoint,
+				property: "levelChangeDown",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Basic Window Covering"]
+			return (
+				valueId.commandClass === CommandClasses["Basic Window Covering"]
 				&& valueId.property === "levelChangeDown"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -937,15 +1005,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "level",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "level",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "level",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "level"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -969,15 +1040,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "maximumCapacity",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "maximumCapacity",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "maximumCapacity",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "maximumCapacity"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1001,15 +1075,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "temperature",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "temperature",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "temperature",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "temperature"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1034,15 +1111,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "chargingStatus",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "chargingStatus",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "chargingStatus",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "chargingStatus"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1065,15 +1145,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "rechargeable",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "rechargeable",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "rechargeable",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "rechargeable"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1095,15 +1178,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "backup",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "backup",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "backup",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "backup"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1125,15 +1211,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "overheating",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "overheating",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "overheating",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "overheating"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1155,15 +1244,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "lowFluid",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "lowFluid",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "lowFluid",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "lowFluid"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1185,15 +1277,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "rechargeOrReplace",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "rechargeOrReplace",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "rechargeOrReplace",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "rechargeOrReplace"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1216,15 +1311,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "disconnected",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "disconnected",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "disconnected",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "disconnected"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1246,15 +1344,18 @@ export const BatteryCCValues = Object.freeze({
 			commandClass: CommandClasses.Battery,
 			property: "lowTemperatureStatus",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Battery,
-			endpoint,
-			property: "lowTemperatureStatus",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Battery,
+				endpoint,
+				property: "lowTemperatureStatus",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Battery
+			return (
+				valueId.commandClass === CommandClasses.Battery
 				&& valueId.property === "lowTemperatureStatus"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1279,15 +1380,18 @@ export const BinarySensorCCValues = Object.freeze({
 			commandClass: CommandClasses["Binary Sensor"],
 			property: "supportedSensorTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Binary Sensor"],
-			endpoint,
-			property: "supportedSensorTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Binary Sensor"],
+				endpoint,
+				property: "supportedSensorTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Binary Sensor"]
+			return (
+				valueId.commandClass === CommandClasses["Binary Sensor"]
 				&& valueId.property === "supportedSensorTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -1310,20 +1414,19 @@ export const BinarySensorCCValues = Object.freeze({
 					commandClass: CommandClasses["Binary Sensor"],
 					property,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Binary Sensor"],
-					endpoint,
-					property: property,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Binary Sensor"],
+						endpoint,
+						property: property,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `Sensor state (${
-							getEnumMemberName(
-								BinarySensorType,
-								sensorType,
-							)
-						})`,
+						label: `Sensor state (${getEnumMemberName(
+							BinarySensorType,
+							sensorType,
+						)})`,
 						ccSpecific: { sensorType },
 					} as const;
 				},
@@ -1331,10 +1434,12 @@ export const BinarySensorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Binary Sensor"]
+				return (
+					valueId.commandClass === CommandClasses["Binary Sensor"]
 					&& (({ property }) =>
 						typeof property === "string"
-						&& property in BinarySensorType)(valueId);
+						&& property in BinarySensorType)(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -1354,15 +1459,18 @@ export const BinarySwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Binary Switch"],
 			property: "currentValue",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Binary Switch"],
-			endpoint,
-			property: "currentValue",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Binary Switch"],
+				endpoint,
+				property: "currentValue",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Binary Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Binary Switch"]
 				&& valueId.property === "currentValue"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1384,15 +1492,18 @@ export const BinarySwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Binary Switch"],
 			property: "targetValue",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Binary Switch"],
-			endpoint,
-			property: "targetValue",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Binary Switch"],
+				endpoint,
+				property: "targetValue",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Binary Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Binary Switch"]
 				&& valueId.property === "targetValue"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1415,15 +1526,18 @@ export const BinarySwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Binary Switch"],
 			property: "duration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Binary Switch"],
-			endpoint,
-			property: "duration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Binary Switch"],
+				endpoint,
+				property: "duration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Binary Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Binary Switch"]
 				&& valueId.property === "duration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1448,15 +1562,18 @@ export const CentralSceneCCValues = Object.freeze({
 			commandClass: CommandClasses["Central Scene"],
 			property: "sceneCount",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Central Scene"],
-			endpoint,
-			property: "sceneCount",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Central Scene"],
+				endpoint,
+				property: "sceneCount",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Central Scene"]
+			return (
+				valueId.commandClass === CommandClasses["Central Scene"]
 				&& valueId.property === "sceneCount"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -1475,15 +1592,18 @@ export const CentralSceneCCValues = Object.freeze({
 			commandClass: CommandClasses["Central Scene"],
 			property: "supportsSlowRefresh",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Central Scene"],
-			endpoint,
-			property: "supportsSlowRefresh",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Central Scene"],
+				endpoint,
+				property: "supportsSlowRefresh",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Central Scene"]
+			return (
+				valueId.commandClass === CommandClasses["Central Scene"]
 				&& valueId.property === "supportsSlowRefresh"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -1502,15 +1622,18 @@ export const CentralSceneCCValues = Object.freeze({
 			commandClass: CommandClasses["Central Scene"],
 			property: "supportedKeyAttributes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Central Scene"],
-			endpoint,
-			property: "supportedKeyAttributes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Central Scene"],
+				endpoint,
+				property: "supportedKeyAttributes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Central Scene"]
+			return (
+				valueId.commandClass === CommandClasses["Central Scene"]
 				&& valueId.property === "supportedKeyAttributes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -1529,15 +1652,18 @@ export const CentralSceneCCValues = Object.freeze({
 			commandClass: CommandClasses["Central Scene"],
 			property: "slowRefresh",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Central Scene"],
-			endpoint,
-			property: "slowRefresh",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Central Scene"],
+				endpoint,
+				property: "slowRefresh",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Central Scene"]
+			return (
+				valueId.commandClass === CommandClasses["Central Scene"]
 				&& valueId.property === "slowRefresh"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1567,29 +1693,30 @@ export const CentralSceneCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Central Scene"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Central Scene"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyUInt8,
-						label: `Scene ${
-							sceneNumber.toString().padStart(3, "0")
-						}`,
+						label: `Scene ${sceneNumber.toString().padStart(3, "0")}`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Central Scene"]
+				return (
+					valueId.commandClass === CommandClasses["Central Scene"]
 					&& (({ property, propertyKey }) =>
 						property === "scene"
 						&& typeof propertyKey === "string"
-						&& /^\d{3}$/.test(propertyKey))(valueId);
+						&& /^\d{3}$/.test(propertyKey))(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -1609,16 +1736,19 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 			commandClass: CommandClasses["Climate Control Schedule"],
 			property: "overrideType",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Climate Control Schedule"],
-			endpoint,
-			property: "overrideType",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Climate Control Schedule"],
+				endpoint,
+				property: "overrideType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Climate Control Schedule"]
 				&& valueId.property === "overrideType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1641,16 +1771,19 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 			commandClass: CommandClasses["Climate Control Schedule"],
 			property: "overrideState",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Climate Control Schedule"],
-			endpoint,
-			property: "overrideState",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Climate Control Schedule"],
+				endpoint,
+				property: "overrideState",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Climate Control Schedule"]
 				&& valueId.property === "overrideState"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1679,31 +1812,33 @@ export const ClimateControlScheduleCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Climate Control Schedule"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Climate Control Schedule"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Any,
-						label: `Schedule (${
-							getEnumMemberName(Weekday, weekday)
-						})`,
+						label: `Schedule (${getEnumMemberName(Weekday, weekday)})`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Climate Control Schedule"]
 					&& (({ property, propertyKey }) =>
 						property === "switchPoints"
 						&& typeof propertyKey === "number"
 						&& propertyKey >= Weekday.Monday
-						&& propertyKey <= Weekday.Sunday)(valueId);
+						&& propertyKey <= Weekday.Sunday)(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -1723,15 +1858,18 @@ export const ColorSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Color Switch"],
 			property: "supportedColorComponents",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Color Switch"],
-			endpoint,
-			property: "supportedColorComponents",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Color Switch"],
+				endpoint,
+				property: "supportedColorComponents",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Color Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Color Switch"]
 				&& valueId.property === "supportedColorComponents"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -1750,15 +1888,18 @@ export const ColorSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Color Switch"],
 			property: "supportsHexColor",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Color Switch"],
-			endpoint,
-			property: "supportsHexColor",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Color Switch"],
+				endpoint,
+				property: "supportsHexColor",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Color Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Color Switch"]
 				&& valueId.property === "supportsHexColor"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -1777,15 +1918,18 @@ export const ColorSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Color Switch"],
 			property: "currentColor",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Color Switch"],
-			endpoint,
-			property: "currentColor",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Color Switch"],
+				endpoint,
+				property: "currentColor",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Color Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Color Switch"]
 				&& valueId.property === "currentColor"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1807,15 +1951,18 @@ export const ColorSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Color Switch"],
 			property: "targetColor",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Color Switch"],
-			endpoint,
-			property: "targetColor",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Color Switch"],
+				endpoint,
+				property: "targetColor",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Color Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Color Switch"]
 				&& valueId.property === "targetColor"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1838,15 +1985,18 @@ export const ColorSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Color Switch"],
 			property: "duration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Color Switch"],
-			endpoint,
-			property: "duration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Color Switch"],
+				endpoint,
+				property: "duration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Color Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Color Switch"]
 				&& valueId.property === "duration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1868,15 +2018,18 @@ export const ColorSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Color Switch"],
 			property: "hexColor",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Color Switch"],
-			endpoint,
-			property: "hexColor",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Color Switch"],
+				endpoint,
+				property: "hexColor",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Color Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Color Switch"]
 				&& valueId.property === "hexColor"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -1907,12 +2060,13 @@ export const ColorSwitchCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Color Switch"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Color Switch"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					const colorName = getEnumMemberName(
 						ColorComponent,
@@ -1921,18 +2075,19 @@ export const ColorSwitchCCValues = Object.freeze({
 					return {
 						...ValueMetadata.ReadOnlyUInt8,
 						label: `Current value (${colorName})`,
-						description:
-							`The current value of the ${colorName} channel.`,
+						description: `The current value of the ${colorName} channel.`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Color Switch"]
+				return (
+					valueId.commandClass === CommandClasses["Color Switch"]
 					&& (({ property, propertyKey }) =>
 						property === "currentColor"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -1955,12 +2110,13 @@ export const ColorSwitchCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Color Switch"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Color Switch"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					const colorName = getEnumMemberName(
 						ColorComponent,
@@ -1969,8 +2125,7 @@ export const ColorSwitchCCValues = Object.freeze({
 					return {
 						...ValueMetadata.UInt8,
 						label: `Target value (${colorName})`,
-						description:
-							`The target value of the ${colorName} channel.`,
+						description: `The target value of the ${colorName} channel.`,
 						valueChangeOptions: ["transitionDuration"],
 					} as const;
 				},
@@ -1978,10 +2133,12 @@ export const ColorSwitchCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Color Switch"]
+				return (
+					valueId.commandClass === CommandClasses["Color Switch"]
 					&& (({ property, propertyKey }) =>
 						property === "targetColor"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -2001,15 +2158,18 @@ export const ConfigurationCCValues = Object.freeze({
 			commandClass: CommandClasses.Configuration,
 			property: "isParamInformationFromConfig",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Configuration,
-			endpoint: 0, // no endpoint support!
-			property: "isParamInformationFromConfig",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Configuration,
+				endpoint: 0, // no endpoint support!
+				property: "isParamInformationFromConfig",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Configuration
+			return (
+				valueId.commandClass === CommandClasses.Configuration
 				&& valueId.property === "isParamInformationFromConfig"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2034,12 +2194,13 @@ export const ConfigurationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Configuration,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Configuration,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -2047,11 +2208,13 @@ export const ConfigurationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Configuration
+				return (
+					valueId.commandClass === CommandClasses.Configuration
 					&& (({ property, propertyKey }) =>
 						typeof property === "number"
 						&& (typeof propertyKey === "number"
-							|| propertyKey == undefined))(valueId);
+							|| propertyKey == undefined))(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -2071,15 +2234,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "targetMode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "targetMode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "targetMode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "targetMode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2102,15 +2268,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "currentMode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "currentMode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "currentMode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "currentMode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2133,15 +2302,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "duration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "duration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "duration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "duration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2163,15 +2335,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "supportedOutsideHandles",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "supportedOutsideHandles",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "supportedOutsideHandles",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "supportedOutsideHandles"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2190,21 +2365,23 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "outsideHandlesCanOpenDoorConfiguration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "outsideHandlesCanOpenDoorConfiguration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "outsideHandlesCanOpenDoorConfiguration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "outsideHandlesCanOpenDoorConfiguration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
 				...ValueMetadata.Any,
-				label:
-					"Which outside handles can open the door (configuration)",
+				label: "Which outside handles can open the door (configuration)",
 			} as const;
 		},
 		options: {
@@ -2221,21 +2398,23 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "outsideHandlesCanOpenDoor",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "outsideHandlesCanOpenDoor",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "outsideHandlesCanOpenDoor",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "outsideHandlesCanOpenDoor"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
 				...ValueMetadata.ReadOnly,
-				label:
-					"Which outside handles can open the door (actual status)",
+				label: "Which outside handles can open the door (actual status)",
 			} as const;
 		},
 		options: {
@@ -2252,15 +2431,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "supportedInsideHandles",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "supportedInsideHandles",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "supportedInsideHandles",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "supportedInsideHandles"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2279,15 +2461,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "insideHandlesCanOpenDoorConfiguration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "insideHandlesCanOpenDoorConfiguration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "insideHandlesCanOpenDoorConfiguration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "insideHandlesCanOpenDoorConfiguration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2309,15 +2494,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "insideHandlesCanOpenDoor",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "insideHandlesCanOpenDoor",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "insideHandlesCanOpenDoor",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "insideHandlesCanOpenDoor"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2339,15 +2527,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "operationType",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "operationType",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "operationType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "operationType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2370,15 +2561,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "lockTimeoutConfiguration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "lockTimeoutConfiguration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "lockTimeoutConfiguration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "lockTimeoutConfiguration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2400,15 +2594,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "lockTimeout",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "lockTimeout",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "lockTimeout",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "lockTimeout"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2430,15 +2627,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "autoRelockSupported",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "autoRelockSupported",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "autoRelockSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "autoRelockSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2457,15 +2657,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "autoRelockTime",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "autoRelockTime",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "autoRelockTime",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "autoRelockTime"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2487,15 +2690,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "holdAndReleaseSupported",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "holdAndReleaseSupported",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "holdAndReleaseSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "holdAndReleaseSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2514,15 +2720,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "holdAndReleaseTime",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "holdAndReleaseTime",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "holdAndReleaseTime",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "holdAndReleaseTime"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2544,15 +2753,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "twistAssistSupported",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "twistAssistSupported",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "twistAssistSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "twistAssistSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2571,15 +2783,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "twistAssist",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "twistAssist",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "twistAssist",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "twistAssist"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2601,15 +2816,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "blockToBlockSupported",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "blockToBlockSupported",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "blockToBlockSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "blockToBlockSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2628,15 +2846,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "blockToBlock",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "blockToBlock",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "blockToBlock",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "blockToBlock"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2658,15 +2879,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "latchSupported",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "latchSupported",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "latchSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "latchSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2685,15 +2909,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "latchStatus",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "latchStatus",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "latchStatus",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "latchStatus"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2715,15 +2942,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "boltSupported",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "boltSupported",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "boltSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "boltSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2742,15 +2972,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "boltStatus",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "boltStatus",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "boltStatus",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "boltStatus"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2772,15 +3005,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "doorSupported",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "doorSupported",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "doorSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "doorSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2799,15 +3035,18 @@ export const DoorLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock"],
 			property: "doorStatus",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock"],
-			endpoint,
-			property: "doorStatus",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock"],
+				endpoint,
+				property: "doorStatus",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock"]
 				&& valueId.property === "doorStatus"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -2909,15 +3148,18 @@ export const DoorLockLoggingCCValues = Object.freeze({
 			commandClass: CommandClasses["Door Lock Logging"],
 			property: "recordsCount",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Door Lock Logging"],
-			endpoint,
-			property: "recordsCount",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Door Lock Logging"],
+				endpoint,
+				property: "recordsCount",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Door Lock Logging"]
+			return (
+				valueId.commandClass === CommandClasses["Door Lock Logging"]
 				&& valueId.property === "recordsCount"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -2945,12 +3187,13 @@ export const EnergyProductionCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Energy Production"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Energy Production"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyNumber,
@@ -2965,11 +3208,12 @@ export const EnergyProductionCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Energy Production"]
+				return (
+					valueId.commandClass === CommandClasses["Energy Production"]
 					&& (({ property, propertyKey }) =>
 						property === "value"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -2989,15 +3233,18 @@ export const EntryControlCCValues = Object.freeze({
 			commandClass: CommandClasses["Entry Control"],
 			property: "keyCacheSize",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Entry Control"],
-			endpoint,
-			property: "keyCacheSize",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Entry Control"],
+				endpoint,
+				property: "keyCacheSize",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Entry Control"]
+			return (
+				valueId.commandClass === CommandClasses["Entry Control"]
 				&& valueId.property === "keyCacheSize"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3023,15 +3270,18 @@ export const EntryControlCCValues = Object.freeze({
 			commandClass: CommandClasses["Entry Control"],
 			property: "keyCacheTimeout",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Entry Control"],
-			endpoint,
-			property: "keyCacheTimeout",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Entry Control"],
+				endpoint,
+				property: "keyCacheTimeout",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Entry Control"]
+			return (
+				valueId.commandClass === CommandClasses["Entry Control"]
 				&& valueId.property === "keyCacheTimeout"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3058,15 +3308,18 @@ export const EntryControlCCValues = Object.freeze({
 			commandClass: CommandClasses["Entry Control"],
 			property: "supportedDataTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Entry Control"],
-			endpoint,
-			property: "supportedDataTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Entry Control"],
+				endpoint,
+				property: "supportedDataTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Entry Control"]
+			return (
+				valueId.commandClass === CommandClasses["Entry Control"]
 				&& valueId.property === "supportedDataTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3085,15 +3338,18 @@ export const EntryControlCCValues = Object.freeze({
 			commandClass: CommandClasses["Entry Control"],
 			property: "supportedEventTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Entry Control"],
-			endpoint,
-			property: "supportedEventTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Entry Control"],
+				endpoint,
+				property: "supportedEventTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Entry Control"]
+			return (
+				valueId.commandClass === CommandClasses["Entry Control"]
 				&& valueId.property === "supportedEventTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3112,15 +3368,18 @@ export const EntryControlCCValues = Object.freeze({
 			commandClass: CommandClasses["Entry Control"],
 			property: "supportedKeys",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Entry Control"],
-			endpoint,
-			property: "supportedKeys",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Entry Control"],
+				endpoint,
+				property: "supportedKeys",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Entry Control"]
+			return (
+				valueId.commandClass === CommandClasses["Entry Control"]
 				&& valueId.property === "supportedKeys"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3142,16 +3401,19 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 			commandClass: CommandClasses["Firmware Update Meta Data"],
 			property: "supportsActivation",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Firmware Update Meta Data"],
-			endpoint,
-			property: "supportsActivation",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Firmware Update Meta Data"],
+				endpoint,
+				property: "supportsActivation",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Firmware Update Meta Data"]
 				&& valueId.property === "supportsActivation"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3170,16 +3432,19 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 			commandClass: CommandClasses["Firmware Update Meta Data"],
 			property: "firmwareUpgradable",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Firmware Update Meta Data"],
-			endpoint,
-			property: "firmwareUpgradable",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Firmware Update Meta Data"],
+				endpoint,
+				property: "firmwareUpgradable",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Firmware Update Meta Data"]
 				&& valueId.property === "firmwareUpgradable"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3198,16 +3463,19 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 			commandClass: CommandClasses["Firmware Update Meta Data"],
 			property: "additionalFirmwareIDs",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Firmware Update Meta Data"],
-			endpoint,
-			property: "additionalFirmwareIDs",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Firmware Update Meta Data"],
+				endpoint,
+				property: "additionalFirmwareIDs",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Firmware Update Meta Data"]
 				&& valueId.property === "additionalFirmwareIDs"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3226,16 +3494,19 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 			commandClass: CommandClasses["Firmware Update Meta Data"],
 			property: "continuesToFunction",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Firmware Update Meta Data"],
-			endpoint,
-			property: "continuesToFunction",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Firmware Update Meta Data"],
+				endpoint,
+				property: "continuesToFunction",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Firmware Update Meta Data"]
 				&& valueId.property === "continuesToFunction"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3254,16 +3525,19 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 			commandClass: CommandClasses["Firmware Update Meta Data"],
 			property: "supportsResuming",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Firmware Update Meta Data"],
-			endpoint,
-			property: "supportsResuming",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Firmware Update Meta Data"],
+				endpoint,
+				property: "supportsResuming",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Firmware Update Meta Data"]
 				&& valueId.property === "supportsResuming"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3282,16 +3556,19 @@ export const FirmwareUpdateMetaDataCCValues = Object.freeze({
 			commandClass: CommandClasses["Firmware Update Meta Data"],
 			property: "supportsNonSecureTransfer",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Firmware Update Meta Data"],
-			endpoint,
-			property: "supportsNonSecureTransfer",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Firmware Update Meta Data"],
+				endpoint,
+				property: "supportsNonSecureTransfer",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Firmware Update Meta Data"]
 				&& valueId.property === "supportsNonSecureTransfer"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3313,16 +3590,18 @@ export const HumidityControlModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Humidity Control Mode"],
 			property: "mode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Humidity Control Mode"],
-			endpoint,
-			property: "mode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Humidity Control Mode"],
+				endpoint,
+				property: "mode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Humidity Control Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Humidity Control Mode"]
 				&& valueId.property === "mode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3345,16 +3624,18 @@ export const HumidityControlModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Humidity Control Mode"],
 			property: "supportedModes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Humidity Control Mode"],
-			endpoint,
-			property: "supportedModes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Humidity Control Mode"],
+				endpoint,
+				property: "supportedModes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Humidity Control Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Humidity Control Mode"]
 				&& valueId.property === "supportedModes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3376,16 +3657,20 @@ export const HumidityControlOperatingStateCCValues = Object.freeze({
 			commandClass: CommandClasses["Humidity Control Operating State"],
 			property: "state",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Humidity Control Operating State"],
-			endpoint,
-			property: "state",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass:
+					CommandClasses["Humidity Control Operating State"],
+				endpoint,
+				property: "state",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Humidity Control Operating State"]
 				&& valueId.property === "state"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3413,16 +3698,19 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 			commandClass: CommandClasses["Humidity Control Setpoint"],
 			property: "supportedSetpointTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Humidity Control Setpoint"],
-			endpoint,
-			property: "supportedSetpointTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Humidity Control Setpoint"],
+				endpoint,
+				property: "supportedSetpointTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Humidity Control Setpoint"]
 				&& valueId.property === "supportedSetpointTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3447,22 +3735,22 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Humidity Control Setpoint"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Humidity Control Setpoint"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						// This is the base metadata that will be extended on the fly
 						...ValueMetadata.Number,
-						label: `Setpoint (${
-							getEnumMemberName(
-								HumidityControlSetpointType,
-								setpointType,
-							)
-						})`,
+						label: `Setpoint (${getEnumMemberName(
+							HumidityControlSetpointType,
+							setpointType,
+						)})`,
 						ccSpecific: { setpointType },
 					} as const;
 				},
@@ -3470,11 +3758,13 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Humidity Control Setpoint"]
 					&& (({ property, propertyKey }) =>
 						property === "setpoint"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -3497,32 +3787,34 @@ export const HumidityControlSetpointCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Humidity Control Setpoint"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Humidity Control Setpoint"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyUInt8,
-						label: `Setpoint scale (${
-							getEnumMemberName(
-								HumidityControlSetpointType,
-								setpointType,
-							)
-						})`,
+						label: `Setpoint scale (${getEnumMemberName(
+							HumidityControlSetpointType,
+							setpointType,
+						)})`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Humidity Control Setpoint"]
 					&& (({ property, propertyKey }) =>
 						property === "setpointScale"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -3542,15 +3834,18 @@ export const IndicatorCCValues = Object.freeze({
 			commandClass: CommandClasses.Indicator,
 			property: "supportedIndicatorIds",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Indicator,
-			endpoint,
-			property: "supportedIndicatorIds",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Indicator,
+				endpoint,
+				property: "supportedIndicatorIds",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Indicator
+			return (
+				valueId.commandClass === CommandClasses.Indicator
 				&& valueId.property === "supportedIndicatorIds"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3569,15 +3864,18 @@ export const IndicatorCCValues = Object.freeze({
 			commandClass: CommandClasses.Indicator,
 			property: "value",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Indicator,
-			endpoint,
-			property: "value",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Indicator,
+				endpoint,
+				property: "value",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Indicator
+			return (
+				valueId.commandClass === CommandClasses.Indicator
 				&& valueId.property === "value"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3602,15 +3900,18 @@ export const IndicatorCCValues = Object.freeze({
 			commandClass: CommandClasses.Indicator,
 			property: "identify",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Indicator,
-			endpoint,
-			property: "identify",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Indicator,
+				endpoint,
+				property: "identify",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Indicator
+			return (
+				valueId.commandClass === CommandClasses.Indicator
 				&& valueId.property === "identify"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3641,12 +3942,13 @@ export const IndicatorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Indicator,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Indicator,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -3654,10 +3956,12 @@ export const IndicatorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Indicator
+				return (
+					valueId.commandClass === CommandClasses.Indicator
 					&& (({ property, propertyKey }) =>
 						property === "supportedPropertyIDs"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -3680,12 +3984,13 @@ export const IndicatorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Indicator,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Indicator,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Any,
@@ -3699,10 +4004,12 @@ export const IndicatorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Indicator
+				return (
+					valueId.commandClass === CommandClasses.Indicator
 					&& (({ property, propertyKey }) =>
 						typeof property === "number"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -3725,12 +4032,13 @@ export const IndicatorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Indicator,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Indicator,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.String,
@@ -3744,10 +4052,12 @@ export const IndicatorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Indicator
+				return (
+					valueId.commandClass === CommandClasses.Indicator
 					&& (({ property, propertyKey }) =>
 						typeof property === "number"
-						&& propertyKey === "timeout")(valueId);
+						&& propertyKey === "timeout")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -3768,11 +4078,12 @@ export const IndicatorCCValues = Object.freeze({
 					commandClass: CommandClasses.Indicator,
 					property,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Indicator,
-					endpoint,
-					property: property,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Indicator,
+						endpoint,
+						property: property,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -3780,10 +4091,10 @@ export const IndicatorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Indicator
-					&& (({ property }) => typeof property === "number")(
-						valueId,
-					);
+				return (
+					valueId.commandClass === CommandClasses.Indicator
+					&& (({ property }) => typeof property === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -3803,15 +4114,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "numValves",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "numValves",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "numValves",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "numValves"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3830,15 +4144,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "numValveTables",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "numValveTables",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "numValveTables",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "numValveTables"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3857,15 +4174,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "supportsMasterValve",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "supportsMasterValve",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "supportsMasterValve",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "supportsMasterValve"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3884,15 +4204,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "maxValveTableSize",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "maxValveTableSize",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "maxValveTableSize",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "maxValveTableSize"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -3911,15 +4234,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "systemVoltage",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "systemVoltage",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "systemVoltage",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "systemVoltage"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3942,15 +4268,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "masterValveDelay",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "masterValveDelay",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "masterValveDelay",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "masterValveDelay"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -3975,15 +4304,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "flowSensorActive",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "flowSensorActive",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "flowSensorActive",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "flowSensorActive"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4005,15 +4337,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "pressureSensorActive",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "pressureSensorActive",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "pressureSensorActive",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "pressureSensorActive"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4035,15 +4370,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "rainSensorActive",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "rainSensorActive",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "rainSensorActive",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "rainSensorActive"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4065,15 +4403,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "rainSensorPolarity",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "rainSensorPolarity",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "rainSensorPolarity",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "rainSensorPolarity"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4098,15 +4439,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "moistureSensorActive",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "moistureSensorActive",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "moistureSensorActive",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "moistureSensorActive"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4128,15 +4472,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "moistureSensorPolarity",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "moistureSensorPolarity",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "moistureSensorPolarity",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "moistureSensorPolarity"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4161,15 +4508,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "flow",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "flow",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "flow",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "flow"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4192,15 +4542,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "pressure",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "pressure",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "pressure",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "pressure"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4223,15 +4576,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "shutoffDuration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "shutoffDuration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "shutoffDuration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "shutoffDuration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4254,15 +4610,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "errorNotProgrammed",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "errorNotProgrammed",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "errorNotProgrammed",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "errorNotProgrammed"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4284,15 +4643,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "errorEmergencyShutdown",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "errorEmergencyShutdown",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "errorEmergencyShutdown",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "errorEmergencyShutdown"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4314,15 +4676,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "errorHighPressure",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "errorHighPressure",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "errorHighPressure",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "errorHighPressure"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4344,15 +4709,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "highPressureThreshold",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "highPressureThreshold",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "highPressureThreshold",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "highPressureThreshold"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4375,15 +4743,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "errorLowPressure",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "errorLowPressure",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "errorLowPressure",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "errorLowPressure"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4405,15 +4776,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "lowPressureThreshold",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "lowPressureThreshold",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "lowPressureThreshold",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "lowPressureThreshold"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4436,15 +4810,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "errorValve",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "errorValve",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "errorValve",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "errorValve"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4466,15 +4843,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "masterValveOpen",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "masterValveOpen",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "masterValveOpen",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "masterValveOpen"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4496,15 +4876,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "firstOpenZoneId",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "firstOpenZoneId",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "firstOpenZoneId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "firstOpenZoneId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4526,15 +4909,18 @@ export const IrrigationCCValues = Object.freeze({
 			commandClass: CommandClasses.Irrigation,
 			property: "shutoff",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Irrigation,
-			endpoint,
-			property: "shutoff",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Irrigation,
+				endpoint,
+				property: "shutoff",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Irrigation
+			return (
+				valueId.commandClass === CommandClasses.Irrigation
 				&& valueId.property === "shutoff"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -4565,28 +4951,29 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(valveId)
-						}: Connected`,
+						label: `${irrigationValveIdToMetadataPrefix(valveId)}: Connected`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "valveConnected")(valueId);
+						&& propertyKey === "valveConnected")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -4609,20 +4996,19 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyNumber,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Nominal current`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Nominal current`,
 						unit: "mA",
 					} as const;
 				},
@@ -4630,10 +5016,12 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "nominalCurrent")(valueId);
+						&& propertyKey === "nominalCurrent")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -4656,20 +5044,19 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Number,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Nominal current - high threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Nominal current - high threshold`,
 						min: 0,
 						max: 2550,
 						unit: "mA",
@@ -4679,12 +5066,14 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
 						&& propertyKey === "nominalCurrentHighThreshold")(
-							valueId,
-						);
+						valueId,
+					)
+				);
 			},
 			options: {
 				internal: false,
@@ -4707,20 +5096,19 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Number,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Nominal current - low threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Nominal current - low threshold`,
 						min: 0,
 						max: 2550,
 						unit: "mA",
@@ -4730,12 +5118,14 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
 						&& propertyKey === "nominalCurrentLowThreshold")(
-							valueId,
-						);
+						valueId,
+					)
+				);
 			},
 			options: {
 				internal: false,
@@ -4758,30 +5148,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Error - Short circuit detected`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Error - Short circuit detected`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "errorShortCircuit")(valueId);
+						&& propertyKey === "errorShortCircuit")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -4804,30 +5195,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Error - Current above high threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Error - Current above high threshold`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "errorHighCurrent")(valueId);
+						&& propertyKey === "errorHighCurrent")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -4850,30 +5242,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Error - Current below low threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Error - Current below low threshold`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "errorLowCurrent")(valueId);
+						&& propertyKey === "errorLowCurrent")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -4896,18 +5289,19 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Number,
-						label: `${
-							irrigationValveIdToMetadataPrefix(valveId)
-						}: Maximum flow`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Maximum flow`,
 						min: 0,
 						unit: "l/h",
 					} as const;
@@ -4916,10 +5310,12 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "maximumFlow")(valueId);
+						&& propertyKey === "maximumFlow")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -4942,30 +5338,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Error - Maximum flow detected`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Error - Maximum flow detected`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "errorMaximumFlow")(valueId);
+						&& propertyKey === "errorMaximumFlow")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -4988,20 +5385,19 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Number,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: High flow threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: High flow threshold`,
 						min: 0,
 						unit: "l/h",
 					} as const;
@@ -5010,10 +5406,12 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "highFlowThreshold")(valueId);
+						&& propertyKey === "highFlowThreshold")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5036,30 +5434,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Error - Flow above high threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Error - Flow above high threshold`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "errorHighFlow")(valueId);
+						&& propertyKey === "errorHighFlow")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5082,20 +5481,19 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Number,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Low flow threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Low flow threshold`,
 						min: 0,
 						unit: "l/h",
 					} as const;
@@ -5104,10 +5502,12 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "lowFlowThreshold")(valueId);
+						&& propertyKey === "lowFlowThreshold")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5130,30 +5530,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyBoolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Error - Flow below low threshold`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Error - Flow below low threshold`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "errorLowFlow")(valueId);
+						&& propertyKey === "errorLowFlow")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5176,30 +5577,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Boolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Use rain sensor`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Use rain sensor`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "useRainSensor")(valueId);
+						&& propertyKey === "useRainSensor")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5222,30 +5624,31 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Boolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(
-								valveId,
-							)
-						}: Use moisture sensor`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Use moisture sensor`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "useMoistureSensor")(valueId);
+						&& propertyKey === "useMoistureSensor")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5268,18 +5671,19 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.UInt16,
-						label: `${
-							irrigationValveIdToMetadataPrefix(valveId)
-						}: Run duration`,
+						label: `${irrigationValveIdToMetadataPrefix(
+							valveId,
+						)}: Run duration`,
 						min: 1,
 						unit: "s",
 					} as const;
@@ -5288,10 +5692,12 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "duration")(valueId);
+						&& propertyKey === "duration")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5314,18 +5720,17 @@ export const IrrigationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Irrigation,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Irrigation,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Boolean,
-						label: `${
-							irrigationValveIdToMetadataPrefix(valveId)
-						}: Start/Stop`,
+						label: `${irrigationValveIdToMetadataPrefix(valveId)}: Start/Stop`,
 						states: {
 							true: "Start",
 							false: "Stop",
@@ -5336,10 +5741,12 @@ export const IrrigationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Irrigation
+				return (
+					valueId.commandClass === CommandClasses.Irrigation
 					&& (({ property, propertyKey }) =>
 						(typeof property === "number" || property === "master")
-						&& propertyKey === "startStop")(valueId);
+						&& propertyKey === "startStop")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5359,15 +5766,18 @@ export const LanguageCCValues = Object.freeze({
 			commandClass: CommandClasses.Language,
 			property: "language",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Language,
-			endpoint,
-			property: "language",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Language,
+				endpoint,
+				property: "language",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Language
+			return (
+				valueId.commandClass === CommandClasses.Language
 				&& valueId.property === "language"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -5389,15 +5799,18 @@ export const LanguageCCValues = Object.freeze({
 			commandClass: CommandClasses.Language,
 			property: "country",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Language,
-			endpoint,
-			property: "country",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Language,
+				endpoint,
+				property: "country",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Language
+			return (
+				valueId.commandClass === CommandClasses.Language
 				&& valueId.property === "country"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -5422,15 +5835,18 @@ export const LockCCValues = Object.freeze({
 			commandClass: CommandClasses.Lock,
 			property: "locked",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Lock,
-			endpoint,
-			property: "locked",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Lock,
+				endpoint,
+				property: "locked",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Lock
+			return (
+				valueId.commandClass === CommandClasses.Lock
 				&& valueId.property === "locked"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -5456,16 +5872,18 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			commandClass: CommandClasses["Manufacturer Specific"],
 			property: "manufacturerId",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Manufacturer Specific"],
-			endpoint: 0, // no endpoint support!
-			property: "manufacturerId",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Manufacturer Specific"],
+				endpoint: 0, // no endpoint support!
+				property: "manufacturerId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Manufacturer Specific"]
+			return (
+				valueId.commandClass === CommandClasses["Manufacturer Specific"]
 				&& valueId.property === "manufacturerId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -5487,16 +5905,18 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			commandClass: CommandClasses["Manufacturer Specific"],
 			property: "productType",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Manufacturer Specific"],
-			endpoint: 0, // no endpoint support!
-			property: "productType",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Manufacturer Specific"],
+				endpoint: 0, // no endpoint support!
+				property: "productType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Manufacturer Specific"]
+			return (
+				valueId.commandClass === CommandClasses["Manufacturer Specific"]
 				&& valueId.property === "productType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -5518,16 +5938,18 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 			commandClass: CommandClasses["Manufacturer Specific"],
 			property: "productId",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Manufacturer Specific"],
-			endpoint: 0, // no endpoint support!
-			property: "productId",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Manufacturer Specific"],
+				endpoint: 0, // no endpoint support!
+				property: "productId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Manufacturer Specific"]
+			return (
+				valueId.commandClass === CommandClasses["Manufacturer Specific"]
 				&& valueId.property === "productId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -5555,30 +5977,31 @@ export const ManufacturerSpecificCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Manufacturer Specific"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Manufacturer Specific"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyString,
-						label: `Device ID (${
-							getEnumMemberName(DeviceIdType, type)
-						})`,
+						label: `Device ID (${getEnumMemberName(DeviceIdType, type)})`,
 					} as const;
 				},
 			};
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Manufacturer Specific"]
 					&& (({ property, propertyKey }) =>
 						property === "deviceId"
 						&& typeof propertyKey === "string"
-						&& propertyKey in DeviceIdType)(valueId);
+						&& propertyKey in DeviceIdType)(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5598,15 +6021,18 @@ export const MeterCCValues = Object.freeze({
 			commandClass: CommandClasses.Meter,
 			property: "type",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Meter,
-			endpoint,
-			property: "type",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Meter,
+				endpoint,
+				property: "type",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Meter
+			return (
+				valueId.commandClass === CommandClasses.Meter
 				&& valueId.property === "type"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -5625,15 +6051,18 @@ export const MeterCCValues = Object.freeze({
 			commandClass: CommandClasses.Meter,
 			property: "supportsReset",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Meter,
-			endpoint,
-			property: "supportsReset",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Meter,
+				endpoint,
+				property: "supportsReset",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Meter
+			return (
+				valueId.commandClass === CommandClasses.Meter
 				&& valueId.property === "supportsReset"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -5652,15 +6081,18 @@ export const MeterCCValues = Object.freeze({
 			commandClass: CommandClasses.Meter,
 			property: "supportedScales",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Meter,
-			endpoint,
-			property: "supportedScales",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Meter,
+				endpoint,
+				property: "supportedScales",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Meter
+			return (
+				valueId.commandClass === CommandClasses.Meter
 				&& valueId.property === "supportedScales"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -5679,15 +6111,18 @@ export const MeterCCValues = Object.freeze({
 			commandClass: CommandClasses.Meter,
 			property: "supportedRateTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Meter,
-			endpoint,
-			property: "supportedRateTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Meter,
+				endpoint,
+				property: "supportedRateTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Meter
+			return (
+				valueId.commandClass === CommandClasses.Meter
 				&& valueId.property === "supportedRateTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -5706,15 +6141,18 @@ export const MeterCCValues = Object.freeze({
 			commandClass: CommandClasses.Meter,
 			property: "reset",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Meter,
-			endpoint,
-			property: "reset",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Meter,
+				endpoint,
+				property: "reset",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Meter
+			return (
+				valueId.commandClass === CommandClasses.Meter
 				&& valueId.property === "reset"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -5749,12 +6187,13 @@ export const MeterCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Meter,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Meter,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.WriteOnlyBoolean,
@@ -5764,8 +6203,8 @@ export const MeterCCValues = Object.freeze({
 							rateType === RateType.Consumed
 								? "Consumption, "
 								: rateType === RateType.Produced
-								? "Production, "
-								: ""
+									? "Production, "
+									: ""
 						}${num2hex(scale)})`,
 						states: {
 							true: "Reset",
@@ -5781,10 +6220,12 @@ export const MeterCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Meter
+				return (
+					valueId.commandClass === CommandClasses.Meter
 					&& (({ property, propertyKey }) =>
 						property === "reset"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5811,12 +6252,13 @@ export const MeterCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Meter,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Meter,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyNumber,
@@ -5832,10 +6274,12 @@ export const MeterCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Meter
+				return (
+					valueId.commandClass === CommandClasses.Meter
 					&& (({ property, propertyKey }) =>
 						property === "value"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -5855,16 +6299,19 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel Association"],
 			property: "groupCount",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multi Channel Association"],
-			endpoint,
-			property: "groupCount",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multi Channel Association"],
+				endpoint,
+				property: "groupCount",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Multi Channel Association"]
 				&& valueId.property === "groupCount"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -5889,12 +6336,14 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multi Channel Association"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Multi Channel Association"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -5902,11 +6351,13 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Multi Channel Association"]
 					&& (({ property, propertyKey }) =>
 						property === "maxNodes"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -5929,12 +6380,14 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multi Channel Association"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Multi Channel Association"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -5942,11 +6395,13 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Multi Channel Association"]
 					&& (({ property, propertyKey }) =>
 						property === "nodeIds"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -5969,12 +6424,14 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multi Channel Association"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Multi Channel Association"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -5982,11 +6439,13 @@ export const MultiChannelAssociationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Multi Channel Association"]
 					&& (({ property, propertyKey }) =>
 						property === "endpoints"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -6006,15 +6465,18 @@ export const MultiChannelCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel"],
 			property: "endpointIndizes",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Multi Channel"],
-			endpoint: 0, // no endpoint support!
-			property: "endpointIndizes",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Multi Channel"],
+				endpoint: 0, // no endpoint support!
+				property: "endpointIndizes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multi Channel"]
+			return (
+				valueId.commandClass === CommandClasses["Multi Channel"]
 				&& valueId.property === "endpointIndizes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6033,15 +6495,18 @@ export const MultiChannelCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel"],
 			property: "individualCount",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Multi Channel"],
-			endpoint: 0, // no endpoint support!
-			property: "individualCount",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Multi Channel"],
+				endpoint: 0, // no endpoint support!
+				property: "individualCount",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multi Channel"]
+			return (
+				valueId.commandClass === CommandClasses["Multi Channel"]
 				&& valueId.property === "individualCount"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6060,15 +6525,18 @@ export const MultiChannelCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel"],
 			property: "aggregatedCount",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Multi Channel"],
-			endpoint: 0, // no endpoint support!
-			property: "aggregatedCount",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Multi Channel"],
+				endpoint: 0, // no endpoint support!
+				property: "aggregatedCount",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multi Channel"]
+			return (
+				valueId.commandClass === CommandClasses["Multi Channel"]
 				&& valueId.property === "aggregatedCount"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6087,15 +6555,18 @@ export const MultiChannelCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel"],
 			property: "countIsDynamic",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Multi Channel"],
-			endpoint: 0, // no endpoint support!
-			property: "countIsDynamic",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Multi Channel"],
+				endpoint: 0, // no endpoint support!
+				property: "countIsDynamic",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multi Channel"]
+			return (
+				valueId.commandClass === CommandClasses["Multi Channel"]
 				&& valueId.property === "countIsDynamic"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6114,15 +6585,18 @@ export const MultiChannelCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel"],
 			property: "identicalCapabilities",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Multi Channel"],
-			endpoint: 0, // no endpoint support!
-			property: "identicalCapabilities",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Multi Channel"],
+				endpoint: 0, // no endpoint support!
+				property: "identicalCapabilities",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multi Channel"]
+			return (
+				valueId.commandClass === CommandClasses["Multi Channel"]
 				&& valueId.property === "identicalCapabilities"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6141,15 +6615,18 @@ export const MultiChannelCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel"],
 			property: "commandClasses",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multi Channel"],
-			endpoint,
-			property: "commandClasses",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multi Channel"],
+				endpoint,
+				property: "commandClasses",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multi Channel"]
+			return (
+				valueId.commandClass === CommandClasses["Multi Channel"]
 				&& valueId.property === "commandClasses"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6168,15 +6645,18 @@ export const MultiChannelCCValues = Object.freeze({
 			commandClass: CommandClasses["Multi Channel"],
 			property: "deviceClass",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multi Channel"],
-			endpoint,
-			property: "deviceClass",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multi Channel"],
+				endpoint,
+				property: "deviceClass",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multi Channel"]
+			return (
+				valueId.commandClass === CommandClasses["Multi Channel"]
 				&& valueId.property === "deviceClass"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6201,12 +6681,13 @@ export const MultiChannelCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multi Channel"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Multi Channel"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -6214,10 +6695,12 @@ export const MultiChannelCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["Multi Channel"]
+				return (
+					valueId.commandClass === CommandClasses["Multi Channel"]
 					&& (({ property, propertyKey }) =>
 						property === "members"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -6237,15 +6720,18 @@ export const MultilevelSensorCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Sensor"],
 			property: "supportedSensorTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multilevel Sensor"],
-			endpoint,
-			property: "supportedSensorTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multilevel Sensor"],
+				endpoint,
+				property: "supportedSensorTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Sensor"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Sensor"]
 				&& valueId.property === "supportedSensorTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6270,12 +6756,13 @@ export const MultilevelSensorCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multilevel Sensor"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Multilevel Sensor"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -6283,11 +6770,12 @@ export const MultilevelSensorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Multilevel Sensor"]
+				return (
+					valueId.commandClass === CommandClasses["Multilevel Sensor"]
 					&& (({ property, propertyKey }) =>
 						property === "supportedScales"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -6308,11 +6796,12 @@ export const MultilevelSensorCCValues = Object.freeze({
 					commandClass: CommandClasses["Multilevel Sensor"],
 					property,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multilevel Sensor"],
-					endpoint,
-					property: property,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Multilevel Sensor"],
+						endpoint,
+						property: property,
+					}) as const,
 				get meta() {
 					return {
 						// Just the base metadata, to be extended using a config manager
@@ -6324,13 +6813,14 @@ export const MultilevelSensorCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Multilevel Sensor"]
+				return (
+					valueId.commandClass === CommandClasses["Multilevel Sensor"]
 					&& (({ property, propertyKey }) =>
 						typeof property === "string"
 						&& property !== "supportedSensorTypes"
 						&& property !== "supportedScales"
-						&& propertyKey == undefined)(valueId);
+						&& propertyKey == undefined)(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -6350,15 +6840,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Switch"],
 			property: "currentValue",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multilevel Switch"],
-			endpoint,
-			property: "currentValue",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multilevel Switch"],
+				endpoint,
+				property: "currentValue",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Switch"]
 				&& valueId.property === "currentValue"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6380,15 +6873,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Switch"],
 			property: "targetValue",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multilevel Switch"],
-			endpoint,
-			property: "targetValue",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multilevel Switch"],
+				endpoint,
+				property: "targetValue",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Switch"]
 				&& valueId.property === "targetValue"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6411,15 +6907,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Switch"],
 			property: "duration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multilevel Switch"],
-			endpoint,
-			property: "duration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multilevel Switch"],
+				endpoint,
+				property: "duration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Switch"]
 				&& valueId.property === "duration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6441,15 +6940,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Switch"],
 			property: "restorePrevious",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multilevel Switch"],
-			endpoint,
-			property: "restorePrevious",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multilevel Switch"],
+				endpoint,
+				property: "restorePrevious",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Switch"]
 				&& valueId.property === "restorePrevious"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6474,15 +6976,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Switch"],
 			property: "event",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multilevel Switch"],
-			endpoint,
-			property: "event",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multilevel Switch"],
+				endpoint,
+				property: "event",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Switch"]
 				&& valueId.property === "event"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6506,15 +7011,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Switch"],
 			property: "switchType",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Multilevel Switch"],
-			endpoint,
-			property: "switchType",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Multilevel Switch"],
+				endpoint,
+				property: "switchType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Switch"]
 				&& valueId.property === "switchType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6533,15 +7041,18 @@ export const MultilevelSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Multilevel Switch"],
 			property: "superviseStartStopLevelChange",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Multilevel Switch"],
-			endpoint: 0, // no endpoint support!
-			property: "superviseStartStopLevelChange",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Multilevel Switch"],
+				endpoint: 0, // no endpoint support!
+				property: "superviseStartStopLevelChange",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Multilevel Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Multilevel Switch"]
 				&& valueId.property === "superviseStartStopLevelChange"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6563,9 +7074,8 @@ export const MultilevelSwitchCCValues = Object.freeze({
 						SwitchType,
 						switchType,
 					);
-					const [, up] = multilevelSwitchTypeToActions(
-						switchTypeName,
-					);
+					const [, up] =
+						multilevelSwitchTypeToActions(switchTypeName);
 					return up;
 				}
 			})();
@@ -6575,19 +7085,19 @@ export const MultilevelSwitchCCValues = Object.freeze({
 					commandClass: CommandClasses["Multilevel Switch"],
 					property,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multilevel Switch"],
-					endpoint,
-					property: property,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Multilevel Switch"],
+						endpoint,
+						property: property,
+					}) as const,
 				get meta() {
 					const switchTypeName = getEnumMemberName(
 						SwitchType,
 						switchType,
 					);
-					const [, up] = multilevelSwitchTypeToActions(
-						switchTypeName,
-					);
+					const [, up] =
+						multilevelSwitchTypeToActions(switchTypeName);
 					return {
 						...ValueMetadata.WriteOnlyBoolean,
 						label: `Perform a level change (${up})`,
@@ -6603,12 +7113,13 @@ export const MultilevelSwitchCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Multilevel Switch"]
+				return (
+					valueId.commandClass === CommandClasses["Multilevel Switch"]
 					&& (({ property }) =>
 						typeof property === "string"
 						&& multilevelSwitchTypeProperties.indexOf(property) % 2
-							=== 1)(valueId);
+							=== 1)(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -6628,9 +7139,8 @@ export const MultilevelSwitchCCValues = Object.freeze({
 						SwitchType,
 						switchType,
 					);
-					const [down] = multilevelSwitchTypeToActions(
-						switchTypeName,
-					);
+					const [down] =
+						multilevelSwitchTypeToActions(switchTypeName);
 					return down;
 				}
 			})();
@@ -6640,19 +7150,19 @@ export const MultilevelSwitchCCValues = Object.freeze({
 					commandClass: CommandClasses["Multilevel Switch"],
 					property,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Multilevel Switch"],
-					endpoint,
-					property: property,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Multilevel Switch"],
+						endpoint,
+						property: property,
+					}) as const,
 				get meta() {
 					const switchTypeName = getEnumMemberName(
 						SwitchType,
 						switchType,
 					);
-					const [down] = multilevelSwitchTypeToActions(
-						switchTypeName,
-					);
+					const [down] =
+						multilevelSwitchTypeToActions(switchTypeName);
 					return {
 						...ValueMetadata.WriteOnlyBoolean,
 						label: `Perform a level change (${down})`,
@@ -6668,12 +7178,13 @@ export const MultilevelSwitchCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Multilevel Switch"]
+				return (
+					valueId.commandClass === CommandClasses["Multilevel Switch"]
 					&& (({ property }) =>
 						typeof property === "string"
 						&& multilevelSwitchTypeProperties.indexOf(property) % 2
-							=== 0)(valueId);
+							=== 0)(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -6693,16 +7204,19 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			commandClass: CommandClasses["Node Naming and Location"],
 			property: "name",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Node Naming and Location"],
-			endpoint: 0, // no endpoint support!
-			property: "name",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Node Naming and Location"],
+				endpoint: 0, // no endpoint support!
+				property: "name",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Node Naming and Location"]
 				&& valueId.property === "name"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6724,16 +7238,19 @@ export const NodeNamingAndLocationCCValues = Object.freeze({
 			commandClass: CommandClasses["Node Naming and Location"],
 			property: "location",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Node Naming and Location"],
-			endpoint: 0, // no endpoint support!
-			property: "location",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Node Naming and Location"],
+				endpoint: 0, // no endpoint support!
+				property: "location",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Node Naming and Location"]
 				&& valueId.property === "location"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6758,15 +7275,18 @@ export const NotificationCCValues = Object.freeze({
 			commandClass: CommandClasses.Notification,
 			property: "supportsV1Alarm",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint: 0, // no endpoint support!
-			property: "supportsV1Alarm",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint: 0, // no endpoint support!
+				property: "supportsV1Alarm",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "supportsV1Alarm"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6785,15 +7305,18 @@ export const NotificationCCValues = Object.freeze({
 			commandClass: CommandClasses.Notification,
 			property: "supportedNotificationTypes",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint: 0, // no endpoint support!
-			property: "supportedNotificationTypes",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint: 0, // no endpoint support!
+				property: "supportedNotificationTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "supportedNotificationTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6812,15 +7335,18 @@ export const NotificationCCValues = Object.freeze({
 			commandClass: CommandClasses.Notification,
 			property: "notificationMode",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint: 0, // no endpoint support!
-			property: "notificationMode",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint: 0, // no endpoint support!
+				property: "notificationMode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "notificationMode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6839,15 +7365,18 @@ export const NotificationCCValues = Object.freeze({
 			commandClass: CommandClasses.Notification,
 			property: "lastRefresh",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint,
-			property: "lastRefresh",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint,
+				property: "lastRefresh",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "lastRefresh"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -6866,15 +7395,18 @@ export const NotificationCCValues = Object.freeze({
 			commandClass: CommandClasses.Notification,
 			property: "alarmType",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint,
-			property: "alarmType",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint,
+				property: "alarmType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "alarmType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6896,15 +7428,18 @@ export const NotificationCCValues = Object.freeze({
 			commandClass: CommandClasses.Notification,
 			property: "alarmLevel",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint,
-			property: "alarmLevel",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint,
+				property: "alarmLevel",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "alarmLevel"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -6927,16 +7462,19 @@ export const NotificationCCValues = Object.freeze({
 			property: "Access Control",
 			propertyKey: "Opening state",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint,
-			property: "Access Control",
-			propertyKey: "Opening state",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint,
+				property: "Access Control",
+				propertyKey: "Opening state",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "Access Control"
-				&& valueId.propertyKey == "Opening state";
+				&& valueId.propertyKey == "Opening state"
+			);
 		},
 		get meta() {
 			return {
@@ -6967,16 +7505,19 @@ export const NotificationCCValues = Object.freeze({
 			property: "Access Control",
 			propertyKey: "Door state (simple)",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint,
-			property: "Access Control",
-			propertyKey: "Door state (simple)",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint,
+				property: "Access Control",
+				propertyKey: "Door state (simple)",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "Access Control"
-				&& valueId.propertyKey == "Door state (simple)";
+				&& valueId.propertyKey == "Door state (simple)"
+			);
 		},
 		get meta() {
 			return {
@@ -7007,16 +7548,19 @@ export const NotificationCCValues = Object.freeze({
 			property: "Access Control",
 			propertyKey: "Door tilt state",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Notification,
-			endpoint,
-			property: "Access Control",
-			propertyKey: "Door tilt state",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Notification,
+				endpoint,
+				property: "Access Control",
+				propertyKey: "Door tilt state",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Notification
+			return (
+				valueId.commandClass === CommandClasses.Notification
 				&& valueId.property === "Access Control"
-				&& valueId.propertyKey == "Door tilt state";
+				&& valueId.propertyKey == "Door tilt state"
+			);
 		},
 		get meta() {
 			return {
@@ -7052,12 +7596,13 @@ export const NotificationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (_endpoint?: number) => ({
-					commandClass: CommandClasses.Notification,
-					endpoint: 0, // no endpoint support!
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (_endpoint?: number) =>
+					({
+						commandClass: CommandClasses.Notification,
+						endpoint: 0, // no endpoint support!
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -7065,10 +7610,12 @@ export const NotificationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Notification
+				return (
+					valueId.commandClass === CommandClasses.Notification
 					&& (({ property, propertyKey }) =>
 						property === "supportedNotificationEvents"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -7089,19 +7636,16 @@ export const NotificationCCValues = Object.freeze({
 					commandClass: CommandClasses.Notification,
 					property,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Notification,
-					endpoint,
-					property: property,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Notification,
+						endpoint,
+						property: property,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyUInt8,
-						label: `Unknown notification (${
-							num2hex(
-								notificationType,
-							)
-						})`,
+						label: `Unknown notification (${num2hex(notificationType)})`,
 						ccSpecific: { notificationType },
 					} as const;
 				},
@@ -7109,10 +7653,12 @@ export const NotificationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Notification
+				return (
+					valueId.commandClass === CommandClasses.Notification
 					&& (({ property }) =>
 						typeof property === "string"
-						&& property.startsWith("UNKNOWN_0x"))(valueId);
+						&& property.startsWith("UNKNOWN_0x"))(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -7135,12 +7681,13 @@ export const NotificationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Notification,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Notification,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyUInt8,
@@ -7152,10 +7699,12 @@ export const NotificationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Notification
+				return (
+					valueId.commandClass === CommandClasses.Notification
 					&& (({ property, propertyKey }) =>
 						typeof property === "string"
-						&& propertyKey === "unknown")(valueId);
+						&& propertyKey === "unknown")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -7178,12 +7727,13 @@ export const NotificationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses.Notification,
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses.Notification,
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -7191,10 +7741,12 @@ export const NotificationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Notification
+				return (
+					valueId.commandClass === CommandClasses.Notification
 					&& (({ property, propertyKey }) =>
 						typeof property === "string"
-						&& typeof propertyKey === "string")(valueId);
+						&& typeof propertyKey === "string")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -7239,15 +7791,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "exclusiveControlNodeId",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "exclusiveControlNodeId",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "exclusiveControlNodeId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "exclusiveControlNodeId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -7271,15 +7826,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "local",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "local",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "local",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "local"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -7302,15 +7860,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "rf",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "rf",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "rf",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "rf"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -7333,15 +7894,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "timeout",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "timeout",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "timeout",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "timeout"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -7363,15 +7927,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "supportsExclusiveControl",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "supportsExclusiveControl",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "supportsExclusiveControl",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "supportsExclusiveControl"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -7390,15 +7957,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "supportsTimeout",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "supportsTimeout",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "supportsTimeout",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "supportsTimeout"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -7417,15 +7987,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "supportedLocalStates",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "supportedLocalStates",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "supportedLocalStates",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "supportedLocalStates"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -7444,15 +8017,18 @@ export const ProtectionCCValues = Object.freeze({
 			commandClass: CommandClasses.Protection,
 			property: "supportedRFStates",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Protection,
-			endpoint,
-			property: "supportedRFStates",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Protection,
+				endpoint,
+				property: "supportedRFStates",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Protection
+			return (
+				valueId.commandClass === CommandClasses.Protection
 				&& valueId.property === "supportedRFStates"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -7474,15 +8050,18 @@ export const SceneActivationCCValues = Object.freeze({
 			commandClass: CommandClasses["Scene Activation"],
 			property: "sceneId",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Scene Activation"],
-			endpoint,
-			property: "sceneId",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Scene Activation"],
+				endpoint,
+				property: "sceneId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Scene Activation"]
+			return (
+				valueId.commandClass === CommandClasses["Scene Activation"]
 				&& valueId.property === "sceneId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -7506,15 +8085,18 @@ export const SceneActivationCCValues = Object.freeze({
 			commandClass: CommandClasses["Scene Activation"],
 			property: "dimmingDuration",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Scene Activation"],
-			endpoint,
-			property: "dimmingDuration",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Scene Activation"],
+				endpoint,
+				property: "dimmingDuration",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Scene Activation"]
+			return (
+				valueId.commandClass === CommandClasses["Scene Activation"]
 				&& valueId.property === "dimmingDuration"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -7546,13 +8128,14 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass:
-						CommandClasses["Scene Actuator Configuration"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Scene Actuator Configuration"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.UInt8,
@@ -7564,11 +8147,13 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Scene Actuator Configuration"]
 					&& (({ property, propertyKey }) =>
 						property === "level"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -7592,13 +8177,14 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass:
-						CommandClasses["Scene Actuator Configuration"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Scene Actuator Configuration"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Duration,
@@ -7609,11 +8195,13 @@ export const SceneActuatorConfigurationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Scene Actuator Configuration"]
 					&& (({ property, propertyKey }) =>
 						property === "dimmingDuration"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -7640,13 +8228,14 @@ export const SceneControllerConfigurationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass:
-						CommandClasses["Scene Controller Configuration"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Scene Controller Configuration"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.UInt8,
@@ -7658,11 +8247,13 @@ export const SceneControllerConfigurationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Scene Controller Configuration"]
 					&& (({ property, propertyKey }) =>
 						property === "sceneId"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -7686,13 +8277,14 @@ export const SceneControllerConfigurationCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass:
-						CommandClasses["Scene Controller Configuration"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass:
+							CommandClasses["Scene Controller Configuration"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Duration,
@@ -7703,11 +8295,13 @@ export const SceneControllerConfigurationCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Scene Controller Configuration"]
 					&& (({ property, propertyKey }) =>
 						property === "dimmingDuration"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -7727,16 +8321,18 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Schedule Entry Lock"],
 			property: "numWeekDaySlots",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Schedule Entry Lock"],
-			endpoint,
-			property: "numWeekDaySlots",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Schedule Entry Lock"],
+				endpoint,
+				property: "numWeekDaySlots",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Schedule Entry Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Schedule Entry Lock"]
 				&& valueId.property === "numWeekDaySlots"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -7755,16 +8351,18 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Schedule Entry Lock"],
 			property: "numYearDaySlots",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Schedule Entry Lock"],
-			endpoint,
-			property: "numYearDaySlots",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Schedule Entry Lock"],
+				endpoint,
+				property: "numYearDaySlots",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Schedule Entry Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Schedule Entry Lock"]
 				&& valueId.property === "numYearDaySlots"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -7783,16 +8381,18 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 			commandClass: CommandClasses["Schedule Entry Lock"],
 			property: "numDailyRepeatingSlots",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Schedule Entry Lock"],
-			endpoint,
-			property: "numDailyRepeatingSlots",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Schedule Entry Lock"],
+				endpoint,
+				property: "numDailyRepeatingSlots",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Schedule Entry Lock"]
+			return (
+				valueId.commandClass === CommandClasses["Schedule Entry Lock"]
 				&& valueId.property === "numDailyRepeatingSlots"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -7817,12 +8417,13 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Schedule Entry Lock"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Schedule Entry Lock"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -7830,11 +8431,13 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Schedule Entry Lock"]
 					&& (({ property, propertyKey }) =>
 						property === "userEnabled"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -7857,12 +8460,13 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Schedule Entry Lock"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Schedule Entry Lock"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -7870,11 +8474,13 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Schedule Entry Lock"]
 					&& (({ property, propertyKey }) =>
 						property === "scheduleKind"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -7901,12 +8507,13 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Schedule Entry Lock"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Schedule Entry Lock"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -7914,11 +8521,13 @@ export const ScheduleEntryLockCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Schedule Entry Lock"]
 					&& (({ property, propertyKey }) =>
 						property === "schedule"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -7938,15 +8547,18 @@ export const SoundSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Sound Switch"],
 			property: "volume",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Sound Switch"],
-			endpoint,
-			property: "volume",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Sound Switch"],
+				endpoint,
+				property: "volume",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Sound Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Sound Switch"]
 				&& valueId.property === "volume"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -7975,15 +8587,18 @@ export const SoundSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Sound Switch"],
 			property: "toneId",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Sound Switch"],
-			endpoint,
-			property: "toneId",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Sound Switch"],
+				endpoint,
+				property: "toneId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Sound Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Sound Switch"]
 				&& valueId.property === "toneId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8006,15 +8621,18 @@ export const SoundSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Sound Switch"],
 			property: "defaultVolume",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Sound Switch"],
-			endpoint,
-			property: "defaultVolume",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Sound Switch"],
+				endpoint,
+				property: "defaultVolume",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Sound Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Sound Switch"]
 				&& valueId.property === "defaultVolume"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8039,15 +8657,18 @@ export const SoundSwitchCCValues = Object.freeze({
 			commandClass: CommandClasses["Sound Switch"],
 			property: "defaultToneId",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Sound Switch"],
-			endpoint,
-			property: "defaultToneId",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Sound Switch"],
+				endpoint,
+				property: "defaultToneId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Sound Switch"]
+			return (
+				valueId.commandClass === CommandClasses["Sound Switch"]
 				&& valueId.property === "defaultToneId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8080,12 +8701,13 @@ export const SupervisionCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (_endpoint?: number) => ({
-					commandClass: CommandClasses.Supervision,
-					endpoint: 0, // no endpoint support!
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (_endpoint?: number) =>
+					({
+						commandClass: CommandClasses.Supervision,
+						endpoint: 0, // no endpoint support!
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -8093,10 +8715,12 @@ export const SupervisionCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses.Supervision
+				return (
+					valueId.commandClass === CommandClasses.Supervision
 					&& (({ property, propertyKey }) =>
 						property === "commandSupported"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -8116,16 +8740,18 @@ export const ThermostatFanModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Fan Mode"],
 			property: "off",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Fan Mode"],
-			endpoint,
-			property: "off",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Fan Mode"],
+				endpoint,
+				property: "off",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Thermostat Fan Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Fan Mode"]
 				&& valueId.property === "off"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8147,16 +8773,18 @@ export const ThermostatFanModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Fan Mode"],
 			property: "mode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Fan Mode"],
-			endpoint,
-			property: "mode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Fan Mode"],
+				endpoint,
+				property: "mode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Thermostat Fan Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Fan Mode"]
 				&& valueId.property === "mode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8179,16 +8807,18 @@ export const ThermostatFanModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Fan Mode"],
 			property: "supportedModes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Fan Mode"],
-			endpoint,
-			property: "supportedModes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Fan Mode"],
+				endpoint,
+				property: "supportedModes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Thermostat Fan Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Fan Mode"]
 				&& valueId.property === "supportedModes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8210,16 +8840,18 @@ export const ThermostatFanStateCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Fan State"],
 			property: "state",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Fan State"],
-			endpoint,
-			property: "state",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Fan State"],
+				endpoint,
+				property: "state",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Thermostat Fan State"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Fan State"]
 				&& valueId.property === "state"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8245,15 +8877,18 @@ export const ThermostatModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Mode"],
 			property: "mode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Mode"],
-			endpoint,
-			property: "mode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Mode"],
+				endpoint,
+				property: "mode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Thermostat Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Mode"]
 				&& valueId.property === "mode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8276,15 +8911,18 @@ export const ThermostatModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Mode"],
 			property: "manufacturerData",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Mode"],
-			endpoint,
-			property: "manufacturerData",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Mode"],
+				endpoint,
+				property: "manufacturerData",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Thermostat Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Mode"]
 				&& valueId.property === "manufacturerData"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8306,15 +8944,18 @@ export const ThermostatModeCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Mode"],
 			property: "supportedModes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Mode"],
-			endpoint,
-			property: "supportedModes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Mode"],
+				endpoint,
+				property: "supportedModes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Thermostat Mode"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Mode"]
 				&& valueId.property === "supportedModes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8336,16 +8977,19 @@ export const ThermostatOperatingStateCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Operating State"],
 			property: "state",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Operating State"],
-			endpoint,
-			property: "state",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Operating State"],
+				endpoint,
+				property: "state",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
+			return (
+				valueId.commandClass
 					=== CommandClasses["Thermostat Operating State"]
 				&& valueId.property === "state"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8371,16 +9015,18 @@ export const ThermostatSetpointCCValues = Object.freeze({
 			commandClass: CommandClasses["Thermostat Setpoint"],
 			property: "supportedSetpointTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Thermostat Setpoint"],
-			endpoint,
-			property: "supportedSetpointTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Thermostat Setpoint"],
+				endpoint,
+				property: "supportedSetpointTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass
-					=== CommandClasses["Thermostat Setpoint"]
+			return (
+				valueId.commandClass === CommandClasses["Thermostat Setpoint"]
 				&& valueId.property === "supportedSetpointTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8405,21 +9051,20 @@ export const ThermostatSetpointCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Thermostat Setpoint"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Thermostat Setpoint"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Number,
-						label: `Setpoint (${
-							getEnumMemberName(
-								ThermostatSetpointType,
-								setpointType,
-							)
-						})`,
+						label: `Setpoint (${getEnumMemberName(
+							ThermostatSetpointType,
+							setpointType,
+						)})`,
 						ccSpecific: { setpointType },
 					} as const;
 				},
@@ -8427,11 +9072,13 @@ export const ThermostatSetpointCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Thermostat Setpoint"]
 					&& (({ property, propertyKey }) =>
 						property === "setpoint"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -8454,12 +9101,13 @@ export const ThermostatSetpointCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Thermostat Setpoint"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Thermostat Setpoint"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -8467,11 +9115,13 @@ export const ThermostatSetpointCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
+				return (
+					valueId.commandClass
 						=== CommandClasses["Thermostat Setpoint"]
 					&& (({ property, propertyKey }) =>
 						property === "setpointScale"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -8491,15 +9141,18 @@ export const TimeParametersCCValues = Object.freeze({
 			commandClass: CommandClasses["Time Parameters"],
 			property: "dateAndTime",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Time Parameters"],
-			endpoint,
-			property: "dateAndTime",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Time Parameters"],
+				endpoint,
+				property: "dateAndTime",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Time Parameters"]
+			return (
+				valueId.commandClass === CommandClasses["Time Parameters"]
 				&& valueId.property === "dateAndTime"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8524,15 +9177,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportedUsers",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportedUsers",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportedUsers",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportedUsers"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8551,15 +9207,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportsAdminCode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportsAdminCode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportsAdminCode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportsAdminCode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8578,15 +9237,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportsAdminCodeDeactivation",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportsAdminCodeDeactivation",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportsAdminCodeDeactivation",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportsAdminCodeDeactivation"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8605,15 +9267,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportsMasterCode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportsMasterCode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportsMasterCode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportsMasterCode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8632,15 +9297,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportsMasterCodeDeactivation",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportsMasterCodeDeactivation",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportsMasterCodeDeactivation",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportsMasterCodeDeactivation"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8659,15 +9327,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportsUserCodeChecksum",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportsUserCodeChecksum",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportsUserCodeChecksum",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportsUserCodeChecksum"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8686,15 +9357,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportsMultipleUserCodeReport",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportsMultipleUserCodeReport",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportsMultipleUserCodeReport",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportsMultipleUserCodeReport"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8713,15 +9387,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportsMultipleUserCodeSet",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportsMultipleUserCodeSet",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportsMultipleUserCodeSet",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportsMultipleUserCodeSet"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8740,15 +9417,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportedUserIDStatuses",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportedUserIDStatuses",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportedUserIDStatuses",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportedUserIDStatuses"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8767,15 +9447,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportedKeypadModes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportedKeypadModes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportedKeypadModes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportedKeypadModes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8794,15 +9477,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "supportedASCIIChars",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "supportedASCIIChars",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "supportedASCIIChars",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "supportedASCIIChars"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8821,15 +9507,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "userCodeChecksum",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "userCodeChecksum",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "userCodeChecksum",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "userCodeChecksum"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8848,15 +9537,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "keypadMode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "keypadMode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "keypadMode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "keypadMode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8878,15 +9570,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "adminCode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "adminCode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "adminCode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "adminCode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -8910,15 +9605,18 @@ export const UserCodeCCValues = Object.freeze({
 			commandClass: CommandClasses["User Code"],
 			property: "masterCode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Code"],
-			endpoint,
-			property: "masterCode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Code"],
+				endpoint,
+				property: "masterCode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Code"]
+			return (
+				valueId.commandClass === CommandClasses["User Code"]
 				&& valueId.property === "masterCode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -8943,12 +9641,13 @@ export const UserCodeCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Code"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Code"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.Number,
@@ -8959,10 +9658,12 @@ export const UserCodeCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["User Code"]
+				return (
+					valueId.commandClass === CommandClasses["User Code"]
 					&& (({ property, propertyKey }) =>
 						property === "userIdStatus"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -8985,12 +9686,13 @@ export const UserCodeCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Code"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Code"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -8998,10 +9700,12 @@ export const UserCodeCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass === CommandClasses["User Code"]
+				return (
+					valueId.commandClass === CommandClasses["User Code"]
 					&& (({ property, propertyKey }) =>
 						property === "userCode"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -9021,15 +9725,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportedUsers",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportedUsers",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportedUsers",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportedUsers"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9048,15 +9755,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportedCredentialRules",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportedCredentialRules",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportedCredentialRules",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportedCredentialRules"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9075,15 +9785,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "maxUserNameLength",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "maxUserNameLength",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "maxUserNameLength",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "maxUserNameLength"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9102,15 +9815,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportsUserSchedule",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportsUserSchedule",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportsUserSchedule",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportsUserSchedule"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9129,15 +9845,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportsAllUsersChecksum",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportsAllUsersChecksum",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportsAllUsersChecksum",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportsAllUsersChecksum"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9156,15 +9875,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportsUserChecksum",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportsUserChecksum",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportsUserChecksum",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportsUserChecksum"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9183,15 +9905,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportedUserNameEncodings",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportedUserNameEncodings",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportedUserNameEncodings",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportedUserNameEncodings"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9210,15 +9935,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportedUserTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportedUserTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportedUserTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportedUserTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9237,15 +9965,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportsCredentialChecksum",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportsCredentialChecksum",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportsCredentialChecksum",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportsCredentialChecksum"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9264,15 +9995,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportsAdminCode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportsAdminCode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportsAdminCode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportsAdminCode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9291,15 +10025,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportsAdminCodeDeactivation",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportsAdminCodeDeactivation",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportsAdminCodeDeactivation",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportsAdminCodeDeactivation"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9318,15 +10055,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportedCredentialTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportedCredentialTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportedCredentialTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportedCredentialTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9351,12 +10091,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9364,11 +10105,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "credentialCapabilities"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9385,15 +10127,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "allUsersChecksum",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "allUsersChecksum",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "allUsersChecksum",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "allUsersChecksum"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9412,15 +10157,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "supportedKeyLockerEntryTypes",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "supportedKeyLockerEntryTypes",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "supportedKeyLockerEntryTypes",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "supportedKeyLockerEntryTypes"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9445,12 +10193,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9458,11 +10207,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "keyLockerCapabilities"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9485,12 +10235,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9498,11 +10249,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "userType"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9525,12 +10277,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9538,11 +10291,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "userActive"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9565,12 +10319,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9578,11 +10333,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "credentialRule"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9605,12 +10361,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9618,11 +10375,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "expiringTimeoutMinutes"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9645,12 +10403,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9658,11 +10417,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "userName"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9685,12 +10445,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9698,11 +10459,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "userModifierType"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9725,12 +10487,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9738,11 +10501,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "userModifierNodeId"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9765,12 +10529,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9778,11 +10543,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "userChecksum"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9805,12 +10571,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9818,11 +10585,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "credentialOwner"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9845,12 +10613,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9858,11 +10627,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "credentialModifierType"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9885,12 +10655,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9898,11 +10669,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "credentialModifierNodeId"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9925,12 +10697,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -9938,11 +10711,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "credential"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -9959,15 +10733,18 @@ export const UserCredentialCCValues = Object.freeze({
 			commandClass: CommandClasses["User Credential"],
 			property: "adminPinCode",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["User Credential"],
-			endpoint,
-			property: "adminPinCode",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["User Credential"],
+				endpoint,
+				property: "adminPinCode",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["User Credential"]
+			return (
+				valueId.commandClass === CommandClasses["User Credential"]
 				&& valueId.property === "adminPinCode"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -9992,12 +10769,13 @@ export const UserCredentialCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["User Credential"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["User Credential"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return ValueMetadata.Any;
 				},
@@ -10005,11 +10783,12 @@ export const UserCredentialCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["User Credential"]
+				return (
+					valueId.commandClass === CommandClasses["User Credential"]
 					&& (({ property, propertyKey }) =>
 						property === "keyLockerEntry"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: true,
@@ -10029,15 +10808,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "firmwareVersions",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "firmwareVersions",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "firmwareVersions",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "firmwareVersions"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10060,15 +10842,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "libraryType",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "libraryType",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "libraryType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "libraryType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10091,15 +10876,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "protocolVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "protocolVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "protocolVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "protocolVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10121,15 +10909,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "hardwareVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "hardwareVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "hardwareVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "hardwareVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10151,15 +10942,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "supportsZWaveSoftwareGet",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses.Version,
-			endpoint,
-			property: "supportsZWaveSoftwareGet",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint,
+				property: "supportsZWaveSoftwareGet",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "supportsZWaveSoftwareGet"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -10178,15 +10972,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "sdkVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "sdkVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "sdkVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "sdkVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10208,15 +11005,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "applicationFrameworkAPIVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "applicationFrameworkAPIVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "applicationFrameworkAPIVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "applicationFrameworkAPIVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10238,15 +11038,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "applicationFrameworkBuildNumber",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "applicationFrameworkBuildNumber",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "applicationFrameworkBuildNumber",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "applicationFrameworkBuildNumber"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10268,15 +11071,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "hostInterfaceVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "hostInterfaceVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "hostInterfaceVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "hostInterfaceVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10298,15 +11104,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "hostInterfaceBuildNumber",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "hostInterfaceBuildNumber",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "hostInterfaceBuildNumber",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "hostInterfaceBuildNumber"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10328,15 +11137,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "zWaveProtocolVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "zWaveProtocolVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "zWaveProtocolVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "zWaveProtocolVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10358,15 +11170,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "zWaveProtocolBuildNumber",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "zWaveProtocolBuildNumber",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "zWaveProtocolBuildNumber",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "zWaveProtocolBuildNumber"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10388,15 +11203,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "applicationVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "applicationVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "applicationVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "applicationVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10418,15 +11236,18 @@ export const VersionCCValues = Object.freeze({
 			commandClass: CommandClasses.Version,
 			property: "applicationBuildNumber",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses.Version,
-			endpoint: 0, // no endpoint support!
-			property: "applicationBuildNumber",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses.Version,
+				endpoint: 0, // no endpoint support!
+				property: "applicationBuildNumber",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses.Version
+			return (
+				valueId.commandClass === CommandClasses.Version
 				&& valueId.property === "applicationBuildNumber"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10451,15 +11272,18 @@ export const WakeUpCCValues = Object.freeze({
 			commandClass: CommandClasses["Wake Up"],
 			property: "controllerNodeId",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Wake Up"],
-			endpoint: 0, // no endpoint support!
-			property: "controllerNodeId",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Wake Up"],
+				endpoint: 0, // no endpoint support!
+				property: "controllerNodeId",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Wake Up"]
+			return (
+				valueId.commandClass === CommandClasses["Wake Up"]
 				&& valueId.property === "controllerNodeId"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10481,15 +11305,18 @@ export const WakeUpCCValues = Object.freeze({
 			commandClass: CommandClasses["Wake Up"],
 			property: "wakeUpInterval",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Wake Up"],
-			endpoint: 0, // no endpoint support!
-			property: "wakeUpInterval",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Wake Up"],
+				endpoint: 0, // no endpoint support!
+				property: "wakeUpInterval",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Wake Up"]
+			return (
+				valueId.commandClass === CommandClasses["Wake Up"]
 				&& valueId.property === "wakeUpInterval"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return {
@@ -10511,15 +11338,18 @@ export const WakeUpCCValues = Object.freeze({
 			commandClass: CommandClasses["Wake Up"],
 			property: "wakeUpOnDemandSupported",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Wake Up"],
-			endpoint: 0, // no endpoint support!
-			property: "wakeUpOnDemandSupported",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Wake Up"],
+				endpoint: 0, // no endpoint support!
+				property: "wakeUpOnDemandSupported",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Wake Up"]
+			return (
+				valueId.commandClass === CommandClasses["Wake Up"]
 				&& valueId.property === "wakeUpOnDemandSupported"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -10541,15 +11371,18 @@ export const WindowCoveringCCValues = Object.freeze({
 			commandClass: CommandClasses["Window Covering"],
 			property: "supportedParameters",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Window Covering"],
-			endpoint,
-			property: "supportedParameters",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Window Covering"],
+				endpoint,
+				property: "supportedParameters",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Window Covering"]
+			return (
+				valueId.commandClass === CommandClasses["Window Covering"]
 				&& valueId.property === "supportedParameters"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -10574,21 +11407,20 @@ export const WindowCoveringCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Window Covering"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Window Covering"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyLevel,
-						label: `Current value - ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								parameter,
-							)
-						}`,
+						label: `Current value - ${getEnumMemberName(
+							WindowCoveringParameter,
+							parameter,
+						)}`,
 						states: windowCoveringParameterToMetadataStates(
 							parameter,
 						),
@@ -10599,11 +11431,12 @@ export const WindowCoveringCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Window Covering"]
+				return (
+					valueId.commandClass === CommandClasses["Window Covering"]
 					&& (({ property, propertyKey }) =>
 						property === "currentValue"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -10626,23 +11459,22 @@ export const WindowCoveringCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Window Covering"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Window Covering"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					// Only odd-numbered parameters have position support and are writable
 					const writeable = parameter % 2 === 1;
 					return {
 						...ValueMetadata.Level,
-						label: `Target value - ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								parameter,
-							)
-						}`,
+						label: `Target value - ${getEnumMemberName(
+							WindowCoveringParameter,
+							parameter,
+						)}`,
 						// Only odd-numbered parameters have position support and are writable
 						writeable: parameter % 2 === 1,
 						states: windowCoveringParameterToMetadataStates(
@@ -10657,11 +11489,12 @@ export const WindowCoveringCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Window Covering"]
+				return (
+					valueId.commandClass === CommandClasses["Window Covering"]
 					&& (({ property, propertyKey }) =>
 						property === "targetValue"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -10684,21 +11517,20 @@ export const WindowCoveringCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Window Covering"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Window Covering"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.ReadOnlyDuration,
-						label: `Remaining duration - ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								parameter,
-							)
-						}`,
+						label: `Remaining duration - ${getEnumMemberName(
+							WindowCoveringParameter,
+							parameter,
+						)}`,
 						ccSpecific: {
 							parameter,
 						},
@@ -10708,11 +11540,12 @@ export const WindowCoveringCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Window Covering"]
+				return (
+					valueId.commandClass === CommandClasses["Window Covering"]
 					&& (({ property, propertyKey }) =>
 						property === "duration"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -10735,26 +11568,23 @@ export const WindowCoveringCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Window Covering"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Window Covering"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.WriteOnlyBoolean,
-						label: `${
-							windowCoveringParameterToLevelChangeLabel(
-								parameter,
-								"up",
-							)
-						} - ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								parameter,
-							)
-						}`,
+						label: `${windowCoveringParameterToLevelChangeLabel(
+							parameter,
+							"up",
+						)} - ${getEnumMemberName(
+							WindowCoveringParameter,
+							parameter,
+						)}`,
 						valueChangeOptions: ["transitionDuration"],
 						states: {
 							true: "Start",
@@ -10767,11 +11597,12 @@ export const WindowCoveringCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Window Covering"]
+				return (
+					valueId.commandClass === CommandClasses["Window Covering"]
 					&& (({ property, propertyKey }) =>
 						property === "levelChangeUp"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -10794,26 +11625,23 @@ export const WindowCoveringCCValues = Object.freeze({
 					property,
 					propertyKey,
 				} as const,
-				endpoint: (endpoint: number = 0) => ({
-					commandClass: CommandClasses["Window Covering"],
-					endpoint,
-					property: property,
-					propertyKey: propertyKey,
-				} as const),
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Window Covering"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
 				get meta() {
 					return {
 						...ValueMetadata.WriteOnlyBoolean,
-						label: `${
-							windowCoveringParameterToLevelChangeLabel(
-								parameter,
-								"down",
-							)
-						} - ${
-							getEnumMemberName(
-								WindowCoveringParameter,
-								parameter,
-							)
-						}`,
+						label: `${windowCoveringParameterToLevelChangeLabel(
+							parameter,
+							"down",
+						)} - ${getEnumMemberName(
+							WindowCoveringParameter,
+							parameter,
+						)}`,
 						valueChangeOptions: ["transitionDuration"],
 						states: {
 							true: "Start",
@@ -10826,11 +11654,12 @@ export const WindowCoveringCCValues = Object.freeze({
 		},
 		{
 			is: (valueId: ValueID): boolean => {
-				return valueId.commandClass
-						=== CommandClasses["Window Covering"]
+				return (
+					valueId.commandClass === CommandClasses["Window Covering"]
 					&& (({ property, propertyKey }) =>
 						property === "levelChangeDown"
-						&& typeof propertyKey === "number")(valueId);
+						&& typeof propertyKey === "number")(valueId)
+				);
 			},
 			options: {
 				internal: false,
@@ -10850,15 +11679,18 @@ export const ZWavePlusCCValues = Object.freeze({
 			commandClass: CommandClasses["Z-Wave Plus Info"],
 			property: "zwavePlusVersion",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Z-Wave Plus Info"],
-			endpoint: 0, // no endpoint support!
-			property: "zwavePlusVersion",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Z-Wave Plus Info"],
+				endpoint: 0, // no endpoint support!
+				property: "zwavePlusVersion",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
+			return (
+				valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
 				&& valueId.property === "zwavePlusVersion"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -10877,15 +11709,18 @@ export const ZWavePlusCCValues = Object.freeze({
 			commandClass: CommandClasses["Z-Wave Plus Info"],
 			property: "nodeType",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Z-Wave Plus Info"],
-			endpoint: 0, // no endpoint support!
-			property: "nodeType",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Z-Wave Plus Info"],
+				endpoint: 0, // no endpoint support!
+				property: "nodeType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
+			return (
+				valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
 				&& valueId.property === "nodeType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -10904,15 +11739,18 @@ export const ZWavePlusCCValues = Object.freeze({
 			commandClass: CommandClasses["Z-Wave Plus Info"],
 			property: "roleType",
 		} as const,
-		endpoint: (_endpoint?: number) => ({
-			commandClass: CommandClasses["Z-Wave Plus Info"],
-			endpoint: 0, // no endpoint support!
-			property: "roleType",
-		} as const),
+		endpoint: (_endpoint?: number) =>
+			({
+				commandClass: CommandClasses["Z-Wave Plus Info"],
+				endpoint: 0, // no endpoint support!
+				property: "roleType",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
+			return (
+				valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
 				&& valueId.property === "roleType"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -10931,15 +11769,18 @@ export const ZWavePlusCCValues = Object.freeze({
 			commandClass: CommandClasses["Z-Wave Plus Info"],
 			property: "userIcon",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Z-Wave Plus Info"],
-			endpoint,
-			property: "userIcon",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Z-Wave Plus Info"],
+				endpoint,
+				property: "userIcon",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
+			return (
+				valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
 				&& valueId.property === "userIcon"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;
@@ -10958,15 +11799,18 @@ export const ZWavePlusCCValues = Object.freeze({
 			commandClass: CommandClasses["Z-Wave Plus Info"],
 			property: "installerIcon",
 		} as const,
-		endpoint: (endpoint: number = 0) => ({
-			commandClass: CommandClasses["Z-Wave Plus Info"],
-			endpoint,
-			property: "installerIcon",
-		} as const),
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Z-Wave Plus Info"],
+				endpoint,
+				property: "installerIcon",
+			}) as const,
 		is: (valueId: ValueID): boolean => {
-			return valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
+			return (
+				valueId.commandClass === CommandClasses["Z-Wave Plus Info"]
 				&& valueId.property === "installerIcon"
-				&& valueId.propertyKey == undefined;
+				&& valueId.propertyKey == undefined
+			);
 		},
 		get meta() {
 			return ValueMetadata.Any;

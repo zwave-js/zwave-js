@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { SemanticEnvError, parseSemanticEnv } from "./env.js";
 
 describe("parseSemanticEnv", () => {
@@ -16,15 +17,16 @@ describe("parseSemanticEnv", () => {
 	});
 
 	it("throws a SemanticEnvError for an invalid enabled value", () => {
-		expect(() => parseSemanticEnv({ ZWAVE_DEV_SEMANTIC_ENABLED: "maybe" }))
-			.toThrow(SemanticEnvError);
+		expect(() =>
+			parseSemanticEnv({ ZWAVE_DEV_SEMANTIC_ENABLED: "maybe" }),
+		).toThrow(SemanticEnvError);
 	});
 
 	it("throws a SemanticEnvError for an invalid local download policy", () => {
 		expect(() =>
 			parseSemanticEnv({
 				ZWAVE_DEV_SEMANTIC_LOCAL_DOWNLOAD: "maybe",
-			})
+			}),
 		).toThrow(SemanticEnvError);
 	});
 

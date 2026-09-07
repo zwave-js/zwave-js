@@ -14,6 +14,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -43,18 +44,8 @@ integrationTest(
 							currentMode: DoorLockMode.Unsecured,
 							targetMode: DoorLockMode.Unsecured,
 							duration: new Duration(0, "seconds"),
-							outsideHandlesCanOpenDoor: [
-								true,
-								true,
-								true,
-								true,
-							],
-							insideHandlesCanOpenDoor: [
-								true,
-								true,
-								true,
-								true,
-							],
+							outsideHandlesCanOpenDoor: [true, true, true, true],
+							insideHandlesCanOpenDoor: [true, true, true, true],
 						});
 						return { action: "sendCC", cc };
 					}
@@ -111,10 +102,7 @@ integrationTest(
 			t.expect(initialCurrentMode === DoorLockMode.Unsecured).toBe(true);
 
 			// Set targetMode to Secured
-			await node.setValue(
-				targetModeValueId,
-				DoorLockMode.Secured,
-			);
+			await node.setValue(targetModeValueId, DoorLockMode.Secured);
 
 			// After the Working report and setValue completion, targetMode updates optimistically
 			t.expect(node.getValue(targetModeValueId)).toBe(

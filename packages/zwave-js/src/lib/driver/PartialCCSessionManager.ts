@@ -23,14 +23,14 @@ export type PartialCCUpdate =
 	| { type: "segment"; duplicate: boolean }
 	// All segments were received and the command can be merged
 	| {
-		type: "complete";
-		/** The final segment, which the partials are merged into */
-		command: CommandClass;
-		/** The other segments, ordered like they were transmitted by the node */
-		partials: CommandClass[];
-		/** The message which contained the final segment */
-		finalMsg: CommandRequest & ContainsCC;
-	};
+			type: "complete";
+			/** The final segment, which the partials are merged into */
+			command: CommandClass;
+			/** The other segments, ordered like they were transmitted by the node */
+			partials: CommandClass[];
+			/** The message which contained the final segment */
+			finalMsg: CommandRequest & ContainsCC;
+	  };
 
 export interface PartialCCSessionManagerHost {
 	/** How long to wait for the next segment of a session */

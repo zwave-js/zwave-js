@@ -1,3 +1,7 @@
+import fsp from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 import {
 	type BytesView,
 	fileHandleToReadableStream,
@@ -8,9 +12,6 @@ import type {
 	FileHandle,
 	FileSystem,
 } from "@zwave-js/shared/bindings";
-import fsp from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 
 /** An implementation of the FileSystem bindings for Node.js */
 export const fs: FileSystem = {
@@ -63,13 +64,10 @@ export const fs: FileSystem = {
 			mode = flags.read ? "w+" : "w";
 		}
 
-		return new NodeFileHandle(
-			await fsp.open(path, mode),
-			{
-				read: flags.read,
-				write: flags.write,
-			},
-		);
+		return new NodeFileHandle(await fsp.open(path, mode), {
+			read: flags.read,
+			write: flags.write,
+		});
 	},
 	async makeTempDir(prefix: string): Promise<string> {
 		return fsp.mkdtemp(path.join(os.tmpdir(), prefix));

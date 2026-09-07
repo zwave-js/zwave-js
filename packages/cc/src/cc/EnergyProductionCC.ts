@@ -12,6 +12,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -54,10 +55,7 @@ export const EnergyProductionCCValues = V.defineCCValues(
 				property === "value" && typeof propertyKey === "number",
 			(parameter: EnergyProductionParameter) => ({
 				...ValueMetadata.ReadOnlyNumber,
-				label: getEnumMemberName(
-					EnergyProductionParameter,
-					parameter,
-				),
+				label: getEnumMemberName(EnergyProductionParameter, parameter),
 				// unit and ccSpecific are set dynamically
 			}),
 		),
@@ -77,7 +75,7 @@ export class EnergyProductionCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(
+		return async function (
 			this: EnergyProductionCCAPI,
 			{ property, propertyKey },
 		) {
@@ -110,9 +108,7 @@ export class EnergyProductionCCAPI extends CCAPI {
 			endpointIndex: this.endpoint.index,
 			parameter,
 		});
-		const response = await this.host.sendCommand<
-			EnergyProductionCCReport
-		>(
+		const response = await this.host.sendCommand<EnergyProductionCCReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -128,9 +124,7 @@ export class EnergyProductionCCAPI extends CCAPI {
 export class EnergyProductionCC extends CommandClass {
 	declare ccCommand: EnergyProductionCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -161,22 +155,18 @@ export class EnergyProductionCC extends CommandClass {
 			tag: options?.tag,
 		});
 
-		for (
-			const parameter of [
-				EnergyProductionParameter.Power,
-				EnergyProductionParameter["Production Total"],
-				EnergyProductionParameter["Production Today"],
-				EnergyProductionParameter["Total Time"],
-			] as const
-		) {
+		for (const parameter of [
+			EnergyProductionParameter.Power,
+			EnergyProductionParameter["Production Total"],
+			EnergyProductionParameter["Production Today"],
+			EnergyProductionParameter["Total Time"],
+		] as const) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message: `querying energy production (${
-					getEnumMemberName(
-						EnergyProductionParameter,
-						parameter,
-					)
-				})...`,
+				message: `querying energy production (${getEnumMemberName(
+					EnergyProductionParameter,
+					parameter,
+				)})...`,
 				direction: "outbound",
 			});
 
@@ -194,9 +184,7 @@ export interface EnergyProductionCCReportOptions {
 
 @CCCommand(EnergyProductionCommand.Report)
 export class EnergyProductionCCReport extends EnergyProductionCC {
-	public constructor(
-		options: WithAddress<EnergyProductionCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<EnergyProductionCCReportOptions>) {
 		super(options);
 		this.parameter = options.parameter;
 		this.value = options.value;
@@ -258,12 +246,10 @@ export class EnergyProductionCCReport extends EnergyProductionCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				[
-					getEnumMemberName(
-						EnergyProductionParameter,
-						this.parameter,
-					).toLowerCase()
-				]: `${this.value} ${this.scale.unit}`,
+				[getEnumMemberName(
+					EnergyProductionParameter,
+					this.parameter,
+				).toLowerCase()]: `${this.value} ${this.scale.unit}`,
 			},
 		};
 	}
@@ -287,9 +273,7 @@ function testResponseForEnergyProductionGet(
 	testResponseForEnergyProductionGet,
 )
 export class EnergyProductionCCGet extends EnergyProductionCC {
-	public constructor(
-		options: WithAddress<EnergyProductionCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<EnergyProductionCCGetOptions>) {
 		super(options);
 		this.parameter = options.parameter;
 	}

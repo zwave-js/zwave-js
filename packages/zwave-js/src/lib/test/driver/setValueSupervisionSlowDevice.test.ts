@@ -19,6 +19,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -366,9 +367,7 @@ integrationTest(
 			// Respond to Supervision Get with immediate success
 			const respondToWindowCoveringSet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
-					if (
-						receivedCC instanceof WindowCoveringCCSet
-					) {
+					if (receivedCC instanceof WindowCoveringCCSet) {
 						// Update the internal state
 						if (receivedCC.targetValues.length > 0) {
 							currentValue = receivedCC.targetValues[0].value;

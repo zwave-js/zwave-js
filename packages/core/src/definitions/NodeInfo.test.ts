@@ -1,5 +1,6 @@
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
+
 import { CommandClasses } from "./CommandClasses.js";
 import {
 	parseApplicationNodeInformation,

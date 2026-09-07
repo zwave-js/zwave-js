@@ -10,60 +10,60 @@ import {
 
 export type TaskTag =
 	| {
-		// Rebuild routes for all nodes
-		id: "rebuild-routes";
-	}
+			// Rebuild routes for all nodes
+			id: "rebuild-routes";
+	  }
 	| {
-		// Rebuild routes for a single node
-		id: "rebuild-node-routes";
-		nodeId: number;
-	}
+			// Rebuild routes for a single node
+			id: "rebuild-node-routes";
+			nodeId: number;
+	  }
 	| {
-		// Perform an OTA firmware update for a node
-		id: "firmware-update-ota";
-		nodeId: number;
-	}
+			// Perform an OTA firmware update for a node
+			id: "firmware-update-ota";
+			nodeId: number;
+	  }
 	| {
-		// Handle inclusion of a node
-		id: "inclusion";
-	}
+			// Handle inclusion of a node
+			id: "inclusion";
+	  }
 	| {
-		// Handle exclusion of a node
-		id: "exclusion";
-	}
+			// Handle exclusion of a node
+			id: "exclusion";
+	  }
 	| {
-		// Remove a failed node
-		id: "remove-failed-node";
-		nodeId: number;
-	}
+			// Remove a failed node
+			id: "remove-failed-node";
+			nodeId: number;
+	  }
 	| {
-		// Replace a failed node
-		id: "replace-failed-node";
-		nodeId: number;
-	}
+			// Replace a failed node
+			id: "replace-failed-node";
+			nodeId: number;
+	  }
 	| {
-		// Interview a node
-		id: "interview";
-		nodeId: number;
-	}
+			// Interview a node
+			id: "interview";
+			nodeId: number;
+	  }
 	| {
-		// Refresh CC values of a node
-		id: "refresh-values";
-		nodeId: number;
-		mode: "user" | "auto";
-	}
+			// Refresh CC values of a node
+			id: "refresh-values";
+			nodeId: number;
+			mode: "user" | "auto";
+	  }
 	| {
-		// Update the controller's firmware
-		id: "firmware-update-otw";
-	}
+			// Update the controller's firmware
+			id: "firmware-update-otw";
+	  }
 	| {
-		// Back up the controller's NVM
-		id: "nvm-backup";
-	}
+			// Back up the controller's NVM
+			id: "nvm-backup";
+	  }
 	| {
-		// Restore a backup to the controller's NVM
-		id: "nvm-restore";
-	};
+			// Restore a backup to the controller's NVM
+			id: "nvm-restore";
+	  };
 
 export type Task<T> = WaddleTask<T, TaskTag, ZWaveError>;
 export type TaskBuilder<T> = WaddleTaskBuilder<T, TaskTag>;

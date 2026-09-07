@@ -32,15 +32,15 @@ interface VirtualValueID extends TranslatedValueID {
 This method and its return values need to be re-evaluated whenever the underlying physical nodes change. This is the case when:
 
 - **Broadcast node**:
-  - All nodes are ready for the first time
-  - A new node is added to the network and becomes ready
-  - An existing node is re-interviewed and becomes ready again
-  - A node is removed from the network
+    - All nodes are ready for the first time
+    - A new node is added to the network and becomes ready
+    - An existing node is re-interviewed and becomes ready again
+    - A node is removed from the network
 - **Multicast groups**:
-  - All members of the multicast group are ready for the first time
-  - A (ready) node is added to a multicast group
-  - A member of a multicast group is re-interviewed and becomes ready again
-  - A node is removed from a multicast group
+    - All members of the multicast group are ready for the first time
+    - A (ready) node is added to a multicast group
+    - A member of a multicast group is re-interviewed and becomes ready again
+    - A node is removed from a multicast group
 
 > [!NOTE] Values of virtual nodes/endpoints are only writable. They don't store a value in the value DB and their value is never updated.
 

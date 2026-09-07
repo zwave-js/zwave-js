@@ -42,6 +42,7 @@ import {
 	num2hex,
 } from "@zwave-js/shared";
 import { isArray } from "alcalzone-shared/typeguards";
+
 import {
 	getAPI,
 	getCCValues,
@@ -49,15 +50,14 @@ import {
 	getImplementedVersion,
 } from "./CommandClassDecorators.js";
 import type { CCValue, StaticCCValue } from "./Values.js";
+// Import and re-export generated types
+import type { CCAPIs, CCNameMap } from "./_CCAPI.generated.js";
 import type { SendCommand } from "./traits.js";
 import type {
 	GetRefreshValueTimeouts,
 	GetUserPreferences,
 	SchedulePoll,
 } from "./traits.js";
-
-// Import and re-export generated types
-import type { CCAPIs, CCNameMap } from "./_CCAPI.generated.js";
 export type { CCAPIs, CCNameMap };
 
 export type ValueIDProperties = Pick<ValueID, "property" | "propertyKey">;
@@ -75,27 +75,25 @@ export const SET_VALUE_HOOKS: unique symbol = Symbol.for(
 	"CCAPI_SET_VALUE_HOOKS",
 );
 
-export type SetValueImplementationHooks =
-	& AllOrNone<{
-		// Opt-in to and handle delayed supervision updates
-		supervisionDelayedUpdates: boolean;
-		supervisionOnSuccess: () => void | Promise<void>;
-		supervisionOnFailure: () => void | Promise<void>;
-	}>
-	& {
-		// Whether the value is a target value for a CC using split
-		// target/current values. If so, the value will be updated optimistically,
-		// even if the device class does not support optimistic updates.
-		isSplitStateTargetValue?: boolean;
-		// Optimistically update related cached values (if allowed)
-		optimisticallyUpdateRelatedValues?: (
-			supervisedAndSuccessful: boolean,
-		) => void;
-		// Check if a verification of the set value is required, even if the API response suggests otherwise
-		forceVerifyChanges?: () => boolean;
-		// Verify the changes
-		verifyChanges?: (result?: SupervisionResult) => void | Promise<void>;
-	};
+export type SetValueImplementationHooks = AllOrNone<{
+	// Opt-in to and handle delayed supervision updates
+	supervisionDelayedUpdates: boolean;
+	supervisionOnSuccess: () => void | Promise<void>;
+	supervisionOnFailure: () => void | Promise<void>;
+}> & {
+	// Whether the value is a target value for a CC using split
+	// target/current values. If so, the value will be updated optimistically,
+	// even if the device class does not support optimistic updates.
+	isSplitStateTargetValue?: boolean;
+	// Optimistically update related cached values (if allowed)
+	optimisticallyUpdateRelatedValues?: (
+		supervisedAndSuccessful: boolean,
+	) => void;
+	// Check if a verification of the set value is required, even if the API response suggests otherwise
+	forceVerifyChanges?: () => boolean;
+	// Verify the changes
+	verifyChanges?: (result?: SupervisionResult) => void | Promise<void>;
+};
 
 export type SetValueImplementationHooksFactory = (
 	property: ValueIDProperties,
@@ -108,8 +106,7 @@ export type SetValueImplementationHooksFactory = (
  * Each implementation will choose the options that are relevant for it, so you can use the same options everywhere.
  * @publicAPI
  */
-export type SetValueAPIOptions =
-	& Partial<ValueChangeOptions>
+export type SetValueAPIOptions = Partial<ValueChangeOptions>
 	& Pick<SendCommandOptions, "onProgress">;
 
 /** Used to identify the method on the CC API class that handles polling values from nodes */
@@ -175,8 +172,7 @@ export interface CCAPISchedulePollOptions {
 }
 
 // Defines the necessary traits the host passed to a CC API must have
-export type CCAPIHost<TNode extends CCAPINode = CCAPINode> =
-	& HostIDs
+export type CCAPIHost<TNode extends CCAPINode = CCAPINode> = HostIDs
 	& GetNode<TNode>
 	& GetValueDB
 	& GetSupportedCCVersion
@@ -190,33 +186,27 @@ export type CCAPIHost<TNode extends CCAPINode = CCAPINode> =
 	& LogNode;
 
 // Defines the necessary traits a node passed to a CC API must have
-export type CCAPINode =
-	& NodeId
+export type CCAPINode = NodeId
 	& ListenBehavior
 	& QueryNodeStatus
 	& QueryNodeInterviewStage;
 
 // Defines the necessary traits an endpoint passed to a CC API must have
-export type CCAPIEndpoint =
-	& (
-		| (
-			// Physical endpoints must let us query their controlled CCs
-			EndpointId & ControlsCC
-		)
-		| (
-			// Virtual endpoints must let us query their physical nodes,
-			// the CCs those nodes implement, and access the endpoints of those
-			// physical nodes
-			VirtualEndpointId & {
-				node: PhysicalNodes<
-					& NodeId
+export type CCAPIEndpoint = (
+	| // Physical endpoints must let us query their controlled CCs
+	  (EndpointId & ControlsCC)
+	// Virtual endpoints must let us query their physical nodes,
+	// the CCs those nodes implement, and access the endpoints of those
+	// physical nodes
+	| (VirtualEndpointId & {
+			node: PhysicalNodes<
+				NodeId
 					& SupportsCC
 					& ControlsCC
 					& GetEndpoint<EndpointId & SupportsCC & ControlsCC>
-				>;
-			}
-		)
-	)
+			>;
+	  })
+)
 	& SupportsCC;
 
 export type PhysicalCCAPIEndpoint = CCAPIEndpoint & EndpointId;
@@ -244,11 +234,9 @@ export class CCAPI {
 		const ccName = CommandClasses[ccId];
 		if (APIConstructor == undefined) {
 			throw new ZWaveError(
-				`Command Class ${ccName} (${
-					num2hex(
-						ccId,
-					)
-				}) has no associated API!`,
+				`Command Class ${ccName} (${num2hex(
+					ccId,
+				)}) has no associated API!`,
 				ZWaveErrorCodes.CC_NoAPI,
 			);
 		}
@@ -381,9 +369,10 @@ export class CCAPI {
 		// use/add the short delay. Otherwise, default to the long delay.
 		const durationMs = duration?.toMilliseconds() ?? 0;
 		const timeouts = this.host.getRefreshValueTimeouts();
-		const additionalDelay = !!durationMs || transition === "fast"
-			? timeouts.refreshValueAfterTransition
-			: timeouts.refreshValue;
+		const additionalDelay =
+			!!durationMs || transition === "fast"
+				? timeouts.refreshValueAfterTransition
+				: timeouts.refreshValue;
 		const timeoutMs = durationMs + additionalDelay;
 
 		if (this.isSinglecast()) {
@@ -433,11 +422,13 @@ export class CCAPI {
 	 */
 	public get version(): number {
 		if (this.isSinglecast()) {
-			return this.host.getSafeCCVersion(
-				this.ccId,
-				this.endpoint.nodeId,
-				this.endpoint.index,
-			) ?? 0;
+			return (
+				this.host.getSafeCCVersion(
+					this.ccId,
+					this.endpoint.nodeId,
+					this.endpoint.index,
+				) ?? 0
+			);
 		} else {
 			return getImplementedVersion(this.ccId);
 		}
@@ -479,12 +470,10 @@ export class CCAPI {
 					this.endpoint.index > 0
 						? ` (Endpoint ${this.endpoint.index})`
 						: ""
-				} does not support the command ${
-					getEnumMemberName(
-						commandEnum,
-						command,
-					)
-				}!`,
+				} does not support the command ${getEnumMemberName(
+					commandEnum,
+					command,
+				)}!`,
 				ZWaveErrorCodes.CC_NotSupported,
 			);
 		}
@@ -577,7 +566,7 @@ export class CCAPI {
 						let result = original(...args);
 						if (result instanceof Promise) {
 							result = result.then((res) =>
-								wrapResult(res, txReport)
+								wrapResult(res, txReport),
 							);
 						} else {
 							result = wrapResult(result, txReport);
@@ -660,7 +649,7 @@ function overrideQueriesWrapper(
 	fallback: (...args: any[]) => any,
 ): (...args: any[]) => any {
 	// We must not capture the `this` context here, because the API methods are bound on use
-	return function(this: any, ...args: any[]) {
+	return function (this: any, ...args: any[]) {
 		const match = overrides.matchOverride(
 			ccId,
 			endpoint.index,
@@ -670,11 +659,9 @@ function overrideQueriesWrapper(
 		if (!match) return fallback.call(this, ...args);
 
 		ctx.logNode(endpoint.nodeId, {
-			message: `API call ${method} for ${
-				getCCName(
-					ccId,
-				)
-			} CC overridden by a compat flag.`,
+			message: `API call ${method} for ${getCCName(
+				ccId,
+			)} CC overridden by a compat flag.`,
 			level: "debug",
 			direction: "none",
 		});
@@ -708,11 +695,9 @@ function overrideQueriesWrapper(
 
 			// Persist values if necessary
 			if (match.persistValues) {
-				for (
-					const [prop, value] of Object.entries(
-						match.persistValues,
-					)
-				) {
+				for (const [prop, value] of Object.entries(
+					match.persistValues,
+				)) {
 					try {
 						const ccValue = prop2value(prop);
 						if (ccValue) {
@@ -722,20 +707,16 @@ function overrideQueriesWrapper(
 							);
 						} else {
 							ctx.logNode(endpoint.nodeId, {
-								message:
-									`Failed to persist value ${prop} during overridden API call: value does not exist`,
+								message: `Failed to persist value ${prop} during overridden API call: value does not exist`,
 								level: "error",
 								direction: "none",
 							});
 						}
 					} catch (e) {
 						ctx.logNode(endpoint.nodeId, {
-							message:
-								`Failed to persist value ${prop} during overridden API call: ${
-									getErrorMessage(
-										e,
-									)
-								}`,
+							message: `Failed to persist value ${prop} during overridden API call: ${getErrorMessage(
+								e,
+							)}`,
 							level: "error",
 							direction: "none",
 						});
@@ -745,11 +726,9 @@ function overrideQueriesWrapper(
 
 			// As well as metadata
 			if (match.extendMetadata) {
-				for (
-					const [prop, meta] of Object.entries(
-						match.extendMetadata,
-					)
-				) {
+				for (const [prop, meta] of Object.entries(
+					match.extendMetadata,
+				)) {
 					try {
 						const ccValue = prop2value(prop);
 						if (ccValue) {
@@ -762,20 +741,16 @@ function overrideQueriesWrapper(
 							);
 						} else {
 							ctx.logNode(endpoint.nodeId, {
-								message:
-									`Failed to extend value metadata ${prop} during overridden API call: value does not exist`,
+								message: `Failed to extend value metadata ${prop} during overridden API call: value does not exist`,
 								level: "error",
 								direction: "none",
 							});
 						}
 					} catch (e) {
 						ctx.logNode(endpoint.nodeId, {
-							message:
-								`Failed to extend value metadata ${prop} during overridden API call: ${
-									getErrorMessage(
-										e,
-									)
-								}`,
+							message: `Failed to extend value metadata ${prop} during overridden API call: ${getErrorMessage(
+								e,
+							)}`,
 							level: "error",
 							direction: "none",
 						});
@@ -791,10 +766,7 @@ function overrideQueriesWrapper(
 
 /** A CC API that is only available for physical endpoints */
 export class PhysicalCCAPI extends CCAPI {
-	public constructor(
-		host: CCAPIHost,
-		endpoint: CCAPIEndpoint,
-	) {
+	public constructor(host: CCAPIHost, endpoint: CCAPIEndpoint) {
 		super(host, endpoint);
 		this.assertPhysicalEndpoint(endpoint);
 	}
@@ -814,10 +786,12 @@ export type CCToName<CC extends CommandClasses> = {
 export type CCNameOrId = CommandClasses | Extract<keyof CCAPIs, string>;
 
 export type CCToAPI<CC extends CCNameOrId> = CC extends CommandClasses
-	? CCToName<CC> extends keyof CCAPIs ? CCAPIs[CCToName<CC>]
-	: never
-	: CC extends keyof CCAPIs ? CCAPIs[CC]
-	: never;
+	? CCToName<CC> extends keyof CCAPIs
+		? CCAPIs[CCToName<CC>]
+		: never
+	: CC extends keyof CCAPIs
+		? CCAPIs[CC]
+		: never;
 
 export type APIMethodsOf<CC extends CCNameOrId> = Omit<
 	OnlyMethods<CCToAPI<CC>>,
@@ -842,27 +816,23 @@ export type OwnMethodsOf<API extends CCAPI> = Omit<
 // Wraps the given type in an object that contains a TX report
 export type WrapWithTXReport<T> = [T] extends [Promise<infer U>]
 	? Promise<WrapWithTXReport<U>>
-	: [T] extends [void] ? { txReport: TXReport | undefined }
-	: { result: T; txReport: TXReport | undefined };
+	: [T] extends [void]
+		? { txReport: TXReport | undefined }
+		: { result: T; txReport: TXReport | undefined };
 
 export type ReturnWithTXReport<T> = T extends (...args: any[]) => any
 	? (...args: Parameters<T>) => WrapWithTXReport<ReturnType<T>>
 	: undefined;
 
 // Converts the type of the given API implementation so the API methods return an object including the TX report
-export type WithTXReport<API extends CCAPI> =
-	& Omit<
-		API,
-		keyof OwnMethodsOf<API> | "withOptions" | "withTXReport" | "setValue"
-	>
-	& {
-		[
-			K in
-				| keyof OwnMethodsOf<API>
-				| "setValue"
-				| "pollValue"
-		]: ReturnWithTXReport<API[K]>;
-	};
+export type WithTXReport<API extends CCAPI> = Omit<
+	API,
+	keyof OwnMethodsOf<API> | "withOptions" | "withTXReport" | "setValue"
+> & {
+	[
+		K in keyof OwnMethodsOf<API> | "setValue" | "pollValue"
+	]: ReturnWithTXReport<API[K]>;
+};
 
 export function normalizeCCNameOrId(
 	ccNameOrId: number | string,

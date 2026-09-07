@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import { type JSONCRule, paramInfoPropertyOrder } from "../utils.js";
 
 export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
@@ -11,16 +12,20 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 			"JSONProperty[key.value='paramInformation'] > JSONArrayExpression > JSONObjectExpression"(
 				node: AST.JSONObjectExpression,
 			) {
-				const properties = node.properties.map((p) => {
-					if (p.key.type !== "JSONLiteral") {
-						return undefined;
-					} else {
-						return [
-							paramInfoPropertyOrder.indexOf(p.key.value as any),
-							p,
-						] as const;
-					}
-				}).filter((p) => !!p);
+				const properties = node.properties
+					.map((p) => {
+						if (p.key.type !== "JSONLiteral") {
+							return undefined;
+						} else {
+							return [
+								paramInfoPropertyOrder.indexOf(
+									p.key.value as any,
+								),
+								p,
+							] as const;
+						}
+					})
+					.filter((p) => !!p);
 
 				const isSomePropertyOutOfOrder = properties.some(
 					([index], i, arr) => i > 0 && index < arr[i - 1][0],
@@ -44,11 +49,11 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 					for (let i = 1; i < propsWithComments.length; i++) {
 						const prev = propsWithComments[i - 1];
 						const cur = propsWithComments[i];
-						const wronglyAttributedComments = cur.comments.leading
-							.filter(
+						const wronglyAttributedComments =
+							cur.comments.leading.filter(
 								(c) =>
 									c.loc.start.line
-										=== prev.property.loc.end.line,
+									=== prev.property.loc.end.line,
 							);
 						prev.comments.trailing.push(
 							...wronglyAttributedComments,
@@ -74,30 +79,29 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 						};
 					});
 
-					const indentation = context.sourceCode
-						.getLines()[withRanges[0].property.loc.start.line]
-						.slice(
-							0,
-							withRanges[0].property.loc.start.column,
-						);
-					const desiredOrder = [...propsWithComments].toSorted((
-						a,
-						b,
-					) => a.index - b.index).map((prop) => {
-						const start = Math.min(
-							prop.property.range[0],
-							...prop.comments.leading.map((c) => c.range[0]),
-						);
-						const end = Math.max(
-							prop.property.range[1],
-							...prop.comments.trailing.map((c) => c.range[1]),
-						);
-						return {
-							...prop,
-							start,
-							end,
-						};
-					});
+					const sourceLines = context.sourceCode.getLines();
+					const indentation = sourceLines[
+						withRanges[0].property.loc.start.line
+					].slice(0, withRanges[0].property.loc.start.column);
+					const desiredOrder = [...propsWithComments]
+						.toSorted((a, b) => a.index - b.index)
+						.map((prop) => {
+							const start = Math.min(
+								prop.property.range[0],
+								...prop.comments.leading.map((c) => c.range[0]),
+							);
+							const end = Math.max(
+								prop.property.range[1],
+								...prop.comments.trailing.map(
+									(c) => c.range[1],
+								),
+							);
+							return {
+								...prop,
+								start,
+								end,
+							};
+						});
 					let desiredText = "";
 					for (let i = 0; i < desiredOrder.length; i++) {
 						const prop = desiredOrder[i];
@@ -105,14 +109,12 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 						// To include trailing commas where necessary, slice twice:
 						// 1. From the start of the first comment to the end of the property
 						// 2. From the end of the property to the end of the last column
-						const part1 = context.sourceCode.getText().slice(
-							prop.start,
-							prop.property.range[1],
-						);
-						let part2 = context.sourceCode.getText().slice(
-							prop.property.range[1],
-							prop.end,
-						);
+						const part1 = context.sourceCode
+							.getText()
+							.slice(prop.start, prop.property.range[1]);
+						let part2 = context.sourceCode
+							.getText()
+							.slice(prop.property.range[1], prop.end);
 						desiredText += part1;
 						if (
 							// Needs trailing comma
@@ -160,10 +162,9 @@ export const consistentDeviceConfigPropertyOrder: JSONCRule.RuleModule = {
 		fixable: "code",
 		schema: false,
 		messages: {
-			"parameter-ordering":
-				`For consistency, config param properties should follow the order ${
-					paramInfoPropertyOrder.map((p) => `"${p}"`).join(", ")
-				}.`,
+			"parameter-ordering": `For consistency, config param properties should follow the order ${paramInfoPropertyOrder
+				.map((p) => `"${p}"`)
+				.join(", ")}.`,
 		},
 		type: "problem",
 	},

@@ -1,5 +1,6 @@
 import { isArray } from "alcalzone-shared/typeguards";
 import { test } from "vitest";
+
 import { ConditionalDeviceConfig } from "./DeviceConfig.js";
 
 test("parses a simple device config", (t) => {
@@ -267,37 +268,39 @@ test("parses a device config with conditional config parameter options", (t) => 
 		...deviceId,
 		firmwareVersion: "0.5",
 	});
-	t.expect(evaluated1.paramInformation?.get({ parameter: 1 })?.options)
-		.toStrictEqual([
-			{
-				label: "Yes",
-				value: 1,
-			},
-			{
-				label: "No",
-				value: 2,
-			},
-			{
-				label: "Maybe",
-				value: 3,
-			},
-		]);
+	t.expect(
+		evaluated1.paramInformation?.get({ parameter: 1 })?.options,
+	).toStrictEqual([
+		{
+			label: "Yes",
+			value: 1,
+		},
+		{
+			label: "No",
+			value: 2,
+		},
+		{
+			label: "Maybe",
+			value: 3,
+		},
+	]);
 
 	const evaluated2 = condConfig.evaluate({
 		...deviceId,
 		firmwareVersion: "1.0",
 	});
-	t.expect(evaluated2.paramInformation?.get({ parameter: 1 })?.options)
-		.toStrictEqual([
-			{
-				label: "Yes",
-				value: 1,
-			},
-			{
-				label: "No",
-				value: 2,
-			},
-		]);
+	t.expect(
+		evaluated2.paramInformation?.get({ parameter: 1 })?.options,
+	).toStrictEqual([
+		{
+			label: "Yes",
+			value: 1,
+		},
+		{
+			label: "No",
+			value: 2,
+		},
+	]);
 });
 
 test("supports sdkVersion in conditions", (t) => {
@@ -560,8 +563,9 @@ test("rejects parameter with both allowed and minValue/maxValue", (t) => {
 		],
 	};
 
-	t.expect(() => new ConditionalDeviceConfig("test-invalid.json", true, json))
-		.toThrow(/cannot be used together with/);
+	t.expect(
+		() => new ConditionalDeviceConfig("test-invalid.json", true, json),
+	).toThrow(/cannot be used together with/);
 });
 
 test("legacy config with minValue/maxValue gets allowed set to single range", (t) => {

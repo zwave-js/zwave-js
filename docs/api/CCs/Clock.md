@@ -8,11 +8,12 @@
 
 ```ts
 async get(): Promise<
-	{
-		hour: number;
-		minute: number;
-		weekday: Weekday;
-	} | undefined
+	| {
+			hour: number;
+			minute: number;
+			weekday: Weekday;
+	  }
+	| undefined
 >;
 ```
 

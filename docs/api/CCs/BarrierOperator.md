@@ -8,10 +8,11 @@
 
 ```ts
 async get(): Promise<
-	{
-		currentState: MaybeUnknown<BarrierState>;
-		position: MaybeUnknown<number>;
-	} | undefined
+	| {
+			currentState: MaybeUnknown<BarrierState>;
+			position: MaybeUnknown<number>;
+	  }
+	| undefined
 >;
 ```
 

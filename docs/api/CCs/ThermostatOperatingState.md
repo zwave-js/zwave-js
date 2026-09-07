@@ -39,8 +39,7 @@ async getLogging(
 
 ```ts
 {
-	commandClass:
-		CommandClasses["Thermostat Operating State"],
+	commandClass: CommandClasses["Thermostat Operating State"],
 	endpoint: number,
 	property: "state",
 }
@@ -62,9 +61,9 @@ async getLogging(
 
 ```ts
 enum ThermostatOperatingState {
-	"Idle" = 0x00,
-	"Heating" = 0x01,
-	"Cooling" = 0x02,
+	Idle = 0x00,
+	Heating = 0x01,
+	Cooling = 0x02,
 	"Fan Only" = 0x03,
 	"Pending Heat" = 0x04,
 	"Pending Cool" = 0x05,

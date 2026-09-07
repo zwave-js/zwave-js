@@ -63,14 +63,12 @@ export function parseLicenseBlob(blob: BytesView): ZWaveMeLicense {
 }
 
 /** Serializes a license blob, appending the trailing CRC-16 */
-export function buildLicenseBlob(
-	opts: {
-		vendorId: number;
-		maxNodes: number;
-		flags: ZWaveMeLicenseFlag[];
-		countSupport?: number;
-	},
-): Bytes {
+export function buildLicenseBlob(opts: {
+	vendorId: number;
+	maxNodes: number;
+	flags: ZWaveMeLicenseFlag[];
+	countSupport?: number;
+}): Bytes {
 	const blob = new Bytes(LICENSE_BLOB_SIZE);
 	blob.writeUInt16BE(opts.vendorId, 0);
 	blob[2] = opts.maxNodes;
@@ -101,9 +99,11 @@ export function buildCommandBlock(
  * Verifies and parses a decrypted license command block.
  * Returns the payload after the subcommand and status bytes.
  */
-export function parseCommandBlock(
-	block: BytesView,
-): { subCommand: number; status: number; payload: Bytes } {
+export function parseCommandBlock(block: BytesView): {
+	subCommand: number;
+	status: number;
+	payload: Bytes;
+} {
 	const view = Bytes.view(block);
 	// CRC covers the whole block except the trailing 2-byte CRC itself
 	const crcOffset = view.length - 2;

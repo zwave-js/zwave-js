@@ -7,6 +7,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { ccCaps, createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

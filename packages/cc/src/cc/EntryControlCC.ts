@@ -17,6 +17,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, type BytesView, buffer2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -56,29 +57,23 @@ import * as ccUtils from "../lib/utils.js";
 export const EntryControlCCValues = V.defineCCValues(
 	CommandClasses["Entry Control"],
 	{
-		...V.staticProperty(
-			"keyCacheSize",
-			{
-				...ValueMetadata.UInt8,
-				label: "Key cache size",
-				description:
-					"Number of character that must be stored before sending",
-				min: 1,
-				max: 32,
-			},
-		),
-		...V.staticProperty(
-			"keyCacheTimeout",
-			{
-				...ValueMetadata.UInt8,
-				label: "Key cache timeout",
-				unit: "seconds",
-				description:
-					"How long the key cache must wait for additional characters",
-				min: 1,
-				max: 10,
-			},
-		),
+		...V.staticProperty("keyCacheSize", {
+			...ValueMetadata.UInt8,
+			label: "Key cache size",
+			description:
+				"Number of character that must be stored before sending",
+			min: 1,
+			max: 32,
+		}),
+		...V.staticProperty("keyCacheTimeout", {
+			...ValueMetadata.UInt8,
+			label: "Key cache timeout",
+			unit: "seconds",
+			description:
+				"How long the key cache must wait for additional characters",
+			min: 1,
+			max: 10,
+		}),
 		...V.staticProperty("supportedDataTypes", undefined, {
 			internal: true,
 		}),
@@ -116,12 +111,11 @@ export class EntryControlCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			EntryControlCCKeySupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<EntryControlCCKeySupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedKeys;
 	}
 
@@ -136,12 +130,11 @@ export class EntryControlCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			EntryControlCCEventSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<EntryControlCCEventSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"supportedDataTypes",
@@ -165,12 +158,11 @@ export class EntryControlCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			EntryControlCCConfigurationReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<EntryControlCCConfigurationReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, ["keyCacheSize", "keyCacheTimeout"]);
 		}
@@ -196,7 +188,7 @@ export class EntryControlCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: EntryControlCCAPI, { property }, value) {
+		return async function (this: EntryControlCCAPI, { property }, value) {
 			if (property !== "keyCacheSize" && property !== "keyCacheTimeout") {
 				throwUnsupportedProperty(this.ccId, property);
 			}
@@ -242,7 +234,7 @@ export class EntryControlCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: EntryControlCCAPI, { property }) {
+		return async function (this: EntryControlCCAPI, { property }) {
 			switch (property) {
 				case "keyCacheSize":
 				case "keyCacheTimeout":
@@ -268,9 +260,7 @@ export class EntryControlCC extends CommandClass {
 		];
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -300,11 +290,9 @@ export class EntryControlCC extends CommandClass {
 		} catch {
 			ctx.logNode(node.id, {
 				endpoint: endpoint.index,
-				message: `Configuring associations to receive ${
-					getCCName(
-						this.ccId,
-					)
-				} commands failed!`,
+				message: `Configuring associations to receive ${getCCName(
+					this.ccId,
+				)} commands failed!`,
 				level: "warn",
 			});
 		}
@@ -319,8 +307,7 @@ export class EntryControlCC extends CommandClass {
 		if (supportedKeys) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`received entry control supported keys: ${supportedKeys.toString()}`,
+				message: `received entry control supported keys: ${supportedKeys.toString()}`,
 				direction: "inbound",
 			});
 		}
@@ -336,16 +323,12 @@ export class EntryControlCC extends CommandClass {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message: `received entry control supported keys:
-data types:            ${
-					eventCapabilities.supportedDataTypes
-						.map((e) => EntryControlDataTypes[e])
-						.toString()
-				}
-event types:           ${
-					eventCapabilities.supportedEventTypes
-						.map((e) => EntryControlEventTypes[e])
-						.toString()
-				}
+data types:            ${eventCapabilities.supportedDataTypes
+					.map((e) => EntryControlDataTypes[e])
+					.toString()}
+event types:           ${eventCapabilities.supportedEventTypes
+					.map((e) => EntryControlEventTypes[e])
+					.toString()}
 min key cache size:    ${eventCapabilities.minKeyCacheSize}
 max key cache size:    ${eventCapabilities.maxKeyCacheSize}
 min key cache timeout: ${eventCapabilities.minKeyCacheTimeout} seconds
@@ -434,9 +417,8 @@ export class EntryControlCCNotification extends EntryControlCC {
 			// But as always - manufacturers don't care and send ASCII data with 0 bytes...
 
 			// We also need to disable the strict validation for some devices to make them work
-			const noStrictValidation = !!ctx.getDeviceConfig?.(
-				ctx.sourceNodeId,
-			)?.compat?.disableStrictEntryControlDataValidation;
+			const noStrictValidation = !!ctx.getDeviceConfig?.(ctx.sourceNodeId)
+				?.compat?.disableStrictEntryControlDataValidation;
 
 			eventData = Bytes.from(
 				raw.payload.subarray(offset, offset + eventDataLength),
@@ -462,9 +444,9 @@ export class EntryControlCCNotification extends EntryControlCC {
 					) {
 						paddingStart--;
 					}
-					eventData = eventData.subarray(0, paddingStart).toString(
-						"ascii",
-					);
+					eventData = eventData
+						.subarray(0, paddingStart)
+						.toString("ascii");
 
 					if (!noStrictValidation) {
 						validatePayload(/^[\u0000-\u007f]+$/.test(eventData));
@@ -510,9 +492,10 @@ export class EntryControlCCNotification extends EntryControlCC {
 					break;
 
 				default:
-					message["event data"] = typeof this.eventData === "string"
-						? this.eventData
-						: buffer2hex(this.eventData);
+					message["event data"] =
+						typeof this.eventData === "string"
+							? this.eventData
+							: buffer2hex(this.eventData);
 			}
 		}
 		return {
@@ -626,13 +609,10 @@ export class EntryControlCCEventSupportedReport extends EntryControlCC {
 		offset += eventTypeLength;
 		validatePayload(raw.payload.length >= offset + 4);
 		const minKeyCacheSize = raw.payload[offset];
-		validatePayload(
-			minKeyCacheSize >= 1 && minKeyCacheSize <= 32,
-		);
+		validatePayload(minKeyCacheSize >= 1 && minKeyCacheSize <= 32);
 		const maxKeyCacheSize = raw.payload[offset + 1];
 		validatePayload(
-			maxKeyCacheSize >= minKeyCacheSize
-				&& maxKeyCacheSize <= 32,
+			maxKeyCacheSize >= minKeyCacheSize && maxKeyCacheSize <= 32,
 		);
 		const minKeyCacheTimeout = raw.payload[offset + 2];
 		const maxKeyCacheTimeout = raw.payload[offset + 3];

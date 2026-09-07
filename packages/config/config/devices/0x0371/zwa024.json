@@ -84,10 +84,7 @@
 			// this parameter automatically.
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 3600] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 3600] }],
 			"defaultValue": 30,
 			"options": [
 				{

@@ -8,12 +8,13 @@
 
 ```ts
 async getSystemInfo(): Promise<
-	{
-		maxValveTableSize: number;
-		numValves: number;
-		numValveTables: number;
-		supportsMasterValve: boolean;
-	} | undefined
+	| {
+			maxValveTableSize: number;
+			numValves: number;
+			numValveTables: number;
+			supportsMasterValve: boolean;
+	  }
+	| undefined
 >;
 ```
 
@@ -21,23 +22,24 @@ async getSystemInfo(): Promise<
 
 ```ts
 async getSystemStatus(): Promise<
-	{
-		errorEmergencyShutdown: boolean;
-		errorHighPressure: boolean;
-		errorLowPressure: boolean;
-		errorNotProgrammed: boolean;
-		errorValve: boolean;
-		firstOpenZoneId?: number;
-		flow?: number;
-		flowSensorActive: boolean;
-		masterValveOpen: boolean;
-		moistureSensorActive: boolean;
-		pressure?: number;
-		pressureSensorActive: boolean;
-		rainSensorActive: boolean;
-		shutoffDuration: number;
-		systemVoltage: number;
-	} | undefined
+	| {
+			errorEmergencyShutdown: boolean;
+			errorHighPressure: boolean;
+			errorLowPressure: boolean;
+			errorNotProgrammed: boolean;
+			errorValve: boolean;
+			firstOpenZoneId?: number;
+			flow?: number;
+			flowSensorActive: boolean;
+			masterValveOpen: boolean;
+			moistureSensorActive: boolean;
+			pressure?: number;
+			pressureSensorActive: boolean;
+			rainSensorActive: boolean;
+			shutoffDuration: number;
+			systemVoltage: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -45,77 +47,76 @@ async getSystemStatus(): Promise<
 
 ```ts
 async getSystemConfig(): Promise<
-	{
-		highPressureThreshold: number;
-		lowPressureThreshold: number;
-		masterValveDelay: number;
-		moistureSensorPolarity?: IrrigationSensorPolarity;
-		rainSensorPolarity?: IrrigationSensorPolarity;
-	} | undefined
+	| {
+			highPressureThreshold: number;
+			lowPressureThreshold: number;
+			masterValveDelay: number;
+			moistureSensorPolarity?: IrrigationSensorPolarity;
+			rainSensorPolarity?: IrrigationSensorPolarity;
+	  }
+	| undefined
 >;
 ```
 
 ### `setSystemConfig`
 
 ```ts
-async setSystemConfig(
-	config: {
-		masterValveDelay: number;
-		highPressureThreshold: number;
-		lowPressureThreshold: number;
-		rainSensorPolarity?: IrrigationSensorPolarity;
-		moistureSensorPolarity?: IrrigationSensorPolarity;
-	},
-): Promise<SupervisionResult | undefined>;
+async setSystemConfig(config: {
+	masterValveDelay: number;
+	highPressureThreshold: number;
+	lowPressureThreshold: number;
+	rainSensorPolarity?: IrrigationSensorPolarity;
+	moistureSensorPolarity?: IrrigationSensorPolarity;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getValveInfo`
 
 ```ts
 async getValveInfo(valveId: ValveId): Promise<
-	{
-		connected: boolean;
-		errorHighCurrent: boolean;
-		errorHighFlow?: boolean;
-		errorLowCurrent: boolean;
-		errorLowFlow?: boolean;
-		errorMaximumFlow?: boolean;
-		errorShortCircuit: boolean;
-		nominalCurrent: number;
-	} | undefined
+	| {
+			connected: boolean;
+			errorHighCurrent: boolean;
+			errorHighFlow?: boolean;
+			errorLowCurrent: boolean;
+			errorLowFlow?: boolean;
+			errorMaximumFlow?: boolean;
+			errorShortCircuit: boolean;
+			nominalCurrent: number;
+	  }
+	| undefined
 >;
 ```
 
 ### `setValveConfig`
 
 ```ts
-async setValveConfig(
-	options: {
-		valveId: ValveId;
-		nominalCurrentHighThreshold: number;
-		nominalCurrentLowThreshold: number;
-		maximumFlow: number;
-		highFlowThreshold: number;
-		lowFlowThreshold: number;
-		useRainSensor: boolean;
-		useMoistureSensor: boolean;
-	},
-): Promise<SupervisionResult | undefined>;
+async setValveConfig(options: {
+	valveId: ValveId;
+	nominalCurrentHighThreshold: number;
+	nominalCurrentLowThreshold: number;
+	maximumFlow: number;
+	highFlowThreshold: number;
+	lowFlowThreshold: number;
+	useRainSensor: boolean;
+	useMoistureSensor: boolean;
+}): Promise<SupervisionResult | undefined>;
 ```
 
 ### `getValveConfig`
 
 ```ts
 async getValveConfig(valveId: ValveId): Promise<
-	{
-		highFlowThreshold: number;
-		lowFlowThreshold: number;
-		maximumFlow: number;
-		nominalCurrentHighThreshold: number;
-		nominalCurrentLowThreshold: number;
-		useMoistureSensor: boolean;
-		useRainSensor: boolean;
-	} | undefined
+	| {
+			highFlowThreshold: number;
+			lowFlowThreshold: number;
+			maximumFlow: number;
+			nominalCurrentHighThreshold: number;
+			nominalCurrentLowThreshold: number;
+			useMoistureSensor: boolean;
+			useRainSensor: boolean;
+	  }
+	| undefined
 >;
 ```
 

@@ -1,5 +1,7 @@
-import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
+
+import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import type { NoiseCipherState } from "../noise/NoiseProtocol.js";
 
 class NoiseDecryptTransformer implements Transformer<BytesView, Bytes> {

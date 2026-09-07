@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { semanticHash, sha256Hex, stableStringify } from "./hash.js";
 
 describe("stableStringify", () => {

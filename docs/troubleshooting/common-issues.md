@@ -120,16 +120,16 @@ This is a series of firmware issues, with the unresponsiveness being the most se
 It can only be resolved by a firmware update. However, there is no known firmware version that is completely fixed, so it is recommended to choose a firmware based on the following criteria:
 
 - 700 series:
-  - prefer SDK versions 7.17.2 to 7.18.x
-  - SDK versions 7.19.x are okay
-  - avoid SDK versions before 7.17.2
-  - avoid SDK versions 7.20 to 7.21.3
+    - prefer SDK versions 7.17.2 to 7.18.x
+    - SDK versions 7.19.x are okay
+    - avoid SDK versions before 7.17.2
+    - avoid SDK versions 7.20 to 7.21.3
 
 - 800 series
-  - prefer SDK versions 7.22.x
-  - SDK versions 7.17.2 to 7.19.x are okay
-  - avoid SDK versions before 7.17.2
-  - avoid SDK versions 7.20 to 7.21.3
+    - prefer SDK versions 7.22.x
+    - SDK versions 7.17.2 to 7.19.x are okay
+    - avoid SDK versions before 7.17.2
+    - avoid SDK versions 7.20 to 7.21.3
 
 > [!NOTE] The SDK version does not have to match the firmware version. If you are unsure which SDK versions a firmware is based on, contact the manufacturer of your device.
 
@@ -137,7 +137,7 @@ It can only be resolved by a firmware update. However, there is no known firmwar
 
 Firmware can be upgraded using the below directions:
 
-- [Upgrade instructions using Linux and Z-Wave JS based applications](https://github.com/kpine/zwave-js-server-docker/wiki/700-series-Controller-Firmware-Updates-(Linux))
+- [Upgrade instructions using Linux and Z-Wave JS based applications](<https://github.com/kpine/zwave-js-server-docker/wiki/700-series-Controller-Firmware-Updates-(Linux)>)
 - [Upgrade instructions using Windows (Aeotec)](https://aeotec.freshdesk.com/support/solutions/articles/6000252296-update-z-stick-7-with-windows)
 - [Upgrade instructions using Windows (Zooz)](https://www.support.getzooz.com/kb/article/931-how-to-perform-an-ota-firmware-update-on-your-zst10-700-z-wave-stick/)
 - [Upgrade instructions using Windows/Linux (Z-Wave.Me)](https://z-wave.me/support/uzbrazberry-firmwares/)

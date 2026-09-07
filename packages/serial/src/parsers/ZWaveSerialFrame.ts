@@ -1,4 +1,5 @@
 import type { Bytes, BytesView } from "@zwave-js/shared";
+
 import type {
 	MessageHeaders,
 	XModemMessageHeaders,
@@ -11,19 +12,23 @@ export enum ZWaveSerialFrameType {
 	Discarded = 0xff,
 }
 
-export type ZWaveSerialFrame = {
-	type: ZWaveSerialFrameType.SerialAPI;
-	data: SerialAPIChunk;
-} | {
-	type: ZWaveSerialFrameType.Bootloader;
-	data: BootloaderChunk;
-} | {
-	type: ZWaveSerialFrameType.CLI;
-	data: CLIChunk;
-} | {
-	type: ZWaveSerialFrameType.Discarded;
-	data: BytesView;
-};
+export type ZWaveSerialFrame =
+	| {
+			type: ZWaveSerialFrameType.SerialAPI;
+			data: SerialAPIChunk;
+	  }
+	| {
+			type: ZWaveSerialFrameType.Bootloader;
+			data: BootloaderChunk;
+	  }
+	| {
+			type: ZWaveSerialFrameType.CLI;
+			data: CLIChunk;
+	  }
+	| {
+			type: ZWaveSerialFrameType.Discarded;
+			data: BytesView;
+	  };
 
 export type SerialAPIChunk =
 	| Bytes
@@ -40,29 +45,29 @@ export enum BootloaderChunkType {
 
 export type BootloaderChunk =
 	| {
-		type: BootloaderChunkType.Error;
-		error: string;
-		_raw: string;
-	}
+			type: BootloaderChunkType.Error;
+			error: string;
+			_raw: string;
+	  }
 	| {
-		type: BootloaderChunkType.Menu;
-		version: string;
-		options: { num: number; option: string }[];
-		_raw: string;
-	}
+			type: BootloaderChunkType.Menu;
+			version: string;
+			options: { num: number; option: string }[];
+			_raw: string;
+	  }
 	| {
-		type: BootloaderChunkType.Message;
-		message: string;
-		_raw: string;
-	}
+			type: BootloaderChunkType.Message;
+			message: string;
+			_raw: string;
+	  }
 	| {
-		type: BootloaderChunkType.FlowControl;
-		command:
-			| XModemMessageHeaders.ACK
-			| XModemMessageHeaders.NAK
-			| XModemMessageHeaders.CAN
-			| XModemMessageHeaders.C;
-	};
+			type: BootloaderChunkType.FlowControl;
+			command:
+				| XModemMessageHeaders.ACK
+				| XModemMessageHeaders.NAK
+				| XModemMessageHeaders.CAN
+				| XModemMessageHeaders.C;
+	  };
 
 export enum CLIChunkType {
 	Prompt, // >
@@ -72,17 +77,17 @@ export enum CLIChunkType {
 
 export type CLIChunk =
 	| {
-		type: CLIChunkType.Prompt;
-	}
+			type: CLIChunkType.Prompt;
+	  }
 	| {
-		type: CLIChunkType.Message;
-		message: string;
-	}
+			type: CLIChunkType.Message;
+			message: string;
+	  }
 	| {
-		type: CLIChunkType.FlowControl;
-		command:
-			| XModemMessageHeaders.ACK
-			| XModemMessageHeaders.NAK
-			| XModemMessageHeaders.CAN
-			| XModemMessageHeaders.C;
-	};
+			type: CLIChunkType.FlowControl;
+			command:
+				| XModemMessageHeaders.ACK
+				| XModemMessageHeaders.NAK
+				| XModemMessageHeaders.CAN
+				| XModemMessageHeaders.C;
+	  };

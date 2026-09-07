@@ -14,6 +14,7 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -73,16 +74,13 @@ integrationTest(
 							}),
 						);
 
-						setTimeout(
-							() => {
-								void self.sendToController(
-									createMockZWaveRequestFrame(cc2, {
-										ackRequested: false,
-									}),
-								);
-							},
-							receivedCC.duration.toMilliseconds(),
-						);
+						setTimeout(() => {
+							void self.sendToController(
+								createMockZWaveRequestFrame(cc2, {
+									ackRequested: false,
+								}),
+							);
+						}, receivedCC.duration.toMilliseconds());
 
 						return { action: "stop" };
 					}

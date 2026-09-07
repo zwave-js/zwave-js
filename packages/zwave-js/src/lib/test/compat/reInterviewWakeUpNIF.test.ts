@@ -1,8 +1,10 @@
+import path from "node:path";
+
 import { ZWaveProtocolCCNodeInformationFrame } from "@zwave-js/cc";
 import { CommandClasses } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -19,10 +21,7 @@ integrationTest(
 			isFrequentListening: false,
 			isListening: false,
 
-			commandClasses: [
-				CommandClasses["Wake Up"],
-				CommandClasses.Version,
-			],
+			commandClasses: [CommandClasses["Wake Up"], CommandClasses.Version],
 		},
 
 		async testBody(t, driver, node, mockController, mockNode) {

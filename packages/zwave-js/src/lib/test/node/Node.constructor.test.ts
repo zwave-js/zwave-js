@@ -4,6 +4,7 @@ import "@zwave-js/cc";
 import { CommandClasses, ValueDB } from "@zwave-js/core";
 import { MockController } from "@zwave-js/testing";
 import { afterEach, test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -86,7 +87,10 @@ test.sequential("stores the given device class", ({ context, expect }) => {
 	nodeWithClass.destroy();
 });
 
-test.sequential("remembers all given command classes", ({ context, expect }) => {
+test.sequential("remembers all given command classes", ({
+	context,
+	expect,
+}) => {
 	const { driver } = context;
 
 	function makeNode(

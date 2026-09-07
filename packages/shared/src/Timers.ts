@@ -68,11 +68,7 @@ export function setTimer<TArgs extends any[]>(
 	delay?: number,
 	...args: TArgs
 ): Timer {
-	return new Timer(
-		callback,
-		delay,
-		...args,
-	);
+	return new Timer(callback, delay, ...args);
 }
 
 export function setInterval<TArgs extends any[]>(

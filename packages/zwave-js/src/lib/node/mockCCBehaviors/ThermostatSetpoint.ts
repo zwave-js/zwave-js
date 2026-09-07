@@ -53,10 +53,7 @@ const respondToThermostatSetpointSet: MockNodeBehavior = {
 				return { action: "fail" };
 			}
 
-			self.state.set(
-				StateKeys.setpoint(receivedCC.setpointType),
-				value,
-			);
+			self.state.set(StateKeys.setpoint(receivedCC.setpointType), value);
 			self.state.set(
 				StateKeys.scale(receivedCC.setpointType),
 				receivedCC.scale,

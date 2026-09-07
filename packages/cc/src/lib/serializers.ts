@@ -1,6 +1,7 @@
 import { ZWaveError, ZWaveErrorCodes, validatePayload } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { clamp } from "alcalzone-shared/math";
+
 import type {
 	SetbackSpecialState,
 	SetbackState,
@@ -77,10 +78,7 @@ export function encodeSwitchpoint(point: Switchpoint): Bytes {
 		);
 	}
 	return Bytes.concat([
-		[
-			point.hour & 0b000_11111,
-			point.minute & 0b00_111111,
-		],
+		[point.hour & 0b000_11111, point.minute & 0b00_111111],
 		encodeSetbackState(point.state),
 	]);
 }

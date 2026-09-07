@@ -10,6 +10,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 const responseTimeoutMs = 2000;
@@ -73,8 +74,8 @@ integrationTest(
 
 					if (receivedCC instanceof ProtectionCCSet) {
 						currentState.local = receivedCC.local;
-						currentState.rf = receivedCC.rf
-							?? RFProtectionState.Unprotected;
+						currentState.rf =
+							receivedCC.rf ?? RFProtectionState.Unprotected;
 						return { action: "stop" };
 					}
 				},
@@ -84,19 +85,16 @@ integrationTest(
 		},
 
 		testBody: async (t, _driver, node, _mockController, mockNode) => {
-			t.expect(node.getValue(ProtectionCCValues.localProtectionState.id))
-				.toBe(
-					LocalProtectionState.Unprotected,
-				);
-			t.expect(node.getValue(ProtectionCCValues.rfProtectionState.id))
-				.toBe(
-					RFProtectionState.Unprotected,
-				);
+			t.expect(
+				node.getValue(ProtectionCCValues.localProtectionState.id),
+			).toBe(LocalProtectionState.Unprotected);
+			t.expect(
+				node.getValue(ProtectionCCValues.rfProtectionState.id),
+			).toBe(RFProtectionState.Unprotected);
 			t.expect(
 				node.getValueMetadata(
 					ProtectionCCValues.localProtectionState.id,
-				)
-					.states,
+				).states,
 			).toStrictEqual({
 				0: "Unprotected",
 				2: "NoOperationPossible",
@@ -149,10 +147,9 @@ integrationTest(
 						"Node should have sent a ProtectionCCReport with the updated RF state",
 				},
 			);
-			t.expect(node.getValue(ProtectionCCValues.rfProtectionState.id))
-				.toBe(
-					RFProtectionState.NoControl,
-				);
+			t.expect(
+				node.getValue(ProtectionCCValues.rfProtectionState.id),
+			).toBe(RFProtectionState.NoControl);
 		},
 	},
 );

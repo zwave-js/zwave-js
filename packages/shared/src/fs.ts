@@ -1,5 +1,7 @@
 import type { ReadableWritablePair } from "node:stream/web";
+
 import path from "pathe";
+
 import { Bytes, type BytesView } from "./Bytes.js";
 import type {
 	CopyFile,

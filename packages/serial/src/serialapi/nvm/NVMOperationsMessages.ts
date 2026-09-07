@@ -49,10 +49,7 @@ export class NVMOperationsRequest extends Message {
 	public command!: NVMOperationsCommand;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([
-			[this.command],
-			this.payload,
-		]);
+		this.payload = Bytes.concat([[this.command], this.payload]);
 
 		return super.serialize(ctx);
 	}

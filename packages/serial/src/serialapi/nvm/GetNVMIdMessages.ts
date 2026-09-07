@@ -80,9 +80,7 @@ export interface GetNVMIdResponseOptions {
 
 @messageTypes(MessageType.Response, FunctionType.GetNVMId)
 export class GetNVMIdResponse extends Message {
-	public constructor(
-		options: GetNVMIdResponseOptions & MessageBaseOptions,
-	) {
+	public constructor(options: GetNVMIdResponseOptions & MessageBaseOptions) {
 		super(options);
 
 		// TODO: Check implementation:

@@ -1,14 +1,16 @@
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
-import type { BytesView } from "@zwave-js/shared";
 import net from "node:net";
 import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import type { BytesView } from "@zwave-js/shared";
+
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
 import type { ZWaveSocketOptions } from "./ZWaveSocketOptions.js";
 
 export function createNodeSocketFactory(
 	socketOptions: ZWaveSocketOptions,
 ): ZWaveSerialBindingFactory {
-	return async function() {
+	return async function () {
 		const socket = new net.Socket();
 		const timeout = 5000;
 

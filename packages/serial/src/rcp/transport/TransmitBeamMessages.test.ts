@@ -1,8 +1,10 @@
 import { ZWaveErrorCodes, assertZWaveError } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import { RCPMessage } from "../../message/RCPMessages.js";
+
 import {
 	AbortBeamRequest,
 	AbortBeamResponse,
@@ -22,8 +24,11 @@ async function roundtrip(
 	functionType: RCPFunctionType,
 	payload: Bytes,
 ): Promise<RCPMessage> {
-	const frame = await new RCPMessage({ type, functionType, payload })
-		.serialize({});
+	const frame = await new RCPMessage({
+		type,
+		functionType,
+		payload,
+	}).serialize({});
 	return RCPMessage.parse(frame, {});
 }
 
@@ -68,15 +73,17 @@ describe("TransmitBeamRequest", () => {
 	});
 
 	test("uses the sentinel TX power when none is given", async () => {
-		const serialized = await createBeamRequest({ txPower: undefined })
-			.serialize({});
+		const serialized = await createBeamRequest({
+			txPower: undefined,
+		}).serialize({});
 		expect(serialized[4]).toBe(0x7f);
 		expect(serialized[5]).toBe(0xff);
 	});
 
 	test("encodes fractional TX power in steps of 0.1 dBm", async () => {
-		const serialized = await createBeamRequest({ txPower: -3.5 })
-			.serialize({});
+		const serialized = await createBeamRequest({ txPower: -3.5 }).serialize(
+			{},
+		);
 		expect(serialized.readInt16BE(4)).toBe(-35);
 	});
 
@@ -177,18 +184,18 @@ describe("AbortBeam", () => {
 		expect(msg.expectsCallback()).toBe(false);
 	});
 
-	test.each([[0x01, true], [0x00, false]])(
-		"the response byte %i indicates success %s",
-		async (byte, success) => {
-			const msg = await roundtrip(
-				RCPMessageType.Response,
-				RCPFunctionType.AbortBeam,
-				Bytes.from([byte]),
-			);
+	test.each([
+		[0x01, true],
+		[0x00, false],
+	])("the response byte %i indicates success %s", async (byte, success) => {
+		const msg = await roundtrip(
+			RCPMessageType.Response,
+			RCPFunctionType.AbortBeam,
+			Bytes.from([byte]),
+		);
 
-			expect(msg).toBeInstanceOf(AbortBeamResponse);
-			expect((msg as AbortBeamResponse).success).toBe(success);
-			expect((msg as AbortBeamResponse).isOK()).toBe(success);
-		},
-	);
+		expect(msg).toBeInstanceOf(AbortBeamResponse);
+		expect((msg as AbortBeamResponse).success).toBe(success);
+		expect((msg as AbortBeamResponse).isOK()).toBe(success);
+	});
 });

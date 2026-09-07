@@ -32,14 +32,12 @@ Returns information about an association group.
 ### `sendReport`
 
 ```ts
-async sendReport(
-	options: {
-		groupId: number;
-		maxNodes: number;
-		nodeIds: number[];
-		reportsToFollow: number;
-	},
-): Promise<void>;
+async sendReport(options: {
+	groupId: number;
+	maxNodes: number;
+	nodeIds: number[];
+	reportsToFollow: number;
+}): Promise<void>;
 ```
 
 ### `addNodeIds`
@@ -56,14 +54,12 @@ Adds new nodes to an association group.
 ### `removeNodeIds`
 
 ```ts
-async removeNodeIds(
-	options: {
-		/** The group from which to remove the nodes. If none is specified, the nodes will be removed from all groups. */
-		groupId?: number;
-		/** The nodes to remove. If none are specified, ALL nodes will be removed. */
-		nodeIds?: number[];
-	},
-): Promise<SupervisionResult | undefined>;
+async removeNodeIds(options: {
+	/** The group from which to remove the nodes. If none is specified, the nodes will be removed from all groups. */
+	groupId?: number;
+	/** The nodes to remove. If none are specified, ALL nodes will be removed. */
+	nodeIds?: number[];
+}): Promise<SupervisionResult | undefined>;
 ```
 
 Removes nodes from an association group.
@@ -89,9 +85,7 @@ Request the association group that represents the most recently detected button 
 ### `reportSpecificGroup`
 
 ```ts
-async reportSpecificGroup(
-	group: number,
-): Promise<void>;
+async reportSpecificGroup(group: number): Promise<void>;
 ```
 
 Report the association group that represents the most recently detected button press.

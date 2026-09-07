@@ -16,8 +16,10 @@ export const consistentImportDeclarations = ESLintUtils.RuleCreator.withoutDocs(
 					const source = node.source.value;
 					if (
 						node.specifiers.length === 0
-						|| node.specifiers.some((s) =>
-							s.type !== TSESTree.AST_NODE_TYPES.ImportSpecifier
+						|| node.specifiers.some(
+							(s) =>
+								s.type
+								!== TSESTree.AST_NODE_TYPES.ImportSpecifier,
 						)
 					) {
 						return;
@@ -64,15 +66,14 @@ export const consistentImportDeclarations = ESLintUtils.RuleCreator.withoutDocs(
 	},
 );
 
-type Context = Parameters<typeof consistentImportDeclarations["create"]>[0];
+type Context = Parameters<(typeof consistentImportDeclarations)["create"]>[0];
 
 function reportImportType(
 	context: Context,
 	nodes: TSESTree.ImportDeclaration[],
 ) {
 	const node = nodes[0];
-	const specifiers = node
-		.specifiers as TSESTree.ImportSpecifier[];
+	const specifiers = node.specifiers as TSESTree.ImportSpecifier[];
 	if (
 		node.importKind !== "type"
 		&& specifiers.every((s) => s.importKind === "type")
@@ -80,7 +81,7 @@ function reportImportType(
 		context.report({
 			node,
 			messageId: "prefer-import-type",
-			fix: function*(fixer) {
+			fix: function* (fixer) {
 				yield fixer.insertTextAfterRange(
 					[node.range[0], node.range[0] + "import".length],
 					" type",
@@ -115,9 +116,9 @@ function reportDuplicateImports(
 		let allTypeOnly = true;
 
 		for (const node of nodes) {
-			const specifiers = node
-				.specifiers as TSESTree.ImportSpecifier[];
-			allTypeOnly &&= node.importKind === "type"
+			const specifiers = node.specifiers as TSESTree.ImportSpecifier[];
+			allTypeOnly &&=
+				node.importKind === "type"
 				|| specifiers.every((s) => s.importKind === "type");
 			allSpecifiers.push(...specifiers);
 			if (node !== firstImport) {
@@ -129,29 +130,22 @@ function reportDuplicateImports(
 			}
 		}
 
-		const newSpecifiers = allSpecifiers
-			.map((s) => {
-				const typeOnly = !allTypeOnly
-					&& (s.importKind === "type"
-						|| (s
-								.parent as TSESTree.ImportDeclaration)
-								.importKind
-							=== "type");
-				const importedName = (s.imported as TSESTree.Identifier)
-					.name;
-				const renamed = s.local.name !== importedName;
-				return `${typeOnly ? "type " : ""}${
-					renamed
-						? `${importedName} as ${s.local.name}`
-						: s.local.name
-				}`;
-			});
+		const newSpecifiers = allSpecifiers.map((s) => {
+			const typeOnly =
+				!allTypeOnly
+				&& (s.importKind === "type"
+					|| (s.parent as TSESTree.ImportDeclaration).importKind
+						=== "type");
+			const importedName = (s.imported as TSESTree.Identifier).name;
+			const renamed = s.local.name !== importedName;
+			return `${typeOnly ? "type " : ""}${
+				renamed ? `${importedName} as ${s.local.name}` : s.local.name
+			}`;
+		});
 
-		const newText = `import ${allTypeOnly ? "type " : ""}{${
-			newSpecifiers
-				.map((s) => `\n\t${s},`)
-				.join("")
-		}\n} from ${firstImport.source.raw};`;
+		const newText = `import ${allTypeOnly ? "type " : ""}{${newSpecifiers
+			.map((s) => `\n\t${s},`)
+			.join("")}\n} from ${firstImport.source.raw};`;
 
 		return [
 			fixer.replaceText(firstImport, newText),

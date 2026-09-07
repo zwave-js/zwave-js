@@ -15,11 +15,13 @@
  *   yarn config:find-multi-endpoints | jq '.[] | {configFilePath, endpointCount, label}'
  */
 
-import { formatId } from "@zwave-js/shared";
-import JSON5 from "json5";
 import fs from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { formatId } from "@zwave-js/shared";
+import JSON5 from "json5";
+
 import { ConfigManager } from "../src/ConfigManager.js";
 import type { DeviceConfigIndexEntry } from "../src/devices/DeviceConfig.js";
 
@@ -154,10 +156,7 @@ async function main() {
 	const seenConfigPaths = new Set<string>();
 
 	for (const file of ohFiles) {
-		const content = await fs.readFile(
-			path.join(ohTempDir, file),
-			"utf8",
-		);
+		const content = await fs.readFile(path.join(ohTempDir, file), "utf8");
 		let json: any;
 		try {
 			json = JSON.parse(content);
@@ -205,10 +204,9 @@ async function main() {
 
 			// Read and parse the existing config to check for an endpoints block
 			const absoluteConfigPath = path.join(processedDir, match.filename);
-			const configContent = await fs.readFile(
-				absoluteConfigPath,
-				"utf8",
-			).catch(() => null);
+			const configContent = await fs
+				.readFile(absoluteConfigPath, "utf8")
+				.catch(() => null);
 			if (!configContent) continue;
 
 			let parsedConfig: any;
@@ -223,9 +221,10 @@ async function main() {
 
 			const endpointInfos: EndpointInfo[] = nonRootEndpoints.map(
 				(ep) => ({
-					number: typeof ep.number === "string"
-						? parseInt(ep.number, 10)
-						: (ep.number as number),
+					number:
+						typeof ep.number === "string"
+							? parseInt(ep.number, 10)
+							: (ep.number as number),
 					genericClassId: ep.generic_class?.id ?? null,
 					genericClassName: ep.generic_class?.name ?? null,
 					specificClassId: ep.specific_class?.id ?? null,
@@ -235,15 +234,16 @@ async function main() {
 
 			// Prefer manual-type documents (type_id 2) for the documentation URL
 			const docs: any[] = json.documents ?? [];
-			const manualUrl = docs.find(
-				(d) =>
-					String(d.type_id) === "2"
-					|| d.type?.label === "Manual",
-			)?.url
+			const manualUrl =
+				docs.find(
+					(d) =>
+						String(d.type_id) === "2" || d.type?.label === "Manual",
+				)?.url
 				?? docs[0]?.url
 				?? null;
 
-			const hasRootAssociations = !!parsedConfig.associations
+			const hasRootAssociations =
+				!!parsedConfig.associations
 				&& Object.keys(parsedConfig.associations).length > 0;
 
 			candidates.push({
@@ -266,12 +266,10 @@ async function main() {
 		if (b.endpointCount !== a.endpointCount) {
 			return b.endpointCount - a.endpointCount;
 		}
-		const diversityA = new Set(
-			a.endpoints.map((e) => e.genericClassId),
-		).size;
-		const diversityB = new Set(
-			b.endpoints.map((e) => e.genericClassId),
-		).size;
+		const diversityA = new Set(a.endpoints.map((e) => e.genericClassId))
+			.size;
+		const diversityB = new Set(b.endpoints.map((e) => e.genericClassId))
+			.size;
 		return diversityB - diversityA;
 	});
 

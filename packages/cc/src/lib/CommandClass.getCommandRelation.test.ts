@@ -4,6 +4,7 @@ import {
 	type SecurityManagers,
 } from "@zwave-js/core";
 import { describe, expect, test } from "vitest";
+
 import { BasicCCGet, BasicCCSet } from "../cc/BasicCC.js";
 import { BinarySwitchCCSet } from "../cc/BinarySwitchCC.js";
 import { CRC16CC } from "../cc/CRC16CC.js";
@@ -16,6 +17,7 @@ import { MultiCommandCC } from "../cc/MultiCommandCC.js";
 import { Security2CC } from "../cc/Security2CC.js";
 import { SecurityCC } from "../cc/SecurityCC.js";
 import { SupervisionCC } from "../cc/SupervisionCC.js";
+
 import { CommandRelation, getCommandRelation } from "./CommandClass.js";
 import { SPANExtension } from "./Security2/Extension.js";
 
@@ -53,8 +55,8 @@ function createSet(
 		endpointIndex: options.endpointIndex,
 		targetValue,
 	});
-	command.encapsulationFlags = options.encapsulationFlags
-		?? EncapsulationFlags.None;
+	command.encapsulationFlags =
+		options.encapsulationFlags ?? EncapsulationFlags.None;
 	return command;
 }
 
@@ -120,11 +122,7 @@ describe("getCommandRelation", () => {
 	});
 
 	test.each([
-		[
-			"different node targets",
-			createSet(1, { nodeId: 3 }),
-			createSet(1),
-		],
+		["different node targets", createSet(1, { nodeId: 3 }), createSet(1)],
 		[
 			"different endpoints",
 			createSet(1, { endpointIndex: 1 }),
@@ -294,21 +292,16 @@ describe("getCommandRelation", () => {
 		];
 
 		// The wrapper node ID cannot distinguish its multicast target sets
-		expect(differentTargets[0].nodeId).toBe(
-			differentTargets[1].nodeId,
-		);
+		expect(differentTargets[0].nodeId).toBe(differentTargets[1].nodeId);
 		// Inner targets and S2 group metadata must all match
 		expect(
 			getCommandRelation(differentTargets[0], differentTargets[1]),
 		).toBe(CommandRelation.Unrelated);
+		expect(getCommandRelation(differentGroups[0], differentGroups[1])).toBe(
+			CommandRelation.Unrelated,
+		);
 		expect(
-			getCommandRelation(differentGroups[0], differentGroups[1]),
-		).toBe(CommandRelation.Unrelated);
-		expect(
-			getCommandRelation(
-				sameGroupAndTargets[0],
-				sameGroupAndTargets[1],
-			),
+			getCommandRelation(sameGroupAndTargets[0], sameGroupAndTargets[1]),
 		).toBe(CommandRelation.Redundant);
 		expect(
 			getCommandRelation(
@@ -340,14 +333,8 @@ describe("getCommandRelation", () => {
 	});
 
 	test("returns unrelated for multi-command encapsulation", () => {
-		const newer = MultiCommandCC.encapsulate([
-			createSet(1),
-			createSet(2),
-		]);
-		const older = MultiCommandCC.encapsulate([
-			createSet(1),
-			createSet(2),
-		]);
+		const newer = MultiCommandCC.encapsulate([createSet(1), createSet(2)]);
+		const older = MultiCommandCC.encapsulate([createSet(1), createSet(2)]);
 		expect(getCommandRelation(newer, older)).toBe(
 			CommandRelation.Unrelated,
 		);

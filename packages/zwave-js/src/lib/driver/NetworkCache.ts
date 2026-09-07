@@ -24,6 +24,7 @@ import type {
 } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 import path from "pathe";
+
 import {
 	ProvisioningEntryStatus,
 	type SmartStartProvisioningEntry,
@@ -39,19 +40,15 @@ export const cacheKeys = {
 		provisioningList: "controller.provisioningList",
 		associations: (groupId: number) => `controller.associations.${groupId}`,
 		securityKeys: (secClass: SecurityClass) =>
-			`controller.securityKeys.${
-				getEnumMemberName(
-					SecurityClass,
-					secClass,
-				)
-			}`,
+			`controller.securityKeys.${getEnumMemberName(
+				SecurityClass,
+				secClass,
+			)}`,
 		securityKeysLongRange: (secClass: SecurityClass) =>
-			`controller.securityKeyLongRange.${
-				getEnumMemberName(
-					SecurityClass,
-					secClass,
-				)
-			}`,
+			`controller.securityKeyLongRange.${getEnumMemberName(
+				SecurityClass,
+				secClass,
+			)}`,
 		privateKey: "controller.privateKey",
 	},
 	// TODO: somehow these functions should be combined with the pattern matching below
@@ -73,12 +70,10 @@ export const cacheKeys = {
 			supportsSecurity: `${nodeBaseKey}supportsSecurity`,
 			supportsBeaming: `${nodeBaseKey}supportsBeaming`,
 			securityClass: (secClass: SecurityClass) =>
-				`${nodeBaseKey}securityClasses.${
-					getEnumMemberName(
-						SecurityClass,
-						secClass,
-					)
-				}`,
+				`${nodeBaseKey}securityClasses.${getEnumMemberName(
+					SecurityClass,
+					secClass,
+				)}`,
 			dsk: `${nodeBaseKey}dsk`,
 			failedS2Bootstrapping: `${nodeBaseKey}failedS2Bootstrapping`,
 			endpoint: (index: number) => {
@@ -100,8 +95,7 @@ export const cacheKeys = {
 			customReturnRoutes: (destinationNodeId: number) =>
 				`${nodeBaseKey}customReturnRoutes.${destinationNodeId}`,
 			customSUCReturnRoutes: `${nodeBaseKey}customReturnRoutes.SUC`,
-			defaultTransitionDuration:
-				`${nodeBaseKey}defaultTransitionDuration`,
+			defaultTransitionDuration: `${nodeBaseKey}defaultTransitionDuration`,
 			defaultVolume: `${nodeBaseKey}defaultVolume`,
 			lastSeen: `${nodeBaseKey}lastSeen`,
 			lastAwake: `${nodeBaseKey}lastAwake`,
@@ -159,11 +153,7 @@ function tryParseDeviceClass(value: unknown): DeviceClass | undefined {
 			&& typeof generic === "number"
 			&& typeof specific === "number"
 		) {
-			return new DeviceClass(
-				basic,
-				generic,
-				specific,
-			);
+			return new DeviceClass(basic, generic, specific);
 		}
 	}
 }
@@ -207,17 +197,16 @@ function tryParseProvisioningList(
 			&& (entry.requestedSecurityClasses == undefined
 				|| (isArray(entry.requestedSecurityClasses)
 					&& entry.requestedSecurityClasses.every((s) =>
-						isSerializedSecurityClass(s)
+						isSerializedSecurityClass(s),
 					)))
 			// protocol and supportedProtocols are (supposed to be) stored as strings, not the enum values
 			&& (entry.protocol == undefined
 				|| isSerializedProtocol(entry.protocol))
-			&& (entry.supportedProtocols == undefined || (
-				isArray(entry.supportedProtocols)
-				&& entry.supportedProtocols.every((s) =>
-					isSerializedProtocol(s)
-				)
-			))
+			&& (entry.supportedProtocols == undefined
+				|| (isArray(entry.supportedProtocols)
+					&& entry.supportedProtocols.every((s) =>
+						isSerializedProtocol(s),
+					)))
 			&& (entry.status == undefined
 				|| isSerializedProvisioningEntryStatus(entry.status))
 		) {
@@ -248,9 +237,7 @@ function tryParseProvisioningList(
 				parsed.protocol = tryParseSerializedProtocol(entry.protocol);
 			}
 			if (entry.supportedProtocols) {
-				parsed.supportedProtocols = (
-					entry.supportedProtocols as any[]
-				)
+				parsed.supportedProtocols = (entry.supportedProtocols as any[])
 					.map((s) => tryParseSerializedProtocol(s))
 					.filter((s) => s !== undefined);
 			}
@@ -316,9 +303,7 @@ function isSerializedProvisioningEntryStatus(
 	);
 }
 
-function isSerializedProtocol(
-	s: unknown,
-): boolean {
+function isSerializedProtocol(s: unknown): boolean {
 	// The list of supported protocols has been around since before we started
 	// saving them as their stringified variant, so we
 	// now have to deal with the following variants:
@@ -332,9 +317,7 @@ function isSerializedProtocol(
 	);
 }
 
-function tryParseSerializedProtocol(
-	value: unknown,
-): Protocols | undefined {
+function tryParseSerializedProtocol(value: unknown): Protocols | undefined {
 	// The list of supported protocols has been around since before we started
 	// saving them as their stringified variant, so we
 	// now have to deal with the following variants:
@@ -372,9 +355,7 @@ function tryParseAssociationAddress(
 	}
 }
 
-function tryParseBuffer(
-	value: unknown,
-): BytesView | undefined {
+function tryParseBuffer(value: unknown): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "hex");
@@ -384,9 +365,7 @@ function tryParseBuffer(
 	}
 }
 
-function tryParseBufferBase64(
-	value: unknown,
-): BytesView | undefined {
+function tryParseBufferBase64(value: unknown): BytesView | undefined {
 	if (typeof value === "string") {
 		try {
 			return Bytes.from(value, "base64");
@@ -587,10 +566,12 @@ export function serializeNetworkCacheValue(
 			);
 			const versionMatch = valueAsString.match(/^\$v\d+\$/)?.[0];
 			if (versionMatch) {
-				return versionMatch
-					+ Bytes.view(value as BytesView).subarray(
-						versionMatch.length,
-					).toString("base64");
+				return (
+					versionMatch
+					+ Bytes.view(value as BytesView)
+						.subarray(versionMatch.length)
+						.toString("base64")
+				);
 			} else {
 				// For lecacy hashes, just return the hex representation
 				return Bytes.view(value as BytesView).toString("hex");
@@ -610,12 +591,12 @@ export function serializeNetworkCacheValue(
 			for (const entry of value as SmartStartProvisioningEntry[]) {
 				const serialized: Record<string, any> = { ...entry };
 				serialized.securityClasses = entry.securityClasses.map((c) =>
-					getEnumMemberName(SecurityClass, c)
+					getEnumMemberName(SecurityClass, c),
 				);
 				if (entry.requestedSecurityClasses) {
-					serialized.requestedSecurityClasses = entry
-						.requestedSecurityClasses.map((c) =>
-							getEnumMemberName(SecurityClass, c)
+					serialized.requestedSecurityClasses =
+						entry.requestedSecurityClasses.map((c) =>
+							getEnumMemberName(SecurityClass, c),
 						);
 				}
 				if (entry.status != undefined) {
@@ -631,9 +612,9 @@ export function serializeNetworkCacheValue(
 					);
 				}
 				if (entry.supportedProtocols != undefined) {
-					serialized.supportedProtocols = entry.supportedProtocols
-						.map(
-							(p) => getEnumMemberName(Protocols, p),
+					serialized.supportedProtocols =
+						entry.supportedProtocols.map((p) =>
+							getEnumMemberName(Protocols, p),
 						);
 				}
 				ret.push(serialized);
@@ -798,11 +779,9 @@ export async function migrateLegacyNetworkCache(
 			// The nesting was inverted from the legacy cache: node -> EP -> CCs
 			// as opposed to node -> CC -> EPs
 			if (isObject(node.commandClasses)) {
-				for (
-					const [ccIdHex, cc] of Object.entries<any>(
-						node.commandClasses,
-					)
-				) {
+				for (const [ccIdHex, cc] of Object.entries<any>(
+					node.commandClasses,
+				)) {
 					const ccId = parseInt(ccIdHex, 16);
 					if (isObject(cc.endpoints)) {
 						for (const endpointId of Object.keys(cc.endpoints)) {

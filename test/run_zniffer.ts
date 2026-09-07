@@ -16,14 +16,8 @@ const zniffer = new Zniffer(port, {
 	defaultFrequency: RFRegion["Europe (Long Range)"],
 	defaultLRChannelConfig: ZnifferLRChannelConfig["Classic & LR B"],
 	securityKeys: {
-		S2_AccessControl: Bytes.from(
-			"31132050077310B6F7032F91C79C2EB8",
-			"hex",
-		),
-		S2_Authenticated: Bytes.from(
-			"656EF5C0F020F3C14238C04A1748B7E1",
-			"hex",
-		),
+		S2_AccessControl: Bytes.from("31132050077310B6F7032F91C79C2EB8", "hex"),
+		S2_Authenticated: Bytes.from("656EF5C0F020F3C14238C04A1748B7E1", "hex"),
 		S2_Unauthenticated: Bytes.from(
 			"5369389EFA18EE2A4894C7FB48347FEA",
 			"hex",
@@ -31,14 +25,8 @@ const zniffer = new Zniffer(port, {
 		S0_Legacy: Bytes.from("0102030405060708090a0b0c0d0e0f10", "hex"),
 	},
 	securityKeysLongRange: {
-		S2_AccessControl: Bytes.from(
-			"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-			"hex",
-		),
-		S2_Authenticated: Bytes.from(
-			"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-			"hex",
-		),
+		S2_AccessControl: Bytes.from("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", "hex"),
+		S2_Authenticated: Bytes.from("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "hex"),
 	},
 })
 	.on("error", console.error)

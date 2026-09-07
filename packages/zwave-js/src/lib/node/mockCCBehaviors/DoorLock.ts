@@ -42,10 +42,8 @@ const StateKeys = {
 	currentMode: `${STATE_KEY_PREFIX}currentMode`,
 	transition: `${STATE_KEY_PREFIX}transition`,
 	operationType: `${STATE_KEY_PREFIX}operationType`,
-	outsideHandlesCanOpenDoorConfiguration:
-		`${STATE_KEY_PREFIX}outsideHandlesCanOpenDoorConfiguration`,
-	insideHandlesCanOpenDoorConfiguration:
-		`${STATE_KEY_PREFIX}insideHandlesCanOpenDoorConfiguration`,
+	outsideHandlesCanOpenDoorConfiguration: `${STATE_KEY_PREFIX}outsideHandlesCanOpenDoorConfiguration`,
+	insideHandlesCanOpenDoorConfiguration: `${STATE_KEY_PREFIX}insideHandlesCanOpenDoorConfiguration`,
 	lockTimeoutConfiguration: `${STATE_KEY_PREFIX}lockTimeoutConfiguration`,
 	autoRelockTime: `${STATE_KEY_PREFIX}autoRelockTime`,
 	holdAndReleaseTime: `${STATE_KEY_PREFIX}holdAndReleaseTime`,
@@ -75,9 +73,9 @@ function getTransitionRemainingDuration(
 function stopCurrentTransition(
 	self: MockNode,
 ): { wasSupervised: boolean } | undefined {
-	const existing = self.state.get(
-		StateKeys.transition,
-	) as DoorLockTransition | undefined;
+	const existing = self.state.get(StateKeys.transition) as
+		| DoorLockTransition
+		| undefined;
 	if (existing) {
 		existing.timer.clear();
 		self.state.set(StateKeys.currentMode, existing.targetMode);
@@ -101,9 +99,8 @@ function beginTransition(
 ): number {
 	stopCurrentTransition(self);
 
-	const currentMode = (
-		self.state.get(StateKeys.currentMode) ?? DoorLockMode.Unsecured
-	) as DoorLockMode;
+	const currentMode = (self.state.get(StateKeys.currentMode)
+		?? DoorLockMode.Unsecured) as DoorLockMode;
 
 	if (currentMode === targetMode || travelTime === 0) {
 		self.state.set(StateKeys.currentMode, targetMode);
@@ -176,9 +173,9 @@ const respondToDoorLockCapabilitiesGet: MockNodeBehavior = {
 const respondToDoorLockOperationGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof DoorLockCCOperationGet) {
-			const transition = self.state.get(
-				StateKeys.transition,
-			) as DoorLockTransition | undefined;
+			const transition = self.state.get(StateKeys.transition) as
+				| DoorLockTransition
+				| undefined;
 
 			let currentMode: DoorLockMode;
 			let targetMode: DoorLockMode | undefined;
@@ -186,17 +183,13 @@ const respondToDoorLockOperationGet: MockNodeBehavior = {
 
 			if (transition) {
 				// Lock is still moving - report the mode before the transition
-				currentMode = (
-					self.state.get(StateKeys.currentMode)
-						?? DoorLockMode.Unsecured
-				) as DoorLockMode;
+				currentMode = (self.state.get(StateKeys.currentMode)
+					?? DoorLockMode.Unsecured) as DoorLockMode;
 				targetMode = transition.targetMode;
 				duration = getTransitionRemainingDuration(transition);
 			} else {
-				currentMode = (
-					self.state.get(StateKeys.currentMode)
-						?? DoorLockMode.Unsecured
-				) as DoorLockMode;
+				currentMode = (self.state.get(StateKeys.currentMode)
+					?? DoorLockMode.Unsecured) as DoorLockMode;
 				targetMode = currentMode;
 				duration = new Duration(0, "seconds");
 			}
@@ -250,10 +243,8 @@ const respondToDoorLockOperationSet: MockNodeBehavior = {
 const respondToDoorLockConfigurationGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof DoorLockCCConfigurationGet) {
-			const operationType = (
-				self.state.get(StateKeys.operationType)
-					?? DoorLockOperationType.Constant
-			) as DoorLockOperationType;
+			const operationType = (self.state.get(StateKeys.operationType)
+				?? DoorLockOperationType.Constant) as DoorLockOperationType;
 			const outsideHandlesCanOpenDoorConfiguration = (self.state.get(
 				StateKeys.outsideHandlesCanOpenDoorConfiguration,
 			) ?? [true, true, true, true]) as [
@@ -273,18 +264,18 @@ const respondToDoorLockConfigurationGet: MockNodeBehavior = {
 			const lockTimeoutConfiguration = self.state.get(
 				StateKeys.lockTimeoutConfiguration,
 			) as number | undefined;
-			const autoRelockTime = self.state.get(
-				StateKeys.autoRelockTime,
-			) as number | undefined;
+			const autoRelockTime = self.state.get(StateKeys.autoRelockTime) as
+				| number
+				| undefined;
 			const holdAndReleaseTime = self.state.get(
 				StateKeys.holdAndReleaseTime,
 			) as number | undefined;
-			const twistAssist = self.state.get(
-				StateKeys.twistAssist,
-			) as boolean | undefined;
-			const blockToBlock = self.state.get(
-				StateKeys.blockToBlock,
-			) as boolean | undefined;
+			const twistAssist = self.state.get(StateKeys.twistAssist) as
+				| boolean
+				| undefined;
+			const blockToBlock = self.state.get(StateKeys.blockToBlock) as
+				| boolean
+				| undefined;
 
 			const cc = new DoorLockCCConfigurationReport({
 				nodeId: controller.ownNodeId,
@@ -318,10 +309,7 @@ const respondToDoorLockConfigurationSet: MockNodeBehavior = {
 				StateKeys.lockTimeoutConfiguration,
 				receivedCC.lockTimeoutConfiguration,
 			);
-			self.state.set(
-				StateKeys.autoRelockTime,
-				receivedCC.autoRelockTime,
-			);
+			self.state.set(StateKeys.autoRelockTime, receivedCC.autoRelockTime);
 			self.state.set(
 				StateKeys.holdAndReleaseTime,
 				receivedCC.holdAndReleaseTime,

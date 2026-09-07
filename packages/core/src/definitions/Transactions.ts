@@ -13,16 +13,18 @@ export enum TransactionState {
 	Failed,
 }
 
-export type TransactionProgress = {
-	state:
-		| TransactionState.Queued
-		| TransactionState.Active
-		| TransactionState.Completed;
-} | {
-	state: TransactionState.Failed;
-	/** Why the transaction failed */
-	reason?: string;
-};
+export type TransactionProgress =
+	| {
+			state:
+				| TransactionState.Queued
+				| TransactionState.Active
+				| TransactionState.Completed;
+	  }
+	| {
+			state: TransactionState.Failed;
+			/** Why the transaction failed */
+			reason?: string;
+	  };
 
 export type TransactionProgressListener = (
 	progress: TransactionProgress,

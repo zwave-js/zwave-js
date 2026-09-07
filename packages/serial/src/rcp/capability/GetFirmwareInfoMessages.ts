@@ -5,6 +5,7 @@ import {
 	parseBitMask,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName } from "@zwave-js/shared";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
@@ -51,16 +52,14 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 		const majorVersion = raw.payload[offset++];
 		const minorVersion = raw.payload[offset++];
 		const patchVersion = raw.payload[offset++];
-		const rcpFirmwareVersion =
-			`${majorVersion}.${minorVersion}.${patchVersion}`;
+		const rcpFirmwareVersion = `${majorVersion}.${minorVersion}.${patchVersion}`;
 
 		const radioLibrary = raw.payload[offset++];
 
 		const radioMajorVersion = raw.payload[offset++];
 		const radioMinorVersion = raw.payload[offset++];
 		const radioPatchVersion = raw.payload[offset++];
-		const radioLibraryVersion =
-			`${radioMajorVersion}.${radioMinorVersion}.${radioPatchVersion}`;
+		const radioLibraryVersion = `${radioMajorVersion}.${radioMinorVersion}.${radioPatchVersion}`;
 
 		const functionTypeBitmaskLength = raw.payload[offset++];
 		const supportedFunctionTypes: RCPFunctionType[] = parseBitMask(
@@ -113,7 +112,7 @@ export class GetFirmwareInfoResponse extends RCPMessage {
 				"radio library version": this.radioLibraryVersion,
 				"supported function types": logList(
 					this.supportedFunctionTypes.map((type) =>
-						getEnumMemberName(RCPFunctionType, type)
+						getEnumMemberName(RCPFunctionType, type),
 					),
 				),
 			},

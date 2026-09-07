@@ -7,6 +7,7 @@ import {
 	type MockZWaveRequestFrame,
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -46,14 +47,13 @@ integrationTest(
 
 			await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
-			const { payload: response } = await mockNode.expectControllerFrame<
-				MockZWaveRequestFrame
-			>(
-				(msg): msg is MockZWaveRequestFrame =>
-					msg.type === MockZWaveFrameType.Request
-					&& msg.payload instanceof SupervisionCCReport,
-				{ timeout: 1000 },
-			);
+			const { payload: response } =
+				await mockNode.expectControllerFrame<MockZWaveRequestFrame>(
+					(msg): msg is MockZWaveRequestFrame =>
+						msg.type === MockZWaveFrameType.Request
+						&& msg.payload instanceof SupervisionCCReport,
+					{ timeout: 1000 },
+				);
 
 			t.expect((response as SupervisionCCReport).status).toBe(
 				SupervisionStatus.Success,
@@ -98,14 +98,13 @@ integrationTest(
 
 			await mockNode.sendToController(createMockZWaveRequestFrame(cc));
 
-			const { payload: response } = await mockNode.expectControllerFrame<
-				MockZWaveRequestFrame
-			>(
-				(msg): msg is MockZWaveRequestFrame =>
-					msg.type === MockZWaveFrameType.Request
-					&& msg.payload instanceof SupervisionCCReport,
-				{ timeout: 1000 },
-			);
+			const { payload: response } =
+				await mockNode.expectControllerFrame<MockZWaveRequestFrame>(
+					(msg): msg is MockZWaveRequestFrame =>
+						msg.type === MockZWaveFrameType.Request
+						&& msg.payload instanceof SupervisionCCReport,
+					{ timeout: 1000 },
+				);
 
 			t.expect((response as SupervisionCCReport).status).toBe(
 				SupervisionStatus.Fail,

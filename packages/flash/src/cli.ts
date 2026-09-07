@@ -29,9 +29,9 @@ let firmware: BytesView;
 const driver = new Driver(port, {
 	logConfig: verbose
 		? {
-			enabled: true,
-			level: "silly",
-		}
+				enabled: true,
+				level: "silly",
+			}
 		: { enabled: false },
 	testingHooks: {
 		skipNodeInterview: true,
@@ -81,12 +81,10 @@ async function flash() {
 			process.exit(0);
 		} else {
 			console.log(
-				`Firmware update failed: ${
-					getEnumMemberName(
-						OTWFirmwareUpdateStatus,
-						r.status,
-					)
-				}`,
+				`Firmware update failed: ${getEnumMemberName(
+					OTWFirmwareUpdateStatus,
+					r.status,
+				)}`,
 			);
 			await wait(1000);
 			process.exit(2);

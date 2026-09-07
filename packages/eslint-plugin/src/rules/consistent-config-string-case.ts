@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import { CONFIG_OPTION, CONFIG_PARAM, ROOT } from "../jsonSelectors.js";
 import {
 	type JSONCRule,
@@ -24,7 +25,8 @@ export const consistentConfigStringCase: JSONCRule.RuleModule = {
 				if (
 					node.value.type !== "JSONLiteral"
 					|| typeof node.value.value !== "string"
-				) return;
+				)
+					return;
 				const value = node.value;
 
 				const rawValue = value.raw.slice(1, -1);
@@ -58,7 +60,8 @@ export const consistentConfigStringCase: JSONCRule.RuleModule = {
 				if (
 					node.value.type !== "JSONLiteral"
 					|| typeof node.value.value !== "string"
-				) return;
+				)
+					return;
 				const value = node.value;
 
 				const rawValue = value.raw.slice(1, -1);
@@ -95,7 +98,8 @@ export const consistentConfigStringCase: JSONCRule.RuleModule = {
 				if (
 					node.value.type !== "JSONLiteral"
 					|| typeof node.value.value !== "string"
-				) return;
+				)
+					return;
 				const value = node.value;
 
 				const rawValue = value.raw.slice(1, -1);
@@ -120,7 +124,7 @@ export const consistentConfigStringCase: JSONCRule.RuleModule = {
 						},
 						{
 							messageId: "disable-for-all-options",
-							fix: function*(fixer) {
+							fix: function* (fixer) {
 								const options = node.parent.parent
 									.parent as AST.JSONProperty;
 
@@ -144,8 +148,7 @@ export const consistentConfigStringCase: JSONCRule.RuleModule = {
 	},
 	meta: {
 		docs: {
-			description:
-				`Ensures that the casing of labels in configuration files follows the style guide`,
+			description: `Ensures that the casing of labels in configuration files follows the style guide`,
 		},
 		fixable: "code",
 		hasSuggestions: true,
@@ -155,8 +158,7 @@ export const consistentConfigStringCase: JSONCRule.RuleModule = {
 			"must-be-sentence-case":
 				"{{what}} must be in Sentence case, except for Command Class names",
 			"change-to-fixed": `Change to "{{fixed}}"`,
-			"disable-for-all-options":
-				`Disable for all options of this parameter`,
+			"disable-for-all-options": `Disable for all options of this parameter`,
 		},
 		type: "problem",
 	},

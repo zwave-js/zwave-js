@@ -23,11 +23,7 @@ async function main(param) {
 		},
 	};
 
-	await exec(
-		"yarn",
-		["run", "implemented_ccs", "--flavor=github"],
-		options,
-	);
+	await exec("yarn", ["run", "implemented_ccs", "--flavor=github"], options);
 
 	ccTable = ccTable
 		.split("\n")

@@ -8,11 +8,12 @@
 
 ```ts
 async get(): Promise<
-	{
-		currentValue?: MaybeUnknown<number>;
-		duration?: Duration;
-		targetValue?: MaybeUnknown<number>;
-	} | undefined
+	| {
+			currentValue?: MaybeUnknown<number>;
+			duration?: Duration;
+			targetValue?: MaybeUnknown<number>;
+	  }
+	| undefined
 >;
 ```
 

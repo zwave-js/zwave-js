@@ -1,4 +1,5 @@
 import { num2hex } from "@zwave-js/shared";
+
 import { RFRegion, ZnifferRegion, ZnifferRegionLegacy } from "./RFRegion.js";
 
 export enum Protocols {
@@ -125,7 +126,7 @@ export function isLongRangeNodeId(nodeId: number): boolean {
 }
 
 export enum ProtocolVersion {
-	"unknown" = 0,
+	unknown = 0,
 	"2.0" = 1,
 	"4.2x / 5.0x" = 2,
 	"4.5x / 6.0x" = 3,
@@ -254,7 +255,7 @@ export function getProtocolHeaderFormatForDataRate(
 		return ProtocolHeaderFormat.LongRange;
 	}
 	return rfRegionToRadioProtocolMode(region)
-			=== RadioProtocolMode.Classic3Channel
+		=== RadioProtocolMode.Classic3Channel
 		? ProtocolHeaderFormat.Classic3Channel
 		: ProtocolHeaderFormat.Classic2Channel;
 }

@@ -25,6 +25,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -69,12 +70,16 @@ export const BasicCCValues = V.defineCCValues(CommandClasses.Basic, {
 		...ValueMetadata.UInt8,
 		label: "Target value",
 	}),
-	...V.staticProperty("duration", {
-		...ValueMetadata.ReadOnlyDuration,
-		label: "Remaining duration",
-	}, {
-		minVersion: 2,
-	}),
+	...V.staticProperty(
+		"duration",
+		{
+			...ValueMetadata.ReadOnlyDuration,
+			label: "Remaining duration",
+		},
+		{
+			minVersion: 2,
+		},
+	),
 
 	...V.staticProperty("restorePrevious", {
 		...ValueMetadata.WriteOnlyBoolean,
@@ -111,7 +116,7 @@ export class BasicCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: BasicCCAPI, { property }, value) {
+		return async function (this: BasicCCAPI, { property }, value) {
 			// Enable restoring the previous non-zero value
 			if (property === "restorePrevious") {
 				property = "targetValue";
@@ -168,8 +173,8 @@ export class BasicCCAPI extends CCAPI {
 							);
 						} else if (this.isMulticast()) {
 							// Figure out which nodes were affected by this command
-							const affectedNodes = this.endpoint.node
-								.physicalNodes.filter(
+							const affectedNodes =
+								this.endpoint.node.physicalNodes.filter(
 									(node) =>
 										node
 											.getEndpoint(this.endpoint.index)
@@ -207,7 +212,7 @@ export class BasicCCAPI extends CCAPI {
 	};
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: BasicCCAPI, { property }) {
+		return async function (this: BasicCCAPI, { property }) {
 			switch (property) {
 				case "currentValue":
 				case "targetValue":
@@ -261,9 +266,7 @@ export class BasicCCAPI extends CCAPI {
 export class BasicCC extends CommandClass {
 	declare ccCommand: BasicCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 
@@ -280,9 +283,7 @@ export class BasicCC extends CommandClass {
 		await this.refreshValues(ctx, { tag: "interview" });
 
 		// Remove Basic CC support again when there was no response
-		if (
-			this.getValue(ctx, BasicCCValues.currentValue) == undefined
-		) {
+		if (this.getValue(ctx, BasicCCValues.currentValue) == undefined) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
 				message:
@@ -340,8 +341,7 @@ remaining duration: ${basicResponse.duration?.toString() ?? "undefined"}`;
 	}
 
 	public override getDefinedValueIDs(
-		ctx:
-			& GetValueDB
+		ctx: GetValueDB
 			& GetSupportedCCVersion
 			& GetDeviceConfig
 			& GetNode<
@@ -378,9 +378,7 @@ export interface BasicCCSetOptions {
 @CCCommand(BasicCommand.Set)
 @useSupervision()
 export class BasicCCSet extends BasicCC {
-	public constructor(
-		options: WithAddress<BasicCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<BasicCCSetOptions>) {
 		super(options);
 		this.targetValue = options.targetValue;
 	}
@@ -432,9 +430,7 @@ export interface BasicCCReportOptions {
 @ccValueProperty("duration", BasicCCValues.duration)
 export class BasicCCReport extends BasicCC {
 	// @noCCValues See comment in the constructor
-	public constructor(
-		options: WithAddress<BasicCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<BasicCCReportOptions>) {
 		super(options);
 
 		this.currentValue = options.currentValue;
@@ -446,9 +442,7 @@ export class BasicCCReport extends BasicCC {
 		validatePayload(raw.payload.length >= 1);
 		const currentValue: MaybeUnknown<number> | undefined =
 			// 0xff is a legacy value for 100% (99)
-			raw.payload[0] === 0xff
-				? 99
-				: parseMaybeNumber(raw.payload[0]);
+			raw.payload[0] === 0xff ? 99 : parseMaybeNumber(raw.payload[0]);
 		validatePayload(currentValue !== undefined);
 
 		let targetValue: MaybeUnknown<number> | undefined;
@@ -476,9 +470,10 @@ export class BasicCCReport extends BasicCC {
 	protected override determineRelation(other: CommandClass): CommandRelation {
 		if (other instanceof BasicCCReport) {
 			return this.currentValue === other.currentValue
-					&& this.targetValue === other.targetValue
-					&& (this.duration ?? Duration.default())
-						.equals(other.duration ?? Duration.default())
+				&& this.targetValue === other.targetValue
+				&& (this.duration ?? Duration.default()).equals(
+					other.duration ?? Duration.default(),
+				)
 				? CommandRelation.Redundant
 				: CommandRelation.Supersedes;
 		}
@@ -494,35 +489,23 @@ export class BasicCCReport extends BasicCC {
 		// Figure out which values may be persisted.
 		const definedValueIDs = this.getDefinedValueIDs(ctx);
 		const shouldPersistCurrentValue = definedValueIDs.some((vid) =>
-			BasicCCValues.currentValue.is(vid)
+			BasicCCValues.currentValue.is(vid),
 		);
 		const shouldPersistTargetValue = definedValueIDs.some((vid) =>
-			BasicCCValues.targetValue.is(vid)
+			BasicCCValues.targetValue.is(vid),
 		);
 		const shouldPersistDuration = definedValueIDs.some((vid) =>
-			BasicCCValues.duration.is(vid)
+			BasicCCValues.duration.is(vid),
 		);
 
 		if (this.currentValue !== undefined && shouldPersistCurrentValue) {
-			this.setValue(
-				ctx,
-				BasicCCValues.currentValue,
-				this.currentValue,
-			);
+			this.setValue(ctx, BasicCCValues.currentValue, this.currentValue);
 		}
 		if (this.targetValue !== undefined && shouldPersistTargetValue) {
-			this.setValue(
-				ctx,
-				BasicCCValues.targetValue,
-				this.targetValue,
-			);
+			this.setValue(ctx, BasicCCValues.targetValue, this.targetValue);
 		}
 		if (this.duration !== undefined && shouldPersistDuration) {
-			this.setValue(
-				ctx,
-				BasicCCValues.duration,
-				this.duration,
-			);
+			this.setValue(ctx, BasicCCValues.duration, this.duration);
 		}
 
 		return true;
@@ -537,9 +520,9 @@ export class BasicCCReport extends BasicCC {
 
 		const ccVersion = getEffectiveCCVersion(ctx, this);
 		if (
-			ccVersion < 2 && ctx.getDeviceConfig?.(
-				this.nodeId as number,
-			)?.compat?.encodeCCsUsingTargetVersion
+			ccVersion < 2
+			&& ctx.getDeviceConfig?.(this.nodeId as number)?.compat
+				?.encodeCCsUsingTargetVersion
 		) {
 			// When forcing CC version 1, only send the current value
 			this.payload = this.payload.subarray(0, 1);

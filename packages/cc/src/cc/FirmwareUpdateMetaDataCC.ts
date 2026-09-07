@@ -20,6 +20,7 @@ import {
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -92,11 +93,10 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 					this.version >= 4
 					&& (this.version < 7
 						|| this.tryGetValueDB()?.getValue(
-								FirmwareUpdateMetaDataCCValues
-									.supportsActivation.endpoint(
-										this.endpoint.index,
-									),
-							) === true)
+							FirmwareUpdateMetaDataCCValues.supportsActivation.endpoint(
+								this.endpoint.index,
+							),
+						) === true)
 				);
 
 			case FirmwareUpdateMetaDataCommand.PrepareGet:
@@ -119,12 +119,11 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			FirmwareUpdateMetaDataCCMetaDataReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<FirmwareUpdateMetaDataCCMetaDataReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"manufacturerId",
@@ -275,12 +274,11 @@ export class FirmwareUpdateMetaDataCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			...options,
 		});
-		const response = await this.host.sendCommand<
-			FirmwareUpdateMetaDataCCActivationReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<FirmwareUpdateMetaDataCCActivationReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.activationStatus;
 	}
 }
@@ -295,9 +293,7 @@ export class FirmwareUpdateMetaDataCC extends CommandClass {
 		return true;
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -430,8 +426,8 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 		const checksum = raw.payload.readUInt16BE(4);
 
 		// V1/V2 only have a single firmware which must be upgradable
-		const firmwareUpgradable = raw.payload[6] === 0xff
-			|| raw.payload[6] == undefined;
+		const firmwareUpgradable =
+			raw.payload[6] === 0xff || raw.payload[6] == undefined;
 
 		let maxFragmentSize: number | undefined;
 		let additionalFirmwareIDs: number[] | undefined;
@@ -511,9 +507,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 	public readonly supportsNonSecureTransfer?: MaybeNotKnown<boolean>;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.alloc(
-			12 + 2 * this.additionalFirmwareIDs.length,
-		);
+		this.payload = Bytes.alloc(12 + 2 * this.additionalFirmwareIDs.length);
 		this.payload.writeUInt16BE(this.manufacturerId, 0);
 		this.payload.writeUInt16BE(this.firmwareId, 2);
 		this.payload.writeUInt16BE(this.checksum, 4);
@@ -526,7 +520,8 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 			offset += 2;
 		}
 		this.payload[offset++] = this.hardwareVersion ?? 0xff;
-		this.payload[offset++] = (this.continuesToFunction ? 0b1 : 0)
+		this.payload[offset++] =
+			(this.continuesToFunction ? 0b1 : 0)
 			| (this.supportsActivation ? 0b10 : 0)
 			| (this.supportsNonSecureTransfer ? 0b100 : 0)
 			| (this.supportsResuming ? 0b1000 : 0);
@@ -575,9 +570,7 @@ export class FirmwareUpdateMetaDataCCMetaDataReport
 
 @CCCommand(FirmwareUpdateMetaDataCommand.MetaDataGet)
 @expectedCCResponse(FirmwareUpdateMetaDataCCMetaDataReport)
-export class FirmwareUpdateMetaDataCCMetaDataGet
-	extends FirmwareUpdateMetaDataCC
-{}
+export class FirmwareUpdateMetaDataCCMetaDataGet extends FirmwareUpdateMetaDataCC {}
 
 // @publicAPI
 export interface FirmwareUpdateMetaDataCCRequestReportOptions {
@@ -587,9 +580,7 @@ export interface FirmwareUpdateMetaDataCCRequestReportOptions {
 }
 
 @CCCommand(FirmwareUpdateMetaDataCommand.RequestReport)
-export class FirmwareUpdateMetaDataCCRequestReport
-	extends FirmwareUpdateMetaDataCC
-{
+export class FirmwareUpdateMetaDataCCRequestReport extends FirmwareUpdateMetaDataCC {
 	public constructor(
 		options: WithAddress<FirmwareUpdateMetaDataCCRequestReportOptions>,
 	) {
@@ -636,10 +627,7 @@ export class FirmwareUpdateMetaDataCCRequestReport
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
-			status: getEnumMemberName(
-				FirmwareUpdateRequestStatus,
-				this.status,
-			),
+			status: getEnumMemberName(FirmwareUpdateRequestStatus, this.status),
 		};
 		if (this.resume != undefined) {
 			message.resume = this.resume;
@@ -655,31 +643,27 @@ export class FirmwareUpdateMetaDataCCRequestReport
 }
 
 // @publicAPI
-export type FirmwareUpdateMetaDataCCRequestGetOptions =
-	& {
-		manufacturerId: number;
-		firmwareId: number;
-		checksum: number;
-	}
-	& AllOrNone<{
-		// V3+
-		firmwareTarget: number;
-		fragmentSize: number;
-		// V4+
-		activation?: boolean;
-		// V5+
-		hardwareVersion?: number;
-		// V8+
-		resume?: boolean;
-		nonSecureTransfer?: boolean;
-	}>;
+export type FirmwareUpdateMetaDataCCRequestGetOptions = {
+	manufacturerId: number;
+	firmwareId: number;
+	checksum: number;
+} & AllOrNone<{
+	// V3+
+	firmwareTarget: number;
+	fragmentSize: number;
+	// V4+
+	activation?: boolean;
+	// V5+
+	hardwareVersion?: number;
+	// V8+
+	resume?: boolean;
+	nonSecureTransfer?: boolean;
+}>;
 
 @CCCommand(FirmwareUpdateMetaDataCommand.RequestGet)
 // The response may take a while to be received on some devices, so manual waiting might be required
 @expectedCCResponse(FirmwareUpdateMetaDataCCRequestReport)
-export class FirmwareUpdateMetaDataCCRequestGet
-	extends FirmwareUpdateMetaDataCC
-{
+export class FirmwareUpdateMetaDataCCRequestGet extends FirmwareUpdateMetaDataCC {
 	public constructor(
 		options: WithAddress<FirmwareUpdateMetaDataCCRequestGetOptions>,
 	) {
@@ -768,15 +752,13 @@ export class FirmwareUpdateMetaDataCCRequestGet
 		// 32 seems like a reasonable default fragment size,
 		// but it should be specified anyways
 		this.payload.writeUInt16BE(this.fragmentSize ?? 32, 7);
-		this.payload[9] = (this.activation ? 0b1 : 0)
+		this.payload[9] =
+			(this.activation ? 0b1 : 0)
 			| (this.nonSecureTransfer ? 0b10 : 0)
 			| (this.resume ? 0b100 : 0);
 		// Hardware version is not always set, but devices check it
 		if (this.hardwareVersion != undefined) {
-			this.payload = Bytes.concat([
-				this.payload,
-				[this.hardwareVersion],
-			]);
+			this.payload = Bytes.concat([this.payload, [this.hardwareVersion]]);
 		}
 
 		return super.serialize(ctx);
@@ -924,10 +906,7 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 			// The CC header is included in the CRC computation
 			let crc = CRC16_CCITT(Bytes.from([this.ccId, this.ccCommand]));
 			crc = CRC16_CCITT(commandBuffer, crc);
-			this.payload = Bytes.concat([
-				commandBuffer,
-				new Bytes(2),
-			]);
+			this.payload = Bytes.concat([commandBuffer, new Bytes(2)]);
 			this.payload.writeUInt16BE(crc, this.payload.length - 2);
 		} else {
 			this.payload = commandBuffer;
@@ -954,9 +933,7 @@ export interface FirmwareUpdateMetaDataCCStatusReportOptions {
 }
 
 @CCCommand(FirmwareUpdateMetaDataCommand.StatusReport)
-export class FirmwareUpdateMetaDataCCStatusReport
-	extends FirmwareUpdateMetaDataCC
-{
+export class FirmwareUpdateMetaDataCCStatusReport extends FirmwareUpdateMetaDataCC {
 	public constructor(
 		options: WithAddress<FirmwareUpdateMetaDataCCStatusReportOptions>,
 	) {
@@ -1021,9 +998,7 @@ export interface FirmwareUpdateMetaDataCCActivationReportOptions {
 }
 
 @CCCommand(FirmwareUpdateMetaDataCommand.ActivationReport)
-export class FirmwareUpdateMetaDataCCActivationReport
-	extends FirmwareUpdateMetaDataCC
-{
+export class FirmwareUpdateMetaDataCCActivationReport extends FirmwareUpdateMetaDataCC {
 	public constructor(
 		options: WithAddress<FirmwareUpdateMetaDataCCActivationReportOptions>,
 	) {
@@ -1079,10 +1054,7 @@ export class FirmwareUpdateMetaDataCCActivationReport
 		this.payload[6] = this.firmwareTarget;
 		this.payload[7] = this.activationStatus;
 		if (this.hardwareVersion != undefined) {
-			this.payload = Bytes.concat([
-				this.payload,
-				[this.hardwareVersion],
-			]);
+			this.payload = Bytes.concat([this.payload, [this.hardwareVersion]]);
 		}
 
 		return super.serialize(ctx);
@@ -1121,9 +1093,7 @@ export interface FirmwareUpdateMetaDataCCActivationSetOptions {
 
 @CCCommand(FirmwareUpdateMetaDataCommand.ActivationSet)
 @expectedCCResponse(FirmwareUpdateMetaDataCCActivationReport)
-export class FirmwareUpdateMetaDataCCActivationSet
-	extends FirmwareUpdateMetaDataCC
-{
+export class FirmwareUpdateMetaDataCCActivationSet extends FirmwareUpdateMetaDataCC {
 	public constructor(
 		options: WithAddress<FirmwareUpdateMetaDataCCActivationSetOptions>,
 	) {
@@ -1173,10 +1143,7 @@ export class FirmwareUpdateMetaDataCCActivationSet
 		this.payload.writeUInt16BE(this.checksum, 4);
 		this.payload[6] = this.firmwareTarget;
 		if (this.hardwareVersion != undefined) {
-			this.payload = Bytes.concat([
-				this.payload,
-				[this.hardwareVersion],
-			]);
+			this.payload = Bytes.concat([this.payload, [this.hardwareVersion]]);
 		}
 		return super.serialize(ctx);
 	}
@@ -1205,9 +1172,7 @@ export interface FirmwareUpdateMetaDataCCPrepareReportOptions {
 }
 
 @CCCommand(FirmwareUpdateMetaDataCommand.PrepareReport)
-export class FirmwareUpdateMetaDataCCPrepareReport
-	extends FirmwareUpdateMetaDataCC
-{
+export class FirmwareUpdateMetaDataCCPrepareReport extends FirmwareUpdateMetaDataCC {
 	public constructor(
 		options: WithAddress<FirmwareUpdateMetaDataCCPrepareReportOptions>,
 	) {
@@ -1265,9 +1230,7 @@ export interface FirmwareUpdateMetaDataCCPrepareGetOptions {
 
 @CCCommand(FirmwareUpdateMetaDataCommand.PrepareGet)
 @expectedCCResponse(FirmwareUpdateMetaDataCCPrepareReport)
-export class FirmwareUpdateMetaDataCCPrepareGet
-	extends FirmwareUpdateMetaDataCC
-{
+export class FirmwareUpdateMetaDataCCPrepareGet extends FirmwareUpdateMetaDataCC {
 	public constructor(
 		options: WithAddress<FirmwareUpdateMetaDataCCPrepareGetOptions>,
 	) {

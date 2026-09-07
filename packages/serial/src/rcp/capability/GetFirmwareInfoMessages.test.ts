@@ -1,7 +1,9 @@
 import { Bytes } from "@zwave-js/shared";
 import { describe, expect, test } from "vitest";
+
 import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import { RCPMessage } from "../../message/RCPMessages.js";
+
 import {
 	GetFirmwareInfoResponse,
 	RadioLibrary,
@@ -22,9 +24,9 @@ const validPayload = Bytes.from([1, 2, 3, RadioLibrary.RAIL, 4, 5, 6, 1, 0b1]);
 
 describe("GetFirmwareInfoResponse", () => {
 	test("parses both versions and the supported function types", async () => {
-		const msg = await parseResponse(
+		const msg = (await parseResponse(
 			validPayload,
-		) as GetFirmwareInfoResponse;
+		)) as GetFirmwareInfoResponse;
 
 		expect(msg).toBeInstanceOf(GetFirmwareInfoResponse);
 		expect(msg.rcpFirmwareVersion).toBe("1.2.3");

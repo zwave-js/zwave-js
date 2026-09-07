@@ -21,6 +21,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -63,15 +64,12 @@ export const CentralSceneCCValues = V.defineCCValues(
 		...V.staticProperty("supportedKeyAttributes", undefined, {
 			internal: true,
 		}),
-		...V.staticProperty(
-			"slowRefresh",
-			{
-				...ValueMetadata.Boolean,
-				label: "Send held down notifications at a slow rate",
-				description:
-					"When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
-			},
-		),
+		...V.staticProperty("slowRefresh", {
+			...ValueMetadata.Boolean,
+			label: "Send held down notifications at a slow rate",
+			description:
+				"When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
+		}),
 		...V.dynamicPropertyAndKeyWithName(
 			"scene",
 			"scene",
@@ -114,12 +112,11 @@ export class CentralSceneCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			CentralSceneCCSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<CentralSceneCCSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"sceneCount",
@@ -140,12 +137,11 @@ export class CentralSceneCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			CentralSceneCCConfigurationReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<CentralSceneCCConfigurationReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, ["slowRefresh"]);
 		}
@@ -169,7 +165,7 @@ export class CentralSceneCCAPI extends CCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(this: CentralSceneCCAPI, { property }, value) {
+		return async function (this: CentralSceneCCAPI, { property }, value) {
 			if (property !== "slowRefresh") {
 				throwUnsupportedProperty(this.ccId, property);
 			}
@@ -186,7 +182,7 @@ export class CentralSceneCCAPI extends CCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: CentralSceneCCAPI, { property }) {
+		return async function (this: CentralSceneCCAPI, { property }) {
 			if (property === "slowRefresh") {
 				return (await this.getConfiguration())?.[property];
 			}
@@ -215,9 +211,7 @@ export class CentralSceneCC extends CommandClass {
 		return true;
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -247,11 +241,9 @@ export class CentralSceneCC extends CommandClass {
 		} catch {
 			ctx.logNode(node.id, {
 				endpoint: endpoint.index,
-				message: `Configuring associations to receive ${
-					getCCName(
-						this.ccId,
-					)
-				} commands failed!`,
+				message: `Configuring associations to receive ${getCCName(
+					this.ccId,
+				)} commands failed!`,
 				level: "warn",
 			});
 		}
@@ -352,7 +344,8 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 		const sceneValue = CentralSceneCCValues.scene(this.sceneNumber);
 
 		// Get device configuration to check for custom scene labels
-		const sceneConfig = ctx.getDeviceConfig?.(this.nodeId as number)
+		const sceneConfig = ctx
+			.getDeviceConfig?.(this.nodeId as number)
 			?.scenes?.get(this.sceneNumber);
 
 		if (sceneConfig) {
@@ -424,15 +417,10 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 		// TODO: Check implementation:
 		this.sceneCount = options.sceneCount;
 		this.supportsSlowRefresh = options.supportsSlowRefresh;
-		for (
-			const [scene, keys] of Object.entries(
-				options.supportedKeyAttributes,
-			)
-		) {
-			this._supportedKeyAttributes.set(
-				parseInt(scene),
-				keys,
-			);
+		for (const [scene, keys] of Object.entries(
+			options.supportedKeyAttributes,
+		)) {
+			this._supportedKeyAttributes.set(parseInt(scene), keys);
 		}
 	}
 
@@ -442,8 +430,9 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 	): CentralSceneCCSupportedReport {
 		validatePayload(raw.payload.length >= 2);
 		const sceneCount = raw.payload[0];
-		const supportsSlowRefresh: MaybeNotKnown<boolean> =
-			!!(raw.payload[1] & 0b1000_0000);
+		const supportsSlowRefresh: MaybeNotKnown<boolean> = !!(
+			raw.payload[1] & 0b1000_0000
+		);
 		const bitMaskBytes = (raw.payload[1] & 0b110) >>> 1;
 		const identicalKeyAttributes = !!(raw.payload[1] & 0b1);
 		const numEntries = identicalKeyAttributes ? 1 : sceneCount;

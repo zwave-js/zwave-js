@@ -1,7 +1,8 @@
+import { pathToFileURL } from "node:url";
+
 import { resolveTemplateImport } from "@zwave-js/config";
 import { readTextFile } from "@zwave-js/shared";
 import type { ReadFile, ReadFileSystemInfo } from "@zwave-js/shared/bindings";
-import { pathToFileURL } from "node:url";
 import {
 	type ASTNode,
 	type JSONDocument,
@@ -9,6 +10,7 @@ import {
 	getLanguageService,
 } from "vscode-json-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
+
 import {
 	getPropertyValueFromNode,
 	nodeIsPropertyNameOrValue,
@@ -73,7 +75,7 @@ export async function parseConfigDocument(
 	rootDirs?: string | string[],
 	text?: string,
 ): Promise<ConfigDocument> {
-	const fileContent = text ?? await readTextFile(fs, filename, "utf8");
+	const fileContent = text ?? (await readTextFile(fs, filename, "utf8"));
 	const {
 		document: textDoc,
 		json: jsonDoc,
@@ -87,13 +89,13 @@ export async function parseConfigDocument(
 			.map((s) =>
 				jsonDoc.getNodeFromOffset(
 					textDoc.offsetAt(s.location.range.start),
-				)
+				),
 			)
 			.filter((n): n is ASTNode => !!n)
 			.map((n) =>
 				nodeIsPropertyNameOrValue(n)
 					? getPropertyValueFromNode(n)
-					: undefined
+					: undefined,
 			)
 			.filter((s): s is string => typeof s === "string"),
 	);

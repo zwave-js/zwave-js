@@ -1,5 +1,7 @@
 import { CommandClasses } from "@zwave-js/core";
+
 import { AccessControlAPI } from "../feature-apis/AccessControl.js";
+
 import { EndpointBase } from "./00_Base.js";
 
 export class FeatureAPIsMixin extends EndpointBase {

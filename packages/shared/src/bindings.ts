@@ -2,15 +2,13 @@
 // file system access, etc.
 
 import type { ReadableWritablePair } from "node:stream/web";
+
 import type { BytesView } from "./Bytes.js";
 
 export interface CryptoPrimitives {
 	randomBytes(length: number): BytesView;
 	/** Encrypts a payload using AES-128-ECB */
-	encryptAES128ECB(
-		plaintext: BytesView,
-		key: BytesView,
-	): Promise<BytesView>;
+	encryptAES128ECB(plaintext: BytesView, key: BytesView): Promise<BytesView>;
 	/** Encrypts a payload using AES-128-CBC */
 	encryptAES128CBC(
 		plaintext: BytesView,
@@ -69,10 +67,7 @@ export interface CryptoPrimitives {
 	): Promise<BytesView>;
 
 	/** Computes HMAC-SHA256 */
-	hmacSHA256(
-		key: BytesView,
-		data: BytesView,
-	): Promise<BytesView>;
+	hmacSHA256(key: BytesView, data: BytesView): Promise<BytesView>;
 
 	/** Encrypts and authenticates a payload using ChaCha20-Poly1305 */
 	encryptChaCha20Poly1305(
@@ -160,13 +155,16 @@ export interface MakeTempDirectory {
 
 export interface OpenFile {
 	/** Opens a file handle */
-	open(path: string, flags: {
-		// FIXME: Define expected behavior for each flag
-		read: boolean;
-		write: boolean;
-		create: boolean;
-		truncate: boolean;
-	}): Promise<FileHandle>;
+	open(
+		path: string,
+		flags: {
+			// FIXME: Define expected behavior for each flag
+			read: boolean;
+			write: boolean;
+			create: boolean;
+			truncate: boolean;
+		},
+	): Promise<FileHandle>;
 }
 
 export interface FileSystem
@@ -177,8 +175,7 @@ export interface FileSystem
 		OpenFile,
 		ReadFileSystemInfo,
 		ManageDirectory,
-		MakeTempDirectory
-{}
+		MakeTempDirectory {}
 
 export type Platform = "linux" | "darwin" | "win32" | "browser" | "other";
 

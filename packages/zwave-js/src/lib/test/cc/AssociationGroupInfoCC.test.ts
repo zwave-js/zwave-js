@@ -36,9 +36,7 @@ test("the NameGet command should serialize correctly", async (t) => {
 			7, // group id
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the NameReport command should be deserialized correctly", async (t) => {
@@ -56,10 +54,9 @@ test("the NameReport command should be deserialized correctly", async (t) => {
 			0x72,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as AssociationGroupInfoCCNameReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as AssociationGroupInfoCCNameReport;
 	t.expect(cc.constructor).toBe(AssociationGroupInfoCCNameReport);
 
 	t.expect(cc.groupId).toBe(7);
@@ -80,9 +77,7 @@ test("the InfoGet command should serialize correctly (no flag set)", async (t) =
 			7, // group id
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the InfoGet command should serialize correctly (refresh cache flag set)", async (t) => {
@@ -99,9 +94,7 @@ test("the InfoGet command should serialize correctly (refresh cache flag set)", 
 			7, // group id
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the InfoGet command should serialize correctly (list mode flag set)", async (t) => {
@@ -118,9 +111,7 @@ test("the InfoGet command should serialize correctly (list mode flag set)", asyn
 			0, // group id is ignored
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Info Report command should be deserialized correctly", async (t) => {
@@ -149,17 +140,16 @@ test("the Info Report command should be deserialized correctly", async (t) => {
 			0,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as AssociationGroupInfoCCInfoReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as AssociationGroupInfoCCInfoReport;
 	t.expect(cc.constructor).toBe(AssociationGroupInfoCCInfoReport);
 
 	t.expect(cc.groups.length).toBe(2);
 	t.expect(cc.groups[0].groupId).toBe(1);
-	t.expect(
-		cc.groups[0].profile,
-	).toBe(AssociationGroupInfoProfile["General: Lifeline"]);
+	t.expect(cc.groups[0].profile).toBe(
+		AssociationGroupInfoProfile["General: Lifeline"],
+	);
 	t.expect(cc.groups[1].groupId).toBe(2);
 	t.expect(cc.groups[1].profile).toBe(
 		AssociationGroupInfoProfile["Control: Key 01"],
@@ -179,9 +169,7 @@ test("the CommandListGet command should serialize correctly", async (t) => {
 			6, // group id
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the CommandListReport command should serialize correctly", async (t) => {
@@ -204,9 +192,7 @@ test("the CommandListReport command should serialize correctly", async (t) => {
 			DeviceResetLocallyCommand.Notification,
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the CommandListReport command should be deserialized correctly", async (t) => {
@@ -223,30 +209,30 @@ test("the CommandListReport command should be deserialized correctly", async (t)
 			0x05,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as AssociationGroupInfoCCCommandListReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as AssociationGroupInfoCCCommandListReport;
 	t.expect(cc.constructor).toBe(AssociationGroupInfoCCCommandListReport);
 
 	t.expect(cc.groupId).toBe(7);
 	t.expect(cc.commands.size).toBe(2);
-	t.expect(
-		[...cc.commands.keys()],
-	).toStrictEqual([CommandClasses.Basic, CommandClasses["Security Mark"]]);
-	t.expect([...cc.commands.values()]).toStrictEqual([[BasicCommand.Set], [
-		0x05,
-	]]);
+	t.expect([...cc.commands.keys()]).toStrictEqual([
+		CommandClasses.Basic,
+		CommandClasses["Security Mark"],
+	]);
+	t.expect([...cc.commands.values()]).toStrictEqual([
+		[BasicCommand.Set],
+		[0x05],
+	]);
 });
 
 test("deserializing an unsupported command should return an unspecified version of AssociationGroupInfoCC", async (t) => {
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 1 } as any,
-	) as AssociationGroupInfoCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 1,
+	} as any)) as AssociationGroupInfoCC;
 	t.expect(cc.constructor).toBe(AssociationGroupInfoCC);
 });
 

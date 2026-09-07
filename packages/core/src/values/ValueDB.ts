@@ -5,6 +5,7 @@ import {
 } from "@zwave-js/shared";
 import type { Database } from "@zwave-js/shared/bindings";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import type { CommandClasses } from "../definitions/CommandClasses.js";
 import {
 	ZWaveError,
@@ -12,6 +13,7 @@ import {
 	isZWaveError,
 } from "../error/ZWaveError.js";
 import type { ValueMetadata } from "../values/Metadata.js";
+
 import type {
 	MetadataUpdatedArgs,
 	SetValueOptions,
@@ -124,16 +126,18 @@ export function valueEquals(a: unknown, b: unknown): boolean {
 	}
 
 	if (isArray(a)) {
-		return isArray(b)
+		return (
+			isArray(b)
 			&& a.length === b.length
-			&& a.every((v, i) => valueEquals(v, b[i]));
+			&& a.every((v, i) => valueEquals(v, b[i]))
+		);
 	}
 
 	if (isObject(a)) {
 		if (!isObject(b)) return false;
 		const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
 		return [...allKeys].every((k) =>
-			valueEquals((a as any)[k], (b as any)[k])
+			valueEquals((a as any)[k], (b as any)[k]),
 		);
 	}
 

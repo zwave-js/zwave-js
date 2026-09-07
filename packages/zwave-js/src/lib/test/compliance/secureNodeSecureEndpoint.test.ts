@@ -22,6 +22,7 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -167,12 +168,12 @@ integrationTest(
 			const respondToS2CommandsSupportedGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
+						receivedCC instanceof Security2CCMessageEncapsulation
 						&& receivedCC.encapsulated
 							instanceof Security2CCCommandsSupportedGet
 					) {
-						const isHighestGranted = receivedCC.securityClass
+						const isHighestGranted =
+							receivedCC.securityClass
 							=== self.encodingContext.getHighestSecurityClass(
 								self.id,
 							);
@@ -182,15 +183,15 @@ integrationTest(
 								nodeId: controller.ownNodeId,
 								supportedCCs: isHighestGranted
 									? [...mockNode.implementedCCs.entries()]
-										.filter(
-											([ccId, info]) =>
-												info.secure
-												&& ccId
-													!== CommandClasses[
-														"Security 2"
-													],
-										)
-										.map(([ccId]) => ccId)
+											.filter(
+												([ccId, info]) =>
+													info.secure
+													&& ccId
+														!== CommandClasses[
+															"Security 2"
+														],
+											)
+											.map(([ccId]) => ccId)
 									: [],
 							}),
 							self.id,
@@ -205,8 +206,7 @@ integrationTest(
 			const respondToS2MultiChannelCCEndPointGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
+						receivedCC instanceof Security2CCMessageEncapsulation
 						&& receivedCC.encapsulated
 							instanceof MultiChannelCCEndPointGet
 					) {
@@ -229,8 +229,7 @@ integrationTest(
 			const respondToS2MultiChannelCCEndPointFind: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
+						receivedCC instanceof Security2CCMessageEncapsulation
 						&& receivedCC.encapsulated
 							instanceof MultiChannelCCEndPointFind
 					) {
@@ -255,8 +254,7 @@ integrationTest(
 			const respondToS2MultiChannelCCCapabilityGet: MockNodeBehavior = {
 				handleCC(controller, self, receivedCC) {
 					if (
-						receivedCC
-							instanceof Security2CCMessageEncapsulation
+						receivedCC instanceof Security2CCMessageEncapsulation
 						&& receivedCC.encapsulated
 							instanceof MultiChannelCCCapabilityGet
 					) {
@@ -269,9 +267,9 @@ integrationTest(
 								endpointIndex: endpoint.index,
 								genericDeviceClass:
 									endpoint?.capabilities.genericDeviceClass
-										?? self.capabilities.genericDeviceClass,
-								specificDeviceClass: endpoint?.capabilities
-									.specificDeviceClass
+									?? self.capabilities.genericDeviceClass,
+								specificDeviceClass:
+									endpoint?.capabilities.specificDeviceClass
 									?? self.capabilities.specificDeviceClass,
 								isDynamic: false,
 								wasRemoved: false,

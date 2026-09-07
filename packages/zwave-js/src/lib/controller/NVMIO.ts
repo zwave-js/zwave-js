@@ -3,6 +3,7 @@ import { NVMAccess, type NVMIO } from "@zwave-js/nvmedit";
 import { FunctionType } from "@zwave-js/serial";
 import { nvmSizeToBufferSize } from "@zwave-js/serial/serialapi";
 import type { BytesView } from "@zwave-js/shared";
+
 import type { ZWaveController } from "./Controller.js";
 
 /** NVM IO over serial for 500 series controllers */
@@ -109,7 +110,7 @@ export class SerialNVMIO500 implements NVMIO {
 		}
 
 		// Write requests need 5 bytes more than read requests, which limits our chunk size
-		const chunkSize = await this.determineChunkSize() - 5;
+		const chunkSize = (await this.determineChunkSize()) - 5;
 		const writeSize = Math.min(data.length, chunkSize, size - offset);
 
 		await this._controller.externalNVMWriteBuffer(
@@ -134,9 +135,7 @@ export class SerialNVMIO700 implements NVMIO {
 	public constructor(controller: ZWaveController) {
 		this._controller = controller;
 		if (
-			controller.isFunctionSupported(
-				FunctionType.ExtendedNVMOperations,
-			)
+			controller.isFunctionSupported(FunctionType.ExtendedNVMOperations)
 		) {
 			this._open = async () => {
 				const { size } = await controller.externalNVMOpenExt();
@@ -222,10 +221,7 @@ export class SerialNVMIO700 implements NVMIO {
 
 		const chunkSize = await this.determineChunkSize();
 
-		return this._read(
-			offset,
-			Math.min(length, chunkSize, size - offset),
-		);
+		return this._read(offset, Math.min(length, chunkSize, size - offset));
 	}
 
 	async write(

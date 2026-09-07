@@ -16,6 +16,7 @@ import {
 	type MockNodeBehavior,
 	type WindowCoveringCCCapabilities,
 } from "@zwave-js/testing";
+
 import {
 	type MockTransition,
 	getTransitionCurrentValue,
@@ -42,9 +43,9 @@ function stopParameterTransition(
 	self: MockNode,
 	param: number,
 ): { wasSupervised: boolean } | undefined {
-	const existing = self.state.get(
-		transitionKey(param),
-	) as MockTransition | undefined;
+	const existing = self.state.get(transitionKey(param)) as
+		| MockTransition
+		| undefined;
 	if (existing) {
 		const value = stopTransition(existing);
 		self.state.set(currentValueKey(param), value);
@@ -137,9 +138,9 @@ const respondToWindowCoveringGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof WindowCoveringCCGet) {
 			const param = receivedCC.parameter;
-			const transition = self.state.get(
-				transitionKey(param),
-			) as MockTransition | undefined;
+			const transition = self.state.get(transitionKey(param)) as
+				| MockTransition
+				| undefined;
 
 			let currentValue: number;
 			let targetValue: number;
@@ -150,9 +151,10 @@ const respondToWindowCoveringGet: MockNodeBehavior = {
 				targetValue = transition.targetValue;
 				duration = getTransitionRemainingDuration(transition);
 			} else {
-				currentValue = (self.state.get(currentValueKey(param)) as
-					| number
-					| undefined) ?? 0;
+				currentValue =
+					(self.state.get(currentValueKey(param)) as
+						| number
+						| undefined) ?? 0;
 				targetValue = currentValue;
 				duration = new Duration(0, "seconds");
 			}
@@ -184,9 +186,9 @@ const respondToWindowCoveringSet: MockNodeBehavior = {
 			);
 			const supervisedState = supervised
 				? {
-					activeParams: new Set<number>(),
-					finished: false,
-				}
+						activeParams: new Set<number>(),
+						finished: false,
+					}
 				: undefined;
 			let durationMs = 0;
 			for (const { parameter, value } of receivedCC.targetValues) {
@@ -220,10 +222,7 @@ const respondToWindowCoveringSet: MockNodeBehavior = {
 					completeSupervised,
 					abortSupervised,
 				);
-				durationMs = Math.max(
-					durationMs,
-					transitionDurationMs,
-				);
+				durationMs = Math.max(durationMs, transitionDurationMs);
 				if (transitionDurationMs > 0 && supervisedState) {
 					supervisedState.activeParams.add(parameter);
 				}
@@ -281,9 +280,8 @@ const respondToWindowCoveringStopLevelChange: MockNodeBehavior = {
 			const param = receivedCC.parameter;
 			const stoppedTransition = stopParameterTransition(self, param);
 
-			const currentValue = (
-				self.state.get(currentValueKey(param)) ?? 0
-			) as number;
+			const currentValue = (self.state.get(currentValueKey(param))
+				?? 0) as number;
 
 			if (!stoppedTransition?.wasSupervised) {
 				// Send a delayed report with the final state

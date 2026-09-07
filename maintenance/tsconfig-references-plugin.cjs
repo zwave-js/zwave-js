@@ -1,8 +1,8 @@
 "use strict";
 
-const { plugin: workspacesPlugin } = require(
-	"@monorepo-utils/workspaces-to-typescript-project-references/lib/manager/workspaces",
-);
+const {
+	plugin: workspacesPlugin,
+} = require("@monorepo-utils/workspaces-to-typescript-project-references/lib/manager/workspaces");
 
 // Workspace dependencies that must not become project references, keyed by the
 // consuming package. These are built by `yarn bootstrap` instead.

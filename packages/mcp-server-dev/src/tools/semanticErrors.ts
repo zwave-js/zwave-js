@@ -1,5 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { getErrorMessage } from "@zwave-js/shared";
+
 import {
 	ConsentRequiredError,
 	LocalModelUnavailableError,
@@ -12,6 +13,7 @@ import {
 	LOCAL_MODEL_SOURCE,
 } from "../semantic/env.js";
 import { SemanticSearchError } from "../semantic/service.js";
+
 import { jsonErrorResult } from "./results.js";
 
 /**

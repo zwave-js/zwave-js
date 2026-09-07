@@ -5,13 +5,14 @@ import {
 	isUint8Array,
 } from "@zwave-js/shared";
 import { unzipSync } from "fflate";
-import { decryptAES256CBC } from "../crypto/index.js";
-import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
-import type { Firmware, FirmwareFileFormat } from "./_Types.js";
-import { CRC16_CCITT } from "./crc.js";
-
 // This package has an incorrect type declaration
 import MemoryMap_ from "nrf-intel-hex";
+
+import { decryptAES256CBC } from "../crypto/index.js";
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
+
+import type { Firmware, FirmwareFileFormat } from "./_Types.js";
+import { CRC16_CCITT } from "./crc.js";
 const MemoryMap =
 	MemoryMap_ as unknown as typeof import("nrf-intel-hex").default;
 
@@ -75,11 +76,13 @@ export function guessFirmwareFileFormat(
  * of the firmware file from the ZIP archive, or `undefined` if no compatible
  * firmware file could be extracted.
  */
-export function tryUnzipFirmwareFile(zipData: BytesView): {
-	filename: string;
-	format: FirmwareFileFormat;
-	rawData: BytesView;
-} | undefined {
+export function tryUnzipFirmwareFile(zipData: BytesView):
+	| {
+			filename: string;
+			format: FirmwareFileFormat;
+			rawData: BytesView;
+	  }
+	| undefined {
 	// Extract files we can work with
 	const unzipped = unzipSync(zipData, {
 		filter: (file) => {
@@ -216,9 +219,8 @@ function extractFirmwareAeotec(data: BytesView): Firmware {
 
 	// Some updaters contain the firmware target in the first byte of the name
 	// We can't test this, so we have to assume the value translates to a non-printable ASCII char (less than " ")
-	const firmwareTarget = firmwareNameBytes[0] < 0x20
-		? firmwareNameBytes[0]
-		: undefined;
+	const firmwareTarget =
+		firmwareNameBytes[0] < 0x20 ? firmwareNameBytes[0] : undefined;
 	const firmwareNameOffset = firmwareTarget == undefined ? 0 : 1;
 
 	const firmwareName = firmwareNameBytes

@@ -11,6 +11,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -107,12 +108,11 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			ManufacturerSpecificCCReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ManufacturerSpecificCCReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"manufacturerId",
@@ -136,12 +136,11 @@ export class ManufacturerSpecificCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			deviceIdType,
 		});
-		const response = await this.host.sendCommand<
-			ManufacturerSpecificCCDeviceSpecificReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<ManufacturerSpecificCCDeviceSpecificReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.deviceId;
 	}
 
@@ -191,9 +190,7 @@ export class ManufacturerSpecificCC extends CommandClass {
 		return [];
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -219,14 +216,10 @@ export class ManufacturerSpecificCC extends CommandClass {
 			});
 			const mfResp = await api.get();
 			if (mfResp) {
-				const logMessage =
-					`received response for manufacturer information:
+				const logMessage = `received response for manufacturer information:
   manufacturer: ${
-						ctx.lookupManufacturer(
-							mfResp.manufacturerId,
-						)
-						|| "unknown"
-					} (${num2hex(mfResp.manufacturerId)})
+		ctx.lookupManufacturer(mfResp.manufacturerId) || "unknown"
+  } (${num2hex(mfResp.manufacturerId)})
   product type: ${num2hex(mfResp.productType)}
   product id:   ${num2hex(mfResp.productId)}`;
 				ctx.logNode(node.id, {
@@ -318,14 +311,10 @@ export interface ManufacturerSpecificCCDeviceSpecificReportOptions {
 }
 
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificReport)
-@ccValueProperty(
-	"deviceId",
-	ManufacturerSpecificCCValues.deviceId,
-	(self) => [self.type],
-)
-export class ManufacturerSpecificCCDeviceSpecificReport
-	extends ManufacturerSpecificCC
-{
+@ccValueProperty("deviceId", ManufacturerSpecificCCValues.deviceId, (self) => [
+	self.type,
+])
+export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpecificCC {
 	public constructor(
 		options: WithAddress<ManufacturerSpecificCCDeviceSpecificReportOptions>,
 	) {
@@ -356,9 +345,10 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			raw.payload.length >= 2 + dataLength,
 		);
 		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
-		const deviceId: string | Bytes = dataFormat === DeviceIdDataFormat.UTF8
-			? deviceIdData.toString("utf8")
-			: deviceIdData;
+		const deviceId: string | Bytes =
+			dataFormat === DeviceIdDataFormat.UTF8
+				? deviceIdData.toString("utf8")
+				: deviceIdData;
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -372,20 +362,18 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 	public readonly deviceId: string | Bytes;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const deviceIdData = typeof this.deviceId === "string"
-			? Bytes.from(this.deviceId, "utf8")
-			: this.deviceId;
+		const deviceIdData =
+			typeof this.deviceId === "string"
+				? Bytes.from(this.deviceId, "utf8")
+				: this.deviceId;
 
-		const format = typeof this.deviceId === "string"
-			? DeviceIdDataFormat.UTF8
-			: DeviceIdDataFormat.Binary;
+		const format =
+			typeof this.deviceId === "string"
+				? DeviceIdDataFormat.UTF8
+				: DeviceIdDataFormat.Binary;
 		const length = Math.min(deviceIdData.length, 0b11111);
 		this.payload = Bytes.concat([
-			[
-				this.type & 0b111,
-				format << 5
-				| length,
-			],
+			[this.type & 0b111, (format << 5) | length],
 			deviceIdData.subarray(0, length),
 		]);
 		return super.serialize(ctx);
@@ -396,9 +384,10 @@ export class ManufacturerSpecificCCDeviceSpecificReport
 			...super.toLogEntry(ctx),
 			message: {
 				"device id type": getEnumMemberName(DeviceIdType, this.type),
-				"device id": typeof this.deviceId === "string"
-					? this.deviceId
-					: logBuffer(this.deviceId),
+				"device id":
+					typeof this.deviceId === "string"
+						? this.deviceId
+						: logBuffer(this.deviceId),
 			},
 		};
 	}
@@ -411,9 +400,7 @@ export interface ManufacturerSpecificCCDeviceSpecificGetOptions {
 
 @CCCommand(ManufacturerSpecificCommand.DeviceSpecificGet)
 @expectedCCResponse(ManufacturerSpecificCCDeviceSpecificReport)
-export class ManufacturerSpecificCCDeviceSpecificGet
-	extends ManufacturerSpecificCC
-{
+export class ManufacturerSpecificCCDeviceSpecificGet extends ManufacturerSpecificCC {
 	public constructor(
 		options: WithAddress<ManufacturerSpecificCCDeviceSpecificGetOptions>,
 	) {

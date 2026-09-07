@@ -1,11 +1,13 @@
 import { Bytes } from "@zwave-js/shared";
 import { expect, test } from "vitest";
+
 import { MPDUHeaderType } from "../definitions/Frame.js";
 import { ProtocolDataRate } from "../definitions/Protocol.js";
 import { RFRegion } from "../definitions/RFRegion.js";
 import { RssiError } from "../definitions/RSSI.js";
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import {
 	LONG_RANGE_MPDU_NOISE_FLOOR_OFFSET,
 	MPDU,
@@ -47,17 +49,20 @@ const baseOptions = {
 } as const;
 
 test("RoutedZWaveMPDU round-trips an outbound frame with the wakeup extension", () => {
-	const parsed = roundtrip({
-		...baseOptions,
-		destinationNodeId: 42,
-		direction: "outbound",
-		routedAck: false,
-		routedError: false,
-		hop: 1,
-		repeaters: [2, 3],
-		destinationWakeupType: "1000ms",
-		payload: Bytes.from([0x01, 0x02, 0x03]),
-	}, ctx2Channel);
+	const parsed = roundtrip(
+		{
+			...baseOptions,
+			destinationNodeId: 42,
+			direction: "outbound",
+			routedAck: false,
+			routedError: false,
+			hop: 1,
+			repeaters: [2, 3],
+			destinationWakeupType: "1000ms",
+			payload: Bytes.from([0x01, 0x02, 0x03]),
+		},
+		ctx2Channel,
+	);
 
 	expect(parsed.destinationNodeId).toBe(42);
 	expect(parsed.direction).toBe("outbound");
@@ -68,33 +73,39 @@ test("RoutedZWaveMPDU round-trips an outbound frame with the wakeup extension", 
 });
 
 test("RoutedZWaveMPDU round-trips a 250ms wakeup extension", () => {
-	const parsed = roundtrip({
-		...baseOptions,
-		destinationNodeId: 42,
-		direction: "outbound",
-		routedAck: false,
-		routedError: false,
-		hop: 0,
-		repeaters: [2],
-		destinationWakeupType: "250ms",
-	}, ctx2Channel);
+	const parsed = roundtrip(
+		{
+			...baseOptions,
+			destinationNodeId: 42,
+			direction: "outbound",
+			routedAck: false,
+			routedError: false,
+			hop: 0,
+			repeaters: [2],
+			destinationWakeupType: "250ms",
+		},
+		ctx2Channel,
+	);
 
 	expect(parsed.destinationWakeupType).toBe("250ms");
 });
 
 test("RoutedZWaveMPDU round-trips an inbound routed ack with the RSSI extension", () => {
-	const parsed = roundtrip({
-		...baseOptions,
-		ackRequested: false,
-		destinationNodeId: 1,
-		direction: "inbound",
-		routedAck: true,
-		routedError: false,
-		// The frame has returned to the source node
-		hop: 0,
-		repeaters: [2, 3, 4],
-		repeaterRSSI: [-50, -60, -70],
-	}, ctx2Channel);
+	const parsed = roundtrip(
+		{
+			...baseOptions,
+			ackRequested: false,
+			destinationNodeId: 1,
+			direction: "inbound",
+			routedAck: true,
+			routedError: false,
+			// The frame has returned to the source node
+			hop: 0,
+			repeaters: [2, 3, 4],
+			repeaterRSSI: [-50, -60, -70],
+		},
+		ctx2Channel,
+	);
 
 	expect(parsed.direction).toBe("inbound");
 	expect(parsed.routedAck).toBe(true);
@@ -352,17 +363,20 @@ test("RoutedZWaveMPDU writes 0x0F as the hop of a frame returning to the source"
 });
 
 test("RoutedZWaveMPDU round-trips a channel configuration 3 frame with the wakeup byte", () => {
-	const parsed = roundtrip({
-		...baseOptions,
-		destinationNodeId: 42,
-		direction: "outbound",
-		routedAck: false,
-		routedError: false,
-		hop: 1,
-		repeaters: [2, 3],
-		destinationWakeup: true,
-		payload: Bytes.from([0xaa]),
-	}, ctx3Channel);
+	const parsed = roundtrip(
+		{
+			...baseOptions,
+			destinationNodeId: 42,
+			direction: "outbound",
+			routedAck: false,
+			routedError: false,
+			hop: 1,
+			repeaters: [2, 3],
+			destinationWakeup: true,
+			payload: Bytes.from([0xaa]),
+		},
+		ctx3Channel,
+	);
 
 	expect(parsed.destinationWakeup).toBe(true);
 	expect(parsed.repeaters).toStrictEqual([2, 3]);
@@ -370,17 +384,20 @@ test("RoutedZWaveMPDU round-trips a channel configuration 3 frame with the wakeu
 });
 
 test("RoutedZWaveMPDU round-trips a routed error with a failed hop of 0", () => {
-	const parsed = roundtrip({
-		...baseOptions,
-		ackRequested: false,
-		destinationNodeId: 1,
-		direction: "inbound",
-		routedAck: false,
-		routedError: true,
-		failedHop: 0,
-		hop: 1,
-		repeaters: [2, 3],
-	}, ctx2Channel);
+	const parsed = roundtrip(
+		{
+			...baseOptions,
+			ackRequested: false,
+			destinationNodeId: 1,
+			direction: "inbound",
+			routedAck: false,
+			routedError: true,
+			failedHop: 0,
+			hop: 1,
+			repeaters: [2, 3],
+		},
+		ctx2Channel,
+	);
 
 	expect(parsed.routedError).toBe(true);
 	expect(parsed.failedHop).toBe(0);
@@ -388,17 +405,20 @@ test("RoutedZWaveMPDU round-trips a routed error with a failed hop of 0", () => 
 });
 
 test("RoutedZWaveMPDU round-trips a routed error with a non-zero failed hop", () => {
-	const parsed = roundtrip({
-		...baseOptions,
-		ackRequested: false,
-		destinationNodeId: 1,
-		direction: "inbound",
-		routedAck: false,
-		routedError: true,
-		failedHop: 2,
-		hop: 3,
-		repeaters: [2, 3, 4],
-	}, ctx2Channel);
+	const parsed = roundtrip(
+		{
+			...baseOptions,
+			ackRequested: false,
+			destinationNodeId: 1,
+			direction: "inbound",
+			routedAck: false,
+			routedError: true,
+			failedHop: 2,
+			hop: 3,
+			repeaters: [2, 3, 4],
+		},
+		ctx2Channel,
+	);
 
 	expect(parsed.failedHop).toBe(2);
 	expect(parsed.hop).toBe(3);
@@ -423,25 +443,17 @@ test("SinglecastLongRangeMPDU serializes the Long Range MPDU header", () => {
 	}).serialize(ctxLongRange);
 
 	expect([...serialized]).toStrictEqual([
-		0xde,
-		0xad,
-		0xbe,
-		0xef,
+		0xde, 0xad, 0xbe, 0xef,
 		// source node 1, destination node 0x123
-		0x00,
-		0x11,
-		0x23,
+		0x00, 0x11, 0x23,
 		// length: 12 header bytes, 2 payload bytes, 2 CRC bytes
 		16,
 		// ack requested, singlecast
-		0x81,
-		5,
+		0x81, 5,
 		// noise floor -96 dBm
 		0xa0,
 		// TX power +14 dBm
-		0x0e,
-		0x01,
-		0x02,
+		0x0e, 0x01, 0x02,
 	]);
 });
 
@@ -498,14 +510,9 @@ test("MPDU.parse() uses the data rate to detect Long Range frames", () => {
 	// end device channel configurations
 	const frame = Bytes.from([
 		// home ID
-		0xde,
-		0xad,
-		0xbe,
-		0xef,
+		0xde, 0xad, 0xbe, 0xef,
 		// source node 1, destination node 2
-		0x00,
-		0x10,
-		0x02,
+		0x00, 0x10, 0x02,
 		// length
 		0x0f,
 		// frame control: ack requested, singlecast

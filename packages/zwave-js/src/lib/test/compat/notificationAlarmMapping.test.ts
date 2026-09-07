@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	NotificationCCReport,
 	NotificationCCValues,
@@ -5,8 +7,8 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
 import sinon from "sinon";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest.sequential(
@@ -59,12 +61,14 @@ integrationTest.sequential(
 			});
 
 			// And they should be known to be supported
-			const supportedNotificationTypes: number[] | undefined = node
-				.getValue(NotificationCCValues.supportedNotificationTypes.id);
+			const supportedNotificationTypes: number[] | undefined =
+				node.getValue(
+					NotificationCCValues.supportedNotificationTypes.id,
+				);
 			t.expect(supportedNotificationTypes?.includes(0x06)).toBe(true);
 
-			const supportedAccessControlEvents: number[] | undefined = node
-				.getValue(
+			const supportedAccessControlEvents: number[] | undefined =
+				node.getValue(
 					NotificationCCValues.supportedNotificationEvents(0x06).id,
 				);
 			t.expect(supportedAccessControlEvents?.includes(0x05)).toBe(true);
@@ -107,21 +111,23 @@ integrationTest.sequential(
 		async testBody(t, driver, node, mockController, mockNode) {
 			t.expect(node.deviceConfig?.compat?.alarmMapping).toBeDefined();
 
-			const supportedNotificationTypes: number[] | undefined = node
-				.getValue(NotificationCCValues.supportedNotificationTypes.id);
+			const supportedNotificationTypes: number[] | undefined =
+				node.getValue(
+					NotificationCCValues.supportedNotificationTypes.id,
+				);
 			t.expect(supportedNotificationTypes).toContain(0x06);
 			t.expect(supportedNotificationTypes).toContain(0x07);
 
-			const supportedAccessControlEvents: number[] | undefined = node
-				.getValue(
+			const supportedAccessControlEvents: number[] | undefined =
+				node.getValue(
 					NotificationCCValues.supportedNotificationEvents(0x06).id,
 				);
 			// 0x05 is added by the alarmMapping compat flag
 			t.expect(supportedAccessControlEvents).toContain(0x05);
 			t.expect(supportedAccessControlEvents).toContain(0x16);
 
-			const supportedHomeSecurityEvents: number[] | undefined = node
-				.getValue(
+			const supportedHomeSecurityEvents: number[] | undefined =
+				node.getValue(
 					NotificationCCValues.supportedNotificationEvents(0x07).id,
 				);
 			t.expect(supportedHomeSecurityEvents).toContain(0x03);

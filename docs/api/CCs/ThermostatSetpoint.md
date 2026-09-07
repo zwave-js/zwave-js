@@ -26,12 +26,13 @@ async set(
 
 ```ts
 async getCapabilities(setpointType: ThermostatSetpointType): Promise<
-	{
-		maxValue: number;
-		maxValueScale: number;
-		minValue: number;
-		minValueScale: number;
-	} | undefined
+	| {
+			maxValue: number;
+			maxValueScale: number;
+			minValue: number;
+			minValueScale: number;
+	  }
+	| undefined
 >;
 ```
 
@@ -75,9 +76,9 @@ during node interview.
 ```ts
 enum ThermostatSetpointType {
 	"N/A" = 0x00,
-	"Heating" = 0x01, // CC v1
-	"Cooling" = 0x02, // CC v1
-	"Furnace" = 0x07, // CC v1
+	Heating = 0x01, // CC v1
+	Cooling = 0x02, // CC v1
+	Furnace = 0x07, // CC v1
 	"Dry Air" = 0x08, // CC v1
 	"Moist Air" = 0x09, // CC v1
 	"Auto Changeover" = 0x0a, // CC v1

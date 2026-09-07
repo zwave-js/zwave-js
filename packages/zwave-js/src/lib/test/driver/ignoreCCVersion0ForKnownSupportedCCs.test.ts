@@ -30,6 +30,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 // Repro for https://github.com/zwave-js/zwave-js/issues/6305
@@ -94,8 +95,7 @@ integrationTest(
 				async handleCC(controller, self, receivedCC) {
 					if (
 						receivedCC instanceof VersionCCCommandClassGet
-						&& receivedCC.requestedCC
-							=== CommandClasses.Security
+						&& receivedCC.requestedCC === CommandClasses.Security
 					) {
 						await wait(100);
 

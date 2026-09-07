@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+
 import {
 	encodeLongRangeBeamFrame,
 	encodeZWaveBeamFrame,
@@ -32,8 +33,7 @@ test("longRangeHomeIdHash() does not adjust the wildcard hash values", () => {
 
 test("encodeZWaveBeamFrame() omits the home ID hash when it is not given", () => {
 	expect([...encodeZWaveBeamFrame({ destinationNodeId: 23 })]).toStrictEqual([
-		0x55,
-		23,
+		0x55, 23,
 	]);
 });
 
@@ -47,10 +47,12 @@ test("encodeZWaveBeamFrame() appends the home ID hash when given", () => {
 });
 
 test("encodeZWaveBeamFrame() rejects node IDs that do not fit 8 bits", () => {
-	expect(() => encodeZWaveBeamFrame({ destinationNodeId: 0x100 }))
-		.toThrow(/not a valid Z-Wave classic node ID/);
-	expect(() => encodeZWaveBeamFrame({ destinationNodeId: 0 }))
-		.toThrow(/not a valid Z-Wave classic node ID/);
+	expect(() => encodeZWaveBeamFrame({ destinationNodeId: 0x100 })).toThrow(
+		/not a valid Z-Wave classic node ID/,
+	);
+	expect(() => encodeZWaveBeamFrame({ destinationNodeId: 0 })).toThrow(
+		/not a valid Z-Wave classic node ID/,
+	);
 });
 
 test("encodeLongRangeBeamFrame() rejects node IDs that do not fit 12 bits", () => {
@@ -59,7 +61,7 @@ test("encodeLongRangeBeamFrame() rejects node IDs that do not fit 12 bits", () =
 			destinationNodeId: 0x1000,
 			txPower: 14,
 			homeIdHash: 0xdd,
-		})
+		}),
 	).toThrow(/not a valid Z-Wave Long Range node ID/);
 });
 

@@ -1,4 +1,5 @@
 import { type RSSI } from "../definitions/RSSI.js";
+
 import { ChannelConfiguration } from "./_Types.js";
 
 /**
@@ -6,7 +7,7 @@ import { ChannelConfiguration } from "./_Types.js";
  * indexed by its 4-bit Tx Power field. Z-Wave Long Range PHY and MAC Layer
  * Specification (2023.07.03), Table 6-31.
  */
-// dprint-ignore
+// oxfmt-ignore
 const longRangeBeamPowers: readonly number[] = [
 	-6, -2,  2,  6,
 	10, 13, 16, 19,
@@ -42,30 +43,27 @@ export function getRouteTag(
 	failedHop?: number,
 ): string {
 	return [
-		direction === "outbound"
-			? padNodeId(source)
-			: padNodeId(destination),
+		direction === "outbound" ? padNodeId(source) : padNodeId(destination),
 		...repeaters.map(padNodeId),
-		direction === "outbound"
-			? padNodeId(destination)
-			: padNodeId(source),
-	].map((id, i) => {
-		if (i === 0) return id;
-		// NWK:0010.1 numbers the repeater that got no acknowledgement, so the
-		// broken link is the one leaving `repeaters[failedHop]`
-		if (i - 2 === failedHop) return " × " + id;
-		if (i - 1 === currentHop) {
-			return (direction === "outbound" ? " » " : " « ") + id;
-		}
-		return (direction === "outbound" ? " › " : " ‹ ") + id;
-	})
+		direction === "outbound" ? padNodeId(destination) : padNodeId(source),
+	]
+		.map((id, i) => {
+			if (i === 0) return id;
+			// NWK:0010.1 numbers the repeater that got no acknowledgement, so the
+			// broken link is the one leaving `repeaters[failedHop]`
+			if (i - 2 === failedHop) return " × " + id;
+			if (i - 1 === currentHop) {
+				return (direction === "outbound" ? " » " : " « ") + id;
+			}
+			return (direction === "outbound" ? " › " : " ‹ ") + id;
+		})
 		.join("");
 }
 
 // The following conversion routines were Given to us by a helpful green dragon
 // who looked at compiled Z-Wave binaries for us:
 
-// dprint-ignore
+// oxfmt-ignore
 const rssiConversionTable_Classic = [
 	-110, -108, -107, -105, -104, -103, -102, -101, -100, -99, -98,
 	 -97,  -96,  -95,  -94,  -93,  -93,  -92,  -92,  -92, -91, -91,
@@ -80,14 +78,14 @@ const rssiConversionTable_Classic = [
 	 -12,  -10,   -9,   -8,   -7,   -6,   -5,   -4,   -3,  -2,  -1,
 ];
 
-// dprint-ignore
+// oxfmt-ignore
 const rssiConversionTable_LROnly = [
 	-60, -60, -59, -58, -57, -56,
 	-55, -54, -53, -52, -52, -52,
 	-51, -51, -51, -51, -51, -50,
 ];
 
-// dprint-ignore
+// oxfmt-ignore
 const rssiConversionTable_ClassicPlusLR_40k_9k6 = [
 	-99, -98, -98, -97, -96, -94, -93,
 	-92, -91, -90, -90, -89, -89, -89,
@@ -96,7 +94,7 @@ const rssiConversionTable_ClassicPlusLR_40k_9k6 = [
 	-77, -77, -77, -77, -76, -76, -75
 ];
 
-// dprint-ignore
+// oxfmt-ignore
 const rssiConversionTable_ClassicPlusLR_100k = [
 	-88, -87, -87, -86, -86,
 	-85, -85, -84, -84, -83,

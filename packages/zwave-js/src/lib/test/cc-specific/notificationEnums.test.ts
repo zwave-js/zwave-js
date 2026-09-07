@@ -5,6 +5,7 @@ import {
 import { CommandClasses, type ValueMetadataNumeric } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest.sequential(
@@ -476,10 +477,11 @@ integrationTest.sequential(
 			const tiltVID = NotificationCCValues.deprecated_doorTiltState.id;
 
 			const hasTiltVID = () =>
-				node.getDefinedValueIDs().some(
-					(vid) =>
+				node
+					.getDefinedValueIDs()
+					.some((vid) =>
 						NotificationCCValues.deprecated_doorTiltState.is(vid),
-				);
+					);
 			// Before receiving any notifications with the tilt enum, the synthetic value should not exist
 			t.expect(hasTiltVID()).toBe(false);
 

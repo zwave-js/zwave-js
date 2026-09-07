@@ -15,6 +15,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -148,9 +149,7 @@ export class TimeCCAPI extends CCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			TimeCCTimeOffsetReport
-		>(
+		const response = await this.host.sendCommand<TimeCCTimeOffsetReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -187,9 +186,7 @@ export class TimeCCAPI extends CCAPI {
 export class TimeCC extends CommandClass {
 	declare ccCommand: TimeCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -233,9 +230,7 @@ export interface TimeCCTimeReportOptions {
 
 @CCCommand(TimeCommand.TimeReport)
 export class TimeCCTimeReport extends TimeCC {
-	public constructor(
-		options: WithAddress<TimeCCTimeReportOptions>,
-	) {
+	public constructor(options: WithAddress<TimeCCTimeReportOptions>) {
 		super(options);
 		this.hour = options.hour;
 		this.minute = options.minute;
@@ -282,9 +277,12 @@ export class TimeCCTimeReport extends TimeCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				time: `${this.hour.toString().padStart(2, "0")}:${
-					this.minute.toString().padStart(2, "0")
-				}:${this.second.toString().padStart(2, "0")}`,
+				time: `${this.hour.toString().padStart(2, "0")}:${this.minute
+					.toString()
+					.padStart(
+						2,
+						"0",
+					)}:${this.second.toString().padStart(2, "0")}`,
 			},
 		};
 	}
@@ -303,9 +301,7 @@ export interface TimeCCDateReportOptions {
 
 @CCCommand(TimeCommand.DateReport)
 export class TimeCCDateReport extends TimeCC {
-	public constructor(
-		options: WithAddress<TimeCCDateReportOptions>,
-	) {
+	public constructor(options: WithAddress<TimeCCDateReportOptions>) {
 		super(options);
 		this.year = options.year;
 		this.month = options.month;
@@ -318,12 +314,7 @@ export class TimeCCDateReport extends TimeCC {
 		const month = raw.payload[2];
 		const day = raw.payload[3];
 
-		validatePayload(
-			month >= 1,
-			month <= 12,
-			day >= 1,
-			day <= 31,
-		);
+		validatePayload(month >= 1, month <= 12, day >= 1, day <= 31);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -353,9 +344,9 @@ export class TimeCCDateReport extends TimeCC {
 		return {
 			...super.toLogEntry(ctx),
 			message: {
-				date: `${this.year.toString().padStart(4, "0")}-${
-					this.month.toString().padStart(2, "0")
-				}-${this.day.toString().padStart(2, "0")}`,
+				date: `${this.year.toString().padStart(4, "0")}-${this.month
+					.toString()
+					.padStart(2, "0")}-${this.day.toString().padStart(2, "0")}`,
 			},
 		};
 	}
@@ -376,9 +367,7 @@ export interface TimeCCTimeOffsetSetOptions {
 @CCCommand(TimeCommand.TimeOffsetSet)
 @useSupervision()
 export class TimeCCTimeOffsetSet extends TimeCC {
-	public constructor(
-		options: WithAddress<TimeCCTimeOffsetSetOptions>,
-	) {
+	public constructor(options: WithAddress<TimeCCTimeOffsetSetOptions>) {
 		super(options);
 		this.standardOffset = options.standardOffset;
 		this.dstOffset = options.dstOffset;
@@ -447,9 +436,7 @@ export interface TimeCCTimeOffsetReportOptions {
 
 @CCCommand(TimeCommand.TimeOffsetReport)
 export class TimeCCTimeOffsetReport extends TimeCC {
-	public constructor(
-		options: WithAddress<TimeCCTimeOffsetReportOptions>,
-	) {
+	public constructor(options: WithAddress<TimeCCTimeOffsetReportOptions>) {
 		super(options);
 		this.standardOffset = options.standardOffset;
 		this.dstOffset = options.dstOffset;

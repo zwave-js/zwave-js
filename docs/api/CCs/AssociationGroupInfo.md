@@ -23,25 +23,24 @@ async getGroupInfo(
 	groupId: number,
 	refreshCache: boolean = false,
 ): Promise<
-	{
-		mode: number;
-		profile: number;
-		eventCode: number;
-		hasDynamicInfo: boolean;
-	} | undefined
+	| {
+			mode: number;
+			profile: number;
+			eventCode: number;
+			hasDynamicInfo: boolean;
+	  }
+	| undefined
 >;
 ```
 
 ### `reportGroupInfo`
 
 ```ts
-async reportGroupInfo(
-	options: {
-		isListMode: boolean;
-		hasDynamicInfo: boolean;
-		groups: AssociationGroupInfo[];
-	},
-): Promise<void>;
+async reportGroupInfo(options: {
+	isListMode: boolean;
+	hasDynamicInfo: boolean;
+	groups: AssociationGroupInfo[];
+}): Promise<void>;
 ```
 
 ### `getCommands`
@@ -50,9 +49,7 @@ async reportGroupInfo(
 async getCommands(
 	groupId: number,
 	allowCache: boolean = true,
-): Promise<
-	MaybeNotKnown<ReadonlyMap<CommandClasses, readonly number[]>>
->;
+): Promise<MaybeNotKnown<ReadonlyMap<CommandClasses, readonly number[]>>>;
 ```
 
 ### `reportCommands`

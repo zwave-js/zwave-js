@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+
 import { RssiError, averageRSSI } from "./RSSI.js";
 
 test("averageRSSI should calculate exponential moving average correctly", () => {
@@ -29,7 +30,7 @@ test("averageRSSI should handle RSSI errors correctly", () => {
 
 	// Test with NoSignalDetected error - should treat as -128 dBm
 	expect(averageRSSI(-50, RssiError.NoSignalDetected, 0.9)).toBe(
-		-50 * 0.9 + (-128) * 0.1,
+		-50 * 0.9 + -128 * 0.1,
 	);
 });
 

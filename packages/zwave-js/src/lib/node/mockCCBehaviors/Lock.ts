@@ -29,9 +29,9 @@ interface LockTransition {
 function stopCurrentTransition(
 	self: MockNode,
 ): { wasSupervised: boolean } | undefined {
-	const existing = self.state.get(
-		StateKeys.transition,
-	) as LockTransition | undefined;
+	const existing = self.state.get(StateKeys.transition) as
+		| LockTransition
+		| undefined;
 	if (existing) {
 		existing.timer.clear();
 		self.state.set(StateKeys.locked, existing.targetLocked);
@@ -55,9 +55,8 @@ function beginTransition(
 ): number {
 	stopCurrentTransition(self);
 
-	const currentLocked = (
-		self.state.get(StateKeys.locked) ?? false
-	) as boolean;
+	const currentLocked = (self.state.get(StateKeys.locked)
+		?? false) as boolean;
 
 	if (currentLocked === targetLocked || travelTime === 0) {
 		self.state.set(StateKeys.locked, targetLocked);
@@ -95,9 +94,8 @@ function beginTransition(
 const respondToLockGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof LockCCGet) {
-			const locked = (
-				self.state.get(StateKeys.locked) ?? false
-			) as boolean;
+			const locked = (self.state.get(StateKeys.locked)
+				?? false) as boolean;
 
 			const cc = new LockCCReport({
 				nodeId: controller.ownNodeId,
@@ -141,7 +139,4 @@ const respondToLockSet: MockNodeBehavior = {
 	},
 };
 
-export const LockCCBehaviors = [
-	respondToLockGet,
-	respondToLockSet,
-];
+export const LockCCBehaviors = [respondToLockGet, respondToLockSet];

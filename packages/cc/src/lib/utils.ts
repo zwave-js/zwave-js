@@ -30,9 +30,11 @@ import {
 	getEnumMemberName,
 } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
+
 import { AssociationCC, AssociationCCValues } from "../cc/AssociationCC.js";
 import { AssociationGroupInfoCC } from "../cc/AssociationGroupInfoCC.js";
 import { MultiChannelAssociationCC } from "../cc/MultiChannelAssociationCC.js";
+
 import { CCAPI, type CCAPIHost, type CCAPINode } from "./API.js";
 import {
 	type AssociationAddress,
@@ -119,14 +121,13 @@ export function getAllAssociations(
 }
 
 export function checkAssociation(
-	ctx:
-		& HostIDs
+	ctx: HostIDs
 		& GetValueDB
 		& GetNode<
-			& NodeId
-			& SupportsCC
-			& GetEndpoint<EndpointId & SupportsCC>
-			& QuerySecurityClasses
+			NodeId
+				& SupportsCC
+				& GetEndpoint<EndpointId & SupportsCC>
+				& QuerySecurityClasses
 		>,
 	endpoint: EndpointId & SupportsCC & ControlsCC,
 	group: number,
@@ -134,9 +135,10 @@ export function checkAssociation(
 ): AssociationCheckResult {
 	// Check that the target endpoint exists except when adding an association to the controller
 	const targetNode = ctx.getNodeOrThrow(destination.nodeId);
-	const targetEndpoint = destination.nodeId === ctx.ownNodeId
-		? targetNode
-		: targetNode.getEndpointOrThrow(destination.endpoint ?? 0);
+	const targetEndpoint =
+		destination.nodeId === ctx.ownNodeId
+			? targetNode
+			: targetNode.getEndpointOrThrow(destination.endpoint ?? 0);
 
 	if (
 		!endpoint.supportsCC(CommandClasses.Association)
@@ -210,8 +212,7 @@ export function checkAssociation(
 			&& !securityClassMustMatch
 			&& !sourceNode.hasSecurityClass(targetSecurityClass)
 		) {
-			return AssociationCheckResult
-				.Forbidden_DestinationSecurityClassNotGranted;
+			return AssociationCheckResult.Forbidden_DestinationSecurityClassNotGranted;
 		}
 	}
 
@@ -274,10 +275,9 @@ export function getAssociationGroups(
 		mcInstance = MultiChannelAssociationCC;
 	}
 
-	const assocGroupCount = assocInstance.getGroupCountCached(ctx, endpoint)
-		?? 0;
-	const mcGroupCount = mcInstance?.getGroupCountCached(ctx, endpoint)
-		?? 0;
+	const assocGroupCount =
+		assocInstance.getGroupCountCached(ctx, endpoint) ?? 0;
+	const mcGroupCount = mcInstance?.getGroupCountCached(ctx, endpoint) ?? 0;
 	const groupCount = Math.max(assocGroupCount, mcGroupCount);
 
 	const deviceConfig = ctx.getDeviceConfig?.(endpoint.nodeId);
@@ -294,26 +294,20 @@ export function getAssociationGroups(
 			);
 			const multiChannel = !!mcInstance && group <= mcGroupCount;
 			ret.set(group, {
-				maxNodes: (multiChannel
-					? mcInstance!
-					: assocInstance).getMaxNodesCached(
-						ctx,
-						endpoint,
-						group,
-					) || 1,
+				maxNodes:
+					(multiChannel
+						? mcInstance!
+						: assocInstance
+					).getMaxNodesCached(ctx, endpoint, group) || 1,
 				// AGI implies Z-Wave+ where group 1 is the lifeline
 				isLifeline: group === 1,
 				label:
 					// prefer the configured label if we have one
 					assocConfig?.label
-						// the ones reported by AGI are sometimes pretty bad
-						?? agiInstance.getGroupNameCached(
-							ctx,
-							endpoint,
-							group,
-						)
-						// but still better than "unnamed"
-						?? `Unnamed group ${group}`,
+					// the ones reported by AGI are sometimes pretty bad
+					?? agiInstance.getGroupNameCached(ctx, endpoint, group)
+					// but still better than "unnamed"
+					?? `Unnamed group ${group}`,
 				multiChannel,
 				profile: agiInstance.getGroupProfileCached(
 					ctx,
@@ -336,13 +330,11 @@ export function getAssociationGroups(
 			);
 			const multiChannel = !!mcInstance && group <= mcGroupCount;
 			ret.set(group, {
-				maxNodes: (multiChannel
-					? mcInstance!
-					: assocInstance).getMaxNodesCached(
-						ctx,
-						endpoint,
-						group,
-					)
+				maxNodes:
+					(multiChannel
+						? mcInstance!
+						: assocInstance
+					).getMaxNodesCached(ctx, endpoint, group)
 					|| assocConfig?.maxNodes
 					|| 1,
 				isLifeline: assocConfig?.isLifeline ?? group === 1,
@@ -369,10 +361,10 @@ export function getAllAssociationGroups(
 
 export async function addAssociations(
 	ctx: CCAPIHost<
-		& CCAPINode
-		& SupportsCC
-		& GetEndpoint<EndpointId & SupportsCC>
-		& QuerySecurityClasses
+		CCAPINode
+			& SupportsCC
+			& GetEndpoint<EndpointId & SupportsCC>
+			& QuerySecurityClasses
 	>,
 	endpoint: EndpointId & SupportsCC & ControlsCC,
 	group: number,
@@ -421,8 +413,8 @@ export async function addAssociations(
 
 	// Disallow associating a node with itself. This is technically checked as part of
 	// checkAssociations, but here we provide a better error message.
-	const selfAssociations = destinations.filter((d) =>
-		d.nodeId === endpoint.nodeId
+	const selfAssociations = destinations.filter(
+		(d) => d.nodeId === endpoint.nodeId,
 	);
 	if (selfAssociations.length > 0) {
 		throw new ZWaveError(
@@ -435,10 +427,9 @@ export async function addAssociations(
 		);
 	}
 
-	const assocGroupCount = assocInstance?.getGroupCountCached(ctx, endpoint)
-		?? 0;
-	const mcGroupCount = mcInstance?.getGroupCountCached(ctx, endpoint)
-		?? 0;
+	const assocGroupCount =
+		assocInstance?.getGroupCountCached(ctx, endpoint) ?? 0;
+	const mcGroupCount = mcInstance?.getGroupCountCached(ctx, endpoint) ?? 0;
 	const groupCount = Math.max(assocGroupCount, mcGroupCount);
 	if (group > groupCount) {
 		throw new ZWaveError(
@@ -449,21 +440,23 @@ export async function addAssociations(
 
 	const deviceConfig = ctx.getDeviceConfig?.(endpoint.nodeId);
 
-	const groupIsMultiChannel = !!mcInstance
+	const groupIsMultiChannel =
+		!!mcInstance
 		&& group <= mcGroupCount
 		&& deviceConfig?.associations?.get(group)?.multiChannel !== false;
 
 	if (groupIsMultiChannel) {
 		// Check that all associations are allowed
 		if (!options?.force) {
-			const disallowedAssociations = destinations.map(
-				(a) => ({
+			const disallowedAssociations = destinations
+				.map((a) => ({
 					...a,
 					checkResult: checkAssociation(ctx, endpoint, group, a),
-				}),
-			).filter(({ checkResult }) =>
-				checkResult !== AssociationCheckResult.OK
-			);
+				}))
+				.filter(
+					({ checkResult }) =>
+						checkResult !== AssociationCheckResult.OK,
+				);
 			if (disallowedAssociations.length) {
 				let message = `The following associations are not allowed:`;
 				message += disallowedAssociations
@@ -471,12 +464,10 @@ export async function addAssociations(
 						(a) =>
 							`\n· Node ${a.nodeId}${
 								a.endpoint ? `, endpoint ${a.endpoint}` : ""
-							}: ${
-								getEnumMemberName(
-									AssociationCheckResult,
-									a.checkResult,
-								).replace("Forbidden_", "")
-							}`,
+							}: ${getEnumMemberName(
+								AssociationCheckResult,
+								a.checkResult,
+							).replace("Forbidden_", "")}`,
 					)
 					.join("");
 				throw new ZWaveError(
@@ -511,26 +502,24 @@ export async function addAssociations(
 
 		// Check that all associations are allowed
 		if (!options?.force) {
-			const disallowedAssociations = destinations.map(
-				(a) => ({
+			const disallowedAssociations = destinations
+				.map((a) => ({
 					...a,
 					checkResult: checkAssociation(ctx, endpoint, group, a),
-				}),
-			).filter(({ checkResult }) =>
-				checkResult !== AssociationCheckResult.OK
-			);
+				}))
+				.filter(
+					({ checkResult }) =>
+						checkResult !== AssociationCheckResult.OK,
+				);
 			if (disallowedAssociations.length) {
-				let message =
-					`The associations to the following nodes are not allowed`;
+				let message = `The associations to the following nodes are not allowed`;
 				message += disallowedAssociations
 					.map(
 						(a) =>
-							`\n· Node ${a.nodeId}: ${
-								getEnumMemberName(
-									AssociationCheckResult,
-									a.checkResult,
-								).replace("Forbidden_", "")
-							}`,
+							`\n· Node ${a.nodeId}: ${getEnumMemberName(
+								AssociationCheckResult,
+								a.checkResult,
+							).replace("Forbidden_", "")}`,
 					)
 					.join("");
 
@@ -542,11 +531,7 @@ export async function addAssociations(
 			}
 		}
 
-		const api = CCAPI.create(
-			CommandClasses.Association,
-			ctx,
-			endpoint,
-		);
+		const api = CCAPI.create(CommandClasses.Association, ctx, endpoint);
 		await api.addNodeIds(group, ...destinations.map((a) => a.nodeId));
 		// Refresh the association list
 		await api.getGroup(group);
@@ -634,11 +619,7 @@ export async function removeAssociations(
 		&& nodeAssociations.length > 0
 		&& groupExistsAsNodeAssociation
 	) {
-		const api = CCAPI.create(
-			CommandClasses.Association,
-			ctx,
-			endpoint,
-		);
+		const api = CCAPI.create(CommandClasses.Association, ctx, endpoint);
 		await api.removeNodeIds({
 			groupId: group,
 			nodeIds: nodeAssociations,
@@ -684,7 +665,8 @@ export function getLifelineGroupIds(
 	const deviceConfig = ctx.getDeviceConfig?.(endpoint.nodeId);
 	if (endpoint.index === 0) {
 		// The root endpoint's associations may be configured separately or as part of "endpoints"
-		associations = deviceConfig?.associations
+		associations =
+			deviceConfig?.associations
 			?? deviceConfig?.endpoints?.get(0)?.associations;
 	} else {
 		// The other endpoints can only have a configuration as part of "endpoints"
@@ -706,10 +688,10 @@ export function getLifelineGroupIds(
 
 export async function configureLifelineAssociations(
 	ctx: CCAPIHost<
-		& CCAPINode
-		& SupportsCC
-		& ControlsCC
-		& GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>
+		CCAPINode
+			& SupportsCC
+			& ControlsCC
+			& GetAllEndpoints<EndpointId & SupportsCC & ControlsCC>
 	>,
 	endpoint: EndpointId & SupportsCC & ControlsCC,
 ): Promise<void> {
@@ -725,11 +707,7 @@ export async function configureLifelineAssociations(
 	);
 
 	let assocInstance: typeof AssociationCC | undefined;
-	const assocAPI = CCAPI.create(
-		CommandClasses.Association,
-		ctx,
-		endpoint,
-	);
+	const assocAPI = CCAPI.create(CommandClasses.Association, ctx, endpoint);
 	if (endpoint.supportsCC(CommandClasses.Association)) {
 		assocInstance = AssociationCC;
 	}
@@ -764,7 +742,7 @@ export async function configureLifelineAssociations(
 				.catch(() => undefined);
 			if (
 				lifeline?.profile
-					=== AssociationGroupInfoProfile["General: Lifeline"]
+				=== AssociationGroupInfoProfile["General: Lifeline"]
 			) {
 				lifelineGroups.push(1);
 			}
@@ -789,11 +767,7 @@ export async function configureLifelineAssociations(
 	ctx.logNode(node.id, {
 		endpoint: endpoint.index,
 		message: logText(
-			`Checking/assigning lifeline groups: ${
-				lifelineGroups.join(
-					", ",
-				)
-			}`,
+			`Checking/assigning lifeline groups: ${lifelineGroups.join(", ")}`,
 			{
 				nested: logDict({
 					"supports classic associations": !!assocInstance,
@@ -810,7 +784,8 @@ export async function configureLifelineAssociations(
 			group,
 		);
 
-		const mustUseNodeAssociation = !groupSupportsMultiChannelAssociation
+		const mustUseNodeAssociation =
+			!groupSupportsMultiChannelAssociation
 			|| !nodeSupportsMultiChannel
 			|| assocConfig?.multiChannel === false;
 		let mustUseMultiChannelAssociation = false;
@@ -854,14 +829,11 @@ export async function configureLifelineAssociations(
 		});
 
 		// Figure out which associations exist and may need to be removed
-		const isAssignedAsNodeAssociation = (
-			endpoint: EndpointId,
-		): boolean => {
+		const isAssignedAsNodeAssociation = (endpoint: EndpointId): boolean => {
 			if (groupSupportsMultiChannelAssociation && mcInstance) {
 				if (
 					// Only consider a group if it doesn't share its associations with the root endpoint
-					mcInstance.getMaxNodesCached(ctx, endpoint, group)
-						> 0
+					mcInstance.getMaxNodesCached(ctx, endpoint, group) > 0
 					&& !!mcInstance
 						.getAllDestinationsCached(ctx, endpoint)
 						.get(group)
@@ -877,8 +849,7 @@ export async function configureLifelineAssociations(
 			if (assocInstance) {
 				if (
 					// Only consider a group if it doesn't share its associations with the root endpoint
-					assocInstance.getMaxNodesCached(ctx, endpoint, group)
-						> 0
+					assocInstance.getMaxNodesCached(ctx, endpoint, group) > 0
 					&& !!assocInstance
 						.getAllDestinationsCached(ctx, endpoint)
 						.get(group)
@@ -897,8 +868,7 @@ export async function configureLifelineAssociations(
 			if (mcInstance) {
 				if (
 					// Only consider a group if it doesn't share its associations with the root endpoint
-					mcInstance.getMaxNodesCached(ctx, endpoint, group)
-						> 0
+					mcInstance.getMaxNodesCached(ctx, endpoint, group) > 0
 					&& mcInstance
 						.getAllDestinationsCached(ctx, endpoint)
 						.get(group)
@@ -916,15 +886,16 @@ export async function configureLifelineAssociations(
 
 		// If the node was used with other controller software, there might be
 		// invalid lifeline associations which cause reporting problems
-		const invalidEndpointAssociations: EndpointAddress[] = mcInstance
-			?.getAllDestinationsCached(ctx, endpoint)
-			.get(group)
-			?.filter(
-				(addr): addr is AssociationAddress & EndpointAddress =>
-					addr.nodeId === ownNodeId
-					&& addr.endpoint != undefined
-					&& addr.endpoint !== 0,
-			) ?? [];
+		const invalidEndpointAssociations: EndpointAddress[] =
+			mcInstance
+				?.getAllDestinationsCached(ctx, endpoint)
+				.get(group)
+				?.filter(
+					(addr): addr is AssociationAddress & EndpointAddress =>
+						addr.nodeId === ownNodeId
+						&& addr.endpoint != undefined
+						&& addr.endpoint !== 0,
+				) ?? [];
 
 		// Clean them up first
 		if (
@@ -934,8 +905,7 @@ export async function configureLifelineAssociations(
 		) {
 			ctx.logNode(node.id, {
 				endpoint: endpoint.index,
-				message:
-					`Found invalid lifeline associations in group #${group}, removing them...`,
+				message: `Found invalid lifeline associations in group #${group}, removing them...`,
 				direction: "outbound",
 			});
 			await mcAPI.removeDestinations({
@@ -966,21 +936,18 @@ export async function configureLifelineAssociations(
 				hasLifeline = true;
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message:
-						`Lifeline group #${group} is already assigned with a node association`,
+					message: `Lifeline group #${group} is already assigned with a node association`,
 					direction: "none",
 				});
 			} else if (
 				assocAPI.isSupported()
 				// Some endpoint groups don't support having any destinations because they are shared with the root
-				&& assocInstance!.getMaxNodesCached(ctx, endpoint, group)
-					> 0
+				&& assocInstance!.getMaxNodesCached(ctx, endpoint, group) > 0
 			) {
 				// We can use a node association, but first remove any possible endpoint associations
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message:
-						`Assigning lifeline group #${group} with a node association via Association CC...`,
+					message: `Assigning lifeline group #${group} with a node association via Association CC...`,
 					direction: "outbound",
 				});
 				if (
@@ -1003,15 +970,13 @@ export async function configureLifelineAssociations(
 				if (hasLifeline) {
 					ctx.logNode(node.id, {
 						endpoint: endpoint.index,
-						message:
-							`Lifeline group #${group} was assigned with a node association via Association CC`,
+						message: `Lifeline group #${group} was assigned with a node association via Association CC`,
 						direction: "none",
 					});
 				} else {
 					ctx.logNode(node.id, {
 						endpoint: endpoint.index,
-						message:
-							`Assigning lifeline group #${group} with a node association via Association CC did not work`,
+						message: `Assigning lifeline group #${group} with a node association via Association CC did not work`,
 						direction: "none",
 					});
 				}
@@ -1026,8 +991,7 @@ export async function configureLifelineAssociations(
 				// We can use a node association, but first remove any possible endpoint associations
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message:
-						`Assigning lifeline group #${group} with a node association via Multi Channel Association CC...`,
+					message: `Assigning lifeline group #${group} with a node association via Multi Channel Association CC...`,
 					direction: "outbound",
 				});
 				if (isAssignedAsEndpointAssociation(endpoint)) {
@@ -1048,15 +1012,13 @@ export async function configureLifelineAssociations(
 				if (hasLifeline) {
 					ctx.logNode(node.id, {
 						endpoint: endpoint.index,
-						message:
-							`Lifeline group #${group} was assigned with a node association via Multi Channel Association CC`,
+						message: `Lifeline group #${group} was assigned with a node association via Multi Channel Association CC`,
 						direction: "none",
 					});
 				} else {
 					ctx.logNode(node.id, {
 						endpoint: endpoint.index,
-						message:
-							`Assigning lifeline group #${group} with a node association via Multi Channel Association CC did not work`,
+						message: `Assigning lifeline group #${group} with a node association via Multi Channel Association CC did not work`,
 						direction: "none",
 					});
 				}
@@ -1071,8 +1033,7 @@ export async function configureLifelineAssociations(
 				hasLifeline = true;
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message:
-						`Lifeline group #${group} is already assigned with an endpoint association`,
+					message: `Lifeline group #${group} is already assigned with an endpoint association`,
 					direction: "none",
 				});
 			} else if (
@@ -1083,8 +1044,7 @@ export async function configureLifelineAssociations(
 				// We can use a multi channel association, but first remove any possible node associations
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message:
-						`Assigning lifeline group #${group} with a multi channel association...`,
+					message: `Assigning lifeline group #${group} with a multi channel association...`,
 					direction: "outbound",
 				});
 				if (isAssignedAsNodeAssociation(endpoint)) {
@@ -1117,15 +1077,13 @@ export async function configureLifelineAssociations(
 				if (hasLifeline) {
 					ctx.logNode(node.id, {
 						endpoint: endpoint.index,
-						message:
-							`Lifeline group #${group} was assigned with a multi channel association`,
+						message: `Lifeline group #${group} was assigned with a multi channel association`,
 						direction: "none",
 					});
 				} else {
 					ctx.logNode(node.id, {
 						endpoint: endpoint.index,
-						message:
-							`Assigning lifeline group #${group} with a multi channel association did not work`,
+						message: `Assigning lifeline group #${group} with a multi channel association did not work`,
 						direction: "none",
 					});
 				}
@@ -1142,15 +1100,15 @@ export async function configureLifelineAssociations(
 			&& endpoint.index > 0
 		) {
 			// But first check if the root may have a multi channel association
-			const rootAssocConfig = deviceConfig
-				?.getAssociationConfigForEndpoint(0, group);
-			const rootMustUseNodeAssociation = !nodeSupportsMultiChannel
+			const rootAssocConfig =
+				deviceConfig?.getAssociationConfigForEndpoint(0, group);
+			const rootMustUseNodeAssociation =
+				!nodeSupportsMultiChannel
 				|| rootAssocConfig?.multiChannel === false;
 
 			ctx.logNode(node.id, {
 				endpoint: endpoint.index,
-				message:
-					`Checking root device for fallback assignment of lifeline group #${group}:
+				message: `Checking root device for fallback assignment of lifeline group #${group}:
 root supports multi channel:  ${nodeSupportsMultiChannel}
 configured strategy:           ${rootAssocConfig?.multiChannel ?? "auto"}
 must use node association:     ${rootMustUseNodeAssociation}`,
@@ -1162,8 +1120,7 @@ must use node association:     ${rootMustUseNodeAssociation}`,
 					hasLifeline = true;
 					ctx.logNode(node.id, {
 						endpoint: endpoint.index,
-						message:
-							`Lifeline group #${group} is already assigned with a multi channel association on the root device`,
+						message: `Lifeline group #${group} is already assigned with a multi channel association on the root device`,
 						direction: "none",
 					});
 				} else {
@@ -1180,8 +1137,7 @@ must use node association:     ${rootMustUseNodeAssociation}`,
 					if (rootMCAPI.isSupported()) {
 						ctx.logNode(node.id, {
 							endpoint: endpoint.index,
-							message:
-								`Assigning lifeline group #${group} with a multi channel association on the root device...`,
+							message: `Assigning lifeline group #${group} with a multi channel association on the root device...`,
 							direction: "outbound",
 						});
 						// Clean up node associations because they might prevent us from adding the endpoint association
@@ -1218,8 +1174,7 @@ must use node association:     ${rootMustUseNodeAssociation}`,
 		if (!hasLifeline) {
 			ctx.logNode(node.id, {
 				endpoint: endpoint.index,
-				message:
-					`All attempts to assign lifeline group #${group} failed, skipping...`,
+				message: `All attempts to assign lifeline group #${group} failed, skipping...`,
 				direction: "none",
 				level: "warn",
 			});
@@ -1235,11 +1190,11 @@ must use node association:     ${rootMustUseNodeAssociation}`,
 
 export async function assignLifelineIssueingCommand(
 	ctx: CCAPIHost<
-		& CCAPINode
-		& SupportsCC
-		& ControlsCC
-		& GetEndpoint<EndpointId & SupportsCC>
-		& QuerySecurityClasses
+		CCAPINode
+			& SupportsCC
+			& ControlsCC
+			& GetEndpoint<EndpointId & SupportsCC>
+			& QuerySecurityClasses
 	>,
 	endpoint: EndpointId,
 	ccId: CommandClasses,
@@ -1251,8 +1206,8 @@ export async function assignLifelineIssueingCommand(
 		&& (node.supportsCC(CommandClasses.Association)
 			|| node.supportsCC(CommandClasses["Multi Channel Association"]))
 	) {
-		const groupsIssueingNotifications = AssociationGroupInfoCC
-			.findGroupsForIssuedCommand(
+		const groupsIssueingNotifications =
+			AssociationGroupInfoCC.findGroupsForIssuedCommand(
 				ctx,
 				node,
 				ccId,
@@ -1261,21 +1216,15 @@ export async function assignLifelineIssueingCommand(
 		if (groupsIssueingNotifications.length > 0) {
 			// We always grab the first group - usually it should be the lifeline
 			const groupId = groupsIssueingNotifications[0];
-			const existingAssociations = getAssociations(ctx, node).get(groupId)
-				?? [];
+			const existingAssociations =
+				getAssociations(ctx, node).get(groupId) ?? [];
 
-			if (
-				!existingAssociations.some(
-					(a) => a.nodeId === ctx.ownNodeId,
-				)
-			) {
+			if (!existingAssociations.some((a) => a.nodeId === ctx.ownNodeId)) {
 				ctx.logNode(node.id, {
 					endpoint: endpoint.index,
-					message: `Configuring associations to receive ${
-						getCCName(
-							ccId,
-						)
-					} commands...`,
+					message: `Configuring associations to receive ${getCCName(
+						ccId,
+					)} commands...`,
 					direction: "outbound",
 				});
 				await addAssociations(ctx, node, groupId, [
@@ -1309,11 +1258,8 @@ export function doesAnyLifelineSendActuatorOrSensorReports(
 	if (
 		lifelineGroupIds.some(
 			(id) =>
-				AssociationGroupInfoCC.getGroupProfileCached(
-					ctx,
-					node,
-					id,
-				) === AssociationGroupInfoProfile["General: Lifeline"],
+				AssociationGroupInfoCC.getGroupProfileCached(ctx, node, id)
+				=== AssociationGroupInfoProfile["General: Lifeline"],
 		)
 	) {
 		return true;

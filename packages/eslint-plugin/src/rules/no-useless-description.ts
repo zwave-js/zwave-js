@@ -1,4 +1,5 @@
 import type { AST } from "jsonc-eslint-parser";
+
 import { CONFIG_PARAM } from "../jsonSelectors.js";
 import { type JSONCRule, removeJSONProperty } from "../utils.js";
 
@@ -16,7 +17,8 @@ export const noUselessDescription: JSONCRule.RuleModule = {
 				if (
 					node.value.type !== "JSONLiteral"
 					|| typeof node.value.value !== "string"
-				) return;
+				)
+					return;
 				const value = node.value;
 
 				const description = value.value.trim();

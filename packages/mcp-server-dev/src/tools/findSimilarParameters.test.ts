@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+
 import {
 	SemanticSearchError,
 	type SemanticSearchService,
 } from "../semantic/service.js";
+
 import { createFindSimilarParametersTool } from "./findSimilarParameters.js";
 
 function fakeService(
@@ -114,12 +116,14 @@ describe("createFindSimilarParametersTool", () => {
 
 	it("translates a thrown SemanticSearchError into a structured response, not a crash", async () => {
 		const service = fakeService({
-			findSimilar: vi.fn().mockRejectedValue(
-				new SemanticSearchError(
-					"Multiple $if variants exist for this parameter",
-					"ambiguous_parameter",
+			findSimilar: vi
+				.fn()
+				.mockRejectedValue(
+					new SemanticSearchError(
+						"Multiple $if variants exist for this parameter",
+						"ambiguous_parameter",
+					),
 				),
-			),
 		} as any);
 		const tool = createFindSimilarParametersTool(service);
 		const result = await tool.handler({
@@ -127,8 +131,6 @@ describe("createFindSimilarParametersTool", () => {
 			parameter: 5,
 		} as any);
 		expect(result.isError).toBe(true);
-		expect(JSON.stringify(result.content)).toContain(
-			"ambiguous_parameter",
-		);
+		expect(JSON.stringify(result.content)).toContain("ambiguous_parameter");
 	});
 });

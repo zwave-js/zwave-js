@@ -23,9 +23,7 @@ function isAsConstExpression(
 	);
 }
 
-function isVHelperCall(
-	node: TSESTree.CallExpression,
-): boolean {
+function isVHelperCall(node: TSESTree.CallExpression): boolean {
 	return (
 		node.callee.type === AST_NODE_TYPES.MemberExpression
 		&& node.callee.object.type === AST_NODE_TYPES.Identifier

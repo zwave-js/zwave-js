@@ -1,3 +1,9 @@
+import crypto from "node:crypto";
+import fsp from "node:fs/promises";
+import type net from "node:net";
+import os from "node:os";
+import path from "node:path";
+
 import { fs } from "@zwave-js/core/bindings/fs/node";
 import type { ZWaveSerialStream } from "@zwave-js/serial";
 import type { MockPort } from "@zwave-js/serial/mock";
@@ -9,15 +15,12 @@ import type {
 	MockNodeOptions,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import crypto from "node:crypto";
-import fsp from "node:fs/promises";
-import type net from "node:net";
-import os from "node:os";
-import path from "node:path";
 import { type TestContext, test } from "vitest";
+
 import type { Driver } from "../driver/Driver.js";
 import type { PartialZWaveOptions } from "../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../node/Node.js";
+
 import { prepareDriver, prepareMocks } from "./integrationTestSuiteShared.js";
 
 interface IntegrationTestOptions {
@@ -62,8 +65,7 @@ export interface IntegrationTestModifiers {
 	skip: IntegrationTestFn;
 }
 export interface IntegrationTest
-	extends IntegrationTestFn, IntegrationTestModifiers
-{
+	extends IntegrationTestFn, IntegrationTestModifiers {
 	/**
 	 * Runs this test sequentially instead of concurrently with the other tests in the file.
 	 * Use for tests that assert on timing or ordering, which CPU contention would perturb.
@@ -186,36 +188,41 @@ function suite(
 		});
 	}
 
-	const base = concurrency === "sequential"
-		? test.sequential
-		: test.concurrent;
-	const fn = modifier === "only"
-		? base.only
-		: modifier === "skip"
-		? base.skip
-		: base;
-	fn(name, async (t) => {
-		t.onTestFinished(async () => {
-			// Give everything a chance to settle before destroying the driver.
-			await wait(100);
+	const base =
+		concurrency === "sequential" ? test.sequential : test.concurrent;
+	const fn =
+		modifier === "only"
+			? base.only
+			: modifier === "skip"
+				? base.skip
+				: base;
+	fn(
+		name,
+		async (t) => {
+			t.onTestFinished(async () => {
+				// Give everything a chance to settle before destroying the driver.
+				await wait(100);
 
-			try {
-				await driver.destroy();
-			} finally {
-				mockController?.destroy();
-				tcpServer?.close(noop);
-				if (!debug) {
-					await fsp.rm(cacheDir, { recursive: true, force: true })
-						.catch(noop);
+				try {
+					await driver.destroy();
+				} finally {
+					mockController?.destroy();
+					tcpServer?.close(noop);
+					if (!debug) {
+						await fsp
+							.rm(cacheDir, { recursive: true, force: true })
+							.catch(noop);
+					}
 				}
-			}
-		});
+			});
 
-		await prepareTest();
-		await testBody(t, driver, node, mockController, mockNode, {
-			tcpServer,
-		});
-	}, 30000);
+			await prepareTest();
+			await testBody(t, driver, node, mockController, mockNode, {
+				tcpServer,
+			});
+		},
+		30000,
+	);
 }
 
 /** Performs an integration test with a real driver using a mock controller and one mock node */

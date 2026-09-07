@@ -6,6 +6,7 @@ import {
 	getDefaultMockControllerCapabilities,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
+
 import {
 	MockControllerCommunicationState,
 	MockControllerStateKeys,

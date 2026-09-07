@@ -54,9 +54,9 @@ async getSupportedModes(): Promise<
 
 ```ts
 enum HumidityControlMode {
-	"Off" = 0x00,
-	"Humidify" = 0x01,
+	Off = 0x00,
+	Humidify = 0x01,
 	"De-humidify" = 0x02,
-	"Auto" = 0x03,
+	Auto = 0x03,
 }
 ```

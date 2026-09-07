@@ -75,10 +75,7 @@
 			"label": "Device: Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 32535] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 32535] }],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -92,10 +89,7 @@
 			"label": "Relay: Auto On Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 32535] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 32535] }],
 			"defaultValue": 30,
 			"options": [
 				{
@@ -109,10 +103,7 @@
 			"label": "Relay: Auto Off Timer",
 			"valueSize": 2,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 32535] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 32535] }],
 			"defaultValue": 30,
 			"options": [
 				{

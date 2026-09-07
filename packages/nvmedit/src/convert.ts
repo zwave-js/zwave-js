@@ -27,6 +27,7 @@ import semverGte from "semver/functions/gte.js";
 import semverLt from "semver/functions/lt.js";
 import semverLte from "semver/functions/lte.js";
 import semverParse from "semver/functions/parse.js";
+
 import { MAX_PROTOCOL_FILE_FORMAT, SUC_MAX_UPDATES } from "./consts.js";
 import { NVM3, type NVM3Meta } from "./lib/NVM3.js";
 import { NVM500 } from "./lib/NVM500.js";
@@ -171,9 +172,10 @@ export interface NVMJSONControllerRFConfig {
 	nodeIdType: NodeIDType | null;
 }
 
-export interface NVMJSONNodeWithInfo
-	extends Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-{
+export interface NVMJSONNodeWithInfo extends Omit<
+	NodeProtocolInfo,
+	"hasSpecificDeviceClass"
+> {
 	isVirtual: boolean;
 
 	genericDeviceClass: number;
@@ -195,9 +197,10 @@ export interface NVMJSONVirtualNode {
 	isVirtual: true;
 }
 
-export interface NVMJSONLRNode
-	extends Omit<NodeProtocolInfo, "hasSpecificDeviceClass">
-{
+export interface NVMJSONLRNode extends Omit<
+	NodeProtocolInfo,
+	"hasSpecificDeviceClass"
+> {
 	genericDeviceClass: number;
 	specificDeviceClass?: number | null;
 }
@@ -206,16 +209,16 @@ export type NVMJSONNode = NVMJSONNodeWithInfo | NVMJSONVirtualNode;
 
 type ParsedNVM =
 	| {
-		type: 500;
-		json: Required<NVM500JSON>;
-	}
+			type: 500;
+			json: Required<NVM500JSON>;
+	  }
 	| {
-		type: 700;
-		json: NVMJSONWithMeta;
-	}
+			type: 700;
+			json: NVMJSONWithMeta;
+	  }
 	| {
-		type: "unknown";
-	};
+			type: "unknown";
+	  };
 
 /**
  * Ensures that the controller node is marked as listening.
@@ -356,8 +359,7 @@ export function nvmObjectsToJSON(
 		"7.0.0", // We don't know the version here yet
 	);
 	const protocolFileFormat = protocolVersionFile.format;
-	const protocolVersion =
-		`${protocolVersionFile.major}.${protocolVersionFile.minor}.${protocolVersionFile.patch}`;
+	const protocolVersion = `${protocolVersionFile.major}.${protocolVersionFile.minor}.${protocolVersionFile.patch}`;
 
 	// Bail early if the NVM uses a protocol file format that's newer than we support
 	if (protocolFileFormat > MAX_PROTOCOL_FILE_FORMAT) {
@@ -492,8 +494,8 @@ export function nvmObjectsToJSON(
 				fileId,
 				protocolVersion,
 			);
-			const { nodeId, ...nodeInfo } = file.nodeInfos.find((i) =>
-				i.nodeId === id
+			const { nodeId, ...nodeInfo } = file.nodeInfos.find(
+				(i) => i.nodeId === id,
 			)!;
 
 			Object.assign(node, nodeInfo);
@@ -539,16 +541,15 @@ export function nvmObjectsToJSON(
 		ApplicationVersionFile800ID,
 		"7.0.0", // We don't know the version here yet
 	);
-	const applicationVersionFile = applicationVersionFile700
-		?? applicationVersionFile800;
+	const applicationVersionFile =
+		applicationVersionFile700 ?? applicationVersionFile800;
 	if (!applicationVersionFile) {
 		throw new ZWaveError(
 			"ApplicationVersionFile not found!",
 			ZWaveErrorCodes.NVM_ObjectNotFound,
 		);
 	}
-	const applicationVersion =
-		`${applicationVersionFile.major}.${applicationVersionFile.minor}.${applicationVersionFile.patch}`;
+	const applicationVersion = `${applicationVersionFile.major}.${applicationVersionFile.minor}.${applicationVersionFile.patch}`;
 
 	const rfConfigFile = getFile<ApplicationRFConfigFile>(
 		ApplicationRFConfigFileID,
@@ -611,19 +612,19 @@ export function nvmObjectsToJSON(
 		preferredRepeaters,
 		...(rfConfigFile
 			? {
-				rfConfig: {
-					rfRegion: rfConfigFile.rfRegion,
-					txPower: rfConfigFile.txPower,
-					measured0dBm: rfConfigFile.measured0dBm,
-					enablePTI: rfConfigFile.enablePTI ?? null,
-					maxTXPower: rfConfigFile.maxTXPower ?? null,
-					nodeIdType: rfConfigFile.nodeIdType ?? null,
-				},
-			}
+					rfConfig: {
+						rfRegion: rfConfigFile.rfRegion,
+						txPower: rfConfigFile.txPower,
+						measured0dBm: rfConfigFile.measured0dBm,
+						enablePTI: rfConfigFile.enablePTI ?? null,
+						maxTXPower: rfConfigFile.maxTXPower ?? null,
+						nodeIdType: rfConfigFile.nodeIdType ?? null,
+					},
+				}
 			: {}),
 		sucUpdateEntries,
-		applicationData: applicationDataFile?.applicationData.toString("hex")
-			?? null,
+		applicationData:
+			applicationDataFile?.applicationData.toString("hex") ?? null,
 		applicationName: applicationNameFile?.name ?? null,
 	};
 
@@ -782,14 +783,20 @@ export async function nvmToJSON(
 	let protocolFileFormat: number;
 	let protocolVersion: string;
 	try {
-		protocolFileFormat = await adapter.get({
-			domain: "controller",
-			type: "protocolFileFormat",
-		}, true);
-		protocolVersion = await adapter.get({
-			domain: "controller",
-			type: "protocolVersion",
-		}, true);
+		protocolFileFormat = await adapter.get(
+			{
+				domain: "controller",
+				type: "protocolFileFormat",
+			},
+			true,
+		);
+		protocolVersion = await adapter.get(
+			{
+				domain: "controller",
+				type: "protocolVersion",
+			},
+			true,
+		);
 	} catch (e) {
 		// Firmwares based on SDK 7.23.0 and 7.23.1 do not write the protocol format/version to NVM,
 		// so file 0x50000 is missing. Those are out in the wild, so we need to work around this.
@@ -838,52 +845,73 @@ export async function nvmToJSON(
 
 	// Read all flags for all nodes
 	const appRouteLock = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "appRouteLock",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "appRouteLock",
+			},
+			true,
+		),
 	);
 	const routeSlaveSUC = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "routeSlaveSUC",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "routeSlaveSUC",
+			},
+			true,
+		),
 	);
 	const sucPendingUpdate = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "sucPendingUpdate",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "sucPendingUpdate",
+			},
+			true,
+		),
 	);
 	const virtualNodeIds = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "virtualNodeIds",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "virtualNodeIds",
+			},
+			true,
+		),
 	);
 	const pendingDiscovery = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "pendingDiscovery",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "pendingDiscovery",
+			},
+			true,
+		),
 	);
 
 	// Figure out which nodes exist
-	const nodeIds = await adapter.get({
-		domain: "controller",
-		type: "nodeIds",
-	}, true);
+	const nodeIds = await adapter.get(
+		{
+			domain: "controller",
+			type: "nodeIds",
+		},
+		true,
+	);
 
 	// And create each node entry, including virtual ones
 	for (const id of nodeIds) {
 		const node = getNode(id) as NVMJSONNodeWithInfo;
 
 		// Find node info
-		const nodeInfo = await adapter.get({
-			domain: "node",
-			nodeId: id,
-			type: "info",
-		}, true);
+		const nodeInfo = await adapter.get(
+			{
+				domain: "node",
+				nodeId: id,
+				type: "info",
+			},
+			true,
+		);
 
 		Object.assign(node, nodeInfo);
 
@@ -918,31 +946,43 @@ export async function nvmToJSON(
 			const node = getLRNode(id);
 
 			// Find node info
-			const nodeInfo = await adapter.get({
-				domain: "lrnode",
-				nodeId: id,
-				type: "info",
-			}, true);
+			const nodeInfo = await adapter.get(
+				{
+					domain: "lrnode",
+					nodeId: id,
+					type: "info",
+				},
+				true,
+			);
 
 			Object.assign(node, nodeInfo);
 		}
 	}
 
 	// Read info about the controller
-	const sucUpdateEntries = await adapter.get({
-		domain: "controller",
-		type: "sucUpdateEntries",
-	}, true);
+	const sucUpdateEntries = await adapter.get(
+		{
+			domain: "controller",
+			type: "sucUpdateEntries",
+		},
+		true,
+	);
 
-	const applicationVersion = await adapter.get({
-		domain: "controller",
-		type: "applicationVersion",
-	}, true);
+	const applicationVersion = await adapter.get(
+		{
+			domain: "controller",
+			type: "applicationVersion",
+		},
+		true,
+	);
 
-	const applicationFileFormat = await adapter.get({
-		domain: "controller",
-		type: "applicationFileFormat",
-	}, true);
+	const applicationFileFormat = await adapter.get(
+		{
+			domain: "controller",
+			type: "applicationFileFormat",
+		},
+		true,
+	);
 
 	const applicationData = await adapter.get({
 		domain: "controller",
@@ -1010,20 +1050,20 @@ export async function nvmToJSON(
 		preferredRepeaters,
 		...(rfConfigFile
 			? {
-				rfConfig: {
-					rfRegion: rfConfigFile.rfRegion,
-					txPower: rfConfigFile.txPower,
-					measured0dBm: rfConfigFile.measured0dBm,
-					enablePTI: rfConfigFile.enablePTI ?? null,
-					maxTXPower: rfConfigFile.maxTXPower ?? null,
-					nodeIdType: rfConfigFile.nodeIdType ?? null,
-				},
-			}
+					rfConfig: {
+						rfRegion: rfConfigFile.rfRegion,
+						txPower: rfConfigFile.txPower,
+						measured0dBm: rfConfigFile.measured0dBm,
+						enablePTI: rfConfigFile.enablePTI ?? null,
+						maxTXPower: rfConfigFile.maxTXPower ?? null,
+						nodeIdType: rfConfigFile.nodeIdType ?? null,
+					},
+				}
 			: {}),
 		sucUpdateEntries,
 		applicationData:
 			(applicationData && Bytes.view(applicationData).toString("hex"))
-				?? null,
+			?? null,
 		applicationName: applicationName ?? null,
 	};
 
@@ -1080,34 +1120,46 @@ export async function nvm500ToJSON(
 
 	// Read all flags for all nodes
 	const appRouteLock = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "appRouteLock",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "appRouteLock",
+			},
+			true,
+		),
 	);
 	const routeSlaveSUC = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "routeSlaveSUC",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "routeSlaveSUC",
+			},
+			true,
+		),
 	);
 	const sucPendingUpdate = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "sucPendingUpdate",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "sucPendingUpdate",
+			},
+			true,
+		),
 	);
 	const virtualNodeIds = new Set(
-		await adapter.get({
+		(await adapter.get({
 			domain: "controller",
 			type: "virtualNodeIds",
-		}) ?? [],
+		})) ?? [],
 	);
 	const pendingDiscovery = new Set(
-		await adapter.get({
-			domain: "controller",
-			type: "pendingDiscovery",
-		}, true),
+		await adapter.get(
+			{
+				domain: "controller",
+				type: "pendingDiscovery",
+			},
+			true,
+		),
 	);
 
 	// Figure out which nodes exist along with their info
@@ -1151,15 +1203,21 @@ export async function nvm500ToJSON(
 	}
 
 	// Read info about the controller
-	const ownNodeId = await adapter.get({
-		domain: "controller",
-		type: "nodeId",
-	}, true);
+	const ownNodeId = await adapter.get(
+		{
+			domain: "controller",
+			type: "nodeId",
+		},
+		true,
+	);
 
-	const ownHomeId = await adapter.get({
-		domain: "controller",
-		type: "homeId",
-	}, true);
+	const ownHomeId = await adapter.get(
+		{
+			domain: "controller",
+			type: "homeId",
+		},
+		true,
+	);
 
 	let learnedHomeId = await adapter.get({
 		domain: "controller",
@@ -1169,65 +1227,95 @@ export async function nvm500ToJSON(
 		learnedHomeId = undefined;
 	}
 
-	const lastNodeId = await adapter.get({
-		domain: "controller",
-		type: "lastNodeId",
-	}, true);
+	const lastNodeId = await adapter.get(
+		{
+			domain: "controller",
+			type: "lastNodeId",
+		},
+		true,
+	);
 
-	const maxNodeId = await adapter.get({
-		domain: "controller",
-		type: "maxNodeId",
-	}, true);
+	const maxNodeId = await adapter.get(
+		{
+			domain: "controller",
+			type: "maxNodeId",
+		},
+		true,
+	);
 
-	const reservedId = await adapter.get({
-		domain: "controller",
-		type: "reservedId",
-	}, true);
+	const reservedId = await adapter.get(
+		{
+			domain: "controller",
+			type: "reservedId",
+		},
+		true,
+	);
 
-	const staticControllerNodeId = await adapter.get({
-		domain: "controller",
-		type: "staticControllerNodeId",
-	}, true);
+	const staticControllerNodeId = await adapter.get(
+		{
+			domain: "controller",
+			type: "staticControllerNodeId",
+		},
+		true,
+	);
 
-	const sucLastIndex = await adapter.get({
-		domain: "controller",
-		type: "sucLastIndex",
-	}, true);
+	const sucLastIndex = await adapter.get(
+		{
+			domain: "controller",
+			type: "sucLastIndex",
+		},
+		true,
+	);
 
-	const controllerConfiguration = await adapter.get({
-		domain: "controller",
-		type: "controllerConfiguration",
-	}, true);
+	const controllerConfiguration = await adapter.get(
+		{
+			domain: "controller",
+			type: "controllerConfiguration",
+		},
+		true,
+	);
 
-	const commandClasses = await adapter.get({
-		domain: "controller",
-		type: "commandClasses",
-	}, true);
+	const commandClasses = await adapter.get(
+		{
+			domain: "controller",
+			type: "commandClasses",
+		},
+		true,
+	);
 
-	const sucUpdateEntries = await adapter.get({
-		domain: "controller",
-		type: "sucUpdateEntries",
-	}, true);
+	const sucUpdateEntries = await adapter.get(
+		{
+			domain: "controller",
+			type: "sucUpdateEntries",
+		},
+		true,
+	);
 
 	const applicationData = await adapter.get({
 		domain: "controller",
 		type: "applicationData",
 	});
 
-	const preferredRepeaters = await adapter.get({
-		domain: "controller",
-		type: "preferredRepeaters",
-	}, true);
+	const preferredRepeaters = await adapter.get(
+		{
+			domain: "controller",
+			type: "preferredRepeaters",
+		},
+		true,
+	);
 
 	const systemState = await adapter.get({
 		domain: "controller",
 		type: "systemState",
 	});
 
-	const watchdogStarted = await adapter.get({
-		domain: "controller",
-		type: "watchdogStarted",
-	}, true);
+	const watchdogStarted = await adapter.get(
+		{
+			domain: "controller",
+			type: "watchdogStarted",
+		},
+		true,
+	);
 
 	const powerLevelNormal = await adapter.get({
 		domain: "controller",
@@ -1254,9 +1342,7 @@ export async function nvm500ToJSON(
 		protocolVersion: info.nvmDescriptor.protocolVersion,
 		applicationVersion: info.nvmDescriptor.firmwareVersion,
 		ownHomeId: buffer2hex(ownHomeId),
-		learnedHomeId: learnedHomeId
-			? buffer2hex(learnedHomeId)
-			: null,
+		learnedHomeId: learnedHomeId ? buffer2hex(learnedHomeId) : null,
 		nodeId: ownNodeId,
 		lastNodeId,
 		staticControllerNodeId,
@@ -1278,7 +1364,7 @@ export async function nvm500ToJSON(
 		commandClasses,
 		applicationData:
 			(applicationData && Bytes.view(applicationData).toString("hex"))
-				?? null,
+			?? null,
 	};
 
 	return {
@@ -1305,7 +1391,7 @@ export async function jsonToNVM(
 	const sharedFileSystem = json.meta?.sharedFileSystem;
 	const nvmSize = sharedFileSystem
 		? ZWAVE_SHARED_NVM_SIZE
-		: (ZWAVE_APPLICATION_NVM_SIZE + ZWAVE_PROTOCOL_NVM_SIZE);
+		: ZWAVE_APPLICATION_NVM_SIZE + ZWAVE_PROTOCOL_NVM_SIZE;
 	const ret = new Uint8Array(nvmSize);
 	const io = new NVMMemoryIO(ret);
 	const nvm3 = new NVM3(io);
@@ -1510,10 +1596,9 @@ export async function jsonToNVM(
 			);
 		}
 	}
-	await adapter.set(
-		{ domain: "controller", type: "nodeIds" },
-		[...nodeInfoExists],
-	);
+	await adapter.set({ domain: "controller", type: "nodeIds" }, [
+		...nodeInfoExists,
+	]);
 
 	if (target.lrNodes) {
 		for (const [id, node] of Object.entries(target.lrNodes)) {
@@ -1526,10 +1611,9 @@ export async function jsonToNVM(
 			);
 		}
 	}
-	await adapter.set(
-		{ domain: "controller", type: "lrNodeIds" },
-		[...lrNodeInfoExists],
-	);
+	await adapter.set({ domain: "controller", type: "lrNodeIds" }, [
+		...lrNodeInfoExists,
+	]);
 
 	// For v3+ targets, the ControllerInfoFile must contain the LongRange properties
 	// or the controller will ignore the file and not have a home ID
@@ -1546,26 +1630,21 @@ export async function jsonToNVM(
 		),
 	);
 
-	await adapter.set(
-		{ domain: "controller", type: "appRouteLock" },
-		[...appRouteLock],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "routeSlaveSUC" },
-		[...routeSlaveSUC],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "sucPendingUpdate" },
-		[...sucPendingUpdate],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "virtualNodeIds" },
-		[...virtualNodeIds],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "pendingDiscovery" },
-		[...pendingDiscovery],
-	);
+	await adapter.set({ domain: "controller", type: "appRouteLock" }, [
+		...appRouteLock,
+	]);
+	await adapter.set({ domain: "controller", type: "routeSlaveSUC" }, [
+		...routeSlaveSUC,
+	]);
+	await adapter.set({ domain: "controller", type: "sucPendingUpdate" }, [
+		...sucPendingUpdate,
+	]);
+	await adapter.set({ domain: "controller", type: "virtualNodeIds" }, [
+		...virtualNodeIds,
+	]);
+	await adapter.set({ domain: "controller", type: "pendingDiscovery" }, [
+		...pendingDiscovery,
+	]);
 
 	if (target.controller.preferredRepeaters?.length) {
 		await adapter.set(
@@ -1642,18 +1721,12 @@ export async function jsonToNVM500(
 			: undefined,
 	);
 
-	await adapter.set(
-		{ domain: "controller", type: "nodeId" },
-		c.nodeId,
-	);
+	await adapter.set({ domain: "controller", type: "nodeId" }, c.nodeId);
 	await adapter.set(
 		{ domain: "controller", type: "lastNodeId" },
 		c.lastNodeId,
 	);
-	await adapter.set(
-		{ domain: "controller", type: "maxNodeId" },
-		c.maxNodeId,
-	);
+	await adapter.set({ domain: "controller", type: "maxNodeId" }, c.maxNodeId);
 	await adapter.set(
 		{ domain: "controller", type: "reservedId" },
 		c.reservedId,
@@ -1775,26 +1848,21 @@ export async function jsonToNVM500(
 		}
 	}
 
-	await adapter.set(
-		{ domain: "controller", type: "appRouteLock" },
-		[...appRouteLock],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "routeSlaveSUC" },
-		[...routeSlaveSUC],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "sucPendingUpdate" },
-		[...sucPendingUpdate],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "virtualNodeIds" },
-		[...virtualNodeIds],
-	);
-	await adapter.set(
-		{ domain: "controller", type: "pendingDiscovery" },
-		[...pendingDiscovery],
-	);
+	await adapter.set({ domain: "controller", type: "appRouteLock" }, [
+		...appRouteLock,
+	]);
+	await adapter.set({ domain: "controller", type: "routeSlaveSUC" }, [
+		...routeSlaveSUC,
+	]);
+	await adapter.set({ domain: "controller", type: "sucPendingUpdate" }, [
+		...sucPendingUpdate,
+	]);
+	await adapter.set({ domain: "controller", type: "virtualNodeIds" }, [
+		...virtualNodeIds,
+	]);
+	await adapter.set({ domain: "controller", type: "pendingDiscovery" }, [
+		...pendingDiscovery,
+	]);
 
 	await adapter.commit();
 	await io.close();
@@ -1853,16 +1921,15 @@ export function json500To700(
 	let controllerConfiguration = source.controller.controllerConfiguration;
 	if (source.controller.controllerConfiguration === 0xff) {
 		// Default to SUC/Primary
-		controllerConfiguration = ControllerCapabilityFlags.SISPresent
+		controllerConfiguration =
+			ControllerCapabilityFlags.SISPresent
 			| ControllerCapabilityFlags.WasRealPrimary
 			| ControllerCapabilityFlags.SUC;
 	}
 
 	let homeId: string;
 	if (
-		!!(
-			controllerConfiguration & ControllerCapabilityFlags.OnOtherNetwork
-		)
+		!!(controllerConfiguration & ControllerCapabilityFlags.OnOtherNetwork)
 		&& source.controller.learnedHomeId
 		&& source.controller.nodeId
 	) {
@@ -1874,8 +1941,8 @@ export function json500To700(
 		controllerConfiguration &= ~ControllerCapabilityFlags.OnOtherNetwork;
 		// Reconstruct the node ID. If we don't know, 1 is a good default
 		if (controllerConfiguration & ControllerCapabilityFlags.SUC) {
-			source.controller.nodeId = source.controller.staticControllerNodeId
-				|| 1;
+			source.controller.nodeId =
+				source.controller.staticControllerNodeId || 1;
 		} else {
 			source.controller.nodeId = 1;
 		}
@@ -2065,7 +2132,8 @@ export async function migrateNVM(
 		preserveSUCUpdateEntries = true,
 	} = options;
 
-	const preserveAll = preserveApplicationData
+	const preserveAll =
+		preserveApplicationData
 		&& preserveNeighbors
 		&& preserveRoutes
 		&& preserveSUCUpdateEntries;
@@ -2119,7 +2187,7 @@ export async function migrateNVM(
 			&& semverLt(sourceApplicationVersion, "255.0.0")
 			&& semverLt(targetApplicationVersion, "255.0.0")
 			// and avoid restoring a backup with a shifted 800 series application version file
-			&& (!hasShiftedAppVersion800File(source.json))
+			&& !hasShiftedAppVersion800File(source.json)
 		) {
 			return sourceNVM;
 		}
@@ -2234,9 +2302,7 @@ export async function migrateNVM(
 /**
  * Detects whether the app version file on a 800 series controller is shifted by 1 byte
  */
-function hasShiftedAppVersion800File(
-	json: NVMJSONWithMeta,
-): boolean {
+function hasShiftedAppVersion800File(json: NVMJSONWithMeta): boolean {
 	// We can only detect this on 800 series controllers with the shared FS
 	if (!json.meta.sharedFileSystem) return false;
 

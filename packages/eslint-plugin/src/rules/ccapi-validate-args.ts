@@ -3,6 +3,7 @@ import {
 	AST_TOKEN_TYPES,
 	ESLintUtils,
 } from "@typescript-eslint/utils";
+
 import {
 	findDecoratorContainingCCId,
 	getCCNameFromDecorator,
@@ -22,12 +23,12 @@ export const ccAPIValidateArgs = ESLintUtils.RuleCreator.withoutDocs({
 					node.source.value === "@zwave-js/transformers"
 					&& node.importKind === "value"
 				) {
-					const importSpecifier = node.specifiers.find((s) =>
-						s.type
-							=== AST_NODE_TYPES.ImportSpecifier
-						&& s.importKind === "value"
-						&& s.imported.type === AST_NODE_TYPES.Identifier
-						&& s.imported.name === "validateArgs"
+					const importSpecifier = node.specifiers.find(
+						(s) =>
+							s.type === AST_NODE_TYPES.ImportSpecifier
+							&& s.importKind === "value"
+							&& s.imported.type === AST_NODE_TYPES.Identifier
+							&& s.imported.name === "validateArgs",
 					);
 					validateArgsImport = importSpecifier?.local.name;
 				}
@@ -64,10 +65,11 @@ export const ccAPIValidateArgs = ESLintUtils.RuleCreator.withoutDocs({
 				// Ignore @internal methods
 				const comments = context.sourceCode.getCommentsBefore(node);
 				if (
-					comments.some((c) =>
-						c.type === AST_TOKEN_TYPES.Block
-						&& c.value.startsWith("*")
-						&& c.value.includes("@internal")
+					comments.some(
+						(c) =>
+							c.type === AST_TOKEN_TYPES.Block
+							&& c.value.startsWith("*")
+							&& c.value.includes("@internal"),
 					)
 				) {
 					return;
@@ -75,21 +77,21 @@ export const ccAPIValidateArgs = ESLintUtils.RuleCreator.withoutDocs({
 
 				// Check if the method has an @validateArgs decorator
 				if (
-					node.decorators.some((d) =>
-						d.expression.type === AST_NODE_TYPES.CallExpression
-						&& d.expression.callee.type
-							=== AST_NODE_TYPES.Identifier
-						&& d.expression.callee.name
-							=== (validateArgsImport || "validateArgs")
+					node.decorators.some(
+						(d) =>
+							d.expression.type === AST_NODE_TYPES.CallExpression
+							&& d.expression.callee.type
+								=== AST_NODE_TYPES.Identifier
+							&& d.expression.callee.name
+								=== (validateArgsImport || "validateArgs"),
 					)
 				) {
 					return;
 				}
 
 				// None found, report an error
-				const lineOfMethod = context.sourceCode.lines[
-					node.loc.start.line - 1
-				];
+				const lineOfMethod =
+					context.sourceCode.lines[node.loc.start.line - 1];
 				const indentation = lineOfMethod.slice(
 					0,
 					node.loc.start.column,
@@ -99,19 +101,21 @@ export const ccAPIValidateArgs = ESLintUtils.RuleCreator.withoutDocs({
 					node,
 					loc: node.key.loc,
 					messageId: "add-decorator",
-					fix: isFixMode ? undefined : function*(fixer) {
-						if (!validateArgsImport) {
-							validateArgsImport = "validateArgs";
-							yield fixer.insertTextBeforeRange(
-								[0, 0],
-								`import { validateArgs } from "@zwave-js/transformers";\n`,
-							);
-						}
-						yield fixer.insertTextBefore(
-							node,
-							`@${validateArgsImport}()\n${indentation}`,
-						);
-					},
+					fix: isFixMode
+						? undefined
+						: function* (fixer) {
+								if (!validateArgsImport) {
+									validateArgsImport = "validateArgs";
+									yield fixer.insertTextBeforeRange(
+										[0, 0],
+										`import { validateArgs } from "@zwave-js/transformers";\n`,
+									);
+								}
+								yield fixer.insertTextBefore(
+									node,
+									`@${validateArgsImport}()\n${indentation}`,
+								);
+							},
 				});
 			},
 			"ClassDeclaration:exit"(_node) {

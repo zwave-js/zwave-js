@@ -1,5 +1,7 @@
-import { CommandClasses } from "@zwave-js/core";
 import path from "node:path";
+
+import { CommandClasses } from "@zwave-js/core";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -28,10 +30,7 @@ integrationTest(
 			],
 		},
 
-		provisioningDirectory: path.join(
-			__dirname,
-			"fixtures/hashV4Migration",
-		),
+		provisioningDirectory: path.join(__dirname, "fixtures/hashV4Migration"),
 
 		additionalDriverOptions: {
 			storage: {

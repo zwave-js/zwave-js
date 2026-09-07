@@ -2,6 +2,7 @@ import { WakeUpCCWakeUpNotification } from "@zwave-js/cc";
 import { MockController } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -57,7 +58,10 @@ function wakeUpNotification(node: ZWaveNode): WakeUpCCWakeUpNotification {
 
 const longAgo = new Date(1970, 0, 1);
 
-test("A Wake Up notification records when the node was awake", async ({ context, expect }) => {
+test("A Wake Up notification records when the node was awake", async ({
+	context,
+	expect,
+}) => {
 	const node = createNode(context.driver);
 	expect(node.lastAwake).toBeUndefined();
 
@@ -66,7 +70,10 @@ test("A Wake Up notification records when the node was awake", async ({ context,
 	node.destroy();
 });
 
-test("Repeated Wake Up notifications update when the node was last awake", async ({ context, expect }) => {
+test("Repeated Wake Up notifications update when the node was last awake", async ({
+	context,
+	expect,
+}) => {
 	const node = createNode(context.driver);
 	await node.handleCommand(wakeUpNotification(node));
 	const firstAwake = node.lastAwake!;
@@ -77,7 +84,10 @@ test("Repeated Wake Up notifications update when the node was last awake", async
 	node.destroy();
 });
 
-test("Marking a node as awake does not count as an observation", ({ context, expect }) => {
+test("Marking a node as awake does not count as an observation", ({
+	context,
+	expect,
+}) => {
 	const node = createNode(context.driver);
 	node.lastAwake = longAgo;
 

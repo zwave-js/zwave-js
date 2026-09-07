@@ -58,10 +58,7 @@ import { WindowCoveringCCBehaviors } from "./mockCCBehaviors/WindowCovering.js";
 
 const respondToRequestNodeInfo: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
-		if (
-			receivedCC
-				instanceof ZWaveProtocolCCRequestNodeInformationFrame
-		) {
+		if (receivedCC instanceof ZWaveProtocolCCRequestNodeInformationFrame) {
 			const cc = new ZWaveProtocolCCNodeInformationFrame({
 				nodeId: self.id,
 				...self.capabilities,
@@ -102,9 +99,10 @@ const respondToVersionCCGet: MockNodeBehavior = {
 const respondToVersionCCCommandClassGet: MockNodeBehavior = {
 	handleCC(controller, self, receivedCC) {
 		if (receivedCC instanceof VersionCCCommandClassGet) {
-			const endpoint = receivedCC.endpointIndex === 0
-				? self
-				: self.endpoints.get(receivedCC.endpointIndex);
+			const endpoint =
+				receivedCC.endpointIndex === 0
+					? self
+					: self.endpoints.get(receivedCC.endpointIndex);
 			if (!endpoint) return;
 
 			let version = 0;
@@ -150,8 +148,8 @@ const respondToZWavePlusCCGet: MockNodeBehavior = {
 				roleType: self.capabilities.isListening
 					? ZWavePlusRoleType.AlwaysOnSlave
 					: self.capabilities.isFrequentListening
-					? ZWavePlusRoleType.SleepingListeningSlave
-					: ZWavePlusRoleType.SleepingReportingSlave,
+						? ZWavePlusRoleType.SleepingListeningSlave
+						: ZWavePlusRoleType.SleepingReportingSlave,
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
@@ -173,16 +171,12 @@ const respondToS2ZWavePlusCCGet: MockNodeBehavior = {
 				roleType: self.capabilities.isListening
 					? ZWavePlusRoleType.AlwaysOnSlave
 					: self.capabilities.isFrequentListening
-					? ZWavePlusRoleType.SleepingListeningSlave
-					: ZWavePlusRoleType.SleepingReportingSlave,
+						? ZWavePlusRoleType.SleepingListeningSlave
+						: ZWavePlusRoleType.SleepingReportingSlave,
 				installerIcon: 0x0000,
 				userIcon: 0x0000,
 			});
-			cc = Security2CC.encapsulate(
-				cc,
-				self.id,
-				self.securityManagers,
-			);
+			cc = Security2CC.encapsulate(cc, self.id, self.securityManagers);
 			return { action: "sendCC", cc };
 		}
 	},

@@ -1,6 +1,7 @@
 import { SoundSwitchCCValues } from "@zwave-js/cc/SoundSwitchCC";
 import { CommandClasses } from "@zwave-js/core";
 import { ccCaps } from "@zwave-js/testing";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

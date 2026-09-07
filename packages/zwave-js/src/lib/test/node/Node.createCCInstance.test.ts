@@ -7,6 +7,7 @@ import {
 import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import { test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -66,7 +67,10 @@ test("should throw if the CC is not supported", ({ context, expect }) => {
 	node.destroy();
 });
 
-test("should return a linked instance of the correct CC", ({ context, expect }) => {
+test("should return a linked instance of the correct CC", ({
+	context,
+	expect,
+}) => {
 	const { driver } = context;
 	const node = new ZWaveNode(2, driver);
 	(driver.controller.nodes as ThrowingMap<number, ZWaveNode>).set(

@@ -21,7 +21,9 @@ import {
 } from "@zwave-js/core";
 import { getenv, staticExtends } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
+
 import type { Driver } from "../driver/Driver.js";
+
 import { createMultiCCAPIWrapper } from "./MultiCCAPIWrapper.js";
 import {
 	VirtualNode,
@@ -128,18 +130,17 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 				// so the API instances access the correct nodes.
 				const node = new VirtualNode(this.node.id, this.driver, nodes);
 				const endpoint = node.getEndpoint(this.index) ?? node;
-				const secClass = getSecurityClassFromCommunicationProfile(
-					profile,
-				);
+				const secClass =
+					getSecurityClassFromCommunicationProfile(profile);
 				return createCCAPI(endpoint, secClass);
 			});
 			return createMultiCCAPIWrapper(apiInstances);
 		} else {
-			const profile =
-				[...this.node.nodesByCommunicationProfile.keys()][0];
-			const securityClass = getSecurityClassFromCommunicationProfile(
-				profile,
-			);
+			const profile = [
+				...this.node.nodesByCommunicationProfile.keys(),
+			][0];
+			const securityClass =
+				getSecurityClassFromCommunicationProfile(profile);
 			return createCCAPI(this, securityClass);
 		}
 	}
@@ -190,7 +191,7 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 	/**
 	 * Used to iterate over the commandClasses API without throwing errors by accessing unsupported CCs
 	 */
-	private readonly commandClassesIterator: () => Iterator<CCAPI> = function*(
+	private readonly commandClassesIterator: () => Iterator<CCAPI> = function* (
 		this: VirtualEndpoint,
 	) {
 		const allCCs = distinct(
@@ -234,12 +235,12 @@ export class VirtualEndpoint implements VirtualEndpointId, SupportsCC {
 	public invokeCCAPI<
 		CC extends CCNameOrId,
 		TMethod extends keyof TAPI,
-		TAPI extends Record<
-			string,
-			(...args: any[]) => any
-		> = CommandClasses extends CC ? any
-			: Omit<CCNameOrId, CommandClasses> extends CC ? any
-			: APIMethodsOf<CC>,
+		TAPI extends Record<string, (...args: any[]) => any> =
+			CommandClasses extends CC
+				? any
+				: Omit<CCNameOrId, CommandClasses> extends CC
+					? any
+					: APIMethodsOf<CC>,
 	>(
 		cc: CC,
 		method: TMethod,

@@ -12,6 +12,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, isPrintableASCII, num2hex } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -37,6 +38,7 @@ import {
 	DoorLockLoggingRecordStatus,
 } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { userCodeToLogString } from "./UserCodeCC.js";
 
 interface DateSegments {
@@ -130,12 +132,11 @@ export class DoorLockLoggingCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			DoorLockLoggingCCRecordsSupportedReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<DoorLockLoggingCCRecordsSupportedReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.recordsCount;
 	}
 
@@ -154,12 +155,11 @@ export class DoorLockLoggingCCAPI extends PhysicalCCAPI {
 			endpointIndex: this.endpoint.index,
 			recordNumber,
 		});
-		const response = await this.host.sendCommand<
-			DoorLockLoggingCCRecordReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<DoorLockLoggingCCRecordReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.record;
 	}
 }
@@ -170,9 +170,7 @@ export class DoorLockLoggingCCAPI extends PhysicalCCAPI {
 export class DoorLockLoggingCC extends CommandClass {
 	declare ccCommand: DoorLockLoggingCommand;
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 
 		ctx.logNode(node.id, {
@@ -275,7 +273,7 @@ export class DoorLockLoggingCCRecordsSupportedReport extends DoorLockLoggingCC {
 function eventTypeToLabel(eventType: DoorLockLoggingEventType): string {
 	return (
 		(eventTypeLabel as any)[DoorLockLoggingEventType[eventType]]
-			?? `Unknown ${num2hex(eventType)}`
+		?? `Unknown ${num2hex(eventType)}`
 	);
 }
 

@@ -5,6 +5,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
+
 import { NodeStatusMixin } from "./20_Status.js";
 
 /**
@@ -21,7 +22,8 @@ export interface NodeWakeup {
 	sendNoMoreInformation(): Promise<boolean>;
 }
 
-export abstract class NodeWakeupMixin extends NodeStatusMixin
+export abstract class NodeWakeupMixin
+	extends NodeStatusMixin
 	implements NodeWakeup
 {
 	public waitForWakeup(): Promise<void> {

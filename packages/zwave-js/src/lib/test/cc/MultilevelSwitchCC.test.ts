@@ -33,9 +33,7 @@ test("the Get command should serialize correctly", async (t) => {
 			MultilevelSwitchCommand.Get, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Set command should serialize correctly (no duration)", async (t) => {
@@ -88,10 +86,9 @@ test("the Report command (V1) should be deserialized correctly", async (t) => {
 			55, // current value
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as MultilevelSwitchCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as MultilevelSwitchCCReport;
 	t.expect(cc.constructor).toBe(MultilevelSwitchCCReport);
 
 	t.expect(cc.currentValue).toBe(55);
@@ -108,10 +105,9 @@ test("the Report command (v4) should be deserialized correctly", async (t) => {
 			1, // duration
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 2 } as any,
-	) as MultilevelSwitchCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 2,
+	} as any)) as MultilevelSwitchCCReport;
 	t.expect(cc.constructor).toBe(MultilevelSwitchCCReport);
 
 	t.expect(cc.currentValue).toBe(55);
@@ -129,9 +125,7 @@ test("the StopLevelChange command should serialize correctly", async (t) => {
 			MultilevelSwitchCommand.StopLevelChange, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the StartLevelChange command (V2) should serialize correctly (down, ignore start level, with duration)", async (t) => {
@@ -168,19 +162,16 @@ test("the SupportedGet command should serialize correctly", async (t) => {
 			MultilevelSwitchCommand.SupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("deserializing an unsupported command should return an unspecified version of MultilevelSwitchCC", async (t) => {
 	const serializedCC = buildCCBuffer(
 		Uint8Array.from([255]), // not a valid command
 	);
-	const cc = await CommandClass.parse(
-		serializedCC,
-		{ sourceNodeId: 2 } as any,
-	) as MultilevelSwitchCC;
+	const cc = (await CommandClass.parse(serializedCC, {
+		sourceNodeId: 2,
+	} as any)) as MultilevelSwitchCC;
 	t.expect(cc.constructor).toBe(MultilevelSwitchCC);
 });
 

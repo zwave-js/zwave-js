@@ -18,28 +18,22 @@ async set(
 
 ```ts
 async getActive(): Promise<
-	MaybeNotKnown<
-		{
-			dimmingDuration?: Duration;
-			level?: number;
-			sceneId: number;
-		}
-	>
+	MaybeNotKnown<{
+		dimmingDuration?: Duration;
+		level?: number;
+		sceneId: number;
+	}>
 >;
 ```
 
 ### `get`
 
 ```ts
-async get(
-	sceneId: number,
-): Promise<
-	MaybeNotKnown<
-		{
-			dimmingDuration?: Duration;
-			level?: number;
-		}
-	>
+async get(sceneId: number): Promise<
+	MaybeNotKnown<{
+		dimmingDuration?: Duration;
+		level?: number;
+	}>
 >;
 ```
 
@@ -49,8 +43,7 @@ async get(
 
 ```ts
 {
-	commandClass:
-		CommandClasses["Scene Actuator Configuration"],
+	commandClass: CommandClasses["Scene Actuator Configuration"],
 	endpoint: number,
 	property: "dimmingDuration",
 	propertyKey: number,
@@ -69,8 +62,7 @@ async get(
 
 ```ts
 {
-	commandClass:
-		CommandClasses["Scene Actuator Configuration"],
+	commandClass: CommandClasses["Scene Actuator Configuration"],
 	endpoint: number,
 	property: "level",
 	propertyKey: number,

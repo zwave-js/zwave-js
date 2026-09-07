@@ -7,15 +7,18 @@ It is recommended to either use TypeScript when consuming the library or work in
 ## Setting up the project
 
 1. If you haven't already, set up a new Node.js project in an empty folder:
-   ```bash
-   npm init
-   ```
-   _...or `yarn init`, or `pnpm init`, it's your choice! The following will assume `npm`._
+
+    ```bash
+    npm init
+    ```
+
+    _...or `yarn init`, or `pnpm init`, it's your choice! The following will assume `npm`._
 
 1. Install this library as a dependency in your project
-   ```bash
-   npm i zwave-js
-   ```
+
+    ```bash
+    npm i zwave-js
+    ```
 
 1. Choose how you want to author your script: Plain JavaScript or TypeScript.
 
@@ -44,20 +47,20 @@ A more robust way to execute TypeScript is by using a transpiler. We recommend u
 If that doesn't work, TypeScript files typically have to be compiled to JavaScript first. To do so,
 
 - add `typescript` as a `devDependency` to your project:
-  ```bash
-  npm i -D typescript
-  ```
+    ```bash
+    npm i -D typescript
+    ```
 - add a `tsconfig.json` file to your project (see the [TypeScript documentation](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html) for details)
-  ```bash
-  npx tsc --init
-  ```
+    ```bash
+    npx tsc --init
+    ```
 - and set up a build script in your `package.json`:
-  ```json
-  "scripts": {
-  	// ... other scripts
-  	"build": "tsc"
-  }
-  ```
+    ```json
+    "scripts": {
+    	// ... other scripts
+    	"build": "tsc"
+    }
+    ```
 
 Then you can compile the script to JavaScript by executing `npm run build` and run the compiled script with `node your_script.js`.
 

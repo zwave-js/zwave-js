@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import type { ZWaveSerialStream } from "@zwave-js/serial";
 import type { MockPort } from "@zwave-js/serial/mock";
 import { Bytes } from "@zwave-js/shared";
@@ -7,8 +10,7 @@ import {
 	MockNode,
 	type MockNodeOptions,
 } from "@zwave-js/testing";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+
 import {
 	createDefaultMockControllerBehaviors,
 	createDefaultMockNodeBehaviors,
@@ -37,11 +39,7 @@ export function prepareDriver(
 	if (logToFile) {
 		logConfig.enabled = true;
 		logConfig.logToFile = true;
-		logConfig.filename = path.join(
-			cacheDir,
-			"logs",
-			"zwavejs_%DATE%.log",
-		);
+		logConfig.filename = path.join(cacheDir, "logs", "zwavejs_%DATE%.log");
 		logConfig.level ??= "debug";
 	}
 

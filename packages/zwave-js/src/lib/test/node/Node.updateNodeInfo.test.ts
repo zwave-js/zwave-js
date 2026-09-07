@@ -5,6 +5,7 @@ import { CommandClasses, InterviewStage, NodeStatus } from "@zwave-js/core";
 import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import { afterEach, test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -89,7 +90,10 @@ test.sequential("marks a sleeping node as awake", ({ context, expect }) => {
 	node.destroy();
 });
 
-test.sequential("does not throw when called on a non-sleeping node", ({ context, expect }) => {
+test.sequential("does not throw when called on a non-sleeping node", ({
+	context,
+	expect,
+}) => {
 	const { makeNode } = context;
 
 	const node = makeNode(false);
@@ -116,7 +120,10 @@ test.sequential("remembers all received CCs", ({ context, expect }) => {
 	node.destroy();
 });
 
-test.sequential("ignores the data in an NIF if it was received already", ({ context, expect }) => {
+test.sequential("ignores the data in an NIF if it was received already", ({
+	context,
+	expect,
+}) => {
 	const { makeNode } = context;
 
 	const node = makeNode();

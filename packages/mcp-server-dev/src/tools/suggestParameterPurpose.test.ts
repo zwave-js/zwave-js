@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+
 import type { SemanticSearchService } from "../semantic/service.js";
+
 import { createSuggestParameterPurposeTool } from "./suggestParameterPurpose.js";
 
 function fakeService(): SemanticSearchService {
@@ -23,11 +25,13 @@ describe("createSuggestParameterPurposeTool", () => {
 		const tool = createSuggestParameterPurposeTool(service);
 		expect((await tool.handler(undefined as any)).isError).toBe(true);
 		expect(
-			(await tool.handler({
-				query: "timer",
-				filename: "/device.json",
-				parameter: 1,
-			} as any)).isError,
+			(
+				await tool.handler({
+					query: "timer",
+					filename: "/device.json",
+					parameter: 1,
+				} as any)
+			).isError,
 		).toBe(true);
 	});
 

@@ -1,6 +1,8 @@
 import { test } from "vitest";
+
 import { ZWaveErrorCodes } from "../error/ZWaveError.js";
 import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import {
 	getLegalRangeForBitMask,
 	getMinimumShiftForBitMask,
@@ -10,12 +12,7 @@ import {
 } from "./misc.js";
 
 test("isConsecutiveArray() -> returns true for consecutive arrays", (t) => {
-	const tests = [
-		[1],
-		[1, 2, 3],
-		[2, 3, 4],
-		[-2, -1, 0],
-	];
+	const tests = [[1], [1, 2, 3], [2, 3, 4], [-2, -1, 0]];
 	for (const test of tests) {
 		t.expect(isConsecutiveArray(test)).toBe(true);
 	}

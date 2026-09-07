@@ -27,32 +27,32 @@ export enum SetValueStatus {
 export type SetValueResult =
 	// Derived from SupervisionResult
 	| {
-		status:
-			| SetValueStatus.NoDeviceSupport
-			| SetValueStatus.Fail
-			| SetValueStatus.Success;
-		remainingDuration?: undefined;
-		message?: undefined;
-	}
+			status:
+				| SetValueStatus.NoDeviceSupport
+				| SetValueStatus.Fail
+				| SetValueStatus.Success;
+			remainingDuration?: undefined;
+			message?: undefined;
+	  }
 	| {
-		status: SetValueStatus.Working;
-		remainingDuration: Duration;
-		message?: undefined;
-	}
+			status: SetValueStatus.Working;
+			remainingDuration: Duration;
+			message?: undefined;
+	  }
 	// Added by setValue
 	| {
-		status: SetValueStatus.SuccessUnsupervised;
-		remainingDuration?: undefined;
-		message?: undefined;
-	}
+			status: SetValueStatus.SuccessUnsupervised;
+			remainingDuration?: undefined;
+			message?: undefined;
+	  }
 	| {
-		status:
-			| SetValueStatus.EndpointNotFound
-			| SetValueStatus.NotImplemented
-			| SetValueStatus.InvalidValue;
-		remainingDuration?: undefined;
-		message: string;
-	};
+			status:
+				| SetValueStatus.EndpointNotFound
+				| SetValueStatus.NotImplemented
+				| SetValueStatus.InvalidValue;
+			remainingDuration?: undefined;
+			message: string;
+	  };
 
 export function supervisionResultToSetValueResult(
 	result: SupervisionResult | undefined,

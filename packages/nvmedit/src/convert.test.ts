@@ -1,9 +1,11 @@
-import { fs } from "@zwave-js/core/bindings/fs/node";
-import { cloneDeep, readJSON } from "@zwave-js/shared";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { fs } from "@zwave-js/core/bindings/fs/node";
+import { cloneDeep, readJSON } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
+
 import {
 	type MigrateNVMOptions,
 	type NVMJSON,
@@ -182,16 +184,16 @@ function bufferEquals(
 			delete expected.meta;
 			if (expected.controller.applicationData) {
 				while (expected.controller.applicationData.startsWith("00")) {
-					expected.controller.applicationData = expected.controller
-						.applicationData.slice(2);
+					expected.controller.applicationData =
+						expected.controller.applicationData.slice(2);
 				}
 				while (expected.controller.applicationData.endsWith("00")) {
-					expected.controller.applicationData = expected.controller
-						.applicationData.slice(0, -2);
+					expected.controller.applicationData =
+						expected.controller.applicationData.slice(0, -2);
 				}
 				if (expected.controller.applicationData.length > 1024) {
-					expected.controller.applicationData = expected.controller
-						.applicationData.slice(0, 1024);
+					expected.controller.applicationData =
+						expected.controller.applicationData.slice(0, 1024);
 				}
 			}
 			t.expect(output).toStrictEqual(expected);

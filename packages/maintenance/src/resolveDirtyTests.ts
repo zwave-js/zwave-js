@@ -3,12 +3,14 @@
  * anything they are not supposed to.
  */
 
-import esMain from "es-main";
-import spawn from "nano-spawn";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+
+import esMain from "es-main";
+import spawn from "nano-spawn";
 import ts from "typescript";
+
 import { loadTSConfig, projectRoot, repoRoot } from "./tsAPITools.js";
 
 const reportFile = path.join(repoRoot, ".tmp", "dirty-tests.json");
@@ -81,10 +83,11 @@ function getImports(
 			if (file) {
 				output.push({
 					name: moduleNameExpr.getText(sourceFile),
-					line: ts.getLineAndCharacterOfPosition(
-						sourceFile,
-						moduleNameExpr.getStart(),
-					).line + 1,
+					line:
+						ts.getLineAndCharacterOfPosition(
+							sourceFile,
+							moduleNameExpr.getStart(),
+						).line + 1,
 					sourceFile: file,
 				});
 			}
@@ -270,7 +273,7 @@ export async function resolveDirtyTests(
 	}
 
 	const dirtyTests = [...dirtySourceFiles].filter((file) =>
-		file.endsWith(".test.ts")
+		file.endsWith(".test.ts"),
 	);
 
 	const testsByPackage: Record<string, string[]> = {};
@@ -316,8 +319,8 @@ async function runDirtyTests(diffBase?: string): Promise<void> {
 		dirtyTests = report.changes[projectFolder];
 	} else {
 		// When executed in the root dir, run all dirty tests
-		dirtyTests = Object.entries(report.changes).flatMap(
-			([folder, tests]) => tests.map((test) => path.join(folder, test)),
+		dirtyTests = Object.entries(report.changes).flatMap(([folder, tests]) =>
+			tests.map((test) => path.join(folder, test)),
 		);
 	}
 

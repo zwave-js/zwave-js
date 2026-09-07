@@ -172,10 +172,7 @@ export class Bytes extends Uint8Array {
 	 * @param [encoding='utf8'] If `value` is a string, this is its encoding.
 	 * @return `true` if `value` was found in `buf`, `false` otherwise.
 	 */
-	includes(
-		value: number | Bytes,
-		byteOffset: number = 0,
-	): boolean {
+	includes(value: number | Bytes, byteOffset: number = 0): boolean {
 		if (typeof value === "number") {
 			return super.includes(value, byteOffset);
 		} else if (byteOffset) {

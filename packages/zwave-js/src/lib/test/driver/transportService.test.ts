@@ -12,6 +12,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest("Receiving Transport Service commands works (happy path)", {
@@ -22,8 +23,7 @@ integrationTest("Receiving Transport Service commands works (happy path)", {
 			nodeId: 2,
 			parameter: 1,
 			reportsToFollow: 0,
-			info:
-				"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+			info: "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
 		});
 		const ccBuffer = await cc.serialize(mockNode.encodingContext);
 		const part1 = ccBuffer.slice(0, 39);
@@ -91,8 +91,7 @@ integrationTest(
 				nodeId: 2,
 				parameter: 1,
 				reportsToFollow: 0,
-				info:
-					"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+				info: "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
 			});
 			const ccBuffer = await cc.serialize(mockNode.encodingContext);
 			const part1 = ccBuffer.slice(0, 39);
@@ -159,8 +158,7 @@ integrationTest(
 				nodeId: 2,
 				parameter: 1,
 				reportsToFollow: 0,
-				info:
-					"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+				info: "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
 			});
 			const ccBuffer = await cc.serialize(mockNode.encodingContext);
 			const part1 = ccBuffer.slice(0, 39);
@@ -233,9 +231,7 @@ integrationTest(
 			// And the ConfigurationCCInfoReport should have been assembled correctly
 			const received = await awaitedCommand;
 			t.expect(received).toBeInstanceOf(ConfigurationCCInfoReport);
-			t.expect(received.info).toBe(
-				cc.info,
-			);
+			t.expect(received.info).toBe(cc.info);
 		},
 	},
 );
@@ -250,8 +246,7 @@ integrationTest(
 				nodeId: 2,
 				parameter: 1,
 				reportsToFollow: 0,
-				info:
-					"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+				info: "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
 			});
 			const ccBuffer = await cc.serialize(mockNode.encodingContext);
 			const part1 = ccBuffer.slice(0, 39);
@@ -323,9 +318,7 @@ integrationTest(
 			// And the ConfigurationCCInfoReport should have been assembled correctly
 			const received = await awaitedCommand;
 			t.expect(received).toBeInstanceOf(ConfigurationCCInfoReport);
-			t.expect(received.info).toBe(
-				cc.info,
-			);
+			t.expect(received.info).toBe(cc.info);
 		},
 	},
 );
@@ -340,8 +333,7 @@ integrationTest(
 				nodeId: 2,
 				parameter: 1,
 				reportsToFollow: 0,
-				info:
-					"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+				info: "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
 			});
 			const ccBuffer = await cc.serialize(mockNode.encodingContext);
 			const part1 = ccBuffer.slice(0, 39);
@@ -406,9 +398,7 @@ integrationTest(
 			// And the ConfigurationCCInfoReport should have been assembled correctly
 			const received = await awaitedCommand;
 			t.expect(received).toBeInstanceOf(ConfigurationCCInfoReport);
-			t.expect(received.info).toBe(
-				cc.info,
-			);
+			t.expect(received.info).toBe(cc.info);
 
 			// Simulate the SegmentComplete being lost. The node should send the last segment again
 
@@ -441,8 +431,7 @@ integrationTest(
 				nodeId: 2,
 				parameter: 1,
 				reportsToFollow: 0,
-				info:
-					"Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
+				info: "Loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text",
 			});
 			const ccBuffer = await cc.serialize(mockNode.encodingContext);
 			const part1 = ccBuffer.slice(0, 39);

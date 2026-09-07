@@ -22,9 +22,7 @@ export interface ProtocolLogContext extends LogContext<"protocol"> {
 }
 
 export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
-	constructor(
-		loggers: LogContainer,
-	) {
+	constructor(loggers: LogContainer) {
 		super(loggers, PROTOCOL_LABEL);
 	}
 
@@ -85,7 +83,9 @@ export class ProtocolLogger extends ZWaveLoggerBase<ProtocolLogContext> {
 				logText([], { tags: logEntry.tags, nested }),
 			);
 
-			const homeId = mpdu.homeId.toString(16).padStart(8, "0")
+			const homeId = mpdu.homeId
+				.toString(16)
+				.padStart(8, "0")
 				.toLowerCase();
 
 			this.logger.log({

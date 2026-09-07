@@ -54,8 +54,8 @@ test("a complete series is merged in transmission order, despite duplicates", (t
 	t.expect(update?.type).toBe("complete");
 	if (update?.type === "complete") {
 		t.expect(
-			update.partials.map((cc) =>
-				(cc as AssociationCCReport).reportsToFollow
+			update.partials.map(
+				(cc) => (cc as AssociationCCReport).reportsToFollow,
 			),
 		).toStrictEqual([2, 1]);
 		t.expect(update.finalMsg).toBe(finalMsg);

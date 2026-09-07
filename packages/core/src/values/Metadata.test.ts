@@ -1,8 +1,9 @@
 import { test } from "vitest";
+
 import { enumValuesToMetadataStates } from "./Metadata.js";
 
 enum TestEnum {
-	"Easy" = 0x00,
+	Easy = 0x00,
 	"This is complicated" = 0x02,
 	"2 lets have some numbers" = 0x08,
 	"8 and one more" = 0x09,

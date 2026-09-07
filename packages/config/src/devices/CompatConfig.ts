@@ -7,7 +7,9 @@ import {
 } from "@zwave-js/core";
 import { type JSONObject, pick } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
+
 import { throwInvalidConfig, tryParseCCId } from "../utils_safe.js";
+
 import { type ConditionalItem, conditionApplies } from "./ConditionalItem.js";
 import type { DeviceID } from "./shared.js";
 
@@ -289,10 +291,12 @@ error in compat option treatMultilevelSwitchSetAsEvent`,
 
 		if (definition.treatSetAsReport != undefined) {
 			if (
-				!(isArray(definition.treatSetAsReport)
+				!(
+					isArray(definition.treatSetAsReport)
 					&& definition.treatSetAsReport.every(
 						(d: any) => typeof d === "string",
-					))
+					)
+				)
 			) {
 				throwInvalidConfig(
 					"devices",
@@ -413,7 +417,7 @@ error in compat option overrideFloatEncoding`,
 			if ("precision" in definition.overrideFloatEncoding) {
 				if (
 					typeof definition.overrideFloatEncoding.precision
-						!= "number"
+					!= "number"
 				) {
 					throwInvalidConfig(
 						"devices",
@@ -488,7 +492,7 @@ error in compat option commandClasses.add`,
 					);
 				} else if (
 					!Object.values(definition.commandClasses.add).every((v) =>
-						isObject(v)
+						isObject(v),
 					)
 				) {
 					throwInvalidConfig(
@@ -499,11 +503,9 @@ All values in compat option commandClasses.add must be objects`,
 				}
 
 				const addCCs = new Map<CommandClasses, CompatAddCC>();
-				for (
-					const [key, info] of Object.entries(
-						definition.commandClasses.add,
-					)
-				) {
+				for (const [key, info] of Object.entries(
+					definition.commandClasses.add,
+				)) {
 					// Parse the key into a CC ID
 					const cc = tryParseCCId(key);
 					if (cc == undefined) {
@@ -532,11 +534,9 @@ error in compat option commandClasses.remove`,
 					CommandClasses,
 					"*" | readonly number[]
 				>();
-				for (
-					const [key, info] of Object.entries(
-						definition.commandClasses.remove,
-					)
-				) {
+				for (const [key, info] of Object.entries(
+					definition.commandClasses.remove,
+				)) {
 					// Parse the key into a CC ID
 					const cc = tryParseCCId(key);
 					if (cc == undefined) {
@@ -601,10 +601,9 @@ compat option alarmMapping must be an array where all items are objects!`,
 compat option remapNotifications must be an array where all items are objects!`,
 				);
 			}
-			this.remapNotifications = (definition.remapNotifications as any[])
-				.map(
-					(m, i) => new CompatRemapNotification(filename, m, i + 1),
-				);
+			this.remapNotifications = (
+				definition.remapNotifications as any[]
+			).map((m, i) => new CompatRemapNotification(filename, m, i + 1));
 		}
 
 		if (definition.overrideQueries != undefined) {
@@ -864,11 +863,9 @@ error in compat option alarmMapping, mapping #${index}: property "to.notificatio
 error in compat option alarmMapping, mapping #${index}: property "to.eventParameters" must be an object!`,
 					);
 				} else {
-					for (
-						const [key, val] of Object.entries(
-							definition.to.eventParameters,
-						)
-					) {
+					for (const [key, val] of Object.entries(
+						definition.to.eventParameters,
+					)) {
 						if (typeof val !== "number" && val !== "alarmLevel") {
 							throwInvalidConfig(
 								"devices",
@@ -975,10 +972,7 @@ error in compat option remapNotifications, mapping #${index}: property "${label}
 				);
 			}
 			for (let j = 0; j < arr.length; j++) {
-				validateToObject(
-					arr[j],
-					`"${label}[${j}]"`,
-				);
+				validateToObject(arr[j], `"${label}[${j}]"`);
 			}
 		};
 
@@ -996,7 +990,7 @@ error in compat option remapNotifications, mapping #${index}: property "${label}
 			this.action = {
 				type: "clear",
 				targets: (definition.clear as any[]).map((target) =>
-					pick(target, ["notificationType", "notificationEvent"])
+					pick(target, ["notificationType", "notificationEvent"]),
 				),
 			};
 		} else if (definition.idle != undefined) {
@@ -1004,7 +998,7 @@ error in compat option remapNotifications, mapping #${index}: property "${label}
 			this.action = {
 				type: "idle",
 				targets: (definition.idle as any[]).map((target) =>
-					pick(target, ["notificationType", "notificationEvent"])
+					pick(target, ["notificationType", "notificationEvent"]),
 				),
 			};
 		} else {
@@ -1032,11 +1026,9 @@ export class CompatOverrideQueries {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "method" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be a string!`,
+Property "method" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be a string!`,
 				);
 			} else if (
 				info.matchArgs != undefined
@@ -1045,21 +1037,17 @@ Property "method" in compat option overrideQueries, CC ${
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "matchArgs" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be an array!`,
+Property "matchArgs" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be an array!`,
 				);
 			} else if (!("result" in info)) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "result" is missing in in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					}!`,
+Property "result" is missing in in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)}!`,
 				);
 			} else if (
 				info.endpoint != undefined
@@ -1068,31 +1056,25 @@ Property "result" is missing in in compat option overrideQueries, CC ${
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "endpoint" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be a number!`,
+Property "endpoint" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be a number!`,
 				);
 			} else if (info.persistValues && !isObject(info.persistValues)) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "persistValues" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be an object!`,
+Property "persistValues" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be an object!`,
 				);
 			} else if (info.extendMetadata && !isObject(info.extendMetadata)) {
 				throwInvalidConfig(
 					"devices",
 					`config/devices/${filename}:
-Property "extendMetadata" in compat option overrideQueries, CC ${
-						getCCName(
-							cc,
-						)
-					} must be an object!`,
+Property "extendMetadata" in compat option overrideQueries, CC ${getCCName(
+						cc,
+					)} must be an object!`,
 				);
 			}
 
@@ -1156,11 +1138,10 @@ Property "${key}" in compat option overrideQueries must be a single override obj
 		args: any[],
 	):
 		| Pick<
-			CompatOverrideQuery,
-			"result" | "persistValues" | "extendMetadata"
-		>
-		| undefined
-	{
+				CompatOverrideQuery,
+				"result" | "persistValues" | "extendMetadata"
+		  >
+		| undefined {
 		const queries = this.overrides.get(cc);
 		if (!queries) return undefined;
 		for (const query of queries) {
@@ -1202,11 +1183,7 @@ export interface CompatOverrideQuery {
 	extendMetadata?: Record<string, any>;
 }
 
-const basicReportMappings = [
-	false,
-	"auto",
-	"Binary Sensor",
-] as const;
+const basicReportMappings = [false, "auto", "Binary Sensor"] as const;
 
 /**
  * Defines how to handle a received Basic CC Report:
@@ -1214,18 +1191,13 @@ const basicReportMappings = [
  * - false: treat the report verbatim without mapping
  * - "Binary Sensor": treat it as a Binary Sensor CC Report, regardless of device type
  */
-export type BasicReportMapping = typeof basicReportMappings[number];
+export type BasicReportMapping = (typeof basicReportMappings)[number];
 
 function isBasicReportMapping(v: unknown): v is BasicReportMapping {
 	return basicReportMappings.includes(v as any);
 }
 
-const basicSetMappings = [
-	"event",
-	"report",
-	"auto",
-	"Binary Sensor",
-] as const;
+const basicSetMappings = ["event", "report", "auto", "Binary Sensor"] as const;
 
 /**
  * Defines how to handle a received Basic CC Set:
@@ -1234,7 +1206,7 @@ const basicSetMappings = [
  * - "auto": map it to a different CC based on the device type, with fallback to Basic CC report
  * - "Binary Sensor": treat it as a Binary Sensor CC Report, regardless of device type
  */
-export type BasicSetMapping = typeof basicSetMappings[number];
+export type BasicSetMapping = (typeof basicSetMappings)[number];
 
 function isBasicSetMapping(v: unknown): v is BasicSetMapping {
 	return basicSetMappings.includes(v as any);

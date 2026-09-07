@@ -1,7 +1,9 @@
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { EmbeddingCache, type EmbeddingCacheKey } from "./embeddingCache.js";
 
 // Package-local scratch directory (never the OS temp dir).
@@ -73,11 +75,7 @@ describe("EmbeddingCache", () => {
 		await cache.set("hash-c", [1, 2, 3]);
 
 		const namespaceDirs = await readdir(scratchRoot);
-		const filePath = join(
-			scratchRoot,
-			namespaceDirs[0],
-			"hash-c.json",
-		);
+		const filePath = join(scratchRoot, namespaceDirs[0], "hash-c.json");
 		await writeFile(filePath, "{not valid json", "utf8");
 
 		// A fresh cache instance (bypassing the in-memory map) must not throw.

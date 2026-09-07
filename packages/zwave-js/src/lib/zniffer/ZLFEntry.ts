@@ -18,16 +18,15 @@ import {
 	computeChecksumXOR,
 } from "@zwave-js/serial";
 import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import { ZLFAttachment } from "./ZLFAttachment.js";
 import type { CapturedData } from "./Zniffer.js";
 
-export function captureToZLFEntry(
-	capture: CapturedData,
-): BytesView {
+export function captureToZLFEntry(capture: CapturedData): BytesView {
 	const buffer = new Bytes(14 + capture.rawData.length).fill(0);
 	// Convert the date to a .NET datetime
-	let ticks = BigInt(capture.timestamp.getTime()) * 10000n
-		+ 621355968000000000n;
+	let ticks =
+		BigInt(capture.timestamp.getTime()) * 10000n + 621355968000000000n;
 	// https://github.com/dotnet/runtime/blob/179473d3c8a1012b036ad732d02804b062923e8d/src/libraries/System.Private.CoreLib/src/System/DateTime.cs#L161
 	ticks = ticks | (2n << 62n); // DateTimeKind.Local << KindShift
 
@@ -126,9 +125,7 @@ enum RAILZWaveRegionId {
 	EU_LR_EndDevice = 17,
 }
 
-function railRegionToZnifferRegion(
-	regionId: RAILZWaveRegionId,
-): ZnifferRegion {
+function railRegionToZnifferRegion(regionId: RAILZWaveRegionId): ZnifferRegion {
 	switch (regionId) {
 		case RAILZWaveRegionId.EU:
 			return ZnifferRegion.Europe;
@@ -413,15 +410,14 @@ function parsePTIFrame(
 			mpdu = mpdu.subarray(0, mpdu[7]);
 		}
 		const checksumLength =
-			protocolDataRate >= ZnifferProtocolDataRate.ZWave_100k
-				? 2
-				: 1;
+			protocolDataRate >= ZnifferProtocolDataRate.ZWave_100k ? 2 : 1;
 		if (mpdu.length <= checksumLength) return;
 		// The MPDU length includes the checksum, the Zniffer payload does not
 		payload = Bytes.view(mpdu.subarray(0, -checksumLength));
-		const expectedChecksum = checksumLength === 2
-			? CRC16_CCITT(payload)
-			: computeChecksumXOR(payload);
+		const expectedChecksum =
+			checksumLength === 2
+				? CRC16_CCITT(payload)
+				: computeChecksumXOR(payload);
 		const checksum = Bytes.view(mpdu).readUIntBE(
 			mpdu.length - checksumLength,
 			checksumLength,
@@ -490,36 +486,37 @@ function parsePTIFrame(
 
 type ParsedZLFEntry =
 	| {
-		kind: ZLFEntryKind.Zniffer;
-		type: ZnifferMessageType.Data;
-		msg: ZnifferDataMessage;
-		capture: CapturedData;
-	}
+			kind: ZLFEntryKind.Zniffer;
+			type: ZnifferMessageType.Data;
+			msg: ZnifferDataMessage;
+			capture: CapturedData;
+	  }
 	| {
-		kind: ZLFEntryKind.Zniffer;
-		type: ZnifferMessageType.Command;
-		msg: ZnifferMessage;
-		capture: CapturedData;
-	}
+			kind: ZLFEntryKind.Zniffer;
+			type: ZnifferMessageType.Command;
+			msg: ZnifferMessage;
+			capture: CapturedData;
+	  }
 	| {
-		kind: ZLFEntryKind.Attachment;
-		attachment: ZLFAttachment;
-		capture?: undefined;
-	};
+			kind: ZLFEntryKind.Attachment;
+			attachment: ZLFAttachment;
+			capture?: undefined;
+	  };
 
-type ParseZLFEntryResult =
-	& ({
-		complete: true;
-		bytesRead: number;
-		accumulator?: undefined;
-	} | {
-		complete: false;
-		bytesRead: number;
-		accumulator: CapturedData;
-	})
-	& {
-		entries: ParsedZLFEntry[];
-	};
+type ParseZLFEntryResult = (
+	| {
+			complete: true;
+			bytesRead: number;
+			accumulator?: undefined;
+	  }
+	| {
+			complete: false;
+			bytesRead: number;
+			accumulator: CapturedData;
+	  }
+) & {
+	entries: ParsedZLFEntry[];
+};
 
 /** @internal */
 export function parseZLFEntry(
@@ -574,10 +571,7 @@ export function parseZLFEntry(
 
 	let rawData = bytes.subarray(13, totalLength - 1);
 	if (accumulator) {
-		rawData = Bytes.concat([
-			accumulator.rawData,
-			rawData,
-		]);
+		rawData = Bytes.concat([accumulator.rawData, rawData]);
 	}
 
 	const parsed: ParsedZLFEntry[] = [];
@@ -629,8 +623,7 @@ export function parseZLFEntry(
 					);
 				}
 				// The length field includes itself and the message, but not the delimiters
-				const frameLength = 2
-					+ Bytes.view(rawData).readUInt16LE(1);
+				const frameLength = 2 + Bytes.view(rawData).readUInt16LE(1);
 				if (rawData.length < frameLength) {
 					throw new ZWaveError(
 						"Incomplete debug channel frame",
@@ -680,7 +673,8 @@ export function parseZLFEntry(
 		};
 	} catch (e) {
 		if (
-			isZWaveError(e) && e.code === ZWaveErrorCodes.PacketFormat_Truncated
+			isZWaveError(e)
+			&& e.code === ZWaveErrorCodes.PacketFormat_Truncated
 		) {
 			// We are dealing with an incomplete frame, so we need to accumulate the data for the next iteration
 			accumulator ??= {

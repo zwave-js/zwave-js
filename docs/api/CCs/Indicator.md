@@ -23,17 +23,9 @@ async set(
 ### `sendReport`
 
 ```ts
-async sendReport(
-	options: {
-		value: number;
-	},
-): Promise<void>;
+async sendReport(options: { value: number }): Promise<void>;
 
-async sendReport(
-	options: {
-		values: IndicatorObject[];
-	},
-): Promise<void>;
+async sendReport(options: { values: IndicatorObject[] }): Promise<void>;
 ```
 
 ### `getSupported`
@@ -41,10 +33,10 @@ async sendReport(
 ```ts
 async getSupported(indicatorId: number): Promise<
 	| {
-		indicatorId?: number;
-		supportedProperties: readonly number[];
-		nextIndicatorId: number;
-	}
+			indicatorId?: number;
+			supportedProperties: readonly number[];
+			nextIndicatorId: number;
+	  }
 	| undefined
 >;
 ```
@@ -90,9 +82,9 @@ Set a timeout for a given indicator ID after which the indicator will be turned 
 **Parameters:**
 
 - `timeout`: The timeout in one of the supported forms:
-  - a timeout string in the form `12h18m17.59s`. All parts (hours, minutes, seconds, hundredths) are optional, but must be specified in this order. An empty string will be treated like `undefined`.
-  - an object specifying the timeout parts. An empty object will be treated like `undefined`.
-  - `undefined` to disable the timeout.
+    - a timeout string in the form `12h18m17.59s`. All parts (hours, minutes, seconds, hundredths) are optional, but must be specified in this order. An empty string will be treated like `undefined`.
+    - an object specifying the timeout parts. An empty object will be treated like `undefined`.
+    - `undefined` to disable the timeout.
 
 ### `getTimeout`
 

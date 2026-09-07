@@ -52,12 +52,9 @@ export interface AssignPrioritySUCReturnRouteRequestOptions {
 
 @expectedResponse(FunctionType.AssignPrioritySUCReturnRoute)
 @expectedCallback(FunctionType.AssignPrioritySUCReturnRoute)
-export class AssignPrioritySUCReturnRouteRequest
-	extends AssignPrioritySUCReturnRouteRequestBase
-{
+export class AssignPrioritySUCReturnRouteRequest extends AssignPrioritySUCReturnRouteRequestBase {
 	public constructor(
-		options:
-			& AssignPrioritySUCReturnRouteRequestOptions
+		options: AssignPrioritySUCReturnRouteRequestOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -115,9 +112,10 @@ export class AssignPrioritySUCReturnRouteRequest
 			...super.toLogEntry(),
 			message: {
 				"node ID": this.nodeId,
-				repeaters: this.repeaters.length > 0
-					? this.repeaters.join(" -> ")
-					: "none",
+				repeaters:
+					this.repeaters.length > 0
+						? this.repeaters.join(" -> ")
+						: "none",
 				"route speed": getEnumMemberName(
 					ZWaveDataRate,
 					this.routeSpeed,
@@ -133,12 +131,12 @@ export interface AssignPrioritySUCReturnRouteResponseOptions {
 }
 
 @messageTypes(MessageType.Response, FunctionType.AssignPrioritySUCReturnRoute)
-export class AssignPrioritySUCReturnRouteResponse extends Message
+export class AssignPrioritySUCReturnRouteResponse
+	extends Message
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& AssignPrioritySUCReturnRouteResponseOptions
+		options: AssignPrioritySUCReturnRouteResponseOptions
 			& MessageBaseOptions,
 	) {
 		super(options);
@@ -181,8 +179,7 @@ export class AssignPrioritySUCReturnRouteRequestTransmitReport
 	implements SuccessIndicator
 {
 	public constructor(
-		options:
-			& AssignPrioritySUCReturnRouteRequestTransmitReportOptions
+		options: AssignPrioritySUCReturnRouteRequestTransmitReportOptions
 			& MessageBaseOptions,
 	) {
 		super(options);

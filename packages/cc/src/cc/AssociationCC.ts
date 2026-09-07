@@ -17,6 +17,7 @@ import {
 import { Bytes } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
+
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
 import {
 	type CCRaw,
@@ -100,12 +101,11 @@ export class AssociationCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			AssociationCCSupportedGroupingsReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<AssociationCCSupportedGroupingsReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) return response.groupCount;
 	}
 
@@ -237,11 +237,12 @@ export class AssociationCCAPI extends PhysicalCCAPI {
 			return this.removeNodeIds({ nodeIds, groupId: 0 });
 		} else {
 			// We have to remove the node manually from all groups
-			const groupCount = this.tryGetValueDB()?.getValue<number>(
-				AssociationCCValues.groupCount.endpoint(
-					this.endpoint.index,
-				),
-			) ?? 0;
+			const groupCount =
+				this.tryGetValueDB()?.getValue<number>(
+					AssociationCCValues.groupCount.endpoint(
+						this.endpoint.index,
+					),
+				) ?? 0;
 			for (let groupId = 1; groupId <= groupCount; groupId++) {
 				// TODO: evaluate intermediate supervision results
 				await this.removeNodeIds({ nodeIds, groupId });
@@ -263,12 +264,11 @@ export class AssociationCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			AssociationCCSpecificGroupReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<AssociationCCSpecificGroupReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.group;
 	}
 
@@ -276,9 +276,7 @@ export class AssociationCCAPI extends PhysicalCCAPI {
 	 * Report the association group that represents the most recently detected button press
 	 */
 	@validateArgs()
-	public async reportSpecificGroup(
-		group: number,
-	): Promise<void> {
+	public async reportSpecificGroup(group: number): Promise<void> {
 		this.assertSupportsCommand(
 			AssociationCommand,
 			AssociationCommand.SpecificGroupReport,
@@ -317,11 +315,13 @@ export class AssociationCC extends CommandClass {
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 	): number {
-		return ctx
-			.getValueDB(endpoint.nodeId)
-			.getValue(
-				AssociationCCValues.groupCount.endpoint(endpoint.index),
-			) || 0;
+		return (
+			ctx
+				.getValueDB(endpoint.nodeId)
+				.getValue(
+					AssociationCCValues.groupCount.endpoint(endpoint.index),
+				) || 0
+		);
 	}
 
 	/**
@@ -341,13 +341,13 @@ export class AssociationCC extends CommandClass {
 						endpoint.index,
 					),
 				)
-				// If the information is not available, fall back to the configuration file if possible
-				// This can happen on some legacy devices which have "hidden" association groups
-				?? ctx
-					.getDeviceConfig?.(endpoint.nodeId)
-					?.getAssociationConfigForEndpoint(endpoint.index, groupId)
-					?.maxNodes
-				?? 0
+			// If the information is not available, fall back to the configuration file if possible
+			// This can happen on some legacy devices which have "hidden" association groups
+			?? ctx
+				.getDeviceConfig?.(endpoint.nodeId)
+				?.getAssociationConfigForEndpoint(endpoint.index, groupId)
+				?.maxNodes
+			?? 0
 		);
 	}
 
@@ -364,9 +364,10 @@ export class AssociationCC extends CommandClass {
 		const valueDB = ctx.getValueDB(endpoint.nodeId);
 		for (let i = 1; i <= groupCount; i++) {
 			// Add all root destinations
-			const nodes = valueDB.getValue<number[]>(
-				AssociationCCValues.nodeIds(i).endpoint(endpoint.index),
-			) ?? [];
+			const nodes =
+				valueDB.getValue<number[]>(
+					AssociationCCValues.nodeIds(i).endpoint(endpoint.index),
+				) ?? [];
 
 			ret.set(
 				i,
@@ -377,9 +378,7 @@ export class AssociationCC extends CommandClass {
 		return ret;
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 		const api = CCAPI.create(
@@ -435,8 +434,7 @@ export class AssociationCC extends CommandClass {
 		if (endpoint.supportsCC(CommandClasses["Multi Channel Association"])) {
 			ctx.logNode(node.id, {
 				endpoint: this.endpointIndex,
-				message:
-					`${this.constructor.name}: delaying configuration of lifeline associations until after Multi Channel Association interview...`,
+				message: `${this.constructor.name}: delaying configuration of lifeline associations until after Multi Channel Association interview...`,
 				direction: "none",
 			});
 			this.setInterviewComplete(ctx, true);
@@ -465,10 +463,7 @@ export class AssociationCC extends CommandClass {
 			tag: options?.tag,
 		});
 
-		const groupCount = AssociationCC.getGroupCountCached(
-			ctx,
-			endpoint,
-		);
+		const groupCount = AssociationCC.getGroupCountCached(ctx, endpoint);
 
 		// Query each association group
 		for (let groupId = 1; groupId <= groupCount; groupId++) {
@@ -479,8 +474,7 @@ export class AssociationCC extends CommandClass {
 			});
 			const group = await api.getGroup(groupId);
 			if (group != undefined) {
-				const logMessage =
-					`received information for association group #${groupId}:
+				const logMessage = `received information for association group #${groupId}:
 maximum # of nodes: ${group.maxNodes}
 currently assigned nodes: ${group.nodeIds.map(String).join(", ")}`;
 				ctx.logNode(node.id, {
@@ -503,9 +497,7 @@ export interface AssociationCCSetOptions {
 @CCCommand(AssociationCommand.Set)
 @useSupervision()
 export class AssociationCCSet extends AssociationCC {
-	public constructor(
-		options: WithAddress<AssociationCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<AssociationCCSetOptions>) {
 		super(options);
 		if (options.groupId < 1) {
 			throw new ZWaveError(
@@ -568,9 +560,7 @@ export interface AssociationCCRemoveOptions {
 @CCCommand(AssociationCommand.Remove)
 @useSupervision()
 export class AssociationCCRemove extends AssociationCC {
-	public constructor(
-		options: WithAddress<AssociationCCRemoveOptions>,
-	) {
+	public constructor(options: WithAddress<AssociationCCRemoveOptions>) {
 		super(options);
 		// When removing associations, we allow invalid node IDs.
 		// See GH#3606 - it is possible that those exist.
@@ -598,19 +588,17 @@ export class AssociationCCRemove extends AssociationCC {
 	public nodeIds?: number[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([
-			this.groupId || 0,
-			...(this.nodeIds || []),
-		]);
+		this.payload = Bytes.from([this.groupId || 0, ...(this.nodeIds || [])]);
 		return super.serialize(ctx);
 	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"group id": this.groupId || "all groups",
-			"node ids": this.nodeIds && this.nodeIds.length
-				? this.nodeIds.join(", ")
-				: "all nodes",
+			"node ids":
+				this.nodeIds && this.nodeIds.length
+					? this.nodeIds.join(", ")
+					: "all nodes",
 		};
 		return {
 			...super.toLogEntry(ctx),
@@ -628,20 +616,14 @@ export interface AssociationCCReportOptions {
 }
 
 @CCCommand(AssociationCommand.Report)
-@ccValueProperty(
-	"maxNodes",
-	AssociationCCValues.maxNodes,
-	(self) => [self.groupId],
-)
-@ccValueProperty(
-	"nodeIds",
-	AssociationCCValues.nodeIds,
-	(self) => [self.groupId],
-)
+@ccValueProperty("maxNodes", AssociationCCValues.maxNodes, (self) => [
+	self.groupId,
+])
+@ccValueProperty("nodeIds", AssociationCCValues.nodeIds, (self) => [
+	self.groupId,
+])
 export class AssociationCCReport extends AssociationCC {
-	public constructor(
-		options: WithAddress<AssociationCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<AssociationCCReportOptions>) {
 		super(options);
 
 		this.groupId = options.groupId;
@@ -725,9 +707,7 @@ export interface AssociationCCGetOptions {
 @CCCommand(AssociationCommand.Get)
 @expectedCCResponse(AssociationCCReport)
 export class AssociationCCGet extends AssociationCC {
-	public constructor(
-		options: WithAddress<AssociationCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<AssociationCCGetOptions>) {
 		super(options);
 		if (options.groupId < 1) {
 			throw new ZWaveError(

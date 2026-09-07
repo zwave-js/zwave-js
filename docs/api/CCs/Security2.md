@@ -61,27 +61,26 @@ async reportSupportedCommands(
 
 ```ts
 async getKeyExchangeParameters(): Promise<
-	{
-		echo: boolean;
-		requestCSA: boolean;
-		requestedKeys: readonly SecurityClass[];
-		supportedECDHProfiles: readonly ECDHProfiles[];
-		supportedKEXSchemes: readonly KEXSchemes[];
-	} | undefined
+	| {
+			echo: boolean;
+			requestCSA: boolean;
+			requestedKeys: readonly SecurityClass[];
+			supportedECDHProfiles: readonly ECDHProfiles[];
+			supportedKEXSchemes: readonly KEXSchemes[];
+	  }
+	| undefined
 >;
 ```
 
 ### `requestKeys`
 
 ```ts
-async requestKeys(
-	params: {
-		requestCSA: boolean;
-		requestedKeys: SecurityClass[];
-		supportedECDHProfiles: ECDHProfiles[];
-		supportedKEXSchemes: KEXSchemes[];
-	},
-): Promise<void>;
+async requestKeys(params: {
+	requestCSA: boolean;
+	requestedKeys: SecurityClass[];
+	supportedECDHProfiles: ECDHProfiles[];
+	supportedKEXSchemes: KEXSchemes[];
+}): Promise<void>;
 ```
 
 Requests the given keys from an including node.
@@ -89,14 +88,12 @@ Requests the given keys from an including node.
 ### `grantKeys`
 
 ```ts
-async grantKeys(
-	params: {
-		grantedKeys: SecurityClass[];
-		permitCSA: boolean;
-		selectedECDHProfile: ECDHProfiles;
-		selectedKEXScheme: KEXSchemes;
-	},
-): Promise<void>;
+async grantKeys(params: {
+	grantedKeys: SecurityClass[];
+	permitCSA: boolean;
+	selectedECDHProfile: ECDHProfiles;
+	selectedKEXScheme: KEXSchemes;
+}): Promise<void>;
 ```
 
 Grants the joining node the given keys.
@@ -104,14 +101,12 @@ Grants the joining node the given keys.
 ### `confirmRequestedKeys`
 
 ```ts
-async confirmRequestedKeys(
-	params: {
-		requestCSA: boolean;
-		requestedKeys: SecurityClass[];
-		supportedECDHProfiles: ECDHProfiles[];
-		supportedKEXSchemes: KEXSchemes[];
-	},
-): Promise<void>;
+async confirmRequestedKeys(params: {
+	requestCSA: boolean;
+	requestedKeys: SecurityClass[];
+	supportedECDHProfiles: ECDHProfiles[];
+	supportedKEXSchemes: KEXSchemes[];
+}): Promise<void>;
 ```
 
 Confirms the keys that were requested by a node.
@@ -119,14 +114,12 @@ Confirms the keys that were requested by a node.
 ### `confirmGrantedKeys`
 
 ```ts
-async confirmGrantedKeys(
-	params: {
-		grantedKeys: SecurityClass[];
-		permitCSA: boolean;
-		selectedECDHProfile: ECDHProfiles;
-		selectedKEXScheme: KEXSchemes;
-	},
-): Promise<Security2CCKEXReport | Security2CCKEXFail | undefined>;
+async confirmGrantedKeys(params: {
+	grantedKeys: SecurityClass[];
+	permitCSA: boolean;
+	selectedECDHProfile: ECDHProfiles;
+	selectedKEXScheme: KEXSchemes;
+}): Promise<Security2CCKEXReport | Security2CCKEXFail | undefined>;
 ```
 
 Confirms the keys that were granted by the including node.

@@ -1,6 +1,8 @@
 import { ZWaveError, ZWaveErrorCodes, stripUndefined } from "@zwave-js/core";
 import { Bytes, type BytesView, buffer2hex } from "@zwave-js/shared";
+
 import type { NVM3Object } from "../object.js";
+
 import {
 	NVMFile,
 	type NVMFileCreationOptions,
@@ -10,30 +12,27 @@ import {
 	nvmSection,
 } from "./NVMFile.js";
 
-export type ControllerInfoFileOptions =
-	& NVMFileCreationOptions
-	& {
-		homeId: BytesView;
-		nodeId: number;
-		lastNodeId: number;
-		staticControllerNodeId: number;
-		sucLastIndex: number;
-		controllerConfiguration: number;
-		maxNodeId: number;
-		reservedId: number;
-		systemState: number;
-	}
-	& (
+export type ControllerInfoFileOptions = NVMFileCreationOptions & {
+	homeId: BytesView;
+	nodeId: number;
+	lastNodeId: number;
+	staticControllerNodeId: number;
+	sucLastIndex: number;
+	controllerConfiguration: number;
+	maxNodeId: number;
+	reservedId: number;
+	systemState: number;
+} & (
 		| {
-			sucAwarenessPushNeeded: number;
-		}
+				sucAwarenessPushNeeded: number;
+		  }
 		| {
-			lastNodeIdLR: number;
-			maxNodeIdLR: number;
-			reservedIdLR: number;
-			primaryLongRangeChannelId: number;
-			dcdcConfig: number;
-		}
+				lastNodeIdLR: number;
+				maxNodeIdLR: number;
+				reservedIdLR: number;
+				primaryLongRangeChannelId: number;
+				dcdcConfig: number;
+		  }
 	);
 
 export const ControllerInfoFileID = 0x50004;

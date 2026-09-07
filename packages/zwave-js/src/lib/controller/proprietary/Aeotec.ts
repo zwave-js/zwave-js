@@ -17,6 +17,7 @@ import {
 } from "@zwave-js/core";
 import { FunctionType, Message, MessageType } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
+
 import type { Driver } from "../../driver/Driver.js";
 import type { ZWaveController } from "../Controller.js";
 import type { ControllerProprietaryCommon } from "../Proprietary.js";
@@ -92,13 +93,8 @@ const CONFIGURABLE_PARAMS = new Map<AeotecConfigParam, ConfigurationMetadata>([
 	[AeotecConfigParam.ConfigurationLocked, configurationLockedMeta],
 ]);
 
-export class ControllerProprietary_Aeotec
-	implements ControllerProprietaryCommon
-{
-	constructor(
-		driver: Driver,
-		controller: ZWaveController,
-	) {
+export class ControllerProprietary_Aeotec implements ControllerProprietaryCommon {
+	constructor(driver: Driver, controller: ZWaveController) {
 		this.driver = driver;
 		this.controller = controller;
 	}
@@ -187,9 +183,8 @@ export class ControllerProprietary_Aeotec
 		param: AeotecConfigParam,
 		value: number | Uint8Array,
 	): Promise<boolean> {
-		const valueBytes = typeof value === "number"
-			? Bytes.from([value])
-			: Bytes.view(value);
+		const valueBytes =
+			typeof value === "number" ? Bytes.from([value]) : Bytes.view(value);
 		return this.setConfigInternal(param, valueBytes, false);
 	}
 
@@ -216,10 +211,7 @@ export class ControllerProprietary_Aeotec
 
 		// The top bit of the size field requests a reset to factory default
 		const sizeField = (useDefault ? 0x80 : 0x00) | value.length;
-		const payload = Bytes.concat([
-			[param, sizeField],
-			value,
-		]);
+		const payload = Bytes.concat([[param, sizeField], value]);
 
 		const setConfigCmd = new Message({
 			type: MessageType.Request,
@@ -311,7 +303,7 @@ export class ControllerProprietary_Aeotec
 			binarySwitchCurrentValueTranslated,
 			binarySwitchTargetValueTranslated,
 			...[...CONFIGURABLE_PARAMS].map(([param, meta]) =>
-				translateValueID(configValueId(param), meta.label!)
+				translateValueID(configValueId(param), meta.label!),
 			),
 		];
 	}

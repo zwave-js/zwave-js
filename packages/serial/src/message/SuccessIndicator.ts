@@ -4,9 +4,7 @@ export interface SuccessIndicator {
 	isOK(): boolean;
 }
 
-export function isSuccessIndicator<T>(
-	msg: T,
-): msg is T & SuccessIndicator {
+export function isSuccessIndicator<T>(msg: T): msg is T & SuccessIndicator {
 	return typeof (msg as any).isOK === "function";
 }
 
@@ -18,8 +16,6 @@ export interface MultiStageCallback {
 	isFinal(): boolean;
 }
 
-export function isMultiStageCallback<T>(
-	msg: T,
-): msg is T & MultiStageCallback {
+export function isMultiStageCallback<T>(msg: T): msg is T & MultiStageCallback {
 	return typeof (msg as any).isFinal === "function";
 }

@@ -1,7 +1,10 @@
-import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { Transformer } from "node:stream/web";
+
+import { Bytes, type BytesView } from "@zwave-js/shared";
+
 import type { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
+
 import {
 	type RCPChunk,
 	type RCPSerialFrame,
@@ -22,35 +25,27 @@ function getMessageLength(data: BytesView): number {
 }
 
 type RCPParserTransformerOutput = RCPSerialFrame & {
-	type:
-		| RCPSerialFrameType.RCP
-		| RCPSerialFrameType.Discarded;
+	type: RCPSerialFrameType.RCP | RCPSerialFrameType.Discarded;
 };
 
-function wrapRCPChunk(
-	chunk: RCPChunk,
-): RCPParserTransformerOutput {
+function wrapRCPChunk(chunk: RCPChunk): RCPParserTransformerOutput {
 	return {
 		type: RCPSerialFrameType.RCP,
 		data: chunk,
 	};
 }
 
-class RCPParserTransformer implements
-	Transformer<
-		BytesView,
-		RCPParserTransformerOutput
-	>
-{
+class RCPParserTransformer implements Transformer<
+	BytesView,
+	RCPParserTransformerOutput
+> {
 	constructor(private logger?: SerialLogger) {}
 
 	private receiveBuffer = new Bytes();
 
 	transform(
 		chunk: BytesView,
-		controller: TransformStreamDefaultController<
-			RCPParserTransformerOutput
-		>,
+		controller: TransformStreamDefaultController<RCPParserTransformerOutput>,
 	) {
 		this.receiveBuffer = Bytes.concat([this.receiveBuffer, chunk]);
 
@@ -62,16 +57,12 @@ class RCPParserTransformer implements
 					// Emit the single-byte messages directly
 					case MessageHeaders.ACK: {
 						this.logger?.ACK("inbound");
-						controller.enqueue(
-							wrapRCPChunk(MessageHeaders.ACK),
-						);
+						controller.enqueue(wrapRCPChunk(MessageHeaders.ACK));
 						break;
 					}
 					case MessageHeaders.NAK: {
 						this.logger?.NAK("inbound");
-						controller.enqueue(
-							wrapRCPChunk(MessageHeaders.NAK),
-						);
+						controller.enqueue(wrapRCPChunk(MessageHeaders.NAK));
 						break;
 					}
 					default: {
@@ -121,9 +112,7 @@ export class RCPParser extends TransformStream<
 	BytesView,
 	RCPParserTransformerOutput
 > {
-	constructor(
-		logger?: SerialLogger,
-	) {
+	constructor(logger?: SerialLogger) {
 		super(new RCPParserTransformer(logger));
 	}
 }

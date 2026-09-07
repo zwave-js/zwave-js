@@ -28,9 +28,9 @@ const respondToMultilevelSensorGetSupportedSensor: MockNodeBehavior = {
 			};
 			const cc = new MultilevelSensorCCSupportedSensorReport({
 				nodeId: controller.ownNodeId,
-				supportedSensorTypes: Object.keys(
-					capabilities.sensors,
-				).map((t) => parseInt(t)),
+				supportedSensorTypes: Object.keys(capabilities.sensors).map(
+					(t) => parseInt(t),
+				),
 			});
 			return { action: "sendCC", cc };
 		}
@@ -74,10 +74,10 @@ const respondToMultilevelSensorGet: MockNodeBehavior = {
 				Object.keys(capabilities.sensors).length > 0
 					? parseInt(Object.keys(capabilities.sensors)[0])
 					: undefined;
-			const sensorType = receivedCC.sensorType
-				?? firstSupportedSensorType
-				?? 1;
-			const scale = receivedCC.scale
+			const sensorType =
+				receivedCC.sensorType ?? firstSupportedSensorType ?? 1;
+			const scale =
+				receivedCC.scale
 				?? capabilities.sensors[sensorType].supportedScales[0]
 				?? 0;
 			const value = capabilities.getValue?.(sensorType, scale) ?? 0;

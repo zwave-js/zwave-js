@@ -16,11 +16,12 @@ async getSupported(): Promise<
 
 ```ts
 async get(parameter: WindowCoveringParameter): Promise<
-	{
-		currentValue: number;
-		duration: Duration;
-		targetValue: number;
-	} | undefined
+	| {
+			currentValue: number;
+			duration: Duration;
+			targetValue: number;
+	  }
+	| undefined
 >;
 ```
 

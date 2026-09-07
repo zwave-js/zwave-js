@@ -6,6 +6,7 @@ import type { ThrowingMap } from "@zwave-js/shared";
 import { MockController } from "@zwave-js/testing";
 import sinon from "sinon";
 import { afterEach, beforeEach, test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -77,7 +78,10 @@ afterEach<LocalTestContext>(({ context, expect }) => {
 	);
 });
 
-test(`persistValues() should not update "interviewComplete" in the value DB`, ({ context, expect }) => {
+test(`persistValues() should not update "interviewComplete" in the value DB`, ({
+	context,
+	expect,
+}) => {
 	const { node2, driver } = context;
 
 	// Repro for #383
@@ -98,7 +102,10 @@ test(`persistValues() should not update "interviewComplete" in the value DB`, ({
 	expect(properties.includes("interviewComplete")).toBe(false);
 });
 
-test(`persistValues() should not store values marked as "events" (non-stateful)`, async ({ context, expect }) => {
+test(`persistValues() should not store values marked as "events" (non-stateful)`, async ({
+	context,
+	expect,
+}) => {
 	const { node2, driver } = context;
 
 	const cc = new CentralSceneCCNotification({
@@ -121,6 +128,7 @@ test(`persistValues() should not store values marked as "events" (non-stateful)`
 	expect(spyN.getCall(0).args[1].value).toBe(CentralSceneKeys.KeyPressed);
 
 	// and not persist the value in the DB
-	expect(node2.valueDB.getValues(CommandClasses["Central Scene"]).length)
-		.toBe(0);
+	expect(
+		node2.valueDB.getValues(CommandClasses["Central Scene"]).length,
+	).toBe(0);
 });

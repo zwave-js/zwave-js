@@ -19,6 +19,7 @@ import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";
 import type { MockNodeBehavior } from "@zwave-js/testing";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+
 import {
 	SetCredentialResult,
 	SetUserResult,
@@ -29,63 +30,59 @@ import { integrationTest } from "../integrationTestSuite.js";
 // Capabilities
 // =============================================================================
 
-integrationTest(
-	"Capabilities are translated correctly for User Code CC V2",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportsAdminCode: true,
-					supportsAdminCodeDeactivation: true,
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-						UserIDStatus.Disabled,
-						UserIDStatus.Messaging,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// User capabilities
-			const userCaps = node.accessControl!.getUserCapabilitiesCached();
-			t.expect(userCaps).toBeDefined();
-			t.expect(userCaps.maxUsers).toBe(10);
-			t.expect(userCaps.supportedUserTypes).toStrictEqual([
-				UserCredentialUserType.General,
-				UserCredentialUserType.NonAccess,
-			]);
-			t.expect(userCaps.maxUserNameLength).toBeUndefined();
-			t.expect(userCaps.supportedCredentialRules).toStrictEqual([
-				UserCredentialRule.Single,
-			]);
-			t.expect(userCaps.supportsUsersWithoutCredentials).toBe(false);
-
-			// Credential capabilities
-			const credCaps = node.accessControl!
-				.getCredentialCapabilitiesCached();
-			t.expect(credCaps).toBeDefined();
-			t.expect(credCaps.supportsAdminCode).toBe(true);
-			t.expect(credCaps.supportsAdminCodeDeactivation).toBe(true);
-			t.expect(credCaps.supportedCredentialTypes.size).toBe(1);
-
-			const pinCap = credCaps.supportedCredentialTypes.get(
-				UserCredentialType.PINCode,
-			);
-			t.expect(pinCap).toBeDefined();
-			t.expect(pinCap!.numberOfCredentialSlots).toBe(10);
-			t.expect(pinCap!.minCredentialLength).toBe(4);
-			t.expect(pinCap!.maxCredentialLength).toBe(10);
-			t.expect(pinCap!.supportsCredentialLearn).toBe(false);
-		},
+integrationTest("Capabilities are translated correctly for User Code CC V2", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportsAdminCode: true,
+				supportsAdminCodeDeactivation: true,
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+					UserIDStatus.Disabled,
+					UserIDStatus.Messaging,
+				],
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		// User capabilities
+		const userCaps = node.accessControl!.getUserCapabilitiesCached();
+		t.expect(userCaps).toBeDefined();
+		t.expect(userCaps.maxUsers).toBe(10);
+		t.expect(userCaps.supportedUserTypes).toStrictEqual([
+			UserCredentialUserType.General,
+			UserCredentialUserType.NonAccess,
+		]);
+		t.expect(userCaps.maxUserNameLength).toBeUndefined();
+		t.expect(userCaps.supportedCredentialRules).toStrictEqual([
+			UserCredentialRule.Single,
+		]);
+		t.expect(userCaps.supportsUsersWithoutCredentials).toBe(false);
+
+		// Credential capabilities
+		const credCaps = node.accessControl!.getCredentialCapabilitiesCached();
+		t.expect(credCaps).toBeDefined();
+		t.expect(credCaps.supportsAdminCode).toBe(true);
+		t.expect(credCaps.supportsAdminCodeDeactivation).toBe(true);
+		t.expect(credCaps.supportedCredentialTypes.size).toBe(1);
+
+		const pinCap = credCaps.supportedCredentialTypes.get(
+			UserCredentialType.PINCode,
+		);
+		t.expect(pinCap).toBeDefined();
+		t.expect(pinCap!.numberOfCredentialSlots).toBe(10);
+		t.expect(pinCap!.minCredentialLength).toBe(4);
+		t.expect(pinCap!.maxCredentialLength).toBe(10);
+		t.expect(pinCap!.supportsCredentialLearn).toBe(false);
+	},
+});
 
 integrationTest(
 	"User Code CC without Messaging status does not advertise NonAccess user type",
@@ -249,8 +246,9 @@ integrationTest(
 			);
 
 			// Non-existent user has no credentials
-			t.expect(node.accessControl!.getCredentialsForUserCached(3).length)
-				.toBe(0);
+			t.expect(
+				node.accessControl!.getCredentialsForUserCached(3).length,
+			).toBe(0);
 		},
 	},
 );
@@ -280,9 +278,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential added",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential added", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			await node.accessControl!.setCredential(
@@ -330,9 +327,8 @@ integrationTest(
 			node.valueDB.setValue(UserCodeCCValues.userCode(2).id, "1234");
 
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential modified",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential modified", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			await node.accessControl!.setCredential(
@@ -382,9 +378,8 @@ integrationTest(
 			const userEvent = createDeferredPromise<unknown>();
 			const credEvent = createDeferredPromise<unknown>();
 			node.on("user deleted", (_node, args) => userEvent.resolve(args));
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential deleted", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			await node.accessControl!.deleteUser(1);
@@ -399,166 +394,154 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"deleteUser does not emit events for non-existing user",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			let eventEmitted = false;
-			node.on("user deleted", () => eventEmitted = true);
-			node.on("credential deleted", () => eventEmitted = true);
-
-			// User 5 is within range but was never set
-			await node.accessControl!.deleteUser(5);
-
-			// Give the driver time to process
-			await new Promise((resolve) => setTimeout(resolve, 100));
-			t.expect(eventEmitted).toBe(false);
-		},
+integrationTest("deleteUser does not emit events for non-existing user", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		let eventEmitted = false;
+		node.on("user deleted", () => (eventEmitted = true));
+		node.on("credential deleted", () => (eventEmitted = true));
+
+		// User 5 is within range but was never set
+		await node.accessControl!.deleteUser(5);
+
+		// Give the driver time to process
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		t.expect(eventEmitted).toBe(false);
+	},
+});
 
 // =============================================================================
 // Set-type commands use correct CC commands
 // =============================================================================
 
-integrationTest(
-	"setCredential uses Extended User Code Set on V2 nodes",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.setCredential(
-				2,
-				UserCredentialType.PINCode,
-				2,
-				"1234",
-			);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
-					&& frame.payload.userCodes[0].userId === 2
-					&& frame.payload.userCodes[0].userIdStatus
-						=== UserIDStatus.Enabled,
-				{
-					errorMessage:
-						"Should have sent ExtendedUserCodeSet for userId 2 with Enabled status",
-				},
-			);
-		},
+integrationTest("setCredential uses Extended User Code Set on V2 nodes", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
 
-integrationTest(
-	"setCredential uses legacy User Code Set on V1 nodes",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 1,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.setCredential(
+			2,
+			UserCredentialType.PINCode,
+			2,
+			"1234",
+		);
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.setCredential(
-				2,
-				UserCredentialType.PINCode,
-				2,
-				"5678",
-			);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCSet,
-				{
-					errorMessage: "Should have used legacy UserCodeSet",
-				},
-			);
-		},
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
+				&& frame.payload.userCodes[0].userId === 2
+				&& frame.payload.userCodes[0].userIdStatus
+					=== UserIDStatus.Enabled,
+			{
+				errorMessage:
+					"Should have sent ExtendedUserCodeSet for userId 2 with Enabled status",
+			},
+		);
 	},
-);
+});
 
-integrationTest(
-	"setUser emits user added event for new user",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-						UserIDStatus.Disabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Pre-populate a credential so setUser has a code to send
-			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
-
-			const userEvent = createDeferredPromise<unknown>();
-			node.on("user added", (_node, args) => userEvent.resolve(args));
-
-			await node.accessControl!.setUser(1, {
-				active: true,
-				userType: UserCredentialUserType.General,
-			});
-
-			t.expect(await userEvent).toMatchObject({
-				userId: 1,
-				active: true,
-				userType: UserCredentialUserType.General,
-			});
-		},
+integrationTest("setCredential uses legacy User Code Set on V1 nodes", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 1,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.setCredential(
+			2,
+			UserCredentialType.PINCode,
+			2,
+			"5678",
+		);
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCSet,
+			{
+				errorMessage: "Should have used legacy UserCodeSet",
+			},
+		);
+	},
+});
+
+integrationTest("setUser emits user added event for new user", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+					UserIDStatus.Disabled,
+				],
+			}),
+		],
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		// Pre-populate a credential so setUser has a code to send
+		node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
+
+		const userEvent = createDeferredPromise<unknown>();
+		node.on("user added", (_node, args) => userEvent.resolve(args));
+
+		await node.accessControl!.setUser(1, {
+			active: true,
+			userType: UserCredentialUserType.General,
+		});
+
+		t.expect(await userEvent).toMatchObject({
+			userId: 1,
+			active: true,
+			userType: UserCredentialUserType.General,
+		});
+	},
+});
 
 integrationTest(
 	"deleteCredential emits credential deleted + user deleted events on UC (cross-deletion cascade)",
@@ -589,9 +572,8 @@ integrationTest(
 
 			const credEvent = createDeferredPromise<unknown>();
 			const userEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential deleted", (_node, args) =>
+				credEvent.resolve(args),
 			);
 			node.on("user deleted", (_node, args) => userEvent.resolve(args));
 
@@ -646,9 +628,8 @@ integrationTest(
 
 			const credEvent = createDeferredPromise<unknown>();
 			const userEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential deleted", (_node, args) =>
+				credEvent.resolve(args),
 			);
 			node.on("user deleted", (_node, args) => userEvent.resolve(args));
 
@@ -695,9 +676,8 @@ integrationTest(
 
 			const credEvent = createDeferredPromise<unknown>();
 			const userEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential deleted", (_node, args) =>
+				credEvent.resolve(args),
 			);
 			node.on("user deleted", (_node, args) => userEvent.resolve(args));
 
@@ -740,12 +720,14 @@ integrationTest(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			await t.expect(
-				node.accessControl!.deleteCredentials({
-					userId: 1,
-					credentialType: UserCredentialType.Password,
-				}),
-			).rejects.toThrow();
+			await t
+				.expect(
+					node.accessControl!.deleteCredentials({
+						userId: 1,
+						credentialType: UserCredentialType.Password,
+					}),
+				)
+				.rejects.toThrow();
 		},
 	},
 );
@@ -772,9 +754,8 @@ integrationTest(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const credEvent = createDeferredPromise<unknown>();
 			const userEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential deleted",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential deleted", (_node, args) =>
+				credEvent.resolve(args),
 			);
 			node.on("user deleted", (_node, args) => userEvent.resolve(args));
 
@@ -804,44 +785,41 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"deleteAllUsers sends Extended User Code Set on V2 nodes",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.deleteAllUsers();
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
-					&& frame.payload.userCodes.length === 1
-					&& frame.payload.userCodes[0].userId === 0
-					&& frame.payload.userCodes[0].userIdStatus
-						=== UserIDStatus.Available,
-				{
-					errorMessage:
-						"Should have sent ExtendedUserCodeSet with userId 0 and Available status",
-				},
-			);
-		},
+integrationTest("deleteAllUsers sends Extended User Code Set on V2 nodes", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.deleteAllUsers();
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
+				&& frame.payload.userCodes.length === 1
+				&& frame.payload.userCodes[0].userId === 0
+				&& frame.payload.userCodes[0].userIdStatus
+					=== UserIDStatus.Available,
+			{
+				errorMessage:
+					"Should have sent ExtendedUserCodeSet with userId 0 and Available status",
+			},
+		);
+	},
+});
 
 integrationTest(
 	"setAdminCode + getAdminCode round-trip returns the set value",
@@ -872,49 +850,46 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"setUser sends Extended User Code Set on V2 nodes",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-						UserIDStatus.Disabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
-
-			await node.accessControl!.setUser(1, {
-				active: false,
-				userType: UserCredentialUserType.General,
-			});
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
-					&& frame.payload.userCodes[0].userId === 1
-					&& frame.payload.userCodes[0].userIdStatus
-						=== UserIDStatus.Disabled,
-				{
-					errorMessage:
-						"Should have sent ExtendedUserCodeSet for userId 1 with Disabled status",
-				},
-			);
-		},
+integrationTest("setUser sends Extended User Code Set on V2 nodes", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+					UserIDStatus.Disabled,
+				],
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		node.valueDB.setValue(UserCodeCCValues.userCode(1).id, "1234");
+
+		await node.accessControl!.setUser(1, {
+			active: false,
+			userType: UserCredentialUserType.General,
+		});
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
+				&& frame.payload.userCodes[0].userId === 1
+				&& frame.payload.userCodes[0].userIdStatus
+					=== UserIDStatus.Disabled,
+			{
+				errorMessage:
+					"Should have sent ExtendedUserCodeSet for userId 1 with Disabled status",
+			},
+		);
+	},
+});
 
 integrationTest(
 	"deleteCredential sends Extended User Code Set to clear on V2 nodes",
@@ -964,113 +939,104 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"setAdminCode sends AdminCodeSet",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportsAdminCode: true,
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.setAdminCode("9999");
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCAdminCodeSet,
-				{
-					errorMessage: "Should have sent AdminCodeSet",
-				},
-			);
-		},
+integrationTest("setAdminCode sends AdminCodeSet", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportsAdminCode: true,
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
 
-integrationTest(
-	"getAdminCode sends AdminCodeGet",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportsAdminCode: true,
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.setAdminCode("9999");
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.getAdminCode();
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCAdminCodeGet,
-				{
-					errorMessage: "Should have sent AdminCodeGet",
-				},
-			);
-		},
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCAdminCodeSet,
+			{
+				errorMessage: "Should have sent AdminCodeSet",
+			},
+		);
 	},
-);
+});
 
-integrationTest(
-	"deleteUser uses Extended User Code Set to clear on V2 nodes",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await node.accessControl!.deleteUser(1);
-
-			mockNode.assertReceivedControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
-					&& frame.payload.userCodes[0].userId === 1
-					&& frame.payload.userCodes[0].userIdStatus
-						=== UserIDStatus.Available,
-				{
-					errorMessage:
-						"Should have sent ExtendedUserCodeSet for userId 1 with Available status",
-				},
-			);
-		},
+integrationTest("getAdminCode sends AdminCodeGet", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportsAdminCode: true,
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.getAdminCode();
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCAdminCodeGet,
+			{
+				errorMessage: "Should have sent AdminCodeGet",
+			},
+		);
+	},
+});
+
+integrationTest("deleteUser uses Extended User Code Set to clear on V2 nodes", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await node.accessControl!.deleteUser(1);
+
+		mockNode.assertReceivedControllerFrame(
+			(frame) =>
+				frame.type === MockZWaveFrameType.Request
+				&& frame.payload instanceof UserCodeCCExtendedUserCodeSet
+				&& frame.payload.userCodes[0].userId === 1
+				&& frame.payload.userCodes[0].userIdStatus
+					=== UserIDStatus.Available,
+			{
+				errorMessage:
+					"Should have sent ExtendedUserCodeSet for userId 1 with Available status",
+			},
+		);
+	},
+});
 
 // =============================================================================
 // Credential slot values other than the user ID are ignored
@@ -1097,9 +1063,8 @@ integrationTest(
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			const credEvent = createDeferredPromise<unknown>();
-			node.on(
-				"credential added",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential added", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			await node.accessControl!.setCredential(
@@ -1123,57 +1088,55 @@ integrationTest(
 // addUser
 // =============================================================================
 
-integrationTest(
-	"addUser without credential throws on UC",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
+integrationTest("addUser without credential throws on UC", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
+	},
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await t.expect(
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await t
+			.expect(
 				node.accessControl!.addUser(1, {
 					active: true,
 					userType: UserCredentialUserType.General,
 				}),
-			).rejects.toThrow(/credential/i);
-		},
+			)
+			.rejects.toThrow(/credential/i);
 	},
-);
+});
 
-integrationTest(
-	"addUser with credential.slot !== userId throws on UC",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 2,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
+integrationTest("addUser with credential.slot !== userId throws on UC", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 2,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
+	},
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			await t.expect(
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		await t
+			.expect(
 				node.accessControl!.addUser(
 					1,
 					{
@@ -1186,10 +1149,10 @@ integrationTest(
 						data: "1234",
 					},
 				),
-			).rejects.toThrow(/slot must equal the user ID/i);
-		},
+			)
+			.rejects.toThrow(/slot must equal the user ID/i);
 	},
-);
+});
 
 integrationTest(
 	"addUser with credential writes user+code in a single Set on UC and emits both events",
@@ -1214,9 +1177,8 @@ integrationTest(
 			const userEvent = createDeferredPromise<unknown>();
 			const credEvent = createDeferredPromise<unknown>();
 			node.on("user added", (_node, args) => userEvent.resolve(args));
-			node.on(
-				"credential added",
-				(_node, args) => credEvent.resolve(args),
+			node.on("credential added", (_node, args) =>
+				credEvent.resolve(args),
 			);
 
 			const result = await node.accessControl!.addUser(
@@ -1615,51 +1577,48 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"addUser succeeds when a V1 node reports an obfuscated code",
-	{
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Version,
-				ccCaps({
-					ccId: CommandClasses["User Code"],
-					version: 1,
-					numUsers: 10,
-					supportedASCIIChars: "0123456789",
-					supportedUserIDStatuses: [
-						UserIDStatus.Available,
-						UserIDStatus.Enabled,
-					],
-				}),
-			],
-		},
-
-		customSetup: async (driver, controller, mockNode) => {
-			mockNode.defineBehavior(obfuscateUserCodeReadBack("*****"));
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const result = await node.accessControl!.addUser(
-				4,
-				{
-					active: true,
-					userType: UserCredentialUserType.General,
-				},
-				{
-					type: UserCredentialType.PINCode,
-					slot: 4,
-					data: "5678",
-				},
-			);
-			// CC:0063.01.00.32.002  A controlling node SHOULD understand that a
-			// code has been set correctly but cannot be read back with such nodes.
-			t.expect(result).toEqual({
-				user: SetUserResult.OK,
-				credential: SetCredentialResult.OK,
-			});
-		},
+integrationTest("addUser succeeds when a V1 node reports an obfuscated code", {
+	nodeCapabilities: {
+		commandClasses: [
+			CommandClasses.Version,
+			ccCaps({
+				ccId: CommandClasses["User Code"],
+				version: 1,
+				numUsers: 10,
+				supportedASCIIChars: "0123456789",
+				supportedUserIDStatuses: [
+					UserIDStatus.Available,
+					UserIDStatus.Enabled,
+				],
+			}),
+		],
 	},
-);
+
+	customSetup: async (driver, controller, mockNode) => {
+		mockNode.defineBehavior(obfuscateUserCodeReadBack("*****"));
+	},
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		const result = await node.accessControl!.addUser(
+			4,
+			{
+				active: true,
+				userType: UserCredentialUserType.General,
+			},
+			{
+				type: UserCredentialType.PINCode,
+				slot: 4,
+				data: "5678",
+			},
+		);
+		// CC:0063.01.00.32.002  A controlling node SHOULD understand that a
+		// code has been set correctly but cannot be read back with such nodes.
+		t.expect(result).toEqual({
+			user: SetUserResult.OK,
+			credential: SetCredentialResult.OK,
+		});
+	},
+});
 
 integrationTest(
 	"setCredential fails when a V2 node reports an obfuscated code (leniency is V1-only)",
@@ -1793,98 +1752,89 @@ integrationTest(
 	},
 );
 
-integrationTest(
-	"setUser persists status on supervised success",
-	{
-		nodeCapabilities: supervisedUserCodeCapabilities,
+integrationTest("setUser persists status on supervised success", {
+	nodeCapabilities: supervisedUserCodeCapabilities,
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const statusVid = UserCodeCCValues.userIdStatus(1).id;
-			const codeVid = UserCodeCCValues.userCode(1).id;
-			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
-			node.valueDB.setValue(codeVid, "1234");
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		const statusVid = UserCodeCCValues.userIdStatus(1).id;
+		const codeVid = UserCodeCCValues.userCode(1).id;
+		node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+		node.valueDB.setValue(codeVid, "1234");
 
-			const result = await node.accessControl!.setUser(1, {
-				active: false,
-			});
-			t.expect(result).toBe(SetUserResult.OK);
+		const result = await node.accessControl!.setUser(1, {
+			active: false,
+		});
+		t.expect(result).toBe(SetUserResult.OK);
 
-			t.expect(node.valueDB.getValue(statusVid)).toBe(
-				UserIDStatus.Disabled,
-			);
-			t.expect(node.valueDB.getValue(codeVid)).toBe("1234");
+		t.expect(node.valueDB.getValue(statusVid)).toBe(UserIDStatus.Disabled);
+		t.expect(node.valueDB.getValue(codeVid)).toBe("1234");
 
-			const cached = node.accessControl!.getUserCached(1);
-			t.expect(cached?.active).toBe(false);
-		},
+		const cached = node.accessControl!.getUserCached(1);
+		t.expect(cached?.active).toBe(false);
 	},
-);
+});
 
-integrationTest(
-	"addUser persists user and code on supervised success",
-	{
-		nodeCapabilities: supervisedUserCodeCapabilities,
+integrationTest("addUser persists user and code on supervised success", {
+	nodeCapabilities: supervisedUserCodeCapabilities,
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const result = await node.accessControl!.addUser(2, {}, {
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		const result = await node.accessControl!.addUser(
+			2,
+			{},
+			{
 				type: UserCredentialType.PINCode,
 				slot: 2,
 				data: "5678",
-			});
-			t.expect(result.user).toBe(SetUserResult.OK);
-			t.expect(result.credential).toBe(SetCredentialResult.OK);
+			},
+		);
+		t.expect(result.user).toBe(SetUserResult.OK);
+		t.expect(result.credential).toBe(SetCredentialResult.OK);
 
-			t.expect(
-				node.valueDB.getValue(UserCodeCCValues.userIdStatus(2).id),
-			).toBe(UserIDStatus.Enabled);
-			t.expect(
-				node.valueDB.getValue(UserCodeCCValues.userCode(2).id),
-			).toBe("5678");
-		},
+		t.expect(
+			node.valueDB.getValue(UserCodeCCValues.userIdStatus(2).id),
+		).toBe(UserIDStatus.Enabled);
+		t.expect(node.valueDB.getValue(UserCodeCCValues.userCode(2).id)).toBe(
+			"5678",
+		);
 	},
-);
+});
 
-integrationTest(
-	"setCredential reconciles the cache on supervised failure",
-	{
-		nodeCapabilities: supervisedUserCodeCapabilities,
+integrationTest("setCredential reconciles the cache on supervised failure", {
+	nodeCapabilities: supervisedUserCodeCapabilities,
 
-		customSetup: async (driver, controller, mockNode) => {
-			mockNode.defineBehavior(failSupervisedUserCodeSet);
-		},
+	customSetup: async (driver, controller, mockNode) => {
+		mockNode.defineBehavior(failSupervisedUserCodeSet);
+	},
 
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// The cache is wrong: the device's slot is actually empty
-			const statusVid = UserCodeCCValues.userIdStatus(2).id;
-			const codeVid = UserCodeCCValues.userCode(2).id;
-			node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
-			node.valueDB.setValue(codeVid, "9999");
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		// The cache is wrong: the device's slot is actually empty
+		const statusVid = UserCodeCCValues.userIdStatus(2).id;
+		const codeVid = UserCodeCCValues.userCode(2).id;
+		node.valueDB.setValue(statusVid, UserIDStatus.Enabled);
+		node.valueDB.setValue(codeVid, "9999");
 
-			const result = await node.accessControl!.setCredential(
-				2,
+		const result = await node.accessControl!.setCredential(
+			2,
+			UserCredentialType.PINCode,
+			2,
+			"1234",
+		);
+		// The cache claimed an existing credential, so this was a modify,
+		// and the readback shows there is nothing to modify
+		t.expect(result).toBe(
+			SetCredentialResult.Error_ModifyRejectedLocationEmpty,
+		);
+
+		t.expect(node.valueDB.getValue(statusVid)).toBe(UserIDStatus.Available);
+		t.expect(node.valueDB.getValue(codeVid)).toBe("");
+		t.expect(
+			node.accessControl!.getCredentialCached(
 				UserCredentialType.PINCode,
 				2,
-				"1234",
-			);
-			// The cache claimed an existing credential, so this was a modify,
-			// and the readback shows there is nothing to modify
-			t.expect(result).toBe(
-				SetCredentialResult.Error_ModifyRejectedLocationEmpty,
-			);
-
-			t.expect(node.valueDB.getValue(statusVid)).toBe(
-				UserIDStatus.Available,
-			);
-			t.expect(node.valueDB.getValue(codeVid)).toBe("");
-			t.expect(
-				node.accessControl!.getCredentialCached(
-					UserCredentialType.PINCode,
-					2,
-				),
-			).toBeUndefined();
-		},
+			),
+		).toBeUndefined();
 	},
-);
+});
 
 integrationTest(
 	"deleteUser returns OK when the device fails clearing an already-empty slot",
@@ -1989,24 +1939,22 @@ integrationTest(
 			// Quirky device: the code was actually applied despite the
 			// supervision failure. Defined here instead of customSetup so the
 			// interview does not already see the code.
-			mockNode.defineBehavior(
-				{
-					handleCC(controller, self, receivedCC) {
-						if (
-							receivedCC instanceof UserCodeCCGet
-							&& receivedCC.userId === 1
-						) {
-							const cc = new UserCodeCCReport({
-								nodeId: controller.ownNodeId,
-								userId: 1,
-								userIdStatus: UserIDStatus.Enabled,
-								userCode: "1234",
-							});
-							return { action: "sendCC", cc };
-						}
-					},
-				} satisfies MockNodeBehavior,
-			);
+			mockNode.defineBehavior({
+				handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCodeCCGet
+						&& receivedCC.userId === 1
+					) {
+						const cc = new UserCodeCCReport({
+							nodeId: controller.ownNodeId,
+							userId: 1,
+							userIdStatus: UserIDStatus.Enabled,
+							userCode: "1234",
+						});
+						return { action: "sendCC", cc };
+					}
+				},
+			} satisfies MockNodeBehavior);
 
 			const result = await node.accessControl!.setCredential(
 				1,
@@ -2079,24 +2027,22 @@ integrationTest(
 			// The device refuses the deletion and still has a code that
 			// differs from the cached one. Defined here instead of customSetup
 			// so the interview does not already see the code.
-			mockNode.defineBehavior(
-				{
-					handleCC(controller, self, receivedCC) {
-						if (
-							receivedCC instanceof UserCodeCCGet
-							&& receivedCC.userId === 1
-						) {
-							const cc = new UserCodeCCReport({
-								nodeId: controller.ownNodeId,
-								userId: 1,
-								userIdStatus: UserIDStatus.Enabled,
-								userCode: "5678",
-							});
-							return { action: "sendCC", cc };
-						}
-					},
-				} satisfies MockNodeBehavior,
-			);
+			mockNode.defineBehavior({
+				handleCC(controller, self, receivedCC) {
+					if (
+						receivedCC instanceof UserCodeCCGet
+						&& receivedCC.userId === 1
+					) {
+						const cc = new UserCodeCCReport({
+							nodeId: controller.ownNodeId,
+							userId: 1,
+							userIdStatus: UserIDStatus.Enabled,
+							userCode: "5678",
+						});
+						return { action: "sendCC", cc };
+					}
+				},
+			} satisfies MockNodeBehavior);
 
 			const statusVid = UserCodeCCValues.userIdStatus(1).id;
 			const codeVid = UserCodeCCValues.userCode(1).id;

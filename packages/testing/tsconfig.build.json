@@ -24,10 +24,6 @@
 			"path": "../cc/tsconfig.build.json"
 		}
 	],
-	"include": [
-		"src/**/*.ts"
-	],
-	"exclude": [
-		"src/**/*.test.ts"
-	]
+	"include": ["src/**/*.ts"],
+	"exclude": ["src/**/*.test.ts"]
 }

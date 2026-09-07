@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import {
 	cosineSimilarity,
 	diffStructure,
@@ -31,15 +32,15 @@ describe("tokenize", () => {
 
 describe("lexicalSimilarity", () => {
 	it("is 1 for identical text", () => {
-		expect(lexicalSimilarity("dimming ramp rate", "dimming ramp rate"))
-			.toBe(1);
+		expect(
+			lexicalSimilarity("dimming ramp rate", "dimming ramp rate"),
+		).toBe(1);
 	});
 
 	it("is 0 when there is no token overlap", () => {
 		expect(
 			lexicalSimilarity("dimming ramp rate", "battery report interval"),
-		)
-			.toBe(0);
+		).toBe(0);
 	});
 
 	it("is 0 when either side has no tokens", () => {
@@ -84,7 +85,10 @@ describe("structuralCompatibility", () => {
 			maxValue: 99,
 			allowManualEntry: true,
 			unsigned: true,
-			options: [{ value: 0, label: "Off" }, { value: 1, label: "On" }],
+			options: [
+				{ value: 0, label: "Off" },
+				{ value: 1, label: "On" },
+			],
 		});
 		const b = structure({ ...a, options: [...a.options] });
 		expect(structuralCompatibility(a, b)).toBeCloseTo(1);
@@ -142,11 +146,11 @@ describe("rankCandidates", () => {
 				structure: structure(),
 			},
 		]);
-		const samePurpose = results.find((r) =>
-			r.record === "same-purpose-unrelated-text"
+		const samePurpose = results.find(
+			(r) => r.record === "same-purpose-unrelated-text",
 		)!;
-		const matchingText = results.find((r) =>
-			r.record === "matching-text-no-purpose"
+		const matchingText = results.find(
+			(r) => r.record === "matching-text-no-purpose",
 		)!;
 		expect(samePurpose.purposeMatch).toBe(true);
 		// Matching wording should still outrank an unrelated-text purpose match.
@@ -192,13 +196,19 @@ describe("diffStructure", () => {
 
 	it("reports an options diff when option labels differ", () => {
 		const a = structure({
-			options: [{ value: 0, label: "Off" }, { value: 1, label: "On" }],
+			options: [
+				{ value: 0, label: "Off" },
+				{ value: 1, label: "On" },
+			],
 		});
 		const b = structure({
-			options: [{ value: 0, label: "Disabled" }, {
-				value: 1,
-				label: "Enabled",
-			}],
+			options: [
+				{ value: 0, label: "Disabled" },
+				{
+					value: 1,
+					label: "Enabled",
+				},
+			],
 		});
 		const diffs = diffStructure(a, b);
 		expect(diffs.some((d) => d.field === "options")).toBe(true);

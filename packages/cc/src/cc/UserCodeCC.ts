@@ -32,6 +32,7 @@ import {
 	uint8ArrayToString,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+
 import {
 	CCAPI,
 	POLL_VALUE,
@@ -69,6 +70,7 @@ import type { NotificationEventPayload } from "../lib/NotificationEventPayload.j
 import { V } from "../lib/Values.js";
 import { KeypadMode, UserCodeCommand, UserIDStatus } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
+
 import { UserCredentialCC } from "./UserCredentialCC.js";
 
 export const UserCodeCCValues = V.defineCCValues(CommandClasses["User Code"], {
@@ -205,13 +207,13 @@ function setUserCodeMetadata(
 
 	const supportedUserIDStatuses: UserIDStatus[] =
 		this.getValue(ctx, UserCodeCCValues.supportedUserIDStatuses)
-			?? (ccVersion === 1
-				? [
+		?? (ccVersion === 1
+			? [
 					UserIDStatus.Available,
 					UserIDStatus.Enabled,
 					UserIDStatus.Disabled,
 				]
-				: [
+			: [
 					UserIDStatus.Available,
 					UserIDStatus.Enabled,
 					UserIDStatus.Disabled,
@@ -312,7 +314,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	}
 
 	protected override get [SET_VALUE](): SetValueImplementation {
-		return async function(
+		return async function (
 			this: UserCodeCCAPI,
 			{ property, propertyKey },
 			value,
@@ -472,7 +474,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
-		return async function(this: UserCodeCCAPI, { property, propertyKey }) {
+		return async function (this: UserCodeCCAPI, { property, propertyKey }) {
 			switch (property) {
 				case "keypadMode":
 					return this.getKeypadMode();
@@ -507,12 +509,11 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			UserCodeCCUsersNumberReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<UserCodeCCUsersNumberReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.supportedUsers;
 	}
 
@@ -542,12 +543,11 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 				userId,
 				reportMore: multiple,
 			});
-			const response = await this.host.sendCommand<
-				UserCodeCCExtendedUserCodeReport
-			>(
-				cc,
-				this.commandOptions,
-			);
+			const response =
+				await this.host.sendCommand<UserCodeCCExtendedUserCodeReport>(
+					cc,
+					this.commandOptions,
+				);
 			if (!response) {
 				return;
 			} else if (multiple) {
@@ -689,26 +689,20 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 				&& !supportedStatuses.includes(code.userIdStatus)
 			) {
 				throw new ZWaveError(
-					`The user ID status ${
-						getEnumMemberName(
-							UserIDStatus,
-							code.userIdStatus,
-						)
-					} is not supported by the node`,
+					`The user ID status ${getEnumMemberName(
+						UserIDStatus,
+						code.userIdStatus,
+					)} is not supported by the node`,
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			} else if (code.userIdStatus === UserIDStatus.Available) {
 				code.userCode = undefined;
 			} else if (supportedASCIIChars) {
-				const userCodeString = typeof code.userCode === "string"
-					? code.userCode
-					: uint8ArrayToString(code.userCode);
-				if (
-					!validateCode(
-						userCodeString,
-						supportedASCIIChars,
-					)
-				) {
+				const userCodeString =
+					typeof code.userCode === "string"
+						? code.userCode
+						: uint8ArrayToString(code.userCode);
+				if (!validateCode(userCodeString, supportedASCIIChars)) {
 					throw new ZWaveError(
 						`The user code must consist of 4 to 10 of the following characters: ${supportedASCIIChars}`,
 						ZWaveErrorCodes.Argument_Invalid,
@@ -772,12 +766,11 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			UserCodeCCCapabilitiesReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<UserCodeCCCapabilitiesReport>(
+				cc,
+				this.commandOptions,
+			);
 		if (response) {
 			return pick(response, [
 				"supportsAdminCode",
@@ -802,12 +795,11 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			UserCodeCCKeypadModeReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<UserCodeCCKeypadModeReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.keypadMode;
 	}
 
@@ -832,12 +824,10 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			);
 		} else if (!supportedModes.includes(keypadMode)) {
 			throw new ZWaveError(
-				`The keypad mode ${
-					getEnumMemberName(
-						KeypadMode,
-						keypadMode,
-					)
-				} is not supported by the node!`,
+				`The keypad mode ${getEnumMemberName(
+					KeypadMode,
+					keypadMode,
+				)} is not supported by the node!`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -861,9 +851,7 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			UserCodeCCAdminCodeReport
-		>(
+		const response = await this.host.sendCommand<UserCodeCCAdminCodeReport>(
 			cc,
 			this.commandOptions,
 		);
@@ -892,8 +880,8 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 
 		// Validate the code
 		if (!adminCode) {
-			const supportsDeactivation = UserCodeCC
-				.supportsAdminCodeDeactivationCached(
+			const supportsDeactivation =
+				UserCodeCC.supportsAdminCodeDeactivationCached(
 					this.host,
 					this.endpoint,
 				);
@@ -929,12 +917,11 @@ export class UserCodeCCAPI extends PhysicalCCAPI {
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 		});
-		const response = await this.host.sendCommand<
-			UserCodeCCUserCodeChecksumReport
-		>(
-			cc,
-			this.commandOptions,
-		);
+		const response =
+			await this.host.sendCommand<UserCodeCCUserCodeChecksumReport>(
+				cc,
+				this.commandOptions,
+			);
 		return response?.userCodeChecksum;
 	}
 }
@@ -958,9 +945,7 @@ export class UserCodeCC extends CommandClass {
 		];
 	}
 
-	public async interview(
-		ctx: InterviewContext,
-	): Promise<void> {
+	public async interview(ctx: InterviewContext): Promise<void> {
 		const node = this.getNode(ctx)!;
 		const endpoint = this.getEndpoint(ctx)!;
 
@@ -1046,15 +1031,12 @@ export class UserCodeCC extends CommandClass {
 		}
 
 		// Synchronize user codes and settings
-		await this.refreshValues(
-			ctx,
-			{
-				queryAllUserCodes: ctx.getInterviewOptions()?.queryAllUserCodes
-					?? false,
-				onProgress: (completed, total) =>
-					node.reportInterviewProgress(completed, total),
-			},
-		);
+		await this.refreshValues(ctx, {
+			queryAllUserCodes:
+				ctx.getInterviewOptions()?.queryAllUserCodes ?? false,
+			onProgress: (completed, total) =>
+				node.reportInterviewProgress(completed, total),
+		});
 
 		// Remember that the interview is complete
 		this.setInterviewComplete(ctx, true);
@@ -1104,13 +1086,11 @@ export class UserCodeCC extends CommandClass {
 			ctx,
 			endpoint,
 		);
-		const supportsUserCodeChecksum: boolean = this.getValue(
-			ctx,
-			UserCodeCCValues.supportsUserCodeChecksum,
-		) ?? false;
+		const supportsUserCodeChecksum: boolean =
+			this.getValue(ctx, UserCodeCCValues.supportsUserCodeChecksum)
+			?? false;
 		const supportedKeypadModes: readonly KeypadMode[] =
-			this.getValue(ctx, UserCodeCCValues.supportedKeypadModes)
-				?? [];
+			this.getValue(ctx, UserCodeCCValues.supportedKeypadModes) ?? [];
 		const supportedUsers: number =
 			this.getValue(ctx, UserCodeCCValues.supportedUsers) ?? 0;
 		const supportsMultipleUserCodeReport = !!this.getValue(
@@ -1125,9 +1105,8 @@ export class UserCodeCC extends CommandClass {
 		// We assume that the user wants to query all codes if they call this method directly
 		// During the initial interview (node.bootstrapped === false), we either delete
 		// all codes, or query them depending on the driver option.
-		const userCodeAction = (!node.bootstrapped && !queryAllUserCodes)
-			? "delete"
-			: "query";
+		const userCodeAction =
+			!node.bootstrapped && !queryAllUserCodes ? "delete" : "query";
 
 		// Check for changed values and codes
 		if (api.version >= 2) {
@@ -1194,8 +1173,7 @@ export class UserCodeCC extends CommandClass {
 							} else {
 								ctx.logNode(node.id, {
 									endpoint: this.endpointIndex,
-									message:
-										`Querying user code #${nextUserId} timed out, skipping the remaining interview...`,
+									message: `Querying user code #${nextUserId} timed out, skipping the remaining interview...`,
 									level: "warn",
 								});
 								break;
@@ -1307,17 +1285,18 @@ export class UserCodeCC extends CommandClass {
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 	): boolean {
-		const valueDB = ctx
-			.getValueDB(endpoint.nodeId);
-		return valueDB.getValue<boolean>(
-			UserCodeCCValues.supportsAdminCode.endpoint(
-				endpoint.index,
-			),
-		) ?? valueDB.getValue<boolean>(
-			UserCodeCCValues._deprecated_supportsMasterCode.endpoint(
-				endpoint.index,
-			),
-		) ?? false;
+		const valueDB = ctx.getValueDB(endpoint.nodeId);
+		return (
+			valueDB.getValue<boolean>(
+				UserCodeCCValues.supportsAdminCode.endpoint(endpoint.index),
+			)
+			?? valueDB.getValue<boolean>(
+				UserCodeCCValues._deprecated_supportsMasterCode.endpoint(
+					endpoint.index,
+				),
+			)
+			?? false
+		);
 	}
 
 	/**
@@ -1328,18 +1307,20 @@ export class UserCodeCC extends CommandClass {
 		ctx: GetValueDB,
 		endpoint: EndpointId,
 	): boolean {
-		const valueDB = ctx
-			.getValueDB(endpoint.nodeId);
-		return valueDB.getValue<boolean>(
-			UserCodeCCValues.supportsAdminCodeDeactivation.endpoint(
-				endpoint.index,
-			),
-		) ?? valueDB.getValue<boolean>(
-			UserCodeCCValues._deprecated_supportsMasterCodeDeactivation
-				.endpoint(
+		const valueDB = ctx.getValueDB(endpoint.nodeId);
+		return (
+			valueDB.getValue<boolean>(
+				UserCodeCCValues.supportsAdminCodeDeactivation.endpoint(
 					endpoint.index,
 				),
-		) ?? false;
+			)
+			?? valueDB.getValue<boolean>(
+				UserCodeCCValues._deprecated_supportsMasterCodeDeactivation.endpoint(
+					endpoint.index,
+				),
+			)
+			?? false
+		);
 	}
 
 	/**
@@ -1400,12 +1381,10 @@ export class UserCodeCC extends CommandClass {
 		userId: number,
 		status: UserIDStatus,
 	): void {
-		ctx
-			.getValueDB(endpoint.nodeId)
-			.setValue(
-				UserCodeCCValues.userIdStatus(userId).endpoint(endpoint.index),
-				status,
-			);
+		ctx.getValueDB(endpoint.nodeId).setValue(
+			UserCodeCCValues.userIdStatus(userId).endpoint(endpoint.index),
+			status,
+		);
 	}
 
 	/**
@@ -1417,42 +1396,38 @@ export class UserCodeCC extends CommandClass {
 		userId: number,
 		code: string | BytesView,
 	): void {
-		ctx
-			.getValueDB(endpoint.nodeId)
-			.setValue(
-				UserCodeCCValues.userCode(userId).endpoint(endpoint.index),
-				code,
-			);
+		ctx.getValueDB(endpoint.nodeId).setValue(
+			UserCodeCCValues.userCode(userId).endpoint(endpoint.index),
+			code,
+		);
 	}
 }
 
 // @publicAPI
 export type UserCodeCCSetOptions =
 	| {
-		userId: 0;
-		userIdStatus: UserIDStatus.Available;
-		userCode?: undefined;
-	}
+			userId: 0;
+			userIdStatus: UserIDStatus.Available;
+			userCode?: undefined;
+	  }
 	| {
-		userId: number;
-		userIdStatus: UserIDStatus.Available;
-		userCode?: undefined;
-	}
+			userId: number;
+			userIdStatus: UserIDStatus.Available;
+			userCode?: undefined;
+	  }
 	| {
-		userId: number;
-		userIdStatus: Exclude<
-			UserIDStatus,
-			UserIDStatus.Available | UserIDStatus.StatusNotAvailable
-		>;
-		userCode: string | BytesView;
-	};
+			userId: number;
+			userIdStatus: Exclude<
+				UserIDStatus,
+				UserIDStatus.Available | UserIDStatus.StatusNotAvailable
+			>;
+			userCode: string | BytesView;
+	  };
 
 @CCCommand(UserCodeCommand.Set)
 @useSupervision()
 export class UserCodeCCSet extends UserCodeCC {
-	public constructor(
-		options: WithAddress<UserCodeCCSetOptions>,
-	) {
+	public constructor(options: WithAddress<UserCodeCCSetOptions>) {
 		super(options);
 		this.userId = options.userId;
 		this.userIdStatus = options.userIdStatus;
@@ -1549,12 +1524,11 @@ export interface UserCodeCCReportOptions {
 }
 
 @CCCommand(UserCodeCommand.Report)
-export class UserCodeCCReport extends UserCodeCC
+export class UserCodeCCReport
+	extends UserCodeCC
 	implements NotificationEventPayload
 {
-	public constructor(
-		options: WithAddress<UserCodeCCReportOptions>,
-	) {
+	public constructor(options: WithAddress<UserCodeCCReportOptions>) {
 		super(options);
 
 		this.userId = options.userId;
@@ -1662,9 +1636,7 @@ export interface UserCodeCCGetOptions {
 @CCCommand(UserCodeCommand.Get)
 @expectedCCResponse(UserCodeCCReport)
 export class UserCodeCCGet extends UserCodeCC {
-	public constructor(
-		options: WithAddress<UserCodeCCGetOptions>,
-	) {
+	public constructor(options: WithAddress<UserCodeCCGetOptions>) {
 		super(options);
 		this.userId = options.userId;
 	}
@@ -1822,18 +1794,14 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 		const statusBitMaskLength = raw.payload[offset] & 0b000_11111;
 		offset += 1;
 
-		validatePayload(
-			raw.payload.length >= offset + statusBitMaskLength + 1,
-		);
+		validatePayload(raw.payload.length >= offset + statusBitMaskLength + 1);
 		const supportedUserIDStatuses: UserIDStatus[] = parseBitMask(
 			raw.payload.subarray(offset, offset + statusBitMaskLength),
 			UserIDStatus.Available,
 		);
 
 		offset += statusBitMaskLength;
-		const supportsUserCodeChecksum = !!(
-			raw.payload[offset] & 0b100_00000
-		);
+		const supportsUserCodeChecksum = !!(raw.payload[offset] & 0b100_00000);
 		const supportsMultipleUserCodeReport = !!(
 			raw.payload[offset] & 0b010_00000
 		);
@@ -1847,10 +1815,7 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 			raw.payload.length >= offset + keypadModesBitMaskLength + 1,
 		);
 		const supportedKeypadModes: KeypadMode[] = parseBitMask(
-			raw.payload.subarray(
-				offset,
-				offset + keypadModesBitMaskLength,
-			),
+			raw.payload.subarray(offset, offset + keypadModesBitMaskLength),
 			KeypadMode.Normal,
 		);
 
@@ -1902,7 +1867,8 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 			undefined,
 			UserIDStatus.Available,
 		);
-		const controlByte1 = (this.supportsAdminCode ? 0b100_00000 : 0)
+		const controlByte1 =
+			(this.supportsAdminCode ? 0b100_00000 : 0)
 			| (this.supportsAdminCodeDeactivation ? 0b010_00000 : 0)
 			| (supportedStatusesBitmask.length & 0b000_11111);
 
@@ -1911,14 +1877,15 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 			undefined,
 			KeypadMode.Normal,
 		);
-		const controlByte2 = (this.supportsUserCodeChecksum ? 0b100_00000 : 0)
+		const controlByte2 =
+			(this.supportsUserCodeChecksum ? 0b100_00000 : 0)
 			| (this.supportsMultipleUserCodeReport ? 0b010_00000 : 0)
 			| (this.supportsMultipleUserCodeSet ? 0b001_00000 : 0)
 			| (supportedKeypadModesBitmask.length & 0b000_11111);
 
-		const keysAsNumbers = this.supportedASCIIChars.split("").map((char) =>
-			char.charCodeAt(0)
-		);
+		const keysAsNumbers = this.supportedASCIIChars
+			.split("")
+			.map((char) => char.charCodeAt(0));
 		const supportedKeysBitmask = encodeBitMask(keysAsNumbers, undefined, 0);
 		const controlByte3 = supportedKeysBitmask.length & 0b000_11111;
 
@@ -1947,12 +1914,12 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 					this.supportsMultipleUserCodeSet,
 				"supported user id statuses": logList(
 					this.supportedUserIDStatuses.map((status) =>
-						getEnumMemberName(UserIDStatus, status)
+						getEnumMemberName(UserIDStatus, status),
 					),
 				),
 				"supported keypad modes": logList(
 					this.supportedKeypadModes.map((mode) =>
-						getEnumMemberName(KeypadMode, mode)
+						getEnumMemberName(KeypadMode, mode),
 					),
 				),
 				"supported ASCII chars": this.supportedASCIIChars,
@@ -1973,9 +1940,7 @@ export interface UserCodeCCKeypadModeSetOptions {
 @CCCommand(UserCodeCommand.KeypadModeSet)
 @useSupervision()
 export class UserCodeCCKeypadModeSet extends UserCodeCC {
-	public constructor(
-		options: WithAddress<UserCodeCCKeypadModeSetOptions>,
-	) {
+	public constructor(options: WithAddress<UserCodeCCKeypadModeSetOptions>) {
 		super(options);
 		this.keypadMode = options.keypadMode;
 	}
@@ -2089,9 +2054,7 @@ export interface UserCodeCCAdminCodeSetOptions {
 @CCCommand(UserCodeCommand.AdminCodeSet)
 @useSupervision()
 export class UserCodeCCAdminCodeSet extends UserCodeCC {
-	public constructor(
-		options: WithAddress<UserCodeCCAdminCodeSetOptions>,
-	) {
+	public constructor(options: WithAddress<UserCodeCCAdminCodeSetOptions>) {
 		super(options);
 		this.adminCode = options.adminCode;
 	}
@@ -2139,9 +2102,7 @@ export interface UserCodeCCAdminCodeReportOptions {
 @CCCommand(UserCodeCommand.AdminCodeReport)
 @ccValueProperty("adminCode", UserCodeCCValues.adminCode)
 export class UserCodeCCAdminCodeReport extends UserCodeCC {
-	public constructor(
-		options: WithAddress<UserCodeCCAdminCodeReportOptions>,
-	) {
+	public constructor(options: WithAddress<UserCodeCCAdminCodeReportOptions>) {
 		super(options);
 		this.adminCode = options.adminCode;
 	}
@@ -2309,12 +2270,7 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const userCodeBuffers = this.userCodes.map((code) => {
 			const ret = Bytes.concat([
-				[
-					0,
-					0,
-					code.userIdStatus,
-					code.userCode?.length ?? 0,
-				],
+				[0, 0, code.userIdStatus, code.userCode?.length ?? 0],
 				isUint8Array(code.userCode)
 					? code.userCode
 					: Bytes.from(code.userCode ?? "", "ascii"),
@@ -2332,11 +2288,9 @@ export class UserCodeCCExtendedUserCodeSet extends UserCodeCC {
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		for (const { userId, userIdStatus, userCode } of this.userCodes) {
-			message[`code #${userId}`] = `${
-				userCodeToLogString(
-					userCode ?? "",
-				)
-			} (status: ${getEnumMemberName(UserIDStatus, userIdStatus)})`;
+			message[`code #${userId}`] = `${userCodeToLogString(
+				userCode ?? "",
+			)} (status: ${getEnumMemberName(UserIDStatus, userIdStatus)})`;
 		}
 		return {
 			...super.toLogEntry(ctx),
@@ -2393,13 +2347,7 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 		if (!super.persistValues(ctx)) return false;
 
 		for (const { userId, userIdStatus, userCode } of this.userCodes) {
-			persistUserCode.call(
-				this,
-				ctx,
-				userId,
-				userIdStatus,
-				userCode,
-			);
+			persistUserCode.call(this, ctx, userId, userIdStatus, userCode);
 		}
 		return true;
 	}
@@ -2410,11 +2358,9 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		for (const { userId, userIdStatus, userCode } of this.userCodes) {
-			message[`code #${userId}`] = `${
-				userCodeToLogString(
-					userCode,
-				)
-			} (status: ${getEnumMemberName(UserIDStatus, userIdStatus)})`;
+			message[`code #${userId}`] = `${userCodeToLogString(
+				userCode,
+			)} (status: ${getEnumMemberName(UserIDStatus, userIdStatus)})`;
 		}
 		message["next user id"] = this.nextUserId;
 		return {

@@ -39,9 +39,7 @@ test("the SupportedGet command should serialize correctly", async (t) => {
 			ColorSwitchCommand.SupportedGet, // CC Command
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the SupportedReport command should deserialize correctly", async (t) => {
@@ -52,10 +50,9 @@ test("the SupportedReport command should deserialize correctly", async (t) => {
 			0b0000_0001,
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ColorSwitchCCSupportedReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ColorSwitchCCSupportedReport;
 	t.expect(cc.constructor).toBe(ColorSwitchCCSupportedReport);
 
 	t.expect(cc.supportedColorComponents).toStrictEqual([
@@ -84,9 +81,7 @@ test("the Get command should serialize correctly", async (t) => {
 			2, // Color Component
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the Report command should deserialize correctly (version 1)", async (t) => {
@@ -97,10 +92,9 @@ test("the Report command should deserialize correctly (version 1)", async (t) =>
 			0b1111_1111, // value: 255
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ColorSwitchCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ColorSwitchCCReport;
 	t.expect(cc.constructor).toBe(ColorSwitchCCReport);
 
 	t.expect(cc.colorComponent).toBe(ColorComponent.Red);
@@ -119,10 +113,9 @@ test("the Report command should deserialize correctly (version 3)", async (t) =>
 			0b0000_0001, // duration: 1
 		]),
 	);
-	const cc = await CommandClass.parse(
-		ccData,
-		{ sourceNodeId: 1 } as any,
-	) as ColorSwitchCCReport;
+	const cc = (await CommandClass.parse(ccData, {
+		sourceNodeId: 1,
+	} as any)) as ColorSwitchCCReport;
 	t.expect(cc.constructor).toBe(ColorSwitchCCReport);
 
 	t.expect(cc.colorComponent).toBe(ColorComponent.Red);
@@ -229,9 +222,7 @@ test("the StopLevelChange command should serialize correctly", async (t) => {
 			0b0000_0010, // color: red
 		]),
 	);
-	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(
-		expected,
-	);
+	await t.expect(cc.serialize({} as any)).resolves.toStrictEqual(expected);
 });
 
 test("the setValue API verifies that targetColor isn't set with non-numeric keys", async (t) => {

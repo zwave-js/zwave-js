@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
 	NotificationCCReport,
 	NotificationCCValues,
@@ -9,7 +11,7 @@ import {
 } from "@zwave-js/core";
 import { createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest.sequential(
@@ -61,14 +63,15 @@ integrationTest.sequential(
 			});
 
 			// Verify the compat flag is loaded
-			t.expect(node.deviceConfig?.compat?.remapNotifications)
-				.toBeDefined();
+			t.expect(
+				node.deviceConfig?.compat?.remapNotifications,
+			).toBeDefined();
 
 			// The supported notification events should be remapped:
 			// 0x01, 0x02, 0x07, 0x09 should be replaced by 0x18, 0x19
 			// (0x07 maps with "clear" and 0x09 with "idle", so they don't add target events)
-			const supportedAccessControlEvents: number[] | undefined = node
-				.getValue(
+			const supportedAccessControlEvents: number[] | undefined =
+				node.getValue(
 					NotificationCCValues.supportedNotificationEvents(0x06).id,
 				);
 
@@ -83,11 +86,10 @@ integrationTest.sequential(
 			t.expect(supportedAccessControlEvents).not.toContain(0x07);
 
 			// Metadata should be created for "Door handle state" variable
-			const doorHandleStateId = NotificationCCValues
-				.notificationVariable(
-					"Access Control",
-					"Door handle state",
-				).id;
+			const doorHandleStateId = NotificationCCValues.notificationVariable(
+				"Access Control",
+				"Door handle state",
+			).id;
 			const metadata = node.getValueMetadata(
 				doorHandleStateId,
 			) as ValueMetadataNumeric;

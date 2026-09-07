@@ -10,16 +10,16 @@ export type TransportServiceRXState =
 	// We have requested a missing segment
 	| { value: "requestMissing"; offset: number }
 	| {
-		value: "success" | "failure";
-		done: true;
-	};
+			value: "success" | "failure";
+			done: true;
+	  };
 
 export type TransportServiceRXMachineInput =
 	| {
-		value: "segment";
-		offset: number;
-		length: number;
-	}
+			value: "segment";
+			offset: number;
+			length: number;
+	  }
 	| { value: "timeout" }
 	| { value: "abort" };
 
@@ -44,11 +44,11 @@ export function createTransportServiceRXMachine(
 
 	const receivedBytes: boolean[] = [
 		// When the machine is started, we've already received the first segment
-		...(Array.from<boolean>({ length: firstSegmentSize })
-			.fill(true)),
+		...Array.from<boolean>({ length: firstSegmentSize }).fill(true),
 		// The rest of the segments are still missing
-		...(Array.from<boolean>({ length: datagramSize - firstSegmentSize })
-			.fill(false)),
+		...Array.from<boolean>({
+			length: datagramSize - firstSegmentSize,
+		}).fill(false),
 	];
 
 	function markReceived(offset: number, length: number): void {
@@ -66,8 +66,7 @@ export function createTransportServiceRXMachine(
 	}
 
 	function hasHole(): boolean {
-		return receivedBytes.lastIndexOf(true)
-			> receivedBytes.indexOf(false);
+		return receivedBytes.lastIndexOf(true) > receivedBytes.indexOf(false);
 	}
 
 	const transitions: InferStateMachineTransitions<

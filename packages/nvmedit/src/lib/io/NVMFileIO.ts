@@ -1,6 +1,8 @@
+import fs, { type FileHandle } from "node:fs/promises";
+
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import type { BytesView } from "@zwave-js/shared";
-import fs, { type FileHandle } from "node:fs/promises";
+
 import { NVMAccess, type NVMIO } from "../common/definitions.js";
 
 /** An implementation of NVMIO for the filesystem */

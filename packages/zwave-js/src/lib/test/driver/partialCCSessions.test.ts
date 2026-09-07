@@ -13,6 +13,7 @@ import {
 	createMockZWaveRequestFrame,
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 const nodeCapabilities = {
@@ -83,9 +84,16 @@ integrationTest(
 						const queryCount = ++queryCountMissingMiddle;
 						const reports: (readonly [string, number])[] =
 							queryCount === 1
-								// The middle report goes missing on the first attempt
-								? [["Test ", 2], ["ter", 0]]
-								: [["Test ", 2], ["parame", 1], ["ter", 0]];
+								? // The middle report goes missing on the first attempt
+									[
+										["Test ", 2],
+										["ter", 0],
+									]
+								: [
+										["Test ", 2],
+										["parame", 1],
+										["ter", 0],
+									];
 						for (const [name, reportsToFollow] of reports) {
 							const cc = new ConfigurationCCNameReport({
 								nodeId: controller.ownNodeId,
@@ -132,9 +140,12 @@ integrationTest(
 						const queryCount = ++queryCountMissingFinal;
 						const reports: (readonly [string, number])[] =
 							queryCount === 1
-								// The final report goes missing on the first attempt
-								? [["Test para", 1]]
-								: [["Test para", 1], ["meter", 0]];
+								? // The final report goes missing on the first attempt
+									[["Test para", 1]]
+								: [
+										["Test para", 1],
+										["meter", 0],
+									];
 						for (const [name, reportsToFollow] of reports) {
 							const cc = new ConfigurationCCNameReport({
 								nodeId: controller.ownNodeId,
@@ -186,9 +197,16 @@ integrationTest(
 						const queryCount = ++queryCountNoRerequest;
 						const reports: (readonly [string, number])[] =
 							queryCount === 1
-								// The middle report goes missing on the first attempt
-								? [["Test ", 2], ["ter", 0]]
-								: [["Test ", 2], ["parame", 1], ["ter", 0]];
+								? // The middle report goes missing on the first attempt
+									[
+										["Test ", 2],
+										["ter", 0],
+									]
+								: [
+										["Test ", 2],
+										["parame", 1],
+										["ter", 0],
+									];
 						for (const [name, reportsToFollow] of reports) {
 							const cc = new ConfigurationCCNameReport({
 								nodeId: controller.ownNodeId,
@@ -257,20 +275,21 @@ integrationTest(
 								offset,
 								offset + MAX_SEGMENT_SIZE,
 							);
-							const segment = offset === 0
-								? new TransportServiceCCFirstSegment({
-									nodeId: controller.ownNodeId,
-									sessionId,
-									datagramSize: serialized.length,
-									partialDatagram,
-								})
-								: new TransportServiceCCSubsequentSegment({
-									nodeId: controller.ownNodeId,
-									sessionId,
-									datagramSize: serialized.length,
-									datagramOffset: offset,
-									partialDatagram,
-								});
+							const segment =
+								offset === 0
+									? new TransportServiceCCFirstSegment({
+											nodeId: controller.ownNodeId,
+											sessionId,
+											datagramSize: serialized.length,
+											partialDatagram,
+										})
+									: new TransportServiceCCSubsequentSegment({
+											nodeId: controller.ownNodeId,
+											sessionId,
+											datagramSize: serialized.length,
+											datagramOffset: offset,
+											partialDatagram,
+										});
 							await self.sendToController(
 								createMockZWaveRequestFrame(segment, {
 									ackRequested: false,
@@ -337,20 +356,21 @@ integrationTest(
 						offset,
 						offset + MAX_SEGMENT_SIZE,
 					);
-					const segment = offset === 0
-						? new TransportServiceCCFirstSegment({
-							nodeId: controller.ownNodeId,
-							sessionId,
-							datagramSize: serialized.length,
-							partialDatagram,
-						})
-						: new TransportServiceCCSubsequentSegment({
-							nodeId: controller.ownNodeId,
-							sessionId,
-							datagramSize: serialized.length,
-							datagramOffset: offset,
-							partialDatagram,
-						});
+					const segment =
+						offset === 0
+							? new TransportServiceCCFirstSegment({
+									nodeId: controller.ownNodeId,
+									sessionId,
+									datagramSize: serialized.length,
+									partialDatagram,
+								})
+							: new TransportServiceCCSubsequentSegment({
+									nodeId: controller.ownNodeId,
+									sessionId,
+									datagramSize: serialized.length,
+									datagramOffset: offset,
+									partialDatagram,
+								});
 					await self.sendToController(
 						createMockZWaveRequestFrame(segment, {
 							ackRequested: false,

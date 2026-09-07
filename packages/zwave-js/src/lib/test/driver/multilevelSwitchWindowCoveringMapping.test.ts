@@ -7,6 +7,7 @@ import {
 import { CommandClasses } from "@zwave-js/core";
 import { ccCaps, createMockZWaveRequestFrame } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(
@@ -140,9 +141,7 @@ integrationTest(
 					ccId: CommandClasses["Window Covering"],
 					isSupported: true,
 					supportedParameters: [
-						WindowCoveringParameter[
-							"Inbound Left (no position)"
-						],
+						WindowCoveringParameter["Inbound Left (no position)"],
 					],
 				}),
 			],

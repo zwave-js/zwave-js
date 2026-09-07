@@ -18,6 +18,7 @@ import {
 } from "@zwave-js/shared";
 import type { Options as KyOptions } from "ky";
 import type PQueue from "p-queue";
+
 import type {
 	FirmwareUpdateBulkInfo,
 	FirmwareUpdateDeviceID,
@@ -108,14 +109,16 @@ function calculateCacheExpiry(response: Response): number {
 			currentAge = Math.max(0, currentAge);
 
 			if (maxAge > currentAge) {
-				return Date.now()
-					+ Math.min(MAX_CACHE_SECONDS, maxAge - currentAge) * 1000;
+				return (
+					Date.now()
+					+ Math.min(MAX_CACHE_SECONDS, maxAge - currentAge) * 1000
+				);
 			}
 		}
 	}
 
 	// Default fallback cache duration
-	return Date.now() + (MAX_CACHE_SECONDS * 1000);
+	return Date.now() + MAX_CACHE_SECONDS * 1000;
 }
 
 async function makeRequest<T>(
@@ -138,9 +141,7 @@ export interface GetAvailableFirmwareUpdateOptions {
 	apiKey?: string;
 }
 
-export interface GetAvailableFirmwareUpdateBulkOptions
-	extends GetAvailableFirmwareUpdateOptions
-{
+export interface GetAvailableFirmwareUpdateBulkOptions extends GetAvailableFirmwareUpdateOptions {
 	rfRegion?: RFRegion;
 }
 
@@ -187,7 +188,8 @@ export async function getAvailableFirmwareUpdatesBulk(
 	const uniqueDeviceIds = deviceIds.filter(
 		(device, index) =>
 			index
-				=== deviceIds.findIndex((d) =>
+			=== deviceIds.findIndex(
+				(d) =>
 					d.manufacturerId === device.manufacturerId
 					&& d.productType === device.productType
 					&& d.productId === device.productId
@@ -195,8 +197,8 @@ export async function getAvailableFirmwareUpdatesBulk(
 					&& additionalFirmwareVersionsEqual(
 						d.additionalFirmwareVersions,
 						device.additionalFirmwareVersions,
-					)
-				),
+					),
+			),
 	);
 
 	// Determine which devices need a request inside the queued task, so calls
@@ -271,14 +273,12 @@ export async function getAvailableFirmwareUpdatesBulk(
 			if (originalDevice) {
 				foundDevices.add(originalDevice);
 
-				const updates: FirmwareUpdateInfo[] = deviceResponse.updates
-					.map(
-						(update) => ({
-							device: originalDevice,
-							...update,
-							channel: update.channel ?? "stable",
-						}),
-					);
+				const updates: FirmwareUpdateInfo[] =
+					deviceResponse.updates.map((update) => ({
+						device: originalDevice,
+						...update,
+						channel: update.channel ?? "stable",
+					}));
 
 				deviceFirmwareCache.set(originalDevice, {
 					updates,
@@ -384,11 +384,7 @@ export async function downloadFirmwareUpdate(
 	const contentDisposition = downloadResponse.headers.get(
 		"content-disposition",
 	);
-	if (
-		contentDisposition?.startsWith(
-			"attachment; filename=",
-		)
-	) {
+	if (contentDisposition?.startsWith("attachment; filename=")) {
 		filename = contentDisposition
 			.split("filename=")[1]
 			.replace(/^"/, "")

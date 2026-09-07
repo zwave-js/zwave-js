@@ -9,13 +9,15 @@
 // 0 -->               -->     Parsers     --> read
 // 1 └─────────────────┘ └─────────────────┘ └──
 
-import type { LogContainer } from "@zwave-js/core";
-import { type BytesView, noop } from "@zwave-js/shared";
 import type {
 	ReadableWritablePair,
 	UnderlyingSink,
 	UnderlyingSource,
 } from "node:stream/web";
+
+import type { LogContainer } from "@zwave-js/core";
+import { type BytesView, noop } from "@zwave-js/shared";
+
 import { SerialLogger } from "../log/Logger.js";
 import { MessageHeaders } from "../message/MessageHeaders.js";
 import { RCPParser } from "../parsers/RCPParser.js";
@@ -24,10 +26,7 @@ import type { ZWaveSerialBindingFactory } from "../serialport/ZWaveSerialStream.
 
 /** Re-usable stream factory to create new serial streams */
 export class RCPSerialStreamFactory {
-	constructor(
-		binding: ZWaveSerialBindingFactory,
-		loggers: LogContainer,
-	) {
+	constructor(binding: ZWaveSerialBindingFactory, loggers: LogContainer) {
 		this.binding = binding;
 		this.logger = new SerialLogger(loggers);
 	}
@@ -43,14 +42,12 @@ export class RCPSerialStreamFactory {
 }
 
 /** Single-use serial stream. Has to be re-created after being closed. */
-export class RCPSerialStream implements
-	ReadableWritablePair<
-		// The serial binding emits RCPSerialFrames
-		RCPSerialFrame,
-		// and accepts binary data
-		BytesView
-	>
-{
+export class RCPSerialStream implements ReadableWritablePair<
+	// The serial binding emits RCPSerialFrames
+	RCPSerialFrame,
+	// and accepts binary data
+	BytesView
+> {
 	constructor(
 		source: UnderlyingSource<BytesView>,
 		sink: UnderlyingSink<BytesView>,
@@ -73,11 +70,13 @@ export class RCPSerialStream implements
 		const parser = new RCPParser(logger);
 		this.readable = parser.readable;
 		const sourceStream = new ReadableStream(source);
-		void sourceStream.pipeTo(parser.writable, {
-			signal: this.#abort.signal,
-		}).catch((_e) => {
-			this._isOpen = false;
-		});
+		void sourceStream
+			.pipeTo(parser.writable, {
+				signal: this.#abort.signal,
+			})
+			.catch((_e) => {
+				this._isOpen = false;
+			});
 	}
 
 	protected logger: SerialLogger;

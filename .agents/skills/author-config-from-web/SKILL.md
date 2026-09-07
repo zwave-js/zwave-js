@@ -154,6 +154,7 @@ After creating the configuration file, you MUST validate it using the following 
 2. **Check for Remaining Issues**: Use the `lint_config` tool with the configuration file path to detect any remaining semantic errors or issues that require manual investigation and fixing
 3. **Format Files**: Use the `format` tool to ensure all files in the project match the required formatting standards (only needs to be called once at the end)
 
+<!-- prettier-ignore -->
 Additional validation steps:
 4. **Validate Structure**: Ensure proper JSON5 formatting and property ordering per the instructions
 5. **Review Consistency**: Compare with similar devices from same manufacturer

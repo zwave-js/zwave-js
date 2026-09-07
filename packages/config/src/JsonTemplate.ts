@@ -150,9 +150,10 @@ async function resolveImportFilename(
 		// Try to find at least one root directory that contains the referenced file
 		if (!rootDirs) {
 			throw new ZWaveError(
-				`An $import specifier cannot start with ~/ when no root directory is defined!${
-					getImportStack(visited, selector)
-				}`,
+				`An $import specifier cannot start with ~/ when no root directory is defined!${getImportStack(
+					visited,
+					selector,
+				)}`,
 				ZWaveErrorCodes.Config_Invalid,
 			);
 		}
@@ -161,11 +162,11 @@ async function resolveImportFilename(
 			if (await pathExists(fs, candidate)) return candidate;
 		}
 		throw new ZWaveError(
-			`Could not find the referenced file ${
-				importFilename.slice(2)
-			} in any of the root directories: ${
-				rootDirs.map((d) => `\n· ${d}`).join("")
-			}\n${getImportStack(visited, selector)}`,
+			`Could not find the referenced file ${importFilename.slice(
+				2,
+			)} in any of the root directories: ${rootDirs
+				.map((d) => `\n· ${d}`)
+				.join("")}\n${getImportStack(visited, selector)}`,
 			ZWaveErrorCodes.Config_Invalid,
 		);
 	} else {
@@ -191,18 +192,18 @@ export async function resolveTemplateImport(
 	assertImportSpecifier(specifier);
 	if (typeof rootDirs === "string") rootDirs = [rootDirs];
 
-	const { filename: importFilename, selector } = importSpecifierRegex
-		.exec(specifier)!.groups!;
+	const { filename: importFilename, selector } =
+		importSpecifierRegex.exec(specifier)!.groups!;
 
 	const newFilename = importFilename
 		? await resolveImportFilename(
-			fs,
-			importFilename,
-			contextFilename,
-			rootDirs,
-			[],
-			selector,
-		)
+				fs,
+				importFilename,
+				contextFilename,
+				rootDirs,
+				[],
+				selector,
+			)
 		: path.normalize(contextFilename);
 
 	const fileCache = new Map(templateCache);
@@ -235,8 +236,8 @@ export async function resolveImportPath(
 	if (!importSpecifierRegex.test(specifier)) return undefined;
 	if (typeof rootDirs === "string") rootDirs = [rootDirs];
 
-	const { filename: importFilename } = importSpecifierRegex
-		.exec(specifier)!.groups!;
+	const { filename: importFilename } =
+		importSpecifierRegex.exec(specifier)!.groups!;
 	if (!importFilename) return path.normalize(contextFilename);
 
 	try {
@@ -272,11 +273,9 @@ async function readJsonWithTemplateInternal(
 
 		if (outsideAllRootDirs) {
 			throw new ZWaveError(
-				`Tried to import config file "${filename}" from outside all root directories: ${
-					rootDirs
-						.map((d) => `\n· ${d}`)
-						.join("")
-				}
+				`Tried to import config file "${filename}" from outside all root directories: ${rootDirs
+					.map((d) => `\n· ${d}`)
+					.join("")}
 ${getImportStack(visited, selector)}`,
 				ZWaveErrorCodes.Config_Invalid,
 			);
@@ -285,12 +284,10 @@ ${getImportStack(visited, selector)}`,
 
 	const specifier = getImportSpecifier(filename, selector);
 	if (visited.includes(specifier)) {
-		const msg = `Circular $import in config files: ${
-			[
-				...visited,
-				specifier,
-			].join(" -> ")
-		}\n`;
+		const msg = `Circular $import in config files: ${[
+			...visited,
+			specifier,
+		].join(" -> ")}\n`;
 		// process.stderr.write(msg + "\n");
 		throw new ZWaveError(msg, ZWaveErrorCodes.Config_CircularImport);
 	}
@@ -305,11 +302,9 @@ ${getImportStack(visited, selector)}`,
 			fileCache.set(filename, json);
 		} catch (e) {
 			throw new ZWaveError(
-				`Could not parse config file ${filename}: ${
-					getErrorMessage(
-						e,
-					)
-				}${getImportStack(visited, selector)}`,
+				`Could not parse config file ${filename}: ${getErrorMessage(
+					e,
+				)}${getImportStack(visited, selector)}`,
 				ZWaveErrorCodes.Config_Invalid,
 			);
 		}
@@ -340,19 +335,19 @@ async function resolveJsonImports(
 		if (prop === IMPORT_KEY) {
 			// This is an import statement. Make sure we're working with a string
 			assertImportSpecifier(val, visited.join(" -> "));
-			const { filename: importFilename, selector } = importSpecifierRegex
-				.exec(val)!.groups!;
+			const { filename: importFilename, selector } =
+				importSpecifierRegex.exec(val)!.groups!;
 
 			// Resolve the correct import path
 			const newFilename = importFilename
 				? await resolveImportFilename(
-					fs,
-					importFilename,
-					filename,
-					rootDirs,
-					visited,
-					selector,
-				)
+						fs,
+						importFilename,
+						filename,
+						rootDirs,
+						visited,
+						selector,
+					)
 				: filename;
 
 			const imported = await readJsonWithTemplateInternal(

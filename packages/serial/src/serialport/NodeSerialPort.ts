@@ -1,7 +1,9 @@
+import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
+
 import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import type { BytesView } from "@zwave-js/shared";
-import type { UnderlyingSink, UnderlyingSource } from "node:stream/web";
 import { SerialPort } from "serialport";
+
 import type { SerialBindingFactoryOptions } from "./Bindings.js";
 import type { DisconnectError } from "./DisconnectError.js";
 import type { ZWaveSerialBindingFactory } from "./ZWaveSerialStream.js";
@@ -12,7 +14,7 @@ export function createNodeSerialPortFactory(
 	Binding: typeof SerialPort = SerialPort,
 	options?: SerialBindingFactoryOptions,
 ): ZWaveSerialBindingFactory {
-	return async function() {
+	return async function () {
 		const { baudrate = 115200 } = options ?? {};
 
 		const serial = new Binding({

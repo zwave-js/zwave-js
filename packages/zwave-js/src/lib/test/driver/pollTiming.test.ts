@@ -1,8 +1,10 @@
+import path from "node:path";
+
 import { BasicCCGet, BasicCCReport } from "@zwave-js/cc";
 import { MessagePriority } from "@zwave-js/core";
 import { type MockNodeBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
-import path from "node:path";
+
 import { integrationTest } from "../integrationTestSuite.js";
 
 integrationTest(

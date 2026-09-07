@@ -1,6 +1,8 @@
+import assert from "node:assert";
+
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { validateArgs } from "@zwave-js/transformers";
-import assert from "node:assert";
+
 import type { Bar } from "./testInterface._imports.mjs";
 
 // Define 3 interfaces with the same name to test that we handle
@@ -11,8 +13,7 @@ interface Foo {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface Foo {
-}
+interface Foo {}
 
 interface Foo {
 	p3?: boolean;

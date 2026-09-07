@@ -117,10 +117,7 @@ enum ScheduleOverrideType {
 ### `SetbackSpecialState`
 
 ```ts
-type SetbackSpecialState =
-	| "Frost Protection"
-	| "Energy Saving"
-	| "Unused";
+type SetbackSpecialState = "Frost Protection" | "Energy Saving" | "Unused";
 ```
 
 ### `SetbackState`

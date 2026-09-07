@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 import {
 	MultiChannelCC,
 	SecurityCC,
@@ -5,7 +7,6 @@ import {
 } from "@zwave-js/cc";
 import { generateAuthKey, generateEncryptionKey } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
-import { randomBytes } from "node:crypto";
 import { test } from "vitest";
 
 test("WakeUpCCNoMoreInformation should expect no response", (t) => {

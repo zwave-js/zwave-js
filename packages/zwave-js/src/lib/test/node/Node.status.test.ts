@@ -2,6 +2,7 @@ import { NodeStatus } from "@zwave-js/core";
 import { MockController } from "@zwave-js/testing";
 import sinon from "sinon";
 import { test as baseTest } from "vitest";
+
 import { createDefaultMockControllerBehaviors } from "../../../Testing.js";
 import type { Driver } from "../../driver/Driver.js";
 import { createAndStartTestingDriver } from "../../driver/DriverMock.js";
@@ -66,38 +67,32 @@ function performTest(
 	sinon.assert.called(spy);
 }
 
-test(
-	"Changing the status to awake should raise the wake up event",
-	({ context }) =>
-		performTest(context, {
-			targetStatus: NodeStatus.Awake,
-			expectedEvent: "wake up",
-		}),
-);
+test("Changing the status to awake should raise the wake up event", ({
+	context,
+}) =>
+	performTest(context, {
+		targetStatus: NodeStatus.Awake,
+		expectedEvent: "wake up",
+	}));
 
-test(
-	"Changing the status to asleep should raise the sleep event",
-	({ context }) =>
-		performTest(context, {
-			targetStatus: NodeStatus.Asleep,
-			expectedEvent: "sleep",
-		}),
-);
+test("Changing the status to asleep should raise the sleep event", ({
+	context,
+}) =>
+	performTest(context, {
+		targetStatus: NodeStatus.Asleep,
+		expectedEvent: "sleep",
+	}));
 
-test(
-	"Changing the status to dead should raise the dead event",
-	({ context }) =>
-		performTest(context, {
-			targetStatus: NodeStatus.Dead,
-			expectedEvent: "dead",
-		}),
-);
+test("Changing the status to dead should raise the dead event", ({ context }) =>
+	performTest(context, {
+		targetStatus: NodeStatus.Dead,
+		expectedEvent: "dead",
+	}));
 
-test(
-	"Changing the status to alive should raise the alive event",
-	({ context }) =>
-		performTest(context, {
-			targetStatus: NodeStatus.Alive,
-			expectedEvent: "alive",
-		}),
-);
+test("Changing the status to alive should raise the alive event", ({
+	context,
+}) =>
+	performTest(context, {
+		targetStatus: NodeStatus.Alive,
+		expectedEvent: "alive",
+	}));

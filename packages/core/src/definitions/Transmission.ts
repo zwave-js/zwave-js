@@ -1,4 +1,5 @@
 import type { CCId } from "../traits/CommandClasses.js";
+
 import type { EncapsulationFlags } from "./EncapsulationFlags.js";
 import type { MessagePriority } from "./MessagePriority.js";
 import type { SecurityClass } from "./SecurityClass.js";
@@ -67,24 +68,21 @@ export interface SendMessageOptions {
 }
 
 export type SupervisionOptions =
-	| (
-		& {
+	| ({
 			/** Whether supervision may be used. `false` disables supervision. Default: `"auto"`. */
 			useSupervision?: "auto";
-		}
-		& (
+	  } & (
 			| {
-				requestStatusUpdates?: false;
-			}
+					requestStatusUpdates?: false;
+			  }
 			| {
-				requestStatusUpdates: true;
-				onUpdate: SupervisionUpdateHandler;
-			}
-		)
-	)
+					requestStatusUpdates: true;
+					onUpdate: SupervisionUpdateHandler;
+			  }
+	  ))
 	| {
-		useSupervision: false;
-	};
+			useSupervision: false;
+	  };
 
 export type SendCommandSecurityS2Options = {
 	/** Send the command using a different (lower) security class */
@@ -97,6 +95,7 @@ export type SendCommandSecurityS2Options = {
 	s2MulticastGroupId?: number;
 };
 
+// oxfmt-ignore
 export type SendCommandOptions =
 	& SendMessageOptions
 	& SupervisionOptions
@@ -127,5 +126,6 @@ export type SendCommandOptions =
 	};
 
 export type SendCommandReturnType<TResponse extends CCId | undefined> =
-	undefined extends TResponse ? SupervisionResult | undefined
+	undefined extends TResponse
+		? SupervisionResult | undefined
 		: TResponse | undefined;

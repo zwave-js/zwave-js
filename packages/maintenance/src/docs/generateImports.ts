@@ -2,29 +2,31 @@
  * This method returns the original source code for an interface or type so it can be put into documentation
  */
 
-import { fs } from "@zwave-js/core/bindings/fs/node";
-import { enumFilesRecursive } from "@zwave-js/shared";
-import c from "ansi-colors";
-import esMain from "es-main";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
+
+import { fs } from "@zwave-js/core/bindings/fs/node";
+import { enumFilesRecursive } from "@zwave-js/shared";
+import c from "ansi-colors";
+import esMain from "es-main";
 import { Piscina } from "piscina";
 import { Project } from "ts-morph";
-import { formatWithDprint } from "../dprint.js";
+// Support directly loading this file in a worker
+import { register } from "tsx/esm/api";
+
+import { formatWithOxfmt } from "../oxfmt.js";
 import {
 	projectRoot,
 	tsConfigFilePathForDocs as tsConfigFilePath,
 } from "../tsAPITools.js";
+
 import {
 	type ImportOptions,
 	findSourceNode,
 	getTransformedSource,
 } from "./shared.js";
-
-// Support directly loading this file in a worker
-import { register } from "tsx/esm/api";
 register();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -72,9 +74,9 @@ function getImportKey(
 type ProcessImportTask =
 	| string
 	| {
-		filename: string;
-		transformedSources: Record<string, string>;
-	};
+			filename: string;
+			transformedSources: Record<string, string>;
+	  };
 
 export async function processDocFile(
 	program: Project | undefined,
@@ -90,19 +92,20 @@ export async function processDocFile(
 		const range = ranges[i];
 		console.log(`  processing import ${range.symbol} from ${range.module}`);
 		const importKey = getImportKey(range);
-		const source = transformedSources[importKey]
-			?? (() => {
-				if (!program) return;
-				const sourceNode = findSourceNode(
-					program,
-					`packages/${
-						range.module.replace(/^@zwave-js\//, "")
-					}/src/index.ts`,
-					range.symbol,
-				);
-				if (!sourceNode) return;
-				return getTransformedSource(sourceNode, range.options);
-			})();
+		let source = transformedSources[importKey];
+		if (!source && program) {
+			const sourceNode = findSourceNode(
+				program,
+				`packages/${range.module.replace(
+					/^@zwave-js\//,
+					"",
+				)}/src/index.ts`,
+				range.symbol,
+			);
+			if (sourceNode) {
+				source = await getTransformedSource(sourceNode, range.options);
+			}
+		}
 		if (!source) {
 			console.error(
 				c.red(
@@ -120,7 +123,7 @@ ${source}
 	}
 	console.log(`formatting ${docFile}...`);
 	fileContent = fileContent.replaceAll("\r\n", "\n");
-	fileContent = formatWithDprint(docFile, fileContent);
+	fileContent = await formatWithOxfmt(docFile, fileContent);
 	if (!hasErrors) {
 		await fsp.writeFile(docFile, fileContent, "utf8");
 	}
@@ -153,7 +156,7 @@ async function collectTransformedSources(
 		if (!sourceNode) continue;
 		transformedSources.set(
 			importKey,
-			getTransformedSource(sourceNode, range.options),
+			await getTransformedSource(sourceNode, range.options),
 		);
 	}
 
@@ -195,7 +198,7 @@ async function processImports(piscina: Piscina): Promise<boolean> {
 				transformedSources: transformedSourcesByFile.get(f) ?? {},
 			},
 			{ name: "processImport" },
-		)
+		),
 	);
 
 	const hasErrors = (await Promise.all(tasks)).some((result) => result);
