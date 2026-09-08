@@ -78,10 +78,7 @@
 			"description": "Sets how often the device checks the thresholds in parameters 2, 3, and 14-17.",
 			"valueSize": 4,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 2678400] }],
 			"defaultValue": 900,
 			"options": [
 				{
@@ -345,10 +342,7 @@
 			"description": "Sets the interval for battery, temperature, humidity, and acceleration reports.",
 			"valueSize": 4,
 			"unit": "seconds",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 2678400] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 2678400] }],
 			"defaultValue": 43200,
 			"options": [
 				{
@@ -478,10 +472,7 @@
 			"label": "Acceleration Change Report Threshold",
 			"valueSize": 1,
 			"unit": "0.01 m/s²",
-			"allowed": [
-				{ "value": 0 },
-				{ "range": [30, 255] }
-			],
+			"allowed": [{ "value": 0 }, { "range": [30, 255] }],
 			"defaultValue": 0,
 			"unsigned": true,
 			"options": [
