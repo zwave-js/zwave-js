@@ -56,7 +56,9 @@
   "scripts": {
     "build": "tsgo -b",
     "bootstrap": "yarn build",
-    "clean": "del-cli build/ *.tsbuildinfo"
+    "clean": "del-cli build/ *.tsbuildinfo",
+    "prefetch-semantic-model": "node build/semantic/prefetchModel.js",
+    "print-semantic-model-cache-key": "node build/semantic/printModelCacheKey.js"
   },
   "publishConfig": {
     "access": "public"
