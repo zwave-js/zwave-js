@@ -133,12 +133,6 @@ export interface OxlintCompatibleRule extends Omit<Rule, "create"> {
 	};
 }
 
-export function defineOxlintCompatibleRule(
-	rule: OxlintCompatibleRule,
-): OxlintCompatibleRule {
-	return rule;
-}
-
 export namespace JSONCRule {
 	// Special ESLint rule type for JSONC files
 	// AST viewer at https://ota-meshi.github.io/jsonc-eslint-parser/

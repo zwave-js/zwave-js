@@ -8,11 +8,11 @@ import {
 import { type CommandClasses, applicationCCs, getCCName } from "@zwave-js/core";
 
 import {
-	defineOxlintCompatibleRule,
 	findDecorator,
 	findDecoratorContainingCCId,
 	getCCIdFromDecorator,
 	getCCIdFromExpression,
+	type OxlintCompatibleRule,
 } from "../utils.js";
 
 const apiBaseClasses = new Set(["CCAPI", "PhysicalCCAPI"]);
@@ -45,7 +45,7 @@ function getRequiredInterviewCCsFromMethod(
 		.filter(({ ccId }) => ccId != undefined);
 }
 
-export const consistentCCClasses = defineOxlintCompatibleRule({
+export const consistentCCClasses: OxlintCompatibleRule = {
 	createOnce(context) {
 		let currentCCId: CommandClasses | undefined;
 		let isInCCCommand = false;
@@ -422,4 +422,4 @@ export const consistentCCClasses = defineOxlintCompatibleRule({
 		},
 	},
 	defaultOptions: [],
-});
+};

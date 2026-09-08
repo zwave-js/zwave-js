@@ -1,14 +1,14 @@
 import { AST_NODE_TYPES, AST_TOKEN_TYPES } from "@typescript-eslint/utils";
 
 import {
-	defineOxlintCompatibleRule,
 	findDecoratorContainingCCId,
 	getCCNameFromDecorator,
+	type OxlintCompatibleRule,
 } from "../utils.js";
 
 const isFixMode = process.argv.some((arg) => arg.startsWith("--fix"));
 
-export const ccAPIValidateArgs = defineOxlintCompatibleRule({
+export const ccAPIValidateArgs: OxlintCompatibleRule = {
 	createOnce(context) {
 		let currentAPIClassCCName: string | undefined;
 		let validateArgsImport: string | undefined;
@@ -139,4 +139,4 @@ export const ccAPIValidateArgs = defineOxlintCompatibleRule({
 		},
 	},
 	defaultOptions: [],
-});
+};

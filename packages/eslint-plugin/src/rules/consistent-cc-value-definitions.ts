@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
-import { defineOxlintCompatibleRule } from "../utils.js";
+import type { OxlintCompatibleRule } from "../utils.js";
+
 const vHelperMethods = new Set([
 	"staticProperty",
 	"staticPropertyWithName",
@@ -30,7 +31,7 @@ function isVHelperCall(node: TSESTree.CallExpression): boolean {
 	);
 }
 
-export const consistentCCValueDefinitions = defineOxlintCompatibleRule({
+export const consistentCCValueDefinitions: OxlintCompatibleRule = {
 	createOnce(context) {
 		return {
 			CallExpression(node) {
@@ -88,4 +89,4 @@ export const consistentCCValueDefinitions = defineOxlintCompatibleRule({
 		},
 	},
 	defaultOptions: [],
-});
+};

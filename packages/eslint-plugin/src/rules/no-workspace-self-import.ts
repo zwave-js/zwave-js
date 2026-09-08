@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import type { TSESTree } from "@typescript-eslint/utils";
 
-import { defineOxlintCompatibleRule } from "../utils.js";
+import type { OxlintCompatibleRule } from "../utils.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -56,7 +56,7 @@ function isRelativeImport(source: string): boolean {
 	return source.startsWith("./") || source.startsWith("../");
 }
 
-export const noWorkspaceSelfImport = defineOxlintCompatibleRule({
+export const noWorkspaceSelfImport: OxlintCompatibleRule = {
 	createOnce(context) {
 		let packageName: string | undefined;
 
@@ -115,4 +115,4 @@ export const noWorkspaceSelfImport = defineOxlintCompatibleRule({
 		},
 	},
 	defaultOptions: [],
-});
+};

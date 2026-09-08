@@ -1,8 +1,8 @@
 import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 
-import { defineOxlintCompatibleRule } from "../utils.js";
+import type { OxlintCompatibleRule } from "../utils.js";
 
-export const noUnnecessaryBytesFrom = defineOxlintCompatibleRule({
+export const noUnnecessaryBytesFrom: OxlintCompatibleRule = {
 	createOnce(context) {
 		return {
 			CallExpression(node) {
@@ -80,4 +80,4 @@ export const noUnnecessaryBytesFrom = defineOxlintCompatibleRule({
 		},
 	},
 	defaultOptions: [],
-});
+};

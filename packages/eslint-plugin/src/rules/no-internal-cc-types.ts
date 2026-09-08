@@ -4,11 +4,11 @@ import {
 	type TSESTree,
 } from "@typescript-eslint/utils";
 
-import { defineOxlintCompatibleRule } from "../utils.js";
+import type { OxlintCompatibleRule } from "../utils.js";
 
 // const isFixMode = process.argv.some((arg) => arg.startsWith("--fix"));
 
-export const noInternalCCTypes = defineOxlintCompatibleRule({
+export const noInternalCCTypes: OxlintCompatibleRule = {
 	createOnce(context) {
 		const localTypeNodes = new Map<
 			string,
@@ -233,4 +233,4 @@ export const noInternalCCTypes = defineOxlintCompatibleRule({
 		},
 	},
 	defaultOptions: [],
-});
+};
