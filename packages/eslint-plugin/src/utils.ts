@@ -125,9 +125,9 @@ export type Rule = TSESLint.RuleModule<
 >;
 
 export interface OxlintCompatibleRule extends Omit<Rule, "create"> {
-	createOnce(context: Parameters<Rule["create"]>[0]): ReturnType<
-		Rule["create"]
-	> & {
+	createOnce(
+		context: Readonly<TSESLint.RuleContext<any, never[]>>,
+	): TSESLint.RuleListener & {
 		before?(): boolean | void;
 		after?(): void;
 	};

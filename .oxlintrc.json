@@ -29,7 +29,7 @@
 		// "style": "error"
 	},
 
-	"jsPlugins": ["@zwave-js/eslint-plugin", "eslint-plugin-unused-imports"],
+	"jsPlugins": ["@zwave-js/eslint-plugin"],
 
 	// Default plugins (typescript, unicorn, oxc are enabled by default)
 	// We don't need to specify them unless we want to disable or change them
@@ -217,8 +217,6 @@
 		// allowProtectedClassPropertyAccess options are not honored by oxlint-tsgolint (verified
 		// broken as of 0.23.0): it still flags and auto-rewrites deliberate bracket access to
 		// private/protected members, which breaks compilation. Keep off until fixed upstream.
-
-		"unused-imports/no-unused-imports": "error",
 
 		// ========= Unicorn Plugin Rules =========
 		"unicorn/prefer-array-find": "error",

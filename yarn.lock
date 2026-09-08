@@ -3474,7 +3474,6 @@ __metadata:
     cz-conventional-changelog: "npm:^3.3.0"
     del-cli: "npm:^7.0.0"
     eslint: "npm:^10.3.0"
-    eslint-plugin-unused-imports: "patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch"
     husky: "npm:^9.1.7"
     js-yaml: "npm:^4.1.1"
     json5: "npm:^2.2.3"
@@ -5196,32 +5195,6 @@ __metadata:
   peerDependencies:
     eslint: ">=9.38.0"
   checksum: 10/d7de8884d1a4369cb0e5cf3b424191dad8a65340943356d0ae0d4d10afd6f05db47d905c2500cbe5d517e7d4d394b51367cf32631c39cce7732b9cbf613cf852
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-unused-imports@npm:4.1.4":
-  version: 4.1.4
-  resolution: "eslint-plugin-unused-imports@npm:4.1.4"
-  peerDependencies:
-    "@typescript-eslint/eslint-plugin": ^8.0.0-0 || ^7.0.0 || ^6.0.0 || ^5.0.0
-    eslint: ^9.0.0 || ^8.0.0
-  peerDependenciesMeta:
-    "@typescript-eslint/eslint-plugin":
-      optional: true
-  checksum: 10/8e987028ad925ce1e04c01dcae70adbf44c2878a8b15c4327b33a2861e471d7fe00f6fe213fbd2b936f3fcefc8ccabb0d778aa1d6e0e0387a3dc7fe150cd4ed4
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-unused-imports@patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch":
-  version: 4.1.4
-  resolution: "eslint-plugin-unused-imports@patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch::version=4.1.4&hash=ca53e2"
-  peerDependencies:
-    "@typescript-eslint/eslint-plugin": ^8.0.0-0 || ^7.0.0 || ^6.0.0 || ^5.0.0
-    eslint: ^9.0.0 || ^8.0.0
-  peerDependenciesMeta:
-    "@typescript-eslint/eslint-plugin":
-      optional: true
-  checksum: 10/4607a8f4350aa713c658aeab1376898888058539877462ef94a1a0aa314140c2d270ea7b5fe9150ef5284e801d616de3a4a7457721bd2fc988ffa77d7a90e174
   languageName: node
   linkType: hard
 

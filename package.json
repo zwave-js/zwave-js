@@ -73,7 +73,6 @@
     "cz-conventional-changelog": "^3.3.0",
     "del-cli": "^7.0.0",
     "eslint": "^10.3.0",
-    "eslint-plugin-unused-imports": "patch:eslint-plugin-unused-imports@npm%3A4.1.4#~/.yarn/patches/eslint-plugin-unused-imports-npm-4.1.4-a7d7c7cdf3.patch",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "json5": "^2.2.3",
