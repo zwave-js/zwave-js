@@ -77,7 +77,7 @@ async function generateExamples(): Promise<boolean> {
 	indexFileContent =
 		indexFileContent.slice(0, indexAutoGenStart + indexAutoGenToken.length)
 		+ generatedIndex;
-	indexFileContent = await formatWithOxfmt("index.md", indexFileContent);
+	indexFileContent = await formatWithOxfmt(indexFilename, indexFileContent);
 	await fsp.writeFile(indexFilename, indexFileContent, "utf8");
 
 	const sidebarInputFilename = path.join(docsDir, "_sidebar.md");
@@ -99,7 +99,7 @@ async function generateExamples(): Promise<boolean> {
 			sidebarAutoGenStart + sidebarAutoGenToken.length,
 		);
 	sidebarFileContent = await formatWithOxfmt(
-		"_sidebar.md",
+		path.join(examplesDocsDir, "_sidebar.md"),
 		sidebarFileContent,
 	);
 	await fsp.writeFile(
