@@ -4,5 +4,6 @@ export interface ToolHandler<TArgs = any> {
 	name: string;
 	description: string;
 	inputSchema: Tool["inputSchema"];
+	annotations: NonNullable<Tool["annotations"]>;
 	handler: (args: TArgs) => Promise<CallToolResult>;
 }

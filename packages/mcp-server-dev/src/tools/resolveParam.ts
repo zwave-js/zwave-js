@@ -135,6 +135,12 @@ export const resolveParamTool: ToolHandler<ResolveConfigParamArgs> = {
 		+ "as-is (matching the config editor preview); pass firmwareVersion to "
 		+ "fully evaluate conditionals for a specific firmware. Returns all "
 		+ "matching parameter variants when more than one exists.",
+	annotations: {
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		openWorldHint: false,
+	},
 	inputSchema: {
 		type: "object",
 		properties: {

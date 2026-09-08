@@ -68,6 +68,12 @@ export function createFindSimilarParametersTool(
 			+ "model; the response may report "
 			+ "model_download_consent_required instead of results if the local "
 			+ "model needs a one-time download that the client cannot confirm.",
+		annotations: {
+			readOnlyHint: true,
+			destructiveHint: false,
+			idempotentHint: true,
+			openWorldHint: true,
+		},
 		inputSchema: {
 			type: "object",
 			properties: {

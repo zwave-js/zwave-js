@@ -136,6 +136,12 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 export const lintConfigTool: ToolHandler = {
 	name: TOOL_NAME,
 	description: "Check semantic correctness of configuration files",
+	annotations: {
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		openWorldHint: false,
+	},
 	inputSchema: {
 		type: "object",
 		properties: {

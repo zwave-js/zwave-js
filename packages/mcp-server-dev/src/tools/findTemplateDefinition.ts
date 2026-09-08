@@ -117,6 +117,12 @@ export const findTemplateDefinitionTool: ToolHandler<FindTemplateDefinitionArgs>
 			+ "and either an $import specifier or a parameter number that uses "
 			+ "$import, returns the target file and the line/column of the "
 			+ "definition (file start if the specifier has no #key).",
+		annotations: {
+			readOnlyHint: true,
+			destructiveHint: false,
+			idempotentHint: true,
+			openWorldHint: false,
+		},
 		inputSchema: {
 			type: "object",
 			properties: {

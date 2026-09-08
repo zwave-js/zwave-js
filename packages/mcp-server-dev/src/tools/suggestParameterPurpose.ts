@@ -65,6 +65,12 @@ export function createSuggestParameterPurposeTool(
 			+ "Returns ranked purposes with similarity, sample size, confidence, "
 			+ "and representative parameter definitions; suggestions are evidence "
 			+ "for review and are never applied automatically.",
+		annotations: {
+			readOnlyHint: true,
+			destructiveHint: false,
+			idempotentHint: true,
+			openWorldHint: true,
+		},
 		inputSchema: {
 			type: "object",
 			properties: {
