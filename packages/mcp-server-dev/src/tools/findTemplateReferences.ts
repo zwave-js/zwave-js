@@ -111,6 +111,12 @@ export const findTemplateReferencesTool: ToolHandler<FindTemplateReferencesArgs>
 			"Find all $import references to a template across every device config "
 			+ "file. Given the template file and the top-level template name, "
 			+ "returns each importing file with its line/column.",
+		annotations: {
+			readOnlyHint: true,
+			destructiveHint: false,
+			idempotentHint: true,
+			openWorldHint: false,
+		},
 		inputSchema: {
 			type: "object",
 			properties: {

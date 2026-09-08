@@ -77,6 +77,12 @@ export function createSearchParameterDefinitionsTool(
 			+ "templates are returned separately. Uses the bundled local embedding "
 			+ "model; if it needs a one-time download, the response may report "
 			+ "model_download_consent_required instead of results.",
+		annotations: {
+			readOnlyHint: true,
+			destructiveHint: false,
+			idempotentHint: true,
+			openWorldHint: true,
+		},
 		inputSchema: {
 			type: "object",
 			properties: {

@@ -41,6 +41,12 @@ async function handleFormat(): Promise<CallToolResult> {
 export const formatTool: ToolHandler = {
 	name: TOOL_NAME,
 	description: "Format all code according to the project's standards",
+	annotations: {
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: true,
+		openWorldHint: false,
+	},
 	inputSchema: {
 		type: "object",
 		properties: {},

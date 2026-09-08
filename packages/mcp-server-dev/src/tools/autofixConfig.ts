@@ -300,6 +300,12 @@ export const autofixConfigTool: ToolHandler<AutofixConfigArgs> = {
 		+ "unnecessary overrides of imported template properties, and report any "
 		+ "remaining import-override conflicts (allowed vs. minValue/maxValue) "
 		+ "that must be resolved manually.",
+	annotations: {
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		openWorldHint: false,
+	},
 	inputSchema: {
 		type: "object",
 		properties: {

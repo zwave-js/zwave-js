@@ -43,6 +43,12 @@ export const resolveImportTool: ToolHandler<ResolveConfigImportArgs> = {
 		"Resolve an $import specifier to the JSON it pulls in, with the "
 		+ "imported file's own $imports resolved recursively. Mirrors the config "
 		+ "editor's import hover preview.",
+	annotations: {
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		openWorldHint: false,
+	},
 	inputSchema: {
 		type: "object",
 		properties: {
