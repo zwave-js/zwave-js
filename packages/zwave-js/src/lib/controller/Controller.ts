@@ -9603,22 +9603,15 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		) {
 			if (wasJoining) {
 				this._currentLearnMode = undefined;
-				this.driver["_securityManager"] = undefined;
-				this.driver["_securityManager2"] =
-					await SecurityManager2.create();
-				this.driver["_securityManagerLR"] =
-					await SecurityManager2.create();
 				this._nodes.clear();
 
-				process.nextTick(() => {
-					void this.afterJoiningNetwork().catch((e: unknown) => {
-						this._joinNetworkOptions = undefined;
-						this.driver.controllerLog.print(
-							`Joining network failed: ${getErrorMessage(e)}`,
-							"error",
-						);
-						this.emit("joining network failed");
-					});
+				void this.afterJoiningNetwork().catch((e: unknown) => {
+					this._joinNetworkOptions = undefined;
+					this.driver.controllerLog.print(
+						`Joining network failed: ${getErrorMessage(e)}`,
+						"error",
+					);
+					this.emit("joining network failed");
 				});
 				return true;
 			} else if (wasLeaving) {
@@ -10389,6 +10382,16 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		};
 
 		const identifySelf = async () => {
+			// Bootstrap reception must be armed before asynchronous crypto initialization
+			this.driver["_securityManager"] = undefined;
+			const [securityManager2, securityManagerLR] = await Promise.all([
+				SecurityManager2.create(),
+				SecurityManager2.create(),
+			]);
+			assertInitializationCanContinue();
+			this.driver["_securityManager2"] = securityManager2;
+			this.driver["_securityManagerLR"] = securityManagerLR;
+
 			// Update own node ID and other controller flags.
 			await this.identify();
 			assertInitializationCanContinue();
