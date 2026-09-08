@@ -47,6 +47,10 @@ integrationTest("when an invalid CC is received, this is printed in the logs", {
 
 		await wait(100);
 		assertMessage(t.expect, spyTransport, {
+			callNumber: 0,
+			message: "  Dropping message with invalid payload from node 33",
+		});
+		assertMessage(t.expect, spyTransport, {
 			callNumber: 1,
 			message: `« [Node 033] [REQ] [ApplicationCommand]
   └─[BinarySensorCCReport] [INVALID]`,
