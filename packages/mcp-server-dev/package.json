@@ -58,6 +58,8 @@
     "bootstrap": "yarn build",
     "clean": "del-cli build/ *.tsbuildinfo",
     "prefetch-semantic-model": "node build/semantic/prefetchModel.js",
+    "prepare-semantic-index": "node build/semantic/prepareIndex.js",
+    "print-semantic-index-cache-key": "node build/semantic/printIndexCacheKey.js",
     "print-semantic-model-cache-key": "node build/semantic/printModelCacheKey.js"
   },
   "publishConfig": {

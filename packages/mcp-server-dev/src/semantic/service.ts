@@ -304,6 +304,20 @@ export class SemanticSearchService {
 		}
 	}
 
+	async prepareIndex(): Promise<{
+		parameters: number;
+		templates: number;
+		warnings: number;
+	}> {
+		const corpus = await buildCorpus();
+		await this.buildIndex(corpus);
+		return {
+			parameters: corpus.parameters.length,
+			templates: corpus.templates.length,
+			warnings: corpus.warnings.length,
+		};
+	}
+
 	private matchesFilters(
 		filters: SearchFilters | undefined,
 		device: DeviceContext | undefined,
