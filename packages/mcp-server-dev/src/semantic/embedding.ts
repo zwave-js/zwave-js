@@ -11,6 +11,7 @@ import type { EmbeddingCacheKey } from "./embeddingCache.js";
 import {
 	EMBEDDING_SCHEMA_VERSION,
 	LOCAL_MODEL_APPROX_SIZE_MB,
+	LOCAL_MODEL_DTYPE,
 	LOCAL_MODEL_DIMENSIONS,
 	LOCAL_MODEL_ID,
 	LOCAL_MODEL_LICENSE,
@@ -133,7 +134,7 @@ export class LocalEmbeddingProvider {
 			cache_dir: this.config.modelCacheDir,
 			local_files_only: localFilesOnly,
 			revision: LOCAL_MODEL_REVISION,
-			dtype: "q8",
+			dtype: LOCAL_MODEL_DTYPE,
 		});
 	}
 

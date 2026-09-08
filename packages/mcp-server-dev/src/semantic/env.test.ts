@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { SemanticEnvError, parseSemanticEnv } from "./env.js";
+import {
+	LOCAL_MODEL_CACHE_KEY,
+	SemanticEnvError,
+	parseSemanticEnv,
+} from "./env.js";
+
+describe("LOCAL_MODEL_CACHE_KEY", () => {
+	it("matches the cache key used by the shared bot workflows", () => {
+		expect(LOCAL_MODEL_CACHE_KEY).toBe(
+			"Xenova_all-MiniLM-L6-v2@751bff37182d3f1213fa05d7196b954e230abad9@q8",
+		);
+	});
+});
 
 describe("parseSemanticEnv", () => {
 	it("defaults to enabled with an interactive download policy", () => {

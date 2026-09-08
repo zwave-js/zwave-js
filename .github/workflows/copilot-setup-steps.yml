@@ -7,9 +7,19 @@ on:
   push:
     paths:
       - .github/workflows/copilot-setup-steps.yml
+      - packages/mcp-server-dev/package.json
+      - packages/mcp-server-dev/src/semantic/embedding.ts
+      - packages/mcp-server-dev/src/semantic/env.ts
+      - packages/mcp-server-dev/src/semantic/prefetchModel.ts
+      - packages/mcp-server-dev/src/semantic/printModelCacheKey.ts
   pull_request:
     paths:
       - .github/workflows/copilot-setup-steps.yml
+      - packages/mcp-server-dev/package.json
+      - packages/mcp-server-dev/src/semantic/embedding.ts
+      - packages/mcp-server-dev/src/semantic/env.ts
+      - packages/mcp-server-dev/src/semantic/prefetchModel.ts
+      - packages/mcp-server-dev/src/semantic/printModelCacheKey.ts
 
 jobs:
   # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
@@ -27,6 +37,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Enable Corepack
         shell: bash
@@ -46,3 +58,23 @@ jobs:
         run: |
           yarn install --immutable
           yarn bootstrap
+
+      - name: Resolve semantic model cache
+        id: semantic-model
+        shell: bash
+        run: |
+          echo "key=$(yarn workspace @zwave-js/mcp-server-dev print-semantic-model-cache-key)" >> "$GITHUB_OUTPUT"
+          echo "ZWAVE_DEV_SEMANTIC_MODEL_CACHE_DIR=$HOME/.cache/zwave-js-bot/models" >> "$GITHUB_ENV"
+
+      - name: Restore semantic model
+        id: semantic-model-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/zwave-js-bot/models
+          key: ${{ steps.semantic-model.outputs.key }}
+          restore-keys: embedding-model-
+
+      - name: Prefetch semantic model
+        if: steps.semantic-model-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: yarn workspace @zwave-js/mcp-server-dev prefetch-semantic-model
