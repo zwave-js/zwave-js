@@ -253,7 +253,7 @@
 			"description": "Sends a Basic Set to association group 6 when this threshold is exceeded.",
 			"valueSize": 2,
 			"unit": "0.1 °F",
-			"minValue": 32,
+			"minValue": 320,
 			"maxValue": 2120,
 			"defaultValue": 860
 		},
