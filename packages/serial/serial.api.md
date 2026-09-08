@@ -2218,6 +2218,8 @@ export class GetBackgroundRSSIResponse extends Message_2 {
     // (undocumented)
     readonly rssiChannel3?: RSSI;
     // (undocumented)
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
+    // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
 
@@ -4077,7 +4079,7 @@ export enum ReplaceFailedNodeStartFlags {
 //
 // @public (undocumented)
 export enum ReplaceFailedNodeStatus {
-    FailedNodeReplace = 3,/* The node cannot be replaced because it is working properly (removed from the failed nodes list ) */
+    FailedNodeReplace = 3,
     FailedNodeReplaceDone = 4,
     FailedNodeReplaceFailed = 5,
     // (undocumented)

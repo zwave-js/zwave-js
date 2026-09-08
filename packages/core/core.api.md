@@ -271,7 +271,7 @@ export enum ChannelConfiguration {
     // (undocumented)
     "LR A & B" = 3,
     // (undocumented)
-    "Classic" = 0
+    Classic = 0
 }
 
 // Warning: (ae-internal-missing-underscore) The name "channelPadding" should be prefixed with an underscore because the declaration is marked as @internal
@@ -489,51 +489,51 @@ export enum CommandClasses {
     // (undocumented)
     "Z/IP" = 35,
     // (undocumented)
-    "Association" = 133,
+    Association = 133,
     // (undocumented)
-    "Authentication" = 161,
+    Authentication = 161,
     // (undocumented)
-    "Basic" = 32,
+    Basic = 32,
     // (undocumented)
-    "Battery" = 128,
+    Battery = 128,
     // (undocumented)
-    "Clock" = 129,
+    Clock = 129,
     // (undocumented)
-    "Configuration" = 112,
+    Configuration = 112,
     // (undocumented)
-    "Hail" = 130,
+    Hail = 130,
     // (undocumented)
-    "Indicator" = 135,
+    Indicator = 135,
     // (undocumented)
-    "Irrigation" = 107,
+    Irrigation = 107,
     // (undocumented)
-    "Language" = 137,
+    Language = 137,
     // (undocumented)
-    "Lock" = 118,
+    Lock = 118,
     // (undocumented)
-    "Mailbox" = 105,
+    Mailbox = 105,
     // (undocumented)
-    "Meter" = 50,
+    Meter = 50,
     // (undocumented)
-    "Notification" = 113,
+    Notification = 113,
     // (undocumented)
-    "Powerlevel" = 115,
+    Powerlevel = 115,
     // (undocumented)
-    "Prepayment" = 63,
+    Prepayment = 63,
     // (undocumented)
-    "Proprietary" = 136,
+    Proprietary = 136,
     // (undocumented)
-    "Protection" = 117,
+    Protection = 117,
     // (undocumented)
-    "Schedule" = 83,
+    Schedule = 83,
     // (undocumented)
-    "Security" = 152,
+    Security = 152,
     // (undocumented)
-    "Supervision" = 108,
+    Supervision = 108,
     // (undocumented)
-    "Time" = 138,
+    Time = 138,
     // (undocumented)
-    "Version" = 134
+    Version = 134
 }
 
 // Warning: (ae-missing-release-tag) "CommandClassInfo" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -966,6 +966,7 @@ export class Duration {
     constructor(value: number, unit: DurationUnit);
     // (undocumented)
     static default(): Duration;
+    equals(other: Duration): boolean;
     static from(input: "default"): Duration;
     // (undocumented)
     static from(input?: Duration | DurationLike | string): Duration | undefined;
@@ -1555,9 +1556,9 @@ export function getHighestSecurityClass(securityClasses: SecurityClass[]): Secur
 // Warning: (ae-missing-release-tag) "getIndicatorProperty" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getIndicatorProperty<ID extends number>(id: ID): ID extends keyof IndicatorProperties ? ({
+export function getIndicatorProperty<ID extends number>(id: ID): ID extends keyof IndicatorProperties ? {
     id: ID;
-} & (IndicatorProperties[ID])) : (IndicatorProperty | undefined);
+} & IndicatorProperties[ID] : IndicatorProperty | undefined;
 
 // Warning: (ae-missing-release-tag) "getIntegerLimits" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1593,9 +1594,9 @@ export interface GetLogger {
 // Warning: (ae-missing-release-tag) "getMeter" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getMeter<MeterType extends number>(type: MeterType): MeterType extends keyof Meters ? ({
+export function getMeter<MeterType extends number>(type: MeterType): MeterType extends keyof Meters ? {
     key: MeterType;
-} & (Meters[MeterType])) : (Meter | undefined);
+} & Meters[MeterType] : Meter | undefined;
 
 // Warning: (ae-missing-release-tag) "getMeterName" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1605,9 +1606,9 @@ export function getMeterName(meterType: number): string;
 // Warning: (ae-missing-release-tag) "getMeterScale" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getMeterScale<MeterType extends number, ScaleKey extends number>(type: MeterType, scale: ScaleKey): MeterType extends keyof Meters ? ScaleKey extends keyof Meters[MeterType]["scales"] ? ({
+export function getMeterScale<MeterType extends number, ScaleKey extends number>(type: MeterType, scale: ScaleKey): MeterType extends keyof Meters ? ScaleKey extends keyof Meters[MeterType]["scales"] ? {
     key: ScaleKey;
-} & (Meters[MeterType]["scales"][ScaleKey])) : (MeterScale | undefined) : (MeterScale | undefined);
+} & Meters[MeterType]["scales"][ScaleKey] : MeterScale | undefined : MeterScale | undefined;
 
 // Warning: (ae-missing-release-tag) "getMinimumShiftForBitMask" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1622,9 +1623,9 @@ export function getMinIntegerSize(value: number, signed: boolean): 1 | 2 | 4 | u
 // Warning: (ae-missing-release-tag) "getNamedScale" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getNamedScale<Name extends keyof NamedScales, Key extends (keyof NamedScales[Name]) & number>(group: Name, key: Key): {
+export function getNamedScale<Name extends keyof NamedScales, Key extends keyof NamedScales[Name] & number>(group: Name, key: Key): {
     key: Key;
-} & (NamedScales[Name][Key]);
+} & NamedScales[Name][Key];
 
 // Warning: (ae-missing-release-tag) "getNamedScaleGroup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1701,7 +1702,7 @@ export interface GetSafeCCVersion {
 // Warning: (ae-missing-release-tag) "getSensor" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getSensor<Key extends number>(type: Key): Key extends keyof Sensors ? Sensors[Key] : (Sensor | undefined);
+export function getSensor<Key extends number>(type: Key): Key extends keyof Sensors ? Sensors[Key] : Sensor | undefined;
 
 // Warning: (ae-missing-release-tag) "getSensorName" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -1711,9 +1712,9 @@ export function getSensorName(sensorType: number): string;
 // Warning: (ae-missing-release-tag) "getSensorScale" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export function getSensorScale<SensorType extends number, ScaleKey extends number>(type: SensorType, scale: ScaleKey): SensorType extends keyof Sensors ? ScaleKey extends keyof Sensors[SensorType]["scales"] ? ({
+export function getSensorScale<SensorType extends number, ScaleKey extends number>(type: SensorType, scale: ScaleKey): SensorType extends keyof Sensors ? ScaleKey extends keyof Sensors[SensorType]["scales"] ? {
     key: ScaleKey;
-} & (Sensors[SensorType]["scales"][ScaleKey])) : (Scale | undefined) : (Scale | undefined);
+} & Sensors[SensorType]["scales"][ScaleKey] : Scale | undefined : Scale | undefined;
 
 // Warning: (ae-missing-release-tag) "getSpecificDeviceClass" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2038,17 +2039,17 @@ export enum Indicator {
     // (undocumented)
     "Zone 8 armed" = 39,
     // (undocumented)
-    "Alarming" = 12,
+    Alarming = 12,
     // (undocumented)
-    "Armed" = 1,
+    Armed = 1,
     // (undocumented)
-    "Busy" = 5,
+    Busy = 5,
     // (undocumented)
-    "Buzzer" = 240,
+    Buzzer = 240,
     // (undocumented)
-    "Fault" = 4,
+    Fault = 4,
     // (undocumented)
-    "Ready" = 3
+    Ready = 3
 }
 
 // Warning: (ae-forgotten-export) The symbol "indicatorProperties" needs to be exported by the entry point index.d.ts
@@ -3473,7 +3474,7 @@ export enum ProtocolVersion {
     // (undocumented)
     "4.5x / 6.0x" = 3,
     // (undocumented)
-    "unknown" = 0
+    unknown = 0
 }
 
 // Warning: (ae-missing-release-tag) "ProvisioningInformation_MaxInclusionRequestInterval" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -3672,23 +3673,23 @@ export enum RFRegion {
     // (undocumented)
     "USA (Long Range)" = 9,
     // (undocumented)
-    "China" = 8,
+    China = 8,
     // (undocumented)
-    "Europe" = 0,
+    Europe = 0,
     // (undocumented)
-    "India" = 5,
+    India = 5,
     // (undocumented)
-    "Israel" = 6,
+    Israel = 6,
     // (undocumented)
-    "Japan" = 32,
+    Japan = 32,
     // (undocumented)
-    "Korea" = 33,
+    Korea = 33,
     // (undocumented)
-    "Russia" = 7,
+    Russia = 7,
     // (undocumented)
-    "Unknown" = 254,
+    Unknown = 254,
     // (undocumented)
-    "USA" = 1
+    USA = 1
 }
 
 // Warning: (ae-missing-release-tag) "RFRegionInfo" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4087,6 +4088,7 @@ export type SendCommandOptions = SendMessageOptions & SupervisionOptions & SendC
     encapsulationFlags?: EncapsulationFlags;
     transmitOptions?: TransmitOptions;
     reportTimeoutMs?: number;
+    preventDeduplication?: boolean;
     ignoreNodeUpdate?: boolean;
 };
 
@@ -5301,23 +5303,23 @@ export enum ZnifferRegion {
     // (undocumented)
     "USA (Long Range, end device)" = 48,
     // (undocumented)
-    "China" = 8,
+    China = 8,
     // (undocumented)
-    "Europe" = 0,
+    Europe = 0,
     // (undocumented)
-    "India" = 5,
+    India = 5,
     // (undocumented)
-    "Israel" = 6,
+    Israel = 6,
     // (undocumented)
-    "Japan" = 32,
+    Japan = 32,
     // (undocumented)
-    "Korea" = 33,
+    Korea = 33,
     // (undocumented)
-    "Russia" = 7,
+    Russia = 7,
     // (undocumented)
-    "Unknown" = 254,
+    Unknown = 254,
     // (undocumented)
-    "USA" = 1
+    USA = 1
 }
 
 // Warning: (ae-missing-release-tag) "ZnifferRegionLegacy" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5475,6 +5477,7 @@ export enum ZWaveErrorCodes {
     // (undocumented)
     Controller_MessageDropped = 202,
     Controller_MessageExpired = 215,
+    Controller_MessageSuperseded = 219,
     Controller_MessageTooLarge = 217,
     Controller_NodeInsecureCommunication = 214,
     Controller_NodeNotFound = 211,
@@ -5586,13 +5589,13 @@ export enum ZWaveLibraryTypes {
     // (undocumented)
     "Static Controller" = 1,
     // (undocumented)
-    "Controller" = 2,
+    Controller = 2,
     // (undocumented)
-    "Installer" = 5,
+    Installer = 5,
     // (undocumented)
-    "Slave" = 4,
+    Slave = 4,
     // (undocumented)
-    "Unknown" = 0
+    Unknown = 0
 }
 
 // Warning: (ae-missing-release-tag) "ZWaveLogger" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -5726,9 +5729,9 @@ export interface ZWaveMPDURawOptions {
 
 // Warnings were encountered during analysis:
 //
-// src/qr/definitions.ts:63:3 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
-// src/security/Manager2.ts:65:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/security/Manager2.ts:65:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/qr/definitions.ts:62:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
+// src/security/Manager2.ts:67:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/security/Manager2.ts:67:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/util/misc.ts:21:4 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
