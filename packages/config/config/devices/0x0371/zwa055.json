@@ -477,7 +477,7 @@
 			"#": "36",
 			"label": "Acceleration Change Report Threshold",
 			"valueSize": 1,
-			"unit": "m/s²",
+			"unit": "0.01 m/s²",
 			"allowed": [
 				{ "value": 0 },
 				{ "range": [30, 255] }
