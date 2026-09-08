@@ -120,11 +120,7 @@ When authoring and reviewing configuration files, consistency is key for maintai
   - If description states available options, convert those to the `options` field
   - If description states min/max values, convert those to `minValue`/`maxValue` fields
   - If description explains the parameter unit, convert to the `unit` field
-- **Exception 1**: When parameter has gaps in valid ranges (e.g., 0-99 plus 255), explain the allowable range. This includes cases with a single option outside of the allowable range.
-  - Examples:
-    - `"description": "Allowable range: 0-99, 255"`
-    - `"description": "Allowable range: 30-1000"` plus an option for 0 (Disabled)
-- **Exception 2**: When units change based on parameter value, describe this in the description
+- **Exception**: When units change based on parameter value, describe this in the description
   - Examples:
     - `"description": "Values 1-127 = seconds; 128-255 = minutes (minus 127)"`
     - `"description": "0 = disabled, 1 to 60 = seconds, 61 to 120 = minutes (minus 60), 121 - 254 = hours (minus 120), 255 = indefinitely"`
@@ -142,6 +138,8 @@ When authoring and reviewing configuration files, consistency is key for maintai
 ### Parameter Values and Ranges
 
 - Define `minValue`/`maxValue` only as large as necessary
+- Use `allowed` when the valid values contain gaps. Combine individual values and ranges as needed (e.g., `"allowed": [{ "value": 0 }, { "range": [30, 2678400] }]`)
+- Do not duplicate values represented by `allowed` in the description
 - Check device manual for actual valid ranges, don't default to 0-255
 - Use `unsigned: true` for parameters interpreted as unsigned values
 - Mark parameters as `readOnly` or `writeOnly` when applicable
