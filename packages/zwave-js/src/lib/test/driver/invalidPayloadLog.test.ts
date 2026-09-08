@@ -48,7 +48,7 @@ integrationTest("when an invalid CC is received, this is printed in the logs", {
 		await wait(100);
 		assertMessage(t.expect, spyTransport, {
 			callNumber: 0,
-			message: "  Dropping message with invalid payload from node 33",
+			message: "« [Node 033] Dropping message with invalid payload",
 		});
 		assertMessage(t.expect, spyTransport, {
 			callNumber: 1,

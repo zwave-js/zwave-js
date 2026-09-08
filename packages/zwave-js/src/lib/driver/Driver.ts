@@ -4366,18 +4366,20 @@ export class Driver
 				case ZWaveErrorCodes.PacketFormat_InvalidPayload:
 					if (msg) {
 						const nodeId = msg.getNodeId();
-						this.driverLog.print(
-							`Dropping message with invalid payload${
-								nodeId != undefined
-									? ` from node ${nodeId}`
-									: ""
-							}${
-								typeof e.context === "string"
-									? ` (Reason: ${e.context})`
-									: ""
-							}`,
-							"warn",
-						);
+						const message = `Dropping message with invalid payload${
+							typeof e.context === "string"
+								? ` (Reason: ${e.context})`
+								: ""
+						}`;
+						if (nodeId != undefined) {
+							this.controllerLog.logNode(nodeId, {
+								message,
+								direction: "inbound",
+								level: "warn",
+							});
+						} else {
+							this.driverLog.print(message, "warn");
+						}
 						try {
 							this.driverLog.logMessage(msg, {
 								direction: "inbound",
