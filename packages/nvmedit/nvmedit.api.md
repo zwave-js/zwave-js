@@ -643,7 +643,7 @@ export class NVM3Adapter implements NVMAdapter {
     // (undocumented)
     delete(property: NVMProperty): Promise<void>;
     // (undocumented)
-    get<T extends NVMProperty, R extends boolean = boolean>(property: T, required?: R): Promise<R extends true ? NVMPropertyToDataType<T> : (NVMPropertyToDataType<T> | undefined)>;
+    get<T extends NVMProperty, R extends boolean = boolean>(property: T, required?: R): Promise<R extends true ? NVMPropertyToDataType<T> : NVMPropertyToDataType<T> | undefined>;
     // (undocumented)
     getFile<T extends NVMFile = NVMFile>(fileId: number, required: true): Promise<T>;
     // (undocumented)
@@ -763,7 +763,7 @@ export class NVM500Adapter implements NVMAdapter {
     // (undocumented)
     delete(_property: NVMProperty): Promise<void>;
     // (undocumented)
-    get<T extends NVMProperty, R extends boolean = boolean>(property: T, required?: R): Promise<R extends true ? NonNullable<NVMPropertyToDataType<T>> : (NVMPropertyToDataType<T> | undefined)>;
+    get<T extends NVMProperty, R extends boolean = boolean>(property: T, required?: R): Promise<R extends true ? NonNullable<NVMPropertyToDataType<T>> : NVMPropertyToDataType<T> | undefined>;
     // (undocumented)
     hasPendingChanges(): boolean;
     // (undocumented)
@@ -951,7 +951,7 @@ export enum NVMAccess {
 export interface NVMAdapter {
     commit(): Promise<void>;
     delete(property: NVMProperty): Promise<void>;
-    get<T extends NVMProperty, R extends boolean = boolean>(property: T, required?: R): Promise<R extends true ? NVMPropertyToDataType<T> : (NVMPropertyToDataType<T> | undefined)>;
+    get<T extends NVMProperty, R extends boolean = boolean>(property: T, required?: R): Promise<R extends true ? NVMPropertyToDataType<T> : NVMPropertyToDataType<T> | undefined>;
     hasPendingChanges(): boolean;
     set<T extends NVMProperty>(property: T, value: NVMPropertyToDataType<T>): Promise<void>;
 }
@@ -1599,12 +1599,12 @@ export interface VersionFileOptions extends NVMFileCreationOptions {
 
 // Warnings were encountered during analysis:
 //
-// src/lib/NVM500.ts:56:2 - (ae-forgotten-export) The symbol "ResolvedNVMLayout" needs to be exported by the entry point index.d.ts
-// src/lib/NVM500.ts:58:2 - (ae-forgotten-export) The symbol "NVM500Impl" needs to be exported by the entry point index.d.ts
-// src/lib/NVM500.ts:59:2 - (ae-forgotten-export) The symbol "NVMDescriptor" needs to be exported by the entry point index.d.ts
-// src/lib/common/definitions.ts:208:2 - (ae-forgotten-export) The symbol "ControllerNVMPropertyTypes" needs to be exported by the entry point index.d.ts
-// src/lib/common/definitions.ts:217:2 - (ae-forgotten-export) The symbol "NodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
-// src/lib/common/definitions.ts:228:2 - (ae-forgotten-export) The symbol "LRNodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
+// src/lib/NVM500.ts:57:2 - (ae-forgotten-export) The symbol "ResolvedNVMLayout" needs to be exported by the entry point index.d.ts
+// src/lib/NVM500.ts:59:2 - (ae-forgotten-export) The symbol "NVM500Impl" needs to be exported by the entry point index.d.ts
+// src/lib/NVM500.ts:60:2 - (ae-forgotten-export) The symbol "NVMDescriptor" needs to be exported by the entry point index.d.ts
+// src/lib/common/definitions.ts:211:2 - (ae-forgotten-export) The symbol "ControllerNVMPropertyTypes" needs to be exported by the entry point index.d.ts
+// src/lib/common/definitions.ts:220:2 - (ae-forgotten-export) The symbol "NodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
+// src/lib/common/definitions.ts:231:2 - (ae-forgotten-export) The symbol "LRNodeNVMPropertyTypes" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 
