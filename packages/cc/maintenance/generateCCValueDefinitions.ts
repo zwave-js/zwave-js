@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { formatWithOxfmt } from "@zwave-js/maintenance";
 import { getErrorMessage } from "@zwave-js/shared";
 import {
@@ -37,7 +39,7 @@ const ignoredImports = new Set(["V", "ValueMetadata"]);
  */
 export async function generateCCValueDefinitionsFile(
 	sourceFiles: SourceFile[],
-	_srcDir: string,
+	srcDir: string,
 ): Promise<Map<string, string>> {
 	const ccSourceFiles = sourceFiles.filter((file) =>
 		file.getBaseNameWithoutExtension().endsWith("CC"),
@@ -301,7 +303,10 @@ export const CCValues = {
 		+ result;
 
 	try {
-		result = await formatWithOxfmt("index.ts", result);
+		result = await formatWithOxfmt(
+			path.join(srcDir, "cc/_CCValues.generated.ts"),
+			result,
+		);
 	} catch (e) {
 		console.error(`Error formatting: ${getErrorMessage(e)}`);
 		process.exit(1);

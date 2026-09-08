@@ -507,7 +507,7 @@ ${formattedValueType}
 	}
 
 	text = text.replaceAll("\r\n", "\n");
-	text = await formatWithOxfmt(filename, text);
+	text = await formatWithOxfmt(path.join(ccDocsDir, filename), text);
 
 	await fsp.writeFile(path.join(ccDocsDir, filename), text, "utf8");
 
