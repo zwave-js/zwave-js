@@ -63,26 +63,10 @@ export default tseslint.config(
 		},
 		languageOptions: tsparser,
 	},
-	// Make sure we're not misusing Bytes.from
-	{
-		files: ["packages/**/*.ts"],
-		rules: {
-			"@zwave-js/no-unnecessary-bytes-from": "error",
-		},
-	},
-	// Prevent self-imports in the CC package
-	{
-		files: ["packages/cc/src/**/*.ts"],
-		rules: {
-			"@zwave-js/no-workspace-self-import": "error",
-		},
-	},
-	// Disable unnecessarily strict rules for test files
+	// Keep type-aware rules in ESLint until Oxlint exposes type information to JS plugins
 	{
 		files: ["**/*.test.ts"],
 		rules: {
-			// Prevent debug logging in checked in tests
-			"@zwave-js/no-debug-in-tests": "error",
 			// Ensure consistent nodeId usage in MockNodeBehavior
 			"@zwave-js/consistent-mock-node-behaviors": "error",
 		},
@@ -93,21 +77,6 @@ export default tseslint.config(
 		languageOptions: tsparser,
 		rules: {
 			"@zwave-js/no-forbidden-imports": "error",
-		},
-	},
-	// Enable CC-specific custom rules
-	{
-		files: ["packages/cc/src/**/*CC.ts"],
-		rules: {
-			"@zwave-js/ccapi-validate-args": "error",
-			"@zwave-js/no-internal-cc-types": "error",
-		},
-	},
-	{
-		files: ["packages/cc/src/**"],
-		rules: {
-			"@zwave-js/consistent-cc-classes": "error",
-			"@zwave-js/consistent-cc-value-definitions": "error",
 		},
 	},
 	// Enable consistent mock node behaviors for mock CC behaviors

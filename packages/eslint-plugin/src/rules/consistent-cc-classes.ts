@@ -2,7 +2,6 @@ import path from "node:path";
 
 import {
 	AST_NODE_TYPES,
-	ESLintUtils,
 	type TSESLint,
 	type TSESTree,
 } from "@typescript-eslint/utils";
@@ -13,6 +12,7 @@ import {
 	findDecoratorContainingCCId,
 	getCCIdFromDecorator,
 	getCCIdFromExpression,
+	type OxlintCompatibleRule,
 } from "../utils.js";
 
 const apiBaseClasses = new Set(["CCAPI", "PhysicalCCAPI"]);
@@ -45,14 +45,20 @@ function getRequiredInterviewCCsFromMethod(
 		.filter(({ ccId }) => ccId != undefined);
 }
 
-export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
-	create(context) {
+export const consistentCCClasses: OxlintCompatibleRule = {
+	createOnce(context) {
 		let currentCCId: CommandClasses | undefined;
 		let isInCCCommand = false;
 		let ctor: TSESTree.MethodDefinition | undefined;
 		let hasFromImpl: boolean;
 
 		return {
+			before() {
+				currentCCId = undefined;
+				isInCCCommand = false;
+				ctor = undefined;
+				hasFromImpl = false;
+			},
 			// Look at class declarations ending with "CC"
 			"ClassDeclaration[id.name=/CC$/]"(
 				node: TSESTree.ClassDeclaration & {
@@ -416,4 +422,4 @@ export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
 		},
 	},
 	defaultOptions: [],
-});
+};

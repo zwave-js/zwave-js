@@ -1,7 +1,9 @@
-import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 
-export const noUnnecessaryBytesFrom = ESLintUtils.RuleCreator.withoutDocs({
-	create(context) {
+import type { OxlintCompatibleRule } from "../utils.js";
+
+export const noUnnecessaryBytesFrom: OxlintCompatibleRule = {
+	createOnce(context) {
 		return {
 			CallExpression(node) {
 				// Check if this is a Bytes.concat call
@@ -78,4 +80,4 @@ export const noUnnecessaryBytesFrom = ESLintUtils.RuleCreator.withoutDocs({
 		},
 	},
 	defaultOptions: [],
-});
+};

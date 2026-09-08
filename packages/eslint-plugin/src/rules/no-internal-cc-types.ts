@@ -1,14 +1,15 @@
 import {
 	AST_NODE_TYPES,
 	AST_TOKEN_TYPES,
-	ESLintUtils,
 	type TSESTree,
 } from "@typescript-eslint/utils";
 
+import type { OxlintCompatibleRule } from "../utils.js";
+
 // const isFixMode = process.argv.some((arg) => arg.startsWith("--fix"));
 
-export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
-	create(context) {
+export const noInternalCCTypes: OxlintCompatibleRule = {
+	createOnce(context) {
 		const localTypeNodes = new Map<
 			string,
 			| TSESTree.TSInterfaceDeclaration
@@ -25,6 +26,16 @@ export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 		let isInParameterType = false;
 
 		return {
+			before() {
+				localTypeNodes.clear();
+				nonExportedTypes.clear();
+				nonMarkedTypes.clear();
+				isInMethodDefinition = false;
+				isInFunctionExpression = false;
+				isInFunctionBody = false;
+				isInReturnType = false;
+				isInParameterType = false;
+			},
 			// Remember which declarations are exported
 			"TSInterfaceDeclaration,TSTypeAliasDeclaration"(
 				node:
@@ -222,4 +233,4 @@ export const noInternalCCTypes = ESLintUtils.RuleCreator.withoutDocs({
 		},
 	},
 	defaultOptions: [],
-});
+};
