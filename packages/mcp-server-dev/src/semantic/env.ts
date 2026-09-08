@@ -24,6 +24,7 @@ export const LOCAL_MODEL_DIMENSIONS = 384;
 
 /** Bump when the embedding cache entry shape or the corpus normalization changes */
 export const EMBEDDING_SCHEMA_VERSION = 3;
+export const SEMANTIC_INDEX_CACHE_KEY = `semantic-index-${LOCAL_MODEL_CACHE_KEY}@v${EMBEDDING_SCHEMA_VERSION}`;
 
 export type LocalDownloadPolicy = "ask" | "allow" | "deny";
 

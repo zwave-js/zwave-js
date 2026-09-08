@@ -8,18 +8,14 @@ on:
     paths:
       - .github/workflows/copilot-setup-steps.yml
       - packages/mcp-server-dev/package.json
-      - packages/mcp-server-dev/src/semantic/embedding.ts
-      - packages/mcp-server-dev/src/semantic/env.ts
-      - packages/mcp-server-dev/src/semantic/prefetchModel.ts
-      - packages/mcp-server-dev/src/semantic/printModelCacheKey.ts
+      - packages/mcp-server-dev/src/semantic/**
+      - packages/config/config/devices/**/*.json
   pull_request:
     paths:
       - .github/workflows/copilot-setup-steps.yml
       - packages/mcp-server-dev/package.json
-      - packages/mcp-server-dev/src/semantic/embedding.ts
-      - packages/mcp-server-dev/src/semantic/env.ts
-      - packages/mcp-server-dev/src/semantic/prefetchModel.ts
-      - packages/mcp-server-dev/src/semantic/printModelCacheKey.ts
+      - packages/mcp-server-dev/src/semantic/**
+      - packages/config/config/devices/**/*.json
 
 jobs:
   # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
@@ -59,22 +55,36 @@ jobs:
           yarn install --immutable
           yarn bootstrap
 
-      - name: Resolve semantic model cache
-        id: semantic-model
+      - name: Resolve semantic caches
+        id: semantic-caches
         shell: bash
         run: |
-          echo "key=$(yarn workspace @zwave-js/mcp-server-dev print-semantic-model-cache-key)" >> "$GITHUB_OUTPUT"
+          echo "model-key=$(yarn workspace @zwave-js/mcp-server-dev print-semantic-model-cache-key)" >> "$GITHUB_OUTPUT"
+          echo "index-key=$(yarn workspace @zwave-js/mcp-server-dev print-semantic-index-cache-key)" >> "$GITHUB_OUTPUT"
           echo "ZWAVE_DEV_SEMANTIC_MODEL_CACHE_DIR=$HOME/.cache/zwave-js-bot/models" >> "$GITHUB_ENV"
+          echo "ZWAVE_DEV_SEMANTIC_INDEX_CACHE_DIR=$HOME/.cache/zwave-js-bot/semantic-index" >> "$GITHUB_ENV"
 
       - name: Restore semantic model
         id: semantic-model-cache
         uses: actions/cache@v6
         with:
           path: ~/.cache/zwave-js-bot/models
-          key: ${{ steps.semantic-model.outputs.key }}
+          key: ${{ steps.semantic-caches.outputs.model-key }}
           restore-keys: embedding-model-
 
       - name: Prefetch semantic model
         if: steps.semantic-model-cache.outputs.cache-hit != 'true'
         shell: bash
         run: yarn workspace @zwave-js/mcp-server-dev prefetch-semantic-model
+
+      - name: Restore semantic index
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/zwave-js-bot/semantic-index
+          key: ${{ steps.semantic-caches.outputs.index-key }}-${{ hashFiles('packages/config/config/devices/**/*.json') }}
+          restore-keys: |
+            ${{ steps.semantic-caches.outputs.index-key }}-
+
+      - name: Prepare semantic index
+        shell: bash
+        run: yarn workspace @zwave-js/mcp-server-dev prepare-semantic-index

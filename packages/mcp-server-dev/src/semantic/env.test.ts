@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
 	LOCAL_MODEL_CACHE_KEY,
+	SEMANTIC_INDEX_CACHE_KEY,
 	SemanticEnvError,
 	parseSemanticEnv,
 } from "./env.js";
@@ -10,6 +11,14 @@ describe("LOCAL_MODEL_CACHE_KEY", () => {
 	it("matches the cache key used by the shared bot workflows", () => {
 		expect(LOCAL_MODEL_CACHE_KEY).toBe(
 			"Xenova_all-MiniLM-L6-v2@751bff37182d3f1213fa05d7196b954e230abad9@q8",
+		);
+	});
+});
+
+describe("SEMANTIC_INDEX_CACHE_KEY", () => {
+	it("includes the model identity and embedding schema", () => {
+		expect(SEMANTIC_INDEX_CACHE_KEY).toBe(
+			"semantic-index-Xenova_all-MiniLM-L6-v2@751bff37182d3f1213fa05d7196b954e230abad9@q8@v3",
 		);
 	});
 });
