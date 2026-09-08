@@ -117,7 +117,27 @@ export function getCCIdFromDecorator(
 	return (CommandClasses as any)[getCCNameFromDecorator(decorator)];
 }
 
-export type Rule = TSESLint.RuleModule<any, never[], TSESLint.RuleListener>;
+export type Rule = TSESLint.RuleModule<
+	any,
+	never[],
+	unknown,
+	TSESLint.RuleListener
+>;
+
+export interface OxlintCompatibleRule extends Omit<Rule, "create"> {
+	createOnce(context: Parameters<Rule["create"]>[0]): ReturnType<
+		Rule["create"]
+	> & {
+		before?(): boolean | void;
+		after?(): void;
+	};
+}
+
+export function defineOxlintCompatibleRule(
+	rule: OxlintCompatibleRule,
+): OxlintCompatibleRule {
+	return rule;
+}
 
 export namespace JSONCRule {
 	// Special ESLint rule type for JSONC files

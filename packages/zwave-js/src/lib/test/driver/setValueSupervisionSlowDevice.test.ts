@@ -1,18 +1,11 @@
 import {
-	SupervisionCCGet,
-	SupervisionCCReport,
 	WindowCoveringCCGet,
 	WindowCoveringCCReport,
 	WindowCoveringCCSet,
 	WindowCoveringCCValues,
 	WindowCoveringParameter,
 } from "@zwave-js/cc";
-import {
-	BasicDeviceClass,
-	CommandClasses,
-	Duration,
-	SupervisionStatus,
-} from "@zwave-js/core";
+import { BasicDeviceClass, CommandClasses, Duration } from "@zwave-js/core";
 import {
 	type MockNodeBehavior,
 	ccCaps,

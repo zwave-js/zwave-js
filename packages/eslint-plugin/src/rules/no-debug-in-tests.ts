@@ -1,8 +1,8 @@
 import path from "node:path";
 
-import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 
-import { repoRoot } from "../utils.js";
+import { defineOxlintCompatibleRule, repoRoot } from "../utils.js";
 
 const isFixMode = process.argv.some((arg) => arg.startsWith("--fix"));
 
@@ -21,11 +21,14 @@ const integrationTestDefinitionFiles = new Set(
 
 const integrationTestExportNames = new Set(["integrationTest"]);
 
-export const noDebugInTests = ESLintUtils.RuleCreator.withoutDocs({
-	create(context) {
+export const noDebugInTests = defineOxlintCompatibleRule({
+	createOnce(context) {
 		const integrationTestMethodNames = new Set<string>();
 
 		return {
+			before() {
+				integrationTestMethodNames.clear();
+			},
 			ImportSpecifier(node) {
 				if (!context.filename.endsWith(".test.ts")) return;
 

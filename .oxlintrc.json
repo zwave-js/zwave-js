@@ -14,8 +14,6 @@
 		"maintenance/**",
 		// Ignore the browser bindings for now
 		"packages/bindings-browser/**/*.ts",
-		// And the web stub
-		"packages/web/**",
 		// And transformer tests
 		"packages/transformers/test/fixtures/**",
 		// Remove warning on eslint config files
@@ -30,6 +28,8 @@
 		// "pedantic": "error",
 		// "style": "error"
 	},
+
+	"jsPlugins": ["@zwave-js/eslint-plugin", "eslint-plugin-unused-imports"],
 
 	// Default plugins (typescript, unicorn, oxc are enabled by default)
 	// We don't need to specify them unless we want to disable or change them
@@ -218,8 +218,7 @@
 		// broken as of 0.23.0): it still flags and auto-rewrites deliberate bracket access to
 		// private/protected members, which breaks compilation. Keep off until fixed upstream.
 
-		// ========= Unused Imports Plugin (not available) =========
-		// "unused-imports/no-unused-imports": "error", // Plugin not available in Oxlint
+		"unused-imports/no-unused-imports": "error",
 
 		// ========= Unicorn Plugin Rules =========
 		"unicorn/prefer-array-find": "error",
@@ -238,7 +237,7 @@
 		"unicorn/prefer-string-starts-ends-with": "error",
 		"unicorn/prefer-string-replace-all": "error",
 
-		// ========= Global Restrictions (not available) =========
+		// ========= Global Restrictions =========
 		// Prefer our own Buffer implementation (compatible with native Uint8array)
 		// See https://sindresorhus.com/blog/goodbye-nodejs-buffer for the reason behind this
 		"eslint/no-restricted-globals": [
@@ -247,7 +246,7 @@
 				"name": "Buffer",
 				"message": "Use Uint8Array or the Bytes implementation from @zwave-js/shared instead."
 			}
-		] // Not available in Oxlint yet
+		]
 	},
 
 	"overrides": [
@@ -285,6 +284,33 @@
 				"typescript/no-floating-promises": "off",
 				"typescript/unbound-method": "off",
 				"typescript/no-unused-vars": "off"
+			}
+		},
+		{
+			"files": ["packages/**/*.ts"],
+			"rules": {
+				"@zwave-js/no-unnecessary-bytes-from": "error"
+			}
+		},
+		{
+			"files": ["packages/cc/src/**/*.ts"],
+			"rules": {
+				"@zwave-js/consistent-cc-classes": "error",
+				"@zwave-js/consistent-cc-value-definitions": "error",
+				"@zwave-js/no-workspace-self-import": "error"
+			}
+		},
+		{
+			"files": ["packages/cc/src/**/*CC.ts"],
+			"rules": {
+				"@zwave-js/ccapi-validate-args": "error",
+				"@zwave-js/no-internal-cc-types": "error"
+			}
+		},
+		{
+			"files": ["**/*.test.ts"],
+			"rules": {
+				"@zwave-js/no-debug-in-tests": "error"
 			}
 		}
 	]

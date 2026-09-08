@@ -1,3 +1,5 @@
+import { eslintCompatPlugin, type Plugin } from "@oxlint/plugins";
+
 import { autoUnsigned } from "./rules/auto-unsigned.js";
 import { ccAPIValidateArgs } from "./rules/ccapi-validate-args.js";
 import { consistentCCClasses } from "./rules/consistent-cc-classes.js";
@@ -24,31 +26,43 @@ import { noWorkspaceSelfImport } from "./rules/no-workspace-self-import.js";
 import { preferDefaultValue } from "./rules/prefer-defaultvalue.js";
 import { validAllowedValues } from "./rules/valid-allowed-values.js";
 
-export default {
+const oxlintCompatibleRules = eslintCompatPlugin({
+	meta: {
+		name: "@zwave-js/eslint-plugin",
+	},
 	rules: {
-		"auto-unsigned": autoUnsigned,
 		"ccapi-validate-args": ccAPIValidateArgs,
 		"consistent-cc-classes": consistentCCClasses,
 		"consistent-cc-value-definitions": consistentCCValueDefinitions,
+		"no-debug-in-tests": noDebugInTests,
+		"no-internal-cc-types": noInternalCCTypes,
+		"no-unnecessary-bytes-from": noUnnecessaryBytesFrom,
+		"no-workspace-self-import": noWorkspaceSelfImport,
+	},
+} as unknown as Plugin).rules;
+
+export default {
+	meta: {
+		name: "@zwave-js/eslint-plugin",
+	},
+	rules: {
+		"auto-unsigned": autoUnsigned,
 		"consistent-config-string-case": consistentConfigStringCase,
 		"consistent-device-config-property-order":
 			consistentDeviceConfigPropertyOrder,
 		"consistent-import-declarations": consistentImportDeclarations,
 		"consistent-mock-node-behaviors": consistentMockNodeBehaviors,
 		"consistent-param-units": consistentParamUnits,
-		"no-debug-in-tests": noDebugInTests,
 		"no-disallowed-default-value": noDisallowedDefaultValue,
 		"no-disallowed-option-values": noDisallowedOptionValues,
 		"no-forbidden-imports": noForbiddenImports,
-		"no-internal-cc-types": noInternalCCTypes,
 		"no-misspelled-names": noMisspelledNames,
 		"no-surrounding-whitespace": noSurroundingWhitespace,
-		"no-unnecessary-bytes-from": noUnnecessaryBytesFrom,
 		"no-unnecessary-min-max-value": noUnnecessaryMinMaxValue,
 		"no-useless-description": noUselessDescription,
 		"no-value-in-option-label": noValueInOptionLabel,
-		"no-workspace-self-import": noWorkspaceSelfImport,
 		"prefer-defaultvalue": preferDefaultValue,
 		"valid-allowed-values": validAllowedValues,
+		...oxlintCompatibleRules,
 	},
 };

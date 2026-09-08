@@ -2,13 +2,13 @@ import path from "node:path";
 
 import {
 	AST_NODE_TYPES,
-	ESLintUtils,
 	type TSESLint,
 	type TSESTree,
 } from "@typescript-eslint/utils";
 import { type CommandClasses, applicationCCs, getCCName } from "@zwave-js/core";
 
 import {
+	defineOxlintCompatibleRule,
 	findDecorator,
 	findDecoratorContainingCCId,
 	getCCIdFromDecorator,
@@ -45,14 +45,20 @@ function getRequiredInterviewCCsFromMethod(
 		.filter(({ ccId }) => ccId != undefined);
 }
 
-export const consistentCCClasses = ESLintUtils.RuleCreator.withoutDocs({
-	create(context) {
+export const consistentCCClasses = defineOxlintCompatibleRule({
+	createOnce(context) {
 		let currentCCId: CommandClasses | undefined;
 		let isInCCCommand = false;
 		let ctor: TSESTree.MethodDefinition | undefined;
 		let hasFromImpl: boolean;
 
 		return {
+			before() {
+				currentCCId = undefined;
+				isInCCCommand = false;
+				ctor = undefined;
+				hasFromImpl = false;
+			},
 			// Look at class declarations ending with "CC"
 			"ClassDeclaration[id.name=/CC$/]"(
 				node: TSESTree.ClassDeclaration & {

@@ -2,7 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
+
+import { defineOxlintCompatibleRule } from "../utils.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,12 +56,9 @@ function isRelativeImport(source: string): boolean {
 	return source.startsWith("./") || source.startsWith("../");
 }
 
-export const noWorkspaceSelfImport = ESLintUtils.RuleCreator.withoutDocs({
-	create(context) {
-		const packageName = getPackageName(context.filename);
-		if (!packageName) {
-			return {};
-		}
+export const noWorkspaceSelfImport = defineOxlintCompatibleRule({
+	createOnce(context) {
+		let packageName: string | undefined;
 
 		function checkImportSource(
 			node:
@@ -67,6 +66,7 @@ export const noWorkspaceSelfImport = ESLintUtils.RuleCreator.withoutDocs({
 				| TSESTree.ExportAllDeclaration
 				| TSESTree.ExportNamedDeclaration,
 		) {
+			if (!packageName) return;
 			const source = node.source;
 			if (!source) return;
 
@@ -93,6 +93,10 @@ export const noWorkspaceSelfImport = ESLintUtils.RuleCreator.withoutDocs({
 		}
 
 		return {
+			before() {
+				packageName = getPackageName(context.filename);
+				return packageName != undefined;
+			},
 			ImportDeclaration: checkImportSource,
 			ExportAllDeclaration: checkImportSource,
 			ExportNamedDeclaration: checkImportSource,

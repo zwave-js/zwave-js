@@ -1,8 +1,4 @@
-import {
-	UserCodeCCExtendedUserCodeSet,
-	UserCodeCCSet,
-	UserCodeCCValues,
-} from "@zwave-js/cc";
+import { UserCodeCCExtendedUserCodeSet, UserCodeCCSet } from "@zwave-js/cc";
 import { UserIDStatus } from "@zwave-js/cc/safe";
 import { CommandClasses } from "@zwave-js/core";
 import { MockZWaveFrameType, ccCaps } from "@zwave-js/testing";

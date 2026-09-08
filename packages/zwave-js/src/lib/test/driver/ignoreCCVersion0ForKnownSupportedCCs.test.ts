@@ -1,34 +1,10 @@
 import {
 	type CommandClass,
-	InvalidCC,
-	Security2CC,
-	Security2CCCommandsSupportedGet,
-	Security2CCCommandsSupportedReport,
-	Security2CCMessageEncapsulation,
-	Security2CCNonceGet,
-	Security2CCNonceReport,
-	SecurityCC,
-	SecurityCCCommandEncapsulation,
-	SecurityCCCommandsSupportedGet,
-	SecurityCCCommandsSupportedReport,
-	SecurityCCNonceGet,
-	SecurityCCNonceReport,
 	VersionCCCommandClassGet,
 	VersionCCCommandClassReport,
 } from "@zwave-js/cc";
-import {
-	CommandClasses,
-	SecurityClass,
-	SecurityManager,
-	SecurityManager2,
-	ZWaveErrorCodes,
-} from "@zwave-js/core";
-import {
-	type MockNodeBehavior,
-	type MockZWaveFrame,
-	MockZWaveFrameType,
-	createMockZWaveRequestFrame,
-} from "@zwave-js/testing";
+import { CommandClasses, SecurityClass } from "@zwave-js/core";
+import { type MockNodeBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 
 import { integrationTest } from "../integrationTestSuite.js";

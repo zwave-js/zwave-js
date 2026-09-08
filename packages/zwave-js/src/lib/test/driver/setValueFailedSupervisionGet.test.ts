@@ -4,10 +4,9 @@ import {
 	BinarySwitchCCSet,
 	BinarySwitchCCValues,
 	SupervisionCCGet,
-	SupervisionCCReport,
 	SupervisionCommand,
 } from "@zwave-js/cc";
-import { CommandClasses, SupervisionStatus } from "@zwave-js/core";
+import { CommandClasses } from "@zwave-js/core";
 import { type MockNodeBehavior, MockZWaveFrameType } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 

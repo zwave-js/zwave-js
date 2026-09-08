@@ -1,7 +1,7 @@
 {
   "name": "@zwave-js/eslint-plugin",
   "version": "15.28.0",
-  "description": "zwave-js: custom ESLint rules",
+  "description": "zwave-js: custom lint rules",
   "private": true,
   "keywords": [],
   "type": "module",
@@ -42,5 +42,8 @@
     "@zwave-js/core": "workspace:*",
     "eslint-plugin-jsonc": "^3.1.2",
     "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "@oxlint/plugins": "^1.80.0"
   }
 }
