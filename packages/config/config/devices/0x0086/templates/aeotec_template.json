@@ -4630,10 +4630,7 @@
 		"label": "Threshold Check Time",
 		"valueSize": 4,
 		"unit": "seconds",
-		"allowed": [
-			{ "value": 0 },
-			{ "range": [30, 2678400] }
-		],
+		"allowed": [{ "value": 0 }, { "range": [30, 2678400] }],
 		"defaultValue": 900,
 		"unsigned": true,
 		"options": [
@@ -4647,10 +4644,7 @@
 		"label": "Periodic Reports Interval",
 		"valueSize": 4,
 		"unit": "seconds",
-		"allowed": [
-			{ "value": 0 },
-			{ "range": [30, 2678400] }
-		],
+		"allowed": [{ "value": 0 }, { "range": [30, 2678400] }],
 		"defaultValue": 43200,
 		"unsigned": true,
 		"options": [
