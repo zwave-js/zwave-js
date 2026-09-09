@@ -1233,6 +1233,40 @@ Contains additional information about this node, loaded from a [config file](/de
 
 This information may change after an update of the config files. To check whether a change occurred that requires a re-interview, use the [`hasDeviceConfigChanged`](#hasdeviceconfigchanged) method.
 
+### `endpointGroups`
+
+```ts
+readonly endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
+```
+
+```ts
+const clamp = node.endpointGroups?.get(1);
+if (clamp) {
+	console.log(clamp.label);
+	for (const endpoint of clamp.endpoints) {
+		console.log(endpoint.index, endpoint.group === clamp);
+	}
+}
+```
+
+Exposes the physical-part groups defined in the [device config](config-files/file-format.md#endpointgroups). Each group contains the node's existing endpoint instances:
+
+```ts
+interface EndpointGroup {
+	readonly id: number;
+	readonly label: string;
+	readonly endpoints: readonly Endpoint[];
+}
+```
+
+Returns `undefined` until endpoint discovery completes. After discovery, an empty map means no groups with existing members apply. Missing endpoints are omitted from their groups and logged. Empty groups are omitted. The root endpoint may be a member.
+
+Group IDs are local to the node. Conditional filtering and missing members can leave gaps in the runtime IDs.
+
+Group instances are reused during normal operation. Reacquire them after a re-interview, a device-config reload, or a change to the discovered endpoints.
+
+Grouping is metadata. Applications retain control over presentation and the treatment of ungrouped endpoints. To serialize a group, convert its members to endpoint indices. Endpoint instances reference their group.
+
 ### `deviceDatabaseUrl`
 
 ```ts

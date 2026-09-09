@@ -12,6 +12,7 @@ The following properties are defined and should always be present in the same or
 | `firmwareVersion`  | The firmware version range this config file is valid for, [see below](#firmwareVersion) for details.                                                                                                                             |
 | `preferred`        | Mark this config file as preferred over others with the same IDs, but overlapping firmware versions. Can be used to have a default white-labeled configuration with re-branded versions, without having to split files too much. |
 | `endpoints`        | Endpoint-specific configuration, [see below](#endpoints) for details. If this is present, `associations` must be specified on endpoint `"0"` instead of on the root level.                                                       |
+| `endpointGroups`   | Metadata identifying endpoints belonging to the same physical part, [see below](#endpointGroups) for details.                                                                                                                    |
 | `associations`     | The association groups the device supports, [see below](#associations) for details. Only needs to be present if the device does not support Z-Wave+ or requires changes to the default association config.                       |
 | `paramInformation` | An array of the configuration parameters the device supports. [See below](#paramInformation) for details.                                                                                                                        |
 | `scenes`           | Custom labels and descriptions for Central Scenes, [see below](#scenes) for details.                                                                                                                                             |
@@ -97,6 +98,31 @@ Optional endpoint-specific configuration. This includes associations, paramInfor
 	// etc.
 }
 ```
+
+## `endpointGroups`
+
+```json
+"endpointGroups": {
+	"1": { "label": "Clamp 1", "endpoints": [1, 2] },
+	"2": { "label": "Clamp 2", "endpoints": [3, 4] }
+}
+```
+
+This optional property identifies endpoints belonging to the same physical part of a device. Grouping is metadata. All endpoints retain their addresses and capabilities. Applications decide how to present the groups.
+
+- **IDs:** Use numeric string keys starting at `"1"` without gaps. IDs are local to the device config.
+- **Labels:** Each group requires a nonempty `label`. Use a short, documentation-derived physical-part name in Title Case.
+- **Members:** Each group requires a nonempty `endpoints` array of unique integers from 0 to 127. Endpoint 0 represents the root device.
+- **Conditions:** A group may have a [`$if` condition](config-files/conditional-settings.md). An endpoint may belong to at most one active group. Mutually exclusive groups may reference the same endpoint. Filtering preserves the configured group IDs.
+- **Singletons:** Groups with one configured member are allowed with a lint warning.
+
+Group membership and endpoint labels are independent. Grouped indices may be absent from the `endpoints` object. Adding only `endpointGroups` permits root-level `associations` to remain in place.
+
+Use the device manual or manufacturer's product page to establish membership. Device classes, matching labels, and endpoint numbering alone do not establish a physical relationship. Leave endpoints ungrouped when that relationship is undocumented.
+
+At runtime, [`node.endpointGroups`](api/node.md#endpointgroups) resolves member indices to existing endpoint instances after endpoint discovery. Missing members produce a warning. Groups without existing members are omitted. A group reduced to one runtime member is valid.
+
+Changes to grouping metadata do not require a re-interview. The metadata is refreshed when the device config is loaded.
 
 ## `associations`
 

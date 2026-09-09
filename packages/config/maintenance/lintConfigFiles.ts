@@ -69,11 +69,13 @@ function getAllConditions(
 				"ver <=",
 				"ver <",
 				"ver ===",
+				"ver !==",
 				">=",
 				">",
 				"<=",
 				"<",
 				"===",
+				"!==",
 			] as const) {
 				if (operator in logic) {
 					const [lhs, rhs] = (logic as any)[operator] as [
@@ -116,6 +118,15 @@ function getAllConditions(
 		for (const assoc of config.associations.values()) {
 			if (assoc.condition) {
 				const logic = parseLogic(assoc.condition);
+				walkLogic(logic);
+			}
+		}
+	}
+
+	if (config.endpointGroups) {
+		for (const group of config.endpointGroups.values()) {
+			if (group.condition) {
+				const logic = parseLogic(group.condition);
 				walkLogic(logic);
 			}
 		}
@@ -179,6 +190,25 @@ function getAllConditions(
 	}
 
 	return ret;
+}
+
+function addNextVersions(
+	versions: Set<string>,
+	maxComponent: number = Infinity,
+): void {
+	const boundaries = [...versions];
+	for (const version of boundaries) {
+		const parts = version.split(".").map(Number);
+		while (parts.length < 3) parts.push(0);
+		for (let i = 2; i >= 0; i--) {
+			if (parts[i] < maxComponent) {
+				parts[i]++;
+				versions.add(parts.join("."));
+				break;
+			}
+			parts[i] = 0;
+		}
+	}
 }
 
 function paramNoToString(parameter: number, valueBitMask?: number): string {
@@ -544,7 +574,9 @@ async function lintDevices(): Promise<void> {
 				variant.manufacturerId,
 			)}:${formatId(variant.productType)}:${formatId(
 				variant.productId,
-			)}:${variant.firmwareVersion})`;
+			)}:${variant.firmwareVersion}${
+				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
+			})`;
 		}
 		if (!errors.has(filename)) errors.set(filename, []);
 
@@ -564,7 +596,9 @@ async function lintDevices(): Promise<void> {
 				variant.manufacturerId,
 			)}:${formatId(variant.productType)}:${formatId(
 				variant.productId,
-			)}:${variant.firmwareVersion})`;
+			)}:${variant.firmwareVersion}${
+				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
+			})`;
 		}
 		if (!warnings.has(filename)) warnings.set(filename, []);
 
@@ -633,7 +667,7 @@ async function lintDevices(): Promise<void> {
 		// Check which variants of the device config we need to lint
 		const variants: (DeviceID | undefined)[] = [];
 		const conditions = getAllConditions(conditionalConfig);
-		if (conditions.size > 0) {
+		if (conditions.size > 0 || conditionalConfig.endpointGroups?.size) {
 			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
 			const fwVersions: Set<string> =
 				conditions.get("firmwareVersion") ?? new Set();
@@ -644,14 +678,44 @@ async function lintDevices(): Promise<void> {
 				fwVersions.add(conditionalConfig.firmwareVersion.min);
 			}
 
+			const sdkVersions = new Set<string | undefined>([undefined]);
+			if (conditionalConfig.endpointGroups?.size) {
+				// Strict comparisons can overlap between their firmware boundaries
+				addNextVersions(fwVersions, 255);
+
+				const sdkConditions = conditions.get("sdkVersion");
+				if (sdkConditions?.size) {
+					sdkConditions.add("0.0");
+					addNextVersions(sdkConditions);
+					for (const version of sdkConditions) {
+						sdkVersions.add(version);
+					}
+				}
+			}
+
+			for (const version of fwVersions) {
+				if (
+					!versionInRange(
+						version,
+						conditionalConfig.firmwareVersion.min,
+						conditionalConfig.firmwareVersion.max,
+					)
+				) {
+					fwVersions.delete(version);
+				}
+			}
+
 			// Combine each firmware version with every device ID defined in the file
 			for (const deviceId of conditionalConfig.devices) {
 				for (const firmwareVersion of fwVersions) {
-					variants.push({
-						manufacturerId: conditionalConfig.manufacturerId,
-						...deviceId,
-						firmwareVersion,
-					});
+					for (const sdkVersion of sdkVersions) {
+						variants.push({
+							manufacturerId: conditionalConfig.manufacturerId,
+							...deviceId,
+							firmwareVersion,
+							...(sdkVersion !== undefined ? { sdkVersion } : {}),
+						});
+					}
 				}
 			}
 		} else {
@@ -777,6 +841,17 @@ async function lintDevices(): Promise<void> {
 					addError(
 						file,
 						`The maximum firmware version ${config.firmwareVersion.max} is invalid. Leading zeroes are not permitted.`,
+					);
+				}
+			}
+		}
+
+		if (conditionalConfig.endpointGroups) {
+			for (const [id, group] of conditionalConfig.endpointGroups) {
+				if (group.endpoints.length === 1) {
+					addWarning(
+						file,
+						`Endpoint group ${id} contains only one endpoint. Consider using an endpoint label.`,
 					);
 				}
 			}
