@@ -167,7 +167,9 @@
 			"description": "Devices in Group 2 will receive a Basic Set command if the temperature exceeds this value.",
 			"valueSize": 2,
 			"unit": "0.1 (°C/°F)",
-			"minValue": 32,
+			// The spec prints 0x0020 (32) here, but the max/default values only convert
+			// cleanly between °C and °F at 320 (32.0°F = 0.0°C, matching the EU/AU minimum).
+			"minValue": 320,
 			"maxValue": 2120,
 			"defaultValue": 860
 		},
@@ -267,8 +269,7 @@
 			"unit": "0.1 (°C/°F)",
 			"minValue": -200,
 			"maxValue": 200,
-			"defaultValue": 0,
-			"unsigned": false
+			"defaultValue": 0
 		},
 		{
 			"#": "26",
@@ -278,8 +279,7 @@
 			"unit": "0.1 %",
 			"minValue": -200,
 			"maxValue": 200,
-			"defaultValue": 0,
-			"unsigned": false
+			"defaultValue": 0
 		},
 		{
 			"#": "64",
