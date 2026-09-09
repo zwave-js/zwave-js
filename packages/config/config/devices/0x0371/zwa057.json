@@ -1,0 +1,306 @@
+{
+	"manufacturer": "Aeotec Ltd.",
+	"manufacturerId": "0x0371",
+	"label": "ZWA057",
+	// eslint-disable-next-line @zwave-js/consistent-config-string-case -- "aërQ" is a stylized brand name
+	"description": "aërQ Temperature and Humidity Sensor 8",
+	"devices": [
+		{
+			// EU version
+			"productType": "0x0002",
+			"productId": "0x0039"
+		},
+		{
+			// US version
+			"productType": "0x0102",
+			"productId": "0x0039"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Temperature High Trigger",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Temperature Low Trigger",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Humidity High Trigger",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Humidity Low Trigger",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Air Temperature",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "Mold Danger",
+			"maxNodes": 5
+		},
+		"8": {
+			"label": "Tamper",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/0x0086/templates/aeotec_template.json#threshold_check_time"
+		},
+		{
+			"#": "2",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Reports: Change Threshold",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 36,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "2",
+			// Other regions:
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Reports: Change Threshold",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 20,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "3",
+			"$purpose": "reporting_threshold.humidity",
+			"label": "Humidity Reports: Change Threshold",
+			"valueSize": 1,
+			"unit": "0.1 %",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 50,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4[0x01]",
+			"$import": "~/0x0086/templates/aeotec_template.json#led_indicator_periodic_reports"
+		},
+		{
+			"#": "4[0x02]",
+			"$import": "~/0x0086/templates/aeotec_template.json#led_indicator_wake"
+		},
+		{
+			"#": "4[0x04]",
+			"$import": "~/0x0086/templates/aeotec_template.json#led_indicator_mold_danger"
+		},
+		{
+			"#": "4[0x08]",
+			"$import": "~/0x0086/templates/aeotec_template.json#led_indicator_tamper",
+			"defaultValue": 1
+		},
+		{
+			// The spec marks this parameter read-only, but a bit field that enables
+			// per-sensor limit reporting cannot sensibly be read-only; treated as writable.
+			"#": "12[0x01]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_temperature_upper"
+		},
+		{
+			"#": "12[0x02]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_humidity_upper"
+		},
+		{
+			"#": "12[0x04]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_temperature_lower"
+		},
+		{
+			"#": "12[0x08]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_humidity_lower"
+		},
+		{
+			"#": "13",
+			"label": "Mold Danger: Humidity Offset",
+			"description": "Increases the humidity threshold that triggers the mold danger alarm, whose baseline is 60%.",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 40,
+			"defaultValue": 0
+		},
+		{
+			"#": "14",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"label": "Temperature Reports: Upper Limit",
+			"description": "Devices in Group 2 will receive a Basic Set command if the temperature exceeds this value.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			// The spec prints 0x0020 (32) here, but the max/default values only convert
+			// cleanly between °C and °F at 320 (32.0°F = 0.0°C, matching the EU/AU minimum).
+			"minValue": 320,
+			"maxValue": 2120,
+			"defaultValue": 860
+		},
+		{
+			"#": "14",
+			// Other regions:
+			"label": "Temperature Reports: Upper Limit",
+			"description": "Devices in Group 2 will receive a Basic Set command if the temperature exceeds this value.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": 0,
+			"maxValue": 1000,
+			"defaultValue": 300
+		},
+		{
+			"#": "15",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"label": "Temperature Reports: Lower Limit",
+			"description": "Devices in Group 3 will receive a Basic Set command if the temperature drops below this value.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -40,
+			"maxValue": 2120,
+			"defaultValue": 320
+		},
+		{
+			"#": "15",
+			// Other regions:
+			"label": "Temperature Reports: Lower Limit",
+			"description": "Devices in Group 3 will receive a Basic Set command if the temperature drops below this value.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -200,
+			"maxValue": 1000,
+			"defaultValue": 0
+		},
+		{
+			"#": "16",
+			"$import": "~/0x0086/templates/aeotec_template.json#watermark_humidity_upper",
+			"description": "Devices in Group 4 will receive a Basic Set command if the humidity exceeds this value."
+		},
+		{
+			"#": "17",
+			"$import": "~/0x0086/templates/aeotec_template.json#watermark_humidity_lower",
+			"description": "Devices in Group 5 will receive a Basic Set command if the humidity drops below this value."
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Temperature Reports: Basic Set Value (Above Upper Limit)",
+			"defaultValue": 0
+		},
+		{
+			"#": "19",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Temperature Reports: Basic Set Value (Below Lower Limit)",
+			"defaultValue": 255
+		},
+		{
+			"#": "20",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Humidity Reports: Basic Set Value (Above Upper Limit)",
+			"defaultValue": 0
+		},
+		{
+			"#": "21",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Humidity Reports: Basic Set Value (Below Lower Limit)",
+			"defaultValue": 255
+		},
+		{
+			"#": "22",
+			"$import": "~/0x0086/templates/aeotec_template.json#enable_binary_report",
+			"description": "Backward-compatible Binary Sensor report for the mold danger state."
+		},
+		{
+			"#": "23",
+			"$purpose": "reporting_threshold.low_battery",
+			"label": "Low Battery Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 10,
+			"maxValue": 50,
+			"defaultValue": 20
+		},
+		{
+			"#": "24",
+			"$import": "~/0x0086/templates/aeotec_template.json#periodic_reports_interval"
+		},
+		{
+			"#": "25",
+			"$purpose": "calibration.temperature",
+			"label": "Temperature Calibration",
+			"description": "Scale is defined by parameter 64.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -200,
+			"maxValue": 200,
+			"defaultValue": 0
+		},
+		{
+			"#": "26",
+			"$purpose": "calibration.humidity",
+			"label": "Humidity Calibration",
+			"valueSize": 2,
+			"unit": "0.1 %",
+			"minValue": -200,
+			"maxValue": 200,
+			"defaultValue": 0
+		},
+		{
+			"#": "64",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"$import": "~/0x0086/templates/aeotec_template.json#celsius_fahrenheit_0",
+			"valueSize": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "64",
+			// Other regions:
+			"$import": "~/0x0086/templates/aeotec_template.json#celsius_fahrenheit_0",
+			"valueSize": 1
+		}
+	],
+	"metadata": {
+		"wakeup": "Press the Action Button once.",
+		"inclusion": "Quickly press the Action Button on the product twice.",
+		"exclusion": "Quickly press the Action Button on the product twice.",
+		"reset": "Press and hold the Action Button for 12 seconds and then release the button.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80653/EngineeringSpec-arQTemperatureHumiditySensor820251219B.pdf"
+	}
+}
