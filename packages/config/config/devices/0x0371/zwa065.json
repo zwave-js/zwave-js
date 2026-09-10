@@ -27,6 +27,19 @@
 			// byte pattern as the confirmed EU Binary Switch entry above, not device-confirmed.
 			"productType": "0x0004",
 			"productId": "0x0041"
+		},
+		{
+			// AU/NZ version. Not in the Z-Wave Alliance catalog yet, but Aeotec's regional
+			// numbering pattern (EU/US/AU regions map to product type bytes 0x00/0x01/0x02) has
+			// proven reliable and is confirmed by Aeotec's own technical specification page:
+			// https://aeotec.freshdesk.com/support/solutions/articles/6000280231-siren-8-technical-specifications-
+			"productType": "0x0203",
+			"productId": "0x0041"
+		},
+		{
+			// AU/NZ version, Sound Switch device type (see comment above)
+			"productType": "0x0204",
+			"productId": "0x0041"
 		}
 	],
 	"firmwareVersion": {
