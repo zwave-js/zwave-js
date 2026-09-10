@@ -360,8 +360,7 @@
 			"#": "22",
 			"$import": "~/0x0086/templates/aeotec_template.json#enable_binary_report",
 			"description": "Backward-compatible Binary Sensor reports for the alarm and mold danger states.",
-			// Z-Wave JS reads these states from the Notification CC, so the
-			// backward-compatible reports must stay off.
+			// Z-Wave JS supports Notification CC
 			"recommendedValue": 0
 		},
 		{
