@@ -4,6 +4,37 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Redundant and superseded commands are now automatically deduplicated. The corresponding API calls can now be aborted or will share a single transaction, depending on the specific situation (#9136, #9137)
+* The new `lastAwake` property now indicates when a node was last awake. This information is persisted across restarts (#9173)
+* Some "invalid payload" warning logs now include the node ID (#9196)
+
+### Bugfixes
+* Notification Reports with event `0xfe` in response to a Get now idle the corresponding notification variables (#9160, #9174)
+* Fixed an issue where regular RSSI measurements could interfere with automatic polling (wakeup compat queries, Hail, etc.) if the commands were slow (#9183)
+
+### Config file changes
+* Add Aeotec ZWA012 productId 0x0037 (#9098)
+* Add Aeotec ZWA056 Water Sensor 8 (#9161)
+* Restrict ZWA055 Basic Set values to the legal value set, correct template key (#9208)
+* Add Aeotec ZWA065 Siren 8 (#9207)
+* Add Aeotec ZWA057 aërQ Temperature and Humidity Sensor 8 (#9206)
+* Add Aeotec ZWA055 Door / Window Sensor 8 (#9089)
+* Update Inovelli VZW32-SN P50, P107 for firmware 2.4 (#9187)
+* Add Zooz ZEN12 800LR Motion Dimmer (#9181)
+* Add Zooz ZEN37 parameter 10 for firmware 2.40 (#9180)
+* Add "Off" option for Heatit Z-TRM7 standby display brightness (#9177)
+* Update Zooz configs for new firmware parameters (#9175)
+* Add Simon 100 Battery Master Roller Blind (#9158)
+* Update Inovelli VZW32-SN P111 to match public docs (#9116)
+
+### Changes under the hood
+* Add AI contribution policy (#9189)
+* Switched the formatter from `dprint` to `oxfmt` (#8596, #9191, #9197, #9202)
+* Migrate syntax-only custom rules to Oxlint (#9203)
+* Improve Copilot review capabilities (#9198, #9200, #9201)
+
 ## 15.28.0 (2026-08-28)
 ### Features
 * Significantly improved capabilities of the experimental RCP firmware driver (#9076, #9077, #9078, #9080, #9081, #9083, #9087, #9088, #9090)
