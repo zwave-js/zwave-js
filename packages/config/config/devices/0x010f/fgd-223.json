@@ -1,0 +1,311 @@
+{
+	"manufacturer": "Nice",
+	"manufacturerId": "0x010f",
+	"label": "FGD-223",
+	"description": "Double Dimmer-Control",
+	"devices": [
+		{
+			"productType": "0x0103",
+			"productId": "0x1000"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_prev"
+		},
+		{
+			"#": "20",
+			"label": "Switch Type",
+			"description": "After selecting auto-detection, operate the wall switch within 10 minutes.",
+			"valueSize": 1,
+			"defaultValue": 1,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch (Single)",
+					"value": 0
+				},
+				{
+					"label": "Momentary switch (Double)",
+					"value": 1
+				},
+				{
+					"label": "Toggle switch, synchronize output (Single)",
+					"value": 2
+				},
+				{
+					"label": "Toggle switch, synchronize output (Double)",
+					"value": 3
+				},
+				{
+					"label": "Toggle switch, toggle output (Single)",
+					"value": 4
+				},
+				{
+					"label": "Toggle switch, toggle output (Double)",
+					"value": 5
+				},
+				{
+					"label": "Automatic detection",
+					"value": 6
+				},
+				{
+					"label": "None",
+					"value": 7
+				}
+			]
+		},
+		{
+			"#": "24",
+			"label": "Inputs Orientation",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Default",
+					"value": 0
+				},
+				{
+					"label": "Reversed",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "40[0x01]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_pressed_1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x02]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_pressed_2x",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x04]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_pressed_3x",
+			"defaultValue": 1
+		},
+		{
+			"#": "40[0x08]",
+			"$import": "templates/fibaro_template.json#send_s1_central_scene_hold_release",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x01]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_pressed_1x",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x02]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_pressed_2x",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x04]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_pressed_3x",
+			"defaultValue": 1
+		},
+		{
+			"#": "41[0x08]",
+			"$import": "templates/fibaro_template.json#send_s2_central_scene_hold_release",
+			"defaultValue": 1
+		},
+		{
+			"#": "154",
+			"$purpose": "timer.auto_off",
+			"label": "Output 1 – Auto-Off Timer",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 43200,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "155",
+			"$import": "#paramInformation/154",
+			"label": "Output 2 – Auto-Off Timer"
+		},
+		{
+			"#": "156",
+			"$import": "~/templates/master_template.json#minimum_dim_level_1-99",
+			"label": "Output 1 – Minimum Brightness Level",
+			"description": "Must not be higher than the maximum brightness level (parameter 158).",
+			"maxValue": 98,
+			"defaultValue": 20
+		},
+		{
+			"#": "157",
+			"$import": "#paramInformation/156",
+			"label": "Output 2 – Minimum Brightness Level",
+			"description": "Must not be higher than the maximum brightness level (parameter 159)."
+		},
+		{
+			"#": "158",
+			"$import": "~/templates/master_template.json#maximum_dim_level_1-99",
+			"label": "Output 1 – Maximum Brightness Level",
+			"description": "Must not be lower than the minimum brightness level (parameter 156).",
+			"minValue": 2,
+			"defaultValue": 75
+		},
+		{
+			"#": "159",
+			"$import": "#paramInformation/158",
+			"label": "Output 2 – Maximum Brightness Level",
+			"description": "Must not be lower than the minimum brightness level (parameter 157)."
+		},
+		{
+			"#": "160",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Output 1 – On/Off Mode",
+			"description": "Enable for non-dimmable loads. Dimming is not available in this mode."
+		},
+		{
+			"#": "161",
+			"$import": "#paramInformation/160",
+			"label": "Output 2 – On/Off Mode"
+		},
+		{
+			"#": "162",
+			"label": "Output 1 – Brightness Level on Single Click",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Last non-zero brightness level",
+					"value": 0
+				},
+				{
+					"label": "Maximum brightness level",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "163",
+			"$import": "#paramInformation/162",
+			"label": "Output 2 – Brightness Level on Single Click"
+		},
+		{
+			"#": "164",
+			"label": "Output 1 – Brightness Level on Double Click",
+			"description": "Allowable range: 0-99",
+			"valueSize": 1,
+			"allowed": [{ "range": [0, 99] }, { "value": 255 }],
+			"defaultValue": 99,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "165",
+			"$import": "#paramInformation/164",
+			"label": "Output 2 – Brightness Level on Double Click"
+		},
+		{
+			"#": "166",
+			"$purpose": "dimming_duration.manual",
+			"label": "Full Transition Time – Holding Wall Switch",
+			"description": "Also affects the Start Level Change command sent to associated devices.",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Instant",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "167",
+			"$purpose": "dimming_duration",
+			"label": "Full Transition Time – Z-Wave Commands and Wall Switch Clicks",
+			"description": "Also affects the Multilevel Switch Set command sent to associated devices.",
+			"valueSize": 1,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 2,
+			"options": [
+				{
+					"label": "Instant",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "200",
+			"$purpose": "reporting_threshold.voltage",
+			"label": "Voltage Report Threshold",
+			"valueSize": 1,
+			"unit": "V",
+			"allowed": [{ "value": 0 }, { "range": [3, 10] }],
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "201",
+			"label": "Overvoltage Notification Threshold",
+			"valueSize": 2,
+			"unit": "V",
+			"allowed": [{ "value": 0 }, { "range": [100, 260] }],
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "202",
+			"label": "Outputs Mode",
+			"description": "When connected, both channels operate using the settings of the first (master) channel.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Independent outputs",
+					"value": 0
+				},
+				{
+					"label": "Connected outputs",
+					"value": 1
+				}
+			]
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Set the hub to add mode (secure or non-secure).\n2. Quickly press the S1 or S2 switch, or the PROG button, three times.\n3. If adding in Security S2 Authenticated mode, enter the PIN code labelled on the device.\n4. Wait for the adding process to finish. The LED indicator glows green (non-secure, S0, S2 Unauthenticated) or magenta (S2 Authenticated) on success, red on failure.\n\nNote: S1 and S2 can only be used for adding during the first 10 minutes after powering the device.",
+		"exclusion": "1. Set the hub to remove mode.\n2. Quickly press the S1 or S2 switch, or the PROG button, three times.\n3. Wait for the removing process to end. Successful removal is confirmed by the red LED indicator.\n\nNote: S1 and S2 can only be used for removing during the first 10 minutes after powering the device.",
+		"reset": "1. Power-cycle the device.\n2. Press and hold the PROG button to enter the menu.\n3. Wait for the LED indicator to glow yellow (position 1).\n4. Quickly release and click the PROG button again.\n5. After a few seconds the device restarts, which is indicated by the red LED indicator.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80622/Manual_DoubleDimmer-Control.pdf"
+	}
+}
