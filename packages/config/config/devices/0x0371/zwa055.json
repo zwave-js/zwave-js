@@ -200,11 +200,15 @@
 		},
 		{
 			"#": "8",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 2: Basic Set Value (On)",
+			"defaultValue": 255
 		},
 		{
 			"#": "9",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 2: Basic Set Value (Off)",
+			"defaultValue": 0
 		},
 		{
 			"#": "10",
@@ -307,23 +311,27 @@
 		},
 		{
 			"#": "18",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off",
-			"label": "Association Group 6: Basic Set Value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 6: Basic Set Value",
+			"defaultValue": 0
 		},
 		{
 			"#": "19",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on",
-			"label": "Association Group 7: Basic Set Value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 7: Basic Set Value",
+			"defaultValue": 255
 		},
 		{
 			"#": "20",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off",
-			"label": "Association Group 8: Basic Set Value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 8: Basic Set Value",
+			"defaultValue": 0
 		},
 		{
 			"#": "21",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on",
-			"label": "Association Group 9: Basic Set Value"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 9: Basic Set Value",
+			"defaultValue": 255
 		},
 		{
 			"#": "22",
@@ -432,13 +440,15 @@
 		},
 		{
 			"#": "31",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_on",
-			"label": "Association Group 5: Basic Set Value (On)"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 5: Basic Set Value (On)",
+			"defaultValue": 255
 		},
 		{
 			"#": "32",
-			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_basic_set_off",
-			"label": "Association Group 5: Basic Set Value (Off)"
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Association Group 5: Basic Set Value (Off)",
+			"defaultValue": 0
 		},
 		{
 			"#": "33",
@@ -500,6 +510,6 @@
 		"inclusion": "Press the Action Button twice within 1 second. The green LED flashes for up to 30 seconds. The green LED stays on for 2 seconds when successful. The red LED stays on for 1 second when unsuccessful.",
 		"exclusion": "Press the Action Button twice within 1 second. The green LED flashes for up to 30 seconds. The green LED stays on for 2 seconds when successful. The red LED stays on for 1 second when unsuccessful.",
 		"reset": "Press and hold the Action Button for more than 12 seconds. The green LED stays on for 1 second, then breathes to confirm the reset.",
-		"manual": "https://aeotec.freshdesk.com/support/solutions/folders/6000244699"
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80651/EngineeringSpec-AeotecDoorWindowSensor820251112-2.pdf"
 	}
 }
