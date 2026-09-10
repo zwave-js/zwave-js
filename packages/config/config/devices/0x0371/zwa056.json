@@ -359,16 +359,14 @@
 		{
 			"#": "22",
 			"$import": "~/0x0086/templates/aeotec_template.json#enable_binary_report",
-			"description": "Backward-compatible Binary Sensor reports for the alarm and mold danger states."
+			"description": "Backward-compatible Binary Sensor reports for the alarm and mold danger states.",
+			// Z-Wave JS reads these states from the Notification CC, so the
+			// backward-compatible reports must stay off.
+			"recommendedValue": 0
 		},
 		{
 			"#": "23",
-			"$purpose": "reporting_threshold.low_battery",
-			"label": "Low Battery Threshold",
-			"valueSize": 1,
-			"unit": "%",
-			"minValue": 10,
-			"maxValue": 50,
+			"$import": "~/0x0086/templates/aeotec_template.json#low_battery_threshold",
 			"defaultValue": 20
 		},
 		{
