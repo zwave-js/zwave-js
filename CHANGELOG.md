@@ -15,7 +15,6 @@
 * Fixed an issue where regular RSSI measurements could interfere with automatic polling (wakeup compat queries, Hail, etc.) if the commands were slow (#9183)
 
 ### Config file changes
-* Add Aeotec ZWA012 productId 0x0037 (#9098)
 * Add Aeotec ZWA056 Water Sensor 8 (#9161)
 * Restrict ZWA055 Basic Set values to the legal value set, correct template key (#9208)
 * Add Aeotec ZWA065 Siren 8 (#9207)
