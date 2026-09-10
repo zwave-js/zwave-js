@@ -134,6 +134,30 @@ Instruct the controller to soft-reset (restart). The returned Promise will resol
 
 > [!WARNING] USB modules will reconnect, meaning that they might get a new address. Make sure to configure your device address in a way that prevents it from changing, e.g. by using `/dev/serial/by-id/...` on Linux.
 
+### `softResetAndRestart`
+
+```ts
+async softResetAndRestart(): Promise<void>
+```
+
+Soft-resets the Z-Wave module and restarts the driver instance.
+
+### `enterBootloader`
+
+```ts
+async enterBootloader(): Promise<void>
+```
+
+Puts the Z-Wave module into bootloader mode. This is useful for performing firmware updates using the bootloader protocol.
+
+### `leaveBootloader`
+
+```ts
+async leaveBootloader(): Promise<void>
+```
+
+Leaves the bootloader by running the application. This restarts the Z-Wave module from bootloader mode back into normal operation.
+
 ### `hardReset`
 
 ```ts
@@ -306,6 +330,14 @@ Updates a subset of the driver options without having to restart the driver. The
 - `preferences`
 - `userAgent` (behaves like `updateUserAgent`)
 
+### `sendTestFrame`
+
+```ts
+async sendTestFrame(nodeId: number, powerlevel: Powerlevel): Promise<TransmitStatus | undefined>
+```
+
+Sends a NOP Power frame to the given node at the specified powerlevel and returns the transmit status. Returns `undefined` if the frame could not be sent. This is primarily used for testing link quality between nodes.
+
 ### Updating the firmware of the Z-Wave module (OTW)
 
 ```ts
@@ -455,6 +487,22 @@ readonly userAgent: string
 ```
 
 Returns the user agent string used for service requests.
+
+### `configVersion`
+
+```ts
+readonly configVersion: string
+```
+
+The version of the device configuration package (`@zwave-js/config`) in use by the driver.
+
+### `options`
+
+```ts
+readonly options: Readonly<ZWaveOptions>
+```
+
+Returns the read-only options the driver was initialized with. The shape of `ZWaveOptions` is described [below](#ZWaveOptions).
 
 ## Driver events
 
