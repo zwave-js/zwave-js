@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.29.0 (2026-09-10)
 ### Features
 * Redundant and superseded commands are now automatically deduplicated. The corresponding API calls can now be aborted or will share a single transaction, depending on the specific situation (#9136, #9137)
 * The new `lastAwake` property now indicates when a node was last awake. This information is persisted across restarts (#9173)
