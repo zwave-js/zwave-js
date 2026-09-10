@@ -874,7 +874,7 @@
 		"$import": "~/templates/master_template.json#base_enable_disable",
 		"label": "Low Battery Voltage Check"
 	},
-	"reporting_threshold.low_battery": {
+	"low_battery_threshold": {
 		"$purpose": "reporting_threshold.low_battery",
 		"label": "Low Battery Threshold",
 		"valueSize": 1,
