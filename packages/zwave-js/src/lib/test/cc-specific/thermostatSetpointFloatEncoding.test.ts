@@ -612,7 +612,7 @@ integrationTest(
 );
 
 integrationTest(
-	"Thermostat Setpoint keeps a prepared setValue consistent when precision is learned before transmission",
+	"Thermostat Setpoint uses precision learned before transmission for the wire value and cache",
 	{
 		nodeCapabilities: {
 			commandClasses: [caps, CommandClasses.Supervision],
@@ -653,17 +653,16 @@ integrationTest(
 				});
 			t.onTestFinished(() => sendCommand.mockRestore());
 			await node.setValue(valueId, 21.55);
-			t.expect(lastSetBytes(controller).subarray(-6)).toEqual(
+			t.expect(lastSetBytes(controller).subarray(-5)).toEqual(
 				Bytes.from([
 					ccId,
 					ThermostatSetpointCommand.Set,
 					ThermostatSetpointType.Heating,
-					0x42,
-					8,
-					0x6b,
+					1,
+					22,
 				]),
 			);
-			t.expect(node.getValue(valueId)).toBe(21.55);
+			t.expect(node.getValue(valueId)).toBe(22);
 			await node.setValue(valueId, 21.55);
 			t.expect(lastSetBytes(controller).subarray(-5)).toEqual(
 				Bytes.from([
@@ -675,6 +674,50 @@ integrationTest(
 				]),
 			);
 			t.expect(node.getValue(valueId)).toBe(22);
+		},
+	},
+);
+
+integrationTest(
+	"Thermostat Setpoint concurrent identical writes retain their transmitted values",
+	{
+		nodeCapabilities: {
+			commandClasses: [caps, CommandClasses.Supervision],
+		},
+		customSetup: async (_driver, _controller, mockNode) => {
+			mockNode.defineBehavior(acceptSet);
+		},
+		testBody: async (t, _driver, node, controller) => {
+			const valueId = ThermostatSetpointCCValues.setpoint(
+				ThermostatSetpointType.Heating,
+			).id;
+			const updates: unknown[] = [];
+			node.on("value updated", (_node, args) => {
+				if (
+					args.commandClass === ccId
+					&& args.property === "setpoint"
+				) {
+					updates.push(args.newValue);
+				}
+			});
+			const results = await Promise.all([
+				node.setValue(valueId, 21.55),
+				node.setValue(valueId, 21.55),
+			]);
+			t.expect(results).toEqual([
+				t.expect.objectContaining({
+					status: SupervisionStatus.Success,
+				}),
+				t.expect.objectContaining({
+					status: SupervisionStatus.Success,
+				}),
+			]);
+			t.expect(lastSetBytes(controller).subarray(-2)).toEqual(
+				Bytes.from([1, 22]),
+			);
+			t.expect(node.getValue(valueId)).toBe(22);
+			t.expect(updates.length).toBeGreaterThan(0);
+			t.expect(updates.every((value) => value === 22)).toBe(true);
 		},
 	},
 );
@@ -770,6 +813,81 @@ for (const disableOptimisticValueUpdate of [false, true]) {
 		},
 	);
 }
+
+multiNodeTest(
+	"Thermostat Setpoint multicast and reused singlecast followups send identical float bytes",
+	{
+		controllerCapabilities: {
+			supportedFunctionTypes: getDefaultSupportedFunctionTypes().filter(
+				(type) =>
+					type !== FunctionType.SendDataBridge
+					&& type !== FunctionType.SendDataMulticastBridge,
+			),
+		},
+		nodeCapabilities: [2, 3].map((id) => ({
+			id,
+			capabilities: {
+				commandClasses: [caps],
+			},
+		})),
+		customSetup: async (_driver, _controller, mockNodes) => {
+			for (const mockNode of mockNodes) {
+				mockNode.defineBehavior({
+					handleCC: (_controller, self, cc) => {
+						if (cc instanceof ThermostatSetpointCCSet) {
+							const values = self.state.get(
+								"receivedSetpoints",
+							) as number[] | undefined;
+							self.state.set("receivedSetpoints", [
+								...(values ?? []),
+								cc.value,
+							]);
+							return { action: "ok" };
+						}
+					},
+				});
+			}
+		},
+		testBody: async (t, driver, nodes, controller, mockNodes) => {
+			nodes[0].valueDB.setValue(observedId, [
+				{ precision: 0, size: 1, scale: 0 },
+			]);
+			nodes[1].valueDB.setValue(observedId, [
+				{ precision: 2, size: 4, scale: 0 },
+			]);
+			const cc = new ThermostatSetpointCCSet({
+				nodeId: [2, 3],
+				setpointType: ThermostatSetpointType.Heating,
+				value: 21.55,
+				scale: 0,
+			});
+			await driver.sendCommand(cc);
+			const multicast = lastSetBytes(controller);
+			// S2 followups reuse the command instance with each recipient's node ID
+			for (const node of nodes) {
+				cc.nodeId = node.id;
+				await driver.sendCommand(cc);
+				t.expect(lastSetBytes(controller)).toEqual(multicast);
+				t.expect(cc.value).toBe(21.55);
+			}
+			for (const mockNode of mockNodes) {
+				await t.expect
+					.poll(() => mockNode.state.get("receivedSetpoints"))
+					.toEqual([21.55, 21.55]);
+				const values = mockNode.state.get(
+					"receivedSetpoints",
+				) as number[];
+				t.expect(values.every((value) => value === 21.55)).toBe(true);
+				mockNode.assertReceivedControllerFrame(
+					(frame) =>
+						frame.type === MockZWaveFrameType.Request
+						&& frame.payload instanceof ThermostatSetpointCCSet
+						&& frame.payload.value === 21.55,
+				);
+			}
+		},
+	},
+);
 
 multiNodeTest(
 	"Thermostat Setpoint multicast keeps automatic encoding with learned bounds",

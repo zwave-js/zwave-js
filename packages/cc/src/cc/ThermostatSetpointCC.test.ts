@@ -78,6 +78,68 @@ function setup() {
 }
 
 describe("Thermostat Setpoint float encodings", () => {
+	test("S2 followups retain the multicast encoding after nodeId changes", async () => {
+		const { ctx, report } = setup();
+		report(0, 1);
+		ctx.getValueDB(3).setValue(observedId, [
+			{ precision: 2, scale: 0, size: 4 },
+		]);
+		const cc = new ThermostatSetpointCCSet({
+			nodeId: [2, 3],
+			setpointType: ThermostatSetpointType.Heating,
+			value: 21.55,
+			scale: 0,
+		});
+		const multicast = await cc.serialize(ctx);
+		for (const nodeId of [2, 3, 2]) {
+			cc.nodeId = nodeId;
+			cc.prepareRetransmission();
+			expect(await cc.serialize(ctx)).toEqual(multicast);
+			expect(cc.value).toBe(21.55);
+		}
+	});
+
+	test("retries retain the first encoding when observations change", async () => {
+		const { ctx, report } = setup();
+		const cc = new ThermostatSetpointCCSet({
+			nodeId: 2,
+			setpointType: ThermostatSetpointType.Heating,
+			value: 21.55,
+			scale: 0,
+		});
+		const initial = await cc.serialize(ctx);
+		report(0, 1);
+		cc.prepareRetransmission();
+		expect(await cc.serialize(ctx)).toEqual(initial);
+		expect(cc.value).toBe(21.55);
+		const next = new ThermostatSetpointCCSet({
+			nodeId: 2,
+			setpointType: ThermostatSetpointType.Heating,
+			value: 21.55,
+			scale: 0,
+		});
+		expect((await next.serialize(ctx)).subarray(3)).toEqual(
+			Bytes.from([1, 22]),
+		);
+		expect(next.value).toBe(22);
+	});
+
+	test("failed encoding does not prevent learning a usable encoding", async () => {
+		const { ctx, report } = setup();
+		report(0, 1);
+		const cc = new ThermostatSetpointCCSet({
+			nodeId: 2,
+			setpointType: ThermostatSetpointType.Heating,
+			value: 128,
+			scale: 0,
+		});
+		expect(() => cc.serialize(ctx)).toThrow();
+		report(0, 2);
+		expect((await cc.serialize(ctx)).subarray(3)).toEqual(
+			Bytes.from([2, 0, 128]),
+		);
+	});
+
 	test("retains raw encodings globally across endpoints and types", async () => {
 		const { valueDB, report, encode } = setup();
 		report(1, 2, 0, ThermostatSetpointType.Heating, 1);
