@@ -8,6 +8,7 @@ export {
 	jsonToNVM,
 	jsonToNVM500,
 	migrateNVM,
+	normalizeNVM,
 	nvm500ToJSON,
 	nvmToJSON,
 } from "./convert.js";
