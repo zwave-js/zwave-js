@@ -12,6 +12,10 @@
 			"productType": "0x0100",
 			"productId": "0x8493",
 			"zwaveAllianceId": 4788
+		},
+		{
+			"productType": "0x0102",
+			"productId": "0x8493"
 		}
 	],
 	"firmwareVersion": {
@@ -232,6 +236,10 @@
 			]
 		}
 	],
+	"compat": {
+		// Despite configuring Multi Channel Associations, the device reports on the root endpoint.
+		"mapRootReportsToEndpoint": 1
+	},
 	"metadata": {
 		"inclusion": "Classic inclusion\nRefer to your primary controller to enter into the Inclusion Mode or Exclusion Mode\nOnce the primary controller is ready to include/exclude the device, press the 'PROG' button once",
 		"exclusion": "Refer to your primary controller to enter into the Inclusion Mode or Exclusion Mode\nOnce the primary controller is ready to include/exclude the device, press the 'PROG' button once",
