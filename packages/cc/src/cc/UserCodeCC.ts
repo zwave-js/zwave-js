@@ -2355,6 +2355,37 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 	public readonly userCodes: readonly UserCode[];
 	public readonly nextUserId: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		if (this.userCodes.length > 255) {
+			throw new ZWaveError(
+				"An extended user code report can contain at most 255 codes",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		const codes = this.userCodes.map((code) => {
+			const userCode = Bytes.from(code.userCode, "ascii");
+			if (userCode.length > 15) {
+				throw new ZWaveError(
+					"User codes must fit in the four-bit length field",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			const buffer = Bytes.concat([
+				[0, 0, code.userIdStatus, userCode.length],
+				userCode,
+			]);
+			buffer.writeUInt16BE(code.userId, 0);
+			return buffer;
+		});
+		this.payload = Bytes.concat([
+			[this.userCodes.length],
+			...codes,
+			[0, 0],
+		]);
+		this.payload.writeUInt16BE(this.nextUserId, this.payload.length - 2);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
 		for (const { userId, userIdStatus, userCode } of this.userCodes) {
@@ -2388,18 +2419,15 @@ export class UserCodeCCExtendedUserCodeGet extends UserCodeCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): UserCodeCCExtendedUserCodeGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new UserCodeCCExtendedUserCodeGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 3);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			userId: raw.payload.readUInt16BE(0),
+			reportMore: !!(raw.payload[2] & 0b1),
+		});
 	}
 
 	public userId: number;
