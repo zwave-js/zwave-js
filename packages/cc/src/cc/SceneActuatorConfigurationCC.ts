@@ -358,18 +358,17 @@ export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationC
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): SceneActuatorConfigurationCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SceneActuatorConfigurationCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 4);
+		validatePayload(raw.payload[0] >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			sceneId: raw.payload[0],
+			dimmingDuration: Duration.parseSet(raw.payload[1])!,
+			level: raw.payload[2] & 0b1000_0000 ? raw.payload[3] : undefined,
+		});
 	}
 
 	public sceneId: number;
@@ -449,6 +448,19 @@ export class SceneActuatorConfigurationCCReport extends SceneActuatorConfigurati
 	public readonly level?: number;
 	public readonly dimmingDuration?: Duration;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.sceneId,
+			this.sceneId === 0 ? 0 : (this.level ?? 0xff),
+			this.sceneId === 0
+				? 0
+				: (
+						this.dimmingDuration ?? Duration.unknown()
+					).serializeReport(),
+		]);
+		return super.serialize(ctx);
+	}
+
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
@@ -522,18 +534,14 @@ export class SceneActuatorConfigurationCCGet extends SceneActuatorConfigurationC
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): SceneActuatorConfigurationCCGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SceneActuatorConfigurationCCGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			sceneId: raw.payload[0],
+		});
 	}
 
 	public sceneId: number;
