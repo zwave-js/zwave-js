@@ -8,8 +8,9 @@ export {
 } from "@zwave-js/core";
 export type { DataRate, FLiRS } from "@zwave-js/core";
 export { DeviceClass } from "./lib/node/DeviceClass.js";
-export type { NodeDump } from "./lib/node/Dump.js";
+export type { EndpointGroupDump, NodeDump } from "./lib/node/Dump.js";
 export { Endpoint } from "./lib/node/Endpoint.js";
+export type { EndpointGroup } from "./lib/node/EndpointGroup.js";
 export { ZWaveNode } from "./lib/node/Node.js";
 export type {
 	NodeStatistics,

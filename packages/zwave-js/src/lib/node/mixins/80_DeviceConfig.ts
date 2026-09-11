@@ -1,9 +1,16 @@
 import { refreshConfigParamMetadataFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
 import { DeviceConfig, parseDeviceConfigHash } from "@zwave-js/config";
-import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
+import {
+	CommandClasses,
+	InterviewStage,
+	type MaybeNotKnown,
+	NOT_KNOWN,
+} from "@zwave-js/core";
 import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 
 import { cacheKeys } from "../../driver/NetworkCache.js";
+import type { Endpoint } from "../Endpoint.js";
+import type { EndpointGroup } from "../EndpointGroup.js";
 
 import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
 
@@ -12,6 +19,9 @@ export interface NodeDeviceConfig {
 	 * Contains additional information about this node, loaded from a config file
 	 */
 	get deviceConfig(): MaybeNotKnown<DeviceConfig>;
+
+	/** Returns groups with existing members. Returns undefined before endpoint discovery. */
+	readonly endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
 
 	/**
 	 * Returns the manufacturer/brand name defined in the device configuration,
@@ -59,6 +69,67 @@ export abstract class DeviceConfigMixin
 	}
 	protected set deviceConfig(value: MaybeNotKnown<DeviceConfig>) {
 		this._deviceConfig = value;
+		this._endpointGroups = undefined;
+		this._endpointGroupEndpoints = undefined;
+	}
+
+	private _endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
+	private _endpointGroupEndpoints: readonly Endpoint[] | undefined;
+
+	/** Returns groups with existing members. Returns undefined before endpoint discovery. */
+	public get endpointGroups():
+		| ReadonlyMap<number, EndpointGroup>
+		| undefined {
+		if (
+			!this.isMultiChannelInterviewComplete
+			&& (this.supportsCC(CommandClasses["Multi Channel"])
+				|| this.interviewStage < InterviewStage.CommandClasses)
+		) {
+			return undefined;
+		}
+
+		const endpoints = this.getAllEndpoints();
+		if (
+			this._endpointGroups
+			&& this._endpointGroupEndpoints?.length === endpoints.length
+			&& endpoints.every(
+				(endpoint, i) => endpoint === this._endpointGroupEndpoints?.[i],
+			)
+		) {
+			return this._endpointGroups;
+		}
+
+		const groups = new Map<number, EndpointGroup>();
+		const endpointsByIndex = new Map(
+			endpoints.map((endpoint) => [endpoint.index, endpoint]),
+		);
+		for (const config of this.deviceConfig?.endpointGroups?.values()
+			?? []) {
+			const members: Endpoint[] = [];
+			for (const index of config.endpoints) {
+				const endpoint = endpointsByIndex.get(index);
+				if (endpoint) {
+					members.push(endpoint);
+				} else {
+					this.driver.controllerLog.logNode(
+						this.id,
+						`Endpoint group ${config.id} references missing endpoint ${index}`,
+						"warn",
+					);
+				}
+			}
+			if (members.length) {
+				groups.set(config.id, {
+					id: config.id,
+					label: config.label,
+					endpoints: members,
+				});
+			}
+		}
+
+		this._endpointGroups = groups;
+		this._endpointGroupEndpoints = endpoints;
+		return groups;
 	}
 
 	/**

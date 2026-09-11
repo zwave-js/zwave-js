@@ -13,6 +13,7 @@ export * from "./devices/CompatConfig.js";
 export * from "./devices/DeviceConfig.js";
 export * from "./devices/DeviceMetadata.js";
 export * from "./devices/EndpointConfig.js";
+export * from "./devices/EndpointGroupConfig.js";
 export * from "./devices/ParamInformation.js";
 export * from "./devices/SceneConfig.js";
 export type * from "./devices/shared.js";
