@@ -76,7 +76,6 @@ import { SceneActivationCCSet } from "@zwave-js/cc/SceneActivationCC";
 import { Security2CCNonceGet } from "@zwave-js/cc/Security2CC";
 import { SecurityCCNonceGet } from "@zwave-js/cc/SecurityCC";
 import { ThermostatModeCCSet } from "@zwave-js/cc/ThermostatModeCC";
-import { ThermostatSetpointCCAPI } from "@zwave-js/cc/ThermostatSetpointCC";
 import {
 	UserCredentialCCAssociationReport,
 	UserCredentialCCCredentialLearnReport,
@@ -576,6 +575,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			};
 
 			const hooks = api.setValueHooks?.(valueIdProps, value, options);
+			if (hooks?.normalizeValue) value = hooks.normalizeValue(value);
 
 			if (hooks?.supervisionDelayedUpdates) {
 				api = api.withOptions({
@@ -604,14 +604,12 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			}
 
 			// And call it
-			const setpointResult =
-				api instanceof ThermostatSetpointCCAPI
-					? await api.setValueWithEffectiveValue(valueIdProps, value)
-					: undefined;
-			const result = setpointResult
-				? setpointResult.result
-				: await api.setValue!.call(api, valueIdProps, value, options);
-			if (setpointResult) value = setpointResult.value;
+			const result = await api.setValue!.call(
+				api,
+				valueIdProps,
+				value,
+				options,
+			);
 
 			if (loglevel === "silly") {
 				const header = `[setValue] result of SET_VALUE API call for ${api.constructor.name}:`;

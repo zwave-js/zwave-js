@@ -612,7 +612,7 @@ integrationTest(
 );
 
 integrationTest(
-	"Thermostat Setpoint uses precision learned before transmission for the wire value and cache",
+	"Thermostat Setpoint keeps queued commands consistent and applies newly learned precision to later sends",
 	{
 		nodeCapabilities: {
 			commandClasses: [caps, CommandClasses.Supervision],
@@ -653,16 +653,17 @@ integrationTest(
 				});
 			t.onTestFinished(() => sendCommand.mockRestore());
 			await node.setValue(valueId, 21.55);
-			t.expect(lastSetBytes(controller).subarray(-5)).toEqual(
+			t.expect(lastSetBytes(controller).subarray(-6)).toEqual(
 				Bytes.from([
 					ccId,
 					ThermostatSetpointCommand.Set,
 					ThermostatSetpointType.Heating,
-					1,
-					22,
+					0x42,
+					8,
+					0x6b,
 				]),
 			);
-			t.expect(node.getValue(valueId)).toBe(22);
+			t.expect(node.getValue(valueId)).toBe(21.55);
 			await node.setValue(valueId, 21.55);
 			t.expect(lastSetBytes(controller).subarray(-5)).toEqual(
 				Bytes.from([

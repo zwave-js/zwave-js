@@ -30,8 +30,9 @@ import {
 	POLL_VALUE,
 	type PollValueImplementation,
 	SET_VALUE,
+	SET_VALUE_HOOKS,
 	type SetValueImplementation,
-	type ValueIDProperties,
+	type SetValueImplementationHooksFactory,
 	throwUnsupportedProperty,
 	throwWrongValueType,
 } from "../lib/API.js";
@@ -175,6 +176,36 @@ export const ThermostatSetpointCCValues = V.defineCCValues(
 
 @API(CommandClasses["Thermostat Setpoint"])
 export class ThermostatSetpointCCAPI extends CCAPI {
+	private getPreferredScale(setpointType: ThermostatSetpointType): number {
+		// SDS14223: The Scale field value MUST be identical to the value received in the Thermostat Setpoint Report for the
+		// actual Setpoint Type during the node interview. Fall back to the first scale if none is known
+		return (
+			this.tryGetValueDB()?.getValue<number>(
+				ThermostatSetpointCCValues.setpointScale(setpointType).endpoint(
+					this.endpoint.index,
+				),
+			) ?? 0
+		);
+	}
+
+	protected [SET_VALUE_HOOKS]: SetValueImplementationHooksFactory = ({
+		property,
+		propertyKey,
+	}) => {
+		if (property === "setpoint" && typeof propertyKey === "number") {
+			return {
+				normalizeValue: (value) =>
+					typeof value === "number"
+						? this.createSetpointSet(
+								propertyKey,
+								value,
+								this.getPreferredScale(propertyKey),
+							).value
+						: value,
+			};
+		}
+	};
+
 	public supportsCommand(
 		cmd: ThermostatSetpointCommand,
 	): MaybeNotKnown<boolean> {
@@ -196,60 +227,42 @@ export class ThermostatSetpointCCAPI extends CCAPI {
 			{ property, propertyKey },
 			value,
 		) {
-			return (
-				await this.setValueWithEffectiveValue(
-					{ property, propertyKey },
-					value,
-				)
-			).result;
-		};
-	}
+			if (property !== "setpoint") {
+				throwUnsupportedProperty(this.ccId, property);
+			}
+			if (typeof propertyKey !== "number") {
+				throw new ZWaveError(
+					`${
+						CommandClasses[this.ccId]
+					}: "${property}" must be further specified by a numeric property key`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			if (typeof value !== "number") {
+				throwWrongValueType(
+					this.ccId,
+					property,
+					"number",
+					typeof value,
+				);
+			}
 
-	/** Sets a value and returns the value encoded by the command. */
-	@validateArgs()
-	public async setValueWithEffectiveValue(
-		valueId: ValueIDProperties,
-		value: unknown,
-	): Promise<{ result: SupervisionResult | undefined; value: number }> {
-		const { property, propertyKey } = valueId;
-		if (property !== "setpoint") {
-			throwUnsupportedProperty(this.ccId, property);
-		}
-		if (typeof propertyKey !== "number") {
-			throw new ZWaveError(
-				`${
-					CommandClasses[this.ccId]
-				}: "${property}" must be further specified by a numeric property key`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-		if (typeof value !== "number") {
-			throwWrongValueType(this.ccId, property, "number", typeof value);
-		}
-
-		// SDS14223: The Scale field value MUST be identical to the value received in the Thermostat Setpoint Report for the
-		// actual Setpoint Type during the node interview. Fall back to the first scale if none is known
-		const preferredScale = this.tryGetValueDB()?.getValue<number>(
-			ThermostatSetpointCCValues.setpointScale(propertyKey).endpoint(
-				this.endpoint.index,
-			),
-		);
-		const { result, value: effectiveValue } =
-			await this.setWithEffectiveValue(
+			const cc = this.createSetpointSet(
 				propertyKey,
 				value,
-				preferredScale ?? 0,
-				true,
+				this.getPreferredScale(propertyKey),
 			);
+			const result = await this.host.sendCommand(cc, this.commandOptions);
 
-		// Verify the current value after a delay, unless the command was supervised and successful
-		if (this.isSinglecast() && !supervisedCommandSucceeded(result)) {
-			// TODO: Ideally this would be a short delay, but some thermostats like Remotec ZXT-600
-			// aren't able to handle the GET this quickly.
-			this.schedulePoll({ property, propertyKey }, effectiveValue);
-		}
+			// Verify the current value after a delay, unless the command was supervised and successful
+			if (this.isSinglecast() && !supervisedCommandSucceeded(result)) {
+				// TODO: Ideally this would be a short delay, but some thermostats like Remotec ZXT-600
+				// aren't able to handle the GET this quickly.
+				this.schedulePoll({ property, propertyKey }, cc.value);
+			}
 
-		return { result, value: effectiveValue };
+			return result;
+		};
 	}
 
 	protected get [POLL_VALUE](): PollValueImplementation {
@@ -318,16 +331,15 @@ export class ThermostatSetpointCCAPI extends CCAPI {
 		value: number,
 		scale: number,
 	): Promise<SupervisionResult | undefined> {
-		return (await this.setWithEffectiveValue(setpointType, value, scale))
-			.result;
+		const cc = this.createSetpointSet(setpointType, value, scale);
+		return this.host.sendCommand(cc, this.commandOptions);
 	}
 
-	private async setWithEffectiveValue(
+	private createSetpointSet(
 		setpointType: ThermostatSetpointType,
 		value: number,
 		scale: number,
-		preventDeduplication = false,
-	): Promise<{ result: SupervisionResult | undefined; value: number }> {
+	): ThermostatSetpointCCSet {
 		this.assertSupportsCommand(
 			ThermostatSetpointCommand,
 			ThermostatSetpointCommand.Set,
@@ -340,12 +352,8 @@ export class ThermostatSetpointCCAPI extends CCAPI {
 			value,
 			scale,
 		});
-		// Value updates need this instance's serialized value
-		const options = preventDeduplication
-			? { ...this.commandOptions, preventDeduplication: true }
-			: this.commandOptions;
-		const result = await this.host.sendCommand(cc, options);
-		return { result, value: cc.value };
+		cc.normalizeValue(this.host);
+		return cc;
 	}
 
 	@validateArgs()
@@ -721,7 +729,17 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 		return CommandRelation.Unrelated;
 	}
 
-	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+	/** Normalizes the value and fixes its encoding for this command. */
+	public normalizeValue(
+		ctx: Pick<CCEncodingContext, "getDeviceConfig" | "tryGetValueDB">,
+	): number {
+		this.getEncodedValue(ctx);
+		return this.value;
+	}
+
+	private getEncodedValue(
+		ctx: Pick<CCEncodingContext, "getDeviceConfig" | "tryGetValueDB">,
+	): Bytes {
 		// Retries and S2 singlecast followups must reuse the original float encoding
 		if (!this.encodedValue) {
 			// If a config file overwrites how the float should be encoded, use that information
@@ -750,9 +768,14 @@ export class ThermostatSetpointCCSet extends ThermostatSetpointCC {
 			this.value = parseFloatWithScale(encodedValue).value;
 			this.encodedValue = encodedValue;
 		}
+		return this.encodedValue;
+	}
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const encodedValue = this.getEncodedValue(ctx);
 		this.payload = Bytes.concat([
 			[this.setpointType & 0b1111],
-			this.encodedValue,
+			encodedValue,
 		]);
 		return super.serialize(ctx);
 	}

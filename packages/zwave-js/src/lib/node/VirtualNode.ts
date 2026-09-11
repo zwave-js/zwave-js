@@ -7,7 +7,6 @@ import {
 	type ValueIDProperties,
 	supervisionResultToSetValueResult,
 } from "@zwave-js/cc";
-import { ThermostatSetpointCCAPI } from "@zwave-js/cc/ThermostatSetpointCC";
 import {
 	type Protocols,
 	SecurityClass,
@@ -163,6 +162,7 @@ export class VirtualNode extends VirtualEndpoint {
 			};
 
 			const hooks = api.setValueHooks?.(valueIdProps, value, options);
+			if (hooks?.normalizeValue) value = hooks.normalizeValue(value);
 
 			if (hooks?.supervisionDelayedUpdates) {
 				api = api.withOptions({
@@ -191,14 +191,12 @@ export class VirtualNode extends VirtualEndpoint {
 			}
 
 			// And call it
-			const setpointResult =
-				api instanceof ThermostatSetpointCCAPI
-					? await api.setValueWithEffectiveValue(valueIdProps, value)
-					: undefined;
-			const result = setpointResult
-				? setpointResult.result
-				: await api.setValue!.call(api, valueIdProps, value, options);
-			if (setpointResult) value = setpointResult.value;
+			const result = await api.setValue!.call(
+				api,
+				valueIdProps,
+				value,
+				options,
+			);
 
 			if (api.isSetValueOptimistic(valueId)) {
 				// If the call did not throw, assume that the call was successful and remember the new value
