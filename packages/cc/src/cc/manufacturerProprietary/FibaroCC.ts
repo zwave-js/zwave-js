@@ -5,6 +5,7 @@ import {
 	type MaybeUnknown,
 	type MessageOrCCLogEntry,
 	type MessageRecord,
+	UNKNOWN_STATE,
 	type ValueID,
 	ValueMetadata,
 	type WithAddress,
@@ -382,14 +383,22 @@ export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): FibaroVenetianBlindCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		validatePayload(raw.payload.length >= 3);
+		const hasPosition = !!(raw.payload[0] & 0b10);
+		const hasTilt = !!(raw.payload[0] & 0b01);
+		validatePayload(hasPosition || hasTilt);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			...(hasPosition
+				? {
+						position: raw.payload[1],
+						...(hasTilt ? { tilt: raw.payload[2] } : {}),
+					}
+				: { tilt: raw.payload[2] }),
+		});
 	}
 
 	public position: number | undefined;
@@ -495,6 +504,16 @@ export class FibaroVenetianBlindCCReport extends FibaroVenetianBlindCC {
 
 	public position: MaybeUnknown<number> | undefined;
 	public tilt: MaybeUnknown<number> | undefined;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			(this.position !== undefined ? 0b10 : 0)
+				| (this.tilt !== undefined ? 0b01 : 0),
+			this.position === UNKNOWN_STATE ? 0xfe : (this.position ?? 0),
+			this.tilt === UNKNOWN_STATE ? 0xfe : (this.tilt ?? 0),
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {};
