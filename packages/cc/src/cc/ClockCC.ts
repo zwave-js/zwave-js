@@ -6,8 +6,6 @@ import {
 	MessagePriority,
 	type SupervisionResult,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
@@ -155,16 +153,19 @@ export class ClockCCSet extends ClockCC {
 		this.minute = options.minute;
 	}
 
-	public static from(_raw: CCRaw, _ctx: CCParsingContext): ClockCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+	public static from(raw: CCRaw, ctx: CCParsingContext): ClockCCSet {
+		validatePayload(raw.payload.length >= 2);
+		const weekday: Weekday = raw.payload[0] >>> 5;
+		const hour = raw.payload[0] & 0b11111;
+		const minute = raw.payload[1];
+		validatePayload(weekday <= Weekday.Sunday, hour <= 23, minute <= 59);
 
-		// return new ClockCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			weekday,
+			hour,
+			minute,
+		});
 	}
 
 	public weekday: Weekday;
@@ -230,6 +231,14 @@ export class ClockCCReport extends ClockCC {
 	public readonly weekday: Weekday;
 	public readonly hour: number;
 	public readonly minute: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			((this.weekday & 0b111) << 5) | (this.hour & 0b11111),
+			this.minute,
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
