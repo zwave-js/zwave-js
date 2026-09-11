@@ -566,10 +566,48 @@ export class IrrigationCCAPI extends CCAPI {
 			IrrigationCommand.SystemConfigSet,
 		);
 
+		let rainSensorPolarity = config.rainSensorPolarity;
+		let moistureSensorPolarity = config.moistureSensorPolarity;
+		if (
+			rainSensorPolarity != undefined
+			|| moistureSensorPolarity != undefined
+		) {
+			const valueDB = this.getValueDB();
+			if (rainSensorPolarity == undefined) {
+				rainSensorPolarity = valueDB.getValue<IrrigationSensorPolarity>(
+					IrrigationCCValues.rainSensorPolarity.endpoint(
+						this.endpoint.index,
+					),
+				);
+				if (rainSensorPolarity == undefined) {
+					throw new ZWaveError(
+						`Cannot set moisture sensor polarity before the rain sensor polarity is known!`,
+						ZWaveErrorCodes.Argument_Invalid,
+					);
+				}
+			}
+			if (moistureSensorPolarity == undefined) {
+				moistureSensorPolarity =
+					valueDB.getValue<IrrigationSensorPolarity>(
+						IrrigationCCValues.moistureSensorPolarity.endpoint(
+							this.endpoint.index,
+						),
+					);
+				if (moistureSensorPolarity == undefined) {
+					throw new ZWaveError(
+						`Cannot set rain sensor polarity before the moisture sensor polarity is known!`,
+						ZWaveErrorCodes.Argument_Invalid,
+					);
+				}
+			}
+		}
+
 		const cc = new IrrigationCCSystemConfigSet({
 			nodeId: this.endpoint.nodeId,
 			endpointIndex: this.endpoint.index,
 			...config,
+			rainSensorPolarity,
+			moistureSensorPolarity,
 		});
 
 		return this.host.sendCommand(cc, this.commandOptions);
@@ -1530,14 +1568,14 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let polarity = 0;
-		if (this.rainSensorPolarity != undefined) polarity |= 0b1;
-		if (this.moistureSensorPolarity != undefined) polarity |= 0b10;
 		if (
-			this.rainSensorPolarity == undefined
-			&& this.moistureSensorPolarity == undefined
+			this.rainSensorPolarity != undefined
+			&& this.moistureSensorPolarity != undefined
 		) {
 			// Valid bit
 			polarity |= 0b1000_0000;
+			polarity |= this.rainSensorPolarity & 0b1;
+			polarity |= (this.moistureSensorPolarity & 0b1) << 1;
 		}
 		this.payload = Bytes.concat([
 			[this.masterValveDelay],
