@@ -425,6 +425,12 @@ export class WakeUpCCIntervalReport extends WakeUpCC {
 
 	public readonly controllerNodeId: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([0, 0, 0, this.controllerNodeId]);
+		this.payload.writeUIntBE(this.wakeUpInterval, 0, 3);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -538,6 +544,16 @@ export class WakeUpCCIntervalCapabilitiesReport extends WakeUpCC {
 	public readonly wakeUpIntervalSteps: number;
 
 	public readonly wakeUpOnDemandSupported: boolean;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = new Bytes(13);
+		this.payload.writeUIntBE(this.minWakeUpInterval, 0, 3);
+		this.payload.writeUIntBE(this.maxWakeUpInterval, 3, 3);
+		this.payload.writeUIntBE(this.defaultWakeUpInterval, 6, 3);
+		this.payload.writeUIntBE(this.wakeUpIntervalSteps, 9, 3);
+		this.payload[12] = this.wakeUpOnDemandSupported ? 1 : 0;
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
