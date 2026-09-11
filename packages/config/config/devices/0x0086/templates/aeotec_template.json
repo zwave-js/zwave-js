@@ -4671,5 +4671,61 @@
 		"maxValue": 1000,
 		"defaultValue": 300,
 		"unsigned": true
+	},
+	"sensor_limit_enable_brightness_upper": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Brightness Reports: Send Above Upper Limit"
+	},
+	"sensor_limit_enable_brightness_lower": {
+		"$import": "~/templates/master_template.json#base_enable_disable",
+		"label": "Brightness Reports: Send Below Lower Limit"
+	},
+	// Values are in a different order than base_color_options_9
+	"base_color_options_9_alt": {
+		"valueSize": 4,
+		"unsigned": true,
+		"allowManualEntry": false,
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			},
+			{
+				"label": "Red",
+				"value": 1
+			},
+			{
+				"label": "Green",
+				"value": 2
+			},
+			{
+				"label": "Blue",
+				"value": 3
+			},
+			{
+				"label": "Yellow",
+				"value": 4
+			},
+			{
+				"label": "White",
+				"value": 5
+			},
+			{
+				"label": "Purple",
+				"value": 6
+			},
+			{
+				"label": "Orange",
+				"value": 7
+			},
+			{
+				"label": "Pink",
+				"value": 8
+			},
+			{
+				"label": "Cyan",
+				"value": 9
+			}
+		]
 	}
 }
