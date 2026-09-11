@@ -13,6 +13,7 @@ import {
 	formatId,
 	getErrorMessage,
 	num2hex,
+	padVersion,
 } from "@zwave-js/shared";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
@@ -21,6 +22,7 @@ import c from "ansi-colors";
 import esMain from "es-main";
 import levenshtein from "js-levenshtein";
 import type { RulesLogic } from "json-logic-js";
+import semverValid from "semver/functions/valid.js";
 
 import { configDir } from "#config_dir";
 
@@ -667,6 +669,21 @@ async function lintDevices(): Promise<void> {
 		// Check which variants of the device config we need to lint
 		const variants: (DeviceID | undefined)[] = [];
 		const conditions = getAllConditions(conditionalConfig);
+		let hasInvalidFirmwareVersion = false;
+		for (const version of conditions.get("firmwareVersion") ?? []) {
+			if (
+				!semverValid(padVersion(version))
+				|| version.split(".").some((part) => Number(part) > 255)
+			) {
+				addError(
+					file,
+					`Invalid firmware version "${version}" in a condition. Use x.y or x.y.z with integer components between 0 and 255 and no leading zeros.`,
+				);
+				hasInvalidFirmwareVersion = true;
+			}
+		}
+		if (hasInvalidFirmwareVersion) continue;
+
 		if (conditions.size > 0 || conditionalConfig.endpointGroups?.size) {
 			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
 			const fwVersions: Set<string> =
@@ -694,14 +711,9 @@ async function lintDevices(): Promise<void> {
 			}
 
 			for (const version of fwVersions) {
-				// Condition literals may contain leading zeros
-				const normalizedVersion = version
-					.split(".")
-					.map(Number)
-					.join(".");
 				if (
 					!versionInRange(
-						normalizedVersion,
+						version,
 						conditionalConfig.firmwareVersion.min,
 						conditionalConfig.firmwareVersion.max,
 					)

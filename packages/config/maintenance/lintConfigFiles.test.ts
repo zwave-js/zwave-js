@@ -233,7 +233,7 @@ test("only checks supported firmware for configs without endpoint groups", async
 });
 
 test.each([false, true])(
-	"handles leading zeros in firmware condition boundaries with endpoint groups: %s",
+	"rejects leading zeros in firmware condition boundaries with endpoint groups: %s",
 	async (withGroups) => {
 		definition.label = [
 			{ $if: "firmwareVersion >= 1.03", value: "Test Device" },
@@ -244,6 +244,47 @@ test.each([false, true])(
 				1: { label: "Output", endpoints: [0, 1] },
 			};
 		}
+
+		await expect(lintConfigFiles()).rejects.toThrow("lint exited");
+
+		expect(reportProblem).toHaveBeenCalledExactlyOnceWith({
+			severity: "error",
+			filename: "packages/config/config/devices/test.json",
+			message:
+				'Invalid firmware version "1.03" in a condition. Use x.y or x.y.z with integer components between 0 and 255 and no leading zeros.',
+		});
+	},
+);
+
+test.each(["01.3", "1.3.00", "256.0", "1.256", "1.0.256"])(
+	"rejects invalid firmware version %s in a condition",
+	async (version) => {
+		definition.label = [
+			{ $if: `firmwareVersion >= ${version}`, value: "Test Device" },
+			"Test Device",
+		];
+
+		await expect(lintConfigFiles()).rejects.toThrow("lint exited");
+
+		expect(reportProblem).toHaveBeenCalledExactlyOnceWith(
+			expect.objectContaining({
+				severity: "error",
+				filename: "packages/config/config/devices/test.json",
+				message: expect.stringContaining(
+					`Invalid firmware version "${version}"`,
+				),
+			}),
+		);
+	},
+);
+
+test.each(["0.0", "1.3", "1.3.0", "255.255.255"])(
+	"accepts valid firmware version %s in a condition",
+	async (version) => {
+		definition.label = [
+			{ $if: `firmwareVersion >= ${version}`, value: "Test Device" },
+			"Test Device",
+		];
 
 		await lintConfigFiles();
 
