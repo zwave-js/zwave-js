@@ -694,9 +694,14 @@ async function lintDevices(): Promise<void> {
 			}
 
 			for (const version of fwVersions) {
+				// Condition literals may contain leading zeros
+				const normalizedVersion = version
+					.split(".")
+					.map(Number)
+					.join(".");
 				if (
 					!versionInRange(
-						version,
+						normalizedVersion,
 						conditionalConfig.firmwareVersion.min,
 						conditionalConfig.firmwareVersion.max,
 					)

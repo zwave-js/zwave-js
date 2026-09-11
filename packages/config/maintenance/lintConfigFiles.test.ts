@@ -232,6 +232,26 @@ test("only checks supported firmware for configs without endpoint groups", async
 	expect(reportProblem).not.toHaveBeenCalled();
 });
 
+test.each([false, true])(
+	"handles leading zeros in firmware condition boundaries with endpoint groups: %s",
+	async (withGroups) => {
+		definition.label = [
+			{ $if: "firmwareVersion >= 1.03", value: "Test Device" },
+			"Test Device",
+		];
+		if (withGroups) {
+			definition.endpointGroups = {
+				1: { label: "Output", endpoints: [0, 1] },
+			};
+		}
+
+		await lintConfigFiles();
+
+		expect(reportProblem).not.toHaveBeenCalled();
+		expect(process.exit).not.toHaveBeenCalled();
+	},
+);
+
 test("does not sample invalid firmware components between adjacent versions", async () => {
 	definition.endpointGroups = {
 		1: {
