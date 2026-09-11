@@ -11,6 +11,7 @@ import {
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
+	encodeBitMask,
 	encodeFloatWithScale,
 	getNamedScale,
 	getUnknownScale,
@@ -529,18 +530,17 @@ export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): HumidityControlSetpointCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new HumidityControlSetpointCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		const { value, scale } = parseFloatWithScale(raw.payload.subarray(1));
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			setpointType: raw.payload[0] & 0b1111,
+			value,
+			scale,
+		});
 	}
 
 	public setpointType: HumidityControlSetpointType;
@@ -654,6 +654,14 @@ export class HumidityControlSetpointCCReport extends HumidityControlSetpointCC {
 	public scale: number;
 	public value: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.type & 0b1111],
+			encodeFloatWithScale(this.value, this.scale),
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const scale = getScale(this.scale);
 		return {
@@ -696,18 +704,14 @@ export class HumidityControlSetpointCCGet extends HumidityControlSetpointCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): HumidityControlSetpointCCGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new HumidityControlSetpointCCGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			setpointType: raw.payload[0] & 0b1111,
+		});
 	}
 
 	public setpointType: HumidityControlSetpointType;
@@ -766,6 +770,15 @@ export class HumidityControlSetpointCCSupportedReport extends HumidityControlSet
 
 	public readonly supportedSetpointTypes: readonly HumidityControlSetpointType[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeBitMask(
+			this.supportedSetpointTypes,
+			undefined,
+			HumidityControlSetpointType["N/A"],
+		);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -818,6 +831,11 @@ export class HumidityControlSetpointCCScaleSupportedReport extends HumidityContr
 
 	public readonly supportedScales: readonly number[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeBitMask(this.supportedScales, 3, 0);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const supportedScales = this.supportedScales.map((scale) =>
 			getScale(scale),
@@ -851,18 +869,14 @@ export class HumidityControlSetpointCCScaleSupportedGet extends HumidityControlS
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): HumidityControlSetpointCCScaleSupportedGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new HumidityControlSetpointCCScaleSupportedGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			setpointType: raw.payload[0] & 0b1111,
+		});
 	}
 
 	public setpointType: HumidityControlSetpointType;
@@ -960,6 +974,15 @@ export class HumidityControlSetpointCCCapabilitiesReport extends HumidityControl
 	public minValueScale: number;
 	public maxValueScale: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.type & 0b1111],
+			encodeFloatWithScale(this.minValue, this.minValueScale),
+			encodeFloatWithScale(this.maxValue, this.maxValueScale),
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const minValueScale = getScale(this.minValueScale);
 		const maxValueScale = getScale(this.maxValueScale);
@@ -993,18 +1016,14 @@ export class HumidityControlSetpointCCCapabilitiesGet extends HumidityControlSet
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): HumidityControlSetpointCCCapabilitiesGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new HumidityControlSetpointCCCapabilitiesGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			setpointType: raw.payload[0] & 0b1111,
+		});
 	}
 
 	public setpointType: HumidityControlSetpointType;
