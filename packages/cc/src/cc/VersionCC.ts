@@ -1060,6 +1060,43 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
 
 	public readonly applicationBuildNumber: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const encodeVersion = (version: string): number[] => {
+			if (version === "unused") return [0, 0, 0];
+			const [major, minor = 0, patch = 0] = version
+				.split(".")
+				.map(Number);
+			return [major, minor, patch];
+		};
+		this.payload = Bytes.concat([
+			encodeVersion(this.sdkVersion),
+			encodeVersion(this.applicationFrameworkAPIVersion),
+			[0, 0],
+			encodeVersion(this.hostInterfaceVersion),
+			[0, 0],
+			encodeVersion(this.zWaveProtocolVersion),
+			[0, 0],
+			encodeVersion(this.applicationVersion),
+			[0, 0],
+		]);
+		for (const [version, build, offset] of [
+			[
+				this.applicationFrameworkAPIVersion,
+				this.applicationFrameworkBuildNumber,
+				6,
+			],
+			[this.hostInterfaceVersion, this.hostInterfaceBuildNumber, 11],
+			[this.zWaveProtocolVersion, this.zWaveProtocolBuildNumber, 16],
+			[this.applicationVersion, this.applicationBuildNumber, 21],
+		] as const) {
+			this.payload.writeUInt16BE(
+				version === "unused" ? 0 : build,
+				offset,
+			);
+		}
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"SDK version": this.sdkVersion,
