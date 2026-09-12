@@ -6,8 +6,6 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
 	validatePayload,
 } from "@zwave-js/core";
@@ -217,17 +215,18 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ClimateControlScheduleCCSet {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ClimateControlScheduleCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 28);
+		const switchPoints = Array.from({ length: 9 }, (_, i) =>
+			decodeSwitchpoint(raw.payload.subarray(1 + 3 * i)),
+		).filter((sp) => sp.state !== "Unused");
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			weekday: raw.payload[0] & 0b111,
+			switchPoints,
+		});
 	}
 
 	public switchPoints: Switchpoint[];
@@ -319,6 +318,22 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 
 	public readonly schedule: readonly Switchpoint[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.weekday & 0b111],
+			...Array.from({ length: 9 }, (_, i) =>
+				encodeSwitchpoint(
+					this.schedule[i] ?? {
+						hour: 0,
+						minute: 0,
+						state: "Unused",
+					},
+				),
+			),
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -353,17 +368,14 @@ export class ClimateControlScheduleCCGet extends ClimateControlScheduleCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ClimateControlScheduleCCGet {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ClimateControlScheduleCCGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			weekday: raw.payload[0] & 0b111,
+		});
 	}
 
 	public weekday: Weekday;
@@ -411,6 +423,11 @@ export class ClimateControlScheduleCCChangedReport extends ClimateControlSchedul
 	}
 
 	public readonly changeCounter: number;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.changeCounter]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -466,6 +483,14 @@ export class ClimateControlScheduleCCOverrideReport extends ClimateControlSchedu
 
 	public readonly overrideState: SetbackState;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[this.overrideType & 0b11],
+			encodeSetbackState(this.overrideState),
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -502,17 +527,16 @@ export class ClimateControlScheduleCCOverrideSet extends ClimateControlScheduleC
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ClimateControlScheduleCCOverrideSet {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ClimateControlScheduleCCOverrideSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 2);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			overrideType: raw.payload[0] & 0b11,
+			overrideState:
+				decodeSetbackState(raw.payload, 1) ?? raw.payload.readInt8(1),
+		});
 	}
 
 	public overrideType: ScheduleOverrideType;
