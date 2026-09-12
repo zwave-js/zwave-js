@@ -12,13 +12,12 @@ import {
 	UNKNOWN_STATE,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
 	logList,
 	logText,
 	maybeUnknownToString,
 	parseBitMask,
+	encodeBitMask,
 	validatePayload,
 } from "@zwave-js/core";
 import {
@@ -561,17 +560,16 @@ export class BarrierOperatorCCSet extends BarrierOperatorCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): BarrierOperatorCCSet {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
+		validatePayload(raw.payload.length >= 1);
+		const targetState = raw.payload[0];
+		validatePayload(
+			targetState === BarrierState.Open
+				|| targetState === BarrierState.Closed,
 		);
-
-		// return new BarrierOperatorCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({ nodeId: ctx.sourceNodeId, targetState });
 	}
 
 	public targetState: BarrierState.Open | BarrierState.Closed;
@@ -652,6 +650,18 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
 
 	public readonly position: MaybeUnknown<number>;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const value =
+			this.currentState === BarrierState.Stopped
+			&& typeof this.position === "number"
+				? this.position === 100
+					? 0xff
+					: this.position
+				: (this.currentState ?? 0x64);
+		this.payload = Bytes.from([value]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -707,6 +717,15 @@ export class BarrierOperatorCCSignalingCapabilitiesReport extends BarrierOperato
 
 	public readonly supportedSubsystemTypes: readonly SubsystemType[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeBitMask(
+			this.supportedSubsystemTypes,
+			undefined,
+			SubsystemType.Audible,
+		);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -743,18 +762,21 @@ export class BarrierOperatorCCEventSignalingSet extends BarrierOperatorCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): BarrierOperatorCCEventSignalingSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
+		validatePayload(raw.payload.length >= 2);
+		const subsystemType = raw.payload[0];
+		const subsystemState = raw.payload[1];
+		validatePayload(
+			isEnumMember(SubsystemType, subsystemType),
+			isEnumMember(SubsystemState, subsystemState),
 		);
-
-		// return new BarrierOperatorCCEventSignalingSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			subsystemType,
+			subsystemState,
+		});
 	}
 
 	public subsystemType: SubsystemType;
@@ -835,6 +857,11 @@ export class BarrierOperatorCCEventSignalingReport extends BarrierOperatorCC {
 	public readonly subsystemType: SubsystemType;
 	public readonly subsystemState: SubsystemState;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.subsystemType, this.subsystemState]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -868,18 +895,13 @@ export class BarrierOperatorCCEventSignalingGet extends BarrierOperatorCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): BarrierOperatorCCEventSignalingGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new BarrierOperatorCCEventSignalingGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		const subsystemType = raw.payload[0];
+		validatePayload(isEnumMember(SubsystemType, subsystemType));
+		return new this({ nodeId: ctx.sourceNodeId, subsystemType });
 	}
 
 	public subsystemType: SubsystemType;
