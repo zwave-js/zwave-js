@@ -2281,18 +2281,39 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ConfigurationCCBulkSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
+		validatePayload(raw.payload.length >= 4);
+		const firstParameter = raw.payload.readUInt16BE(0);
+		const numParams = raw.payload[2];
+		const resetToDefault = !!(raw.payload[3] & 0b1000_0000);
+		const handshake = !!(raw.payload[3] & 0b0100_0000);
+		const valueSize = raw.payload[3] & 0b111;
+		validatePayload(numParams > 0, firstParameter + numParams <= 0x10000);
+		validatePayload(valueSize >= 1, valueSize <= 4);
+		validatePayload(raw.payload.length >= 4 + numParams * valueSize);
+		const parameters = Array.from(
+			{ length: numParams },
+			(_, i) => firstParameter + i,
 		);
-
-		// return new ConfigurationCCBulkSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		if (resetToDefault) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				parameters,
+				handshake,
+				resetToDefault,
+			});
+		}
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameters,
+			handshake,
+			valueSize,
+			values: parameters.map((_, i) =>
+				raw.payload.readIntBE(4 + i * valueSize, valueSize),
+			),
+		});
 	}
 
 	private _parameters: number[];
@@ -2496,6 +2517,60 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 		return this._values;
 	}
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const parameters = [...this._values.keys()].toSorted((a, b) => a - b);
+		if (
+			parameters.length > 255
+			|| (parameters.length > 0 && !isConsecutiveArray(parameters))
+			|| parameters.some(
+				(p) => !Number.isInteger(p) || p < 0 || p > 0xffff,
+			)
+			|| !Number.isInteger(this.valueSize)
+			|| this.valueSize < (parameters.length > 0 ? 1 : 0)
+			|| this.valueSize > 4
+		) {
+			throw new ZWaveError(
+				"ConfigurationCCBulkReport requires consecutive parameters and a valid value size",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		this.payload = new Bytes(5 + parameters.length * this.valueSize);
+		this.payload.writeUInt16BE(parameters[0] ?? 0, 0);
+		this.payload[2] = parameters.length;
+		this.payload[3] = this.reportsToFollow;
+		this.payload[4] =
+			(this.defaultValues ? 0b1000_0000 : 0)
+			| (this.isHandshakeResponse ? 0b0100_0000 : 0)
+			| this.valueSize;
+		for (let i = 0; i < parameters.length; i++) {
+			const value = this._values.get(parameters[i])!;
+			const format =
+				value < 0
+					? ConfigValueFormat.SignedInteger
+					: ConfigValueFormat.UnsignedInteger;
+			if (
+				!Number.isInteger(value)
+				|| value < -(2 ** (8 * this.valueSize - 1))
+				|| value >= 2 ** (8 * this.valueSize)
+			) {
+				throwInvalidValueError(
+					value,
+					parameters[i],
+					this.valueSize,
+					format,
+				);
+			}
+			serializeValue(
+				this.payload,
+				5 + i * this.valueSize,
+				this.valueSize,
+				format,
+				value,
+			);
+		}
+		return super.serialize(ctx);
+	}
+
 	public getPartialCCSessionId(): Record<string, any> | undefined {
 		return {};
 	}
@@ -2564,18 +2639,20 @@ export class ConfigurationCCBulkGet extends ConfigurationCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ConfigurationCCBulkGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ConfigurationCCBulkGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 3);
+		const firstParameter = raw.payload.readUInt16BE(0);
+		const numParams = raw.payload[2];
+		validatePayload(numParams > 0, firstParameter + numParams <= 0x10000);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameters: Array.from(
+				{ length: numParams },
+				(_, i) => firstParameter + i,
+			),
+		});
 	}
 
 	private _parameters: number[];
