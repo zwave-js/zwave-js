@@ -166,16 +166,21 @@ export class LanguageCCSet extends LanguageCC {
 		this._country = options.country;
 	}
 
-	public static from(_raw: CCRaw, _ctx: CCParsingContext): LanguageCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+	public static from(raw: CCRaw, ctx: CCParsingContext): LanguageCCSet {
+		validatePayload(raw.payload.length >= 3);
+		const language = raw.payload.subarray(0, 3).toString("ascii");
+		validatePayload(language.toLowerCase() === language);
+		let country: string | undefined;
+		if (raw.payload.length >= 5) {
+			country = raw.payload.subarray(3, 5).toString("ascii");
+			validatePayload(country.toUpperCase() === country);
+		}
 
-		// return new LanguageCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			language,
+			country,
+		});
 	}
 
 	private _language: string;
@@ -276,6 +281,14 @@ export class LanguageCCReport extends LanguageCC {
 	public readonly language: string;
 
 	public readonly country: MaybeNotKnown<string>;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from(
+			this.language + (this.country ?? ""),
+			"ascii",
+		);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = { language: this.language };
