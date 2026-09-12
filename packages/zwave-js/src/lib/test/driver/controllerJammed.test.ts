@@ -414,8 +414,6 @@ integrationTestMulti(
 	},
 );
 
-let shouldFailAfterTransmitting = false;
-
 integrationTest.sequential(
 	"a TX status of Fail after transmitting is reported as such, not as a missing acknowledgement",
 	{
@@ -428,12 +426,21 @@ integrationTest.sequential(
 		},
 
 		customSetup: async (driver, controller, mockNode) => {
+			// Every SendData in this test fails after being transmitted
 			const handleSendData: MockControllerBehavior = {
 				async onHostMessage(controller, msg) {
 					if (msg instanceof SendDataRequest) {
-						if (!shouldFailAfterTransmitting) {
-							// Defer to the default behavior
-							return false;
+						// Check if this command is legal right now
+						const state = controller.state.get(
+							MockControllerStateKeys.CommunicationState,
+						) as MockControllerCommunicationState | undefined;
+						if (
+							state != undefined
+							&& state !== MockControllerCommunicationState.Idle
+						) {
+							throw new Error(
+								"Received SendDataRequest while not idle",
+							);
 						}
 
 						controller.state.set(
@@ -480,17 +487,17 @@ integrationTest.sequential(
 		},
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			node.markAsAlive();
-			shouldFailAfterTransmitting = true;
 
+			// "Fail" alone would also match the jam rejection
+			// ("Failed to send the command after N attempts")
 			await assertZWaveError(
 				t.expect,
 				() => node.commandClasses.Basic.set(99),
 				{
-					messageMatches: "Fail",
+					errorCode: ZWaveErrorCodes.Controller_CallbackNOK,
+					messageMatches: "Status Fail",
 				},
 			);
-
-			shouldFailAfterTransmitting = false;
 		},
 	},
 );

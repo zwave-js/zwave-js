@@ -6954,14 +6954,12 @@ ${handlers.length} left`,
 							// For anything else, name the status instead of guessing.
 							throw new ZWaveError(
 								prevResult.transmitStatus
-										=== TransmitStatus.NoAck
+									=== TransmitStatus.NoAck
 									? "The node did not acknowledge the command"
-									: `Failed to send the command (Status ${
-										getEnumMemberName(
+									: `Failed to send the command (Status ${getEnumMemberName(
 											TransmitStatus,
 											prevResult.transmitStatus,
-										)
-									})`,
+										)})`,
 								ZWaveErrorCodes.Controller_CallbackNOK,
 								prevResult,
 								transaction.stack,
