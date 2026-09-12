@@ -11,6 +11,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	getCCName,
+	encodeBitMask,
 	parseBitMask,
 	supervisedCommandSucceeded,
 	validatePayload,
@@ -477,6 +478,40 @@ export class EntryControlCCNotification extends EntryControlCC {
 	public readonly eventType: EntryControlEventTypes;
 	public readonly eventData?: BytesView | string;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let data =
+			typeof this.eventData === "string"
+				? Bytes.from(this.eventData, "ascii")
+				: Bytes.from(this.eventData ?? []);
+		if (
+			data.length > 32
+			|| (this.dataType === EntryControlDataTypes.MD5
+				&& data.length !== 16)
+		) {
+			throw new ZWaveError(
+				"Invalid event data length",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		if (this.dataType === EntryControlDataTypes.ASCII && data.length > 0) {
+			const padded = new Bytes(Math.ceil(data.length / 16) * 16).fill(
+				0xff,
+			);
+			padded.set(data);
+			data = padded;
+		}
+		this.payload = Bytes.concat([
+			[
+				this.sequenceNumber,
+				this.dataType & 0b11,
+				this.eventType,
+				data.length,
+			],
+			data,
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"sequence number": this.sequenceNumber,
@@ -541,6 +576,12 @@ export class EntryControlCCKeySupportedReport extends EntryControlCC {
 	}
 
 	public readonly supportedKeys: readonly number[];
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const mask = encodeBitMask(this.supportedKeys, undefined, 0);
+		this.payload = Bytes.concat([[mask.length], mask]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -658,6 +699,32 @@ export class EntryControlCCEventSupportedReport extends EntryControlCC {
 	public readonly minKeyCacheTimeout: number;
 	public readonly maxKeyCacheTimeout: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const dataTypes = encodeBitMask(
+			this.supportedDataTypes,
+			undefined,
+			EntryControlDataTypes.None,
+		);
+		const eventTypes = encodeBitMask(
+			this.supportedEventTypes,
+			undefined,
+			EntryControlEventTypes.Caching,
+		);
+		this.payload = Bytes.concat([
+			[dataTypes.length],
+			dataTypes,
+			[eventTypes.length],
+			eventTypes,
+			[
+				this.minKeyCacheSize,
+				this.maxKeyCacheSize,
+				this.minKeyCacheTimeout,
+				this.maxKeyCacheTimeout,
+			],
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -721,6 +788,11 @@ export class EntryControlCCConfigurationReport extends EntryControlCC {
 
 	public readonly keyCacheTimeout: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.keyCacheSize, this.keyCacheTimeout]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -754,18 +826,17 @@ export class EntryControlCCConfigurationSet extends EntryControlCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): EntryControlCCConfigurationSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new EntryControlCCConfigurationSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 2);
+		const keyCacheSize = raw.payload[0];
+		validatePayload(keyCacheSize >= 1 && keyCacheSize <= 32);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			keyCacheSize,
+			keyCacheTimeout: raw.payload[1],
+		});
 	}
 
 	public readonly keyCacheSize: number;
