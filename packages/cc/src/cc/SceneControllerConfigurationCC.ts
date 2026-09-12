@@ -490,18 +490,16 @@ export class SceneControllerConfigurationCCSet extends SceneControllerConfigurat
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): SceneControllerConfigurationCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SceneControllerConfigurationCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 3);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			groupId: raw.payload[0],
+			sceneId: raw.payload[1],
+			dimmingDuration: Duration.parseSet(raw.payload[2]),
+		});
 	}
 
 	public groupId: number;
@@ -571,6 +569,15 @@ export class SceneControllerConfigurationCCReport extends SceneControllerConfigu
 	public readonly sceneId: number;
 	public readonly dimmingDuration: Duration;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			this.groupId,
+			this.sceneId,
+			this.dimmingDuration.serializeReport(),
+		]);
+		return super.serialize(ctx);
+	}
+
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
 
@@ -631,18 +638,14 @@ export class SceneControllerConfigurationCCGet extends SceneControllerConfigurat
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): SceneControllerConfigurationCCGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SceneControllerConfigurationCCGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			groupId: raw.payload[0],
+		});
 	}
 
 	public groupId: number;
