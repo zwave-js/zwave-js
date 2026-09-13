@@ -516,7 +516,7 @@ export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const mask = encodeBitMask(
-			this.supportedSensorTypes,
+			this.supportedSensorTypes.filter((t) => t !== AlarmSensorType.Any),
 			undefined,
 			AlarmSensorType["General Purpose"],
 		);
