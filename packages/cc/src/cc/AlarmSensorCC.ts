@@ -8,8 +8,7 @@ import {
 	type MessageRecord,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
+	encodeBitMask,
 	logDict,
 	logList,
 	logText,
@@ -377,6 +376,18 @@ export class AlarmSensorCCReport extends AlarmSensorCC {
 	public readonly severity: number | undefined;
 	public readonly duration: number | undefined;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			0,
+			this.sensorType,
+			this.state ? (this.severity ?? 0xff) : 0,
+			0,
+			0,
+		]);
+		this.payload.writeUInt16BE(this.duration ?? 0, 3);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"sensor type": getEnumMemberName(AlarmSensorType, this.sensorType),
@@ -435,16 +446,12 @@ export class AlarmSensorCCGet extends AlarmSensorCC {
 		this.sensorType = options.sensorType ?? AlarmSensorType.Any;
 	}
 
-	public static from(_raw: CCRaw, _ctx: CCParsingContext): AlarmSensorCCGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new AlarmSensorCCGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+	public static from(raw: CCRaw, ctx: CCParsingContext): AlarmSensorCCGet {
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			sensorType: raw.payload[0],
+		});
 	}
 
 	public sensorType: AlarmSensorType;
@@ -506,6 +513,16 @@ export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
 	}
 
 	public supportedSensorTypes: AlarmSensorType[];
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const mask = encodeBitMask(
+			this.supportedSensorTypes.filter((t) => t !== AlarmSensorType.Any),
+			undefined,
+			AlarmSensorType["General Purpose"],
+		);
+		this.payload = Bytes.concat([[mask.length], mask]);
+		return super.serialize(ctx);
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
