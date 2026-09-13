@@ -118,7 +118,7 @@
 			"#": "40",
 			"$purpose": "reporting_threshold.power",
 			"label": "Power Reporting (Watts) on Power Change",
-			"valueSize": 2,
+			"valueSize": 1,
 			"unit": "%",
 			"minValue": 0,
 			"maxValue": 100,
