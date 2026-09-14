@@ -891,11 +891,13 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 		}
 		const reportNumber = data.readUInt16BE(0) & 0x7fff;
 		validatePayload(reportNumber > 0);
+		const isLast = !!(data[0] & 0x80);
+		const firmwareData = data.subarray(2);
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			reportNumber,
-			isLast: !!(data[0] & 0x80),
-			firmwareData: data.subarray(2),
+			isLast,
+			firmwareData,
 		});
 	}
 
