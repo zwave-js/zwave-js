@@ -358,18 +358,23 @@ export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationC
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): SceneActuatorConfigurationCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SceneActuatorConfigurationCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 4);
+		validatePayload(raw.payload[0] >= 1);
+		const sceneId = raw.payload[0];
+		const dimmingDuration = Duration.parseSet(raw.payload[1])!;
+		let level: number | undefined;
+		if (raw.payload[2] & 0b1000_0000) {
+			level = raw.payload[3];
+		}
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			sceneId,
+			dimmingDuration,
+			level,
+		});
 	}
 
 	public sceneId: number;
@@ -377,10 +382,14 @@ export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationC
 	public level?: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let overrideByte = 0;
+		if (this.level != undefined) {
+			overrideByte = 0b1000_0000;
+		}
 		this.payload = Bytes.from([
 			this.sceneId,
 			this.dimmingDuration.serializeSet(),
-			this.level != undefined ? 0b1000_0000 : 0,
+			overrideByte,
 			this.level ?? 0xff,
 		]);
 		return super.serialize(ctx);
@@ -448,6 +457,19 @@ export class SceneActuatorConfigurationCCReport extends SceneActuatorConfigurati
 	public readonly sceneId: number;
 	public readonly level?: number;
 	public readonly dimmingDuration?: Duration;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		if (this.sceneId === 0) {
+			this.payload = Bytes.from([0, 0, 0]);
+		} else {
+			this.payload = Bytes.from([
+				this.sceneId,
+				this.level ?? 0xff,
+				(this.dimmingDuration ?? Duration.unknown()).serializeReport(),
+			]);
+		}
+		return super.serialize(ctx);
+	}
 
 	public persistValues(ctx: PersistValuesContext): boolean {
 		if (!super.persistValues(ctx)) return false;
@@ -522,18 +544,14 @@ export class SceneActuatorConfigurationCCGet extends SceneActuatorConfigurationC
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): SceneActuatorConfigurationCCGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SceneActuatorConfigurationCCGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			sceneId: raw.payload[0],
+		});
 	}
 
 	public sceneId: number;
