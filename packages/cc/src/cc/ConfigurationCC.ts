@@ -2520,21 +2520,6 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const parameters = [...this._values.keys()].toSorted((a, b) => a - b);
-		if (
-			parameters.length > 255
-			|| (parameters.length > 0 && !isConsecutiveArray(parameters))
-			|| parameters.some(
-				(p) => !Number.isInteger(p) || p < 0 || p > 0xffff,
-			)
-			|| !Number.isInteger(this.valueSize)
-			|| this.valueSize < (parameters.length > 0 ? 1 : 0)
-			|| this.valueSize > 4
-		) {
-			throw new ZWaveError(
-				"ConfigurationCCBulkReport requires consecutive parameters and a valid value size",
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
 		this.payload = new Bytes(5 + parameters.length * this.valueSize);
 		this.payload.writeUInt16BE(parameters[0] ?? 0, 0);
 		this.payload[2] = parameters.length;
@@ -2549,11 +2534,7 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 				value < 0
 					? ConfigValueFormat.SignedInteger
 					: ConfigValueFormat.UnsignedInteger;
-			if (
-				!Number.isInteger(value)
-				|| value < -(2 ** (8 * this.valueSize - 1))
-				|| value >= 2 ** (8 * this.valueSize)
-			) {
+			if (!isSafeValue(value, this.valueSize, format)) {
 				throwInvalidValueError(
 					value,
 					parameters[i],
