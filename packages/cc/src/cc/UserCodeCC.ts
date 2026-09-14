@@ -2366,7 +2366,7 @@ export class UserCodeCCExtendedUserCodeReport extends UserCodeCC {
 			const userCode = Bytes.from(code.userCode, "ascii");
 			if (userCode.length > 15) {
 				throw new ZWaveError(
-					"User codes must fit in the four-bit length field",
+					"User codes must not be longer than 15 characters",
 					ZWaveErrorCodes.Argument_Invalid,
 				);
 			}
