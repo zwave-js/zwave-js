@@ -1,0 +1,711 @@
+{
+	"manufacturer": "Aeotec Ltd.",
+	"manufacturerId": "0x0371",
+	"label": "ZWA066",
+	"description": "MultiSensor 8",
+	"devices": [
+		{
+			// EU version
+			"productType": "0x0002",
+			"productId": "0x0042"
+		},
+		{
+			// US version
+			"productType": "0x0102",
+			"productId": "0x0042"
+		},
+		{
+			// AU/NZ version. Not in the Z-Wave Alliance catalog yet, but Aeotec's regional
+			// numbering pattern (EU/US/AU regions map to product type bytes 0x00/0x01/0x02) has
+			// proven reliable across the other Gen8 devices.
+			"productType": "0x0202",
+			"productId": "0x0042"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		},
+		"2": {
+			"label": "Motion",
+			"maxNodes": 5
+		},
+		"3": {
+			"label": "Over Heat",
+			"maxNodes": 5
+		},
+		"4": {
+			"label": "Under Heat",
+			"maxNodes": 5
+		},
+		"5": {
+			"label": "Over Humidity",
+			"maxNodes": 5
+		},
+		"6": {
+			"label": "Under Humidity",
+			"maxNodes": 5
+		},
+		"7": {
+			"label": "Over Light",
+			"maxNodes": 5
+		},
+		"8": {
+			"label": "Under Light",
+			"maxNodes": 5
+		},
+		"9": {
+			"label": "Mold Danger",
+			"maxNodes": 5
+		},
+		"10": {
+			"label": "Temperature",
+			"maxNodes": 5
+		},
+		"11": {
+			"label": "Tamper",
+			"maxNodes": 5
+		}
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/0x0086/templates/aeotec_template.json#enable_binary_report",
+			"description": "Backward-compatible Binary Sensor report for the motion state.",
+			// Z-Wave JS supports Notification CC
+			"recommendedValue": 0
+		},
+		{
+			"#": "2",
+			"$purpose": "motion_retrigger_interval",
+			"label": "Motion Retrigger Time",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 3600,
+			"defaultValue": 240,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "3",
+			"$purpose": "motion_clear_delay",
+			"label": "Motion Untrigger Time",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 3600,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "4",
+			"$purpose": "motion_sensitivity",
+			"label": "Motion Sensitivity",
+			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 11,
+			"defaultValue": 11,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "5",
+			"label": "Motion Group: Brightness Threshold",
+			"description": "Commands will only be sent when the ambient light level is below this threshold.",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": 0,
+			"maxValue": 30000,
+			"defaultValue": 30000
+		},
+		{
+			"#": "6",
+			"label": "Tamper Report Timeout",
+			"description": "Time until the tamper status resets after being triggered.",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 4,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				},
+				{
+					"label": "Don't time out",
+					"value": 255
+				}
+			]
+		},
+		{
+			"#": "7",
+			"label": "Acceleration Reports: Change Threshold",
+			"valueSize": 1,
+			"unit": "m/s²",
+			"allowed": [{ "value": 0 }, { "range": [30, 255] }],
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "8",
+			"label": "Motion Group: Basic Set Value",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Motion: On (0xff) / no motion: Off (0x00)",
+					"value": 0
+				},
+				{
+					"label": "Motion: Off (0x00) / no motion: On (0xff)",
+					"value": 1
+				},
+				{
+					"label": "Motion only: On (0xff)",
+					"value": 2
+				},
+				{
+					"label": "Motion only: Off (0x00)",
+					"value": 3
+				},
+				{
+					"label": "No motion only: Off (0x00)",
+					"value": 4
+				},
+				{
+					"label": "No motion only: On (0xff)",
+					"value": 5
+				},
+				{
+					"label": "Custom",
+					"value": 6
+				}
+			]
+		},
+		{
+			"#": "9[0xff00]",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Motion Group: Custom Basic Set Value (Motion Detected)",
+			"description": "Applicable when parameter 8 is set to Custom (value 6).",
+			"valueSize": 2,
+			"defaultValue": 255
+		},
+		{
+			"#": "9[0x00ff]",
+			"$import": "~/templates/master_template.json#basic_set_value",
+			"label": "Motion Group: Custom Basic Set Value (No Motion)",
+			"description": "Applicable when parameter 8 is set to Custom (value 6).",
+			"valueSize": 2,
+			"defaultValue": 0
+		},
+		{
+			"#": "10",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"$import": "~/0x0086/templates/aeotec_template.json#celsius_fahrenheit_0",
+			"valueSize": 1,
+			"defaultValue": 1
+		},
+		{
+			"#": "10",
+			// Other regions:
+			"$import": "~/0x0086/templates/aeotec_template.json#celsius_fahrenheit_0",
+			"valueSize": 1
+		},
+		{
+			"#": "11",
+			"label": "Threshold Check Time",
+			"description": "Disables or enables threshold reporting for parameters 14-25 and sets the check interval.",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 65535,
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			// The spec marks this parameter read-only, but a bit field that enables
+			// per-sensor limit reporting cannot sensibly be read-only; treated as writable.
+			"#": "12[0x01]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_temperature_upper"
+		},
+		{
+			"#": "12[0x02]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_humidity_upper"
+		},
+		{
+			"#": "12[0x04]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_brightness_upper"
+		},
+		// Bit 3 (0x08) is reserved and has no corresponding sensor on this device
+		{
+			"#": "12[0x10]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_temperature_lower"
+		},
+		{
+			"#": "12[0x20]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_humidity_lower"
+		},
+		{
+			"#": "12[0x40]",
+			"$import": "~/0x0086/templates/aeotec_template.json#sensor_limit_enable_brightness_lower"
+		},
+		{
+			"#": "13[0x01]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_out_of_limit",
+			"label": "Out of Range: Temperature Upper Limit"
+		},
+		{
+			"#": "13[0x02]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_out_of_limit",
+			"label": "Out of Range: Humidity Upper Limit"
+		},
+		{
+			"#": "13[0x04]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_out_of_limit",
+			"label": "Out of Range: Brightness Upper Limit"
+		},
+		// Bit 3 (0x08) is reserved and has no corresponding sensor on this device
+		{
+			"#": "13[0x10]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_out_of_limit",
+			"label": "Out of Range: Temperature Lower Limit"
+		},
+		{
+			"#": "13[0x20]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_out_of_limit",
+			"label": "Out of Range: Humidity Lower Limit"
+		},
+		{
+			"#": "13[0x40]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_out_of_limit",
+			"label": "Out of Range: Brightness Lower Limit"
+		},
+		{
+			"#": "14",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"label": "Over Heat Group Threshold",
+			"description": "Devices in Group 3 will be turned on if the temperature is >= this value and turned off below.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -400,
+			"maxValue": 1850,
+			"defaultValue": 750
+		},
+		{
+			"#": "14",
+			// Other regions:
+			"label": "Over Heat Group Threshold",
+			"description": "Devices in Group 3 will be turned on if the temperature is >= this value and turned off below.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -400,
+			"maxValue": 850,
+			"defaultValue": 239
+		},
+		{
+			"#": "15",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"label": "Under Heat Group Threshold",
+			"description": "Devices in Group 4 will be turned on if the temperature is <= this value and turned off above.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -400,
+			"maxValue": 1850,
+			"defaultValue": 600
+		},
+		{
+			"#": "15",
+			// Other regions:
+			"label": "Under Heat Group Threshold",
+			"description": "Devices in Group 4 will be turned on if the temperature is <= this value and turned off above.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -400,
+			"maxValue": 850,
+			"defaultValue": 155
+		},
+		{
+			"#": "16",
+			"label": "Over Humidity Group Threshold",
+			"description": "Devices in Group 5 will be turned on if the humidity is >= this value and turned off below.",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 60,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "17",
+			"label": "Under Humidity Group Threshold",
+			"description": "Devices in Group 6 will be turned on if the humidity is <= this value and turned off above.",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 100,
+			"defaultValue": 40,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "18",
+			"label": "Over Light Group Threshold",
+			"description": "Devices in Group 7 will be turned on if the brightness is >= this value and turned off below.",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": 0,
+			"maxValue": 30000,
+			"defaultValue": 2000,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "19",
+			"label": "Under Light Group Threshold",
+			"description": "Devices in Group 8 will be turned on if the brightness is <= this value and turned off above.",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": 0,
+			"maxValue": 30000,
+			"defaultValue": 100,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "20",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"$import": "~/0x0086/templates/aeotec_template.json#recover_limit_temp",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)",
+			"defaultValue": 36
+		},
+		{
+			"#": "20",
+			// Other regions:
+			"$import": "~/0x0086/templates/aeotec_template.json#recover_limit_temp",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)"
+		},
+		{
+			"#": "21",
+			"$import": "~/0x0086/templates/aeotec_template.json#recover_limit_humidity"
+		},
+		{
+			"#": "22",
+			"$import": "~/0x0086/templates/aeotec_template.json#recover_limit_lighting",
+			"minValue": 1
+		},
+		{
+			"#": "23",
+			// US-specific:
+			"$if": "productType === 0x0102",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Reports: Change Threshold",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 18,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "23",
+			// Other regions:
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Reports: Change Threshold",
+			"valueSize": 1,
+			"unit": "0.1 (°C/°F)",
+			"minValue": 0,
+			"maxValue": 255,
+			"defaultValue": 10,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "24",
+			"$purpose": "reporting_threshold.humidity",
+			"label": "Humidity Reports: Change Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 50,
+			"defaultValue": 5,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "25",
+			"$purpose": "reporting_threshold.brightness",
+			"label": "Brightness Reports: Change Threshold",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": 0,
+			"maxValue": 10000,
+			"defaultValue": 250,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "26",
+			"$import": "~/0x0086/templates/aeotec_template.json#low_battery_threshold",
+			"maxValue": 90,
+			"defaultValue": 20
+		},
+		{
+			"#": "27",
+			"$purpose": "calibration.temperature",
+			"label": "Temperature Calibration",
+			"description": "Scale is defined by parameter 10.",
+			"valueSize": 2,
+			"unit": "0.1 (°C/°F)",
+			"minValue": -200,
+			"maxValue": 200,
+			"defaultValue": 0
+		},
+		{
+			"#": "28",
+			"$purpose": "calibration.humidity",
+			"label": "Humidity Calibration",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": -50,
+			"maxValue": 50,
+			"defaultValue": 0
+		},
+		{
+			"#": "29",
+			"$purpose": "calibration.brightness",
+			"label": "Brightness Calibration",
+			"valueSize": 2,
+			"unit": "lux",
+			"minValue": -10000,
+			"maxValue": 10000,
+			"defaultValue": 0
+		},
+		{
+			"#": "30",
+			"label": "Mold Danger: Humidity Offset",
+			"description": "Increases the humidity threshold that triggers the mold danger alarm, whose baseline is 60%.",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 0,
+			"maxValue": 40,
+			"defaultValue": 0
+		},
+		{
+			"#": "31[0x0000000f]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: Periodic Report",
+			"defaultValue": 0
+		},
+		{
+			"#": "31[0x000000f0]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: Wake-Up Report",
+			"defaultValue": 4
+		},
+		{
+			"#": "31[0x00000f00]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: Mold Detection",
+			"defaultValue": 1
+		},
+		{
+			"#": "31[0x0000f000]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: Motion Report",
+			"defaultValue": 2
+		},
+		{
+			"#": "31[0x000f0000]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: Tamper Detection",
+			"defaultValue": 3
+		},
+		{
+			"#": "31[0x00f00000]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: Acceleration Report",
+			"defaultValue": 0
+		},
+		{
+			"#": "31[0x0f000000]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: Exceeding Threshold",
+			"defaultValue": 0
+		},
+		{
+			"#": "31[0xf0000000]",
+			"$import": "~/0x0086/templates/aeotec_template.json#base_color_options_9_alt",
+			"label": "Report Indicator: LED Activity",
+			"defaultValue": 0
+		},
+		{
+			"#": "32[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 1: Temperature",
+			"defaultValue": 1
+		},
+		{
+			"#": "32[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 1: Humidity",
+			"defaultValue": 1
+		},
+		{
+			"#": "32[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 1: Brightness",
+			"defaultValue": 1
+		},
+		{
+			"#": "32[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 1: Dew Point",
+			"defaultValue": 1
+		},
+		{
+			"#": "32[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 1: Battery",
+			"defaultValue": 1
+		},
+		{
+			"#": "33[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 2: Temperature"
+		},
+		{
+			"#": "33[0x02]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 2: Humidity"
+		},
+		{
+			"#": "33[0x04]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 2: Brightness"
+		},
+		{
+			"#": "33[0x08]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 2: Dew Point"
+		},
+		{
+			"#": "33[0x10]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Automatic Report Checklist 2: Battery"
+		},
+		{
+			"#": "34",
+			"label": "Automatic Report Checklist 1: Interval Time",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [{ "value": 0 }, { "range": [30, 65535] }],
+			"defaultValue": 3600,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "35",
+			"label": "Automatic Report Checklist 2: Interval Time",
+			"valueSize": 2,
+			"unit": "seconds",
+			"allowed": [{ "value": 0 }, { "range": [30, 65535] }],
+			"defaultValue": 0,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"wakeup": "Press the Action Button once.",
+		"inclusion": "Open the battery cover, then press the Action Button twice.",
+		"exclusion": "Open the battery cover, then press the Action Button twice.",
+		"reset": "Press and hold the Action Button for 12 seconds and then release the button.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80673/SPEC-ZWA066-MultiSensor8202512191.pdf"
+	}
+}
