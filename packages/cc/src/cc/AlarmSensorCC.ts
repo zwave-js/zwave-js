@@ -377,13 +377,13 @@ export class AlarmSensorCCReport extends AlarmSensorCC {
 	public readonly duration: number | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([
-			0,
-			this.sensorType,
-			this.state ? (this.severity ?? 0xff) : 0,
-			0,
-			0,
-		]);
+		let severity: number;
+		if (this.state) {
+			severity = this.severity ?? 0xff;
+		} else {
+			severity = 0;
+		}
+		this.payload = Bytes.from([0, this.sensorType, severity, 0, 0]);
 		this.payload.writeUInt16BE(this.duration ?? 0, 3);
 		return super.serialize(ctx);
 	}
@@ -515,6 +515,7 @@ export class AlarmSensorCCSupportedReport extends AlarmSensorCC {
 	public supportedSensorTypes: AlarmSensorType[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		// Any is not a valid sensor type for the bit mask
 		const mask = encodeBitMask(
 			this.supportedSensorTypes.filter((t) => t !== AlarmSensorType.Any),
 			undefined,
