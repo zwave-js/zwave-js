@@ -459,15 +459,15 @@ export class SceneActuatorConfigurationCCReport extends SceneActuatorConfigurati
 	public readonly dimmingDuration?: Duration;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		let level = 0;
-		let dimmingDuration = 0;
-		if (this.sceneId !== 0) {
-			level = this.level ?? 0xff;
-			dimmingDuration = (
-				this.dimmingDuration ?? Duration.unknown()
-			).serializeReport();
+		if (this.sceneId === 0) {
+			this.payload = Bytes.from([0, 0, 0]);
+		} else {
+			this.payload = Bytes.from([
+				this.sceneId,
+				this.level ?? 0xff,
+				(this.dimmingDuration ?? Duration.unknown()).serializeReport(),
+			]);
 		}
-		this.payload = Bytes.from([this.sceneId, level, dimmingDuration]);
 		return super.serialize(ctx);
 	}
 
