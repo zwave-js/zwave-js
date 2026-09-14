@@ -12,6 +12,8 @@ import {
 	UNKNOWN_STATE,
 	ValueMetadata,
 	type WithAddress,
+	ZWaveError,
+	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
 	logList,
 	logText,
@@ -657,8 +659,13 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
 			&& typeof this.position === "number"
 		) {
 			value = this.position === 100 ? 0xff : this.position;
+		} else if (this.currentState != null) {
+			value = this.currentState;
 		} else {
-			value = this.currentState ?? 100;
+			throw new ZWaveError(
+				"Cannot serialize a Barrier Operator Report without a known state",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
 		}
 		this.payload = Bytes.from([value]);
 		return super.serialize(ctx);
