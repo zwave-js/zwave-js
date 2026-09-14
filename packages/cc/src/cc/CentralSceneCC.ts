@@ -8,9 +8,8 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	enumValuesToMetadataStates,
+	encodeBitMask,
 	getCCName,
 	logDict,
 	logList,
@@ -372,6 +371,17 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 	public readonly sceneNumber: number;
 	public readonly slowRefresh: boolean | undefined;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let keyAttributeByte = this.keyAttribute & 0b111;
+		if (this.slowRefresh) keyAttributeByte |= 0x80;
+		this.payload = Bytes.from([
+			this.sequenceNumber,
+			keyAttributeByte,
+			this.sceneNumber,
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
 			"sequence number": this.sequenceNumber,
@@ -503,6 +513,26 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 
 	public readonly sceneCount: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const masks: Bytes[] = [];
+		for (let i = 1; i <= this.sceneCount; i++) {
+			masks.push(
+				encodeBitMask(
+					this.supportedKeyAttributes.get(i) ?? [],
+					7,
+					CentralSceneKeys.KeyPressed,
+				),
+			);
+		}
+		const bitMaskBytes = masks[0]?.length ?? 1;
+		let byte1 = bitMaskBytes << 1;
+		if (this.supportsSlowRefresh) {
+			byte1 |= 0x80;
+		}
+		this.payload = Bytes.concat([[this.sceneCount, byte1], ...masks]);
+		return super.serialize(ctx);
+	}
+
 	// TODO: Only offer `slowRefresh` if this is true
 
 	public readonly supportsSlowRefresh: MaybeNotKnown<boolean>;
@@ -574,6 +604,11 @@ export class CentralSceneCCConfigurationReport extends CentralSceneCC {
 
 	public readonly slowRefresh: boolean;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.slowRefresh ? 0x80 : 0]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -602,17 +637,14 @@ export class CentralSceneCCConfigurationSet extends CentralSceneCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): CentralSceneCCConfigurationSet {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new CentralSceneCCConfigurationSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			slowRefresh: !!(raw.payload[0] & 0x80),
+		});
 	}
 
 	public slowRefresh: boolean;
