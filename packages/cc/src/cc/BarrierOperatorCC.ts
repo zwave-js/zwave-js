@@ -651,13 +651,15 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
 	public readonly position: MaybeUnknown<number>;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const value =
+		let value: number;
+		if (
 			this.currentState === BarrierState.Stopped
 			&& typeof this.position === "number"
-				? this.position === 100
-					? 0xff
-					: this.position
-				: (this.currentState ?? 0x64);
+		) {
+			value = this.position === 100 ? 0xff : this.position;
+		} else {
+			value = this.currentState ?? 0x64;
+		}
 		this.payload = Bytes.from([value]);
 		return super.serialize(ctx);
 	}
