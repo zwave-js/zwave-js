@@ -2305,14 +2305,15 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 				resetToDefault,
 			});
 		}
+		const values = parameters.map((_, i) =>
+			raw.payload.readIntBE(4 + i * valueSize, valueSize),
+		);
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameters,
 			handshake,
 			valueSize,
-			values: parameters.map((_, i) =>
-				raw.payload.readIntBE(4 + i * valueSize, valueSize),
-			),
+			values,
 		});
 	}
 
@@ -2538,10 +2539,10 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 		this.payload.writeUInt16BE(parameters[0] ?? 0, 0);
 		this.payload[2] = parameters.length;
 		this.payload[3] = this.reportsToFollow;
-		this.payload[4] =
-			(this.defaultValues ? 0b1000_0000 : 0)
-			| (this.isHandshakeResponse ? 0b0100_0000 : 0)
-			| this.valueSize;
+		let flags = this.valueSize;
+		if (this.defaultValues) flags |= 0b1000_0000;
+		if (this.isHandshakeResponse) flags |= 0b0100_0000;
+		this.payload[4] = flags;
 		for (let i = 0; i < parameters.length; i++) {
 			const value = this._values.get(parameters[i])!;
 			const format =
