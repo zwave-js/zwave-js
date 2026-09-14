@@ -1255,10 +1255,8 @@ export class IrrigationCCSystemInfoReport extends IrrigationCC {
 	public readonly maxValveTableSize: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		let byte0 = 0;
-		if (this.supportsMasterValve) byte0 |= 0x01;
 		this.payload = Bytes.from([
-			byte0,
+			this.supportsMasterValve ? 1 : 0,
 			this.numValves,
 			this.numValveTables,
 			this.maxValveTableSize & 0b1111,
@@ -1459,9 +1457,6 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
 		if (this.errorLowPressure) errorFlags |= 8;
 		if (this.errorValve) errorFlags |= 16;
 
-		let masterValveByte = 0;
-		if (this.masterValveOpen) masterValveByte = 1;
-
 		this.payload = Bytes.concat([
 			[this.systemVoltage, sensorFlags],
 			encodeFloatWithScale(this.flow ?? 0, 0),
@@ -1469,7 +1464,7 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
 			[
 				this.shutoffDuration,
 				errorFlags,
-				masterValveByte,
+				this.masterValveOpen ? 1 : 0,
 				this.firstOpenZoneId ?? 0,
 			],
 		]);
