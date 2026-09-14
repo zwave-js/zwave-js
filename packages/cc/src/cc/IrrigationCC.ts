@@ -1840,17 +1840,15 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
 	public readonly errorLowFlow?: boolean;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const isMaster = this.valveId === "master";
-
 		let byte0 = 0;
-		if (isMaster) byte0 |= 1;
+		if (this.valveId === "master") byte0 |= 1;
 		if (this.connected) byte0 |= 2;
 
 		let errorFlags = 0;
 		if (this.errorShortCircuit) errorFlags |= 1;
 		if (this.errorHighCurrent) errorFlags |= 2;
 		if (this.errorLowCurrent) errorFlags |= 4;
-		if (isMaster) {
+		if (this.valveId === "master") {
 			if (this.errorMaximumFlow) errorFlags |= 8;
 			if (this.errorHighFlow) errorFlags |= 16;
 			if (this.errorLowFlow) errorFlags |= 32;
@@ -1858,7 +1856,7 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
 
 		this.payload = Bytes.from([
 			byte0,
-			isMaster ? 1 : this.valveId,
+			this.valveId === "master" ? 1 : this.valveId,
 			Math.floor(this.nominalCurrent / 10),
 			errorFlags,
 		]);
@@ -2267,16 +2265,14 @@ export class IrrigationCCValveConfigReport extends IrrigationCC {
 	public useMoistureSensor: boolean;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const isMaster = this.valveId === "master";
-
 		let sensorFlags = 0;
 		if (this.useRainSensor) sensorFlags |= 1;
 		if (this.useMoistureSensor) sensorFlags |= 2;
 
 		this.payload = Bytes.concat([
 			[
-				isMaster ? 1 : 0,
-				isMaster ? 1 : this.valveId,
+				this.valveId === "master" ? 1 : 0,
+				this.valveId === "master" ? 1 : this.valveId,
 				Math.floor(this.nominalCurrentHighThreshold / 10),
 				Math.floor(this.nominalCurrentLowThreshold / 10),
 			],
@@ -2385,10 +2381,9 @@ export class IrrigationCCValveRun extends IrrigationCC {
 	public duration: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const isMaster = this.valveId === "master";
 		this.payload = Bytes.from([
-			isMaster ? 1 : 0,
-			isMaster ? 1 : this.valveId || 1,
+			this.valveId === "master" ? 1 : 0,
+			this.valveId === "master" ? 1 : this.valveId || 1,
 			0,
 			0,
 		]);
