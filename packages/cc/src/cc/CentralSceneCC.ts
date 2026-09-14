@@ -524,7 +524,8 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 				),
 			);
 		}
-		let byte1 = 0b10;
+		const bitMaskBytes = masks[0]?.length ?? 1;
+		let byte1 = bitMaskBytes << 1;
 		if (this.supportsSlowRefresh) {
 			byte1 |= 0x80;
 		}
