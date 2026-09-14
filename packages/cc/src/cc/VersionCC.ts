@@ -1080,28 +1080,16 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
 			[0, 0],
 		]);
 		if (this.applicationFrameworkAPIVersion !== "unused") {
-			this.payload.writeUInt16BE(
-				this.applicationFrameworkBuildNumber,
-				6,
-			);
+			this.payload.writeUInt16BE(this.applicationFrameworkBuildNumber, 6);
 		}
 		if (this.hostInterfaceVersion !== "unused") {
-			this.payload.writeUInt16BE(
-				this.hostInterfaceBuildNumber,
-				11,
-			);
+			this.payload.writeUInt16BE(this.hostInterfaceBuildNumber, 11);
 		}
 		if (this.zWaveProtocolVersion !== "unused") {
-			this.payload.writeUInt16BE(
-				this.zWaveProtocolBuildNumber,
-				16,
-			);
+			this.payload.writeUInt16BE(this.zWaveProtocolBuildNumber, 16);
 		}
 		if (this.applicationVersion !== "unused") {
-			this.payload.writeUInt16BE(
-				this.applicationBuildNumber,
-				21,
-			);
+			this.payload.writeUInt16BE(this.applicationBuildNumber, 21);
 		}
 		return super.serialize(ctx);
 	}
