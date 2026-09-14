@@ -494,11 +494,14 @@ export class SceneControllerConfigurationCCSet extends SceneControllerConfigurat
 		ctx: CCParsingContext,
 	): SceneControllerConfigurationCCSet {
 		validatePayload(raw.payload.length >= 3);
+		const groupId = raw.payload[0];
+		const sceneId = raw.payload[1];
+		const dimmingDuration = Duration.parseSet(raw.payload[2]);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			groupId: raw.payload[0],
-			sceneId: raw.payload[1],
-			dimmingDuration: Duration.parseSet(raw.payload[2]),
+			groupId,
+			sceneId,
+			dimmingDuration,
 		});
 	}
 
