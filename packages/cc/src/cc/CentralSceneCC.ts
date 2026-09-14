@@ -604,11 +604,7 @@ export class CentralSceneCCConfigurationReport extends CentralSceneCC {
 	public readonly slowRefresh: boolean;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		let byte0 = 0;
-		if (this.slowRefresh) {
-			byte0 = 0x80;
-		}
-		this.payload = Bytes.from([byte0]);
+		this.payload = Bytes.from([this.slowRefresh ? 0x80 : 0]);
 		return super.serialize(ctx);
 	}
 
