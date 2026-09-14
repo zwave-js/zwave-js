@@ -7,8 +7,6 @@ import {
 	MessagePriority,
 	type SupervisionResult,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	formatDate,
 	getDSTInfo,
 	validatePayload,
@@ -375,19 +373,31 @@ export class TimeCCTimeOffsetSet extends TimeCC {
 		this.dstEndDate = options.dstEnd;
 	}
 
-	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
-	): TimeCCTimeOffsetSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new TimeCCTimeOffsetSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+	public static from(raw: CCRaw, ctx: CCParsingContext): TimeCCTimeOffsetSet {
+		validatePayload(raw.payload.length >= 9);
+		const { standardOffset, dstOffset } = parseTimezone(raw.payload);
+		const currentYear = new Date().getUTCFullYear();
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			standardOffset,
+			dstOffset,
+			dstStart: new Date(
+				Date.UTC(
+					currentYear,
+					raw.payload[3] - 1,
+					raw.payload[4],
+					raw.payload[5],
+				),
+			),
+			dstEnd: new Date(
+				Date.UTC(
+					currentYear,
+					raw.payload[6] - 1,
+					raw.payload[7],
+					raw.payload[8],
+				),
+			),
+		});
 	}
 
 	public standardOffset: number;

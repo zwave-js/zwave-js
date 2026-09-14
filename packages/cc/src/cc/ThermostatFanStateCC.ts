@@ -10,7 +10,7 @@ import {
 	enumValuesToMetadataStates,
 	validatePayload,
 } from "@zwave-js/core";
-import { getEnumMemberName } from "@zwave-js/shared";
+import { Bytes, getEnumMemberName } from "@zwave-js/shared";
 
 import {
 	CCAPI,
@@ -39,7 +39,7 @@ import {
 	ThermostatFanState,
 	ThermostatFanStateCommand,
 } from "../lib/_Types.js";
-import type { CCParsingContext } from "../lib/traits.js";
+import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 export const ThermostatFanStateCCValues = V.defineCCValues(
 	CommandClasses["Thermostat Fan State"],
@@ -184,6 +184,11 @@ export class ThermostatFanStateCCReport extends ThermostatFanStateCC {
 	}
 
 	public readonly state: ThermostatFanState;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.state & 0b1111]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
