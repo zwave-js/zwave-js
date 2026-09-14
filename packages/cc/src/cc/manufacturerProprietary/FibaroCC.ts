@@ -390,15 +390,23 @@ export class FibaroVenetianBlindCCSet extends FibaroVenetianBlindCC {
 		const hasPosition = !!(raw.payload[0] & 0b10);
 		const hasTilt = !!(raw.payload[0] & 0b01);
 		validatePayload(hasPosition || hasTilt);
-		return new this({
-			nodeId: ctx.sourceNodeId,
-			...(hasPosition
-				? {
-						position: raw.payload[1],
-						...(hasTilt ? { tilt: raw.payload[2] } : {}),
-					}
-				: { tilt: raw.payload[2] }),
-		});
+		if (hasPosition && hasTilt) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				position: raw.payload[1],
+				tilt: raw.payload[2],
+			});
+		} else if (hasPosition) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				position: raw.payload[1],
+			});
+		} else {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				tilt: raw.payload[2],
+			});
+		}
 	}
 
 	public position: number | undefined;
