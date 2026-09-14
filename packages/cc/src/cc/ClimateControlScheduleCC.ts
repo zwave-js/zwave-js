@@ -531,11 +531,13 @@ export class ClimateControlScheduleCCOverrideSet extends ClimateControlScheduleC
 		ctx: CCParsingContext,
 	): ClimateControlScheduleCCOverrideSet {
 		validatePayload(raw.payload.length >= 2);
+		const overrideType = raw.payload[0] & 0b11;
+		const overrideState =
+			decodeSetbackState(raw.payload, 1) ?? raw.payload.readInt8(1);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			overrideType: raw.payload[0] & 0b11,
-			overrideState:
-				decodeSetbackState(raw.payload, 1) ?? raw.payload.readInt8(1),
+			overrideType,
+			overrideState,
 		});
 	}
 
