@@ -7,8 +7,7 @@ import {
 	type SupervisionResult,
 	ValueMetadata,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
+	encodeBitMask,
 	enumValuesToMetadataStates,
 	logList,
 	logText,
@@ -288,18 +287,14 @@ export class HumidityControlModeCCSet extends HumidityControlModeCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): HumidityControlModeCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new HumidityControlModeCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			mode: raw.payload[0] & 0b1111,
+		});
 	}
 
 	public mode: HumidityControlMode;
@@ -350,6 +345,11 @@ export class HumidityControlModeCCReport extends HumidityControlModeCC {
 	}
 
 	public readonly mode: HumidityControlMode;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.mode & 0b1111]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
@@ -418,6 +418,15 @@ export class HumidityControlModeCCSupportedReport extends HumidityControlModeCC 
 	}
 
 	public supportedModes: HumidityControlMode[];
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeBitMask(
+			this.supportedModes,
+			undefined,
+			HumidityControlMode.Off,
+		);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
