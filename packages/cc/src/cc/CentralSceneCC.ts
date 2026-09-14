@@ -373,12 +373,7 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let keyAttributeByte = this.keyAttribute & 0b111;
-		if (
-			this.keyAttribute === CentralSceneKeys.KeyHeldDown
-			&& this.slowRefresh
-		) {
-			keyAttributeByte |= 0x80;
-		}
+		if (this.slowRefresh) keyAttributeByte |= 0x80;
 		this.payload = Bytes.from([
 			this.sequenceNumber,
 			keyAttributeByte,
@@ -519,13 +514,16 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 	public readonly sceneCount: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const masks = Array.from({ length: this.sceneCount }, (_, i) =>
-			encodeBitMask(
-				this.supportedKeyAttributes.get(i + 1) ?? [],
-				7,
-				CentralSceneKeys.KeyPressed,
-			),
-		);
+		const masks: Bytes[] = [];
+		for (let i = 1; i <= this.sceneCount; i++) {
+			masks.push(
+				encodeBitMask(
+					this.supportedKeyAttributes.get(i) ?? [],
+					7,
+					CentralSceneKeys.KeyPressed,
+				),
+			);
+		}
 		let byte1 = 0b10;
 		if (this.supportsSlowRefresh) {
 			byte1 |= 0x80;
