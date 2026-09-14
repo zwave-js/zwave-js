@@ -219,9 +219,11 @@ export class ClimateControlScheduleCCSet extends ClimateControlScheduleCC {
 		ctx: CCParsingContext,
 	): ClimateControlScheduleCCSet {
 		validatePayload(raw.payload.length >= 28);
-		const switchPoints = Array.from({ length: 9 }, (_, i) =>
-			decodeSwitchpoint(raw.payload.subarray(1 + 3 * i)),
-		).filter((sp) => sp.state !== "Unused");
+		const switchPoints: Switchpoint[] = [];
+		for (let i = 0; i < 9; i++) {
+			const sp = decodeSwitchpoint(raw.payload.subarray(1 + 3 * i));
+			if (sp.state !== "Unused") switchPoints.push(sp);
+		}
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			weekday: raw.payload[0] & 0b111,
@@ -319,9 +321,10 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 	public readonly schedule: readonly Switchpoint[];
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([
-			[this.weekday & 0b111],
-			...Array.from({ length: 9 }, (_, i) =>
+		const switchpointBytes: Bytes[] = [];
+		for (let i = 0; i < 9; i++) {
+			// Pad unused switchpoint slots with the "Unused" encoding
+			switchpointBytes.push(
 				encodeSwitchpoint(
 					this.schedule[i] ?? {
 						hour: 0,
@@ -329,7 +332,11 @@ export class ClimateControlScheduleCCReport extends ClimateControlScheduleCC {
 						state: "Unused",
 					},
 				),
-			),
+			);
+		}
+		this.payload = Bytes.concat([
+			[this.weekday & 0b111],
+			...switchpointBytes,
 		]);
 		return super.serialize(ctx);
 	}
@@ -532,6 +539,7 @@ export class ClimateControlScheduleCCOverrideSet extends ClimateControlScheduleC
 	): ClimateControlScheduleCCOverrideSet {
 		validatePayload(raw.payload.length >= 2);
 		const overrideType = raw.payload[0] & 0b11;
+		// If we receive an unknown setback state, return the raw value
 		const overrideState =
 			decodeSetbackState(raw.payload, 1) ?? raw.payload.readInt8(1);
 		return new this({
