@@ -534,10 +534,12 @@ export class HumidityControlSetpointCCSet extends HumidityControlSetpointCC {
 		ctx: CCParsingContext,
 	): HumidityControlSetpointCCSet {
 		validatePayload(raw.payload.length >= 1);
+		const setpointType: HumidityControlSetpointType =
+			raw.payload[0] & 0b1111;
 		const { value, scale } = parseFloatWithScale(raw.payload.subarray(1));
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			setpointType: raw.payload[0] & 0b1111,
+			setpointType,
 			value,
 			scale,
 		});
