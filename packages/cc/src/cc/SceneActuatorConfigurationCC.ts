@@ -363,11 +363,17 @@ export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationC
 	): SceneActuatorConfigurationCCSet {
 		validatePayload(raw.payload.length >= 4);
 		validatePayload(raw.payload[0] >= 1);
+		const sceneId = raw.payload[0];
+		const dimmingDuration = Duration.parseSet(raw.payload[1])!;
+		let level: number | undefined;
+		if (raw.payload[2] & 0b1000_0000) {
+			level = raw.payload[3];
+		}
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			sceneId: raw.payload[0],
-			dimmingDuration: Duration.parseSet(raw.payload[1])!,
-			level: raw.payload[2] & 0b1000_0000 ? raw.payload[3] : undefined,
+			sceneId,
+			dimmingDuration,
+			level,
 		});
 	}
 
@@ -376,10 +382,14 @@ export class SceneActuatorConfigurationCCSet extends SceneActuatorConfigurationC
 	public level?: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let overrideByte = 0;
+		if (this.level != undefined) {
+			overrideByte = 0b1000_0000;
+		}
 		this.payload = Bytes.from([
 			this.sceneId,
 			this.dimmingDuration.serializeSet(),
-			this.level != undefined ? 0b1000_0000 : 0,
+			overrideByte,
 			this.level ?? 0xff,
 		]);
 		return super.serialize(ctx);
@@ -449,15 +459,15 @@ export class SceneActuatorConfigurationCCReport extends SceneActuatorConfigurati
 	public readonly dimmingDuration?: Duration;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([
-			this.sceneId,
-			this.sceneId === 0 ? 0 : (this.level ?? 0xff),
-			this.sceneId === 0
-				? 0
-				: (
-						this.dimmingDuration ?? Duration.unknown()
-					).serializeReport(),
-		]);
+		let level = 0;
+		let dimmingDuration = 0;
+		if (this.sceneId !== 0) {
+			level = this.level ?? 0xff;
+			dimmingDuration = (
+				this.dimmingDuration ?? Duration.unknown()
+			).serializeReport();
+		}
+		this.payload = Bytes.from([this.sceneId, level, dimmingDuration]);
 		return super.serialize(ctx);
 	}
 
