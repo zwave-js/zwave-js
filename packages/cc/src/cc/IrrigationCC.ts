@@ -1255,8 +1255,10 @@ export class IrrigationCCSystemInfoReport extends IrrigationCC {
 	public readonly maxValveTableSize: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let byte0 = 0;
+		if (this.supportsMasterValve) byte0 |= 0x01;
 		this.payload = Bytes.from([
-			this.supportsMasterValve ? 1 : 0,
+			byte0,
 			this.numValves,
 			this.numValveTables,
 			this.maxValveTableSize & 0b1111,
@@ -1444,24 +1446,30 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
 	public firstOpenZoneId?: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let sensorFlags = 0;
+		if (this.flowSensorActive) sensorFlags |= 1;
+		if (this.pressureSensorActive) sensorFlags |= 2;
+		if (this.rainSensorActive) sensorFlags |= 4;
+		if (this.moistureSensorActive) sensorFlags |= 8;
+
+		let errorFlags = 0;
+		if (this.errorNotProgrammed) errorFlags |= 1;
+		if (this.errorEmergencyShutdown) errorFlags |= 2;
+		if (this.errorHighPressure) errorFlags |= 4;
+		if (this.errorLowPressure) errorFlags |= 8;
+		if (this.errorValve) errorFlags |= 16;
+
+		let masterValveByte = 0;
+		if (this.masterValveOpen) masterValveByte = 1;
+
 		this.payload = Bytes.concat([
-			[
-				this.systemVoltage,
-				(this.flowSensorActive ? 1 : 0)
-					| (this.pressureSensorActive ? 2 : 0)
-					| (this.rainSensorActive ? 4 : 0)
-					| (this.moistureSensorActive ? 8 : 0),
-			],
+			[this.systemVoltage, sensorFlags],
 			encodeFloatWithScale(this.flow ?? 0, 0),
 			encodeFloatWithScale(this.pressure ?? 0, 0),
 			[
 				this.shutoffDuration,
-				(this.errorNotProgrammed ? 1 : 0)
-					| (this.errorEmergencyShutdown ? 2 : 0)
-					| (this.errorHighPressure ? 4 : 0)
-					| (this.errorLowPressure ? 8 : 0)
-					| (this.errorValve ? 16 : 0),
-				this.masterValveOpen ? 1 : 0,
+				errorFlags,
+				masterValveByte,
 				this.firstOpenZoneId ?? 0,
 			],
 		]);
@@ -1706,13 +1714,15 @@ export class IrrigationCCSystemConfigReport extends IrrigationCC {
 	public readonly moistureSensorPolarity?: IrrigationSensorPolarity;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		const polarity =
+		let polarity =
 			(this.rainSensorPolarity ?? 0)
-			| ((this.moistureSensorPolarity ?? 0) << 1)
-			| (this.rainSensorPolarity != undefined
+			| ((this.moistureSensorPolarity ?? 0) << 1);
+		if (
+			this.rainSensorPolarity != undefined
 			|| this.moistureSensorPolarity != undefined
-				? 0b1000_0000
-				: 0);
+		) {
+			polarity |= 0b1000_0000;
+		}
 		this.payload = Bytes.concat([
 			[this.masterValveDelay],
 			encodeFloatWithScale(this.highPressureThreshold, 0),
@@ -1835,18 +1845,27 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
 	public readonly errorLowFlow?: boolean;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const isMaster = this.valveId === "master";
+
+		let byte0 = 0;
+		if (isMaster) byte0 |= 1;
+		if (this.connected) byte0 |= 2;
+
+		let errorFlags = 0;
+		if (this.errorShortCircuit) errorFlags |= 1;
+		if (this.errorHighCurrent) errorFlags |= 2;
+		if (this.errorLowCurrent) errorFlags |= 4;
+		if (isMaster) {
+			if (this.errorMaximumFlow) errorFlags |= 8;
+			if (this.errorHighFlow) errorFlags |= 16;
+			if (this.errorLowFlow) errorFlags |= 32;
+		}
+
 		this.payload = Bytes.from([
-			(this.valveId === "master" ? 1 : 0) | (this.connected ? 2 : 0),
-			this.valveId === "master" ? 1 : this.valveId,
+			byte0,
+			isMaster ? 1 : this.valveId,
 			Math.floor(this.nominalCurrent / 10),
-			(this.errorShortCircuit ? 1 : 0)
-				| (this.errorHighCurrent ? 2 : 0)
-				| (this.errorLowCurrent ? 4 : 0)
-				| (this.valveId === "master"
-					? (this.errorMaximumFlow ? 8 : 0)
-						| (this.errorHighFlow ? 16 : 0)
-						| (this.errorLowFlow ? 32 : 0)
-					: 0),
+			errorFlags,
 		]);
 		return super.serialize(ctx);
 	}
@@ -2253,17 +2272,23 @@ export class IrrigationCCValveConfigReport extends IrrigationCC {
 	public useMoistureSensor: boolean;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const isMaster = this.valveId === "master";
+
+		let sensorFlags = 0;
+		if (this.useRainSensor) sensorFlags |= 1;
+		if (this.useMoistureSensor) sensorFlags |= 2;
+
 		this.payload = Bytes.concat([
 			[
-				this.valveId === "master" ? 1 : 0,
-				this.valveId === "master" ? 1 : this.valveId,
+				isMaster ? 1 : 0,
+				isMaster ? 1 : this.valveId,
 				Math.floor(this.nominalCurrentHighThreshold / 10),
 				Math.floor(this.nominalCurrentLowThreshold / 10),
 			],
 			encodeFloatWithScale(this.maximumFlow, 0),
 			encodeFloatWithScale(this.highFlowThreshold, 0),
 			encodeFloatWithScale(this.lowFlowThreshold, 0),
-			[(this.useRainSensor ? 1 : 0) | (this.useMoistureSensor ? 2 : 0)],
+			[sensorFlags],
 		]);
 		return super.serialize(ctx);
 	}
@@ -2354,10 +2379,12 @@ export class IrrigationCCValveRun extends IrrigationCC {
 		ctx: CCParsingContext,
 	): IrrigationCCValveRun {
 		validatePayload(raw.payload.length >= 4);
+		const valveId: ValveId = raw.payload[0] & 1 ? "master" : raw.payload[1];
+		const duration = raw.payload.readUInt16BE(2);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			valveId: raw.payload[0] & 1 ? "master" : raw.payload[1],
-			duration: raw.payload.readUInt16BE(2),
+			valveId,
+			duration,
 		});
 	}
 
@@ -2365,9 +2392,10 @@ export class IrrigationCCValveRun extends IrrigationCC {
 	public duration: number;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const isMaster = this.valveId === "master";
 		this.payload = Bytes.from([
-			this.valveId === "master" ? 1 : 0,
-			this.valveId === "master" ? 1 : this.valveId || 1,
+			isMaster ? 1 : 0,
+			isMaster ? 1 : this.valveId || 1,
 			0,
 			0,
 		]);
