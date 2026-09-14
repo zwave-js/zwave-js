@@ -658,7 +658,7 @@ export class BarrierOperatorCCReport extends BarrierOperatorCC {
 		) {
 			value = this.position === 100 ? 0xff : this.position;
 		} else {
-			value = this.currentState ?? 0x64;
+			value = this.currentState ?? 100;
 		}
 		this.payload = Bytes.from([value]);
 		return super.serialize(ctx);
