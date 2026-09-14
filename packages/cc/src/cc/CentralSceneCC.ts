@@ -372,13 +372,16 @@ export class CentralSceneCCNotification extends CentralSceneCC {
 	public readonly slowRefresh: boolean | undefined;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		let keyAttributeByte = this.keyAttribute & 0b111;
+		if (
+			this.keyAttribute === CentralSceneKeys.KeyHeldDown
+			&& this.slowRefresh
+		) {
+			keyAttributeByte |= 0x80;
+		}
 		this.payload = Bytes.from([
 			this.sequenceNumber,
-			(this.keyAttribute & 0b111)
-				| (this.keyAttribute === CentralSceneKeys.KeyHeldDown
-				&& this.slowRefresh
-					? 0x80
-					: 0),
+			keyAttributeByte,
 			this.sceneNumber,
 		]);
 		return super.serialize(ctx);
@@ -523,10 +526,11 @@ export class CentralSceneCCSupportedReport extends CentralSceneCC {
 				CentralSceneKeys.KeyPressed,
 			),
 		);
-		this.payload = Bytes.concat([
-			[this.sceneCount, (this.supportsSlowRefresh ? 0x80 : 0) | 0b10],
-			...masks,
-		]);
+		let byte1 = 0b10;
+		if (this.supportsSlowRefresh) {
+			byte1 |= 0x80;
+		}
+		this.payload = Bytes.concat([[this.sceneCount, byte1], ...masks]);
 		return super.serialize(ctx);
 	}
 
@@ -602,7 +606,11 @@ export class CentralSceneCCConfigurationReport extends CentralSceneCC {
 	public readonly slowRefresh: boolean;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([this.slowRefresh ? 0x80 : 0]);
+		let byte0 = 0;
+		if (this.slowRefresh) {
+			byte0 = 0x80;
+		}
+		this.payload = Bytes.from([byte0]);
 		return super.serialize(ctx);
 	}
 
