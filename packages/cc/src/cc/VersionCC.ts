@@ -1079,19 +1079,28 @@ export class VersionCCZWaveSoftwareReport extends VersionCC {
 			encodeVersion(this.applicationVersion),
 			[0, 0],
 		]);
-		for (const [version, build, offset] of [
-			[
-				this.applicationFrameworkAPIVersion,
+		if (this.applicationFrameworkAPIVersion !== "unused") {
+			this.payload.writeUInt16BE(
 				this.applicationFrameworkBuildNumber,
 				6,
-			],
-			[this.hostInterfaceVersion, this.hostInterfaceBuildNumber, 11],
-			[this.zWaveProtocolVersion, this.zWaveProtocolBuildNumber, 16],
-			[this.applicationVersion, this.applicationBuildNumber, 21],
-		] as const) {
+			);
+		}
+		if (this.hostInterfaceVersion !== "unused") {
 			this.payload.writeUInt16BE(
-				version === "unused" ? 0 : build,
-				offset,
+				this.hostInterfaceBuildNumber,
+				11,
+			);
+		}
+		if (this.zWaveProtocolVersion !== "unused") {
+			this.payload.writeUInt16BE(
+				this.zWaveProtocolBuildNumber,
+				16,
+			);
+		}
+		if (this.applicationVersion !== "unused") {
+			this.payload.writeUInt16BE(
+				this.applicationBuildNumber,
+				21,
 			);
 		}
 		return super.serialize(ctx);
