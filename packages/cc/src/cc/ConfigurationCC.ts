@@ -2520,6 +2520,12 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		const parameters = [...this._values.keys()].toSorted((a, b) => a - b);
+		if (parameters.length > 0 && !isConsecutiveArray(parameters)) {
+			throw new ZWaveError(
+				"ConfigurationCCBulkReport requires consecutive parameters",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
 		this.payload = new Bytes(5 + parameters.length * this.valueSize);
 		this.payload.writeUInt16BE(parameters[0] ?? 0, 0);
 		this.payload[2] = parameters.length;
