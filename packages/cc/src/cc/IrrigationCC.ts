@@ -2379,11 +2379,10 @@ export class IrrigationCCValveRun extends IrrigationCC {
 		ctx: CCParsingContext,
 	): IrrigationCCValveRun {
 		validatePayload(raw.payload.length >= 4);
-		const valveId: ValveId = raw.payload[0] & 1 ? "master" : raw.payload[1];
 		const duration = raw.payload.readUInt16BE(2);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			valveId,
+			valveId: raw.payload[0] & 1 ? "master" : raw.payload[1],
 			duration,
 		});
 	}
