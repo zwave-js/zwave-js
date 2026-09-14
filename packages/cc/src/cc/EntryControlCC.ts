@@ -483,6 +483,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 			typeof this.eventData === "string"
 				? Bytes.from(this.eventData, "ascii")
 				: Bytes.from(this.eventData ?? []);
+		// RAW and ASCII: 1 to 32 bytes; MD5: exactly 16 bytes
 		if (
 			data.length > 32
 			|| (this.dataType === EntryControlDataTypes.MD5
@@ -493,6 +494,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
+		// ASCII data MUST be padded with 0xFF to fit 16 byte blocks
 		if (this.dataType === EntryControlDataTypes.ASCII && data.length > 0) {
 			const padded = new Bytes(Math.ceil(data.length / 16) * 16).fill(
 				0xff,
@@ -832,10 +834,11 @@ export class EntryControlCCConfigurationSet extends EntryControlCC {
 		validatePayload(raw.payload.length >= 2);
 		const keyCacheSize = raw.payload[0];
 		validatePayload(keyCacheSize >= 1 && keyCacheSize <= 32);
+		const keyCacheTimeout = raw.payload[1];
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			keyCacheSize,
-			keyCacheTimeout: raw.payload[1],
+			keyCacheTimeout,
 		});
 	}
 
