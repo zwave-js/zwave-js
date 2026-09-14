@@ -10,6 +10,7 @@ import {
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
+	encodeBitMask,
 	enumValuesToMetadataStates,
 	logList,
 	logText,
@@ -344,18 +345,15 @@ export class ThermostatFanModeCCSet extends ThermostatFanModeCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ThermostatFanModeCCSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ThermostatFanModeCCSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			mode: raw.payload[0] & 0b1111,
+			off: !!(raw.payload[0] & 0b1000_0000),
+		});
 	}
 
 	public mode: ThermostatFanMode;
@@ -416,6 +414,13 @@ export class ThermostatFanModeCCReport extends ThermostatFanModeCC {
 	public readonly mode: ThermostatFanMode;
 
 	public readonly off: boolean | undefined;
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			(this.off ? 0b1000_0000 : 0) | (this.mode & 0b1111),
+		]);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		const message: MessageRecord = {
@@ -484,6 +489,15 @@ export class ThermostatFanModeCCSupportedReport extends ThermostatFanModeCC {
 	}
 
 	public readonly supportedModes: ThermostatFanMode[];
+
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = encodeBitMask(
+			this.supportedModes,
+			undefined,
+			ThermostatFanMode["Auto low"],
+		);
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
