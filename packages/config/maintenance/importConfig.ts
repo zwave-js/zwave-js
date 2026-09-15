@@ -371,6 +371,8 @@ function normalizeConfig(config: Record<string, any>): Record<string, any> {
 		"description",
 		"devices",
 		"firmwareVersion",
+		"endpoints",
+		"endpointGroups",
 		"associations",
 		"paramInformation",
 		"compat",

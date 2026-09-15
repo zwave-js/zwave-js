@@ -28,12 +28,13 @@ Device configuration files must follow this property order for consistency:
 6. `firmwareVersion` - Firmware version range the config applies to
 7. `preferred` - Mark as preferred over overlapping configs (only rarely needed)
 8. `endpoints` - Endpoint-specific configuration (only if needed)
-9. `associations` - Association groups (only if needed)
-10. `paramInformation` - Configuration parameters array
-11. `scenes` - Custom labels and description for Central Scenes (only if needed)
-12. `proprietary` - Proprietary CC settings (only if needed)
-13. `compat` - Compatibility flags for non-compliant devices (only if needed)
-14. `metadata` - User-facing metadata (inclusion instructions, etc.)
+9. `endpointGroups` - Physical-part grouping metadata (only if documented)
+10. `associations` - Association groups (only if needed)
+11. `paramInformation` - Configuration parameters array
+12. `scenes` - Custom labels and description for Central Scenes (only if needed)
+13. `proprietary` - Proprietary CC settings (only if needed)
+14. `compat` - Compatibility flags for non-compliant devices (only if needed)
+15. `metadata` - User-facing metadata (inclusion instructions, etc.)
 
 ## Consistency Guidelines
 
@@ -246,6 +247,28 @@ If an `endpoints` block is added to a config that already has root-level `associ
     "3": { "label": "Circuit 3" }
 }
 ```
+
+## Endpoint Groups
+
+```json
+"endpointGroups": {
+    "1": { "label": "Clamp 1", "endpoints": [1, 2] },
+    "2": { "label": "Clamp 2", "endpoints": [3, 4] }
+}
+```
+
+Use `endpointGroups` when the device documentation explicitly identifies multiple endpoints as belonging to the same physical part. Grouping is metadata and leaves endpoint behavior unchanged.
+
+- **Evidence:** Establish membership from the device manual or manufacturer's product page. Never infer membership from device classes, matching labels, or adjacent indices.
+- **Property order:** Place `endpointGroups` directly after `endpoints`, in slot 9.
+- **IDs:** Use numeric string keys starting at `"1"` without gaps in the authored file. Conditional filtering preserves the IDs.
+- **Labels:** Require a nonempty physical-part label. Follow the endpoint-label style rules.
+- **Members:** Require a nonempty array of unique integer endpoint indices from 0 to 127. Root endpoint 0 is allowed.
+- **Conditions:** Support `$if` per group. An endpoint may occur in at most one active group after evaluation. Mutually exclusive groups may share endpoint indices.
+- **Singletons:** A single configured member is allowed with a lint warning. Missing runtime endpoints may reduce a group to one member without a singleton warning.
+- **Independence:** Group membership requires no endpoint label or entry in `endpoints`. Adding only `endpointGroups` requires no root-association migration.
+
+Leave endpoints ungrouped when their physical relationship is undocumented. Whole-device totals may remain ungrouped. Applications decide how to present ungrouped endpoints.
 
 ## Central Scene Labels
 

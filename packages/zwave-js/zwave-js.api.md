@@ -958,6 +958,30 @@ export type EditableZWaveOptions = Expand<Pick<PartialZWaveOptions, "attempts" |
 export class Endpoint extends EndpointMixins {
 }
 
+// Warning: (ae-missing-release-tag) "EndpointGroup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export interface EndpointGroup {
+    // (undocumented)
+    readonly endpoints: readonly Endpoint[];
+    // (undocumented)
+    readonly id: number;
+    // (undocumented)
+    readonly label: string;
+}
+
+// Warning: (ae-missing-release-tag) "EndpointGroupDump" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EndpointGroupDump {
+    // (undocumented)
+    endpoints: number[];
+    // (undocumented)
+    id: number;
+    // (undocumented)
+    label: string;
+}
+
 export { EntryControlDataTypes }
 
 export { EntryControlEventTypes }
@@ -1633,6 +1657,8 @@ export interface NodeDump {
     deviceClass: DeviceClassesDump | "unknown";
     // (undocumented)
     dsk?: string;
+    // (undocumented)
+    endpointLabel?: string;
     // Warning: (ae-forgotten-export) The symbol "EndpointDump" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1647,6 +1673,8 @@ export interface NodeDump {
         firmwareVersion: string;
         hardwareVersion?: number;
     };
+    // (undocumented)
+    group?: EndpointGroupDump;
     // (undocumented)
     id: number;
     // (undocumented)

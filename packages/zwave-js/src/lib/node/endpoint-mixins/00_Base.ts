@@ -35,6 +35,7 @@ import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
 import type { EndpointDump } from "../Dump.js";
+import type { EndpointGroup } from "../EndpointGroup.js";
 import type { ZWaveNode } from "../Node.js";
 
 /**
@@ -129,6 +130,22 @@ export class EndpointBase
 	public get endpointLabel(): string | undefined {
 		return this.tryGetNode()?.deviceConfig?.endpoints?.get(this.index)
 			?.label;
+	}
+
+	/** Returns the shared group containing this endpoint after endpoint discovery */
+	public get group(): EndpointGroup | undefined {
+		const groups = this.tryGetNode()?.endpointGroups;
+		if (!groups) return undefined;
+		for (const group of groups.values()) {
+			if (
+				group.endpoints.some(
+					(endpoint: EndpointBase) => endpoint === this,
+				)
+			) {
+				return group;
+			}
+		}
+		return undefined;
 	}
 
 	/** Resets all stored information of this endpoint */
@@ -497,8 +514,19 @@ export class EndpointBase
 	 * Returns a dump of this endpoint's information for debugging purposes
 	 */
 	public createEndpointDump(): EndpointDump {
+		const group = this.group;
 		const ret: EndpointDump = {
 			index: this.index,
+			endpointLabel: this.endpointLabel,
+			group: group
+				? {
+						id: group.id,
+						label: group.label,
+						endpoints: group.endpoints.map(
+							(endpoint) => endpoint.index,
+						),
+					}
+				: undefined,
 			deviceClass: "unknown",
 			commandClasses: {},
 			maySupportBasicCC: this.maySupportBasicCC(),
