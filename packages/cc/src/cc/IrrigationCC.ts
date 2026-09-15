@@ -1445,17 +1445,17 @@ export class IrrigationCCSystemStatusReport extends IrrigationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let sensorFlags = 0;
-		if (this.flowSensorActive) sensorFlags |= 1;
-		if (this.pressureSensorActive) sensorFlags |= 2;
-		if (this.rainSensorActive) sensorFlags |= 4;
-		if (this.moistureSensorActive) sensorFlags |= 8;
+		if (this.flowSensorActive) sensorFlags |= 0x01;
+		if (this.pressureSensorActive) sensorFlags |= 0x02;
+		if (this.rainSensorActive) sensorFlags |= 0x04;
+		if (this.moistureSensorActive) sensorFlags |= 0x08;
 
 		let errorFlags = 0;
-		if (this.errorNotProgrammed) errorFlags |= 1;
-		if (this.errorEmergencyShutdown) errorFlags |= 2;
-		if (this.errorHighPressure) errorFlags |= 4;
-		if (this.errorLowPressure) errorFlags |= 8;
-		if (this.errorValve) errorFlags |= 16;
+		if (this.errorNotProgrammed) errorFlags |= 0x01;
+		if (this.errorEmergencyShutdown) errorFlags |= 0x02;
+		if (this.errorHighPressure) errorFlags |= 0x04;
+		if (this.errorLowPressure) errorFlags |= 0x08;
+		if (this.errorValve) errorFlags |= 0x10;
 
 		this.payload = Bytes.concat([
 			[this.systemVoltage, sensorFlags],
@@ -1549,16 +1549,45 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): IrrigationCCSystemConfigSet {
-		const report = IrrigationCCSystemConfigReport.from(raw, ctx);
+		validatePayload(raw.payload.length >= 2);
+		const masterValveDelay = raw.payload[0];
+		let offset = 1;
+		let highPressureThreshold;
+		{
+			const { value, scale, bytesRead } = parseFloatWithScale(
+				raw.payload.subarray(offset),
+			);
+			validatePayload(scale === 0);
+			highPressureThreshold = value;
+			offset += bytesRead;
+		}
+
+		let lowPressureThreshold;
+		{
+			const { value, scale, bytesRead } = parseFloatWithScale(
+				raw.payload.subarray(offset),
+			);
+			validatePayload(scale === 0);
+			lowPressureThreshold = value;
+			offset += bytesRead;
+		}
+
+		validatePayload(raw.payload.length >= offset + 1);
+		const polarity = raw.payload[offset];
+		let rainSensorPolarity: IrrigationSensorPolarity | undefined;
+		let moistureSensorPolarity: IrrigationSensorPolarity | undefined;
+		if (!!(polarity & 0b1000_0000)) {
+			rainSensorPolarity = polarity & 0b1;
+			moistureSensorPolarity = (polarity & 0b10) >>> 1;
+		}
+
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			...pick(report, [
-				"masterValveDelay",
-				"highPressureThreshold",
-				"lowPressureThreshold",
-				"rainSensorPolarity",
-				"moistureSensorPolarity",
-			]),
+			masterValveDelay,
+			highPressureThreshold,
+			lowPressureThreshold,
+			rainSensorPolarity,
+			moistureSensorPolarity,
 		});
 	}
 
@@ -1569,9 +1598,9 @@ export class IrrigationCCSystemConfigSet extends IrrigationCC {
 	public moistureSensorPolarity?: IrrigationSensorPolarity;
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
-		let polarity = 0;
-		polarity |= (this.rainSensorPolarity ?? 0) & 0b1;
-		polarity |= ((this.moistureSensorPolarity ?? 0) & 0b1) << 1;
+		let polarity =
+			(this.rainSensorPolarity ?? 0)
+			| ((this.moistureSensorPolarity ?? 0) << 1);
 		if (
 			this.rainSensorPolarity != undefined
 			|| this.moistureSensorPolarity != undefined
@@ -1841,17 +1870,17 @@ export class IrrigationCCValveInfoReport extends IrrigationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let byte0 = 0;
-		if (this.valveId === "master") byte0 |= 1;
-		if (this.connected) byte0 |= 2;
+		if (this.valveId === "master") byte0 |= 0b1;
+		if (this.connected) byte0 |= 0b10;
 
 		let errorFlags = 0;
-		if (this.errorShortCircuit) errorFlags |= 1;
-		if (this.errorHighCurrent) errorFlags |= 2;
-		if (this.errorLowCurrent) errorFlags |= 4;
+		if (this.errorShortCircuit) errorFlags |= 0b1;
+		if (this.errorHighCurrent) errorFlags |= 0b10;
+		if (this.errorLowCurrent) errorFlags |= 0b100;
 		if (this.valveId === "master") {
-			if (this.errorMaximumFlow) errorFlags |= 8;
-			if (this.errorHighFlow) errorFlags |= 16;
-			if (this.errorLowFlow) errorFlags |= 32;
+			if (this.errorMaximumFlow) errorFlags |= 0b1000;
+			if (this.errorHighFlow) errorFlags |= 0b1_0000;
+			if (this.errorLowFlow) errorFlags |= 0b10_0000;
 		}
 
 		this.payload = Bytes.from([
@@ -1984,9 +2013,15 @@ export class IrrigationCCValveInfoGet extends IrrigationCC {
 		ctx: CCParsingContext,
 	): IrrigationCCValveInfoGet {
 		validatePayload(raw.payload.length >= 2);
+		let valveId: ValveId;
+		if (raw.payload[0] & 0b1) {
+			valveId = "master";
+		} else {
+			valveId = raw.payload[1];
+		}
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			valveId: raw.payload[0] & 1 ? "master" : raw.payload[1],
+			valveId,
 		});
 	}
 
@@ -2043,19 +2078,61 @@ export class IrrigationCCValveConfigSet extends IrrigationCC {
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): IrrigationCCValveConfigSet {
-		const report = IrrigationCCValveConfigReport.from(raw, ctx);
+		validatePayload(raw.payload.length >= 4);
+		let valveId: ValveId;
+		if (raw.payload[0] & 0b1) {
+			valveId = "master";
+		} else {
+			valveId = raw.payload[1];
+		}
+
+		const nominalCurrentHighThreshold = 10 * raw.payload[2];
+		const nominalCurrentLowThreshold = 10 * raw.payload[3];
+		let offset = 4;
+		let maximumFlow;
+		{
+			const { value, scale, bytesRead } = parseFloatWithScale(
+				raw.payload.subarray(offset),
+			);
+			validatePayload(scale === 0);
+			maximumFlow = value;
+			offset += bytesRead;
+		}
+
+		let highFlowThreshold;
+		{
+			const { value, scale, bytesRead } = parseFloatWithScale(
+				raw.payload.subarray(offset),
+			);
+			validatePayload(scale === 0);
+			highFlowThreshold = value;
+			offset += bytesRead;
+		}
+
+		let lowFlowThreshold;
+		{
+			const { value, scale, bytesRead } = parseFloatWithScale(
+				raw.payload.subarray(offset),
+			);
+			validatePayload(scale === 0);
+			lowFlowThreshold = value;
+			offset += bytesRead;
+		}
+
+		validatePayload(raw.payload.length >= offset + 1);
+		const useRainSensor = !!(raw.payload[offset] & 0b1);
+		const useMoistureSensor = !!(raw.payload[offset] & 0b10);
+
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			...pick(report, [
-				"valveId",
-				"nominalCurrentHighThreshold",
-				"nominalCurrentLowThreshold",
-				"maximumFlow",
-				"highFlowThreshold",
-				"lowFlowThreshold",
-				"useRainSensor",
-				"useMoistureSensor",
-			]),
+			valveId,
+			nominalCurrentHighThreshold,
+			nominalCurrentLowThreshold,
+			maximumFlow,
+			highFlowThreshold,
+			lowFlowThreshold,
+			useRainSensor,
+			useMoistureSensor,
 		});
 	}
 
@@ -2266,8 +2343,8 @@ export class IrrigationCCValveConfigReport extends IrrigationCC {
 
 	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
 		let sensorFlags = 0;
-		if (this.useRainSensor) sensorFlags |= 1;
-		if (this.useMoistureSensor) sensorFlags |= 2;
+		if (this.useRainSensor) sensorFlags |= 0b1;
+		if (this.useMoistureSensor) sensorFlags |= 0b10;
 
 		this.payload = Bytes.concat([
 			[
@@ -2324,9 +2401,15 @@ export class IrrigationCCValveConfigGet extends IrrigationCC {
 		ctx: CCParsingContext,
 	): IrrigationCCValveConfigGet {
 		validatePayload(raw.payload.length >= 2);
+		let valveId: ValveId;
+		if (raw.payload[0] & 0b1) {
+			valveId = "master";
+		} else {
+			valveId = raw.payload[1];
+		}
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			valveId: raw.payload[0] & 1 ? "master" : raw.payload[1],
+			valveId,
 		});
 	}
 
@@ -2370,10 +2453,17 @@ export class IrrigationCCValveRun extends IrrigationCC {
 		ctx: CCParsingContext,
 	): IrrigationCCValveRun {
 		validatePayload(raw.payload.length >= 4);
+		let valveId: ValveId;
+		if (raw.payload[0] & 0b1) {
+			valveId = "master";
+		} else {
+			valveId = raw.payload[1];
+		}
+		const duration = raw.payload.readUInt16BE(2);
 		return new this({
 			nodeId: ctx.sourceNodeId,
-			valveId: raw.payload[0] & 1 ? "master" : raw.payload[1],
-			duration: raw.payload.readUInt16BE(2),
+			valveId,
+			duration,
 		});
 	}
 
