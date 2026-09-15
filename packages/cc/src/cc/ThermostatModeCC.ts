@@ -322,15 +322,11 @@ export type ThermostatModeCCSetOptions =
 			manufacturerData: BytesView;
 	  };
 
-function validateManufacturerDataLength(
+function truncateManufacturerData(manufacturerData: BytesView): BytesView;
+function truncateManufacturerData(
 	manufacturerData: BytesView | undefined,
-): void {
-	if (manufacturerData && manufacturerData.length > 0b111) {
-		throw new ZWaveError(
-			"Manufacturer data must not exceed 7 bytes!",
-			ZWaveErrorCodes.Argument_Invalid,
-		);
-	}
+): BytesView | undefined {
+	return manufacturerData?.subarray(0, 0b111);
 }
 
 @CCCommand(ThermostatModeCommand.Set)
@@ -340,8 +336,9 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 		super(options);
 		this.mode = options.mode;
 		if ("manufacturerData" in options) {
-			validateManufacturerDataLength(options.manufacturerData);
-			this.manufacturerData = options.manufacturerData;
+			this.manufacturerData = truncateManufacturerData(
+				options.manufacturerData,
+			);
 		}
 	}
 
@@ -376,9 +373,8 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 		const manufacturerData =
 			this.mode === ThermostatMode["Manufacturer specific"]
 			&& this.manufacturerData
-				? this.manufacturerData
+				? truncateManufacturerData(this.manufacturerData)
 				: new Uint8Array();
-		validateManufacturerDataLength(manufacturerData);
 		const manufacturerDataLength = manufacturerData.length;
 		this.payload = Bytes.concat([
 			[(manufacturerDataLength << 5) + (this.mode & 0b11111)],
