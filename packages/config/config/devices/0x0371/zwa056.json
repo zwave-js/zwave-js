@@ -167,8 +167,7 @@
 		},
 		{
 			"#": "6",
-			"$import": "~/templates/master_template.json#base_options_nounit",
-			"label": "Association Group 2: Trigger",
+			"$import": "~/0x0086/templates/aeotec_template.json#association_group_2_trigger",
 			"options": [
 				{
 					"label": "Switch after dry contact closed and open",
@@ -374,6 +373,9 @@
 			"description": "Sets the interval for battery, temperature and humidity reports."
 		},
 		{
+			// The spec declares this parameter as 1 byte, which cannot hold its documented
+			// -200..200 range. Sized as 2 bytes to match the identical parameter 26 and the
+			// equivalent parameter on other Gen8 sensors.
 			"#": "25",
 			"$purpose": "calibration.temperature",
 			"label": "Temperature Calibration",
