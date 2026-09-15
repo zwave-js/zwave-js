@@ -1224,7 +1224,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			this.emit("interview started", this);
 			// Reset the progress baseline and announce the 0% starting point for a fresh interview
 			this.resetInterviewProgressBaseline();
-			await this.queryProtocolInfo();
+			// Yield queued requests so controller recovery cannot block scheduler shutdown
+			yield* waitFor(this.queryProtocolInfo());
 		}
 
 		if (!this.isControllerNode) {
@@ -1238,7 +1239,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				&& this.status !== NodeStatus.Alive
 			) {
 				// Ping non-sleeping nodes to determine their status
-				if (!(await this.ping())) {
+				if (!(yield* waitFor(this.ping()))) {
 					// Not alive, abort the interview
 					return false;
 				}
@@ -2038,7 +2039,9 @@ protocol version:      ${this.protocolVersion}`;
 					endpoint.addCC(ccId, { secure: true });
 
 					// Perform the test and treat errors as negative results
-					const success = !!(await test().catch(() => false));
+					const success = !!(yield* waitFor(
+						test().catch(() => false),
+					));
 
 					if (success) {
 						this.driver.controllerLog.logNode(this.id, {
