@@ -322,13 +322,6 @@ export type ThermostatModeCCSetOptions =
 			manufacturerData: BytesView;
 	  };
 
-function truncateManufacturerData(manufacturerData: BytesView): BytesView;
-function truncateManufacturerData(
-	manufacturerData: BytesView | undefined,
-): BytesView | undefined {
-	return manufacturerData?.subarray(0, 0b111);
-}
-
 @CCCommand(ThermostatModeCommand.Set)
 @useSupervision()
 export class ThermostatModeCCSet extends ThermostatModeCC {
@@ -336,9 +329,7 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 		super(options);
 		this.mode = options.mode;
 		if ("manufacturerData" in options) {
-			this.manufacturerData = truncateManufacturerData(
-				options.manufacturerData,
-			);
+			this.manufacturerData = options.manufacturerData;
 		}
 	}
 
@@ -373,7 +364,7 @@ export class ThermostatModeCCSet extends ThermostatModeCC {
 		const manufacturerData =
 			this.mode === ThermostatMode["Manufacturer specific"]
 			&& this.manufacturerData
-				? truncateManufacturerData(this.manufacturerData)
+				? this.manufacturerData.subarray(0, 0b111)
 				: new Uint8Array();
 		const manufacturerDataLength = manufacturerData.length;
 		this.payload = Bytes.concat([
