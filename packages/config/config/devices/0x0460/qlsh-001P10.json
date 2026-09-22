@@ -90,7 +90,9 @@
 		},
 		{
 			"#": "81",
-			"$import": "templates/wave_template.json#max_moving_time"
+			"$import": "templates/wave_template.json#max_moving_time",
+			"unit": "0.01 seconds",
+			"defaultValue": 6000
 		},
 		{
 			"#": "105",
