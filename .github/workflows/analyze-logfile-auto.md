@@ -88,6 +88,7 @@ permissions:
 runs-on-slim: ubuntu-latest
 
 engine: copilot
+model: claude-opus-4.8
 
 imports:
   - zwave-js/bot-workflows/workflows/shared/hardening.md@75148e07b701ca92e052212a9b7710864068ef6e
