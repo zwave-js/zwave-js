@@ -56,7 +56,7 @@ on:
       docs-age-days: ${{ steps.docs-index.outputs.age-days }}
       docs-source: ${{ steps.docs-index.outputs.source }}
       docs-status: ${{ steps.docs-index.outputs.status }}
-      github-token: ${{ secrets.BOT_TOKEN }}
+      github-token: ${{ github.token }}
       posts: ${{ steps.posts-index.outputs.found }}
       posts-age-days: ${{ steps.posts-index.outputs.age-days }}
       posts-source: ${{ steps.posts-index.outputs.source }}
@@ -116,7 +116,7 @@ engine:
   max-turns: 5
 model: claude-sonnet-5
 runs-on-slim: ubuntu-latest
-source: zwave-js/bot-workflows/workflows/answer-from-docs.md@bb324b62a0e6b629d59a081bbf0391bb851c8c1d
+source: zwave-js/bot-workflows/workflows/answer-from-docs.md@ab873f558d606e5379c405d70ed2b769952a4716
 timeout-minutes: 15
 ---
 Follow the Documentation Answer Judge instructions below.
