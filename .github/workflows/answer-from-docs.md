@@ -101,7 +101,7 @@ if: needs.pre_activation.outputs.gate_result == 'success'
 network: {}
 imports:
 - zwave-js/bot-workflows/workflows/shared/hardening.md@75148e07b701ca92e052212a9b7710864068ef6e
-- ./shared/docs-answer-judge.md
+- zwave-js/bot-workflows/workflows/shared/docs-answer-judge.md@75148e07b701ca92e052212a9b7710864068ef6e
 safe-outputs:
   timeout-minutes: 10
 steps:
@@ -114,6 +114,7 @@ description: Answer questions in issues and discussions based on the documentati
 engine:
   id: copilot
   max-turns: 5
+model: claude-sonnet-5
 runs-on-slim: ubuntu-latest
 source: zwave-js/bot-workflows/workflows/answer-from-docs.md@bb324b62a0e6b629d59a081bbf0391bb851c8c1d
 timeout-minutes: 15
