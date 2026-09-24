@@ -124,7 +124,7 @@ safe-outputs:
 network: defaults
 
 timeout-minutes: 30
-source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@43d9dd67ab9c49d08c85002b35b6a02f300dde2f
+source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@ab873f558d606e5379c405d70ed2b769952a4716
 ---
 
 # Z-Wave JS Logfile Analysis
