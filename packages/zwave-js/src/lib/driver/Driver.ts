@@ -3894,26 +3894,57 @@ export class Driver
 
 		this.driverLog.print("destroying driver instance...");
 
-		// First stop the scheduler, all queues and close the serial port, so nothing happens anymore
-		await this._scheduler.stop();
+		// Applications usually wait for destroy() to finish before restarting the driver.
+		// If a step never completes, they hang without any indication why, so track
+		// the current step and warn when destroying takes too long.
+		const watchdogTimeoutSeconds = 30;
+		let currentStep = "";
+		const step = (description: string) => {
+			currentStep = description;
+			this.driverLog.print(`destroy: ${description}`, "debug");
+		};
+		const watchdog = setTimer(() => {
+			this.driverLog.print(
+				`destroying the driver instance is taking longer than ${watchdogTimeoutSeconds} seconds, current step: ${currentStep}`,
+				"warn",
+			);
+		}, watchdogTimeoutSeconds * 1000).unref();
 
-		await this.destroyTransactionQueues(
-			"driver instance destroyed",
-			ZWaveErrorCodes.Driver_Destroyed,
-		);
+		try {
+			// First stop the scheduler, all queues and close the serial port, so nothing happens anymore
+			step("stopping the task scheduler");
+			await this._scheduler.stop();
 
-		this.destroySerialAPIQueue(
-			"driver instance destroyed",
-			ZWaveErrorCodes.Driver_Destroyed,
-		);
+			step("rejecting pending transactions");
+			await this.destroyTransactionQueues(
+				"driver instance destroyed",
+				ZWaveErrorCodes.Driver_Destroyed,
+			);
 
-		if (this.serial != undefined) {
-			// Avoid spewing errors if the port was in the middle of receiving something
-			if (this.serial.isOpen) await this.serial.close();
-			this.serial = undefined;
+			this.destroySerialAPIQueue(
+				"driver instance destroyed",
+				ZWaveErrorCodes.Driver_Destroyed,
+			);
+
+			if (this.serial != undefined) {
+				// Avoid spewing errors if the port was in the middle of receiving something
+				if (this.serial.isOpen) {
+					step("closing the serial port");
+					await this.serial.close();
+				}
+				this.serial = undefined;
+			}
+
+			await this.destroyController(undefined, step);
+		} catch (e) {
+			this.driverLog.print(
+				`destroying the driver instance failed while ${currentStep}: ${getErrorMessage(e)}`,
+				"error",
+			);
+			throw e;
+		} finally {
+			watchdog.clear();
 		}
-
-		await this.destroyController();
 
 		this.driverLog.print(`driver instance destroyed`);
 
@@ -3927,9 +3958,11 @@ export class Driver
 	// FIXME: Too much overlap with destroy()
 	private async destroyController(
 		keepTask?: (task: { tag?: { id: string } }) => boolean,
+		onStep: (description: string) => void = noop,
 	): Promise<void> {
 		// Avoid re-transmissions etc. communicating with other applications
 		// or the bootloader
+		onStep("removing scheduled tasks");
 		await this.scheduler.removeTasks(
 			(task) => !keepTask?.(task),
 			new ZWaveError(
@@ -3938,6 +3971,7 @@ export class Driver
 			),
 		);
 
+		onStep("rejecting pending transactions");
 		await this.destroyTransactionQueues(
 			"The controller instance is being destroyed",
 			ZWaveErrorCodes.Driver_TaskRemoved,
@@ -3951,6 +3985,7 @@ export class Driver
 		this.requestHandlers.clear();
 
 		// Attempt to close the value DBs and network cache
+		onStep("closing the databases");
 		await this.closeDatabases();
 
 		// Remove all timeouts
