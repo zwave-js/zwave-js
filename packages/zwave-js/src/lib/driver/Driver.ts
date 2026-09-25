@@ -3620,7 +3620,11 @@ export class Driver
 		this.isSoftResetting = false;
 
 		// Clean up and interview the controller again
-		await this.destroyController();
+		await this.destroyController(
+			(task) =>
+				task.tag?.id === "nvm-restore"
+				|| task.tag?.id === "firmware-update-otw",
+		);
 		void this.initializeControllerAndNodes();
 	}
 
