@@ -64,7 +64,7 @@ Files without root-level associations are safe to update directly.
 
 ## 5. Apply the Labels
 
-Insert the `endpoints` block in property order position 8 (after `firmwareVersion`/`preferred`, before `associations`). Only include endpoints that have a label. The `label` field is the only required field for a label-only endpoint entry:
+Insert the `endpoints` block in property order position 8 (after `firmwareVersion`/`preferred`, before `endpointGroups`/`associations`). Only include endpoints that have a label. The `label` field is the only required field for a label-only endpoint entry:
 
 ```json
 "endpoints": {
@@ -77,7 +77,27 @@ Insert the `endpoints` block in property order position 8 (after `firmwareVersio
 
 If an endpoint also has existing `associations` or `paramInformation`, keep them and add `label` alongside.
 
-## 6. Validate
+## 6. Record Documented Endpoint Groups
+
+When the documentation explicitly identifies several endpoints as the same physical part, add `endpointGroups` after `endpoints`. Follow the "Endpoint Groups" rules in `.agents/instructions/config-files.md`.
+
+```json
+"endpointGroups": {
+    "1": { "label": "Clamp 1", "endpoints": [1, 2] },
+    "2": { "label": "Clamp 2", "endpoints": [3, 4] }
+}
+```
+
+- **Evidence:** Use an explicit documented physical relationship. Matching device classes, labels, or adjacent indices are insufficient.
+- **IDs:** Start at `"1"` without gaps in the authored file.
+- **Members:** Include each endpoint at most once among active groups. Root endpoint 0 is allowed. Mutually exclusive `$if` groups may share indices.
+- **Labels:** Name the physical part using the endpoint-label style rules.
+- **Singletons:** A one-member group is allowed with a lint warning.
+- **Independence:** Grouped endpoints require no label or entry in `endpoints`. Adding only `endpointGroups` requires no root-association migration.
+
+Leave undocumented relationships ungrouped.
+
+## 7. Validate
 
 Run the `zwave-dev` MCP validation chain in order — do not finalize until all pass clean:
 

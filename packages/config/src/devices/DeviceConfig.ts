@@ -56,6 +56,10 @@ import {
 	type EndpointConfig,
 } from "./EndpointConfig.js";
 import {
+	ConditionalEndpointGroupConfig,
+	type EndpointGroupConfig,
+} from "./EndpointGroupConfig.js";
+import {
 	type ConditionalParamInfoMap,
 	type ParamInfoMap,
 	type ParamInformation,
@@ -575,6 +579,48 @@ found non-numeric endpoint index "${key}" in endpoints`,
 			this.endpoints = endpoints;
 		}
 
+		if (definition.endpointGroups !== undefined) {
+			if (!isObject(definition.endpointGroups)) {
+				throwInvalidConfig(
+					"device",
+					`packages/config/config/devices/${filename}:
+endpointGroups is not an object`,
+				);
+			}
+			const endpointGroups = new Map<
+				number,
+				ConditionalEndpointGroupConfig
+			>();
+			for (const [key, group] of Object.entries(
+				definition.endpointGroups,
+			)) {
+				const id = Number(key);
+				if (!/^[1-9][0-9]*$/.test(key) || !Number.isSafeInteger(id)) {
+					throwInvalidConfig(
+						"device",
+						`packages/config/config/devices/${filename}:
+invalid endpoint group id "${key}" in endpointGroups - must be a positive safe integer without leading zeros`,
+					);
+				}
+				endpointGroups.set(
+					id,
+					new ConditionalEndpointGroupConfig(filename, id, group),
+				);
+			}
+			if (
+				![...endpointGroups.keys()]
+					.toSorted((a, b) => a - b)
+					.every((id, index) => id === index + 1)
+			) {
+				throwInvalidConfig(
+					"device",
+					`packages/config/config/devices/${filename}:
+endpointGroups IDs must start at 1 without gaps`,
+				);
+			}
+			this.endpointGroups = endpointGroups;
+		}
+
 		if (definition.associations != undefined) {
 			const associations = new Map<
 				number,
@@ -730,6 +776,10 @@ scene number ${keyNum} must be between 1 and 255`,
 	/** Mark this configuration as preferred over other config files with an overlapping firmware range */
 	public readonly preferred: boolean;
 	public readonly endpoints?: ReadonlyMap<number, ConditionalEndpointConfig>;
+	public readonly endpointGroups?: ReadonlyMap<
+		number,
+		ConditionalEndpointGroupConfig
+	>;
 	public readonly associations?: ReadonlyMap<
 		number,
 		ConditionalAssociationConfig
@@ -752,6 +802,25 @@ scene number ${keyNum} must be between 1 and 255`,
 	public readonly isEmbedded: boolean;
 
 	public evaluate(deviceId?: DeviceID): DeviceConfig {
+		const endpointGroups = evaluateDeep(this.endpointGroups, deviceId);
+		// Conditional groups may overlap before a device ID selects the active groups
+		if (deviceId && endpointGroups) {
+			const membership = new Map<number, number>();
+			for (const [id, group] of endpointGroups) {
+				for (const endpoint of group.endpoints) {
+					const existingGroup = membership.get(endpoint);
+					if (existingGroup !== undefined) {
+						throwInvalidConfig(
+							"device",
+							`packages/config/config/devices/${this.filename}:
+Endpoint ${endpoint} belongs to multiple active endpoint groups: ${existingGroup} and ${id}`,
+						);
+					}
+					membership.set(endpoint, id);
+				}
+			}
+		}
+
 		return new DeviceConfig(
 			this.filename,
 			this.isEmbedded,
@@ -769,6 +838,7 @@ scene number ${keyNum} must be between 1 and 255`,
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
 			evaluateDeep(this.metadata, deviceId),
+			endpointGroups,
 		);
 	}
 }
@@ -816,6 +886,7 @@ export class DeviceConfig {
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
 		metadata?: DeviceMetadata,
+		endpointGroups?: ReadonlyMap<number, EndpointGroupConfig>,
 	) {
 		this.filename = filename;
 		this.isEmbedded = isEmbedded;
@@ -833,6 +904,7 @@ export class DeviceConfig {
 		this.proprietary = proprietary;
 		this.compat = compat;
 		this.metadata = metadata;
+		this.endpointGroups = endpointGroups;
 	}
 
 	public readonly filename: string;
@@ -850,6 +922,7 @@ export class DeviceConfig {
 	/** Mark this configuration as preferred over other config files with an overlapping firmware range */
 	public readonly preferred: boolean;
 	public readonly endpoints?: ReadonlyMap<number, EndpointConfig>;
+	public readonly endpointGroups?: ReadonlyMap<number, EndpointGroupConfig>;
 	public readonly associations?: ReadonlyMap<number, AssociationConfig>;
 	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 	public readonly paramInformation?: ParamInfoMap;
