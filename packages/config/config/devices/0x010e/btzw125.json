@@ -18,6 +18,11 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"compat": {
+        "commandClasses": {
+          "add": { "0x80": { "isSupported": true, "version": 1 } }
+        }
+	},
 	"paramInformation": [
 		{
 			"#": "1",
