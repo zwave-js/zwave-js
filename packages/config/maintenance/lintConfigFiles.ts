@@ -192,6 +192,11 @@ function getAllConditions(
 	return ret;
 }
 
+/**
+ * Returns the firmware version after the given one, or `undefined` for 255.255.255.
+ * `>` excludes its boundary, so the range after it starts one version later.
+ * No previous version is needed for `<`, because it switches at the boundary itself, which is sampled already.
+ */
 function getNextFirmwareVersion(version: string): string | undefined {
 	const parts = version.split(".").map(Number);
 	while (parts.length < 3) parts.push(0);
