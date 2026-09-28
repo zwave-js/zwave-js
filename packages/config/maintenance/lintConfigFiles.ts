@@ -578,6 +578,17 @@ async function lintTemplates(
 async function lintDevices(): Promise<void> {
 	process.env.NODE_ENV = "test";
 
+	// Only files with SDK version samples mention the SDK version in their variants
+	let hasSdkVariants = false;
+	function formatVariant(variant: DeviceID): string {
+		const sdk = hasSdkVariants
+			? `, SDK ${variant.sdkVersion ?? "unknown"}`
+			: "";
+		return ` (Variant ${formatId(variant.manufacturerId)}:${formatId(
+			variant.productType,
+		)}:${formatId(variant.productId)}:${variant.firmwareVersion}${sdk})`;
+	}
+
 	const errors = new Map<string, string[]>();
 	function addError(
 		filename: string,
@@ -585,15 +596,7 @@ async function lintDevices(): Promise<void> {
 		variant?: DeviceID,
 		endpoint?: number,
 	): void {
-		if (variant) {
-			filename += ` (Variant ${formatId(
-				variant.manufacturerId,
-			)}:${formatId(variant.productType)}:${formatId(
-				variant.productId,
-			)}:${variant.firmwareVersion}${
-				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
-			})`;
-		}
+		if (variant) filename += formatVariant(variant);
 		if (!errors.has(filename)) errors.set(filename, []);
 
 		const errorPrefix = !!endpoint ? `Endpoint ${endpoint}: ` : "";
@@ -607,15 +610,7 @@ async function lintDevices(): Promise<void> {
 		variant?: DeviceID,
 		endpoint?: number,
 	): void {
-		if (variant) {
-			filename += ` (Variant ${formatId(
-				variant.manufacturerId,
-			)}:${formatId(variant.productType)}:${formatId(
-				variant.productId,
-			)}:${variant.firmwareVersion}${
-				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
-			})`;
-		}
+		if (variant) filename += formatVariant(variant);
 		if (!warnings.has(filename)) warnings.set(filename, []);
 
 		const errorPrefix = !!endpoint ? `Endpoint ${endpoint}: ` : "";
@@ -663,6 +658,7 @@ async function lintDevices(): Promise<void> {
 
 	for (const file of uniqueFiles) {
 		const filePath = path.join(rootDir, file);
+		hasSdkVariants = false;
 
 		// Try parsing the file
 		let conditionalConfig: ConditionalDeviceConfig;
@@ -727,6 +723,7 @@ async function lintDevices(): Promise<void> {
 				)) {
 					sdkVersions.add(version);
 				}
+				hasSdkVariants = true;
 			}
 
 			// Combine each firmware and SDK version with every device ID defined in the file
