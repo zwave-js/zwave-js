@@ -103,20 +103,17 @@ function getAllConditions(
 		}
 	}
 
+	function walkCondition(condition: string | undefined): void {
+		if (condition) walkLogic(parseLogic(condition));
+	}
+
 	for (const prop of ["manufacturer", "label", "description"] as const) {
 		const value = config[prop];
 		if (isArray(value)) {
 			for (const item of value) {
-				if (item.condition) {
-					const logic = parseLogic(item.condition);
-					walkLogic(logic);
-				}
+				walkCondition(item.condition);
 			}
 		}
-	}
-
-	function walkCondition(condition: string | undefined): void {
-		if (condition) walkLogic(parseLogic(condition));
 	}
 
 	function walkAssociations(
@@ -156,14 +153,10 @@ function getAllConditions(
 	if (config.compat) {
 		if (isArray(config.compat)) {
 			for (const compat of config.compat) {
-				if (compat.condition) {
-					const logic = parseLogic(compat.condition);
-					walkLogic(logic);
-				}
+				walkCondition(compat.condition);
 			}
-		} else if (config.compat.condition) {
-			const logic = parseLogic(config.compat.condition);
-			walkLogic(logic);
+		} else {
+			walkCondition(config.compat.condition);
 		}
 	}
 
@@ -181,14 +174,10 @@ function getAllConditions(
 
 			if (isArray(value)) {
 				for (const entry of value) {
-					if (entry.condition) {
-						const logic = parseLogic(entry.condition);
-						walkLogic(logic);
-					}
+					walkCondition(entry.condition);
 				}
-			} else if (isObject(value) && value.condition) {
-				const logic = parseLogic(value.condition);
-				walkLogic(logic);
+			} else if (isObject(value)) {
+				walkCondition(value.condition);
 			}
 		}
 	}
