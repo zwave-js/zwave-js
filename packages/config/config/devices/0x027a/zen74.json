@@ -143,7 +143,7 @@
 		},
 		{
 			"#": "26",
-			"$if": "firmwareVersion >= 1.03",
+			"$if": "firmwareVersion >= 1.3",
 			"$import": "templates/zooz_template.json#local_programming",
 			"defaultValue": 0
 		},

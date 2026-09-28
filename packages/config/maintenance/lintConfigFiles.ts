@@ -38,6 +38,10 @@ import type {
 } from "../src/devices/ParamInformation.js";
 import type { DeviceID } from "../src/devices/shared.js";
 import { getDeviceEntryPredicate, versionInRange } from "../src/utils.js";
+import {
+	firmwareVersionFormatHint,
+	isFirmwareVersion,
+} from "../src/utils_safe.js";
 
 const configManager = new ConfigManager();
 
@@ -69,11 +73,13 @@ function getAllConditions(
 				"ver <=",
 				"ver <",
 				"ver ===",
+				"ver !==",
 				">=",
 				">",
 				"<=",
 				"<",
 				"===",
+				"!==",
 			] as const) {
 				if (operator in logic) {
 					const [lhs, rhs] = (logic as any)[operator] as [
@@ -100,55 +106,60 @@ function getAllConditions(
 		}
 	}
 
+	function walkCondition(condition: string | undefined): void {
+		if (condition) walkLogic(parseLogic(condition));
+	}
+
 	for (const prop of ["manufacturer", "label", "description"] as const) {
 		const value = config[prop];
 		if (isArray(value)) {
 			for (const item of value) {
-				if (item.condition) {
-					const logic = parseLogic(item.condition);
-					walkLogic(logic);
-				}
+				walkCondition(item.condition);
 			}
 		}
 	}
 
-	if (config.associations) {
-		for (const assoc of config.associations.values()) {
-			if (assoc.condition) {
-				const logic = parseLogic(assoc.condition);
-				walkLogic(logic);
-			}
+	function walkAssociations(
+		associations: ConditionalDeviceConfig["associations"],
+	): void {
+		for (const assoc of associations?.values() ?? []) {
+			walkCondition(assoc.condition);
 		}
 	}
 
-	if (config.paramInformation) {
-		for (const params of config.paramInformation.values()) {
+	function walkParamInformation(
+		paramInformation: ConditionalDeviceConfig["paramInformation"],
+	): void {
+		for (const params of paramInformation?.values() ?? []) {
 			for (const param of params) {
-				if (param.condition) {
-					const logic = parseLogic(param.condition);
-					walkLogic(logic);
-				}
+				walkCondition(param.condition);
 				for (const option of param.options) {
-					if (option.condition) {
-						const logic = parseLogic(option.condition);
-						walkLogic(logic);
-					}
+					walkCondition(option.condition);
 				}
 			}
 		}
+	}
+
+	walkAssociations(config.associations);
+	walkParamInformation(config.paramInformation);
+
+	for (const endpoint of config.endpoints?.values() ?? []) {
+		walkCondition(endpoint.condition);
+		walkAssociations(endpoint.associations);
+		walkParamInformation(endpoint.paramInformation);
+	}
+
+	for (const scene of config.scenes?.values() ?? []) {
+		walkCondition(scene.condition);
 	}
 
 	if (config.compat) {
 		if (isArray(config.compat)) {
 			for (const compat of config.compat) {
-				if (compat.condition) {
-					const logic = parseLogic(compat.condition);
-					walkLogic(logic);
-				}
+				walkCondition(compat.condition);
 			}
-		} else if (config.compat.condition) {
-			const logic = parseLogic(config.compat.condition);
-			walkLogic(logic);
+		} else {
+			walkCondition(config.compat.condition);
 		}
 	}
 
@@ -166,14 +177,10 @@ function getAllConditions(
 
 			if (isArray(value)) {
 				for (const entry of value) {
-					if (entry.condition) {
-						const logic = parseLogic(entry.condition);
-						walkLogic(logic);
-					}
+					walkCondition(entry.condition);
 				}
-			} else if (isObject(value) && value.condition) {
-				const logic = parseLogic(value.condition);
-				walkLogic(logic);
+			} else if (isObject(value)) {
+				walkCondition(value.condition);
 			}
 		}
 	}
@@ -633,6 +640,18 @@ async function lintDevices(): Promise<void> {
 		// Check which variants of the device config we need to lint
 		const variants: (DeviceID | undefined)[] = [];
 		const conditions = getAllConditions(conditionalConfig);
+		let hasInvalidFirmwareVersion = false;
+		for (const version of conditions.get("firmwareVersion") ?? []) {
+			if (!isFirmwareVersion(version)) {
+				addError(
+					file,
+					`Firmware version "${version}" in a condition is malformed or invalid. ${firmwareVersionFormatHint}`,
+				);
+				hasInvalidFirmwareVersion = true;
+			}
+		}
+		if (hasInvalidFirmwareVersion) continue;
+
 		if (conditions.size > 0) {
 			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
 			const fwVersions: Set<string> =

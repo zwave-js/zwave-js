@@ -35,7 +35,12 @@ import { configDir } from "#config_dir";
 
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
-import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
+import {
+	firmwareVersionFormatHint,
+	hexKeyRegex4Digits,
+	isFirmwareVersion,
+	throwInvalidConfig,
+} from "../utils_safe.js";
 
 import {
 	type AssociationConfig,
@@ -395,18 +400,6 @@ function isHexKeyWith4Digits(val: any): val is string {
 	return typeof val === "string" && hexKeyRegex4Digits.test(val);
 }
 
-const firmwareVersionRegex = /^\d{1,3}\.\d{1,3}(\.\d{1,3})?$/;
-function isFirmwareVersion(val: any): val is string {
-	return (
-		typeof val === "string"
-		&& firmwareVersionRegex.test(val)
-		&& val
-			.split(".")
-			.map((str) => parseInt(str, 10))
-			.every((num) => num >= 0 && num <= 255)
-	);
-}
-
 const deflateDict = Bytes.from(
 	// Substrings appearing in the device config files in descending order of frequency
 	// except for very short ones like 0, 1, ...
@@ -522,7 +515,7 @@ devices is malformed (not an object or type/id that is not a lowercase 4-digit h
 			throwInvalidConfig(
 				`device`,
 				`packages/config/config/devices/${filename}:
-firmwareVersion is malformed or invalid. Must be x.y or x.y.z where x, y, and z are integers between 0 and 255`,
+firmwareVersion is malformed or invalid. ${firmwareVersionFormatHint}`,
 			);
 		} else {
 			const { min, max } = definition.firmwareVersion;
