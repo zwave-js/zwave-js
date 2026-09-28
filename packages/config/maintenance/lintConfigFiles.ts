@@ -217,6 +217,7 @@ function getVersionRangeStarts(
 	boundaries: Iterable<string>,
 	min: string,
 ): Set<string> {
+	// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
 	const starts = new Set([min]);
 	for (const boundary of boundaries) {
 		// Each boundary is a range of its own, because `>=`, `<=` and `===` include it and `>` and `<` exclude it
@@ -695,16 +696,8 @@ async function lintDevices(): Promise<void> {
 			const { min, max } = conditionalConfig.firmwareVersion;
 			const boundaries: Set<string> =
 				conditions.get("firmwareVersion") ?? new Set();
-			let fwVersions: Set<string>;
-			if (conditionalConfig.endpointGroups?.size) {
-				// Group memberships must not overlap anywhere in the firmware range
-				fwVersions = getVersionRangeStarts(boundaries, min);
-			} else if (boundaries.size > 0) {
-				// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
-				fwVersions = new Set([...boundaries, min, max]);
-			} else {
-				fwVersions = new Set([min]);
-			}
+			// Check every firmware range because several conditional items can be active at once between two boundaries
+			const fwVersions = getVersionRangeStarts(boundaries, min);
 
 			for (const version of fwVersions) {
 				if (!versionInRange(version, min, max)) {
@@ -715,8 +708,8 @@ async function lintDevices(): Promise<void> {
 			// The SDK version may be unknown at runtime
 			const sdkVersions = new Set<string | undefined>([undefined]);
 			const sdkBoundaries = conditions.get("sdkVersion");
-			if (conditionalConfig.endpointGroups?.size && sdkBoundaries?.size) {
-				// Group memberships must not overlap for any SDK version either
+			if (sdkBoundaries?.size) {
+				// Check every SDK version range too
 				for (const version of getVersionRangeStarts(
 					sdkBoundaries,
 					"0.0",
