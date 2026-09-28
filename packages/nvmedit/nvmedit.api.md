@@ -593,6 +593,11 @@ export type NodeNVMProperty = {
 // @public (undocumented)
 export type NodeNVMPropertyToDataType<P extends NodeNVMProperty> = P["type"] extends keyof NodeNVMPropertyTypes ? NodeNVMPropertyTypes[P["type"]] : never;
 
+// Warning: (ae-missing-release-tag) "normalizeNVM" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function normalizeNVM(nvm: BytesView): Promise<NVMJSON>;
+
 // Warning: (ae-missing-release-tag) "NVM" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
