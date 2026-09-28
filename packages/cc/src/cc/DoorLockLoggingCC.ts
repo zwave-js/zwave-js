@@ -260,6 +260,11 @@ export class DoorLockLoggingCCRecordsSupportedReport extends DoorLockLoggingCC {
 
 	public readonly recordsCount: number;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.recordsCount]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -355,6 +360,43 @@ export class DoorLockLoggingCCRecordReport extends DoorLockLoggingCC {
 	public readonly recordNumber: number;
 	public readonly record?: DoorLockLoggingRecord;
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const code =
+			typeof this.record?.userCode === "string"
+				? Bytes.from(this.record.userCode, "utf8")
+				: (this.record?.userCode ?? new Bytes(0));
+		if (code.length > 10) {
+			throw new ZWaveError(
+				"User code must not exceed 10 bytes",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		this.payload = new Bytes(11 + code.length);
+		this.payload[0] = this.recordNumber;
+		if (this.record) {
+			const date = new Date(this.record.timestamp);
+			if (!Number.isFinite(date.getTime())) {
+				throw new ZWaveError(
+					"Invalid record timestamp",
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			this.payload.writeUInt16BE(date.getFullYear(), 1);
+			this.payload[3] = date.getMonth() + 1;
+			this.payload[4] = date.getDate();
+			this.payload[5] =
+				(DoorLockLoggingRecordStatus.HoldsLegalData << 5)
+				| date.getHours();
+			this.payload[6] = date.getMinutes();
+			this.payload[7] = date.getSeconds();
+			this.payload[8] = this.record.eventType;
+			this.payload[9] = this.record.userId ?? 0;
+			this.payload[10] = code.length;
+			this.payload.set(code, 11);
+		}
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		let message: MessageRecord;
 
@@ -413,17 +455,14 @@ export class DoorLockLoggingCCRecordGet extends DoorLockLoggingCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): DoorLockLoggingCCRecordGet {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new DoorLockLoggingCCRecordGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			recordNumber: raw.payload[0],
+		});
 	}
 
 	public recordNumber: number;

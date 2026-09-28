@@ -12,8 +12,6 @@ import {
 	type SpecificDeviceClass,
 	type SupportsCC,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	encodeApplicationNodeInformation,
 	encodeBitMask,
 	getCCName,
@@ -1267,6 +1265,15 @@ export class MultiChannelCCAggregatedMembersReport extends MultiChannelCC {
 
 	public readonly members: readonly number[];
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const bitMask = encodeBitMask(this.members);
+		this.payload = Bytes.concat([
+			[this.aggregatedEndpointIndex & 0b0111_1111, bitMask.length],
+			bitMask,
+		]);
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(ctx?: GetValueDB): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(ctx),
@@ -1294,18 +1301,14 @@ export class MultiChannelCCAggregatedMembersGet extends MultiChannelCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): MultiChannelCCAggregatedMembersGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new MultiChannelCCAggregatedMembersGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 1);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			requestedEndpoint: raw.payload[0] & 0b0111_1111,
+		});
 	}
 
 	public requestedEndpoint: number;

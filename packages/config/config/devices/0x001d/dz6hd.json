@@ -13,6 +13,10 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"compat": {
+		// The device needs a short delay before it answers value refreshes after manual actuation
+		"manualValueRefreshDelayMs": 1000
+	},
 	"paramInformation": [
 		{
 			"#": "1",

@@ -2281,18 +2281,40 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ConfigurationCCBulkSet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
+		validatePayload(raw.payload.length >= 4);
+		const firstParameter = raw.payload.readUInt16BE(0);
+		const numParams = raw.payload[2];
+		const resetToDefault = !!(raw.payload[3] & 0b1000_0000);
+		const handshake = !!(raw.payload[3] & 0b0100_0000);
+		const valueSize = raw.payload[3] & 0b111;
+		validatePayload(numParams > 0, firstParameter + numParams <= 0x10000);
+		validatePayload(valueSize >= 1, valueSize <= 4);
+		validatePayload(raw.payload.length >= 4 + numParams * valueSize);
+		const parameters = Array.from(
+			{ length: numParams },
+			(_, i) => firstParameter + i,
 		);
-
-		// return new ConfigurationCCBulkSet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		if (resetToDefault) {
+			return new this({
+				nodeId: ctx.sourceNodeId,
+				parameters,
+				handshake,
+				resetToDefault,
+			});
+		}
+		const values = parameters.map((_, i) =>
+			raw.payload.readIntBE(4 + i * valueSize, valueSize),
+		);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameters,
+			handshake,
+			valueSize,
+			values,
+		});
 	}
 
 	private _parameters: number[];
@@ -2496,6 +2518,47 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 		return this._values;
 	}
 
+	public serialize(ctx: CCEncodingContext): Promise<Bytes> {
+		const parameters = [...this._values.keys()].toSorted((a, b) => a - b);
+		if (parameters.length > 0 && !isConsecutiveArray(parameters)) {
+			throw new ZWaveError(
+				"ConfigurationCCBulkReport requires consecutive parameters",
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		this.payload = new Bytes(5 + parameters.length * this.valueSize);
+		this.payload.writeUInt16BE(parameters[0] ?? 0, 0);
+		this.payload[2] = parameters.length;
+		this.payload[3] = this.reportsToFollow;
+		let flags = this.valueSize;
+		if (this.defaultValues) flags |= 0b1000_0000;
+		if (this.isHandshakeResponse) flags |= 0b0100_0000;
+		this.payload[4] = flags;
+		for (let i = 0; i < parameters.length; i++) {
+			const value = this._values.get(parameters[i])!;
+			const format =
+				value < 0
+					? ConfigValueFormat.SignedInteger
+					: ConfigValueFormat.UnsignedInteger;
+			if (!isSafeValue(value, this.valueSize, format)) {
+				throwInvalidValueError(
+					value,
+					parameters[i],
+					this.valueSize,
+					format,
+				);
+			}
+			serializeValue(
+				this.payload,
+				5 + i * this.valueSize,
+				this.valueSize,
+				format,
+				value,
+			);
+		}
+		return super.serialize(ctx);
+	}
+
 	public getPartialCCSessionId(): Record<string, any> | undefined {
 		return {};
 	}
@@ -2564,18 +2627,20 @@ export class ConfigurationCCBulkGet extends ConfigurationCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): ConfigurationCCBulkGet {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new ConfigurationCCBulkGet({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		validatePayload(raw.payload.length >= 3);
+		const firstParameter = raw.payload.readUInt16BE(0);
+		const numParams = raw.payload[2];
+		validatePayload(numParams > 0, firstParameter + numParams <= 0x10000);
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			parameters: Array.from(
+				{ length: numParams },
+				(_, i) => firstParameter + i,
+			),
+		});
 	}
 
 	private _parameters: number[];

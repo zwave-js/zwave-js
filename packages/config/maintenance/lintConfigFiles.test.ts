@@ -251,7 +251,7 @@ test("only checks supported firmware for configs without endpoint groups", async
 });
 
 test.each([false, true])(
-	"handles leading zeros in firmware condition boundaries with endpoint groups: %s",
+	"reports leading zeros in firmware condition boundaries with endpoint groups: %s",
 	async (withGroups) => {
 		definition.label = [
 			{ $if: "firmwareVersion >= 1.03", value: "Test Device" },
@@ -263,10 +263,16 @@ test.each([false, true])(
 			};
 		}
 
-		await lintConfigFiles();
+		await expect(lintConfigFiles()).rejects.toThrow("lint exited");
 
-		expect(reportProblem).not.toHaveBeenCalled();
-		expect(process.exit).not.toHaveBeenCalled();
+		expect(reportProblem).toHaveBeenCalledExactlyOnceWith(
+			expect.objectContaining({
+				severity: "error",
+				message: expect.stringContaining(
+					'Firmware version "1.03" in a condition is malformed or invalid',
+				),
+			}),
+		);
 	},
 );
 

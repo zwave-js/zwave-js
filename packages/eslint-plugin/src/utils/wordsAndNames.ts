@@ -24,6 +24,7 @@ const ccAndCommandNames = combinations(
 		"Notification",
 		"Binary Sensor",
 		"Binary Switch",
+		"Sound Switch",
 		"Hail",
 		"Configuration",
 		"Barrier",
