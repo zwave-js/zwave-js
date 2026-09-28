@@ -103,38 +103,36 @@ function getAllConditions(
 		}
 	}
 
-	function walkCondition(item: { condition?: string }): void {
-		if (item.condition) walkLogic(parseLogic(item.condition));
-	}
-
-	function walkAssociations(
-		associations: ReadonlyMap<number, { condition?: string }> | undefined,
-	): void {
-		if (!associations) return;
-		for (const assoc of associations.values()) {
-			walkCondition(assoc);
-		}
-	}
-
-	function walkParamInformation(
-		paramInformation: ConditionalParamInfoMap | undefined,
-	): void {
-		if (!paramInformation) return;
-		for (const params of paramInformation.values()) {
-			for (const param of params) {
-				walkCondition(param);
-				for (const option of param.options) {
-					walkCondition(option);
-				}
-			}
-		}
+	function walkCondition(condition: string | undefined): void {
+		if (condition) walkLogic(parseLogic(condition));
 	}
 
 	for (const prop of ["manufacturer", "label", "description"] as const) {
 		const value = config[prop];
 		if (isArray(value)) {
 			for (const item of value) {
-				walkCondition(item);
+				walkCondition(item.condition);
+			}
+		}
+	}
+
+	function walkAssociations(
+		associations: ConditionalDeviceConfig["associations"],
+	): void {
+		for (const assoc of associations?.values() ?? []) {
+			walkCondition(assoc.condition);
+		}
+	}
+
+	function walkParamInformation(
+		paramInformation: ConditionalDeviceConfig["paramInformation"],
+	): void {
+		for (const params of paramInformation?.values() ?? []) {
+			for (const param of params) {
+				walkCondition(param.condition);
+				for (const option of param.options) {
+					walkCondition(option.condition);
+				}
 			}
 		}
 	}
@@ -142,27 +140,23 @@ function getAllConditions(
 	walkAssociations(config.associations);
 	walkParamInformation(config.paramInformation);
 
-	if (config.endpoints) {
-		for (const endpoint of config.endpoints.values()) {
-			walkCondition(endpoint);
-			walkAssociations(endpoint.associations);
-			walkParamInformation(endpoint.paramInformation);
-		}
+	for (const endpoint of config.endpoints?.values() ?? []) {
+		walkCondition(endpoint.condition);
+		walkAssociations(endpoint.associations);
+		walkParamInformation(endpoint.paramInformation);
 	}
 
-	if (config.scenes) {
-		for (const scene of config.scenes.values()) {
-			walkCondition(scene);
-		}
+	for (const scene of config.scenes?.values() ?? []) {
+		walkCondition(scene.condition);
 	}
 
 	if (config.compat) {
 		if (isArray(config.compat)) {
 			for (const compat of config.compat) {
-				walkCondition(compat);
+				walkCondition(compat.condition);
 			}
 		} else {
-			walkCondition(config.compat);
+			walkCondition(config.compat.condition);
 		}
 	}
 
@@ -180,10 +174,10 @@ function getAllConditions(
 
 			if (isArray(value)) {
 				for (const entry of value) {
-					walkCondition(entry);
+					walkCondition(entry.condition);
 				}
 			} else if (isObject(value)) {
-				walkCondition(value);
+				walkCondition(value.condition);
 			}
 		}
 	}
