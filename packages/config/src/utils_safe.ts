@@ -8,6 +8,9 @@ export const hexKeyRegex2Digits = /^0x[a-f0-9]{2}$/;
 const firmwareVersionRegex =
 	/^(0|[1-9]\d{0,2})\.(0|[1-9]\d{0,2})(\.(0|[1-9]\d{0,2}))?$/;
 
+export const firmwareVersionFormatHint =
+	"Must be x.y or x.y.z where x, y, and z are integers between 0 and 255 without leading zeros";
+
 /** Checks if the given value is a firmware version in the format x.y or x.y.z with components between 0 and 255 and no leading zeros */
 export function isFirmwareVersion(val: unknown): boolean {
 	return (

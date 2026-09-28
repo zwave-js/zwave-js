@@ -38,7 +38,10 @@ import type {
 } from "../src/devices/ParamInformation.js";
 import type { DeviceID } from "../src/devices/shared.js";
 import { getDeviceEntryPredicate, versionInRange } from "../src/utils.js";
-import { isFirmwareVersion } from "../src/utils_safe.js";
+import {
+	firmwareVersionFormatHint,
+	isFirmwareVersion,
+} from "../src/utils_safe.js";
 
 const configManager = new ConfigManager();
 
@@ -642,7 +645,7 @@ async function lintDevices(): Promise<void> {
 			if (!isFirmwareVersion(version)) {
 				addError(
 					file,
-					`Invalid firmware version "${version}" in a condition. Use x.y or x.y.z with integer components between 0 and 255 and no leading zeros.`,
+					`Firmware version "${version}" in a condition is malformed or invalid. ${firmwareVersionFormatHint}`,
 				);
 				hasInvalidFirmwareVersion = true;
 			}

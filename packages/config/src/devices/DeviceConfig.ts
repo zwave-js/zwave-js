@@ -36,6 +36,7 @@ import { configDir } from "#config_dir";
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
 import {
+	firmwareVersionFormatHint,
 	hexKeyRegex4Digits,
 	isFirmwareVersion,
 	throwInvalidConfig,
@@ -514,7 +515,7 @@ devices is malformed (not an object or type/id that is not a lowercase 4-digit h
 			throwInvalidConfig(
 				`device`,
 				`packages/config/config/devices/${filename}:
-firmwareVersion is malformed or invalid. Must be x.y or x.y.z where x, y, and z are integers between 0 and 255 without leading zeros`,
+firmwareVersion is malformed or invalid. ${firmwareVersionFormatHint}`,
 			);
 		} else {
 			const { min, max } = definition.firmwareVersion;
