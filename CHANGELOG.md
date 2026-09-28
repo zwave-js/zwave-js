@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.30.0 (2026-09-28)
 ### Features
 * Implemented parsing and serialization for several commands that normally don't appear in everyday communication
 
