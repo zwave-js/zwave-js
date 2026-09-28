@@ -4429,7 +4429,8 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 	/** Returns a dump of this node's information for debugging purposes */
 	public createDump(): NodeDump {
-		const { index, ...endpointDump } = this.createEndpointDump();
+		const { index, endpointLabel, ...endpointDump } =
+			this.createEndpointDump();
 		const ret: NodeDump = {
 			id: this.id,
 			manufacturer: this.deviceConfig?.manufacturer,

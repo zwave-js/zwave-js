@@ -66,11 +66,25 @@ Endpoint group ${id}: endpoints must not contain duplicate indices`,
 			);
 		}
 		this.endpoints = [...definition.endpoints];
+
+		if (
+			definition.isMainDevice !== undefined
+			&& typeof definition.isMainDevice !== "boolean"
+		) {
+			throwInvalidConfig(
+				"device",
+				`packages/config/config/devices/${filename}:
+Endpoint group ${id}: isMainDevice must be a boolean`,
+			);
+		}
+		this.isMainDevice = !!definition.isMainDevice;
 	}
 
 	public readonly id: number;
 	public readonly label: string;
 	public readonly endpoints: readonly number[];
+	/** Whether this group represents the device as a whole */
+	public readonly isMainDevice: boolean;
 	public readonly condition?: string;
 
 	public evaluateCondition(
@@ -81,6 +95,7 @@ Endpoint group ${id}: endpoints must not contain duplicate indices`,
 			id: this.id,
 			label: this.label,
 			endpoints: this.endpoints,
+			isMainDevice: this.isMainDevice,
 		};
 	}
 }
@@ -89,3 +104,45 @@ export type EndpointGroupConfig = Omit<
 	ConditionalEndpointGroupConfig,
 	"condition" | "evaluateCondition"
 >;
+
+export interface EndpointGroupConflict {
+	keptGroup: number;
+	droppedGroup: number;
+	/** The endpoint both groups contain, or `undefined` if both groups are marked as the main device */
+	endpoint?: number;
+}
+
+/**
+ * Keeps groups in ID order and drops each group that conflicts with a group kept before it.
+ * Two groups conflict when they share an endpoint or are both marked as the main device.
+ */
+export function dropConflictingEndpointGroups(
+	groups: ReadonlyMap<number, EndpointGroupConfig>,
+): {
+	groups: Map<number, EndpointGroupConfig>;
+	conflicts: EndpointGroupConflict[];
+} {
+	const kept = new Map<number, EndpointGroupConfig>();
+	const conflicts: EndpointGroupConflict[] = [];
+	const membership = new Map<number, number>();
+	let mainDeviceGroup: number | undefined;
+	for (const [id, group] of [...groups].toSorted(([a], [b]) => a - b)) {
+		const endpoint = group.endpoints.find((ep) => membership.has(ep));
+		if (endpoint !== undefined) {
+			conflicts.push({
+				endpoint,
+				keptGroup: membership.get(endpoint)!,
+				droppedGroup: id,
+			});
+			continue;
+		}
+		if (group.isMainDevice && mainDeviceGroup !== undefined) {
+			conflicts.push({ keptGroup: mainDeviceGroup, droppedGroup: id });
+			continue;
+		}
+		if (group.isMainDevice) mainDeviceGroup = id;
+		for (const ep of group.endpoints) membership.set(ep, id);
+		kept.set(id, group);
+	}
+	return { groups: kept, conflicts };
+}

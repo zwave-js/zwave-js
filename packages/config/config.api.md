@@ -379,6 +379,7 @@ export class ConditionalEndpointGroupConfig implements ConditionalItem<EndpointG
     evaluateCondition(deviceId?: DeviceID): EndpointGroupConfig | undefined;
     // (undocumented)
     readonly id: number;
+    readonly isMainDevice: boolean;
     // (undocumented)
     readonly label: string;
 }
@@ -671,6 +672,14 @@ export interface DeviceMetadata {
     wakeup?: string;
 }
 
+// Warning: (ae-missing-release-tag) "dropConflictingEndpointGroups" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function dropConflictingEndpointGroups(groups: ReadonlyMap<number, EndpointGroupConfig>): {
+    groups: Map<number, EndpointGroupConfig>;
+    conflicts: EndpointGroupConflict[];
+};
+
 // Warning: (ae-missing-release-tag) "embeddedDevicesDir" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -688,6 +697,17 @@ export type EndpointConfig = Omit<ConditionalEndpointConfig, "condition" | "eval
 //
 // @public (undocumented)
 export type EndpointGroupConfig = Omit<ConditionalEndpointGroupConfig, "condition" | "evaluateCondition">;
+
+// Warning: (ae-missing-release-tag) "EndpointGroupConflict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EndpointGroupConflict {
+    // (undocumented)
+    droppedGroup: number;
+    endpoint?: number;
+    // (undocumented)
+    keptGroup: number;
+}
 
 // Warning: (ae-missing-release-tag) "FirmwareVersionRange" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

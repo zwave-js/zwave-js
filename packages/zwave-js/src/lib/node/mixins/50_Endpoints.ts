@@ -119,7 +119,7 @@ export abstract class EndpointsMixin
 	}
 
 	/** Whether the Multi Channel CC has been interviewed and all endpoint information is known */
-	protected get isMultiChannelInterviewComplete(): boolean {
+	private get isMultiChannelInterviewComplete(): boolean {
 		return nodeUtils.isMultiChannelInterviewComplete(this.driver, this.id);
 	}
 

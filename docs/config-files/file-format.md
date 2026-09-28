@@ -115,12 +115,13 @@ This optional property identifies endpoints belonging to the same physical part 
 - **Members:** Each group requires a nonempty `endpoints` array of unique integers from 0 to 127. Endpoint 0 represents the root device.
 - **Conditions:** A group may have a [`$if` condition](config-files/conditional-settings.md). An endpoint may belong to at most one active group. Mutually exclusive groups may reference the same endpoint. Filtering preserves the configured group IDs.
 - **Singletons:** Groups with one configured member are allowed with a lint warning.
+- **Main device:** Set `"isMainDevice": true` on a group that represents the device as a whole, like the total consumption of a multi-clamp energy meter or the entire power strip. At most one active group may be marked as the main device.
 
 Group membership and endpoint labels are independent. Grouped indices may be absent from the `endpoints` object. Adding only `endpointGroups` permits root-level `associations` to remain in place.
 
 Use the device manual or manufacturer's product page to establish membership. Device classes, matching labels, and endpoint numbering alone do not establish a physical relationship. Leave endpoints ungrouped when that relationship is undocumented.
 
-At runtime, [`node.endpointGroups`](api/node.md#endpointgroups) resolves member indices to existing endpoint instances after endpoint discovery. Missing members produce a warning. Groups without existing members are omitted. A group reduced to one runtime member is valid.
+At runtime, [`node.endpointGroups`](api/node.md#endpointgroups) exposes the active groups. `getEndpoints()` returns only the members that exist on the node. If active groups share an endpoint or more than one is marked as the main device anyway, the group with the lower ID wins and the others are ignored with a warning.
 
 Changes to grouping metadata do not require a re-interview. The metadata is refreshed when the device config is loaded.
 

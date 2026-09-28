@@ -1243,29 +1243,30 @@ readonly endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
 const clamp = node.endpointGroups?.get(1);
 if (clamp) {
 	console.log(clamp.label);
-	for (const endpoint of clamp.endpoints) {
-		console.log(endpoint.index, endpoint.group === clamp);
+	for (const endpoint of clamp.getEndpoints()) {
+		console.log(endpoint.index, endpoint.getGroup() === clamp);
 	}
 }
 ```
 
-Exposes the physical-part groups defined in the [device config](config-files/file-format.md#endpointgroups). Each group contains the node's existing endpoint instances:
+Exposes the physical-part groups defined in the [device config](config-files/file-format.md#endpointgroups), or `undefined` if the device config defines none.
 
 ```ts
-interface EndpointGroup {
+class EndpointGroup {
 	readonly id: number;
 	readonly label: string;
-	readonly endpoints: readonly Endpoint[];
+	/** The indices of the endpoints in this group, including those the node does not have */
+	readonly endpointIndices: readonly number[];
+	/** Whether this group represents the device as a whole */
+	readonly isMainDevice: boolean;
+	/** Returns the endpoints of this group that exist on the node */
+	getEndpoints(): Endpoint[];
 }
 ```
 
-Returns `undefined` until endpoint discovery completes. After discovery, an empty map means no groups with existing members apply. Missing endpoints are omitted from their groups and logged. Empty groups are omitted. The root endpoint may be a member.
+At most one group has `isMainDevice` set. It represents the device as a whole, like the total consumption of a multi-clamp energy meter. The root endpoint may be a member. Group IDs are local to the node. Conditional filtering can leave gaps in the IDs. The groups are recreated when the device config is loaded, so reacquire them after a re-interview or a device config reload.
 
-Group IDs are local to the node. Conditional filtering and missing members can leave gaps in the runtime IDs.
-
-Group instances are reused during normal operation. Reacquire them after a re-interview, a device-config reload, or a change to the discovered endpoints.
-
-Grouping is metadata. Applications retain control over presentation and the treatment of ungrouped endpoints. To serialize a group, convert its members to endpoint indices. Endpoint instances reference their group.
+Grouping is metadata. Applications retain control over presentation and the treatment of ungrouped endpoints.
 
 ### `deviceDatabaseUrl`
 

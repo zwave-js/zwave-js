@@ -55,6 +55,7 @@ import type { DeviceID } from '@zwave-js/config';
 import { Duration } from '@zwave-js/core';
 import { DurationLike } from '@zwave-js/core';
 import { DurationUnit } from '@zwave-js/core';
+import type { EndpointGroupConfig } from '@zwave-js/config';
 import { EndpointId } from '@zwave-js/core';
 import { EntryControlDataTypes } from '@zwave-js/cc';
 import { EntryControlEventTypes } from '@zwave-js/cc';
@@ -961,11 +962,13 @@ export class Endpoint extends EndpointMixins {
 // Warning: (ae-missing-release-tag) "EndpointGroup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
-export interface EndpointGroup {
-    // (undocumented)
-    readonly endpoints: readonly Endpoint[];
+export class EndpointGroup {
+    constructor(node: GetEndpoint<Endpoint>, config: EndpointGroupConfig);
+    readonly endpointIndices: readonly number[];
+    getEndpoints(): Endpoint[];
     // (undocumented)
     readonly id: number;
+    readonly isMainDevice: boolean;
     // (undocumented)
     readonly label: string;
 }
@@ -978,6 +981,8 @@ export interface EndpointGroupDump {
     endpoints: number[];
     // (undocumented)
     id: number;
+    // (undocumented)
+    isMainDevice: boolean;
     // (undocumented)
     label: string;
 }
@@ -1657,8 +1662,6 @@ export interface NodeDump {
     deviceClass: DeviceClassesDump | "unknown";
     // (undocumented)
     dsk?: string;
-    // (undocumented)
-    endpointLabel?: string;
     // Warning: (ae-forgotten-export) The symbol "EndpointDump" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

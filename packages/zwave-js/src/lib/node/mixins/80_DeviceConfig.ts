@@ -1,16 +1,15 @@
 import { refreshConfigParamMetadataFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
-import { DeviceConfig, parseDeviceConfigHash } from "@zwave-js/config";
 import {
-	CommandClasses,
-	InterviewStage,
-	type MaybeNotKnown,
-	NOT_KNOWN,
-} from "@zwave-js/core";
+	DeviceConfig,
+	type EndpointGroupConfig,
+	dropConflictingEndpointGroups,
+	parseDeviceConfigHash,
+} from "@zwave-js/config";
+import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 
 import { cacheKeys } from "../../driver/NetworkCache.js";
-import type { Endpoint } from "../Endpoint.js";
-import type { EndpointGroup } from "../EndpointGroup.js";
+import { EndpointGroup } from "../EndpointGroup.js";
 
 import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
 
@@ -20,7 +19,7 @@ export interface NodeDeviceConfig {
 	 */
 	get deviceConfig(): MaybeNotKnown<DeviceConfig>;
 
-	/** Returns groups with existing members. Returns undefined before endpoint discovery. */
+	/** The endpoint groups defined in the device configuration */
 	readonly endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
 
 	/**
@@ -69,67 +68,39 @@ export abstract class DeviceConfigMixin
 	}
 	protected set deviceConfig(value: MaybeNotKnown<DeviceConfig>) {
 		this._deviceConfig = value;
-		this._endpointGroups = undefined;
-		this._endpointGroupEndpoints = undefined;
+		this._endpointGroups =
+			value?.endpointGroups
+			&& this.createEndpointGroups(value.endpointGroups);
 	}
 
 	private _endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
-	private _endpointGroupEndpoints: readonly Endpoint[] | undefined;
 
-	/** Returns groups with existing members. Returns undefined before endpoint discovery. */
+	/** The endpoint groups defined in the device configuration */
 	public get endpointGroups():
 		| ReadonlyMap<number, EndpointGroup>
 		| undefined {
-		if (
-			!this.isMultiChannelInterviewComplete
-			&& (this.supportsCC(CommandClasses["Multi Channel"])
-				|| this.interviewStage < InterviewStage.CommandClasses)
-		) {
-			return undefined;
-		}
+		return this._endpointGroups;
+	}
 
-		const endpoints = this.getAllEndpoints();
-		if (
-			this._endpointGroups
-			&& this._endpointGroupEndpoints?.length === endpoints.length
-			&& endpoints.every(
-				(endpoint, i) => endpoint === this._endpointGroupEndpoints?.[i],
-			)
-		) {
-			return this._endpointGroups;
+	private createEndpointGroups(
+		configs: ReadonlyMap<number, EndpointGroupConfig>,
+	): Map<number, EndpointGroup> {
+		const { groups, conflicts } = dropConflictingEndpointGroups(configs);
+		for (const conflict of conflicts) {
+			this.driver.controllerLog.logNode(
+				this.id,
+				conflict.endpoint !== undefined
+					? `Ignoring endpoint group ${conflict.droppedGroup} because endpoint ${conflict.endpoint} also belongs to group ${conflict.keptGroup}`
+					: `Ignoring endpoint group ${conflict.droppedGroup} because group ${conflict.keptGroup} is already marked as the main device`,
+				"warn",
+			);
 		}
-
-		const groups = new Map<number, EndpointGroup>();
-		const endpointsByIndex = new Map(
-			endpoints.map((endpoint) => [endpoint.index, endpoint]),
+		return new Map(
+			[...groups].map(([id, config]) => [
+				id,
+				new EndpointGroup(this, config),
+			]),
 		);
-		for (const config of this.deviceConfig?.endpointGroups?.values()
-			?? []) {
-			const members: Endpoint[] = [];
-			for (const index of config.endpoints) {
-				const endpoint = endpointsByIndex.get(index);
-				if (endpoint) {
-					members.push(endpoint);
-				} else {
-					this.driver.controllerLog.logNode(
-						this.id,
-						`Endpoint group ${config.id} references missing endpoint ${index}`,
-						"warn",
-					);
-				}
-			}
-			if (members.length) {
-				groups.set(config.id, {
-					id: config.id,
-					label: config.label,
-					endpoints: members,
-				});
-			}
-		}
-
-		this._endpointGroups = groups;
-		this._endpointGroupEndpoints = endpoints;
-		return groups;
 	}
 
 	/**

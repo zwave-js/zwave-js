@@ -31,6 +31,7 @@ import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,
 } from "../src/devices/DeviceConfig.js";
+import { dropConflictingEndpointGroups } from "../src/devices/EndpointGroupConfig.js";
 import type {
 	ConditionalParamInfoMap,
 	ParamInfoMap,
@@ -739,6 +740,20 @@ async function lintDevices(): Promise<void> {
 			}
 
 			// Validate that the file is semantically correct
+
+			if (config.endpointGroups) {
+				for (const conflict of dropConflictingEndpointGroups(
+					config.endpointGroups,
+				).conflicts) {
+					addError(
+						file,
+						conflict.endpoint !== undefined
+							? `Endpoint ${conflict.endpoint} belongs to multiple active endpoint groups: ${conflict.keptGroup} and ${conflict.droppedGroup}`
+							: `Multiple active endpoint groups are marked as the main device: ${conflict.keptGroup} and ${conflict.droppedGroup}`,
+						variant,
+					);
+				}
+			}
 
 			// By evaluating conditionals, we may end up with a file without manufacturer, label or description
 			if (config.manufacturer == undefined) {

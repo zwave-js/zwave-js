@@ -266,6 +266,7 @@ Use `endpointGroups` when the device documentation explicitly identifies multipl
 - **Members:** Require a nonempty array of unique integer endpoint indices from 0 to 127. Root endpoint 0 is allowed.
 - **Conditions:** Support `$if` per group. An endpoint may occur in at most one active group after evaluation. Mutually exclusive groups may share endpoint indices.
 - **Singletons:** A single configured member is allowed with a lint warning. Missing runtime endpoints may reduce a group to one member without a singleton warning.
+- **Main device:** Set `"isMainDevice": true` only when the documentation describes the group as the device as a whole, e.g. the total consumption of a multi-clamp meter or the entire power strip. At most one active group may have it.
 - **Independence:** Group membership requires no endpoint label or entry in `endpoints`. Adding only `endpointGroups` requires no root-association migration.
 
 Leave endpoints ungrouped when their physical relationship is undocumented. Whole-device totals may remain ungrouped. Applications decide how to present ungrouped endpoints.

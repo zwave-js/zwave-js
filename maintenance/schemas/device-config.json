@@ -79,6 +79,7 @@
 			"const": true
 		},
 		"endpoints": { "$ref": "#/definitions/endpoints" },
+		"endpointGroups": { "$ref": "#/definitions/endpointGroups" },
 		"associations": { "$ref": "#/definitions/associations" },
 		"scenes": { "$ref": "#/definitions/scenes" },
 		"paramInformation": { "$ref": "#/definitions/paramInformation" },
@@ -263,6 +264,39 @@
 				},
 				"additionalProperties": false
 			}
+		},
+		"endpointGroups": {
+			"type": "object",
+			"description": "Groups of endpoints that belong to the same physical part of the device",
+			"patternProperties": {
+				"^[1-9]\\d*$": {
+					"type": "object",
+					"properties": {
+						"$if": { "$ref": "#/definitions/condition" },
+						"label": {
+							"type": "string",
+							"minLength": 1
+						},
+						"endpoints": {
+							"type": "array",
+							"minItems": 1,
+							"uniqueItems": true,
+							"items": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 127
+							}
+						},
+						"isMainDevice": {
+							"type": "boolean",
+							"description": "Whether this group represents the device as a whole, e.g. the total consumption of a multi-clamp meter"
+						}
+					},
+					"required": ["label", "endpoints"],
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
 		},
 		"associations": {
 			"type": "object",

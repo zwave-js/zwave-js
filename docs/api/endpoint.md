@@ -86,6 +86,24 @@ supportsCCAPI(cc: CommandClasses): boolean
 
 Allows checking whether a CC API is supported before calling it with [`invokeCCAPI`](#invokeCCAPI)
 
+### `getGroup`
+
+```ts
+getGroup(): EndpointGroup | undefined;
+```
+
+Returns the [endpoint group](api/node.md#endpointgroups) containing this endpoint, or `undefined` if the endpoint is ungrouped.
+
+```ts
+const group = node.getEndpoint(1)?.getGroup();
+if (group) {
+	console.log(group === node.endpointGroups?.get(group.id)); // true
+	console.log(group.endpointIndices);
+}
+```
+
+The root endpoint can also belong to a group. Grouping leaves endpoint addressing, values, and command-class APIs unchanged.
+
 ## Endpoint properties
 
 ### `nodeId`
@@ -111,24 +129,6 @@ readonly endpointLabel: string | undefined;
 ```
 
 If the device config file contains a label for this endpoint, it is exposed here.
-
-### `group`
-
-```ts
-readonly group: EndpointGroup | undefined;
-```
-
-Returns the shared group instance containing this endpoint. The group comes from [`node.endpointGroups`](api/node.md#endpointgroups). Returns `undefined` before endpoint discovery or when the endpoint is ungrouped.
-
-```ts
-const group = node.getEndpoint(1)?.group;
-if (group) {
-	console.log(group === node.endpointGroups?.get(group.id)); // true
-	console.log(group.endpoints.map((endpoint) => endpoint.index));
-}
-```
-
-The root endpoint can also belong to a group. Grouping leaves endpoint addressing, values, and command-class APIs unchanged.
 
 ### `installerIcon`
 

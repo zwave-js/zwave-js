@@ -1,4 +1,3 @@
-import { ZWaveErrorCodes } from "@zwave-js/core";
 import { expect, expectTypeOf, test } from "vitest";
 
 import type { DeviceConfig, EndpointGroupConfig } from "../index.js";
@@ -7,7 +6,10 @@ import {
 	ConditionalDeviceConfig,
 	type DeviceConfigHashVersion,
 } from "./DeviceConfig.js";
-import { ConditionalEndpointGroupConfig } from "./EndpointGroupConfig.js";
+import {
+	ConditionalEndpointGroupConfig,
+	dropConflictingEndpointGroups,
+} from "./EndpointGroupConfig.js";
 
 const definition = {
 	manufacturer: "Test Manufacturer",
@@ -49,8 +51,24 @@ test("exposes endpoint groups as readonly metadata", () => {
 	);
 	expect(config.evaluate(deviceId).endpointGroups).toEqual(
 		new Map([
-			[1, { id: 1, label: "Living Room", endpoints: [3, 1] }],
-			[2, { id: 2, label: "Kitchen", endpoints: [2, 127] }],
+			[
+				1,
+				{
+					id: 1,
+					label: "Living Room",
+					endpoints: [3, 1],
+					isMainDevice: false,
+				},
+			],
+			[
+				2,
+				{
+					id: 2,
+					label: "Kitchen",
+					endpoints: [2, 127],
+					isMainDevice: false,
+				},
+			],
 		]),
 	);
 	expect(config.evaluate(deviceId).endpoints).toBeUndefined();
@@ -189,7 +207,7 @@ test("allows authored single-member groups", () => {
 		parse({ 1: { label: "Output", endpoints: [0] } })
 			.evaluate(deviceId)
 			.endpointGroups?.get(1),
-	).toEqual({ id: 1, label: "Output", endpoints: [0] });
+	).toEqual({ id: 1, label: "Output", endpoints: [0], isMainDevice: false });
 });
 
 test.each([false, 1, [], {}].map((value) => ({ value })))(
@@ -222,7 +240,17 @@ test("preserves authored IDs after excluding inactive groups", () => {
 		2: { label: "Output", endpoints: [1, 2] },
 	});
 	expect(config.evaluate(deviceId).endpointGroups).toEqual(
-		new Map([[2, { id: 2, label: "Output", endpoints: [1, 2] }]]),
+		new Map([
+			[
+				2,
+				{
+					id: 2,
+					label: "Output",
+					endpoints: [1, 2],
+					isMainDevice: false,
+				},
+			],
+		]),
 	);
 });
 
@@ -260,21 +288,49 @@ test("allows mutually exclusive groups to share members", () => {
 	expect([...config.evaluate().endpointGroups!.keys()]).toEqual([1, 2]);
 });
 
-test.each([undefined, "firmwareVersion >= 1.0"])(
-	"rejects active overlapping membership with condition %j",
-	($if) => {
-		const config = parse({
-			1: { label: "Output", endpoints: [0, 1] },
-			2: { $if, label: "Other Output", endpoints: [0, 2] },
-		});
-		expect(() => config.evaluate(deviceId)).toThrow(
-			"Endpoint 0 belongs to multiple active endpoint groups: 1 and 2",
-		);
-		expect(() => config.evaluate(deviceId)).toThrow(
-			expect.objectContaining({ code: ZWaveErrorCodes.Config_Invalid }),
-		);
+test("marks a group as the main device", () => {
+	const config = parse({
+		1: { label: "Mains", endpoints: [0, 1], isMainDevice: true },
+		2: { label: "Clamp 1", endpoints: [2, 3] },
+	}).evaluate(deviceId);
+	expect(config.endpointGroups?.get(1)?.isMainDevice).toBe(true);
+	expect(config.endpointGroups?.get(2)?.isMainDevice).toBe(false);
+});
+
+test.each([null, 1, "true", [], {}].map((value) => ({ value })))(
+	"rejects invalid isMainDevice %j",
+	({ value: isMainDevice }) => {
+		expect(() =>
+			parse({ 1: { label: "Output", endpoints: [1, 2], isMainDevice } }),
+		).toThrow("Endpoint group 1: isMainDevice must be a boolean");
 	},
 );
+
+test("dropConflictingEndpointGroups() drops groups that share an endpoint with a lower group", () => {
+	const config = parse({
+		1: { label: "Output", endpoints: [0, 1] },
+		2: { label: "Other Output", endpoints: [0, 2] },
+		3: { label: "Third Output", endpoints: [2, 3] },
+	}).evaluate(deviceId);
+	const { groups, conflicts } = dropConflictingEndpointGroups(
+		config.endpointGroups!,
+	);
+	expect([...groups.keys()]).toEqual([1, 3]);
+	expect(conflicts).toEqual([{ endpoint: 0, keptGroup: 1, droppedGroup: 2 }]);
+});
+
+test("dropConflictingEndpointGroups() keeps only the first main device group", () => {
+	const config = parse({
+		1: { label: "Mains", endpoints: [0], isMainDevice: true },
+		2: { label: "Clamp 1", endpoints: [1, 2] },
+		3: { label: "Whole Strip", endpoints: [3], isMainDevice: true },
+	}).evaluate(deviceId);
+	const { groups, conflicts } = dropConflictingEndpointGroups(
+		config.endpointGroups!,
+	);
+	expect([...groups.keys()]).toEqual([1, 2]);
+	expect(conflicts).toEqual([{ keptGroup: 1, droppedGroup: 3 }]);
+});
 
 const hashVersions = [0, 1, 2, 3, 4] satisfies DeviceConfigHashVersion[];
 

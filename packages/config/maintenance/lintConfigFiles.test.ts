@@ -127,6 +127,24 @@ test("reports unconditional overlapping membership", async () => {
 	);
 });
 
+test("reports multiple active main device groups", async () => {
+	definition.endpointGroups = {
+		1: { label: "Mains", endpoints: [0, 1], isMainDevice: true },
+		2: { label: "Whole Strip", endpoints: [2, 3], isMainDevice: true },
+	};
+
+	await expect(lintConfigFiles()).rejects.toThrow("lint exited");
+
+	expect(reportProblem).toHaveBeenCalledWith(
+		expect.objectContaining({
+			severity: "error",
+			message: expect.stringContaining(
+				"Multiple active endpoint groups are marked as the main device: 1 and 2",
+			),
+		}),
+	);
+});
+
 test("checks firmware boundaries from endpoint group conditions", async () => {
 	definition.endpointGroups = {
 		1: {

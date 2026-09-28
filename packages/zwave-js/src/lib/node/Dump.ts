@@ -35,6 +35,7 @@ export interface EndpointGroupDump {
 	id: number;
 	label: string;
 	endpoints: number[];
+	isMainDevice: boolean;
 }
 
 export interface EndpointDump {
@@ -48,7 +49,6 @@ export interface EndpointDump {
 
 export interface NodeDump {
 	id: number;
-	endpointLabel?: string;
 	group?: EndpointGroupDump;
 	manufacturer?: string;
 	label?: string;

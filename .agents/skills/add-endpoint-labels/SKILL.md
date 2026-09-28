@@ -93,6 +93,7 @@ When the documentation explicitly identifies several endpoints as the same physi
 - **Members:** Include each endpoint at most once among active groups. Root endpoint 0 is allowed. Mutually exclusive `$if` groups may share indices.
 - **Labels:** Name the physical part using the endpoint-label style rules.
 - **Singletons:** A one-member group is allowed with a lint warning.
+- **Main device:** Set `"isMainDevice": true` on the one group that documentation describes as the whole device, e.g. the total consumption of a multi-clamp meter.
 - **Independence:** Grouped endpoints require no label or entry in `endpoints`. Adding only `endpointGroups` requires no root-association migration.
 
 Leave undocumented relationships ungrouped.

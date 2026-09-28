@@ -802,25 +802,6 @@ scene number ${keyNum} must be between 1 and 255`,
 	public readonly isEmbedded: boolean;
 
 	public evaluate(deviceId?: DeviceID): DeviceConfig {
-		const endpointGroups = evaluateDeep(this.endpointGroups, deviceId);
-		// Conditional groups may overlap before a device ID selects the active groups
-		if (deviceId && endpointGroups) {
-			const membership = new Map<number, number>();
-			for (const [id, group] of endpointGroups) {
-				for (const endpoint of group.endpoints) {
-					const existingGroup = membership.get(endpoint);
-					if (existingGroup !== undefined) {
-						throwInvalidConfig(
-							"device",
-							`packages/config/config/devices/${this.filename}:
-Endpoint ${endpoint} belongs to multiple active endpoint groups: ${existingGroup} and ${id}`,
-						);
-					}
-					membership.set(endpoint, id);
-				}
-			}
-		}
-
 		return new DeviceConfig(
 			this.filename,
 			this.isEmbedded,
@@ -838,7 +819,7 @@ Endpoint ${endpoint} belongs to multiple active endpoint groups: ${existingGroup
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
 			evaluateDeep(this.metadata, deviceId),
-			endpointGroups,
+			evaluateDeep(this.endpointGroups, deviceId),
 		);
 	}
 }

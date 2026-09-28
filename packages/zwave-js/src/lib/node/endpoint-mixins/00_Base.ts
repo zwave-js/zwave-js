@@ -132,20 +132,13 @@ export class EndpointBase
 			?.label;
 	}
 
-	/** Returns the shared group containing this endpoint after endpoint discovery */
-	public get group(): EndpointGroup | undefined {
+	/** Returns the endpoint group this endpoint belongs to */
+	public getGroup(): EndpointGroup | undefined {
 		const groups = this.tryGetNode()?.endpointGroups;
-		if (!groups) return undefined;
+		if (!groups) return;
 		for (const group of groups.values()) {
-			if (
-				group.endpoints.some(
-					(endpoint: EndpointBase) => endpoint === this,
-				)
-			) {
-				return group;
-			}
+			if (group.endpointIndices.includes(this.index)) return group;
 		}
-		return undefined;
 	}
 
 	/** Resets all stored information of this endpoint */
@@ -514,7 +507,7 @@ export class EndpointBase
 	 * Returns a dump of this endpoint's information for debugging purposes
 	 */
 	public createEndpointDump(): EndpointDump {
-		const group = this.group;
+		const group = this.getGroup();
 		const ret: EndpointDump = {
 			index: this.index,
 			endpointLabel: this.endpointLabel,
@@ -522,9 +515,8 @@ export class EndpointBase
 				? {
 						id: group.id,
 						label: group.label,
-						endpoints: group.endpoints.map(
-							(endpoint) => endpoint.index,
-						),
+						endpoints: [...group.endpointIndices],
+						isMainDevice: group.isMainDevice,
 					}
 				: undefined,
 			deviceClass: "unknown",
