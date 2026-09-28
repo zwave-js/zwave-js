@@ -280,10 +280,12 @@ import {
 	serialAPICommandErrorToZWaveError,
 } from "./StateMachineShared.js";
 import {
+	type Task,
 	type TaskBuilder,
 	TaskInterruptBehavior,
 	TaskPriority,
 	TaskScheduler,
+	TaskState,
 } from "./Task.js";
 import { throttlePresets } from "./ThrottlePresets.js";
 import { Transaction } from "./Transaction.js";
@@ -3593,8 +3595,13 @@ export class Driver
 		}
 	}
 
-	/** Soft-reset the Z-Wave module and restart the driver instance */
-	public async softResetAndRestart(): Promise<void> {
+	/**
+	 * Soft-reset the Z-Wave module and restart the driver instance.
+	 * @param keepTask Selects tasks that must survive the restart. A task that calls this method must keep itself.
+	 */
+	public async softResetAndRestart(
+		keepTask?: (task: Task<unknown>) => boolean,
+	): Promise<void> {
 		this.controllerLog.print("Performing soft reset...");
 
 		try {
@@ -3620,11 +3627,7 @@ export class Driver
 		this.isSoftResetting = false;
 
 		// Clean up and interview the controller again
-		await this.destroyController(
-			(task) =>
-				task.tag?.id === "nvm-restore"
-				|| task.tag?.id === "firmware-update-otw",
-		);
+		await this.destroyController(keepTask);
 		void this.initializeControllerAndNodes();
 	}
 
@@ -3930,7 +3933,7 @@ export class Driver
 	/** Cleanly destroy the controller instance, but not the entire driver */
 	// FIXME: Too much overlap with destroy()
 	private async destroyController(
-		keepTask?: (task: { tag?: { id: string } }) => boolean,
+		keepTask?: (task: Task<unknown>) => boolean,
 	): Promise<void> {
 		// Avoid re-transmissions etc. communicating with other applications
 		// or the bootloader
@@ -9192,7 +9195,13 @@ ${handlers.length} left`,
 							self.driverLog.print(
 								"Activating new firmware and restarting driver...",
 							);
-							yield* waitFor(self.softResetAndRestart());
+							yield* waitFor(
+								self.softResetAndRestart(
+									(task) =>
+										task.tag?.id === "firmware-update-otw"
+										&& task.state !== TaskState.None,
+								),
+							);
 						}
 						return wasUpdated;
 					}

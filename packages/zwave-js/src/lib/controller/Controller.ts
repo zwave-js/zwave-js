@@ -315,6 +315,7 @@ import {
 	type TaskBuilder,
 	TaskInterruptBehavior,
 	TaskPriority,
+	TaskState,
 } from "../driver/Task.js";
 import { DeviceClass } from "../node/DeviceClass.js";
 import { ZWaveNode } from "../node/Node.js";
@@ -8703,7 +8704,14 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				// Reset all info about all nodes, so they get re-interviewed.
 				self._nodes.clear();
 
-				yield* waitFor(self.driver.softResetAndRestart());
+				// Keep only this task. A queued restore would run against the destroyed controller instance.
+				yield* waitFor(
+					self.driver.softResetAndRestart(
+						(task) =>
+							task.tag?.id === "nvm-restore"
+							&& task.state !== TaskState.None,
+					),
+				);
 			},
 			cleanup: async () => {
 				// Turn the radio back on when the task is dropped before it could do so itself
