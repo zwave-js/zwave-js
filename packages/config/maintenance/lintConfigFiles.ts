@@ -38,6 +38,7 @@ import type {
 } from "../src/devices/ParamInformation.js";
 import type { DeviceID } from "../src/devices/shared.js";
 import { getDeviceEntryPredicate, versionInRange } from "../src/utils.js";
+import { isFirmwareVersion } from "../src/utils_safe.js";
 
 const configManager = new ConfigManager();
 
@@ -69,11 +70,13 @@ function getAllConditions(
 				"ver <=",
 				"ver <",
 				"ver ===",
+				"ver !==",
 				">=",
 				">",
 				"<=",
 				"<",
 				"===",
+				"!==",
 			] as const) {
 				if (operator in logic) {
 					const [lhs, rhs] = (logic as any)[operator] as [
@@ -633,6 +636,18 @@ async function lintDevices(): Promise<void> {
 		// Check which variants of the device config we need to lint
 		const variants: (DeviceID | undefined)[] = [];
 		const conditions = getAllConditions(conditionalConfig);
+		let hasInvalidFirmwareVersion = false;
+		for (const version of conditions.get("firmwareVersion") ?? []) {
+			if (!isFirmwareVersion(version)) {
+				addError(
+					file,
+					`Invalid firmware version "${version}" in a condition. Use x.y or x.y.z with integer components between 0 and 255 and no leading zeros.`,
+				);
+				hasInvalidFirmwareVersion = true;
+			}
+		}
+		if (hasInvalidFirmwareVersion) continue;
+
 		if (conditions.size > 0) {
 			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
 			const fwVersions: Set<string> =
