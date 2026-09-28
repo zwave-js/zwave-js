@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.31.0 (2026-09-28)
 ### Features
 * Support grouping endpoints through configuration files (#9205)
 
