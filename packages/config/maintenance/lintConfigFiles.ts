@@ -708,8 +708,8 @@ async function lintDevices(): Promise<void> {
 			// The SDK version may be unknown at runtime
 			const sdkVersions = new Set<string | undefined>([undefined]);
 			const sdkBoundaries = conditions.get("sdkVersion");
-			if (conditionalConfig.endpointGroups?.size && sdkBoundaries?.size) {
-				// Group memberships must not overlap for any SDK version either
+			if (sdkBoundaries?.size) {
+				// Check every SDK version range too
 				for (const version of getVersionRangeStarts(
 					sdkBoundaries,
 					"0.0",
