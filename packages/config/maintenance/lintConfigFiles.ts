@@ -217,7 +217,7 @@ function getVersionRangeStarts(
 	boundaries: Iterable<string>,
 	min: string,
 ): Set<string> {
-	// Check every firmware range because several conditional items can be active at once between two boundaries
+	// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
 	const starts = new Set([min]);
 	for (const boundary of boundaries) {
 		// Each boundary is a range of its own, because `>=`, `<=` and `===` include it and `>` and `<` exclude it
@@ -696,6 +696,7 @@ async function lintDevices(): Promise<void> {
 			const { min, max } = conditionalConfig.firmwareVersion;
 			const boundaries: Set<string> =
 				conditions.get("firmwareVersion") ?? new Set();
+			// Check every firmware range because several conditional items can be active at once between two boundaries
 			const fwVersions = getVersionRangeStarts(boundaries, min);
 
 			for (const version of fwVersions) {
