@@ -101,6 +101,8 @@ Optional endpoint-specific configuration. This includes associations, paramInfor
 
 ## `endpointGroups`
 
+Optional grouping of endpoints that belong to the same physical part of a device, e.g. the clamps of a multi-clamp energy meter. Only add groups if the device documentation explicitly describes this relationship. Example:
+
 ```json
 "endpointGroups": {
 	"1": { "label": "Clamp 1", "endpoints": [1, 2] },
@@ -108,22 +110,16 @@ Optional endpoint-specific configuration. This includes associations, paramInfor
 }
 ```
 
-This optional property identifies endpoints belonging to the same physical part of a device. Grouping is metadata. All endpoints retain their addresses and capabilities. Applications decide how to present the groups.
+The keys are the group IDs, which must be numbered consecutively, starting at `"1"`. Each group has the following properties:
 
-- **IDs:** Use numeric string keys starting at `"1"` without gaps. IDs are local to the device config.
-- **Labels:** Each group requires a nonempty `label`. Use a short, documentation-derived physical-part name in Title Case.
-- **Members:** Each group requires a nonempty `endpoints` array of unique integers from 1 to 127. The root endpoint 0 represents the node itself and cannot be a member.
-- **Conditions:** A group may have a [`$if` condition](config-files/conditional-settings.md). An endpoint may belong to at most one active group. Mutually exclusive groups may reference the same endpoint. Filtering preserves the configured group IDs.
-- **Singletons:** Groups with one configured member are meant for edge cases, like conditional endpoints. They cause a lint warning.
-- **Main device (optional):** Set `"isMainDevice": true` on a group that represents the device as a whole, like the total consumption of a multi-clamp energy meter or the entire power strip. At most one active group may be marked as the main device.
+| Property       | Type     | Required? | Description                                                                                                                                  |
+| -------------- | -------- | :-------: | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`        | string   |    yes    | The name of the physical part, e.g. `"Clamp 1"`                                                                                              |
+| `endpoints`    | number[] |    yes    | The endpoints belonging to this group. The root endpoint 0 cannot be part of a group.                                                        |
+| `isMainDevice` | boolean  |    no     | Marks the group that represents the device as a whole, e.g. the total consumption of a multi-clamp energy meter. Only one group may have it. |
+| `$if`          | string   |    no     | A [condition](config-files/conditional-settings.md) for this group                                                                           |
 
-Group membership and endpoint labels are independent. Grouped indices may be absent from the `endpoints` object. Adding only `endpointGroups` permits root-level `associations` to remain in place.
-
-Use the device manual or manufacturer's product page to establish membership. Device classes, matching labels, and endpoint numbering alone do not establish a physical relationship. Leave endpoints ungrouped when that relationship is undocumented.
-
-At runtime, [`node.endpointGroups`](api/node.md#endpointgroups) exposes the active groups. `getEndpoints()` returns only the members that exist on the node.
-
-Changes to grouping metadata do not require a re-interview. The metadata is refreshed when the device config is loaded.
+Each endpoint may only belong to one group. Groups with a single endpoint should only be used in edge cases, like with conditional endpoints.
 
 ## `associations`
 

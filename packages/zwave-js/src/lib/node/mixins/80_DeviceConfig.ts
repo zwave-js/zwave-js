@@ -63,17 +63,9 @@ export abstract class DeviceConfigMixin
 	}
 	protected set deviceConfig(value: MaybeNotKnown<DeviceConfig>) {
 		this._deviceConfig = value;
-		this._endpointGroups =
-			value?.endpointGroups
-			&& new Map(
-				[...value.endpointGroups].map(([id, config]) => [
-					id,
-					new EndpointGroup(this, config),
-				]),
-			);
 	}
 
-	private _endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
+	protected _endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
 
 	/** The endpoint groups defined in the device configuration */
 	public get endpointGroups():
@@ -187,6 +179,14 @@ export abstract class DeviceConfigMixin
 			this.firmwareVersion,
 			this.sdkVersion,
 		);
+		this._endpointGroups =
+			this.deviceConfig?.endpointGroups
+			&& new Map(
+				[...this.deviceConfig.endpointGroups].map(([id, config]) => [
+					id,
+					new EndpointGroup(this.id, this.driver, config),
+				]),
+			);
 
 		if (!this.deviceConfig) {
 			this.driver.controllerLog.logNode(

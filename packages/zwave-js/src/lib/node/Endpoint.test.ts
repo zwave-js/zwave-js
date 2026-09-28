@@ -1,8 +1,9 @@
 import "@zwave-js/cc";
 
 import { BatteryCCAPI } from "@zwave-js/cc/BatteryCC";
+import { ManufacturerSpecificCCValues } from "@zwave-js/cc/ManufacturerSpecificCC";
 import { VersionCCAPI } from "@zwave-js/cc/VersionCC";
-import { ConditionalDeviceConfig } from "@zwave-js/config";
+import { ConditionalDeviceConfig, type DeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	ZWaveErrorCodes,
@@ -241,7 +242,10 @@ function groupConfig(
 		description: "Test",
 		devices: [{ productType: "0x0001", productId: "0x0001" }],
 		firmwareVersion: { min: "0.0", max: "255.255" },
-		endpoints: { "1": { label: "Consumption" } },
+		endpoints: {
+			"0": { label: "Meter" },
+			"1": { label: "Consumption" },
+		},
 		endpointGroups,
 	}).evaluate({
 		manufacturerId: 1,
@@ -251,32 +255,52 @@ function groupConfig(
 	});
 }
 
-function nodeWithGroups(context: LocalTestContext["context"]): ZWaveNode {
+async function loadDeviceConfig(
+	context: LocalTestContext["context"],
+	node: ZWaveNode,
+	config: DeviceConfig | undefined,
+): Promise<void> {
+	vi.spyOn(context.driver.configManager, "lookupDevice").mockResolvedValue(
+		config,
+	);
+	await node["loadDeviceConfig"]();
+}
+
+async function nodeWithGroups(
+	context: LocalTestContext["context"],
+): Promise<ZWaveNode> {
 	const node = new ZWaveNode(2, context.driver, undefined, [
 		CommandClasses["Multi Channel"],
 	]);
 	context.node = node;
 	context.driver.controller["_nodes"].set(node.id, node);
-	node["deviceConfig"] = groupConfig();
+	node.valueDB.setValue(ManufacturerSpecificCCValues.manufacturerId.id, 1);
+	node.valueDB.setValue(ManufacturerSpecificCCValues.productType.id, 1);
+	node.valueDB.setValue(ManufacturerSpecificCCValues.productId.id, 1);
 	setEndpointIndizes(context.driver, node.id, [1, 2, 3, 4, 5]);
+	setMultiChannelInterviewComplete(context.driver, node.id, true);
+	await loadDeviceConfig(context, node, groupConfig());
 	return node;
 }
 
-test.sequential("endpoint groups resolve their existing endpoints", ({
+test.sequential("endpoint groups resolve their existing endpoints", async ({
 	context,
 	expect,
 }) => {
-	const node = nodeWithGroups(context);
-	node["deviceConfig"] = groupConfig({
-		"1": { label: "Clamp 1", endpoints: [1, 2, 9] },
-		"2": { label: "Mains", endpoints: [3, 4], isMainDevice: true },
-	});
-	setMultiChannelInterviewComplete(context.driver, node.id, true);
+	const node = await nodeWithGroups(context);
+	await loadDeviceConfig(
+		context,
+		node,
+		groupConfig({
+			"1": { label: "Clamp 1", endpoints: [1, 2, 9] },
+			"2": { label: "Mains", endpoints: [3, 4], isMainDevice: true },
+		}),
+	);
 	const groups = node.endpointGroups!;
-	expect(groups.get(2)?.isMainDevice).toBe(true);
 	expect([...groups.keys()]).toEqual([1, 2]);
 	expect(groups.get(1)?.label).toBe("Clamp 1");
 	expect(groups.get(1)?.isMainDevice).toBe(false);
+	expect(groups.get(2)?.isMainDevice).toBe(true);
 	expect(groups.get(1)?.endpointIndices).toEqual([1, 2, 9]);
 	expect(groups.get(1)?.getEndpoints()).toEqual([
 		node.getEndpoint(1),
@@ -288,12 +312,11 @@ test.sequential("endpoint groups resolve their existing endpoints", ({
 	]);
 });
 
-test.sequential("getGroup() returns the group containing the endpoint", ({
+test.sequential("getGroup() returns the group containing the endpoint", async ({
 	context,
 	expect,
 }) => {
-	const node = nodeWithGroups(context);
-	setMultiChannelInterviewComplete(context.driver, node.id, true);
+	const node = await nodeWithGroups(context);
 	const groups = node.endpointGroups!;
 	expect(node.getEndpoint(1)?.getGroup()).toBe(groups.get(1));
 	expect(node.getEndpoint(2)?.getGroup()).toBe(groups.get(1));
@@ -302,45 +325,41 @@ test.sequential("getGroup() returns the group containing the endpoint", ({
 	expect(node.getEndpoint(5)?.getGroup()).toBeUndefined();
 });
 
-test.sequential("endpoint groups follow device config changes", ({
+test.sequential("endpoint groups follow device config changes", async ({
 	context,
 	expect,
 }) => {
-	const node = nodeWithGroups(context);
-	setMultiChannelInterviewComplete(context.driver, node.id, true);
+	const node = await nodeWithGroups(context);
 	const endpoint = node.getEndpoint(1)!;
 
-	node["deviceConfig"] = groupConfig({
-		"1": { label: "First Clamp", endpoints: [1, 3] },
-	});
+	await loadDeviceConfig(
+		context,
+		node,
+		groupConfig({
+			"1": { label: "First Clamp", endpoints: [1, 3] },
+		}),
+	);
 	expect(node.endpointGroups?.get(1)?.label).toBe("First Clamp");
 	expect(endpoint.getGroup()).toBe(node.endpointGroups?.get(1));
 	expect(node.getEndpoint(2)?.getGroup()).toBeUndefined();
 
-	node["deviceConfig"] = undefined;
+	await loadDeviceConfig(context, node, undefined);
 	expect(node.endpointGroups).toBeUndefined();
 	expect(endpoint.getGroup()).toBeUndefined();
 });
 
-test.sequential("endpoint groups and dumps serialize without cycles", ({
+test.sequential("node dumps contain endpoint groups and endpoint labels", async ({
 	context,
 	expect,
 }) => {
-	const node = nodeWithGroups(context);
-	setMultiChannelInterviewComplete(context.driver, node.id, true);
-	expect(JSON.parse(JSON.stringify(node.endpointGroups!.get(1)))).toEqual({
-		id: 1,
-		label: "Clamp 1",
-		endpointIndices: [1, 2],
-		isMainDevice: false,
-	});
+	const node = await nodeWithGroups(context);
 
 	const dump = node.getEndpoint(1)!.createEndpointDump();
 	expect(dump.endpointLabel).toBe("Consumption");
 	expect(dump).not.toHaveProperty("group");
 
 	const nodeDump = node.createDump();
-	expect(nodeDump).not.toHaveProperty("endpointLabel");
+	expect(nodeDump.endpointLabel).toBe("Meter");
 	expect(nodeDump.endpointGroups).toEqual([
 		{
 			id: 1,

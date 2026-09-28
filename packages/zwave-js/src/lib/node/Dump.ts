@@ -48,6 +48,7 @@ export interface EndpointDump {
 
 export interface NodeDump {
 	id: number;
+	endpointLabel?: string;
 	manufacturer?: string;
 	label?: string;
 	description?: string;

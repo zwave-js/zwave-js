@@ -1134,6 +1134,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			this.supportsSecurity = undefined;
 			this.supportsBeaming = undefined;
 			this.deviceConfig = undefined;
+			this._endpointGroups = undefined;
 			this.currentDeviceConfigHash = undefined;
 			this.cachedDeviceConfigHash = undefined;
 			this._hasEmittedNoS0NetworkKeyError = false;
@@ -4429,8 +4430,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 	/** Returns a dump of this node's information for debugging purposes */
 	public createDump(): NodeDump {
-		const { index, endpointLabel, ...endpointDump } =
-			this.createEndpointDump();
+		const { index, ...endpointDump } = this.createEndpointDump();
 		const ret: NodeDump = {
 			id: this.id,
 			manufacturer: this.deviceConfig?.manufacturer,

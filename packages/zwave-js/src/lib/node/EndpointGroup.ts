@@ -1,23 +1,23 @@
 import type { EndpointGroupConfig } from "@zwave-js/config";
-import type { GetEndpoint } from "@zwave-js/core";
+
+import type { Driver } from "../driver/Driver.js";
 
 import type { Endpoint } from "./Endpoint.js";
 
 /** An endpoint group identifies endpoints belonging to the same physical part of a node */
 export class EndpointGroup {
 	public constructor(
-		node: GetEndpoint<Endpoint>,
+		/** The ID of the node this endpoint group belongs to */
+		public readonly nodeId: number,
+		/** The driver instance this endpoint group belongs to */
+		protected readonly driver: Driver,
 		config: EndpointGroupConfig,
 	) {
-		this.#node = node;
 		this.id = config.id;
 		this.label = config.label;
 		this.endpointIndices = config.endpoints;
 		this.isMainDevice = config.isMainDevice;
 	}
-
-	// The node must stay in a true private field so JSON serialization skips it
-	readonly #node: GetEndpoint<Endpoint>;
 
 	public readonly id: number;
 	public readonly label: string;
@@ -28,8 +28,10 @@ export class EndpointGroup {
 
 	/** Returns the endpoints of this group that exist on the node */
 	public getEndpoints(): Endpoint[] {
+		const node = this.driver.controller.nodes.get(this.nodeId);
+		if (!node) return [];
 		return this.endpointIndices
-			.map((index) => this.#node.getEndpoint(index))
+			.map((index) => node.getEndpoint(index))
 			.filter((endpoint) => endpoint != undefined);
 	}
 }

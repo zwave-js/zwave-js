@@ -963,7 +963,10 @@ export class Endpoint extends EndpointMixins {
 //
 // @public
 export class EndpointGroup {
-    constructor(node: GetEndpoint<Endpoint>, config: EndpointGroupConfig);
+    constructor(
+    nodeId: number,
+    driver: Driver, config: EndpointGroupConfig);
+    protected readonly driver: Driver;
     readonly endpointIndices: readonly number[];
     getEndpoints(): Endpoint[];
     // (undocumented)
@@ -971,6 +974,7 @@ export class EndpointGroup {
     readonly isMainDevice: boolean;
     // (undocumented)
     readonly label: string;
+    readonly nodeId: number;
 }
 
 // Warning: (ae-missing-release-tag) "EndpointGroupDump" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1664,6 +1668,8 @@ export interface NodeDump {
     dsk?: string;
     // (undocumented)
     endpointGroups?: EndpointGroupDump[];
+    // (undocumented)
+    endpointLabel?: string;
     // Warning: (ae-forgotten-export) The symbol "EndpointDump" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -3405,7 +3411,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:1109:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/driver/Driver.ts:8125:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:383:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2608:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2609:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/rcp/RCPHost.ts:571:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:737:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:738:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
