@@ -103,55 +103,66 @@ function getAllConditions(
 		}
 	}
 
+	function walkCondition(item: { condition?: string }): void {
+		if (item.condition) walkLogic(parseLogic(item.condition));
+	}
+
+	function walkAssociations(
+		associations: ReadonlyMap<number, { condition?: string }> | undefined,
+	): void {
+		if (!associations) return;
+		for (const assoc of associations.values()) {
+			walkCondition(assoc);
+		}
+	}
+
+	function walkParamInformation(
+		paramInformation: ConditionalParamInfoMap | undefined,
+	): void {
+		if (!paramInformation) return;
+		for (const params of paramInformation.values()) {
+			for (const param of params) {
+				walkCondition(param);
+				for (const option of param.options) {
+					walkCondition(option);
+				}
+			}
+		}
+	}
+
 	for (const prop of ["manufacturer", "label", "description"] as const) {
 		const value = config[prop];
 		if (isArray(value)) {
 			for (const item of value) {
-				if (item.condition) {
-					const logic = parseLogic(item.condition);
-					walkLogic(logic);
-				}
+				walkCondition(item);
 			}
 		}
 	}
 
-	if (config.associations) {
-		for (const assoc of config.associations.values()) {
-			if (assoc.condition) {
-				const logic = parseLogic(assoc.condition);
-				walkLogic(logic);
-			}
+	walkAssociations(config.associations);
+	walkParamInformation(config.paramInformation);
+
+	if (config.endpoints) {
+		for (const endpoint of config.endpoints.values()) {
+			walkCondition(endpoint);
+			walkAssociations(endpoint.associations);
+			walkParamInformation(endpoint.paramInformation);
 		}
 	}
 
-	if (config.paramInformation) {
-		for (const params of config.paramInformation.values()) {
-			for (const param of params) {
-				if (param.condition) {
-					const logic = parseLogic(param.condition);
-					walkLogic(logic);
-				}
-				for (const option of param.options) {
-					if (option.condition) {
-						const logic = parseLogic(option.condition);
-						walkLogic(logic);
-					}
-				}
-			}
+	if (config.scenes) {
+		for (const scene of config.scenes.values()) {
+			walkCondition(scene);
 		}
 	}
 
 	if (config.compat) {
 		if (isArray(config.compat)) {
 			for (const compat of config.compat) {
-				if (compat.condition) {
-					const logic = parseLogic(compat.condition);
-					walkLogic(logic);
-				}
+				walkCondition(compat);
 			}
-		} else if (config.compat.condition) {
-			const logic = parseLogic(config.compat.condition);
-			walkLogic(logic);
+		} else {
+			walkCondition(config.compat);
 		}
 	}
 
@@ -169,14 +180,10 @@ function getAllConditions(
 
 			if (isArray(value)) {
 				for (const entry of value) {
-					if (entry.condition) {
-						const logic = parseLogic(entry.condition);
-						walkLogic(logic);
-					}
+					walkCondition(entry);
 				}
-			} else if (isObject(value) && value.condition) {
-				const logic = parseLogic(value.condition);
-				walkLogic(logic);
+			} else if (isObject(value)) {
+				walkCondition(value);
 			}
 		}
 	}
