@@ -115,30 +115,42 @@ function getAllConditions(
 		}
 	}
 
-	if (config.associations) {
-		for (const assoc of config.associations.values()) {
-			if (assoc.condition) {
-				const logic = parseLogic(assoc.condition);
-				walkLogic(logic);
+	function walkCondition(condition: string | undefined): void {
+		if (condition) walkLogic(parseLogic(condition));
+	}
+
+	function walkAssociations(
+		associations: ConditionalDeviceConfig["associations"],
+	): void {
+		for (const assoc of associations?.values() ?? []) {
+			walkCondition(assoc.condition);
+		}
+	}
+
+	function walkParamInformation(
+		paramInformation: ConditionalDeviceConfig["paramInformation"],
+	): void {
+		for (const params of paramInformation?.values() ?? []) {
+			for (const param of params) {
+				walkCondition(param.condition);
+				for (const option of param.options) {
+					walkCondition(option.condition);
+				}
 			}
 		}
 	}
 
-	if (config.paramInformation) {
-		for (const params of config.paramInformation.values()) {
-			for (const param of params) {
-				if (param.condition) {
-					const logic = parseLogic(param.condition);
-					walkLogic(logic);
-				}
-				for (const option of param.options) {
-					if (option.condition) {
-						const logic = parseLogic(option.condition);
-						walkLogic(logic);
-					}
-				}
-			}
-		}
+	walkAssociations(config.associations);
+	walkParamInformation(config.paramInformation);
+
+	for (const endpoint of config.endpoints?.values() ?? []) {
+		walkCondition(endpoint.condition);
+		walkAssociations(endpoint.associations);
+		walkParamInformation(endpoint.paramInformation);
+	}
+
+	for (const scene of config.scenes?.values() ?? []) {
+		walkCondition(scene.condition);
 	}
 
 	if (config.compat) {
