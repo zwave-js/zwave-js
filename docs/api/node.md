@@ -1239,17 +1239,8 @@ This information may change after an update of the config files. To check whethe
 readonly endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
 ```
 
-```ts
-const clamp = node.endpointGroups?.get(1);
-if (clamp) {
-	console.log(clamp.label);
-	for (const endpoint of clamp.getEndpoints()) {
-		console.log(endpoint.index, endpoint.getGroup() === clamp);
-	}
-}
-```
-
-Exposes the physical-part groups defined in the [device config](config-files/file-format.md#endpointgroups), or `undefined` if the device config defines none.
+Returns the device's endpoint groups as defined in the device config file, or `undefined` if none are defined.
+Endpoint groups semantically group the endpoints of a device, like the individual clamps of a multi-clamp energy meter.
 
 ```ts
 class EndpointGroup {
@@ -1257,16 +1248,12 @@ class EndpointGroup {
 	readonly label: string;
 	/** The indices of the endpoints in this group, including those the node does not have */
 	readonly endpointIndices: readonly number[];
-	/** Whether this group represents the device as a whole */
+	/** Whether this group represents the device as a whole. At most one group can have this set to true */
 	readonly isMainDevice: boolean;
 	/** Returns the endpoints of this group that exist on the node */
 	getEndpoints(): Endpoint[];
 }
 ```
-
-At most one group has `isMainDevice` set. It represents the device as a whole, like the total consumption of a multi-clamp energy meter. The root endpoint may be a member. Group IDs are local to the node. Conditional filtering can leave gaps in the IDs. The groups are recreated when the device config is loaded, so reacquire them after a re-interview or a device config reload.
-
-Grouping is metadata. Applications retain control over presentation and the treatment of ungrouped endpoints.
 
 ### `deviceDatabaseUrl`
 
