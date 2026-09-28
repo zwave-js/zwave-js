@@ -1134,6 +1134,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			this.supportsSecurity = undefined;
 			this.supportsBeaming = undefined;
 			this.deviceConfig = undefined;
+			this._endpointGroups = undefined;
 			this.currentDeviceConfigHash = undefined;
 			this.cachedDeviceConfigHash = undefined;
 			this._hasEmittedNoS0NetworkKeyError = false;
@@ -4553,6 +4554,17 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 				(ccId) => endpointDump.commandClasses[getCCName(ccId)]?.values,
 			);
 			ret.endpoints[endpoint.index] = endpointDump;
+		}
+
+		if (this.endpointGroups) {
+			ret.endpointGroups = [...this.endpointGroups.values()].map(
+				(group) => ({
+					id: group.id,
+					label: group.label,
+					isMainDevice: group.isMainDevice,
+					endpointIndices: [...group.endpointIndices],
+				}),
+			);
 		}
 
 		if (this.deviceConfig) {

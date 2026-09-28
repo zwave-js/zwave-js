@@ -31,8 +31,16 @@ export interface ValueDump {
 	internal?: boolean;
 }
 
+export interface EndpointGroupDump {
+	id: number;
+	label: string;
+	isMainDevice: boolean;
+	endpointIndices: number[];
+}
+
 export interface EndpointDump {
 	index: number;
+	endpointLabel?: string;
 	deviceClass: DeviceClassesDump | "unknown";
 	maySupportBasicCC: boolean;
 	commandClasses: Record<string, CommandClassDump>;
@@ -40,6 +48,7 @@ export interface EndpointDump {
 
 export interface NodeDump {
 	id: number;
+	endpointLabel?: string;
 	manufacturer?: string;
 	label?: string;
 	description?: string;
@@ -74,6 +83,7 @@ export interface NodeDump {
 	commandClasses: Record<string, CommandClassDump>;
 
 	endpoints?: Record<number, EndpointDump>;
+	endpointGroups?: EndpointGroupDump[];
 
 	configFileName?: string;
 	compatFlags?: JSONObject;

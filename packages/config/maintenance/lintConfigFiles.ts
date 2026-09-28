@@ -153,6 +153,10 @@ function getAllConditions(
 		walkCondition(scene.condition);
 	}
 
+	for (const group of config.endpointGroups?.values() ?? []) {
+		walkCondition(group.condition);
+	}
+
 	if (config.compat) {
 		if (isArray(config.compat)) {
 			for (const compat of config.compat) {
@@ -186,6 +190,41 @@ function getAllConditions(
 	}
 
 	return ret;
+}
+
+/**
+ * Returns the version after the given one, or `undefined` for 255.255.255.
+ * `>` excludes its boundary, so the range after it starts one version later.
+ * No previous version is needed for `<`, because it switches at the boundary itself, which is sampled already.
+ */
+function getNextVersion(version: string): string | undefined {
+	const parts = version.split(".").map(Number);
+	while (parts.length < 3) parts.push(0);
+	for (let i = 2; i >= 0; i--) {
+		if (parts[i] < 255) {
+			parts[i]++;
+			return parts.join(".");
+		}
+		parts[i] = 0;
+	}
+}
+
+/**
+ * Splits the versions into ranges in which every condition on that version has the same result,
+ * and returns the first version of each range.
+ */
+function getVersionRangeStarts(
+	boundaries: Iterable<string>,
+	min: string,
+): Set<string> {
+	const starts = new Set([min]);
+	for (const boundary of boundaries) {
+		// Each boundary is a range of its own, because `>=`, `<=` and `===` include it and `>` and `<` exclude it
+		starts.add(boundary);
+		const next = getNextVersion(boundary);
+		if (next) starts.add(next);
+	}
+	return starts;
 }
 
 function paramNoToString(parameter: number, valueBitMask?: number): string {
@@ -539,6 +578,17 @@ async function lintTemplates(
 async function lintDevices(): Promise<void> {
 	process.env.NODE_ENV = "test";
 
+	// Only files with SDK version samples mention the SDK version in their variants
+	let hasSdkVariants = false;
+	function formatVariant(variant: DeviceID): string {
+		const sdk = hasSdkVariants
+			? `, SDK ${variant.sdkVersion ?? "unknown"}`
+			: "";
+		return ` (Variant ${formatId(variant.manufacturerId)}:${formatId(
+			variant.productType,
+		)}:${formatId(variant.productId)}:${variant.firmwareVersion}${sdk})`;
+	}
+
 	const errors = new Map<string, string[]>();
 	function addError(
 		filename: string,
@@ -546,13 +596,7 @@ async function lintDevices(): Promise<void> {
 		variant?: DeviceID,
 		endpoint?: number,
 	): void {
-		if (variant) {
-			filename += ` (Variant ${formatId(
-				variant.manufacturerId,
-			)}:${formatId(variant.productType)}:${formatId(
-				variant.productId,
-			)}:${variant.firmwareVersion})`;
-		}
+		if (variant) filename += formatVariant(variant);
 		if (!errors.has(filename)) errors.set(filename, []);
 
 		const errorPrefix = !!endpoint ? `Endpoint ${endpoint}: ` : "";
@@ -566,13 +610,7 @@ async function lintDevices(): Promise<void> {
 		variant?: DeviceID,
 		endpoint?: number,
 	): void {
-		if (variant) {
-			filename += ` (Variant ${formatId(
-				variant.manufacturerId,
-			)}:${formatId(variant.productType)}:${formatId(
-				variant.productId,
-			)}:${variant.firmwareVersion})`;
-		}
+		if (variant) filename += formatVariant(variant);
 		if (!warnings.has(filename)) warnings.set(filename, []);
 
 		const errorPrefix = !!endpoint ? `Endpoint ${endpoint}: ` : "";
@@ -620,6 +658,7 @@ async function lintDevices(): Promise<void> {
 
 	for (const file of uniqueFiles) {
 		const filePath = path.join(rootDir, file);
+		hasSdkVariants = false;
 
 		// Try parsing the file
 		let conditionalConfig: ConditionalDeviceConfig;
@@ -652,25 +691,52 @@ async function lintDevices(): Promise<void> {
 		}
 		if (hasInvalidFirmwareVersion) continue;
 
-		if (conditions.size > 0) {
-			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
-			const fwVersions: Set<string> =
+		if (conditions.size > 0 || conditionalConfig.endpointGroups?.size) {
+			const { min, max } = conditionalConfig.firmwareVersion;
+			const boundaries: Set<string> =
 				conditions.get("firmwareVersion") ?? new Set();
-			if (fwVersions.size > 0) {
-				fwVersions.add(conditionalConfig.firmwareVersion.min);
-				fwVersions.add(conditionalConfig.firmwareVersion.max);
+			let fwVersions: Set<string>;
+			if (conditionalConfig.endpointGroups?.size) {
+				// Group memberships must not overlap anywhere in the firmware range
+				fwVersions = getVersionRangeStarts(boundaries, min);
+			} else if (boundaries.size > 0) {
+				// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
+				fwVersions = new Set([...boundaries, min, max]);
 			} else {
-				fwVersions.add(conditionalConfig.firmwareVersion.min);
+				fwVersions = new Set([min]);
 			}
 
-			// Combine each firmware version with every device ID defined in the file
+			for (const version of fwVersions) {
+				if (!versionInRange(version, min, max)) {
+					fwVersions.delete(version);
+				}
+			}
+
+			// The SDK version may be unknown at runtime
+			const sdkVersions = new Set<string | undefined>([undefined]);
+			const sdkBoundaries = conditions.get("sdkVersion");
+			if (conditionalConfig.endpointGroups?.size && sdkBoundaries?.size) {
+				// Group memberships must not overlap for any SDK version either
+				for (const version of getVersionRangeStarts(
+					sdkBoundaries,
+					"0.0",
+				)) {
+					sdkVersions.add(version);
+				}
+				hasSdkVariants = true;
+			}
+
+			// Combine each firmware and SDK version with every device ID defined in the file
 			for (const deviceId of conditionalConfig.devices) {
 				for (const firmwareVersion of fwVersions) {
-					variants.push({
-						manufacturerId: conditionalConfig.manufacturerId,
-						...deviceId,
-						firmwareVersion,
-					});
+					for (const sdkVersion of sdkVersions) {
+						variants.push({
+							manufacturerId: conditionalConfig.manufacturerId,
+							...deviceId,
+							firmwareVersion,
+							sdkVersion,
+						});
+					}
 				}
 			}
 		} else {
@@ -689,6 +755,34 @@ async function lintDevices(): Promise<void> {
 			}
 
 			// Validate that the file is semantically correct
+
+			if (config.endpointGroups) {
+				const membership = new Map<number, number>();
+				let mainDeviceGroup: number | undefined;
+				for (const [id, group] of config.endpointGroups) {
+					for (const endpoint of group.endpoints) {
+						const otherGroup = membership.get(endpoint);
+						if (otherGroup !== undefined) {
+							addError(
+								file,
+								`Endpoint ${endpoint} belongs to multiple active endpoint groups: ${otherGroup} and ${id}`,
+								variant,
+							);
+						}
+						membership.set(endpoint, id);
+					}
+					if (group.isMainDevice) {
+						if (mainDeviceGroup !== undefined) {
+							addError(
+								file,
+								`Multiple active endpoint groups are marked as the main device: ${mainDeviceGroup} and ${id}`,
+								variant,
+							);
+						}
+						mainDeviceGroup = id;
+					}
+				}
+			}
 
 			// By evaluating conditionals, we may end up with a file without manufacturer, label or description
 			if (config.manufacturer == undefined) {
@@ -796,6 +890,17 @@ async function lintDevices(): Promise<void> {
 					addError(
 						file,
 						`The maximum firmware version ${config.firmwareVersion.max} is invalid. Leading zeroes are not permitted.`,
+					);
+				}
+			}
+		}
+
+		if (conditionalConfig.endpointGroups) {
+			for (const [id, group] of conditionalConfig.endpointGroups) {
+				if (group.endpoints.length === 1) {
+					addWarning(
+						file,
+						`Endpoint group ${id} contains only one endpoint. Consider using an endpoint label.`,
 					);
 				}
 			}

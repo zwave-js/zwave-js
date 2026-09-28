@@ -1233,6 +1233,28 @@ Contains additional information about this node, loaded from a [config file](/de
 
 This information may change after an update of the config files. To check whether a change occurred that requires a re-interview, use the [`hasDeviceConfigChanged`](#hasdeviceconfigchanged) method.
 
+### `endpointGroups`
+
+```ts
+readonly endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
+```
+
+Returns the device's endpoint groups as defined in the device config file, or `undefined` if none are defined.
+Endpoint groups semantically group the endpoints of a device, like the individual clamps of a multi-clamp energy meter.
+
+```ts
+class EndpointGroup {
+	readonly id: number;
+	readonly label: string;
+	/** The indices of the endpoints in this group, including those the node does not have */
+	readonly endpointIndices: readonly number[];
+	/** Whether this group represents the device as a whole. At most one group can have this set to true */
+	readonly isMainDevice: boolean;
+	/** Returns the endpoints of this group that exist on the node */
+	getEndpoints(): Endpoint[];
+}
+```
+
 ### `deviceDatabaseUrl`
 
 ```ts

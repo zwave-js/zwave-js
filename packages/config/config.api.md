@@ -297,6 +297,8 @@ export class ConditionalDeviceConfig {
         productId: number;
     }[];
     // (undocumented)
+    readonly endpointGroups?: ReadonlyMap<number, ConditionalEndpointGroupConfig>;
+    // (undocumented)
     readonly endpoints?: ReadonlyMap<number, ConditionalEndpointConfig>;
     // (undocumented)
     evaluate(deviceId?: DeviceID): DeviceConfig;
@@ -362,6 +364,24 @@ export class ConditionalEndpointConfig implements ConditionalItem<EndpointConfig
     readonly label?: string;
     // (undocumented)
     readonly paramInformation?: ConditionalParamInfoMap;
+}
+
+// Warning: (ae-missing-release-tag) "ConditionalEndpointGroupConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export class ConditionalEndpointGroupConfig implements ConditionalItem<EndpointGroupConfig> {
+    constructor(filename: string, id: number, definition: unknown);
+    // (undocumented)
+    readonly condition?: string;
+    // (undocumented)
+    readonly endpoints: readonly number[];
+    // (undocumented)
+    evaluateCondition(deviceId?: DeviceID): EndpointGroupConfig | undefined;
+    // (undocumented)
+    readonly id: number;
+    readonly isMainDevice: boolean;
+    // (undocumented)
+    readonly label: string;
 }
 
 // Warning: (ae-missing-release-tag) "ConditionalParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -539,7 +559,7 @@ export class DeviceConfig {
     constructor(filename: string, isEmbedded: boolean, manufacturer: string, manufacturerId: number, label: string, description: string, devices: readonly {
         productType: number;
         productId: number;
-    }[], firmwareVersion: FirmwareVersionRange, preferred: boolean, endpoints?: ReadonlyMap<number, EndpointConfig>, associations?: ReadonlyMap<number, AssociationConfig>, scenes?: ReadonlyMap<number, SceneConfig>, paramInformation?: ParamInfoMap, proprietary?: Record<string, unknown>, compat?: CompatConfig, metadata?: DeviceMetadata);
+    }[], firmwareVersion: FirmwareVersionRange, preferred: boolean, endpoints?: ReadonlyMap<number, EndpointConfig>, associations?: ReadonlyMap<number, AssociationConfig>, scenes?: ReadonlyMap<number, SceneConfig>, paramInformation?: ParamInfoMap, proprietary?: Record<string, unknown>, compat?: CompatConfig, metadata?: DeviceMetadata, endpointGroups?: ReadonlyMap<number, EndpointGroupConfig>);
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
     static areHashesEqual(currentHash: BytesView, cachedHash: BytesView): boolean;
@@ -553,6 +573,8 @@ export class DeviceConfig {
         productType: number;
         productId: number;
     }[];
+    // (undocumented)
+    readonly endpointGroups?: ReadonlyMap<number, EndpointGroupConfig>;
     // (undocumented)
     readonly endpoints?: ReadonlyMap<number, EndpointConfig>;
     // (undocumented)
@@ -663,6 +685,11 @@ export type EndpointConfig = Omit<ConditionalEndpointConfig, "condition" | "eval
     paramInformation?: ParamInfoMap;
 };
 
+// Warning: (ae-missing-release-tag) "EndpointGroupConfig" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export type EndpointGroupConfig = Omit<ConditionalEndpointGroupConfig, "condition" | "evaluateCondition">;
+
 // Warning: (ae-missing-release-tag) "FirmwareVersionRange" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -735,7 +762,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.28.0";
+export const PACKAGE_VERSION = "15.30.0";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

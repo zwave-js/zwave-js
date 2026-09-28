@@ -55,6 +55,7 @@ import type { DeviceID } from '@zwave-js/config';
 import { Duration } from '@zwave-js/core';
 import { DurationLike } from '@zwave-js/core';
 import { DurationUnit } from '@zwave-js/core';
+import type { EndpointGroupConfig } from '@zwave-js/config';
 import { EndpointId } from '@zwave-js/core';
 import { EntryControlDataTypes } from '@zwave-js/cc';
 import { EntryControlEventTypes } from '@zwave-js/cc';
@@ -958,6 +959,38 @@ export type EditableZWaveOptions = Expand<Pick<PartialZWaveOptions, "attempts" |
 export class Endpoint extends EndpointMixins {
 }
 
+// Warning: (ae-missing-release-tag) "EndpointGroup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class EndpointGroup {
+    constructor(
+    nodeId: number,
+    driver: Driver, config: EndpointGroupConfig);
+    protected readonly driver: Driver;
+    readonly endpointIndices: readonly number[];
+    getEndpoints(): Endpoint[];
+    // (undocumented)
+    readonly id: number;
+    readonly isMainDevice: boolean;
+    // (undocumented)
+    readonly label: string;
+    readonly nodeId: number;
+}
+
+// Warning: (ae-missing-release-tag) "EndpointGroupDump" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EndpointGroupDump {
+    // (undocumented)
+    endpointIndices: number[];
+    // (undocumented)
+    id: number;
+    // (undocumented)
+    isMainDevice: boolean;
+    // (undocumented)
+    label: string;
+}
+
 export { EntryControlDataTypes }
 
 export { EntryControlEventTypes }
@@ -1633,6 +1666,10 @@ export interface NodeDump {
     deviceClass: DeviceClassesDump | "unknown";
     // (undocumented)
     dsk?: string;
+    // (undocumented)
+    endpointGroups?: EndpointGroupDump[];
+    // (undocumented)
+    endpointLabel?: string;
     // Warning: (ae-forgotten-export) The symbol "EndpointDump" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -3374,7 +3411,7 @@ export * from "@zwave-js/cc";
 // src/lib/driver/Driver.ts:1109:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/driver/Driver.ts:8125:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:383:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2608:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2609:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/rcp/RCPHost.ts:571:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:737:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:738:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen

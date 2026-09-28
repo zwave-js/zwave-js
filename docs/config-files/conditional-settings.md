@@ -21,6 +21,7 @@ You can use `"$if"` in the following locations:
 
 - In the top-level `manufacturer`, `label` or `description` properties
 - Inside endpoint definitions
+- Inside endpoint group definitions
 - Inside association groups
 - Inside config parameters
 - Inside config parameter options

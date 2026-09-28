@@ -86,6 +86,14 @@ supportsCCAPI(cc: CommandClasses): boolean
 
 Allows checking whether a CC API is supported before calling it with [`invokeCCAPI`](#invokeCCAPI)
 
+### `getGroup`
+
+```ts
+getGroup(): EndpointGroup | undefined;
+```
+
+Returns the [endpoint group](api/node.md#endpointgroups) containing this endpoint, or `undefined` if the endpoint is ungrouped.
+
 ## Endpoint properties
 
 ### `nodeId`
