@@ -4,6 +4,16 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Support grouping endpoints through configuration files (#9205)
+
+### Bugfixes
+* Added lint rules for correct firmware version formatting, fix conditions that never matched (#9279)
+
+### Changes under the hood
+* Config file lints now check all possible firmware and SDK version ranges config files with `$if` conditions (#9282)
+
 ## 15.30.0 (2026-09-28)
 ### Features
 * Implemented parsing and serialization for several commands that normally don't appear in everyday communication
