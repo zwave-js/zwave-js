@@ -978,7 +978,7 @@ export class EndpointGroup {
 // @public (undocumented)
 export interface EndpointGroupDump {
     // (undocumented)
-    endpoints: number[];
+    endpointIndices: number[];
     // (undocumented)
     id: number;
     // (undocumented)
@@ -1662,6 +1662,8 @@ export interface NodeDump {
     deviceClass: DeviceClassesDump | "unknown";
     // (undocumented)
     dsk?: string;
+    // (undocumented)
+    endpointGroups?: EndpointGroupDump[];
     // Warning: (ae-forgotten-export) The symbol "EndpointDump" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1676,8 +1678,6 @@ export interface NodeDump {
         firmwareVersion: string;
         hardwareVersion?: number;
     };
-    // (undocumented)
-    group?: EndpointGroupDump;
     // (undocumented)
     id: number;
     // (undocumented)

@@ -94,15 +94,7 @@ getGroup(): EndpointGroup | undefined;
 
 Returns the [endpoint group](api/node.md#endpointgroups) containing this endpoint, or `undefined` if the endpoint is ungrouped.
 
-```ts
-const group = node.getEndpoint(1)?.getGroup();
-if (group) {
-	console.log(group === node.endpointGroups?.get(group.id)); // true
-	console.log(group.endpointIndices);
-}
-```
-
-The root endpoint can also belong to a group. Grouping leaves endpoint addressing, values, and command-class APIs unchanged.
+Grouping leaves endpoint addressing, values, and command-class APIs unchanged.
 
 ## Endpoint properties
 

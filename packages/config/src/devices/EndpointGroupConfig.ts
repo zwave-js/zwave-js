@@ -34,7 +34,7 @@ Endpoint group ${id} is not an object`,
 			throwInvalidConfig(
 				"device",
 				`packages/config/config/devices/${filename}:
-Endpoint group ${id}: label must be a nonblank string`,
+Endpoint group ${id}: label is not a string`,
 			);
 		}
 		this.label = definition.label;
@@ -46,14 +46,14 @@ Endpoint group ${id}: label must be a nonblank string`,
 				(endpoint: unknown): endpoint is number =>
 					typeof endpoint === "number"
 					&& Number.isInteger(endpoint)
-					&& endpoint >= 0
+					&& endpoint >= 1
 					&& endpoint <= 127,
 			)
 		) {
 			throwInvalidConfig(
 				"device",
 				`packages/config/config/devices/${filename}:
-Endpoint group ${id}: endpoints must be a nonempty array of integer endpoint indices between 0 and 127`,
+Endpoint group ${id}: endpoints must be a non-empty array of endpoint indices from 1 to 127`,
 			);
 		}
 		if (
@@ -62,7 +62,7 @@ Endpoint group ${id}: endpoints must be a nonempty array of integer endpoint ind
 			throwInvalidConfig(
 				"device",
 				`packages/config/config/devices/${filename}:
-Endpoint group ${id}: endpoints must not contain duplicate indices`,
+Endpoint group ${id}: endpoints contains duplicates`,
 			);
 		}
 		this.endpoints = [...definition.endpoints];
@@ -74,7 +74,7 @@ Endpoint group ${id}: endpoints must not contain duplicate indices`,
 			throwInvalidConfig(
 				"device",
 				`packages/config/config/devices/${filename}:
-Endpoint group ${id}: isMainDevice must be a boolean`,
+Endpoint group ${id}: isMainDevice is not a boolean`,
 			);
 		}
 		this.isMainDevice = !!definition.isMainDevice;
@@ -104,45 +104,3 @@ export type EndpointGroupConfig = Omit<
 	ConditionalEndpointGroupConfig,
 	"condition" | "evaluateCondition"
 >;
-
-export interface EndpointGroupConflict {
-	keptGroup: number;
-	droppedGroup: number;
-	/** The endpoint both groups contain, or `undefined` if both groups are marked as the main device */
-	endpoint?: number;
-}
-
-/**
- * Keeps groups in ID order and drops each group that conflicts with a group kept before it.
- * Two groups conflict when they share an endpoint or are both marked as the main device.
- */
-export function dropConflictingEndpointGroups(
-	groups: ReadonlyMap<number, EndpointGroupConfig>,
-): {
-	groups: Map<number, EndpointGroupConfig>;
-	conflicts: EndpointGroupConflict[];
-} {
-	const kept = new Map<number, EndpointGroupConfig>();
-	const conflicts: EndpointGroupConflict[] = [];
-	const membership = new Map<number, number>();
-	let mainDeviceGroup: number | undefined;
-	for (const [id, group] of [...groups].toSorted(([a], [b]) => a - b)) {
-		const endpoint = group.endpoints.find((ep) => membership.has(ep));
-		if (endpoint !== undefined) {
-			conflicts.push({
-				endpoint,
-				keptGroup: membership.get(endpoint)!,
-				droppedGroup: id,
-			});
-			continue;
-		}
-		if (group.isMainDevice && mainDeviceGroup !== undefined) {
-			conflicts.push({ keptGroup: mainDeviceGroup, droppedGroup: id });
-			continue;
-		}
-		if (group.isMainDevice) mainDeviceGroup = id;
-		for (const ep of group.endpoints) membership.set(ep, id);
-		kept.set(id, group);
-	}
-	return { groups: kept, conflicts };
-}

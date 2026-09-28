@@ -31,7 +31,6 @@ import {
 	ConditionalDeviceConfig,
 	type DeviceConfig,
 } from "../src/devices/DeviceConfig.js";
-import { dropConflictingEndpointGroups } from "../src/devices/EndpointGroupConfig.js";
 import type {
 	ConditionalParamInfoMap,
 	ParamInfoMap,
@@ -193,23 +192,34 @@ function getAllConditions(
 	return ret;
 }
 
-function addNextVersions(
-	versions: Set<string>,
-	maxComponent: number = Infinity,
-): void {
-	const boundaries = [...versions];
-	for (const version of boundaries) {
-		const parts = version.split(".").map(Number);
-		while (parts.length < 3) parts.push(0);
-		for (let i = 2; i >= 0; i--) {
-			if (parts[i] < maxComponent) {
-				parts[i]++;
-				versions.add(parts.join("."));
-				break;
-			}
-			parts[i] = 0;
+function getNextFirmwareVersion(version: string): string | undefined {
+	const parts = version.split(".").map(Number);
+	while (parts.length < 3) parts.push(0);
+	for (let i = 2; i >= 0; i--) {
+		if (parts[i] < 255) {
+			parts[i]++;
+			return parts.join(".");
 		}
+		parts[i] = 0;
 	}
+}
+
+/**
+ * Splits the firmware versions into ranges in which every firmware condition has the same result,
+ * and returns the first version of each range.
+ */
+function getFirmwareRangeStarts(
+	boundaries: Iterable<string>,
+	min: string,
+): Set<string> {
+	const starts = new Set([min]);
+	for (const boundary of boundaries) {
+		// Each boundary is a range of its own, because `>=`, `<=` and `===` include it and `>` and `<` exclude it
+		starts.add(boundary);
+		const next = getNextFirmwareVersion(boundary);
+		if (next) starts.add(next);
+	}
+	return starts;
 }
 
 function paramNoToString(parameter: number, valueBitMask?: number): string {
@@ -575,9 +585,7 @@ async function lintDevices(): Promise<void> {
 				variant.manufacturerId,
 			)}:${formatId(variant.productType)}:${formatId(
 				variant.productId,
-			)}:${variant.firmwareVersion}${
-				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
-			})`;
+			)}:${variant.firmwareVersion})`;
 		}
 		if (!errors.has(filename)) errors.set(filename, []);
 
@@ -597,9 +605,7 @@ async function lintDevices(): Promise<void> {
 				variant.manufacturerId,
 			)}:${formatId(variant.productType)}:${formatId(
 				variant.productId,
-			)}:${variant.firmwareVersion}${
-				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
-			})`;
+			)}:${variant.firmwareVersion})`;
 		}
 		if (!warnings.has(filename)) warnings.set(filename, []);
 
@@ -681,39 +687,22 @@ async function lintDevices(): Promise<void> {
 		if (hasInvalidFirmwareVersion) continue;
 
 		if (conditions.size > 0 || conditionalConfig.endpointGroups?.size) {
-			// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
-			const fwVersions: Set<string> =
+			const { min, max } = conditionalConfig.firmwareVersion;
+			const boundaries: Set<string> =
 				conditions.get("firmwareVersion") ?? new Set();
-			if (fwVersions.size > 0) {
-				fwVersions.add(conditionalConfig.firmwareVersion.min);
-				fwVersions.add(conditionalConfig.firmwareVersion.max);
-			} else {
-				fwVersions.add(conditionalConfig.firmwareVersion.min);
-			}
-
-			const sdkVersions = new Set<string | undefined>([undefined]);
+			let fwVersions: Set<string>;
 			if (conditionalConfig.endpointGroups?.size) {
-				// Strict comparisons can overlap between their firmware boundaries
-				addNextVersions(fwVersions, 255);
-
-				const sdkConditions = conditions.get("sdkVersion");
-				if (sdkConditions?.size) {
-					sdkConditions.add("0.0");
-					addNextVersions(sdkConditions);
-					for (const version of sdkConditions) {
-						sdkVersions.add(version);
-					}
-				}
+				// Group memberships must not overlap anywhere in the firmware range
+				fwVersions = getFirmwareRangeStarts(boundaries, min);
+			} else if (boundaries.size > 0) {
+				// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
+				fwVersions = new Set([...boundaries, min, max]);
+			} else {
+				fwVersions = new Set([min]);
 			}
 
 			for (const version of fwVersions) {
-				if (
-					!versionInRange(
-						version,
-						conditionalConfig.firmwareVersion.min,
-						conditionalConfig.firmwareVersion.max,
-					)
-				) {
+				if (!versionInRange(version, min, max)) {
 					fwVersions.delete(version);
 				}
 			}
@@ -721,14 +710,11 @@ async function lintDevices(): Promise<void> {
 			// Combine each firmware version with every device ID defined in the file
 			for (const deviceId of conditionalConfig.devices) {
 				for (const firmwareVersion of fwVersions) {
-					for (const sdkVersion of sdkVersions) {
-						variants.push({
-							manufacturerId: conditionalConfig.manufacturerId,
-							...deviceId,
-							firmwareVersion,
-							...(sdkVersion !== undefined ? { sdkVersion } : {}),
-						});
-					}
+					variants.push({
+						manufacturerId: conditionalConfig.manufacturerId,
+						...deviceId,
+						firmwareVersion,
+					});
 				}
 			}
 		} else {
@@ -749,16 +735,30 @@ async function lintDevices(): Promise<void> {
 			// Validate that the file is semantically correct
 
 			if (config.endpointGroups) {
-				for (const conflict of dropConflictingEndpointGroups(
-					config.endpointGroups,
-				).conflicts) {
-					addError(
-						file,
-						conflict.endpoint !== undefined
-							? `Endpoint ${conflict.endpoint} belongs to multiple active endpoint groups: ${conflict.keptGroup} and ${conflict.droppedGroup}`
-							: `Multiple active endpoint groups are marked as the main device: ${conflict.keptGroup} and ${conflict.droppedGroup}`,
-						variant,
-					);
+				const membership = new Map<number, number>();
+				let mainDeviceGroup: number | undefined;
+				for (const [id, group] of config.endpointGroups) {
+					for (const endpoint of group.endpoints) {
+						const otherGroup = membership.get(endpoint);
+						if (otherGroup !== undefined) {
+							addError(
+								file,
+								`Endpoint ${endpoint} belongs to multiple active endpoint groups: ${otherGroup} and ${id}`,
+								variant,
+							);
+						}
+						membership.set(endpoint, id);
+					}
+					if (group.isMainDevice) {
+						if (mainDeviceGroup !== undefined) {
+							addError(
+								file,
+								`Multiple active endpoint groups are marked as the main device: ${mainDeviceGroup} and ${id}`,
+								variant,
+							);
+						}
+						mainDeviceGroup = id;
+					}
 				}
 			}
 

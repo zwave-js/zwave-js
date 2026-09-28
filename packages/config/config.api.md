@@ -672,14 +672,6 @@ export interface DeviceMetadata {
     wakeup?: string;
 }
 
-// Warning: (ae-missing-release-tag) "dropConflictingEndpointGroups" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public
-export function dropConflictingEndpointGroups(groups: ReadonlyMap<number, EndpointGroupConfig>): {
-    groups: Map<number, EndpointGroupConfig>;
-    conflicts: EndpointGroupConflict[];
-};
-
 // Warning: (ae-missing-release-tag) "embeddedDevicesDir" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -697,17 +689,6 @@ export type EndpointConfig = Omit<ConditionalEndpointConfig, "condition" | "eval
 //
 // @public (undocumented)
 export type EndpointGroupConfig = Omit<ConditionalEndpointGroupConfig, "condition" | "evaluateCondition">;
-
-// Warning: (ae-missing-release-tag) "EndpointGroupConflict" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
-//
-// @public (undocumented)
-export interface EndpointGroupConflict {
-    // (undocumented)
-    droppedGroup: number;
-    endpoint?: number;
-    // (undocumented)
-    keptGroup: number;
-}
 
 // Warning: (ae-missing-release-tag) "FirmwareVersionRange" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -781,7 +762,7 @@ export type ManufacturersMap = Map<number, string>;
 // Warning: (ae-missing-release-tag) "PACKAGE_VERSION" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
-export const PACKAGE_VERSION = "15.28.0";
+export const PACKAGE_VERSION = "15.30.0";
 
 // Warning: (ae-missing-release-tag) "ParamInfoMap" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //

@@ -231,7 +231,7 @@ function groupConfig(
 		{ label: string; endpoints: number[]; isMainDevice?: boolean }
 	> = {
 		"1": { label: "Clamp 1", endpoints: [1, 2] },
-		"2": { label: "Mains", endpoints: [0, 3], isMainDevice: true },
+		"2": { label: "Mains", endpoints: [3, 4], isMainDevice: true },
 	},
 ) {
 	return new ConditionalDeviceConfig("test.json", true, {
@@ -258,18 +258,18 @@ function nodeWithGroups(context: LocalTestContext["context"]): ZWaveNode {
 	context.node = node;
 	context.driver.controller["_nodes"].set(node.id, node);
 	node["deviceConfig"] = groupConfig();
-	setEndpointIndizes(context.driver, node.id, [1, 2, 3, 4]);
+	setEndpointIndizes(context.driver, node.id, [1, 2, 3, 4, 5]);
 	return node;
 }
 
-test.sequential("endpoint groups resolve their existing endpoints, including the root", ({
+test.sequential("endpoint groups resolve their existing endpoints", ({
 	context,
 	expect,
 }) => {
 	const node = nodeWithGroups(context);
 	node["deviceConfig"] = groupConfig({
 		"1": { label: "Clamp 1", endpoints: [1, 2, 9] },
-		"2": { label: "Mains", endpoints: [0, 3], isMainDevice: true },
+		"2": { label: "Mains", endpoints: [3, 4], isMainDevice: true },
 	});
 	setMultiChannelInterviewComplete(context.driver, node.id, true);
 	const groups = node.endpointGroups!;
@@ -282,7 +282,10 @@ test.sequential("endpoint groups resolve their existing endpoints, including the
 		node.getEndpoint(1),
 		node.getEndpoint(2),
 	]);
-	expect(groups.get(2)?.getEndpoints()).toEqual([node, node.getEndpoint(3)]);
+	expect(groups.get(2)?.getEndpoints()).toEqual([
+		node.getEndpoint(3),
+		node.getEndpoint(4),
+	]);
 });
 
 test.sequential("getGroup() returns the group containing the endpoint", ({
@@ -294,30 +297,9 @@ test.sequential("getGroup() returns the group containing the endpoint", ({
 	const groups = node.endpointGroups!;
 	expect(node.getEndpoint(1)?.getGroup()).toBe(groups.get(1));
 	expect(node.getEndpoint(2)?.getGroup()).toBe(groups.get(1));
-	expect(node.getGroup()).toBe(groups.get(2));
-	expect(node.getEndpoint(4)?.getGroup()).toBeUndefined();
-});
-
-test.sequential("overlapping endpoint groups keep the lower group and log a warning", ({
-	context,
-	expect,
-}) => {
-	const node = nodeWithGroups(context);
-	const log = vi
-		.spyOn(context.driver.controllerLog, "logNode")
-		.mockImplementation(() => {});
-	node["deviceConfig"] = groupConfig({
-		"1": { label: "Clamp 1", endpoints: [1, 2] },
-		"2": { label: "Clamp 2", endpoints: [2, 3] },
-	});
-	expect([...node.endpointGroups!.keys()]).toEqual([1]);
-	expect(log.mock.calls).toEqual([
-		[
-			node.id,
-			"Ignoring endpoint group 2 because endpoint 2 also belongs to group 1",
-			"warn",
-		],
-	]);
+	expect(node.getEndpoint(3)?.getGroup()).toBe(groups.get(2));
+	expect(node.getGroup()).toBeUndefined();
+	expect(node.getEndpoint(5)?.getGroup()).toBeUndefined();
 });
 
 test.sequential("endpoint groups follow device config changes", ({
@@ -355,21 +337,19 @@ test.sequential("endpoint groups and dumps serialize without cycles", ({
 
 	const dump = node.getEndpoint(1)!.createEndpointDump();
 	expect(dump.endpointLabel).toBe("Consumption");
-	expect(dump.group).toEqual({
-		id: 1,
-		label: "Clamp 1",
-		endpoints: [1, 2],
-		isMainDevice: false,
-	});
-	expect(JSON.parse(JSON.stringify(dump))).toEqual(dump);
+	expect(dump).not.toHaveProperty("group");
 
 	const nodeDump = node.createDump();
 	expect(nodeDump).not.toHaveProperty("endpointLabel");
-	expect(nodeDump.group).toEqual({
-		id: 2,
-		label: "Mains",
-		endpoints: [0, 3],
-		isMainDevice: true,
-	});
+	expect(nodeDump.endpointGroups).toEqual([
+		{
+			id: 1,
+			label: "Clamp 1",
+			isMainDevice: false,
+			endpointIndices: [1, 2],
+		},
+		{ id: 2, label: "Mains", isMainDevice: true, endpointIndices: [3, 4] },
+	]);
+	expect(Object.keys(nodeDump.endpoints!)).toEqual(["1", "2", "3", "4", "5"]);
 	expect(() => JSON.stringify(nodeDump)).not.toThrow();
 });

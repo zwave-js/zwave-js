@@ -592,7 +592,7 @@ endpointGroups is not an object`,
 					throwInvalidConfig(
 						"device",
 						`packages/config/config/devices/${filename}:
-invalid endpoint group id "${key}" in endpointGroups - must be a positive safe integer without leading zeros`,
+found invalid group id "${key}" in endpointGroups`,
 					);
 				}
 				endpointGroups.set(
@@ -608,7 +608,7 @@ invalid endpoint group id "${key}" in endpointGroups - must be a positive safe i
 				throwInvalidConfig(
 					"device",
 					`packages/config/config/devices/${filename}:
-endpointGroups IDs must start at 1 without gaps`,
+endpointGroups must be numbered consecutively, starting at 1`,
 				);
 			}
 			this.endpointGroups = endpointGroups;

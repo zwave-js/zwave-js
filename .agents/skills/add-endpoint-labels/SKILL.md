@@ -90,10 +90,10 @@ When the documentation explicitly identifies several endpoints as the same physi
 
 - **Evidence:** Use an explicit documented physical relationship. Matching device classes, labels, or adjacent indices are insufficient.
 - **IDs:** Start at `"1"` without gaps in the authored file.
-- **Members:** Include each endpoint at most once among active groups. Root endpoint 0 is allowed. Mutually exclusive `$if` groups may share indices.
+- **Members:** Include each endpoint at most once among active groups. Root endpoint 0 cannot be a member. Mutually exclusive `$if` groups may share indices.
 - **Labels:** Name the physical part using the endpoint-label style rules.
-- **Singletons:** A one-member group is allowed with a lint warning.
-- **Main device:** Set `"isMainDevice": true` on the one group that documentation describes as the whole device, e.g. the total consumption of a multi-clamp meter.
+- **Singletons:** Use one-member groups only in edge cases, like conditional endpoints. They cause a lint warning.
+- **Main device (optional):** Most groups omit `isMainDevice`. Set `"isMainDevice": true` only on the one group that documentation describes as the whole device, e.g. the total consumption of a multi-clamp meter.
 - **Independence:** Grouped endpoints require no label or entry in `endpoints`. Adding only `endpointGroups` requires no root-association migration.
 
 Leave undocumented relationships ungrouped.

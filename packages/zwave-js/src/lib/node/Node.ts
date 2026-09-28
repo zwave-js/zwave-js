@@ -4556,6 +4556,17 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			ret.endpoints[endpoint.index] = endpointDump;
 		}
 
+		if (this.endpointGroups) {
+			ret.endpointGroups = [...this.endpointGroups.values()].map(
+				(group) => ({
+					id: group.id,
+					label: group.label,
+					isMainDevice: group.isMainDevice,
+					endpointIndices: [...group.endpointIndices],
+				}),
+			);
+		}
+
 		if (this.deviceConfig) {
 			const relativePath = path.relative(
 				embeddedDevicesDir,

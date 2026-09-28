@@ -507,18 +507,9 @@ export class EndpointBase
 	 * Returns a dump of this endpoint's information for debugging purposes
 	 */
 	public createEndpointDump(): EndpointDump {
-		const group = this.getGroup();
 		const ret: EndpointDump = {
 			index: this.index,
 			endpointLabel: this.endpointLabel,
-			group: group
-				? {
-						id: group.id,
-						label: group.label,
-						endpoints: [...group.endpointIndices],
-						isMainDevice: group.isMainDevice,
-					}
-				: undefined,
 			deviceClass: "unknown",
 			commandClasses: {},
 			maySupportBasicCC: this.maySupportBasicCC(),

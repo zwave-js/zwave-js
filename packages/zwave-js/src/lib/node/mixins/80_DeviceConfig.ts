@@ -1,10 +1,5 @@
 import { refreshConfigParamMetadataFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
-import {
-	DeviceConfig,
-	type EndpointGroupConfig,
-	dropConflictingEndpointGroups,
-	parseDeviceConfigHash,
-} from "@zwave-js/config";
+import { DeviceConfig, parseDeviceConfigHash } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 
@@ -70,7 +65,12 @@ export abstract class DeviceConfigMixin
 		this._deviceConfig = value;
 		this._endpointGroups =
 			value?.endpointGroups
-			&& this.createEndpointGroups(value.endpointGroups);
+			&& new Map(
+				[...value.endpointGroups].map(([id, config]) => [
+					id,
+					new EndpointGroup(this, config),
+				]),
+			);
 	}
 
 	private _endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
@@ -80,27 +80,6 @@ export abstract class DeviceConfigMixin
 		| ReadonlyMap<number, EndpointGroup>
 		| undefined {
 		return this._endpointGroups;
-	}
-
-	private createEndpointGroups(
-		configs: ReadonlyMap<number, EndpointGroupConfig>,
-	): Map<number, EndpointGroup> {
-		const { groups, conflicts } = dropConflictingEndpointGroups(configs);
-		for (const conflict of conflicts) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				conflict.endpoint !== undefined
-					? `Ignoring endpoint group ${conflict.droppedGroup} because endpoint ${conflict.endpoint} also belongs to group ${conflict.keptGroup}`
-					: `Ignoring endpoint group ${conflict.droppedGroup} because group ${conflict.keptGroup} is already marked as the main device`,
-				"warn",
-			);
-		}
-		return new Map(
-			[...groups].map(([id, config]) => [
-				id,
-				new EndpointGroup(this, config),
-			]),
-		);
 	}
 
 	/**
