@@ -4,6 +4,25 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Features
+* Implemented parsing and serialization for several commands that normally don't appear in everyday communication
+
+### Bugfixes
+* Enforce the Thermostat Mode Set manufacturer-data byte limit (#9222)
+
+### Config file changes
+* Add manual refresh delay for Leviton DZ6HD (#9272)
+* Correct Shelly Wave Shutter moving-time units (#9269)
+* Polish Aeotec ZWA056 config file (#9213)
+* Correct acceleration sensor unit factor for Aeotec ZWA055 (#9258)
+* Add Aeotec ZWA066 MultiSensor 8 (#9214)
+* Add Shenzhen Neo NAS-WS02Z Water Sensor (#8777)
+* Add Nice FGD-223 Double Dimmer-Control (#9212)
+* Fix several Qubino ZMNHTD parameter errors (#9256)
+* Change Qubino ZMNHTD parameter 40 value size to 1 (#9250)
+* Map root reports to endpoint 1 on Remotec ZXT-800, add fingerprint (#9215)
+
 ## 15.29.0 (2026-09-10)
 ### Features
 * Redundant and superseded commands are now automatically deduplicated. The corresponding API calls can now be aborted or will share a single transaction, depending on the specific situation (#9136, #9137)
