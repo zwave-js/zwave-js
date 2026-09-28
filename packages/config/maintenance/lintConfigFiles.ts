@@ -193,11 +193,11 @@ function getAllConditions(
 }
 
 /**
- * Returns the firmware version after the given one, or `undefined` for 255.255.255.
+ * Returns the version after the given one, or `undefined` for 255.255.255.
  * `>` excludes its boundary, so the range after it starts one version later.
  * No previous version is needed for `<`, because it switches at the boundary itself, which is sampled already.
  */
-function getNextFirmwareVersion(version: string): string | undefined {
+function getNextVersion(version: string): string | undefined {
 	const parts = version.split(".").map(Number);
 	while (parts.length < 3) parts.push(0);
 	for (let i = 2; i >= 0; i--) {
@@ -210,10 +210,10 @@ function getNextFirmwareVersion(version: string): string | undefined {
 }
 
 /**
- * Splits the firmware versions into ranges in which every firmware condition has the same result,
+ * Splits the versions into ranges in which every condition on that version has the same result,
  * and returns the first version of each range.
  */
-function getFirmwareRangeStarts(
+function getVersionRangeStarts(
 	boundaries: Iterable<string>,
 	min: string,
 ): Set<string> {
@@ -221,7 +221,7 @@ function getFirmwareRangeStarts(
 	for (const boundary of boundaries) {
 		// Each boundary is a range of its own, because `>=`, `<=` and `===` include it and `>` and `<` exclude it
 		starts.add(boundary);
-		const next = getNextFirmwareVersion(boundary);
+		const next = getNextVersion(boundary);
 		if (next) starts.add(next);
 	}
 	return starts;
@@ -590,7 +590,9 @@ async function lintDevices(): Promise<void> {
 				variant.manufacturerId,
 			)}:${formatId(variant.productType)}:${formatId(
 				variant.productId,
-			)}:${variant.firmwareVersion})`;
+			)}:${variant.firmwareVersion}${
+				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
+			})`;
 		}
 		if (!errors.has(filename)) errors.set(filename, []);
 
@@ -610,7 +612,9 @@ async function lintDevices(): Promise<void> {
 				variant.manufacturerId,
 			)}:${formatId(variant.productType)}:${formatId(
 				variant.productId,
-			)}:${variant.firmwareVersion})`;
+			)}:${variant.firmwareVersion}${
+				variant.sdkVersion ? `, SDK ${variant.sdkVersion}` : ""
+			})`;
 		}
 		if (!warnings.has(filename)) warnings.set(filename, []);
 
@@ -698,7 +702,7 @@ async function lintDevices(): Promise<void> {
 			let fwVersions: Set<string>;
 			if (conditionalConfig.endpointGroups?.size) {
 				// Group memberships must not overlap anywhere in the firmware range
-				fwVersions = getFirmwareRangeStarts(boundaries, min);
+				fwVersions = getVersionRangeStarts(boundaries, min);
 			} else if (boundaries.size > 0) {
 				// If there is at least one condition, check the firmware limits too. Otherwise the minimum is enough
 				fwVersions = new Set([...boundaries, min, max]);
@@ -712,14 +716,30 @@ async function lintDevices(): Promise<void> {
 				}
 			}
 
-			// Combine each firmware version with every device ID defined in the file
+			// The SDK version may be unknown at runtime
+			const sdkVersions = new Set<string | undefined>([undefined]);
+			const sdkBoundaries = conditions.get("sdkVersion");
+			if (conditionalConfig.endpointGroups?.size && sdkBoundaries?.size) {
+				// Group memberships must not overlap for any SDK version either
+				for (const version of getVersionRangeStarts(
+					sdkBoundaries,
+					"0.0",
+				)) {
+					sdkVersions.add(version);
+				}
+			}
+
+			// Combine each firmware and SDK version with every device ID defined in the file
 			for (const deviceId of conditionalConfig.devices) {
 				for (const firmwareVersion of fwVersions) {
-					variants.push({
-						manufacturerId: conditionalConfig.manufacturerId,
-						...deviceId,
-						firmwareVersion,
-					});
+					for (const sdkVersion of sdkVersions) {
+						variants.push({
+							manufacturerId: conditionalConfig.manufacturerId,
+							...deviceId,
+							firmwareVersion,
+							sdkVersion,
+						});
+					}
 				}
 			}
 		} else {
