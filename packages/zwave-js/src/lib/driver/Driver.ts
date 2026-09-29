@@ -280,7 +280,9 @@ import {
 	serialAPICommandErrorToZWaveError,
 } from "./StateMachineShared.js";
 import {
+	type Task,
 	type TaskBuilder,
+	type TaskHandle,
 	TaskInterruptBehavior,
 	TaskPriority,
 	TaskScheduler,
@@ -3593,8 +3595,11 @@ export class Driver
 		}
 	}
 
-	/** Soft-reset the Z-Wave module and restart the driver instance */
-	public async softResetAndRestart(): Promise<void> {
+	/**
+	 * Soft-reset the Z-Wave module and restart the driver instance.
+	 * @param callingTask The task that calls this method. It survives the restart, all other tasks are removed.
+	 */
+	public async softResetAndRestart(callingTask?: TaskHandle): Promise<void> {
 		this.controllerLog.print("Performing soft reset...");
 
 		try {
@@ -3620,7 +3625,7 @@ export class Driver
 		this.isSoftResetting = false;
 
 		// Clean up and interview the controller again
-		await this.destroyController();
+		await this.destroyController((task) => task === callingTask);
 		void this.initializeControllerAndNodes();
 	}
 
@@ -3926,7 +3931,7 @@ export class Driver
 	/** Cleanly destroy the controller instance, but not the entire driver */
 	// FIXME: Too much overlap with destroy()
 	private async destroyController(
-		keepTask?: (task: { tag?: { id: string } }) => boolean,
+		keepTask?: (task: Task<unknown>) => boolean,
 	): Promise<void> {
 		// Avoid re-transmissions etc. communicating with other applications
 		// or the bootloader
@@ -9165,7 +9170,7 @@ ${handlers.length} left`,
 			group: { id: "controller-exclusive" },
 			// An interrupted update may leave the controller in recovery mode
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* firmwareUpdateOTWTask() {
+			task: async function* firmwareUpdateOTWTask(thisTask) {
 				// When in bootloader mode, we can use the 700 series update method
 				if (self.mode === DriverMode.Bootloader) {
 					return yield* self.firmwareUpdateOTW700(data);
@@ -9188,7 +9193,7 @@ ${handlers.length} left`,
 							self.driverLog.print(
 								"Activating new firmware and restarting driver...",
 							);
-							yield* waitFor(self.softResetAndRestart());
+							yield* waitFor(self.softResetAndRestart(thisTask));
 						}
 						return wasUpdated;
 					}
