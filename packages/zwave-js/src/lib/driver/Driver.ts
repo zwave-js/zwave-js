@@ -282,10 +282,10 @@ import {
 import {
 	type Task,
 	type TaskBuilder,
+	type TaskHandle,
 	TaskInterruptBehavior,
 	TaskPriority,
 	TaskScheduler,
-	TaskState,
 } from "./Task.js";
 import { throttlePresets } from "./ThrottlePresets.js";
 import { Transaction } from "./Transaction.js";
@@ -3597,11 +3597,9 @@ export class Driver
 
 	/**
 	 * Soft-reset the Z-Wave module and restart the driver instance.
-	 * @param keepTask Selects tasks that must survive the restart. A task that calls this method must keep itself.
+	 * @param callingTask The task that calls this method. It survives the restart, all other tasks are removed.
 	 */
-	public async softResetAndRestart(
-		keepTask?: (task: Task<unknown>) => boolean,
-	): Promise<void> {
+	public async softResetAndRestart(callingTask?: TaskHandle): Promise<void> {
 		this.controllerLog.print("Performing soft reset...");
 
 		try {
@@ -3627,7 +3625,7 @@ export class Driver
 		this.isSoftResetting = false;
 
 		// Clean up and interview the controller again
-		await this.destroyController(keepTask);
+		await this.destroyController((task) => task === callingTask);
 		void this.initializeControllerAndNodes();
 	}
 
@@ -9172,7 +9170,7 @@ ${handlers.length} left`,
 			group: { id: "controller-exclusive" },
 			// An interrupted update may leave the controller in recovery mode
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* firmwareUpdateOTWTask() {
+			task: async function* firmwareUpdateOTWTask(thisTask) {
 				// When in bootloader mode, we can use the 700 series update method
 				if (self.mode === DriverMode.Bootloader) {
 					return yield* self.firmwareUpdateOTW700(data);
@@ -9195,13 +9193,7 @@ ${handlers.length} left`,
 							self.driverLog.print(
 								"Activating new firmware and restarting driver...",
 							);
-							yield* waitFor(
-								self.softResetAndRestart(
-									(task) =>
-										task.tag?.id === "firmware-update-otw"
-										&& task.state !== TaskState.None,
-								),
-							);
+							yield* waitFor(self.softResetAndRestart(thisTask));
 						}
 						return wasUpdated;
 					}

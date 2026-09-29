@@ -315,7 +315,6 @@ import {
 	type TaskBuilder,
 	TaskInterruptBehavior,
 	TaskPriority,
-	TaskState,
 } from "../driver/Task.js";
 import { DeviceClass } from "../node/DeviceClass.js";
 import { ZWaveNode } from "../node/Node.js";
@@ -8613,7 +8612,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			group: { id: "controller-exclusive" },
 			// The radio is off during the restore, so other tasks cannot communicate anyways
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* restoreNVMTask() {
+			task: async function* restoreNVMTask(thisTask) {
 				// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
 				if (!(yield* waitFor(self.toggleRF(false)))) {
 					throw new ZWaveError(
@@ -8704,14 +8703,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				// Reset all info about all nodes, so they get re-interviewed.
 				self._nodes.clear();
 
-				// Keep only this task. A queued restore would run against the destroyed controller instance.
-				yield* waitFor(
-					self.driver.softResetAndRestart(
-						(task) =>
-							task.tag?.id === "nvm-restore"
-							&& task.state !== TaskState.None,
-					),
-				);
+				yield* waitFor(self.driver.softResetAndRestart(thisTask));
 			},
 			cleanup: async () => {
 				// Turn the radio back on when the task is dropped before it could do so itself
