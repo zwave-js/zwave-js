@@ -1,4 +1,6 @@
 import {
+	ApplicationStatus,
+	ApplicationStatusCCBusy,
 	type CCEncodingContext,
 	type CommandClass,
 	MGRPExtension,
@@ -43,6 +45,7 @@ import {
 	TransmitOptions,
 	ZWaveError,
 	ZWaveErrorCodes,
+	isZWaveError,
 	mergeSupervisionResults,
 } from "@zwave-js/core";
 import type { Message } from "@zwave-js/serial";
@@ -100,14 +103,44 @@ function maybePartialNodeUpdate(
 	return sentCommand.isExpectedCCResponse(ctx, receivedCommand);
 }
 
+/** Returns the Application Busy command if the node asks to send the command again later */
+function getTryAgainLater(
+	sent: Message,
+	received: Message,
+): ApplicationStatusCCBusy | undefined {
+	if (!containsCC(sent) || !containsCC(received)) return;
+	if (sent.getNodeId() !== received.getNodeId()) return;
+	const receivedCommand = getInnermostCommandClass(received.command);
+	if (
+		receivedCommand instanceof ApplicationStatusCCBusy
+		&& receivedCommand.status !== ApplicationStatus.RequestQueued
+	) {
+		return receivedCommand;
+	}
+}
+
+/** Tests if the node answered a command with Application Busy and asked to send it again later */
+export function isNodeBusyError(
+	e: unknown,
+): e is ZWaveError & { context: ApplicationStatusCCBusy } {
+	return (
+		isZWaveError(e)
+		&& e.code === ZWaveErrorCodes.Controller_NodeTimeout
+		&& e.context instanceof ApplicationStatusCCBusy
+	);
+}
+
 export async function waitForNodeUpdate<T extends Message>(
 	driver: Driver,
 	msg: Message,
 	timeoutMs: number,
 ): Promise<T> {
+	let received: Message;
 	try {
-		return await driver.waitForMessage<T>(
-			(received) => msg.isExpectedNodeUpdate(driver, received),
+		received = await driver.waitForMessage(
+			(received) =>
+				msg.isExpectedNodeUpdate(driver, received)
+				|| !!getTryAgainLater(msg, received),
 			timeoutMs,
 			(received) => maybePartialNodeUpdate(driver, msg, received),
 		);
@@ -117,6 +150,16 @@ export async function waitForNodeUpdate<T extends Message>(
 			ZWaveErrorCodes.Controller_NodeTimeout,
 		);
 	}
+	const busy = getTryAgainLater(msg, received);
+	if (busy) {
+		// The driver sends the command again after the wait time
+		throw new ZWaveError(
+			`The node is busy and did not respond`,
+			ZWaveErrorCodes.Controller_NodeTimeout,
+			busy,
+		);
+	}
+	return received as T;
 }
 
 function getNodeUpdateTimeout(
@@ -1007,7 +1050,11 @@ export function createMessageGenerator(
 						generator.current = value;
 						sendResult = yield generator.current;
 					} catch (e) {
-						if (e instanceof Error) {
+						if (isNodeBusyError(e)) {
+							// The driver decides whether to send the command again
+							generator.reset();
+							throw e;
+						} else if (e instanceof Error) {
 							// There was an actual error, reject the transaction
 							generator.parent.settleRejected(e);
 						} else if (isTransmitReport(e) && !e.isOK()) {

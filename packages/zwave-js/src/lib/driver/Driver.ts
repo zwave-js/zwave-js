@@ -1,5 +1,6 @@
 import type { JsonlDBOptions } from "@alcalzone/jsonl-db";
 import {
+	type ApplicationStatusCCBusy,
 	ApplicationStatusCCRejectedRequest,
 	type CCAPIHost,
 	type CCEncodingContext,
@@ -235,6 +236,7 @@ import {
 	isFirmwareUpdateInfo,
 } from "../controller/_Types.js";
 import { DriverLogger } from "../log/Driver.js";
+import { handleApplicationBusy } from "../node/CCHandlers/ApplicationStatusCC.js";
 import type { Endpoint } from "../node/Endpoint.js";
 import type { ZWaveNode } from "../node/Node.js";
 import {
@@ -257,7 +259,10 @@ import {
 import { Bootloader } from "./Bootloader.js";
 import { DriverMode } from "./DriverMode.js";
 import { EndDeviceCLI } from "./EndDeviceCLI.js";
-import { createMessageGenerator } from "./MessageGenerators.js";
+import {
+	createMessageGenerator,
+	isNodeBusyError,
+} from "./MessageGenerators.js";
 import {
 	cacheKeys,
 	deserializeNetworkCacheValue,
@@ -8428,6 +8433,8 @@ ${handlers.length} left`,
 				this.handleMissingSendDataResponseOrCallback(transaction, error)
 			)
 				return;
+		} else if (isNodeBusyError(error)) {
+			if (this.handleNodeBusy(transaction, error.context)) return;
 		} else if (wasControllerReset(error)) {
 			// The controller was reset in the middle of a transaction.
 			// Re-queue the transaction, so it can get handled again
@@ -8438,6 +8445,21 @@ ${handlers.length} left`,
 		}
 
 		this.rejectTransaction(transaction, error);
+	}
+
+	private handleNodeBusy(
+		transaction: Transaction,
+		command: ApplicationStatusCCBusy,
+	): boolean {
+		transaction.busyAttempts++;
+		if (transaction.busyAttempts >= this.options.attempts.sendData) {
+			return false;
+		}
+		const node = this.tryGetNode(transaction.message);
+		if (!node) return false;
+
+		void handleApplicationBusy(this, this, node, command, transaction);
+		return true;
 	}
 
 	private rejectTransaction(
@@ -8535,12 +8557,15 @@ ${handlers.length} left`,
 	/**
 	 * @internal
 	 * Re-queues all pending transactions for a node after a delay
+	 * @param failedTransaction A finished transaction to re-queue first
 	 */
 	public async delayTransactionsForNode(
 		nodeId: number,
 		delaySeconds: number,
+		failedTransaction?: Transaction,
 	): Promise<void> {
 		const requeue: Transaction[] = [];
+		if (failedTransaction) requeue.push(failedTransaction);
 
 		await this.reduceQueues((transaction, source) => {
 			// Only handle transactions for this node that are still queued (not currently active)
