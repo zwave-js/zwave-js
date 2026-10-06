@@ -102,9 +102,17 @@ export abstract class NetworkRoleMixin
 	}
 
 	public get maxDataRate(): MaybeNotKnown<DataRate> {
-		if (this.supportedDataRates) {
-			return Math.max(...this.supportedDataRates) as DataRate;
+		// Until we have queried the data rates, we don't know the max data rate yet
+		if (!this.supportedDataRates) return NOT_KNOWN;
+
+		if (this.supportedDataRates.length === 0) {
+			// This should never happen. If we end up here, the protocol info
+			// was queried, but we somehow lost the information. Respond with
+			// a safe fallback
+			return this.protocol === Protocols.ZWaveLongRange ? 100000 : 9600;
 		}
+
+		return Math.max(...this.supportedDataRates) as DataRate;
 	}
 
 	public get protocolVersion(): MaybeNotKnown<ProtocolVersion> {
