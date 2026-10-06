@@ -23,5 +23,8 @@
 			"maxNodes": 232,
 			"isLifeline": true
 		}
+	},
+	"compat": {
+		"manualValueRefreshDelayMs": 1000
 	}
 }
