@@ -4804,10 +4804,10 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	 * `false` if the process was already active.
 	 */
 	public beginRebuildingRoutes(options: RebuildRoutesOptions = {}): boolean {
-		// Don't start the process twice. While the parent task is awaiting a node,
-		// it is not in the queue, so we have to look for the per-node tasks too.
-		const existingTask =
-			this.driver.scheduler.findTask(isRebuildRoutesTask);
+		// Don't start the process twice
+		const existingTask = this.driver.scheduler.findTask(
+			(t) => t.tag?.id === "rebuild-routes",
+		);
 		if (existingTask) return false;
 
 		options.includeSleeping ??= true;

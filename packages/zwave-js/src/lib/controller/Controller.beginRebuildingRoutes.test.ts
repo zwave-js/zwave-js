@@ -46,34 +46,66 @@ const test = baseTest.extend<LocalTestContext>({
 	],
 });
 
-test("should not start a rebuild while a single node's routes are being rebuilt", async ({
+function queueRebuildWithNodeTask(driver: Driver) {
+	const nodeTaskStarted = Promise.withResolvers<void>();
+	const nodeTaskGate = Promise.withResolvers<void>();
+
+	const rebuildTask = driver.scheduler.queueTask({
+		priority: TaskPriority.Lower,
+		tag: { id: "rebuild-routes" },
+		task: async function* () {
+			return yield* waitFor({
+				priority: TaskPriority.Lower,
+				tag: { id: "rebuild-node-routes", nodeId: 2 },
+				task: async function* () {
+					nodeTaskStarted.resolve();
+					yield* waitFor(nodeTaskGate.promise);
+					return true;
+				},
+			});
+		},
+	});
+
+	return {
+		rebuildTask,
+		nodeTaskStarted: nodeTaskStarted.promise,
+		releaseNodeTask: nodeTaskGate.resolve,
+	};
+}
+
+test("should not start a rebuild while the running rebuild waits for a single node", async ({
 	context,
 	expect,
 }) => {
 	const { driver } = context;
-
-	// While the network-wide task awaits a per-node sub-task, the scheduler takes the
-	// parent out of its queue, so only the sub-task is visible. Model that state
-	// directly: a rebuild-node-routes task that stays in flight until we release it.
-	let releaseNodeTask: () => void;
-	const nodeTaskGate = new Promise<void>((resolve) => {
-		releaseNodeTask = resolve;
-	});
-
-	const nodeTask = driver.scheduler.queueTask({
-		priority: TaskPriority.Lower,
-		tag: { id: "rebuild-node-routes", nodeId: 2 },
-		task: async function* () {
-			yield* waitFor(nodeTaskGate);
-			return true;
-		},
-	});
-
-	// Sanity check: the scheduler really is holding a route rebuild task.
-	expect(driver.controller.isRebuildingRoutes).toBe(true);
+	const { rebuildTask, nodeTaskStarted, releaseNodeTask } =
+		queueRebuildWithNodeTask(driver);
+	await nodeTaskStarted;
 
 	expect(driver.controller.beginRebuildingRoutes()).toBe(false);
 
-	releaseNodeTask!();
-	await nodeTask;
+	releaseNodeTask();
+	await rebuildTask;
+});
+
+test("should not start a rebuild when a single node's rebuild has just finished", async ({
+	context,
+	expect,
+}) => {
+	const { driver } = context;
+	const { rebuildTask, nodeTaskStarted, releaseNodeTask } =
+		queueRebuildWithNodeTask(driver);
+	await nodeTaskStarted;
+
+	// Callers of rebuildNodeRoutes() join the running node task and get its promise
+	const nodeTask = driver.scheduler.findTask(
+		(t) => t.tag?.id === "rebuild-node-routes",
+	)!;
+	const startedAfterNodeTask = nodeTask.then(() =>
+		driver.controller.beginRebuildingRoutes(),
+	);
+
+	releaseNodeTask();
+	expect(await startedAfterNodeTask).toBe(false);
+	await rebuildTask;
 });
