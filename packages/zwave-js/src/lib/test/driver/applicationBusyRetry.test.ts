@@ -16,7 +16,7 @@ import { wait } from "alcalzone-shared/async";
 
 import { integrationTest } from "../integrationTestSuite.js";
 
-integrationTest(
+integrationTest.sequential(
 	"A Get answered with Application Busy (Try again later) is sent again after the wait time",
 	{
 		// debug: true,
@@ -88,7 +88,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"A Get answered with Application Busy (Try again in wait time) resolves with the report of the next attempt",
 	{
 		// debug: true,
@@ -137,7 +137,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"A Get that is always answered with Application Busy is sent at most as often as configured",
 	{
 		// debug: true,
