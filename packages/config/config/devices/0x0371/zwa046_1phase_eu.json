@@ -20,12 +20,26 @@
 		"exclusion": "1. Turn your gateway/ main controller into removing mode.\n2. Press once the Action Button on the product",
 		"reset": "Press and hold the Action Button on product for 10s.\n\nNote: Please use this procedure only when the network's primary controller is missing or otherwise inoperable."
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
-		}
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 5,
+					"isLifeline": true
+				}
+			}
+		},
+		"1": { "label": "Clamp 1 Consumption" },
+		"2": { "label": "Clamp 1 Production" },
+		"3": { "label": "Total Consumption" },
+		"4": { "label": "Total Production" },
+		"5": { "label": "Net Consumption" },
+		"6": { "label": "Net Production" }
+	},
+	"endpointGroups": {
+		"1": { "label": "Clamp 1", "endpoints": [1, 2] },
+		"2": { "label": "Overall", "endpoints": [3, 4, 5, 6], "isMainDevice": true }
 	},
 	"paramInformation": [
 		{
