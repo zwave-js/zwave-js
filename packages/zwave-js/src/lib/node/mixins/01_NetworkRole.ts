@@ -101,9 +101,15 @@ export abstract class NetworkRoleMixin
 		this.driver.cacheSet(cacheKeys.node(this.id).supportedDataRates, value);
 	}
 
+	public abstract get ready(): boolean;
+
 	public get maxDataRate(): MaybeNotKnown<DataRate> {
-		if (this.supportedDataRates) {
+		if (this.supportedDataRates?.length) {
 			return Math.max(...this.supportedDataRates) as DataRate;
+		}
+		// Applications expect ready nodes to have a known data rate
+		if (this.ready) {
+			return this.protocol === Protocols.ZWaveLongRange ? 100000 : 9600;
 		}
 	}
 
