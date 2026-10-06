@@ -16,16 +16,35 @@
 		"max": "255.255"
 	},
 	"endpoints": {
-		"1": { "label": "Clamp 1 Consumption" },
-		"2": { "label": "Clamp 1 Production" },
-		"3": { "label": "Total Consumption" },
-		"4": { "label": "Total Production" },
-		"5": { "label": "Net Consumption" },
-		"6": { "label": "Net Generation" }
+		"1": {
+			"label": "Clamp 1 Consumption"
+		},
+		"2": {
+			"label": "Clamp 1 Production"
+		},
+		"3": {
+			"label": "Total Consumption"
+		},
+		"4": {
+			"label": "Total Production"
+		},
+		"5": {
+			"label": "Net Consumption"
+		},
+		"6": {
+			"label": "Net Generation"
+		}
 	},
 	"endpointGroups": {
-		"1": { "label": "Clamp 1", "endpoints": [1, 2] },
-		"2": { "label": "Total", "endpoints": [3, 4, 5, 6], "isMainDevice": true }
+		"1": {
+			"label": "Clamp 1",
+			"endpoints": [1, 2]
+		},
+		"2": {
+			"label": "Total",
+			"endpoints": [3, 4, 5, 6],
+			"isMainDevice": true
+		}
 	},
 	"paramInformation": [
 		{
