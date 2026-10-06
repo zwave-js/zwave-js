@@ -1,5 +1,6 @@
 import { MockController } from "@zwave-js/testing";
 import { waitFor } from "@zwave-js/waddle";
+import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 import { test as baseTest } from "vitest";
 
 import { createDefaultMockControllerBehaviors } from "../../Testing.js";
@@ -47,8 +48,8 @@ const test = baseTest.extend<LocalTestContext>({
 });
 
 function queueRebuildWithNodeTask(driver: Driver) {
-	const nodeTaskStarted = Promise.withResolvers<void>();
-	const nodeTaskGate = Promise.withResolvers<void>();
+	const nodeTaskStarted = createDeferredPromise<void>();
+	const nodeTaskGate = createDeferredPromise<void>();
 
 	const rebuildTask = driver.scheduler.queueTask({
 		priority: TaskPriority.Lower,
@@ -59,7 +60,7 @@ function queueRebuildWithNodeTask(driver: Driver) {
 				tag: { id: "rebuild-node-routes", nodeId: 2 },
 				task: async function* () {
 					nodeTaskStarted.resolve();
-					yield* waitFor(nodeTaskGate.promise);
+					yield* waitFor(nodeTaskGate);
 					return true;
 				},
 			});
@@ -68,8 +69,8 @@ function queueRebuildWithNodeTask(driver: Driver) {
 
 	return {
 		rebuildTask,
-		nodeTaskStarted: nodeTaskStarted.promise,
-		releaseNodeTask: nodeTaskGate.resolve,
+		nodeTaskStarted,
+		releaseNodeTask: () => nodeTaskGate.resolve(),
 	};
 }
 
