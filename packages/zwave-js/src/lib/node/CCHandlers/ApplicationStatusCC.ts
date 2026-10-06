@@ -14,6 +14,8 @@ import type { ZWaveNode } from "../Node.js";
  */
 export async function handleApplicationBusy(
 	ctx: PersistValuesContext & LogNode,
+	// FIXME: This method should not need to take the driver as a separate parameter,
+	// this should be done through the context instead.
 	driver: Driver,
 	node: ZWaveNode,
 	command: ApplicationStatusCCBusy,

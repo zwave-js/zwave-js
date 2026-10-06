@@ -130,6 +130,13 @@ export function isNodeBusyError(
 	);
 }
 
+/**
+ * Waits for the node to send an update in response to a message.
+ * Throws with a timeout error if the node does not respond in time.
+ *
+ * If the node responds with an Application Busy command asking to try again later,
+ * the thrown error will contain the Application Busy command in its context.
+ */
 export async function waitForNodeUpdate<T extends Message>(
 	driver: Driver,
 	msg: Message,

@@ -63,6 +63,7 @@ integrationTest(
 			};
 			mockNode.defineBehavior(busyOnFirstGet);
 
+			// Send a command to the host informing it that something happened
 			const nif = new ApplicationUpdateRequestNodeInfoReceived({
 				nodeInformation: {
 					nodeId: node.id,
@@ -78,6 +79,7 @@ integrationTest(
 
 			await wait(2500);
 
+			// Check that the node retried the Get command after being busy
 			t.expect(numGets).toBe(2);
 			t.expect(
 				node.getValue(MultilevelSwitchCCValues.currentValue.id),
@@ -105,19 +107,21 @@ integrationTest(
 				handleCC(controller, self, receivedCC) {
 					if (!(receivedCC instanceof MultilevelSwitchCCGet)) return;
 					numGets++;
-					const cc =
-						numGets === 1
-							? new ApplicationStatusCCBusy({
-									nodeId: controller.ownNodeId,
-									status: ApplicationStatus.TryAgainInWaitTimeSeconds,
-									waitTime: 1,
-								})
-							: new MultilevelSwitchCCReport({
-									nodeId: controller.ownNodeId,
-									targetValue: 42,
-									currentValue: 42,
-								});
-					return { action: "sendCC", cc };
+					if (numGets === 1) {
+						const cc = new ApplicationStatusCCBusy({
+							nodeId: controller.ownNodeId,
+							status: ApplicationStatus.TryAgainInWaitTimeSeconds,
+							waitTime: 1,
+						});
+						return { action: "sendCC", cc };
+					} else {
+						const cc = new MultilevelSwitchCCReport({
+							nodeId: controller.ownNodeId,
+							targetValue: 42,
+							currentValue: 42,
+						});
+						return { action: "sendCC", cc };
+					}
 				},
 			};
 			mockNode.defineBehavior(busyOnFirstGet);
@@ -167,7 +171,7 @@ integrationTest(
 				new MultilevelSwitchCCGet({ nodeId: node.id }),
 			);
 			t.expect(report).toBeUndefined();
-			t.expect(numGets).toBe(3);
+			t.expect(numGets).toBe(driver.options.attempts.sendData);
 		},
 	},
 );
