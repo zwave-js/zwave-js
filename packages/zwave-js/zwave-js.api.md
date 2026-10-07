@@ -193,6 +193,7 @@ import { SpecificDeviceClass } from '@zwave-js/core';
 import { SupervisionResult } from '@zwave-js/core';
 import { SupportsCC } from '@zwave-js/core';
 import { Switchpoint } from '@zwave-js/cc';
+import { TaskHandle } from '@zwave-js/waddle';
 import { TaskScheduler as TaskScheduler_2 } from '@zwave-js/waddle';
 import { TransactionProgress } from '@zwave-js/core';
 import { TransactionProgressListener } from '@zwave-js/core';
@@ -833,7 +834,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     setSecurityClass(nodeId: number, securityClass: SecurityClass, granted: boolean): void;
     shutdown(): Promise<boolean>;
     softReset(): Promise<void>;
-    softResetAndRestart(): Promise<void>;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    softResetAndRestart(callingTask?: TaskHandle): Promise<void>;
     start(): Promise<void>;
     get statisticsEnabled(): boolean;
     // (undocumented)
@@ -3408,8 +3410,8 @@ export * from "@zwave-js/cc";
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:107:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // src/lib/controller/Controller.ts:929:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
-// src/lib/driver/Driver.ts:1109:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:8125:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:1116:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/driver/Driver.ts:8135:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/driver/ZWaveOptions.ts:383:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/lib/node/Node.ts:2609:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/rcp/RCPHost.ts:571:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
