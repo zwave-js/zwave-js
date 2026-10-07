@@ -21,6 +21,9 @@
 		"1": { "label": "Blinds Control" },
 		"2": { "label": "Lamella Position" }
 	},
+	"endpointGroups": {
+		"1": { "label": "Blinds Control", "endpoints": [1, 2], "isMainDevice": true }
+	},
 	"paramInformation": [
 		{
 			"#": "1",
