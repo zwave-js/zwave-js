@@ -1,18 +1,25 @@
 // oxlint-disable
 
 /**
- * Discovers device config files for multi-endpoint Z-Wave devices that do not
- * yet define endpoint labels. Uses the OpenSmartHouse DB as the data source,
- * since endpoint counts are only known at runtime (discovered via Multi Channel
- * CC 0x60) and are not stored in the local config files.
+ * Discovers multi-endpoint Z-Wave devices for endpoint-metadata work, using the
+ * OpenSmartHouse DB as the data source (endpoint counts are only known at runtime
+ * via Multi Channel CC 0x60 and are not stored in the local config files).
+ *
+ * Two modes:
+ *   - Default: find devices that do not yet define endpoint labels.
+ *   - --review-groups: find devices that already have labeled endpoints but no
+ *     endpoint groups, as candidates for a groups-only review pass. The output
+ *     includes the existing labels for each device.
  *
  * Usage:
- *   yarn config:find-multi-endpoints             (uses cached .tmpoh data)
- *   yarn config:find-multi-endpoints --download  (downloads OH data first)
+ *   yarn config:find-multi-endpoints                  (uses cached .tmpoh data)
+ *   yarn config:find-multi-endpoints --download       (downloads OH data first)
+ *   yarn config:find-multi-endpoints --review-groups  (labeled, ungrouped devices)
  *
  * Output: ranked JSON array to stdout, progress/errors to stderr.
  * Pipe through `jq` for formatted display, e.g.:
  *   yarn config:find-multi-endpoints | jq '.[] | {configFilePath, endpointCount, label}'
+ *   yarn config:find-multi-endpoints --review-groups | jq '.[] | {configFilePath, existingLabels, manualUrl}'
  */
 
 import fs from "node:fs/promises";
@@ -113,11 +120,18 @@ export interface MultiEndpointCandidate {
 	 * auto-applying.
 	 */
 	hasRootAssociations: boolean;
+	/**
+	 * In --review-groups mode, the labels already defined for each endpoint in
+	 * the existing config, keyed by endpoint index. Lets a reviewer judge
+	 * grouping without opening the config file.
+	 */
+	existingLabels?: Record<string, string>;
 }
 
 async function main() {
 	const args = process.argv.slice(2);
 	const shouldDownload = args.includes("--download") || args.includes("-D");
+	const reviewGroups = args.includes("--review-groups");
 
 	const configManager = new ConfigManager();
 	process.stderr.write("Loading device config index...");
@@ -216,8 +230,27 @@ async function main() {
 				continue;
 			}
 
-			// Skip configs that already have an endpoints block
-			if (parsedConfig.endpoints) continue;
+			// Collect any endpoint labels already defined in the config
+			const existingLabels: Record<string, string> = {};
+			if (parsedConfig.endpoints) {
+				for (const [index, ep] of Object.entries<any>(
+					parsedConfig.endpoints,
+				)) {
+					if (typeof ep?.label === "string") {
+						existingLabels[index] = ep.label;
+					}
+				}
+			}
+
+			if (reviewGroups) {
+				// Review mode: only configs that already have labeled endpoints
+				// but no endpoint groups yet are grouping candidates
+				if (Object.keys(existingLabels).length === 0) continue;
+				if (parsedConfig.endpointGroups) continue;
+			} else {
+				// Default mode: skip configs that already have an endpoints block
+				if (parsedConfig.endpoints) continue;
+			}
 
 			const endpointInfos: EndpointInfo[] = nonRootEndpoints.map(
 				(ep) => ({
@@ -232,15 +265,22 @@ async function main() {
 				}),
 			);
 
-			// Prefer manual-type documents (type_id 2) for the documentation URL
+			// Determine a documentation URL. Cache entries list documents as
+			// { id, file, label } with no direct URL, so fall back to the OH
+			// device page (keyed by the cache file's device id), which lists the
+			// device's manuals for download.
 			const docs: any[] = json.documents ?? [];
-			const manualUrl =
+			const directUrl: string | undefined =
 				docs.find(
 					(d) =>
 						String(d.type_id) === "2" || d.type?.label === "Manual",
-				)?.url
-				?? docs[0]?.url
-				?? null;
+				)?.url ?? docs[0]?.url;
+			const ohId = path.basename(file, ".json");
+			const manualUrl =
+				directUrl
+				?? (docs.length
+					? `https://opensmarthouse.org/zwavedatabase/${ohId}`
+					: null);
 
 			const hasRootAssociations =
 				!!parsedConfig.associations
@@ -257,6 +297,7 @@ async function main() {
 				endpoints: endpointInfos,
 				manualUrl,
 				hasRootAssociations,
+				...(reviewGroups ? { existingLabels } : {}),
 			});
 		}
 	}
@@ -276,7 +317,9 @@ async function main() {
 	// Emit the ranked candidate list as JSON for piping / post-processing
 	console.log(JSON.stringify(candidates, null, 2));
 	process.stderr.write(
-		`\nFound ${candidates.length} multi-endpoint devices without endpoint labels.\n`,
+		reviewGroups
+			? `\nFound ${candidates.length} multi-endpoint devices with labeled endpoints but no endpoint groups.\n`
+			: `\nFound ${candidates.length} multi-endpoint devices without endpoint labels.\n`,
 	);
 }
 

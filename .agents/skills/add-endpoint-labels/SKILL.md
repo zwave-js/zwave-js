@@ -142,6 +142,8 @@ After (excerpt, labels sourced from "Channel 1: S1 input" / "Channel 2: S2 input
 
 # Processing Multiple Candidates
 
+The `findMultiEndpointDevices.ts` script has two modes. The default mode lists multi-endpoint devices that have **no** endpoint labels yet (for a labeling pass). The `--review-groups` flag instead lists devices that **already have labeled endpoints but no `endpointGroups`** — candidates for a groups-only review pass. In that mode each candidate includes an `existingLabels` map so you can judge grouping without opening the config file; apply groups per Task 6 only where the documentation explicitly supports it.
+
 When working from the `findMultiEndpointDevices.ts` output, process candidates one at a time:
 
 1. Pick a candidate with a `manualUrl` (skip ones where `manualUrl` is null unless you can find documentation through another means)
