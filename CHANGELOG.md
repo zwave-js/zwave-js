@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.31.1 (2026-10-07)
 ### Bugfixes
 * Prevent `restoreNVM()` and 500-series OTW update from self-aborting during soft-reset (#9277)
 * After the node responds with Application Busy instead of the expected response to a command, the original command is now retried after a delay (#9294)
