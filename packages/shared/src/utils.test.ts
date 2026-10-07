@@ -194,3 +194,24 @@ test("mergeDeep -> sanity check with overwrite: false", (t) => {
 		f: "bar",
 	});
 });
+
+test("mergeDeep -> copies plain objects from the source", (t) => {
+	const source = { a: { b: 1 } };
+	const result = mergeDeep({}, source, true);
+	mergeDeep(result, { a: { c: 2 } });
+	t.expect(result).toStrictEqual({ a: { b: 1, c: 2 } });
+	t.expect(source).toStrictEqual({ a: { b: 1 } });
+});
+
+test("mergeDeep -> keeps class instances and arrays from the source", (t) => {
+	class Foo {
+		bar(): number {
+			return 1;
+		}
+	}
+	const foo = new Foo();
+	const arr = [1, 2];
+	const result = mergeDeep({}, { foo, arr }, true);
+	t.expect(result.foo).toBe(foo);
+	t.expect(result.arr).toBe(arr);
+});

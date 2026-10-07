@@ -117,11 +117,20 @@ export function mergeDeep(
 				// Only overwrite existing primitives if the overwrite flag is set
 				target[key] = value;
 			}
+		} else if (isPlainObject(value)) {
+			// Copy so later merges into the result don't modify the caller's object
+			target[key] = mergeDeep({}, value, overwrite);
 		} else if (value !== undefined) {
 			target[key] = value;
 		}
 	}
 	return target;
+}
+
+function isPlainObject(value: unknown): value is Record<string, any> {
+	if (!isObject(value)) return false;
+	const proto = Object.getPrototypeOf(value);
+	return proto === Object.prototype || proto === null;
 }
 
 /**
