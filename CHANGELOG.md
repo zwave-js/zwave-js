@@ -4,6 +4,18 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Prevent `restoreNVM()` and 500-series OTW update from self-aborting during soft-reset (#9277)
+* After the node responds with Application Busy instead of the expected response to a command, the original command is now retried after a delay (#9294)
+* Fixed an issue where `maxDataRate` could be `-Infinity` for ready nodes where known data rates were missing (#9297)
+* Fixed an issue where a network wide route rebuild could be started while another one was still running (#9292)
+
+### Config file changes
+* Name and group endpoints on Aeotec HEM 8 (#9289)
+* Delay manual value refresh for Leviton VRI06 (#9296)
+* Add manual refresh delay for Leviton VRMX1 and VRS15 (#9293)
+
 ## 15.31.0 (2026-09-28)
 ### Features
 * Support grouping endpoints through configuration files (#9205)
