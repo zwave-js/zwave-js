@@ -108,22 +108,23 @@ export function mergeDeep(
 	for (const [key, value] of Object.entries(source)) {
 		// Skip `__proto__` because assigning or merging into it changes a prototype
 		if (key === "__proto__") continue;
-		if (Object.hasOwn(target, key)) {
-			if (value === undefined) {
-				// Explicitly delete keys that were set to `undefined`, but only if overwriting is enabled
-				if (overwrite) delete target[key];
-			} else if (typeof value === "object") {
-				// merge objects
-				target[key] = mergeDeep(target[key], value, overwrite);
-			} else if (overwrite || typeof target[key] === "undefined") {
-				// Only overwrite existing primitives if the overwrite flag is set
-				target[key] = value;
-			}
-		} else if (isPlainObject(value)) {
+		const exists = Object.hasOwn(target, key);
+		if (value === undefined) {
+			// Explicitly delete keys that were set to `undefined`, but only if overwriting is enabled
+			if (overwrite && exists) delete target[key];
+		} else if (
+			exists
+			&& isPlainObject(target[key])
+			&& isPlainObject(value)
+		) {
+			// Only recurse into plain objects. Functions and class instances are
+			// kept by reference and must not be modified.
+			mergeDeep(target[key], value, overwrite);
+		} else if (overwrite || !exists || target[key] === undefined) {
 			// Copy so later merges into the result don't modify the caller's object
-			target[key] = mergeDeep({}, value, overwrite);
-		} else if (value !== undefined) {
-			target[key] = value;
+			target[key] = isPlainObject(value)
+				? mergeDeep({}, value, overwrite)
+				: value;
 		}
 	}
 	return target;

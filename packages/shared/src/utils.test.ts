@@ -235,3 +235,22 @@ test("mergeDeep -> ignores __proto__ keys", (t) => {
 	t.expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
 	t.expect(Object.getPrototypeOf(result.b)).toBe(Object.prototype);
 });
+
+test("mergeDeep -> does not merge into functions or class instances", (t) => {
+	const result = mergeDeep({}, { binding: Object }, true);
+	mergeDeep(result, { binding: { prototype: { marker: true } } });
+	t.expect(({} as any).marker).toBeUndefined();
+	t.expect(result.binding).toBe(Object);
+
+	mergeDeep(result, { binding: { prototype: { marker: true } } }, true);
+	t.expect(({} as any).marker).toBeUndefined();
+	t.expect(result.binding).toStrictEqual({ prototype: { marker: true } });
+});
+
+test("mergeDeep -> replaces arrays instead of merging them", (t) => {
+	const result = mergeDeep({ a: [1, 2, 3] }, { a: [4] }, true);
+	t.expect(result.a).toStrictEqual([4]);
+	t.expect(mergeDeep({ a: [1, 2, 3] }, { a: [4] }).a).toStrictEqual([
+		1, 2, 3,
+	]);
+});
