@@ -215,3 +215,23 @@ test("mergeDeep -> keeps class instances and arrays from the source", (t) => {
 	t.expect(result.foo).toBe(foo);
 	t.expect(result.arr).toBe(arr);
 });
+
+test("mergeDeep -> does not merge into inherited properties", (t) => {
+	const result = mergeDeep(
+		{ b: {} },
+		{ a: { constructor: { marker: true } }, constructor: { marker: true } },
+		true,
+	);
+	t.expect((Object as any).marker).toBeUndefined();
+	t.expect(result.a.constructor).toStrictEqual({ marker: true });
+});
+
+test("mergeDeep -> ignores __proto__ keys", (t) => {
+	const source = JSON.parse(
+		'{"__proto__": {"marker": true}, "b": {"__proto__": {"marker": true}}}',
+	);
+	const result = mergeDeep({ b: {} }, source, true);
+	t.expect(({} as any).marker).toBeUndefined();
+	t.expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+	t.expect(Object.getPrototypeOf(result.b)).toBe(Object.prototype);
+});

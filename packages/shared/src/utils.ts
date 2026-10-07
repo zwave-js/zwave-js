@@ -106,7 +106,9 @@ export function mergeDeep(
 ): Record<string, any> {
 	target = target || {};
 	for (const [key, value] of Object.entries(source)) {
-		if (key in target) {
+		// Skip `__proto__` because assigning or merging into it changes a prototype
+		if (key === "__proto__") continue;
+		if (Object.hasOwn(target, key)) {
 			if (value === undefined) {
 				// Explicitly delete keys that were set to `undefined`, but only if overwriting is enabled
 				if (overwrite) delete target[key];
