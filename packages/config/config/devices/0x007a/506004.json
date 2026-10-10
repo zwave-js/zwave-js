@@ -42,27 +42,27 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "switching/dimming/shutters",
+					"label": "Switching, dimming or shutters",
 					"value": 0
 				},
 				{
-					"label": "switching Single-Surface",
+					"label": "Switching single-surface",
 					"value": 4
 				},
 				{
-					"label": "doorbell Function",
+					"label": "Doorbell function",
 					"value": 44
 				},
 				{
-					"label": "lower Shutter As Long As Button Is Pressed",
+					"label": "Lower shutter as long as button is pressed",
 					"value": 52
 				},
 				{
-					"label": "move Shutter Single-Surface",
+					"label": "Move shutter single-surface",
 					"value": 54
 				},
 				{
-					"label": "raise Shutter As Long As Button Is Pressed",
+					"label": "Raise shutter as long as button is pressed",
 					"value": 55
 				}
 			]
@@ -76,27 +76,27 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "switching/dimming/shutters",
+					"label": "Switching, dimming or shutters",
 					"value": 0
 				},
 				{
-					"label": "switching Single-Surface",
+					"label": "Switching single-surface",
 					"value": 4
 				},
 				{
-					"label": "doorbell Function",
+					"label": "Doorbell function",
 					"value": 44
 				},
 				{
-					"label": "lower Shutter As Long As Button Is Pressed",
+					"label": "Lower shutter as long as button is pressed",
 					"value": 52
 				},
 				{
-					"label": "move Shutter Single-Surface",
+					"label": "Move shutter single-surface",
 					"value": 54
 				},
 				{
-					"label": "raise Shutter As Long As Button Is Pressed",
+					"label": "Raise shutter as long as button is pressed",
 					"value": 55
 				}
 			]
@@ -110,27 +110,27 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "switching/dimming/shutters",
+					"label": "Switching, dimming or shutters",
 					"value": 0
 				},
 				{
-					"label": "switching Single-Surface",
+					"label": "Switching single-surface",
 					"value": 4
 				},
 				{
-					"label": "doorbell Function",
+					"label": "Doorbell function",
 					"value": 44
 				},
 				{
-					"label": "lower Shutter As Long As Button Is Pressed",
+					"label": "Lower shutter as long as button is pressed",
 					"value": 52
 				},
 				{
-					"label": "move Shutter Single-Surface",
+					"label": "Move shutter single-surface",
 					"value": 54
 				},
 				{
-					"label": "raise Shutter As Long As Button Is Pressed",
+					"label": "Raise shutter as long as button is pressed",
 					"value": 55
 				}
 			]
@@ -144,27 +144,27 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "switching/dimming/shutters",
+					"label": "Switching, dimming or shutters",
 					"value": 0
 				},
 				{
-					"label": "switching Single-Surface",
+					"label": "Switching single-surface",
 					"value": 4
 				},
 				{
-					"label": "doorbell Function",
+					"label": "Doorbell function",
 					"value": 44
 				},
 				{
-					"label": "lower Shutter As Long As Button Is Pressed",
+					"label": "Lower shutter as long as button is pressed",
 					"value": 52
 				},
 				{
-					"label": "move Shutter Single-Surface",
+					"label": "Move shutter single-surface",
 					"value": 54
 				},
 				{
-					"label": "raise Shutter As Long As Button Is Pressed",
+					"label": "Raise shutter as long as button is pressed",
 					"value": 55
 				}
 			]
