@@ -2194,6 +2194,11 @@ export function isEmptyRoute(route: Route): boolean;
 // @public
 export function isEncapsulationCC(cc: CommandClasses): boolean;
 
+// Warning: (ae-missing-release-tag) "isExtendedCCId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function isExtendedCCId(ccId: CommandClasses): boolean;
+
 // Warning: (ae-missing-release-tag) "isLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
