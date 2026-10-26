@@ -2238,7 +2238,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 							),
 						);
 					} else {
-						startedPromise.reject(e as Error);
+						startedPromise.reject(e);
 					}
 					return;
 				}
@@ -2349,7 +2349,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				} catch (e) {
 					self.setInclusionState(InclusionState.Idle);
 					// Error handling for this happens at the call site
-					startedPromise.reject(e as Error);
+					startedPromise.reject(e);
 					return;
 				}
 
@@ -3217,7 +3217,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 							),
 						);
 					} else {
-						startedPromise.reject(e as Error);
+						startedPromise.reject(e);
 					}
 					return;
 				}

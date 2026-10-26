@@ -508,3 +508,34 @@ test("decryptAES128CCM returns no plaintext when authentication fails in all imp
 		t.expect(result.plaintext.length).toBe(0);
 	}
 });
+
+test("decryptAES128CCM rejects a modified auth tag for empty payloads in all implementations", async (t) => {
+	for (const primitives of [
+		"./primitives.browser.js",
+		"./primitives.node.js",
+	] as const) {
+		const { encryptAES128CCM, decryptAES128CCM }: CryptoPrimitives = (
+			await import(primitives)
+		).primitives;
+		const key = Bytes.from("2b7e151628aed2a6abf7158809cf4f3c", "hex");
+		const iv = Bytes.from("000102030405060708090a0b0c", "hex");
+		for (const aad of [new Bytes(), Bytes.from("0102", "hex")]) {
+			const { ciphertext, authTag } = await encryptAES128CCM(
+				new Bytes(),
+				key,
+				iv,
+				aad,
+				8,
+			);
+			t.expect(
+				(await decryptAES128CCM(ciphertext, key, iv, aad, authTag))
+					.authOK,
+			).toBe(true);
+			authTag[0] ^= 0x01;
+			t.expect(
+				(await decryptAES128CCM(ciphertext, key, iv, aad, authTag))
+					.authOK,
+			).toBe(false);
+		}
+	}
+});

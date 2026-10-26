@@ -179,8 +179,11 @@ function decryptAES128CCM(
 	decipher.setAuthTag(authTag);
 	decipher.setAAD(additionalData, { plaintextLength: ciphertext.length });
 
-	// do decryption
-	const plaintext = decipher.update(ciphertext);
+	// Node.js 22 skips the OpenSSL update and the tag verification for inputs
+	// backed by an empty ArrayBuffer, so pass empty inputs as a view into a non-empty one
+	const plaintext = decipher.update(
+		ciphertext.length > 0 ? ciphertext : new Uint8Array(1).subarray(0, 0),
+	);
 	// verify decryption
 	let authOK = false;
 	try {
