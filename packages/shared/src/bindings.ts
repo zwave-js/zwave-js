@@ -8,7 +8,7 @@ import type { BytesView } from "./Bytes.js";
 export interface CryptoPrimitives {
 	/** Returns the given number of cryptographically secure random bytes */
 	randomBytes(length: number): BytesView;
-	/** Encrypts a payload using AES-128-ECB (as described in SDS10865) */
+	/** Encrypts a payload using AES-128-ECB */
 	encryptAES128ECB(plaintext: BytesView, key: BytesView): Promise<BytesView>;
 	/** Encrypts a payload using AES-128-CBC */
 	encryptAES128CBC(
@@ -16,7 +16,7 @@ export interface CryptoPrimitives {
 		key: BytesView,
 		iv: BytesView,
 	): Promise<BytesView>;
-	/** Encrypts a payload using AES-128-OFB (as described in SDS10865) */
+	/** Encrypts a payload using AES-128-OFB */
 	encryptAES128OFB(
 		plaintext: BytesView,
 		key: BytesView,

@@ -17,7 +17,7 @@ function randomBytes(length: number): BytesView {
 	return crypto.getRandomValues(buffer);
 }
 
-/** Encrypts a payload using AES-128-ECB (as described in SDS10865) */
+/** Encrypts a payload using AES-128-ECB */
 async function encryptAES128ECB(
 	plaintext: BytesView,
 	key: BytesView,
@@ -177,7 +177,7 @@ async function decryptAESOFB(
 	return ret;
 }
 
-/** Encrypts a payload using AES-128-OFB (as described in SDS10865) */
+/** Encrypts a payload using AES-128-OFB */
 function encryptAES128OFB(
 	plaintext: BytesView,
 	key: BytesView,

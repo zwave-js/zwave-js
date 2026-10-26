@@ -62,7 +62,7 @@ function decrypt(
 	}
 }
 
-/** Encrypts a payload using AES-128-ECB (as described in SDS10865) */
+/** Encrypts a payload using AES-128-ECB */
 function encryptAES128ECB(
 	plaintext: BytesView,
 	key: BytesView,
@@ -79,7 +79,7 @@ function encryptAES128ECB(
 	);
 }
 
-/** Encrypts a payload using AES-128-OFB (as described in SDS10865) */
+/** Encrypts a payload using AES-128-OFB */
 function encryptAES128OFB(
 	plaintext: BytesView,
 	key: BytesView,
