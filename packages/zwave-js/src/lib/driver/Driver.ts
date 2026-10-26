@@ -4005,10 +4005,8 @@ export class Driver
 	}
 
 	private clearAllTimeouts() {
-		for (const timeout of [this._powerlevelTestNodeContext?.timeout]) {
-			if (timeout) clearTimeout(timeout);
-		}
 		for (const timeout of [
+			this._powerlevelTestNodeContext?.timeout,
 			...this.autoRefreshNodeValueTimers.values(),
 			...this.reinterviewTimers.values(),
 			this.statisticsTimeout,
@@ -10075,7 +10073,7 @@ ${handlers.length} left`,
 	private _powerlevelTestNodeContext:
 		| {
 				testNodeId: number;
-				timeout: NodeJS.Timeout | undefined;
+				timeout: Timer | undefined;
 				acknowledgedFrames: number;
 		  }
 		| undefined;
@@ -10091,7 +10089,7 @@ ${handlers.length} left`,
 	): Promise<number> {
 		if (this._powerlevelTestNodeContext) {
 			// Cancel the previous test
-			clearTimeout(this._powerlevelTestNodeContext.timeout);
+			this._powerlevelTestNodeContext.timeout?.clear();
 			this._powerlevelTestNodeContext = undefined;
 		}
 
@@ -10103,7 +10101,7 @@ ${handlers.length} left`,
 			testNodeId,
 			acknowledgedFrames: 0,
 			// This is set below after defining sendFrame
-			timeout: undefined as NodeJS.Timeout | undefined,
+			timeout: undefined as Timer | undefined,
 		};
 		this._powerlevelTestNodeContext = context;
 
@@ -10126,14 +10124,14 @@ ${handlers.length} left`,
 			frameCount--;
 
 			if (frameCount > 0) {
-				context.timeout = setTimeout(sendFrame, interval);
+				context.timeout = setTimer(sendFrame, interval);
 			} else {
 				context.timeout = undefined;
 				ret.resolve(context.acknowledgedFrames);
 			}
 		};
 
-		context.timeout = setTimeout(sendFrame, interval);
+		context.timeout = setTimer(sendFrame, interval);
 
 		return ret;
 	}
