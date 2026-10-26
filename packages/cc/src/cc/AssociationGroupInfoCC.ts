@@ -10,11 +10,10 @@ import {
 	type WithAddress,
 	encodeCCId,
 	getCCName,
-	isExtendedCCId,
 	logDict,
 	logList,
 	logText,
-	parseCCId,
+	tryParseCCId,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared";
@@ -817,9 +816,9 @@ export class AssociationGroupInfoCCCommandListReport extends AssociationGroupInf
 		const commands = new Map<CommandClasses, number[]>();
 		while (offset < listLength) {
 			// Ignore a truncated entry at the end of the list
-			const entryLength = isExtendedCCId(listBytes[offset]) ? 3 : 2;
-			if (offset + entryLength > listLength) break;
-			const { ccId, bytesRead } = parseCCId(listBytes, offset);
+			const parsed = tryParseCCId(listBytes, offset);
+			if (!parsed || offset + parsed.bytesRead >= listLength) break;
+			const { ccId, bytesRead } = parsed;
 			const command = listBytes[offset + bytesRead];
 			if (!commands.has(ccId)) commands.set(ccId, []);
 			commands.get(ccId)!.push(command);

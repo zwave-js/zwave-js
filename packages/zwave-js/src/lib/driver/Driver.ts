@@ -473,26 +473,35 @@ function checkOptions(options: ZWaveOptions): void {
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
-	for (const [securityKeys, which] of [
-		[options.securityKeys, ""],
-		[options.securityKeysLongRange, "Long Range "],
-	] as const) {
-		if (securityKeys == undefined) continue;
-		const keys = Object.entries(securityKeys);
-		for (let i = 0; i < keys.length; i++) {
-			const [secClass, key] = keys[i];
-			if (key.length !== 16) {
-				throw new ZWaveError(
-					`The ${which}security key for class ${secClass} must be a buffer with length 16!`,
-					ZWaveErrorCodes.Driver_InvalidOptions,
-				);
-			}
-			if (keys.findIndex(([, k]) => areUint8ArraysEqual(k, key)) !== i) {
-				throw new ZWaveError(
-					`The ${which}security key for class ${secClass} was used multiple times!`,
-					ZWaveErrorCodes.Driver_InvalidOptions,
-				);
-			}
+	const allKeys: { name: string; key: BytesView }[] = [
+		...Object.entries(options.securityKeys ?? {}).map(
+			([secClass, key]) => ({
+				name: `security key for class ${secClass}`,
+				key,
+			}),
+		),
+		...Object.entries(options.securityKeysLongRange ?? {}).map(
+			([secClass, key]) => ({
+				name: `Long Range security key for class ${secClass}`,
+				key,
+			}),
+		),
+	];
+	for (let i = 0; i < allKeys.length; i++) {
+		const { name, key } = allKeys[i];
+		if (key.length !== 16) {
+			throw new ZWaveError(
+				`The ${name} must be a buffer with length 16!`,
+				ZWaveErrorCodes.Driver_InvalidOptions,
+			);
+		}
+		if (
+			allKeys.findIndex(({ key: k }) => areUint8ArraysEqual(k, key)) !== i
+		) {
+			throw new ZWaveError(
+				`The ${name} was used multiple times!`,
+				ZWaveErrorCodes.Driver_InvalidOptions,
+			);
 		}
 	}
 	if (options.attempts.controller < 1 || options.attempts.controller > 3) {
