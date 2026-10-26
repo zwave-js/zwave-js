@@ -259,6 +259,16 @@ If an `endpoints` block is added to a config that already has root-level `associ
 
 Use `endpointGroups` when the device documentation explicitly identifies multiple endpoints as belonging to the same physical part. Grouping is metadata and leaves endpoint behavior unchanged.
 
+**Why it matters.** Grouping controls how consumers split a multi-endpoint node into devices: a non-root endpoint that is in no group is typically presented as its own device/feature. Group endpoints so that one physical thing is shown as one device, not several.
+
+**How to decide, per device:**
+
+1. From the product manual, establish what each endpoint actually is. Re-verify any existing labels against the manual — a prior label can be wrong, and the grouping decision depends on what each endpoint really is.
+2. If the manual presents the endpoints as virtual/logical resources of one physical device (one siren, one light), group all of them as one `isMainDevice` group.
+3. Otherwise identify the real physical parts. Group any part that spans two or more endpoints (a clamp's power + energy, a blind's position + slat tilt). A part that is a single endpoint is only labeled, not grouped.
+4. If the device exposes a whole-device total or aggregate endpoint, put it in its own `isMainDevice` group.
+5. Leave genuinely independent parts ungrouped.
+
 - **Evidence:** Establish membership from the device's **product manual** — fetch and read the manual PDF, not only the OpenSmartHouse or Z-Wave Alliance product listing. Those listings usually omit the endpoint-architecture explanation (e.g. whether endpoints are virtual resources of one device) that determines grouping. Never infer membership from device classes, matching labels, or adjacent indices.
 - **Property order:** Place `endpointGroups` directly after `endpoints`, in slot 9.
 - **IDs:** Use numeric string keys starting at `"1"` without gaps in the authored file. Conditional filtering preserves the IDs.

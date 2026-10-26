@@ -89,6 +89,7 @@ When the documentation explicitly identifies several endpoints as the same physi
 ```
 
 - **Evidence:** Use an explicit relationship documented in the device's **product manual** — fetch and read the manual PDF, since the OpenSmartHouse and Z-Wave Alliance listings usually omit the endpoint-architecture explanation. Matching device classes, labels, or adjacent indices are insufficient.
+- **Re-verify existing labels.** When the config already has endpoint labels, check each against the manual before grouping. A prior label can be wrong — e.g. an endpoint labeled "Temperature Sensor" that the manual documents as the slat-tilt control — and the group you form depends on what each endpoint really is.
 - **IDs:** Start at `"1"` without gaps in the authored file.
 - **Members:** Include each endpoint at most once among active groups. Root endpoint 0 cannot be a member. Mutually exclusive `$if` groups may share indices.
 - **Labels:** Name the physical part using the endpoint-label style rules.
@@ -96,6 +97,7 @@ When the documentation explicitly identifies several endpoints as the same physi
 - **Main device:** Ordinary part groups omit `isMainDevice`. Always put a whole-device total in its own group with `"isMainDevice": true` — even a single-endpoint total — so it is distinguishable from the individual endpoints.
 - **Independence:** Grouped endpoints require no label or entry in `endpoints`. Adding only `endpointGroups` requires no root-association migration.
 - **Virtual endpoints of a single device:** When the manual describes the endpoints as virtual or logical application resources of one physical device (e.g. a siren with a single speaker and light that exposes several sound/notification endpoints), group **all** of its endpoints into one group with `"isMainDevice": true`. This grouping is recommended, not optional — otherwise the virtual endpoints are presented as separate devices.
+- **Cover with a slat endpoint:** A shutter/blind that exposes its up/down position and its slat/lamella tilt as two endpoints is one physical blind — group both with `"isMainDevice": true`.
 
 Leave undocumented relationships ungrouped.
 
