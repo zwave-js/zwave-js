@@ -438,7 +438,13 @@ test("AES-OFB and AES-CBC are compatible between all implementations for partial
 	const node: CryptoPrimitives = (await import("./primitives.node.js"))
 		.primitives;
 
+	const crypto = await import("node:crypto");
+
 	const key = Bytes.from("2b7e151628aed2a6abf7158809cf4f3c", "hex");
+	const key256 = Bytes.from(
+		"603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+		"hex",
+	);
 	const iv = Bytes.from("000102030405060708090a0b0c0d0e0f", "hex");
 
 	for (const length of [1, 15, 16, 17, 31, 33]) {
@@ -456,6 +462,19 @@ test("AES-OFB and AES-CBC are compatible between all implementations for partial
 		const cbcBrowser = await browser.encryptAES128CBC(plaintext, key, iv);
 		const cbcNode = await node.encryptAES128CBC(plaintext, key, iv);
 		assertBufferEquals(t.expect, cbcBrowser, cbcNode);
+
+		const cipher = crypto.createCipheriv("aes-256-cbc", key256, iv);
+		const cbc256 = Bytes.concat([cipher.update(plaintext), cipher.final()]);
+		assertBufferEquals(
+			t.expect,
+			await browser.decryptAES256CBC(cbc256, key256, iv),
+			plaintext,
+		);
+		assertBufferEquals(
+			t.expect,
+			await node.decryptAES256CBC(cbc256, key256, iv),
+			plaintext,
+		);
 	}
 });
 
@@ -487,37 +506,5 @@ test("decryptAES128CCM returns no plaintext when authentication fails in all imp
 		);
 		t.expect(result.authOK).toBe(false);
 		t.expect(result.plaintext.length).toBe(0);
-	}
-});
-
-test("decryptAES256CBC removes the PKCS#7 padding in all implementations", async (t) => {
-	const crypto = await import("node:crypto");
-	const key = Bytes.from(
-		"603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
-		"hex",
-	);
-	const iv = Bytes.from("000102030405060708090a0b0c0d0e0f", "hex");
-
-	for (const length of [1, 15, 16, 17]) {
-		const plaintext = crypto.randomBytes(length);
-		const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
-		const ciphertext = Bytes.concat([
-			cipher.update(plaintext),
-			cipher.final(),
-		]);
-
-		for (const primitives of [
-			"./primitives.browser.js",
-			"./primitives.node.js",
-		] as const) {
-			const { decryptAES256CBC }: CryptoPrimitives = (
-				await import(primitives)
-			).primitives;
-			assertBufferEquals(
-				t.expect,
-				await decryptAES256CBC(ciphertext, key, iv),
-				plaintext,
-			);
-		}
 	}
 });

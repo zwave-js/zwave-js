@@ -132,14 +132,12 @@ function encryptAES128CBC(
 	);
 }
 
-/** Decrypts a payload using AES-256-CBC */
+/** Decrypts a PKCS#7-padded payload using AES-256-CBC and removes the padding */
 function decryptAES256CBC(
 	ciphertext: BytesView,
 	key: BytesView,
 	iv: BytesView,
 ): Promise<BytesView> {
-	// Unlike the other ciphers, this is used for files with PKCS#7 padding,
-	// which must be removed like the WebCrypto API does
 	const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
 	return Promise.resolve(
 		Bytes.concat([decipher.update(ciphertext), decipher.final()]),

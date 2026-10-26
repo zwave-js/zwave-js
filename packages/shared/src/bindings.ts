@@ -27,7 +27,7 @@ export interface CryptoPrimitives {
 		key: BytesView,
 		iv: BytesView,
 	): Promise<BytesView>;
-	/** Decrypts a payload using AES-256-CBC */
+	/** Decrypts a PKCS#7-padded payload using AES-256-CBC and removes the padding */
 	decryptAES256CBC(
 		ciphertext: BytesView,
 		key: BytesView,
