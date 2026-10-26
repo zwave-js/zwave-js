@@ -5460,7 +5460,7 @@ export class Driver
 				// Transport Service is only used for singlecast commands
 				frameType: command.frameType ?? "singlecast",
 			});
-			assertValidCCs({ command: reassembled } as ContainsCC);
+			assertValidCCs({ command: reassembled });
 			return reassembled;
 		} catch (e) {
 			this.driverLog.print(
