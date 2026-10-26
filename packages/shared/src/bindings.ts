@@ -6,8 +6,9 @@ import type { ReadableWritablePair } from "node:stream/web";
 import type { BytesView } from "./Bytes.js";
 
 export interface CryptoPrimitives {
+	/** Returns the given number of cryptographically secure random bytes */
 	randomBytes(length: number): BytesView;
-	/** Encrypts a payload using AES-128-ECB */
+	/** Encrypts a payload using AES-128-ECB (as described in SDS10865) */
 	encryptAES128ECB(plaintext: BytesView, key: BytesView): Promise<BytesView>;
 	/** Encrypts a payload using AES-128-CBC */
 	encryptAES128CBC(
@@ -15,7 +16,7 @@ export interface CryptoPrimitives {
 		key: BytesView,
 		iv: BytesView,
 	): Promise<BytesView>;
-	/** Encrypts a payload using AES-128-OFB */
+	/** Encrypts a payload using AES-128-OFB (as described in SDS10865) */
 	encryptAES128OFB(
 		plaintext: BytesView,
 		key: BytesView,
@@ -61,6 +62,7 @@ export interface CryptoPrimitives {
 		additionalData: BytesView,
 		authTag: BytesView,
 	): Promise<{ plaintext: BytesView; authOK: boolean }>;
+	/** Computes the hash of a payload with the given algorithm */
 	digest(
 		algorithm: "md5" | "sha-1" | "sha-256",
 		data: BytesView,
