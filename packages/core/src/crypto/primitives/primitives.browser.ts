@@ -55,7 +55,6 @@ async function encryptAES128CBC(
 	return new Uint8Array(ciphertext, 0, paddedPlaintext.length);
 }
 
-/** Decrypts a PKCS#7-padded payload using AES-256-CBC and removes the padding */
 async function decryptAES256CBC(
 	ciphertext: BytesView,
 	key: BytesView,

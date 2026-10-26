@@ -132,7 +132,6 @@ function encryptAES128CBC(
 	);
 }
 
-/** Decrypts a PKCS#7-padded payload using AES-256-CBC and removes the padding */
 function decryptAES256CBC(
 	ciphertext: BytesView,
 	key: BytesView,
