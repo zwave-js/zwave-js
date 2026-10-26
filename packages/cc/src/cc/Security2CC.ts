@@ -46,7 +46,6 @@ import {
 	type BytesView,
 	buffer2hex,
 	getEnumMemberName,
-	getenv,
 	pick,
 } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
@@ -82,6 +81,7 @@ import {
 	KEXSchemes,
 } from "../lib/Security2/shared.js";
 import { Security2Command } from "../lib/_Types.js";
+import { shouldLogSecurityDetails } from "../lib/securityLogging.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
 import { CRC16CC } from "./CRC16CC.js";
@@ -1888,9 +1888,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		]);
 
 		// Generate the authentication data for CCM encryption
-		const destinationTag = getDestinationIDTX.call(
-			this as Security2CCMessageEncapsulation,
-		);
+		const self = this as Security2CCMessageEncapsulation;
+		const destinationTag = getDestinationIDTX.call(self);
 		const messageLength =
 			this.computeEncapsulationOverhead() + serializedCC.length;
 		const authData = getAuthenticationData(
@@ -1971,11 +1970,8 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 		const message: MessageRecord = {
 			"sequence number": this.sequenceNumber ?? "(not set)",
 		};
-		// Log the used keys in integration tests
-		if (
-			getenv("NODE_ENV") === "test"
-			|| getenv("NODE_ENV") === "development"
-		) {
+		// Only log the used keys when explicitly allowed
+		if (shouldLogSecurityDetails()) {
 			if (this.key) {
 				message.key = buffer2hex(this.key);
 			}
