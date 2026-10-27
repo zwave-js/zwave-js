@@ -262,6 +262,23 @@ test("the Report command should round the previous value if the shared precision
 	t.expect(parsed.previousValue).toBe(0);
 });
 
+test("the Report command should find a shared precision when the previous value does not fit with its own precision", async (t) => {
+	const cc = new MeterCCReport({
+		nodeId: 1,
+		type: 3,
+		scale: 2,
+		rateType: RateType.Produced,
+		value: 21474836.5,
+		deltaTime: 5,
+		previousValue: 21474836.48,
+	});
+	const parsed = (await CommandClass.parse(await cc.serialize({} as any), {
+		sourceNodeId: 1,
+	} as any)) as MeterCCReport;
+	t.expect(parsed.value).toBe(21474836.5);
+	t.expect(parsed.previousValue).toBe(21474836.5);
+});
+
 test("the Report command (V3) should be deserialized correctly", async (t) => {
 	const ccData = buildCCBuffer(
 		Uint8Array.from([

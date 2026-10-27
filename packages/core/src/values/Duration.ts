@@ -29,6 +29,11 @@ export class Duration {
 		return this._value;
 	}
 	public set value(v: number) {
+		// Fractional minutes are more accurately represented in seconds, if they fit
+		if (this.unit === "minutes" && !Number.isInteger(v) && v * 60 <= 127) {
+			this.unit = "seconds";
+			v *= 60;
+		}
 		// Only whole seconds or minutes can be encoded
 		this._value = clamp(Math.round(v), 0, 127);
 		// 0 minutes cannot be encoded, the minutes range starts at 1.

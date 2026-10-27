@@ -130,12 +130,20 @@ export function parseFloatWithScale(
 /** The maximum precision that can be encoded in the 3-bit precision field */
 const MAX_PRECISION = 7;
 
-function getPrecision(num: number): number {
+/** Determines how many decimal places are needed to represent the given number, up to a maximum of 7 */
+export function getPrecision(num: number): number {
 	if (!Number.isFinite(num)) return 0;
+	// Floating point arithmetic leaves tiny errors like 0.1 + 0.2 = 0.30000000000000004,
+	// which would otherwise require the maximum precision. Differences far below the
+	// finest representable step (1e-7) are treated as such errors.
+	const tolerance = Math.max(1e-9, Math.abs(num) * 64 * Number.EPSILON);
 	let e = 1;
 	let p = 0;
 	// Without an upper bound, this loops forever for tiny numbers, where e overflows to Infinity
-	while (p < MAX_PRECISION && Math.round(num * e) / e !== num) {
+	while (
+		p < MAX_PRECISION
+		&& Math.abs(Math.round(num * e) / e - num) >= tolerance
+	) {
 		e *= 10;
 		p++;
 	}

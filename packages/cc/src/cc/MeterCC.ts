@@ -29,6 +29,7 @@ import {
 	getMeterName,
 	getMeterScale,
 	getMinIntegerSize,
+	getPrecision,
 	getUnknownMeterScale,
 	logDict,
 	logList,
@@ -251,11 +252,8 @@ function getSharedFloatParameters(
 	value: number,
 	previousValue: number,
 ): FloatParameters {
-	const valuePrecision = getFloatParameters(value).precision;
-	const maxPrecision = Math.max(
-		valuePrecision,
-		getFloatParameters(previousValue).precision,
-	);
+	const valuePrecision = getPrecision(value);
+	const maxPrecision = Math.max(valuePrecision, getPrecision(previousValue));
 	// A higher precision may make the scaled values too large to fit into 4 bytes
 	for (
 		let precision = maxPrecision;

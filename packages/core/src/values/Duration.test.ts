@@ -127,8 +127,17 @@ test("serializeSet() -> should not encode negative or zero minutes as the defaul
 
 test("the value is rounded to whole seconds or minutes", (t) => {
 	t.expect(new Duration(1.5, "seconds").serializeSet()).toBe(0x02);
+	t.expect(new Duration(2.5, "minutes")).toStrictEqual(
+		new Duration(3, "minutes"),
+	);
+});
+
+test("fractional minutes are converted to seconds if they fit", (t) => {
 	t.expect(new Duration(0.4, "minutes")).toStrictEqual(
-		new Duration(0, "seconds"),
+		new Duration(24, "seconds"),
+	);
+	t.expect(new Duration(1.5, "minutes")).toStrictEqual(
+		new Duration(90, "seconds"),
 	);
 });
 
