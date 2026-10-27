@@ -23,24 +23,7 @@
 	"paramInformation": [
 		{
 			"#": "5",
-			"label": "Switch Type",
-			"valueSize": 1,
-			"defaultValue": 0,
-			"allowManualEntry": false,
-			"options": [
-				{
-					"label": "Momentary switch",
-					"value": 0
-				},
-				{
-					"label": "Toggle switch",
-					"value": 1
-				},
-				{
-					"label": "Single momentary switch (SW1)",
-					"value": 2
-				}
-			]
+			"$import": "templates/wave_template.json#shutter_switch_type"
 		},
 		{
 			"#": "6",
