@@ -81,6 +81,11 @@
 		},
 		{
 			"#": "120",
+			"$if": "firmwareVersion <= 10.8",
+			"$import": "templates/wave_template.json#factory_reset_4_bytes"
+		},
+		{
+			"#": "120",
 			"$import": "templates/wave_template.json#factory_reset"
 		},
 		{
