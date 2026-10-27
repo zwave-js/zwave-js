@@ -107,7 +107,7 @@
 		},
 		{
 			"#": "120",
-			"$if": "firmwareVersion < 13.0",
+			"$if": "firmwareVersion <= 10.13 || firmwareVersion >= 11.3 && firmwareVersion <= 12.1",
 			"$import": "templates/wave_template.json#factory_reset_4_bytes"
 		},
 		{
