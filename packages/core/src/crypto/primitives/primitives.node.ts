@@ -15,6 +15,7 @@ import {
 // for some algorithms Z-Wave needs than the Web Crypto API, so we can implement
 // those without additional operations.
 
+/** Returns the given number of cryptographically secure random bytes */
 function randomBytes(length: number): BytesView {
 	return crypto.randomBytes(length);
 }
@@ -61,7 +62,7 @@ function decrypt(
 	}
 }
 
-/** Encrypts a payload using AES-128-ECB (as described in SDS10865) */
+/** Encrypts a payload using AES-128-ECB */
 function encryptAES128ECB(
 	plaintext: BytesView,
 	key: BytesView,
@@ -78,7 +79,7 @@ function encryptAES128ECB(
 	);
 }
 
-/** Encrypts a payload using AES-OFB (as described in SDS10865) */
+/** Encrypts a payload using AES-128-OFB */
 function encryptAES128OFB(
 	plaintext: BytesView,
 	key: BytesView,
@@ -89,7 +90,7 @@ function encryptAES128OFB(
 	);
 }
 
-/** Decrypts a payload using AES-OFB */
+/** Decrypts a payload using AES-128-OFB */
 function decryptAES128OFB(
 	ciphertext: BytesView,
 	key: BytesView,
@@ -122,6 +123,7 @@ function decryptAES256OFB(
 	);
 }
 
+/** Encrypts a payload using AES-128-CBC */
 function encryptAES128CBC(
 	plaintext: BytesView,
 	key: BytesView,
@@ -132,17 +134,19 @@ function encryptAES128CBC(
 	);
 }
 
-/** Decrypts a payload using AES-256-CBC */
+/** Decrypts a PKCS#7-padded payload using AES-256-CBC and removes the padding */
 function decryptAES256CBC(
 	ciphertext: BytesView,
 	key: BytesView,
 	iv: BytesView,
 ): Promise<BytesView> {
+	const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
 	return Promise.resolve(
-		decrypt("aes-256-cbc", BLOCK_SIZE, true, ciphertext, key, iv),
+		Bytes.concat([decipher.update(ciphertext), decipher.final()]),
 	);
 }
 
+/** Encrypts and authenticates a payload using AES-128-CCM */
 function encryptAES128CCM(
 	plaintext: BytesView,
 	key: BytesView,
@@ -163,6 +167,7 @@ function encryptAES128CCM(
 	return Promise.resolve({ ciphertext, authTag });
 }
 
+/** Decrypts and verifies a payload using AES-128-CCM */
 function decryptAES128CCM(
 	ciphertext: BytesView,
 	key: BytesView,
@@ -198,6 +203,7 @@ function decryptAES128CCM(
 	});
 }
 
+/** Computes the hash of a payload with the given algorithm */
 function digest(
 	algorithm: "md5" | "sha-1" | "sha-256",
 	data: BytesView,
@@ -214,12 +220,14 @@ function digest(
 	return Promise.resolve(hash.digest());
 }
 
+/** Computes HMAC-SHA256 */
 function hmacSHA256(key: BytesView, data: BytesView): Promise<BytesView> {
 	const hmac = crypto.createHmac("sha256", key);
 	hmac.update(data);
 	return Promise.resolve(hmac.digest());
 }
 
+/** Encrypts and authenticates a payload using ChaCha20-Poly1305 */
 function encryptChaCha20Poly1305(
 	key: BytesView,
 	nonce: BytesView,
@@ -237,6 +245,7 @@ function encryptChaCha20Poly1305(
 	return Promise.resolve({ ciphertext, authTag });
 }
 
+/** Decrypts and verifies a payload using ChaCha20-Poly1305 */
 function decryptChaCha20Poly1305(
 	key: BytesView,
 	nonce: BytesView,
@@ -314,6 +323,7 @@ function generateECDHKeyPair(): Promise<KeyPair> {
 	return Promise.resolve({ publicKey, privateKey });
 }
 
+/** Expand an x25519 / ECDH private key into the full key pair */
 function keyPairFromRawECDHPrivateKey(privateKey: BytesView): Promise<KeyPair> {
 	const privateKeyObject = importRawECDHPrivateKey(privateKey);
 	const publicKeyObject = crypto.createPublicKey(privateKeyObject);
@@ -324,6 +334,7 @@ function keyPairFromRawECDHPrivateKey(privateKey: BytesView): Promise<KeyPair> {
 	});
 }
 
+/** Derives the shared ECDH secret from an x25519 / ECDH key pair */
 function deriveSharedECDHSecret(keyPair: KeyPair): Promise<BytesView> {
 	const publicKey = importRawECDHPublicKey(keyPair.publicKey);
 	const privateKey = importRawECDHPrivateKey(keyPair.privateKey);
