@@ -80,3 +80,58 @@ test("the UserSet command refuses to encode characters outside of Extended ASCII
 		errorCode: ZWaveErrorCodes.Argument_Invalid,
 	});
 });
+
+test("the UserSet command refuses to encode characters outside of ASCII", async (t) => {
+	const cc = new UserCredentialCCUserSet({
+		nodeId: 2,
+		operationType: UserCredentialOperationType.Add,
+		userId: 1,
+		userType: UserCredentialUserType.General,
+		active: true,
+		credentialRule: UserCredentialRule.Single,
+		nameEncoding: UserCredentialNameEncoding.ASCII,
+		userName: extendedASCIIName,
+	});
+	await assertZWaveError(t.expect, () => cc.serialize({} as any), {
+		errorCode: ZWaveErrorCodes.Argument_Invalid,
+	});
+});
+
+test("the UserReport command decodes ASCII user names with one byte per character", async (t) => {
+	const cc = new UserCredentialCCUserReport({
+		nodeId: 2,
+		reportType: UserCredentialUserReportType.UserAdded,
+		modifierType: UserCredentialModifierType.ZWave,
+		modifierNodeId: 1,
+		userId: 1,
+		userType: UserCredentialUserType.General,
+		active: true,
+		credentialRule: UserCredentialRule.Single,
+		expiringTimeoutMinutes: 0,
+		nameEncoding: UserCredentialNameEncoding.ExtendedASCII,
+		userName: extendedASCIIName,
+	});
+	const serialized = await cc.serialize({} as any);
+	// CC, command and 13 bytes before the name encoding
+	serialized[15] = UserCredentialNameEncoding.ASCII;
+
+	const parsed = (await CommandClass.parse(serialized, {
+		sourceNodeId: 2,
+	} as any)) as UserCredentialCCUserReport;
+	t.expect(parsed.userName).toBe(extendedASCIIName);
+});
+
+test("the UserSet command refuses to serialize Add/Modify without a name encoding", async (t) => {
+	const cc = new UserCredentialCCUserSet({
+		nodeId: 2,
+		operationType: UserCredentialOperationType.Add,
+		userId: 1,
+		userType: UserCredentialUserType.General,
+		active: true,
+		credentialRule: UserCredentialRule.Single,
+		userName: "John Doe",
+	});
+	await assertZWaveError(t.expect, () => cc.serialize({} as any), {
+		errorCode: ZWaveErrorCodes.Argument_Invalid,
+	});
+});
