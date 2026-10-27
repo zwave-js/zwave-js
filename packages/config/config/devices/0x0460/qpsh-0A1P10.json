@@ -1,0 +1,143 @@
+{
+	"manufacturer": "Shelly Europe Ltd.",
+	"manufacturerId": "0x0460",
+	"label": "QPSH-0A1P10EU",
+	"description": "Wave Pro Shutter",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0084"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"endpoints": {
+		"1": { "label": "Shutter" },
+		"2": { "label": "Slat Tilt" }
+	},
+	"endpointGroups": {
+		"1": { "label": "Shutter", "endpoints": [1, 2], "isMainDevice": true }
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"label": "Switch Type",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Momentary switch",
+					"value": 0
+				},
+				{
+					"label": "Toggle switch",
+					"value": 1
+				},
+				{
+					"label": "Single momentary switch (SW1)",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "3",
+			"$import": "templates/wave_template.json#swap_inputs"
+		},
+		{
+			"#": "5",
+			"$import": "templates/wave_template.json#swap_outputs"
+		},
+		{
+			"#": "40",
+			"$import": "templates/wave_template.json#power_change_report_treshold",
+			"label": "Power Change Report Threshold"
+		},
+		{
+			"#": "71",
+			"label": "Operating Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Shutter",
+					"value": 0
+				},
+				{
+					"label": "Venetian blind",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "72",
+			"label": "Venetian Mode: Turning Time",
+			"description": "Time required for the slats to make a full turn (180°)",
+			"valueSize": 2,
+			"unit": "0.01 seconds",
+			"minValue": 0,
+			"maxValue": 32000,
+			"defaultValue": 150,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "73",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Venetian Mode: Restore Slats Position After Moving",
+			"defaultValue": 1
+		},
+		{
+			"#": "76",
+			"$import": "templates/wave_template.json#motor_limit_detection",
+			"unit": "W"
+		},
+		{
+			"#": "78",
+			"$import": "templates/wave_template.json#force_calibration",
+			"label": "Shutter Calibration",
+			"defaultValue": 3
+		},
+		{
+			"#": "80",
+			"label": "Delay Motor Stop",
+			"description": "How long to wait before stopping the motor after reaching the end position",
+			"valueSize": 1,
+			"unit": "0.1 seconds",
+			"minValue": 0,
+			"maxValue": 127,
+			"defaultValue": 10
+		},
+		{
+			"#": "85",
+			"$import": "templates/wave_template.json#delay_limit_detection",
+			"defaultValue": 30
+		},
+		{
+			"#": "91",
+			"$import": "templates/wave_template.json#max_moving_time"
+		},
+		{
+			"#": "120",
+			"$if": "firmwareVersion >= 10.1 && firmwareVersion <= 10.11",
+			"$import": "templates/wave_template.json#factory_reset_4_bytes"
+		},
+		{
+			"#": "120",
+			"$import": "templates/wave_template.json#factory_reset"
+		}
+	],
+	"metadata": {
+		"inclusion": "1. Press and hold the S button until the LED turns solid blue.\n2. Release the button, then press and hold it again for more than 2 seconds until the blue LED starts blinking slowly.\n3. Release the S button.\n4. The blue LED blinks faster while adding. The green LED blinks slowly when the device was added successfully.",
+		"exclusion": "1. Press and hold the S button until the LED turns solid blue.\n2. Release the button, then press and hold it again for more than 2 seconds until the blue LED starts blinking slowly.\n3. Release the S button.\n4. The blue LED blinks faster while removing. The blue LED blinks slowly when the device was removed successfully.",
+		"reset": "1. Press and hold the S button until the LED turns solid blue.\n2. Press the S button repeatedly until the LED turns solid red.\n3. Press and hold the S button for more than 2 seconds until the red LED starts blinking faster.\n4. Release the S button.\n5. The LED turns solid green for about 1 second, then the blue and red LEDs blink for about 2 seconds. The blue LED blinks slowly when the reset was successful.",
+		"manual": "https://www.shelly.com/blogs/documentation/wave-pro-shutter-eu"
+	}
+}
