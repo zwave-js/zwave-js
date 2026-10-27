@@ -1,7 +1,7 @@
 {
 	"manufacturer": "Shelly Europe Ltd.",
 	"manufacturerId": "0x0460",
-	"label": "QPSH-0A1P10EU",
+	"label": "QPSH-0A1P10",
 	"description": "Wave Pro Shutter",
 	"devices": [
 		{
