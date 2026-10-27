@@ -13,7 +13,7 @@ import {
 	logDict,
 	logList,
 	logText,
-	parseCCId,
+	tryParseCCId,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared";
@@ -815,7 +815,10 @@ export class AssociationGroupInfoCCCommandListReport extends AssociationGroupInf
 		let offset = 0;
 		const commands = new Map<CommandClasses, number[]>();
 		while (offset < listLength) {
-			const { ccId, bytesRead } = parseCCId(listBytes, offset);
+			// Ignore a truncated entry at the end of the list
+			const parsed = tryParseCCId(listBytes, offset);
+			if (!parsed || offset + parsed.bytesRead >= listLength) break;
+			const { ccId, bytesRead } = parsed;
 			const command = listBytes[offset + bytesRead];
 			if (!commands.has(ccId)) commands.set(ccId, []);
 			commands.get(ccId)!.push(command);
