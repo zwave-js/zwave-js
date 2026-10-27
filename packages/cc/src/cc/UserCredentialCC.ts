@@ -2827,12 +2827,20 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		const credentialReadBack = !!(raw.payload[6] & 0b1000_0000);
 		const credentialLength = raw.payload[7];
 		validatePayload(raw.payload.length >= 8 + credentialLength + 6);
-		// Passwords are UTF-16BE (CC:0083.01.0A.11.021)
-		validatePayload(
-			!credentialReadBack
-				|| credentialType !== UserCredentialType.Password
-				|| credentialLength % 2 === 0,
-		);
+		if (
+			credentialType === UserCredentialType.Password
+			&& credentialLength % 2 !== 0
+		) {
+			// CC:0083.01.0C.11.000: If the credential cannot be read back
+			// (CRB is zero), the node MUST instead report a hash sum of the credential.
+			if (credentialReadBack) {
+				// CC:0083.01.0A.11.021: Passwords MUST be transmitted in Unicode
+				// UTF-16 format, in big endian order.
+				validatePayload.fail(
+					"Password credentials must have an even length",
+				);
+			}
+		}
 
 		const offset = 8 + credentialLength;
 		const modifierType: UserCredentialModifierType = raw.payload[offset];
