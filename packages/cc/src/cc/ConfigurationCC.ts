@@ -2699,23 +2699,20 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const rawName = raw.payload.subarray(3).toString("utf8");
+		const name = escapeControlCharacters(
+			raw.payload.subarray(3).toString("utf8"),
+		);
 
-		const ret = new this({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			reportsToFollow,
-			name: escapeControlCharacters(rawName),
+			name,
 		});
-		ret.rawName = rawName;
-		return ret;
 	}
 
 	public readonly parameter: number;
 	public name: string;
-	// Kept so segments can be escaped as a whole after merging, instead of
-	// stripping the NUL padding of each segment individually
-	private rawName: string | undefined;
 	public readonly reportsToFollow: number;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -2776,11 +2773,9 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 		_ctx: CCParsingContext,
 	): Promise<void> {
 		// Concat the name
-		this.name = escapeControlCharacters(
-			[...partials, this]
-				.map((report) => report.rawName ?? report.name)
-				.join(""),
-		);
+		this.name = [...partials, this]
+			.map((report) => report.name)
+			.reduce((prev, cur) => prev + cur, "");
 		return Promise.resolve();
 	}
 
@@ -2863,23 +2858,21 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const rawInfo = raw.payload.subarray(3).toString("utf8");
+		const info = escapeControlCharacters(
+			raw.payload.subarray(3).toString("utf8"),
+			{ keepNewlines: true },
+		);
 
-		const ret = new this({
+		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			reportsToFollow,
-			info: escapeControlCharacters(rawInfo, { keepNewlines: true }),
+			info,
 		});
-		ret.rawInfo = rawInfo;
-		return ret;
 	}
 
 	public readonly parameter: number;
 	public info: string;
-	// Kept so segments can be sanitized as a whole after merging, instead of
-	// stripping the NUL padding of each segment individually
-	private rawInfo: string | undefined;
 	public readonly reportsToFollow: number;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -2955,12 +2948,9 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 		_ctx: CCParsingContext,
 	): Promise<void> {
 		// Concat the info
-		this.info = escapeControlCharacters(
-			[...partials, this]
-				.map((report) => report.rawInfo ?? report.info)
-				.join(""),
-			{ keepNewlines: true },
-		);
+		this.info = [...partials, this]
+			.map((report) => report.info)
+			.reduce((prev, cur) => prev + cur, "");
 		return Promise.resolve();
 	}
 

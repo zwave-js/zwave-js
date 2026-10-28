@@ -9,12 +9,9 @@ export function cpp2js(str: string): string {
 }
 
 /**
- * Makes strings received from other devices safe to display, so they cannot manipulate logs or
- * applications that show them. Trailing NUL padding is removed, C0 and C1 control characters
- * (e.g. `"\x1b"`) are replaced with `\xHH` and Unicode bidi controls as well as line/paragraph
- * separators with `\uHHHH`. This is lossy: the result cannot be converted back to the original string.
- *
- * With `keepNewlines`, line breaks are normalized to `\n` and kept, for texts that legitimately span multiple lines.
+ * Escapes control characters in strings received from other devices, so they cannot manipulate
+ * logs or applications that display them. Trailing NUL padding is removed.
+ * Use `keepNewlines` for texts that legitimately span multiple lines.
  */
 export function escapeControlCharacters(
 	str: string,
