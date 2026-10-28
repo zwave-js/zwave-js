@@ -95,6 +95,12 @@ test("escapeControlCharacters() -> should remove trailing NUL padding", (t) => {
 	t.expect(escapeControlCharacters("\0".repeat(100_000))).toBe("");
 });
 
+test("escapeControlCharacters() -> should keep normalized newlines if requested", (t) => {
+	t.expect(
+		escapeControlCharacters("a\r\nb\rc\nd\x1b", { keepNewlines: true }),
+	).toBe("a\nb\nc\nd\\x1b");
+});
+
 test("escapeControlCharacters() -> should keep printable characters", (t) => {
 	t.expect(escapeControlCharacters("Küche 🔥")).toBe("Küche 🔥");
 });

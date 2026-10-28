@@ -84,11 +84,6 @@ import { V } from "../lib/Values.js";
 import { type ConfigValue, ConfigurationCommand } from "../lib/_Types.js";
 import type { CCEncodingContext, CCParsingContext } from "../lib/traits.js";
 
-/** Parameter descriptions legitimately span multiple lines, which would otherwise be escaped */
-function sanitizeParamInfo(info: string): string {
-	return escapeControlCharacters(info.replaceAll(/\r\n|\r|\n/g, " "));
-}
-
 function configValueToString(value: ConfigValue): string {
 	if (typeof value === "number") return value.toString();
 	else return [...value].join(", ");
@@ -2874,7 +2869,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			reportsToFollow,
-			info: sanitizeParamInfo(rawInfo),
+			info: escapeControlCharacters(rawInfo, { keepNewlines: true }),
 		});
 		ret.rawInfo = rawInfo;
 		return ret;
@@ -2960,10 +2955,11 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 		_ctx: CCParsingContext,
 	): Promise<void> {
 		// Concat the info
-		this.info = sanitizeParamInfo(
+		this.info = escapeControlCharacters(
 			[...partials, this]
 				.map((report) => report.rawInfo ?? report.info)
 				.join(""),
+			{ keepNewlines: true },
 		);
 		return Promise.resolve();
 	}
