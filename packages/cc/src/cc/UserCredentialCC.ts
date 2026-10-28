@@ -16,6 +16,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	stripControlCharacters,
 	getEnumMemberName,
 	pick,
 	stringToUint8ArrayUTF16BE,
@@ -2153,6 +2154,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 				raw.payload.subarray(10, 10 + nameLength),
 			);
 		}
+		userName = stripControlCharacters(userName);
 
 		if (userType === UserCredentialUserType.Expiring) {
 			return new this({
@@ -2372,6 +2374,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 				raw.payload.subarray(15, 15 + nameLength),
 			);
 		}
+		userName = stripControlCharacters(userName);
 
 		const common = {
 			nodeId: ctx.sourceNodeId,
