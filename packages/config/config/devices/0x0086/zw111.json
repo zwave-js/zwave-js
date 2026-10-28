@@ -487,25 +487,18 @@
 			"$import": "templates/aeotec_template.json#factory_reset_exclude"
 		}
 	],
-	"compat": [
-		{
-			"$if": "productType === 0x0003 && productId === 0x006f",
-			// The European ZW111 sends Meter V3 reports even when the cached CC version is V1.
-			"commandClasses": {
-				"add": {
-					"Meter": {
-						"version": 3
-					}
+	"compat": {
+		// Some ZW111 devices send Meter V3 reports when the cached CC version is V1.
+		"commandClasses": {
+			"add": {
+				"Meter": {
+					"version": 3
 				}
-			},
-			"mapBasicSet": "event",
-			"treatMultilevelSwitchSetAsEvent": true
+			}
 		},
-		{
-			"mapBasicSet": "event",
-			"treatMultilevelSwitchSetAsEvent": true
-		}
-	],
+		"mapBasicSet": "event",
+		"treatMultilevelSwitchSetAsEvent": true
+	},
 	"metadata": {
 		"inclusion": "Short press the Action button on the product housing",
 		"exclusion": "Short press the Action button on the product housing",
