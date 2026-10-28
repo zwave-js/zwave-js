@@ -2699,20 +2699,23 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const name = stripControlCharacters(
-			raw.payload.subarray(3).toString("utf8"),
-		);
+		const rawName = raw.payload.subarray(3).toString("utf8");
 
-		return new this({
+		const ret = new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			reportsToFollow,
-			name,
+			name: stripControlCharacters(rawName),
 		});
+		ret.rawName = rawName;
+		return ret;
 	}
 
 	public readonly parameter: number;
 	public name: string;
+	// Line breaks and NUL terminators may be split across reports, so the
+	// merged text must be sanitized as a whole
+	private rawName: string | undefined;
 	public readonly reportsToFollow: number;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -2773,9 +2776,11 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 		_ctx: CCParsingContext,
 	): Promise<void> {
 		// Concat the name
-		this.name = [...partials, this]
-			.map((report) => report.name)
-			.reduce((prev, cur) => prev + cur, "");
+		this.name = stripControlCharacters(
+			[...partials, this]
+				.map((report) => report.rawName ?? report.name)
+				.join(""),
+		);
 		return Promise.resolve();
 	}
 
@@ -2858,21 +2863,23 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const info = stripControlCharacters(
-			raw.payload.subarray(3).toString("utf8"),
-			{ keepNewlines: true },
-		);
+		const rawInfo = raw.payload.subarray(3).toString("utf8");
 
-		return new this({
+		const ret = new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			reportsToFollow,
-			info,
+			info: stripControlCharacters(rawInfo, { keepNewlines: true }),
 		});
+		ret.rawInfo = rawInfo;
+		return ret;
 	}
 
 	public readonly parameter: number;
 	public info: string;
+	// Line breaks and NUL terminators may be split across reports, so the
+	// merged text must be sanitized as a whole
+	private rawInfo: string | undefined;
 	public readonly reportsToFollow: number;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -2948,9 +2955,12 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 		_ctx: CCParsingContext,
 	): Promise<void> {
 		// Concat the info
-		this.info = [...partials, this]
-			.map((report) => report.info)
-			.reduce((prev, cur) => prev + cur, "");
+		this.info = stripControlCharacters(
+			[...partials, this]
+				.map((report) => report.rawInfo ?? report.info)
+				.join(""),
+			{ keepNewlines: true },
+		);
 		return Promise.resolve();
 	}
 
