@@ -255,9 +255,11 @@ function parseExpression(s: ParserState): Expression | undefined {
 }
 
 function parseOr(s: ParserState): Expression | undefined {
+	// <and|comparison|group> || <and|comparison|group> || ...
 	const first = parseAnd(s);
 	if (!first) return;
 
+	// Now optionally parse further sequences of "||" <and|comparison|group>
 	const operands: Expression[] = [first];
 	while (s.tokens[s.pos]?.kind === TokenKind.BarBar) {
 		const startPos = s.pos;
@@ -278,9 +280,11 @@ function parseOr(s: ParserState): Expression | undefined {
 }
 
 function parseAnd(s: ParserState): Expression | undefined {
+	// <comparison|group> && <comparison|group> && ...
 	const first = parsePrimary(s);
 	if (!first) return;
 
+	// Now optionally parse further sequences of "&&" <comparison|group>
 	const operands: Expression[] = [first];
 	while (s.tokens[s.pos]?.kind === TokenKind.AmpAmp) {
 		const startPos = s.pos;
@@ -305,6 +309,8 @@ function parsePrimary(s: ParserState): Expression | undefined {
 }
 
 function parseGroup(s: ParserState): Expression | undefined {
+	// A group is technically only needed for operator precedence of OR expressions,
+	// but we parse any expression within parentheses for simplicity
 	// "(" <expression> ")"
 	const startPos = s.pos;
 	if (s.tokens[s.pos]?.kind !== TokenKind.LeftParen) {
