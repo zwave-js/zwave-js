@@ -16,7 +16,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	escapeControlCharacters,
+	stripControlCharacters,
 	getEnumMemberName,
 	pick,
 	stringToUint8ArrayUTF16BE,
@@ -2049,7 +2049,7 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 				.subarray(10, 10 + nameLength)
 				.toString("ascii");
 		}
-		userName = escapeControlCharacters(userName);
+		userName = stripControlCharacters(userName);
 
 		if (userType === UserCredentialUserType.Expiring) {
 			return new this({
@@ -2256,7 +2256,7 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 				.subarray(15, 15 + nameLength)
 				.toString("ascii");
 		}
-		userName = escapeControlCharacters(userName);
+		userName = stripControlCharacters(userName);
 
 		const common = {
 			nodeId: ctx.sourceNodeId,

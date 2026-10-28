@@ -1,6 +1,11 @@
 import { Bytes, type BytesView } from "./Bytes.js";
 import { uint8ArrayToHex } from "./uint8array-extras.js";
 
+const CONTROL_CHARACTERS =
+	/[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g;
+const CONTROL_CHARACTERS_EXCEPT_LF =
+	/[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g;
+
 /** Translates a null-terminated (C++) string to JS */
 export function cpp2js(str: string): string {
 	const nullIndex = str.indexOf("\0");
@@ -9,27 +14,22 @@ export function cpp2js(str: string): string {
 }
 
 /**
- * Escapes control characters in strings received from other devices, so they cannot manipulate
+ * Removes control characters from strings received from other devices, so they cannot manipulate
  * logs or applications that display them. Some devices send NUL-terminated or padded strings
  * although the specifications don't allow this, so the string is cut off at the first NUL character.
  * Use `keepNewlines` for texts that legitimately span multiple lines.
  */
-export function escapeControlCharacters(
+export function stripControlCharacters(
 	str: string,
 	options?: { keepNewlines?: boolean },
 ): string {
-	let ret = cpp2js(str);
-	if (options?.keepNewlines) ret = ret.replaceAll(/\r\n?/g, "\n");
-	return ret.replaceAll(
-		/[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g,
-		(c) => {
-			if (c === "\n" && options?.keepNewlines) return c;
-			const code = c.charCodeAt(0);
-			return code <= 0xff
-				? `\\x${code.toString(16).padStart(2, "0")}`
-				: `\\u${code.toString(16).padStart(4, "0")}`;
-		},
-	);
+	const ret = cpp2js(str);
+	if (options?.keepNewlines) {
+		return ret
+			.replaceAll(/\r\n?/g, "\n")
+			.replaceAll(CONTROL_CHARACTERS_EXCEPT_LF, "");
+	}
+	return ret.replaceAll(CONTROL_CHARACTERS, "");
 }
 
 /**

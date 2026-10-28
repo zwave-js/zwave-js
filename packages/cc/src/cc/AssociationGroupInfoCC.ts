@@ -18,7 +18,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	escapeControlCharacters,
+	stripControlCharacters,
 	getEnumMemberName,
 	num2hex,
 } from "@zwave-js/shared";
@@ -498,7 +498,7 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 		// CC:0059.01.02.11.001: The Name Length field MUST be in the range 0..42
 		validatePayload(nameLength <= 42);
 		validatePayload(raw.payload.length >= 2 + nameLength);
-		const name = escapeControlCharacters(
+		const name = stripControlCharacters(
 			raw.payload.subarray(2, 2 + nameLength).toString("utf8"),
 		);
 

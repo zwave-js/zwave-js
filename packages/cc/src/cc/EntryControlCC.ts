@@ -20,7 +20,7 @@ import {
 	Bytes,
 	type BytesView,
 	buffer2hex,
-	escapeControlCharacters,
+	stripControlCharacters,
 	pick,
 } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
@@ -458,7 +458,7 @@ export class EntryControlCCNotification extends EntryControlCC {
 					if (!noStrictValidation) {
 						validatePayload(/^[\u0000-\u007f]+$/.test(asciiData));
 					}
-					eventData = escapeControlCharacters(asciiData);
+					eventData = stripControlCharacters(asciiData);
 					break;
 				case EntryControlDataTypes.MD5:
 					// MD5 16 byte binary data encoded as a MD5 hash value.

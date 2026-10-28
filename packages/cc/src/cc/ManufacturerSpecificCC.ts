@@ -11,7 +11,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	escapeControlCharacters,
+	stripControlCharacters,
 	getEnumMemberName,
 	num2hex,
 	pick,
@@ -353,7 +353,7 @@ export class ManufacturerSpecificCCDeviceSpecificReport extends ManufacturerSpec
 		const deviceIdData = raw.payload.subarray(2, 2 + dataLength);
 		const deviceId: string | Bytes =
 			dataFormat === DeviceIdDataFormat.UTF8
-				? escapeControlCharacters(deviceIdData.toString("utf8"))
+				? stripControlCharacters(deviceIdData.toString("utf8"))
 				: deviceIdData;
 
 		return new this({

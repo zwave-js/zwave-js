@@ -20,7 +20,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	escapeControlCharacters,
+	stripControlCharacters,
 	getEnumMemberName,
 	num2hex,
 } from "@zwave-js/shared";
@@ -1563,7 +1563,7 @@ export class IndicatorCCDescriptionReport extends IndicatorCC {
 		const indicatorId = raw.payload[0];
 		const descriptionLength = raw.payload[1];
 		validatePayload(raw.payload.length >= 2 + descriptionLength);
-		const description: string = escapeControlCharacters(
+		const description: string = stripControlCharacters(
 			raw.payload.subarray(2, 2 + descriptionLength).toString("utf8"),
 			{ keepNewlines: true },
 		);

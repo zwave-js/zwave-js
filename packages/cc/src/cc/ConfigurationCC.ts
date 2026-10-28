@@ -43,7 +43,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	escapeControlCharacters,
+	stripControlCharacters,
 	getEnumMemberName,
 	num2hex,
 	pick,
@@ -2699,7 +2699,7 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const name = escapeControlCharacters(
+		const name = stripControlCharacters(
 			raw.payload.subarray(3).toString("utf8"),
 		);
 
@@ -2858,7 +2858,7 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const info = escapeControlCharacters(
+		const info = stripControlCharacters(
 			raw.payload.subarray(3).toString("utf8"),
 			{ keepNewlines: true },
 		);

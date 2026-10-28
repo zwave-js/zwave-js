@@ -3,7 +3,7 @@ import { test } from "vitest";
 import { Bytes } from "./Bytes.js";
 import {
 	cpp2js,
-	escapeControlCharacters,
+	stripControlCharacters,
 	isPrintableASCIIWithWhitespace,
 	num2hex,
 	stringToUint8ArrayUTF16BE,
@@ -75,32 +75,30 @@ test("stringToUint8ArrayUTF16BE / uint8ArrayToStringUTF16BE", (t) => {
 	}
 });
 
-test("escapeControlCharacters() -> should escape C0 and C1 control characters", (t) => {
-	t.expect(escapeControlCharacters("a\x1b[31mb\nc\x9b")).toBe(
-		"a\\x1b[31mb\\x0ac\\x9b",
-	);
+test("stripControlCharacters() -> should remove C0 and C1 control characters", (t) => {
+	t.expect(stripControlCharacters("a\x1b[31mb\nc\x9b")).toBe("a[31mbc");
 });
 
-test("escapeControlCharacters() -> should escape bidi controls and line/paragraph separators", (t) => {
+test("stripControlCharacters() -> should remove bidi controls and line/paragraph separators", (t) => {
 	t.expect(
-		escapeControlCharacters(
+		stripControlCharacters(
 			"a\u202eb\u2066c\u2069d\u2028e\u2029f\u061cg\u200eh\u200f",
 		),
-	).toBe("a\\u202eb\\u2066c\\u2069d\\u2028e\\u2029f\\u061cg\\u200eh\\u200f");
+	).toBe("abcdefgh");
 });
 
-test("escapeControlCharacters() -> should cut off at the first NUL character", (t) => {
-	t.expect(escapeControlCharacters("name\0\0\0")).toBe("name");
-	t.expect(escapeControlCharacters("name\0garbage")).toBe("name");
-	t.expect(escapeControlCharacters("\0".repeat(100_000))).toBe("");
+test("stripControlCharacters() -> should cut off at the first NUL character", (t) => {
+	t.expect(stripControlCharacters("name\0\0\0")).toBe("name");
+	t.expect(stripControlCharacters("name\0garbage")).toBe("name");
+	t.expect(stripControlCharacters("\0".repeat(100_000))).toBe("");
 });
 
-test("escapeControlCharacters() -> should keep normalized newlines if requested", (t) => {
+test("stripControlCharacters() -> should keep normalized newlines if requested", (t) => {
 	t.expect(
-		escapeControlCharacters("a\r\nb\rc\nd\x1b", { keepNewlines: true }),
-	).toBe("a\nb\nc\nd\\x1b");
+		stripControlCharacters("a\r\nb\rc\nd\x1b", { keepNewlines: true }),
+	).toBe("a\nb\nc\nd");
 });
 
-test("escapeControlCharacters() -> should keep printable characters", (t) => {
-	t.expect(escapeControlCharacters("Küche 🔥")).toBe("Küche 🔥");
+test("stripControlCharacters() -> should keep printable characters", (t) => {
+	t.expect(stripControlCharacters("Küche 🔥")).toBe("Küche 🔥");
 });

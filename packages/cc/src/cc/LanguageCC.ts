@@ -12,7 +12,7 @@ import {
 	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, escapeControlCharacters, pick } from "@zwave-js/shared";
+import { Bytes, stripControlCharacters, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 
 import { CCAPI } from "../lib/API.js";
@@ -175,9 +175,9 @@ export class LanguageCCSet extends LanguageCC {
 			country = raw.payload.subarray(3, 5).toString("ascii");
 			validatePayload(country.toUpperCase() === country);
 		}
-		// Escape only after validating, so the checks apply to the original codes
-		language = escapeControlCharacters(language);
-		country &&= escapeControlCharacters(country);
+		// Strip only after validating, so the checks apply to the original codes
+		language = stripControlCharacters(language);
+		country &&= stripControlCharacters(country);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
@@ -273,8 +273,8 @@ export class LanguageCCReport extends LanguageCC {
 				country.toUpperCase() === country,
 			);
 		}
-		language = escapeControlCharacters(language);
-		country &&= escapeControlCharacters(country);
+		language = stripControlCharacters(language);
+		country &&= stripControlCharacters(country);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
