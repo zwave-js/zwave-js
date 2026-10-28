@@ -18,7 +18,6 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
-	cpp2js,
 	escapeControlCharacters,
 	getEnumMemberName,
 	num2hex,
@@ -499,11 +498,8 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 		// CC:0059.01.02.11.001: The Name Length field MUST be in the range 0..42
 		validatePayload(nameLength <= 42);
 		validatePayload(raw.payload.length >= 2 + nameLength);
-		// The specs don't allow 0-terminated string, but some devices use them
-		// So we need to cut them off. Escaping only strips trailing NULs, so this
-		// also drops garbage after the terminator instead of showing it escaped.
 		const name = escapeControlCharacters(
-			cpp2js(raw.payload.subarray(2, 2 + nameLength).toString("utf8")),
+			raw.payload.subarray(2, 2 + nameLength).toString("utf8"),
 		);
 
 		return new this({

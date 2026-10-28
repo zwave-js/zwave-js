@@ -10,17 +10,15 @@ export function cpp2js(str: string): string {
 
 /**
  * Escapes control characters in strings received from other devices, so they cannot manipulate
- * logs or applications that display them. Trailing NUL padding is removed.
+ * logs or applications that display them. Some devices send NUL-terminated or padded strings
+ * although the specifications don't allow this, so the string is cut off at the first NUL character.
  * Use `keepNewlines` for texts that legitimately span multiple lines.
  */
 export function escapeControlCharacters(
 	str: string,
 	options?: { keepNewlines?: boolean },
 ): string {
-	// A linear scan avoids the polynomial runtime of a regex on long runs of NUL characters
-	let end = str.length;
-	while (end > 0 && str.charCodeAt(end - 1) === 0) end--;
-	let ret = str.slice(0, end);
+	let ret = cpp2js(str);
 	if (options?.keepNewlines) ret = ret.replaceAll(/\r\n?/g, "\n");
 	return ret.replaceAll(
 		/[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g,

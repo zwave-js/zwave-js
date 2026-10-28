@@ -89,9 +89,9 @@ test("escapeControlCharacters() -> should escape bidi controls and line/paragrap
 	).toBe("a\\u202eb\\u2066c\\u2069d\\u2028e\\u2029f\\u061cg\\u200eh\\u200f");
 });
 
-test("escapeControlCharacters() -> should remove trailing NUL padding", (t) => {
+test("escapeControlCharacters() -> should cut off at the first NUL character", (t) => {
 	t.expect(escapeControlCharacters("name\0\0\0")).toBe("name");
-	t.expect(escapeControlCharacters("na\0me")).toBe("na\\x00me");
+	t.expect(escapeControlCharacters("name\0garbage")).toBe("name");
 	t.expect(escapeControlCharacters("\0".repeat(100_000))).toBe("");
 });
 
