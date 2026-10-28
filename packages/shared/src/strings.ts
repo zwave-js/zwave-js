@@ -15,14 +15,14 @@ export function cpp2js(str: string): string {
 
 /**
  * Removes control characters from strings received from other devices, so they cannot manipulate
- * logs or applications that display them. Some devices send NUL-terminated or padded strings
- * although the specifications don't allow this, so the string is cut off at the first NUL character.
+ * logs or applications that display them. The string is also terminated at the first NUL character.
  * Use `keepNewlines` for texts that legitimately span multiple lines.
  */
 export function stripControlCharacters(
 	str: string,
 	options?: { keepNewlines?: boolean },
 ): string {
+	// Some devices send NUL-terminated or padded strings, although the specs don't allow this
 	const ret = cpp2js(str);
 	if (options?.keepNewlines) {
 		return ret
