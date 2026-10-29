@@ -1,3 +1,6 @@
+// Registers HelloResponse, so its parsing can fail
+import "../HelloMessages.js";
+
 import { ZWaveErrorCodes } from "@zwave-js/core";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import { expect, test } from "vitest";
