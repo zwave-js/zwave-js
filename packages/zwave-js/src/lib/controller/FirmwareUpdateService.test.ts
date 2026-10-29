@@ -1,6 +1,5 @@
 import { type AddressInfo } from "node:net";
 
-import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { afterAll, beforeAll, beforeEach, test } from "vitest";
 
 import {
@@ -173,6 +172,7 @@ test("only stale devices are re-requested", async (t) => {
 for (const file of ["hanging.bin", "stalling.bin"]) {
 	test(`aborting the download of ${file} rejects with the abort reason`, async (t) => {
 		const abort = new AbortController();
+		const reason = new Error("aborted");
 		const download = downloadFirmwareUpdate(
 			{
 				target: 0,
@@ -181,17 +181,8 @@ for (const file of ["hanging.bin", "stalling.bin"]) {
 			},
 			abort.signal,
 		);
-		setTimeout(() => {
-			abort.abort(
-				new ZWaveError(
-					"aborted",
-					ZWaveErrorCodes.FWUpdateService_DownloadAborted,
-				),
-			);
-		}, 100);
+		setTimeout(() => abort.abort(reason), 100);
 
-		await t.expect(download).rejects.toMatchObject({
-			code: ZWaveErrorCodes.FWUpdateService_DownloadAborted,
-		});
+		await t.expect(download).rejects.toBe(reason);
 	});
 }

@@ -31,7 +31,6 @@ import {
 	SecurityCCSchemeGet,
 	SecurityCCSchemeInherit,
 	VersionCCValues,
-	VersionCommand,
 	ZWaveProtocolCCAssignReturnRoute,
 	ZWaveProtocolCCAssignReturnRoutePriority,
 	ZWaveProtocolCCAssignSUCReturnRoute,
@@ -48,7 +47,6 @@ import {
 	ControllerRole,
 	ControllerStatus,
 	EMPTY_ROUTE,
-	type Firmware,
 	LongRangeChannel,
 	MAX_NODES,
 	type MaybeNotKnown,
@@ -330,10 +328,7 @@ import {
 	ControllerStatisticsHost,
 } from "./ControllerStatistics.js";
 import { ZWaveFeature, minFeatureVersions } from "./Features.js";
-import {
-	downloadFirmwareUpdate,
-	getAvailableFirmwareUpdatesBulk,
-} from "./FirmwareUpdateService.js";
+import { getAvailableFirmwareUpdatesBulk } from "./FirmwareUpdateService.js";
 import {
 	type ExclusionOptions,
 	ExclusionStrategy,
@@ -9251,71 +9246,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	}
 
 	/** Ensures that the device ID used to request a firmware update matches the device the firmware update is for */
-	private async ensureFirmwareDeviceIdMatches(
-		node: ZWaveNode,
-		deviceId: FirmwareUpdateDeviceID,
-	): Promise<void> {
-		if (
-			deviceId.rfRegion !== undefined
-			&& this.rfRegion !== NOT_KNOWN
-			&& deviceId.rfRegion !== this.rfRegion
-		) {
-			throw new ZWaveError(
-				`Cannot update firmware for node ${node.id}: The firmware update is for a different region!`,
-				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
-			);
-		}
-
-		const manufacturerResponse =
-			await node.commandClasses["Manufacturer Specific"].get();
-
-		if (!manufacturerResponse) {
-			throw new ZWaveError(
-				`Cannot check for firmware updates for node ${node.id}: Failed to query fingerprint from the node!`,
-				ZWaveErrorCodes.FWUpdateService_MissingInformation,
-			);
-		}
-
-		// Query the version using both possible commands to ensure we have the full version
-		const versionResponse = await node.commandClasses.Version.get();
-		if (!versionResponse) {
-			throw new ZWaveError(
-				`Cannot check for firmware updates for node ${node.id}: Failed to query firmware version from the node!`,
-				ZWaveErrorCodes.FWUpdateService_MissingInformation,
-			);
-		}
-		if (
-			node.commandClasses.Version.supportsCommand(
-				VersionCommand.ZWaveSoftwareGet,
-			)
-		) {
-			const softwareResponse =
-				await node.commandClasses.Version.getZWaveSoftware();
-			if (!softwareResponse) {
-				throw new ZWaveError(
-					`Cannot check for firmware updates for node ${node.id}: Failed to query firmware version from the node!`,
-					ZWaveErrorCodes.FWUpdateService_MissingInformation,
-				);
-			}
-		}
-
-		if (
-			node.manufacturerId !== deviceId.manufacturerId
-			|| node.productType !== deviceId.productType
-			|| node.productId !== deviceId.productId
-		) {
-			throw new ZWaveError(
-				`Cannot update firmware for node ${node.id}: The firmware update is for a different device!`,
-				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
-			);
-		} else if (node.firmwareVersion !== deviceId.firmwareVersion) {
-			throw new ZWaveError(
-				`Cannot update firmware for node ${node.id}: The update is for a different original firmware version!`,
-				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
-			);
-		}
-	}
-
 	/**
 	 * Downloads the desired firmware update(s) from the Z-Wave JS firmware update service and updates the firmware of the given node.
 	 * @param updateInfo The desired entry from the updates array that was returned by {@link getAvailableFirmwareUpdates}.
@@ -9349,103 +9279,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 		}
 
-		const files = updateInfo.files;
-		const validateDeviceId = updateInfo.device;
-
-		// We made a breaking change to the method signature. files should never be undefined, unless applications still
-		// use the old signature.
-		if (files?.length === 0) {
-			throw new ZWaveError(
-				`At least one update must be provided`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
 		const node = this.nodes.getOrThrow(nodeId);
-		this.driver.controllerLog.logNode(
-			nodeId,
-			`OTA firmware update started, downloading ${files.length} updates...`,
-		);
-
-		const loglevel = this.driver.getLogConfig().level;
-
-		const firmwares = await node.withFirmwareDownload(async (signal) => {
-			const firmwares: Firmware[] = [];
-			for (let i = 0; i < files.length; i++) {
-				const update = files[i];
-				const logMessage = `Downloading firmware update ${i} of ${files.length}...`;
-				this.driver.controllerLog.logNode(nodeId, {
-					message:
-						loglevel === "silly"
-							? logText(logMessage, {
-									nested: logDict({
-										URL: update.url,
-										integrity: update.integrity,
-									}),
-								})
-							: logMessage,
-				});
-
-				try {
-					const firmware = await downloadFirmwareUpdate(
-						update,
-						AbortSignal.any([signal, this.driver.destroySignal]),
-					);
-					firmwares.push(firmware);
-				} catch (e: any) {
-					let message = `Downloading the firmware update for node ${nodeId} failed:\n`;
-					if (isZWaveError(e)) {
-						// Pass "real" Z-Wave errors through
-						throw new ZWaveError(message + e.message, e.code);
-					} else if (e.response) {
-						// And construct a better error message for HTTP errors
-						if (
-							isObject(e.response.data)
-							&& typeof e.response.data.message === "string"
-						) {
-							message += `${e.response.data.message} `;
-						}
-						message += `[${e.response.status} ${e.response.statusText}]`;
-					} else if (typeof e.message === "string") {
-						message += e.message;
-					} else {
-						message += `Failed to download firmware update!`;
-					}
-
-					throw new ZWaveError(
-						message,
-						ZWaveErrorCodes.FWUpdateService_RequestError,
-					);
-				}
-			}
-
-			// Make sure we're not applying the update to the wrong device
-			if (validateDeviceId) {
-				this.driver.controllerLog.logNode(
-					nodeId,
-					`All updates downloaded, validating device IDs...`,
-				);
-
-				await this.ensureFirmwareDeviceIdMatches(
-					node,
-					validateDeviceId,
-				);
-
-				this.driver.controllerLog.logNode(
-					nodeId,
-					`Device IDs match, installing firmware updates...`,
-				);
-			} else {
-				this.driver.controllerLog.logNode(
-					nodeId,
-					`All updates downloaded, installing...`,
-				);
-			}
-
-			return firmwares;
-		});
-
-		return node.updateFirmware(firmwares, options);
+		return node.updateFirmware(updateInfo, options);
 	}
 
 	private _currentLearnMode: LearnModeIntent | undefined;

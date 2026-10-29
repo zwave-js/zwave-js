@@ -16,6 +16,7 @@ import {
 	FirmwareUpdateRequestStatus,
 	type FirmwareUpdateResult,
 	FirmwareUpdateStatus,
+	VersionCommand,
 	getEffectiveCCVersion,
 } from "@zwave-js/cc";
 import {
@@ -23,9 +24,13 @@ import {
 	CommandClasses,
 	EncapsulationFlags,
 	type Firmware,
+	NOT_KNOWN,
 	SecurityClass,
 	ZWaveError,
 	ZWaveErrorCodes,
+	isZWaveError,
+	logDict,
+	logText,
 	randomBytes,
 	securityClassIsS2,
 	timespan,
@@ -40,8 +45,13 @@ import {
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 import { roundTo } from "alcalzone-shared/math";
-import { isArray } from "alcalzone-shared/typeguards";
+import { isArray, isObject } from "alcalzone-shared/typeguards";
 
+import { downloadFirmwareUpdate } from "../../controller/FirmwareUpdateService.js";
+import {
+	type FirmwareUpdateDeviceID,
+	type FirmwareUpdateInfo,
+} from "../../controller/_Types.js";
 import {
 	type Task,
 	type TaskBuilder,
@@ -62,6 +72,34 @@ type PartialFirmwareUpdateResult = Pick<
 	"status" | "waitTime"
 > & { success: boolean };
 
+function assertValidFirmwareUpdates(updates: Firmware[]): void {
+	if (updates.length === 0) {
+		throw new ZWaveError(
+			`At least one update must be provided`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+
+	// Check that each update has a buffer with at least 1 byte
+	if (updates.some((u) => u.data.length === 0)) {
+		throw new ZWaveError(
+			`All firmware updates must have a non-empty data buffer`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+
+	// Check that the targets are not duplicates
+	if (
+		distinct(updates.map((u) => u.firmwareTarget ?? 0)).length
+		!== updates.length
+	) {
+		throw new ZWaveError(
+			`The target of all provided firmware updates must be unique`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
+}
+
 /** Checks if a task belongs to a route rebuilding process */
 export function isFirmwareUpdateOTATask(t: Task<unknown>): boolean {
 	return t.tag?.id === "firmware-update-ota";
@@ -80,12 +118,14 @@ export interface NodeFirmwareUpdate {
 	 *
 	 * **WARNING: Use at your own risk! We don't take any responsibility if your devices don't work after an update.**
 	 *
-	 * @param updates An array of firmware updates that will be done in sequence
+	 * @param updates An array of firmware updates that will be done in sequence,
+	 * or an entry returned by `controller.getAvailableFirmwareUpdates`. Before applying such an update,
+	 * Z-Wave JS downloads the files and checks whether the device IDs, firmware version and region match.
 	 *
 	 * @returns Whether all of the given updates were successful.
 	 */
 	updateFirmware(
-		updates: Firmware[],
+		updates: Firmware[] | FirmwareUpdateInfo,
 		options?: FirmwareUpdateOptions,
 	): Promise<FirmwareUpdateResult>;
 
@@ -93,15 +133,6 @@ export interface NodeFirmwareUpdate {
 	 * Returns whether a firmware update is in progress for this node.
 	 */
 	isFirmwareUpdateInProgress(): boolean;
-
-	/**
-	 * @internal
-	 * Runs the given download of firmware update files, which can be aborted using {@link abortFirmwareUpdate}.
-	 * Throws when a firmware update is already in progress for this node.
-	 */
-	withFirmwareDownload<T>(
-		download: (signal: AbortSignal) => Promise<T>,
-	): Promise<T>;
 
 	/**
 	 * Retrieves the firmware update capabilities of a node to decide which options to offer a user prior to the update.
@@ -191,43 +222,8 @@ export abstract class FirmwareUpdateMixin
 
 	private _abortFirmwareUpdate: (() => Promise<void>) | undefined;
 	public async abortFirmwareUpdate(): Promise<void> {
-		if (this._firmwareDownload) {
-			this.driver.controllerLog.logNode(
-				this.id,
-				`Aborting firmware download...`,
-			);
-			this._firmwareDownload.abort(
-				new ZWaveError(
-					`The firmware download was aborted`,
-					ZWaveErrorCodes.FWUpdateService_DownloadAborted,
-				),
-			);
-		}
 		if (!this._abortFirmwareUpdate) return;
 		await this._abortFirmwareUpdate();
-	}
-
-	private _firmwareDownload: AbortController | undefined;
-	public async withFirmwareDownload<T>(
-		download: (signal: AbortSignal) => Promise<T>,
-	): Promise<T> {
-		if (this.isFirmwareUpdateInProgress()) {
-			throw new ZWaveError(
-				`Failed to start the update: A firmware update is already in progress for this node!`,
-				ZWaveErrorCodes.FirmwareUpdateCC_Busy,
-			);
-		}
-
-		const controller = new AbortController();
-		this._firmwareDownload = controller;
-		try {
-			const result = await download(controller.signal);
-			// The abort may happen after the last request finished
-			controller.signal.throwIfAborted();
-			return result;
-		} finally {
-			this._firmwareDownload = undefined;
-		}
 	}
 
 	// Stores the CRC of the previously transferred firmware image.
@@ -240,31 +236,15 @@ export abstract class FirmwareUpdateMixin
 		| undefined;
 
 	public async updateFirmware(
-		updates: Firmware[],
+		updates: Firmware[] | FirmwareUpdateInfo,
 		options: FirmwareUpdateOptions = {},
 	): Promise<FirmwareUpdateResult> {
-		if (updates.length === 0) {
+		if (Array.isArray(updates)) {
+			assertValidFirmwareUpdates(updates);
+		} else if (updates.files.length === 0) {
+			// The downloaded files are validated after the download
 			throw new ZWaveError(
 				`At least one update must be provided`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
-		// Check that each update has a buffer with at least 1 byte
-		if (updates.some((u) => u.data.length === 0)) {
-			throw new ZWaveError(
-				`All firmware updates must have a non-empty data buffer`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
-		// Check that the targets are not duplicates
-		if (
-			distinct(updates.map((u) => u.firmwareTarget ?? 0)).length
-			!== updates.length
-		) {
-			throw new ZWaveError(
-				`The target of all provided firmware updates must be unique`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
@@ -278,12 +258,6 @@ export abstract class FirmwareUpdateMixin
 		}
 
 		// Don't allow starting two firmware updates for the same node
-		if (this._firmwareDownload) {
-			throw new ZWaveError(
-				`Failed to start the update: A firmware update is already in progress for this node!`,
-				ZWaveErrorCodes.FirmwareUpdateCC_Busy,
-			);
-		}
 		const task = this.getUpdateFirmwareTask(updates, options);
 		if (task instanceof Promise) {
 			throw new ZWaveError(
@@ -297,14 +271,11 @@ export abstract class FirmwareUpdateMixin
 	}
 
 	public isFirmwareUpdateInProgress(): boolean {
-		return (
-			!!this._firmwareDownload
-			|| !!this.driver.scheduler.findTask(isFirmwareUpdateOTATask)
-		);
+		return !!this.driver.scheduler.findTask(isFirmwareUpdateOTATask);
 	}
 
 	private getUpdateFirmwareTask(
-		updates: Firmware[],
+		updates: Firmware[] | FirmwareUpdateInfo,
 		options: FirmwareUpdateOptions = {},
 	): Promise<FirmwareUpdateResult> | TaskBuilder<FirmwareUpdateResult> {
 		const self = this;
@@ -335,8 +306,29 @@ export abstract class FirmwareUpdateMixin
 					tooLateToAbort: false,
 					abortPromise: createDeferredPromise<boolean>(),
 				};
+				let download: AbortController | undefined;
+
+				const finishAborted = (): FirmwareUpdateResult => {
+					const result: FirmwareUpdateResult = {
+						success: false,
+						status: FirmwareUpdateStatus.Error_TransmissionFailed,
+						reInterview: false,
+					};
+					self._emit("firmware update finished", self, result);
+					return result;
+				};
 
 				self._abortFirmwareUpdate = async () => {
+					if (download) {
+						self.driver.controllerLog.logNode(
+							self.id,
+							`Aborting firmware download...`,
+						);
+						abortContext.abort = true;
+						download.abort();
+						return;
+					}
+
 					if (abortContext.tooLateToAbort) {
 						throw new ZWaveError(
 							`The firmware update was transmitted completely, cannot abort anymore.`,
@@ -364,6 +356,34 @@ export abstract class FirmwareUpdateMixin
 					});
 				};
 
+				// Download the firmware files
+				let firmwares: Firmware[];
+				if (!Array.isArray(updates)) {
+					download = new AbortController();
+					try {
+						firmwares = yield* waitFor(
+							self.downloadFirmwareUpdates(
+								updates,
+								AbortSignal.any([
+									download.signal,
+									self.driver.destroySignal,
+								]),
+							),
+						);
+					} catch (e) {
+						if (abortContext.abort) return finishAborted();
+						throw e;
+					} finally {
+						download = undefined;
+					}
+					// The abort may happen after the last download finished
+					if (abortContext.abort) return finishAborted();
+
+					assertValidFirmwareUpdates(firmwares);
+				} else {
+					firmwares = updates;
+				}
+
 				// Prepare the firmware update
 				let fragmentSizeSecure: number;
 				let fragmentSizeNonSecure: number;
@@ -372,20 +392,12 @@ export abstract class FirmwareUpdateMixin
 				try {
 					const prepareResult =
 						await self.prepareFirmwareUpdateInternal(
-							updates.map((u) => u.firmwareTarget ?? 0),
+							firmwares.map((u) => u.firmwareTarget ?? 0),
 							abortContext,
 						);
 
 					// Handle early aborts
-					if (abortContext.abort) {
-						const result: FirmwareUpdateResult = {
-							success: false,
-							status: FirmwareUpdateStatus.Error_TransmissionFailed,
-							reInterview: false,
-						};
-						self._emit("firmware update finished", self, result);
-						return result;
-					}
+					if (abortContext.abort) return finishAborted();
 
 					// If the firmware update was not aborted, prepareResult is definitely defined
 					({
@@ -431,7 +443,7 @@ export abstract class FirmwareUpdateMixin
 				);
 
 				// If resuming is supported and desired, try to figure out with which file to continue
-				const updatesWithChecksum = updates.map((u) => ({
+				const updatesWithChecksum = firmwares.map((u) => ({
 					...u,
 					checksum: CRC16_CCITT(u.data),
 				}));
@@ -647,6 +659,147 @@ export abstract class FirmwareUpdateMixin
 		};
 	}
 
+	/** Downloads the files of the given update and checks that the update is meant for this node */
+	private async downloadFirmwareUpdates(
+		updateInfo: FirmwareUpdateInfo,
+		signal: AbortSignal,
+	): Promise<Firmware[]> {
+		const files = updateInfo.files;
+		this.driver.controllerLog.logNode(
+			this.id,
+			`OTA firmware update started, downloading ${files.length} updates...`,
+		);
+
+		const loglevel = this.driver.getLogConfig().level;
+
+		const firmwares: Firmware[] = [];
+		for (let i = 0; i < files.length; i++) {
+			const update = files[i];
+			const logMessage = `Downloading firmware update ${i} of ${files.length}...`;
+			this.driver.controllerLog.logNode(this.id, {
+				message:
+					loglevel === "silly"
+						? logText(logMessage, {
+								nested: logDict({
+									URL: update.url,
+									integrity: update.integrity,
+								}),
+							})
+						: logMessage,
+			});
+
+			try {
+				const firmware = await downloadFirmwareUpdate(update, signal);
+				firmwares.push(firmware);
+			} catch (e: any) {
+				// Let the update task decide how to handle aborts
+				if (signal.aborted) throw e;
+
+				let message = `Downloading the firmware update for node ${this.id} failed:\n`;
+				if (isZWaveError(e)) {
+					// Pass "real" Z-Wave errors through
+					throw new ZWaveError(message + e.message, e.code);
+				} else if (e.response) {
+					// And construct a better error message for HTTP errors
+					if (
+						isObject(e.response.data)
+						&& typeof e.response.data.message === "string"
+					) {
+						message += `${e.response.data.message} `;
+					}
+					message += `[${e.response.status} ${e.response.statusText}]`;
+				} else if (typeof e.message === "string") {
+					message += e.message;
+				} else {
+					message += `Failed to download firmware update!`;
+				}
+
+				throw new ZWaveError(
+					message,
+					ZWaveErrorCodes.FWUpdateService_RequestError,
+				);
+			}
+		}
+
+		// Make sure we're not applying the update to the wrong device
+		this.driver.controllerLog.logNode(
+			this.id,
+			`All updates downloaded, validating device IDs...`,
+		);
+		await this.ensureFirmwareDeviceIdMatches(updateInfo.device);
+		this.driver.controllerLog.logNode(
+			this.id,
+			`Device IDs match, installing firmware updates...`,
+		);
+
+		return firmwares;
+	}
+
+	private async ensureFirmwareDeviceIdMatches(
+		deviceId: FirmwareUpdateDeviceID,
+	): Promise<void> {
+		const rfRegion = this.driver.controller.rfRegion;
+		if (
+			deviceId.rfRegion !== undefined
+			&& rfRegion !== NOT_KNOWN
+			&& deviceId.rfRegion !== rfRegion
+		) {
+			throw new ZWaveError(
+				`Cannot update firmware for node ${this.id}: The firmware update is for a different region!`,
+				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
+			);
+		}
+
+		const manufacturerResponse =
+			await this.commandClasses["Manufacturer Specific"].get();
+
+		if (!manufacturerResponse) {
+			throw new ZWaveError(
+				`Cannot check for firmware updates for node ${this.id}: Failed to query fingerprint from the node!`,
+				ZWaveErrorCodes.FWUpdateService_MissingInformation,
+			);
+		}
+
+		// Query the version using both possible commands to ensure we have the full version
+		const versionResponse = await this.commandClasses.Version.get();
+		if (!versionResponse) {
+			throw new ZWaveError(
+				`Cannot check for firmware updates for node ${this.id}: Failed to query firmware version from the node!`,
+				ZWaveErrorCodes.FWUpdateService_MissingInformation,
+			);
+		}
+		if (
+			this.commandClasses.Version.supportsCommand(
+				VersionCommand.ZWaveSoftwareGet,
+			)
+		) {
+			const softwareResponse =
+				await this.commandClasses.Version.getZWaveSoftware();
+			if (!softwareResponse) {
+				throw new ZWaveError(
+					`Cannot check for firmware updates for node ${this.id}: Failed to query firmware version from the node!`,
+					ZWaveErrorCodes.FWUpdateService_MissingInformation,
+				);
+			}
+		}
+
+		if (
+			this.manufacturerId !== deviceId.manufacturerId
+			|| this.productType !== deviceId.productType
+			|| this.productId !== deviceId.productId
+		) {
+			throw new ZWaveError(
+				`Cannot update firmware for node ${this.id}: The firmware update is for a different device!`,
+				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
+			);
+		} else if (this.firmwareVersion !== deviceId.firmwareVersion) {
+			throw new ZWaveError(
+				`Cannot update firmware for node ${this.id}: The update is for a different original firmware version!`,
+				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
+			);
+		}
+	}
+
 	/** Prepares the firmware update of a single target by collecting the necessary information */
 	private async prepareFirmwareUpdateInternal(
 		targets: number[],
@@ -752,7 +905,7 @@ export abstract class FirmwareUpdateMixin
 	): Promise<void> {
 		// This method will only be called under two circumstances:
 		// 1. The node is currently busy responding to a firmware update request -> remember the request
-		if (this.driver.scheduler.findTask(isFirmwareUpdateOTATask)) {
+		if (this.isFirmwareUpdateInProgress()) {
 			this._firmwareUpdatePrematureRequest = command;
 			return;
 		}
