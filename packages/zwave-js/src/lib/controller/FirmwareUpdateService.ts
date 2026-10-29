@@ -366,6 +366,7 @@ function assertAllowedDownloadProtocol(url: string): void {
 	}
 }
 
+// FIXME: Once we require Node 22, upgrade to ky 2.2+ and use its `maxResponseSize` option instead
 async function readResponseWithLimit(
 	response: Response,
 	maxSize: number,
