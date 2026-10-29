@@ -4156,30 +4156,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	}
 
 	/**
-	 * Derives the ECDH shared secret for S2 bootstrapping.
-	 * Returns `undefined` if the peer's public key is invalid, e.g. a low-order point that results in an all-zero secret.
-	 */
-	private async deriveS2SharedSecret(
-		peerNodeId: number,
-		publicKey: BytesView,
-		privateKey: BytesView,
-	): Promise<BytesView | undefined> {
-		try {
-			const sharedSecret = await deriveSharedECDHSecret({
-				publicKey,
-				privateKey,
-			});
-			if (sharedSecret.some((b) => b !== 0)) return sharedSecret;
-		} catch {
-			// The public key could not be used
-		}
-		this.driver.controllerLog.logNode(peerNodeId, {
-			message: `Security S2 bootstrapping failed: the public key is invalid`,
-			level: "warn",
-		});
-	}
-
-	/**
 	 * Returns the security class the given command was decrypted with,
 	 * or `undefined` if it was not received S2-encapsulated.
 	 */
@@ -4530,12 +4506,19 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			}
 
 			// After the user has verified the DSK, we can derive the shared secret
-			const sharedSecret = await this.deriveS2SharedSecret(
-				node.id,
-				nodePublicKey,
-				keyPair.privateKey,
-			);
-			if (!sharedSecret) {
+			let sharedSecret: BytesView;
+			try {
+				sharedSecret = await deriveSharedECDHSecret({
+					publicKey: nodePublicKey,
+					privateKey: keyPair.privateKey,
+				});
+			} catch {
+				// The crypto backends reject invalid public keys, e.g. low-order points
+				// that would result in a predictable all-zero secret
+				this.driver.controllerLog.logNode(node.id, {
+					message: `Security S2 bootstrapping failed: the public key is invalid`,
+					level: "warn",
+				});
 				await abort(KEXFailType.BootstrappingCanceled);
 				return SecurityBootstrapFailure.Unknown;
 			}
@@ -10048,12 +10031,19 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			}
 
 			const includingNodePubKey = pubKeyReport.publicKey;
-			const sharedSecret = await this.deriveS2SharedSecret(
-				bootstrappingNode.id,
-				includingNodePubKey,
-				keyPair.privateKey,
-			);
-			if (!sharedSecret) {
+			let sharedSecret: BytesView;
+			try {
+				sharedSecret = await deriveSharedECDHSecret({
+					publicKey: includingNodePubKey,
+					privateKey: keyPair.privateKey,
+				});
+			} catch {
+				// The crypto backends reject invalid public keys, e.g. low-order points
+				// that would result in a predictable all-zero secret
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message: `Security S2 bootstrapping failed: the public key is invalid`,
+					level: "warn",
+				});
 				await abort(KEXFailType.BootstrappingCanceled);
 				return SecurityBootstrapFailure.Unknown;
 			}
