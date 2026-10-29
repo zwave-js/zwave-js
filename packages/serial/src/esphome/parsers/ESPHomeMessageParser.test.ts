@@ -3,7 +3,6 @@ import { Bytes, type BytesView } from "@zwave-js/shared";
 import { expect, test } from "vitest";
 
 import { ESPHomeMessage, ESPHomeMessageType } from "../ESPHomeMessage.js";
-import { HelloResponse } from "../HelloMessages.js";
 import { PingRequest } from "../PingMessages.js";
 
 import { ESPHomeMessageParser } from "./ESPHomeMessageParser.js";
@@ -78,7 +77,6 @@ test("A well-framed message with an invalid body is dropped", async () => {
 
 	expect(messages).toHaveLength(1);
 	expect(messages[0]).toBeInstanceOf(PingRequest);
-	expect(messages[0]).not.toBeInstanceOf(HelloResponse);
 });
 
 test("In Noise mode, a message length exceeding the decrypted frame errors the stream", async () => {
