@@ -441,9 +441,28 @@ export async function downloadFirmwareUpdate(
 		downloadResponse = await ky.get(downloadURL, {
 			timeout: DOWNLOAD_TIMEOUT,
 			redirect: "manual",
-			throwHttpErrors: (status) => status < 300 || status >= 400,
+			// Browsers report redirects with status 0, see below
+			throwHttpErrors: (status) =>
+				status !== 0 && (status < 300 || status >= 400),
 		});
 		if (downloadResponse.ok) break;
+
+		if (downloadResponse.type === "opaqueredirect") {
+			// Browsers hide the status and location of redirects from scripts, so the hops
+			// cannot be checked individually. Let the browser follow them instead, which
+			// blocks downgrades to HTTP on HTTPS pages, and check where we ended up.
+			downloadResponse = await ky.get(downloadURL, {
+				timeout: DOWNLOAD_TIMEOUT,
+			});
+			downloadURL = downloadResponse.url;
+			try {
+				assertAllowedDownloadProtocol(downloadURL);
+			} catch (e) {
+				await downloadResponse.body?.cancel().catch(noop);
+				throw e;
+			}
+			break;
+		}
 
 		// Only 3xx responses get here
 		await downloadResponse.body?.cancel().catch(noop);
