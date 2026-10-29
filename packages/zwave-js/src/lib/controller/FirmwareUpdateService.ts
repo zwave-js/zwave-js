@@ -394,10 +394,12 @@ async function readResponseWithLimit(
 	while (true) {
 		const { done, value } = await reader.read();
 		if (done) break;
+		// Abort when surpassing the maximum size
 		if (size + value.length > maxSize) {
 			await reader.cancel().catch(noop);
 			throw tooLarge();
 		}
+		// Grow the buffer if needed
 		if (size + value.length > buffer.length) {
 			const grown = new Uint8Array(
 				Math.min(
