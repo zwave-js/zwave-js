@@ -82,6 +82,8 @@ export enum ZWaveErrorCodes {
 	FWUpdateService_IntegrityCheckFailed,
 	/** The firmware update is for a different device */
 	FWUpdateService_DeviceMismatch,
+	/** The firmware download was aborted */
+	FWUpdateService_DownloadAborted,
 
 	/** The given NVM version/format is unsupported */
 	NVM_NotSupported = 280,

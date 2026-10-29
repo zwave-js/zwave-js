@@ -9369,71 +9369,81 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 
 		const loglevel = this.driver.getLogConfig().level;
 
-		const firmwares: Firmware[] = [];
-		for (let i = 0; i < files.length; i++) {
-			const update = files[i];
-			const logMessage = `Downloading firmware update ${i} of ${files.length}...`;
-			this.driver.controllerLog.logNode(nodeId, {
-				message:
-					loglevel === "silly"
-						? logText(logMessage, {
-								nested: logDict({
-									URL: update.url,
-									integrity: update.integrity,
-								}),
-							})
-						: logMessage,
-			});
+		const firmwares = await node.withFirmwareDownload(async (signal) => {
+			const firmwares: Firmware[] = [];
+			for (let i = 0; i < files.length; i++) {
+				const update = files[i];
+				const logMessage = `Downloading firmware update ${i} of ${files.length}...`;
+				this.driver.controllerLog.logNode(nodeId, {
+					message:
+						loglevel === "silly"
+							? logText(logMessage, {
+									nested: logDict({
+										URL: update.url,
+										integrity: update.integrity,
+									}),
+								})
+							: logMessage,
+				});
 
-			try {
-				const firmware = await downloadFirmwareUpdate(update);
-				firmwares.push(firmware);
-			} catch (e: any) {
-				let message = `Downloading the firmware update for node ${nodeId} failed:\n`;
-				if (isZWaveError(e)) {
-					// Pass "real" Z-Wave errors through
-					throw new ZWaveError(message + e.message, e.code);
-				} else if (e.response) {
-					// And construct a better error message for HTTP errors
-					if (
-						isObject(e.response.data)
-						&& typeof e.response.data.message === "string"
-					) {
-						message += `${e.response.data.message} `;
+				try {
+					const firmware = await downloadFirmwareUpdate(
+						update,
+						AbortSignal.any([signal, this.driver.destroySignal]),
+					);
+					firmwares.push(firmware);
+				} catch (e: any) {
+					let message = `Downloading the firmware update for node ${nodeId} failed:\n`;
+					if (isZWaveError(e)) {
+						// Pass "real" Z-Wave errors through
+						throw new ZWaveError(message + e.message, e.code);
+					} else if (e.response) {
+						// And construct a better error message for HTTP errors
+						if (
+							isObject(e.response.data)
+							&& typeof e.response.data.message === "string"
+						) {
+							message += `${e.response.data.message} `;
+						}
+						message += `[${e.response.status} ${e.response.statusText}]`;
+					} else if (typeof e.message === "string") {
+						message += e.message;
+					} else {
+						message += `Failed to download firmware update!`;
 					}
-					message += `[${e.response.status} ${e.response.statusText}]`;
-				} else if (typeof e.message === "string") {
-					message += e.message;
-				} else {
-					message += `Failed to download firmware update!`;
-				}
 
-				throw new ZWaveError(
-					message,
-					ZWaveErrorCodes.FWUpdateService_RequestError,
+					throw new ZWaveError(
+						message,
+						ZWaveErrorCodes.FWUpdateService_RequestError,
+					);
+				}
+			}
+
+			// Make sure we're not applying the update to the wrong device
+			if (validateDeviceId) {
+				this.driver.controllerLog.logNode(
+					nodeId,
+					`All updates downloaded, validating device IDs...`,
+				);
+
+				await this.ensureFirmwareDeviceIdMatches(
+					node,
+					validateDeviceId,
+				);
+
+				this.driver.controllerLog.logNode(
+					nodeId,
+					`Device IDs match, installing firmware updates...`,
+				);
+			} else {
+				this.driver.controllerLog.logNode(
+					nodeId,
+					`All updates downloaded, installing...`,
 				);
 			}
-		}
 
-		// Make sure we're not applying the update to the wrong device
-		if (validateDeviceId) {
-			this.driver.controllerLog.logNode(
-				nodeId,
-				`All updates downloaded, validating device IDs...`,
-			);
-
-			await this.ensureFirmwareDeviceIdMatches(node, validateDeviceId);
-
-			this.driver.controllerLog.logNode(
-				nodeId,
-				`Device IDs match, installing firmware updates...`,
-			);
-		} else {
-			this.driver.controllerLog.logNode(
-				nodeId,
-				`All updates downloaded, installing...`,
-			);
-		}
+			return firmwares;
+		});
 
 		return node.updateFirmware(firmwares, options);
 	}

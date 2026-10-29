@@ -536,7 +536,7 @@ try {
 abortFirmwareUpdate(): Promise<void>
 ```
 
-Aborts an active firmware update process.
+Aborts an active firmware update process, including downloading the update files with `controller.firmwareUpdateOTA`.
 
 ### `ping`
 

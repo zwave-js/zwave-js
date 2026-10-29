@@ -69,7 +69,7 @@ export function isFirmwareUpdateOTATask(t: Task<unknown>): boolean {
 
 export interface NodeFirmwareUpdate {
 	/**
-	 * Aborts an active firmware update process
+	 * Aborts an active firmware update process, including downloading the update files
 	 */
 	abortFirmwareUpdate(): Promise<void>;
 
@@ -93,6 +93,15 @@ export interface NodeFirmwareUpdate {
 	 * Returns whether a firmware update is in progress for this node.
 	 */
 	isFirmwareUpdateInProgress(): boolean;
+
+	/**
+	 * @internal
+	 * Runs the given download of firmware update files, which can be aborted using {@link abortFirmwareUpdate}.
+	 * Throws when a firmware update is already in progress for this node.
+	 */
+	withFirmwareDownload<T>(
+		download: (signal: AbortSignal) => Promise<T>,
+	): Promise<T>;
 
 	/**
 	 * Retrieves the firmware update capabilities of a node to decide which options to offer a user prior to the update.
@@ -182,8 +191,44 @@ export abstract class FirmwareUpdateMixin
 
 	private _abortFirmwareUpdate: (() => Promise<void>) | undefined;
 	public async abortFirmwareUpdate(): Promise<void> {
+		if (this._firmwareDownload) {
+			this.driver.controllerLog.logNode(
+				this.id,
+				`Aborting firmware download...`,
+			);
+			this._firmwareDownload.abort(
+				new ZWaveError(
+					`The firmware download was aborted`,
+					ZWaveErrorCodes.FWUpdateService_DownloadAborted,
+				),
+			);
+			return;
+		}
 		if (!this._abortFirmwareUpdate) return;
 		await this._abortFirmwareUpdate();
+	}
+
+	private _firmwareDownload: AbortController | undefined;
+	public async withFirmwareDownload<T>(
+		download: (signal: AbortSignal) => Promise<T>,
+	): Promise<T> {
+		if (this.isFirmwareUpdateInProgress()) {
+			throw new ZWaveError(
+				`Failed to start the update: A firmware update is already in progress for this node!`,
+				ZWaveErrorCodes.FirmwareUpdateCC_Busy,
+			);
+		}
+
+		const controller = new AbortController();
+		this._firmwareDownload = controller;
+		try {
+			const result = await download(controller.signal);
+			// The abort may happen after the last request finished
+			controller.signal.throwIfAborted();
+			return result;
+		} finally {
+			this._firmwareDownload = undefined;
+		}
 	}
 
 	// Stores the CRC of the previously transferred firmware image.
@@ -247,7 +292,10 @@ export abstract class FirmwareUpdateMixin
 	}
 
 	public isFirmwareUpdateInProgress(): boolean {
-		return !!this.driver.scheduler.findTask(isFirmwareUpdateOTATask);
+		return (
+			!!this._firmwareDownload
+			|| !!this.driver.scheduler.findTask(isFirmwareUpdateOTATask)
+		);
 	}
 
 	private getUpdateFirmwareTask(
@@ -699,7 +747,7 @@ export abstract class FirmwareUpdateMixin
 	): Promise<void> {
 		// This method will only be called under two circumstances:
 		// 1. The node is currently busy responding to a firmware update request -> remember the request
-		if (this.isFirmwareUpdateInProgress()) {
+		if (this.driver.scheduler.findTask(isFirmwareUpdateOTATask)) {
 			this._firmwareUpdatePrematureRequest = command;
 			return;
 		}

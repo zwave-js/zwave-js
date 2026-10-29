@@ -1,8 +1,12 @@
 import { type AddressInfo } from "node:net";
 
+import { ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
 import { afterAll, beforeAll, beforeEach, test } from "vitest";
 
-import { getAvailableFirmwareUpdatesBulk } from "./FirmwareUpdateService.js";
+import {
+	downloadFirmwareUpdate,
+	getAvailableFirmwareUpdatesBulk,
+} from "./FirmwareUpdateService.js";
 import type {
 	FirmwareUpdateBulkInfo,
 	FirmwareUpdateDeviceID,
@@ -17,6 +21,15 @@ let server: import("node:http").Server;
 beforeAll(async () => {
 	const { createServer } = await import("node:http");
 	server = createServer((req, res) => {
+		// Send the headers and part of the body, then stall
+		if (req.url === "/stalling.bin") {
+			res.writeHead(200, { "content-length": "1000" });
+			res.write(new Uint8Array(100));
+			return;
+		}
+		// Never respond
+		if (req.url === "/hanging.bin") return;
+
 		let body = "";
 		req.on("data", (chunk) => (body += chunk));
 		req.on("end", () => {
@@ -61,6 +74,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
 	delete process.env.ZWAVEJS_FW_SERVICE_URL;
+	server.closeAllConnections();
 	await new Promise((resolve) => server.close(resolve));
 });
 
@@ -155,3 +169,29 @@ test("only stale devices are re-requested", async (t) => {
 	t.expect(requestedDevices[1]).toHaveLength(1);
 	t.expect(requestedDevices[1][0].productId).toBe("0x0002");
 });
+
+for (const file of ["hanging.bin", "stalling.bin"]) {
+	test(`aborting the download of ${file} rejects with the abort reason`, async (t) => {
+		const abort = new AbortController();
+		const download = downloadFirmwareUpdate(
+			{
+				target: 0,
+				url: `${process.env.ZWAVEJS_FW_SERVICE_URL}/${file}`,
+				integrity: "sha256:abcd",
+			},
+			abort.signal,
+		);
+		setTimeout(() => {
+			abort.abort(
+				new ZWaveError(
+					"aborted",
+					ZWaveErrorCodes.FWUpdateService_DownloadAborted,
+				),
+			);
+		}, 100);
+
+		await t.expect(download).rejects.toMatchObject({
+			code: ZWaveErrorCodes.FWUpdateService_DownloadAborted,
+		});
+	});
+}

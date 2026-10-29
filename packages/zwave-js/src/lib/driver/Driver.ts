@@ -3862,6 +3862,15 @@ export class Driver
 		return !!this._destroyPromise;
 	}
 
+	private readonly _destroyAbort = new AbortController();
+	/**
+	 * @internal
+	 * Gets aborted when the driver is destroyed
+	 */
+	public get destroySignal(): AbortSignal {
+		return this._destroyAbort.signal;
+	}
+
 	/**
 	 * Ensures that the driver is ready to communicate (serial port open and not destroyed).
 	 * If desired, also checks that the controller interview has been completed.
@@ -3916,6 +3925,13 @@ export class Driver
 		this._destroyPromise = createDeferredPromise();
 
 		this.driverLog.print("destroying driver instance...");
+
+		this._destroyAbort.abort(
+			new ZWaveError(
+				"The driver instance was destroyed",
+				ZWaveErrorCodes.Driver_Destroyed,
+			),
+		);
 
 		// First stop the scheduler, all queues and close the serial port, so nothing happens anymore
 		await this._scheduler.stop();
@@ -9326,7 +9342,7 @@ ${handlers.length} left`,
 
 		let firmware: Firmware;
 		try {
-			firmware = await downloadFirmwareUpdate(update);
+			firmware = await downloadFirmwareUpdate(update, this.destroySignal);
 		} catch (e: any) {
 			let message = `Downloading the OTW firmware update failed:\n`;
 			if (isZWaveError(e)) {
