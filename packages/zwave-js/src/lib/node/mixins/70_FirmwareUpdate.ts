@@ -202,7 +202,6 @@ export abstract class FirmwareUpdateMixin
 					ZWaveErrorCodes.FWUpdateService_DownloadAborted,
 				),
 			);
-			return;
 		}
 		if (!this._abortFirmwareUpdate) return;
 		await this._abortFirmwareUpdate();
@@ -279,6 +278,12 @@ export abstract class FirmwareUpdateMixin
 		}
 
 		// Don't allow starting two firmware updates for the same node
+		if (this._firmwareDownload) {
+			throw new ZWaveError(
+				`Failed to start the update: A firmware update is already in progress for this node!`,
+				ZWaveErrorCodes.FirmwareUpdateCC_Busy,
+			);
+		}
 		const task = this.getUpdateFirmwareTask(updates, options);
 		if (task instanceof Promise) {
 			throw new ZWaveError(
