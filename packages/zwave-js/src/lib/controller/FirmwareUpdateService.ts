@@ -47,7 +47,6 @@ const DOWNLOAD_TIMEOUT = 60000;
 const CHECK_TIMEOUT = 30000; // The initial check after releasing new updates can be pretty slow. Give it some time.
 
 const MAX_CACHE_SECONDS = 60 * 60 * 24; // Cache for a day at max
-const MAX_DOWNLOAD_REDIRECTS = 5;
 const CLEAN_CACHE_INTERVAL_MS = 60 * 60 * 1000; // Remove stale entries from the cache every hour
 
 // Cache for individual device firmware updates
@@ -428,58 +427,20 @@ export async function downloadFirmwareUpdate(
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
-
 	// TODO: Make request abort-able (requires AbortController, Node 14.17+ / Node 16)
 
-	// Download the firmware file. Redirects are followed manually, so every hop
-	// can be checked before it is requested.
+	// Download the firmware file
+	assertAllowedDownloadProtocol(file.url);
 	const { default: ky } = await import("ky");
-	let downloadURL = file.url;
-	let downloadResponse: Response;
-	for (let redirects = 0; ; redirects++) {
-		assertAllowedDownloadProtocol(downloadURL);
-		downloadResponse = await ky.get(downloadURL, {
-			timeout: DOWNLOAD_TIMEOUT,
-			redirect: "manual",
-			// Browsers report redirects with status 0, see below
-			throwHttpErrors: (status) =>
-				status !== 0 && (status < 300 || status >= 400),
-		});
-		if (downloadResponse.ok) break;
-
-		if (downloadResponse.type === "opaqueredirect") {
-			// Browsers hide the status and location of redirects from scripts, so the hops
-			// cannot be checked individually. Let the browser follow them instead, which
-			// blocks downgrades to HTTP on HTTPS pages, and check where we ended up.
-			downloadResponse = await ky.get(downloadURL, {
-				timeout: DOWNLOAD_TIMEOUT,
-			});
-			downloadURL = downloadResponse.url;
-			try {
-				assertAllowedDownloadProtocol(downloadURL);
-			} catch (e) {
-				await downloadResponse.body?.cancel().catch(noop);
-				throw e;
-			}
-			break;
-		}
-
-		// Only 3xx responses get here
+	const downloadResponse = await ky.get(file.url, {
+		timeout: DOWNLOAD_TIMEOUT,
+	});
+	// Redirects may lead elsewhere, so check where we ended up before reading the body
+	try {
+		assertAllowedDownloadProtocol(downloadResponse.url);
+	} catch (e) {
 		await downloadResponse.body?.cancel().catch(noop);
-		const location = downloadResponse.headers.get("location");
-		if (!location) {
-			throw new ZWaveError(
-				`Firmware download failed with status ${downloadResponse.status}`,
-				ZWaveErrorCodes.FWUpdateService_RequestError,
-			);
-		}
-		if (redirects >= MAX_DOWNLOAD_REDIRECTS) {
-			throw new ZWaveError(
-				`Refusing to download firmware from ${file.url}: too many redirects`,
-				ZWaveErrorCodes.FWUpdateService_RequestError,
-			);
-		}
-		downloadURL = new URL(location, downloadURL).href;
+		throw e;
 	}
 
 	const rawData = await readResponseWithLimit(
@@ -492,7 +453,7 @@ export async function downloadFirmwareUpdate(
 	// from the requested URL
 	let actualPathname: string | undefined;
 	try {
-		actualPathname = new URL(downloadURL).pathname;
+		actualPathname = new URL(downloadResponse.url).pathname;
 	} catch {
 		// ignore
 	}
