@@ -36,7 +36,12 @@ import {
 	timespan,
 } from "@zwave-js/core";
 import { containsCC } from "@zwave-js/serial/serialapi";
-import { type BytesView, getEnumMemberName, throttle } from "@zwave-js/shared";
+import {
+	type BytesView,
+	getEnumMemberName,
+	noop,
+	throttle,
+} from "@zwave-js/shared";
 import { waitFor } from "@zwave-js/waddle";
 import { distinct } from "alcalzone-shared/arrays";
 import { wait } from "alcalzone-shared/async";
@@ -726,7 +731,7 @@ export abstract class FirmwareUpdateMixin
 			this.id,
 			`All updates downloaded, validating device IDs...`,
 		);
-		await this.ensureFirmwareDeviceIdMatches(updateInfo.device);
+		await this.ensureFirmwareDeviceIdMatches(updateInfo.device, signal);
 		this.driver.controllerLog.logNode(
 			this.id,
 			`Device IDs match, installing firmware updates...`,
@@ -737,6 +742,37 @@ export abstract class FirmwareUpdateMixin
 
 	private async ensureFirmwareDeviceIdMatches(
 		deviceId: FirmwareUpdateDeviceID,
+		signal: AbortSignal,
+	): Promise<void> {
+		signal.throwIfAborted();
+
+		// On abort, stop waiting for the node and drop the queued queries,
+		// so a sleeping or unresponsive node does not hold up the update task
+		const tag = "firmware-update-device-id";
+		const aborted = createDeferredPromise<never>();
+		const onAbort = () => {
+			aborted.reject(signal.reason);
+			void this.driver.rejectTransactions(
+				(t) => t.tag === tag && t.message.getNodeId() === this.id,
+				"The firmware update was aborted",
+			);
+		};
+		signal.addEventListener("abort", onAbort, { once: true });
+
+		const query = this.queryFirmwareDeviceId(deviceId, tag, signal);
+		try {
+			await Promise.race([query, aborted]);
+		} finally {
+			signal.removeEventListener("abort", onAbort);
+			// The query may still fail after the abort
+			query.catch(noop);
+		}
+	}
+
+	private async queryFirmwareDeviceId(
+		deviceId: FirmwareUpdateDeviceID,
+		tag: string,
+		signal: AbortSignal,
 	): Promise<void> {
 		const rfRegion = this.driver.controller.rfRegion;
 		if (
@@ -750,8 +786,12 @@ export abstract class FirmwareUpdateMixin
 			);
 		}
 
-		const manufacturerResponse =
-			await this.commandClasses["Manufacturer Specific"].get();
+		const manufacturerResponse = await this.commandClasses[
+			"Manufacturer Specific"
+		]
+			.withOptions({ tag })
+			.get();
+		signal.throwIfAborted();
 
 		if (!manufacturerResponse) {
 			throw new ZWaveError(
@@ -761,7 +801,10 @@ export abstract class FirmwareUpdateMixin
 		}
 
 		// Query the version using both possible commands to ensure we have the full version
-		const versionResponse = await this.commandClasses.Version.get();
+		const versionResponse = await this.commandClasses.Version.withOptions({
+			tag,
+		}).get();
+		signal.throwIfAborted();
 		if (!versionResponse) {
 			throw new ZWaveError(
 				`Cannot check for firmware updates for node ${this.id}: Failed to query firmware version from the node!`,
@@ -774,7 +817,10 @@ export abstract class FirmwareUpdateMixin
 			)
 		) {
 			const softwareResponse =
-				await this.commandClasses.Version.getZWaveSoftware();
+				await this.commandClasses.Version.withOptions({
+					tag,
+				}).getZWaveSoftware();
+			signal.throwIfAborted();
 			if (!softwareResponse) {
 				throw new ZWaveError(
 					`Cannot check for firmware updates for node ${this.id}: Failed to query firmware version from the node!`,
