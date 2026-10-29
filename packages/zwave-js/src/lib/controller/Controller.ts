@@ -9993,7 +9993,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				return abortCanceled();
 			} else if (!pubKeyReport.includingNode) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
-					message: `Security S2 bootstrapping failed: Public key was not sent by the including node.`,
+					message: `Security S2 bootstrapping failed: Public Key Report has invalid fields.`,
 					direction: "inbound",
 					level: "warn",
 				});
