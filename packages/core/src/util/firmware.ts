@@ -16,16 +16,6 @@ import { CRC16_CCITT } from "./crc.js";
 const MemoryMap =
 	MemoryMap_ as unknown as typeof import("nrf-intel-hex").default;
 
-/** Firmware file extensions we can work with, from most to least preferred when a ZIP archive contains several */
-const firmwareExtensionPriority = [
-	["gbl"],
-	["otz", "ota"],
-	["hex"],
-	["bin"],
-	["hec"],
-	["exe", "ex_"],
-];
-
 /** The maximum size of an extracted firmware image. 10 MB should be enough for any conceivable Z-Wave chip. */
 export const MAX_FIRMWARE_SIZE = 10 * 1024 * 1024;
 
@@ -96,37 +86,24 @@ export function tryUnzipFirmwareFile(zipData: BytesView):
 			rawData: BytesView;
 	  }
 	| undefined {
-	// Find the best file we can work with, without inflating anything yet
-	let bestFilename: string | undefined;
-	let bestPriority = Number.POSITIVE_INFINITY;
-	let ambiguous = false;
-	unzipSync(zipData, {
+	// Extract files we can work with. Avoid inflating huge files or many files, which could
+	// exhaust the memory. The result is only usable if exactly one file matches anyways,
+	// so only the first match is inflated.
+	let numMatches = 0;
+	const unzipped = unzipSync(zipData, {
 		filter: (file) => {
-			const extension = file.name.slice(file.name.lastIndexOf(".") + 1);
-			const priority = firmwareExtensionPriority.findIndex((exts) =>
-				exts.includes(extension),
-			);
-			if (priority === -1 || file.originalSize > MAX_FIRMWARE_SIZE) {
+			if (
+				!/\.(hex|exe|ex_|ota|otz|hec|gbl|bin)$/.test(file.name)
+				|| file.originalSize > MAX_FIRMWARE_SIZE
+			) {
 				return false;
 			}
-			if (priority < bestPriority) {
-				bestFilename = file.name;
-				bestPriority = priority;
-				ambiguous = false;
-			} else if (priority === bestPriority) {
-				ambiguous = true;
-			}
-			return false;
+			numMatches++;
+			return numMatches === 1;
 		},
 	});
-	// Multiple files of the same type could be meant for different devices or regions
-	if (bestFilename == undefined || ambiguous) return;
-
-	// Only inflate the chosen file, so huge or many files cannot exhaust the memory
-	const unzipped = unzipSync(zipData, {
-		filter: (file) => file.name === bestFilename,
-	});
-	if (Object.keys(unzipped).length === 1) {
+	if (numMatches === 1 && Object.keys(unzipped).length === 1) {
+		// Exactly one file was extracted, inspect that
 		const filename = Object.keys(unzipped)[0];
 		const rawData = unzipped[filename] as BytesView;
 		try {
