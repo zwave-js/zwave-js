@@ -3,7 +3,6 @@ import {
 	AssociationCC,
 	type AssociationCheckResult,
 	type AssociationGroup,
-	type CommandClass,
 	ECDHProfiles,
 	FLiRS2WakeUpTime,
 	type FirmwareUpdateOptions,
@@ -21,7 +20,6 @@ import {
 	Security2CCKEXGet,
 	type Security2CCKEXReport,
 	Security2CCKEXSet,
-	type Security2CCMessageEncapsulation,
 	Security2CCNetworkKeyGet,
 	Security2CCNetworkKeyReport,
 	Security2CCNetworkKeyVerify,
@@ -4155,23 +4153,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		}
 	}
 
-	/**
-	 * Returns the security class the given command was decrypted with,
-	 * or `undefined` if it was not received S2-encapsulated.
-	 */
-	private getS2DecryptionSecurityClass(
-		cc: CommandClass,
-	): SecurityClass | undefined {
-		// Unlike the node's SPAN state, which may be changed by concurrently received
-		// commands, this reflects the key that was actually used for this command
-		return (
-			cc.getEncapsulatingCC(
-				CommandClasses["Security 2"],
-				Security2Command.MessageEncapsulation,
-			) as Security2CCMessageEncapsulation | undefined
-		)?.securityClass;
-	}
-
 	private async secureBootstrapS2(
 		node: ZWaveNode,
 		// inclusionOptions is passed during normal inclusion, and undefined
@@ -4755,17 +4736,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				)
 				.catch(() => "timeout" as const);
 			if (transferEnd === "timeout") return abortTimeout();
-			if (
-				this.getS2DecryptionSecurityClass(transferEnd)
-				!== SecurityClass.Temporary
-			) {
-				this.driver.controllerLog.logNode(node.id, {
-					message: `Security S2 bootstrapping failed: Node used wrong key to communicate.`,
-					level: "warn",
-				});
-				await abort(KEXFailType.WrongSecurityLevel);
-				return SecurityBootstrapFailure.S2WrongSecurityLevel;
-			} else if (!transferEnd.keyRequestComplete) {
+			if (!transferEnd.keyRequestComplete) {
 				// S2 bootstrapping failed
 				this.driver.controllerLog.logNode(node.id, {
 					message: `Security S2 bootstrapping failed: Node did not confirm completion of the key exchange`,
@@ -10270,16 +10241,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					this.driver.controllerLog.logNode(bootstrappingNode.id, {
 						message: `Security S2 bootstrapping failed: Command received without encryption`,
 						direction: "inbound",
-						level: "warn",
-					});
-					await abort(KEXFailType.WrongSecurityLevel);
-					return SecurityBootstrapFailure.S2WrongSecurityLevel;
-				} else if (
-					this.getS2DecryptionSecurityClass(transferEnd)
-					!== SecurityClass.Temporary
-				) {
-					this.driver.controllerLog.logNode(bootstrappingNode.id, {
-						message: `Security S2 bootstrapping failed: Node used wrong key to communicate.`,
 						level: "warn",
 					});
 					await abort(KEXFailType.WrongSecurityLevel);
