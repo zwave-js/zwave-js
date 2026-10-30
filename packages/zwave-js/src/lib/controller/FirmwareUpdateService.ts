@@ -44,6 +44,8 @@ function serviceURL(): string {
 	return getenv("ZWAVEJS_FW_SERVICE_URL") || "https://firmware.zwave-js.io";
 }
 const DOWNLOAD_TIMEOUT = 60000;
+// Limit the entire download because ky's timeout only covers the time until the response headers arrive
+const DOWNLOAD_DEADLINE = 5 * 60000;
 const CHECK_TIMEOUT = 30000; // The initial check after releasing new updates can be pretty slow. Give it some time.
 
 const MAX_CACHE_SECONDS = 60 * 60 * 24; // Cache for a day at max
@@ -416,8 +418,13 @@ async function readResponseWithLimit(
 	return buffer.slice(0, size);
 }
 
+/**
+ * Downloads and extracts a firmware update file.
+ * @param signal Aborts the download. The download rejects with the signal's abort reason.
+ */
 export async function downloadFirmwareUpdate(
 	file: FirmwareUpdateFileInfo,
+	signal?: AbortSignal,
 ): Promise<Firmware> {
 	const [hashAlgorithm, expectedHash] = file.integrity.split(":", 2);
 
@@ -427,13 +434,14 @@ export async function downloadFirmwareUpdate(
 			ZWaveErrorCodes.Argument_Invalid,
 		);
 	}
-	// TODO: Make request abort-able (requires AbortController, Node 14.17+ / Node 16)
 
 	// Download the firmware file
 	assertAllowedDownloadProtocol(file.url);
+	const deadline = AbortSignal.timeout(DOWNLOAD_DEADLINE);
 	const { default: ky } = await import("ky");
 	const downloadResponse = await ky.get(file.url, {
 		timeout: DOWNLOAD_TIMEOUT,
+		signal: signal ? AbortSignal.any([signal, deadline]) : deadline,
 	});
 	// Redirects may lead elsewhere, so check where we ended up before reading the body
 	try {

@@ -3642,8 +3642,16 @@ export class Driver
 
 		this.isSoftResetting = false;
 
-		// Clean up and interview the controller again
-		await this.destroyController((task) => task === callingTask);
+		// Clean up and interview the controller again. Removing a parent would also remove
+		// the calling task, so keep the tasks waiting for it.
+		await this.destroyController((task) => {
+			let t = callingTask;
+			while (t) {
+				if (t === task) return true;
+				t = t.parent;
+			}
+			return false;
+		});
 		void this.initializeControllerAndNodes();
 	}
 
@@ -9189,13 +9197,6 @@ ${handlers.length} left`,
 	public async firmwareUpdateOTW(
 		data: BytesView | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
-		// If the data is provided as a FirmwareUpdateInfo, we need to download the firmware first.
-		// This must happen before the busy checks, so no concurrent update can slip in between them
-		// and queueing the task.
-		if (isFirmwareUpdateInfo(data)) {
-			data = await this.extractOTWUpdateInfo(data);
-		}
-
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
 			const message = `Failed to start the update: A firmware update is already in progress on this network!`;
@@ -9214,6 +9215,48 @@ ${handlers.length} left`,
 	}
 
 	private getFirmwareUpdateOTWTask(
+		data: BytesView | FirmwareUpdateInfo,
+	): TaskBuilder<OTWFirmwareUpdateResult> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Normal,
+			// Covers both the download and the installation, so no other update can start in between
+			tag: { id: "firmware-update-otw" },
+			task: async function* firmwareUpdateOTWTask() {
+				if (isFirmwareUpdateInfo(data)) {
+					data = (yield self.getDownloadFirmwareOTWTask(
+						data,
+					)) as BytesView;
+				}
+				return (yield self.getInstallFirmwareOTWTask(
+					data,
+				)) as OTWFirmwareUpdateResult;
+			},
+		};
+	}
+
+	private getDownloadFirmwareOTWTask(
+		updateInfo: FirmwareUpdateInfo,
+	): TaskBuilder<BytesView> {
+		const self = this;
+		const download = new AbortController();
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "firmware-update-otw" },
+			task: async function* downloadFirmwareOTWTask() {
+				return yield* waitFor(
+					self.extractOTWUpdateInfo(updateInfo, download.signal),
+				);
+			},
+			async cleanup() {
+				download.abort();
+			},
+		};
+	}
+
+	private getInstallFirmwareOTWTask(
 		data: BytesView,
 	): TaskBuilder<OTWFirmwareUpdateResult> {
 		const self = this;
@@ -9224,7 +9267,7 @@ ${handlers.length} left`,
 			group: { id: "controller-exclusive" },
 			// An interrupted update may leave the controller in recovery mode
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* firmwareUpdateOTWTask(thisTask) {
+			task: async function* installFirmwareOTWTask(thisTask) {
 				// When in bootloader mode, we can use the 700 series update method
 				if (self.mode === DriverMode.Bootloader) {
 					return yield* self.firmwareUpdateOTW700(data);
@@ -9272,6 +9315,7 @@ ${handlers.length} left`,
 	 */
 	private async extractOTWUpdateInfo(
 		updateInfo: FirmwareUpdateInfo,
+		signal: AbortSignal,
 	): Promise<BytesView> {
 		// Controller updates must have exactly one file
 		if (updateInfo.files?.length !== 1) {
@@ -9326,7 +9370,7 @@ ${handlers.length} left`,
 
 		let firmware: Firmware;
 		try {
-			firmware = await downloadFirmwareUpdate(update);
+			firmware = await downloadFirmwareUpdate(update, signal);
 		} catch (e: any) {
 			let message = `Downloading the OTW firmware update failed:\n`;
 			if (isZWaveError(e)) {
