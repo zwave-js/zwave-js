@@ -9209,30 +9209,44 @@ ${handlers.length} left`,
 			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
 		}
 
-		return this._scheduler.queueTask(
-			isFirmwareUpdateInfo(data)
-				? this.getDownloadAndFirmwareUpdateOTWTask(data)
-				: this.getFirmwareUpdateOTWTask(data),
-		);
+		return this._scheduler.queueTask(this.getFirmwareUpdateOTWTask(data));
 	}
 
-	private getDownloadAndFirmwareUpdateOTWTask(
-		updateInfo: FirmwareUpdateInfo,
+	private getFirmwareUpdateOTWTask(
+		data: BytesView | FirmwareUpdateInfo,
 	): TaskBuilder<OTWFirmwareUpdateResult> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Normal,
+			// Covers both the download and the installation, so no other update can start in between
+			tag: { id: "firmware-update-otw" },
+			task: async function* firmwareUpdateOTWTask() {
+				if (isFirmwareUpdateInfo(data)) {
+					data = (yield self.getDownloadFirmwareOTWTask(
+						data,
+					)) as BytesView;
+				}
+				return (yield self.getInstallFirmwareOTWTask(
+					data,
+				)) as OTWFirmwareUpdateResult;
+			},
+		};
+	}
+
+	private getDownloadFirmwareOTWTask(
+		updateInfo: FirmwareUpdateInfo,
+	): TaskBuilder<BytesView> {
 		const self = this;
 		const download = new AbortController();
 
 		return {
 			priority: TaskPriority.Normal,
-			// Shares the tag with the update itself, so no other update can start during the download
 			tag: { id: "firmware-update-otw" },
-			task: async function* downloadFirmwareUpdateOTWTask() {
-				const data = yield* waitFor(
+			task: async function* downloadFirmwareOTWTask() {
+				return yield* waitFor(
 					self.extractOTWUpdateInfo(updateInfo, download.signal),
 				);
-				return (yield self.getFirmwareUpdateOTWTask(
-					data,
-				)) as OTWFirmwareUpdateResult;
 			},
 			cleanup() {
 				download.abort();
@@ -9241,7 +9255,7 @@ ${handlers.length} left`,
 		};
 	}
 
-	private getFirmwareUpdateOTWTask(
+	private getInstallFirmwareOTWTask(
 		data: BytesView,
 	): TaskBuilder<OTWFirmwareUpdateResult> {
 		const self = this;
@@ -9252,7 +9266,7 @@ ${handlers.length} left`,
 			group: { id: "controller-exclusive" },
 			// An interrupted update may leave the controller in recovery mode
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* firmwareUpdateOTWTask(thisTask) {
+			task: async function* installFirmwareOTWTask(thisTask) {
 				// When in bootloader mode, we can use the 700 series update method
 				if (self.mode === DriverMode.Bootloader) {
 					return yield* self.firmwareUpdateOTW700(data);

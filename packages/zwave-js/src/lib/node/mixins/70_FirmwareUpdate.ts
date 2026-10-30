@@ -311,14 +311,82 @@ export abstract class FirmwareUpdateMixin
 			this.driver.scheduler.findTask<FirmwareUpdateResult>(isThisTask);
 		if (existingTask) return existingTask;
 
-		let keepAwake: boolean;
-		let download: AbortController | undefined;
-
 		return {
 			// Firmware updates cause a lot of traffic. Execute them in the background.
 			priority: TaskPriority.Lower,
 			tag: { id: "firmware-update-ota", nodeId: self.id },
 			task: async function* firmwareUpdateTask() {
+				let firmwares: Firmware[];
+				if (Array.isArray(updates)) {
+					firmwares = updates;
+				} else {
+					// Until the transfer starts, the node does not need to be told about the abort.
+					// Removing the task stops the download in its cleanup.
+					self._abortFirmwareUpdate = async () => {
+						self.driver.controllerLog.logNode(
+							self.id,
+							`Aborting firmware download...`,
+						);
+						await self.driver.scheduler.removeTasks(
+							isThisTask,
+							downloadAborted,
+						);
+					};
+					firmwares = (yield self.getDownloadFirmwareTask(
+						updates,
+					)) as Firmware[];
+					assertValidFirmwareUpdates(firmwares);
+				}
+
+				return (yield self.getInstallFirmwareTask(
+					firmwares,
+					options,
+				)) as FirmwareUpdateResult;
+			},
+			cleanup() {
+				self._abortFirmwareUpdate = undefined;
+				return Promise.resolve();
+			},
+		};
+	}
+
+	private getDownloadFirmwareTask(
+		updateInfo: FirmwareUpdateInfo,
+	): TaskBuilder<Firmware[]> {
+		const self = this;
+		const download = new AbortController();
+
+		return {
+			priority: TaskPriority.Lower,
+			tag: { id: "firmware-update-ota", nodeId: self.id },
+			task: async function* downloadFirmwareTask() {
+				return yield* waitFor(
+					self.downloadFirmwareUpdates(updateInfo, download.signal),
+				);
+			},
+			async cleanup() {
+				download.abort();
+				await self.driver.rejectTransactions(
+					(t) =>
+						t.message.getNodeId() === self.id
+						&& t.tag === "firmware-update-ota",
+					"The firmware update was aborted",
+				);
+			},
+		};
+	}
+
+	private getInstallFirmwareTask(
+		firmwares: Firmware[],
+		options: FirmwareUpdateOptions,
+	): TaskBuilder<FirmwareUpdateResult> {
+		const self = this;
+		let keepAwake: boolean;
+
+		return {
+			priority: TaskPriority.Lower,
+			tag: { id: "firmware-update-ota", nodeId: self.id },
+			task: async function* installFirmwareTask() {
 				// Keep battery powered nodes awake during the process
 				keepAwake = self.keepAwake;
 				self.keepAwake = true;
@@ -331,20 +399,6 @@ export abstract class FirmwareUpdateMixin
 				};
 
 				self._abortFirmwareUpdate = async () => {
-					// Until the transfer starts, the node does not need to be told about the abort.
-					// Removing the task stops the download in its cleanup.
-					if (download) {
-						self.driver.controllerLog.logNode(
-							self.id,
-							`Aborting firmware download...`,
-						);
-						await self.driver.scheduler.removeTasks(
-							isThisTask,
-							downloadAborted,
-						);
-						return;
-					}
-
 					if (abortContext.tooLateToAbort) {
 						throw new ZWaveError(
 							`The firmware update was transmitted completely, cannot abort anymore.`,
@@ -371,20 +425,6 @@ export abstract class FirmwareUpdateMixin
 						direction: "inbound",
 					});
 				};
-
-				// Download the firmware files
-				let firmwares: Firmware[];
-				if (!Array.isArray(updates)) {
-					download = new AbortController();
-					firmwares = yield* waitFor(
-						self.downloadFirmwareUpdates(updates, download.signal),
-					);
-					download = undefined;
-
-					assertValidFirmwareUpdates(firmwares);
-				} else {
-					firmwares = updates;
-				}
 
 				// Prepare the firmware update
 				let fragmentSizeSecure: number;
@@ -646,20 +686,9 @@ export abstract class FirmwareUpdateMixin
 
 				return result;
 			},
-			async cleanup() {
+			cleanup() {
 				self._abortFirmwareUpdate = undefined;
 				self._firmwareUpdatePrematureRequest = undefined;
-
-				if (download) {
-					download.abort();
-					download = undefined;
-					await self.driver.rejectTransactions(
-						(t) =>
-							t.message.getNodeId() === self.id
-							&& t.tag === "firmware-update-ota",
-						"The firmware update was aborted",
-					);
-				}
 
 				// Make sure that the keepAwake flag gets reset at the end
 				self.keepAwake = keepAwake;
@@ -668,6 +697,8 @@ export abstract class FirmwareUpdateMixin
 						self.driver.debounceSendNodeToSleep(self);
 					});
 				}
+
+				return Promise.resolve();
 			},
 		};
 	}
