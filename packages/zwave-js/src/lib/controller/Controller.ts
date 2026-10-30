@@ -4955,8 +4955,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			task: async function* rebuildRoutesTask() {
 				// We work our way outwards from the controller and start with non-sleeping nodes, one by one
 				try {
-					const neighbors = await self.getNodeNeighbors(
-						self._ownNodeId!,
+					const neighbors = yield* waitFor(
+						self.getNodeNeighbors(self._ownNodeId!),
 					);
 					neighbors.forEach((id) => addTodo(id));
 				} catch {
@@ -4992,7 +4992,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 
 					// Figure out which nodes to do next
 					try {
-						const neighbors = await self.getNodeNeighbors(nodeId);
+						const neighbors = yield* waitFor(
+							self.getNodeNeighbors(nodeId),
+						);
 						neighbors.forEach((id) => addTodo(id));
 					} catch {
 						// ignore
@@ -5201,8 +5203,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					});
 
 					try {
-						const result = await self.discoverNodeNeighbors(
-							node.id,
+						const result = yield* waitFor(
+							self.discoverNodeNeighbors(node.id),
 						);
 						if (result) {
 							self.driver.controllerLog.logNode(node.id, {
@@ -5240,8 +5242,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				yield; // Give the task scheduler time to do something else
 
 				// 2. re-create the SUC return route, just in case
-				node.hasSUCReturnRoute = await self.assignSUCReturnRoutes(
-					node.id,
+				node.hasSUCReturnRoute = yield* waitFor(
+					self.assignSUCReturnRoutes(node.id),
 				);
 
 				// 3. delete all return routes to get rid of potential priority return routes
@@ -5253,7 +5255,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 						direction: "outbound",
 					});
 
-					if (await self.deleteReturnRoutes(node.id)) {
+					if (yield* waitFor(self.deleteReturnRoutes(node.id))) {
 						break;
 					}
 
@@ -5312,9 +5314,11 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 							});
 
 							if (
-								await self.assignReturnRoutes(
-									node.id,
-									destinationNodeId,
+								yield* waitFor(
+									self.assignReturnRoutes(
+										node.id,
+										destinationNodeId,
+									),
 								)
 							) {
 								// this step was successful, continue with the next
@@ -6639,13 +6643,15 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					);
 				}
 
-				const result = await self.driver.sendMessage<
-					| RemoveFailedNodeRequestStatusReport
-					| RemoveFailedNodeResponse
-				>(
-					new RemoveFailedNodeRequest({
-						failedNodeId: node.id,
-					}),
+				const result = yield* waitFor(
+					self.driver.sendMessage<
+						| RemoveFailedNodeRequestStatusReport
+						| RemoveFailedNodeResponse
+					>(
+						new RemoveFailedNodeRequest({
+							failedNodeId: node.id,
+						}),
+					),
 				);
 
 				if (result instanceof RemoveFailedNodeResponse) {
@@ -6803,7 +6809,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			`starting replace failed node process...`,
 		);
 
-		if (await node.ping()) {
+		if (yield* waitFor(node.ping())) {
 			self.setInclusionState(InclusionState.Idle);
 			startedPromise.reject(
 				new ZWaveError(
@@ -6983,8 +6989,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 
 		if (newNode.protocol == Protocols.ZWave) {
 			// Assign SUC return route to make sure the node knows where to get its routes from
-			newNode.hasSUCReturnRoute = await this.assignSUCReturnRoutes(
-				newNode.id,
+			newNode.hasSUCReturnRoute = yield* waitFor(
+				this.assignSUCReturnRoutes(newNode.id),
 			);
 		}
 
@@ -6993,10 +6999,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		const strategy = options.strategy;
 		let bootstrapFailure: SecurityBootstrapFailure | undefined;
 		if (strategy === InclusionStrategy.Security_S2) {
-			bootstrapFailure = await this.secureBootstrapS2(
-				newNode,
-				options,
-				true,
+			bootstrapFailure = yield* waitFor(
+				this.secureBootstrapS2(newNode, options, true),
 			);
 			if (bootstrapFailure == undefined) {
 				const actualSecurityClass = newNode.getHighestSecurityClass();
@@ -7011,15 +7015,14 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				newNode.failedS2Bootstrapping = true;
 			}
 		} else if (strategy === InclusionStrategy.Security_S0) {
-			bootstrapFailure = await this.secureBootstrapS0(
-				newNode,
-				// When replacing a node, we don't receive NIF, so we have to make
-				// some assumptions, just like we do for Security S2 above.
-				// We don't know if the node is a controller, so just assume it is not.
-				false,
-				// Also we must assume that the node supports S0, because we
-				// don't know any better at this point.
-				true,
+			bootstrapFailure = yield* waitFor(
+				this.secureBootstrapS0(
+					newNode,
+					// Treat the node as an end device until its device class is known
+					false,
+					// Assume S0 support because the user requested it
+					true,
+				),
 			);
 			if (bootstrapFailure == undefined) {
 				const actualSecurityClass = newNode.getHighestSecurityClass();
