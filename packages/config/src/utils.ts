@@ -132,10 +132,19 @@ export async function syncExternalConfigDir(
 	// or if it contains nothing but files the OS creates when browsing a folder.
 	try {
 		const entries = await fs.readDir(extConfigDir);
-		const isOwnedByUs =
-			entries.includes("version")
-			&& (await fs.stat(externalVersionFilename)).isFile();
-		if (!isOwnedByUs && entries.some((e) => !osManagedEntries.has(e))) {
+		const isFile = async (entry: string) =>
+			(await fs.stat(path.join(extConfigDir, entry))).isFile();
+		const isSafeToWipe = entries.includes("version")
+			? await isFile("version")
+			: (
+					await Promise.all(
+						entries.map(
+							async (e) =>
+								osManagedEntries.has(e) && (await isFile(e)),
+						),
+					)
+				).every(Boolean);
+		if (!isSafeToWipe) {
 			logger.print(
 				`External config dir ${extConfigDir} contains unexpected entries. Delete it to let Z-Wave JS recreate it - using embedded config`,
 				"error",
