@@ -3645,8 +3645,10 @@ export class Driver
 		// Clean up and interview the controller again. Removing a parent would also remove
 		// the calling task, so keep the tasks waiting for it.
 		await this.destroyController((task) => {
-			for (let t = callingTask; t; t = t.parent) {
+			let t = callingTask;
+			while (t) {
 				if (t === task) return true;
+				t = t.parent;
 			}
 			return false;
 		});
