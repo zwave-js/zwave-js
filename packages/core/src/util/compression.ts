@@ -4,7 +4,6 @@ import {
 	Gunzip,
 	type InflateOptions,
 	deflateSync as defflateSync,
-	gunzipSync as fgunzipSync,
 	inflateSync as infflateSync,
 } from "fflate";
 
@@ -22,12 +21,11 @@ export function inflateSync(data: BytesView, opts?: InflateOptions): BytesView {
  */
 export function gunzipSync(
 	data: BytesView,
-	maxOutputLength?: number,
+	maxOutputLength: number = Number.POSITIVE_INFINITY,
 ): BytesView {
-	if (maxOutputLength == undefined) return fgunzipSync(data);
-
-	// The streaming decompressor silently accepts empty or truncated input,
-	// so check what fflate's gunzipSync would check: the minimum size (header + trailer)...
+	// fflate's gunzipSync allocates the output based on the size in the trailer, so truncated input
+	// can make it allocate gigabytes. The streaming decompressor avoids that, but silently accepts
+	// empty or truncated input, so check the minimum size (header + trailer)...
 	if (data.length < 18) {
 		throw new Error("Invalid gzip data");
 	}

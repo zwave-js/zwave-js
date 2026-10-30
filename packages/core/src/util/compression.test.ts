@@ -15,7 +15,7 @@ test("gunzipSync() throws when the decompressed data exceeds the limit", () => {
 	expect(() => gunzipSync(compressed, 99_999)).toThrow();
 });
 
-test("gunzipSync() throws for empty or truncated input when a limit is given", () => {
+test("gunzipSync() throws for empty or truncated input", () => {
 	const compressed = gzipSync(new Uint8Array(100_000).fill(0x42));
 	for (const data of [
 		new Uint8Array(0),
@@ -25,6 +25,7 @@ test("gunzipSync() throws for empty or truncated input when a limit is given", (
 		compressed.subarray(0, -4),
 		compressed.subarray(0, -10),
 	]) {
+		expect(() => gunzipSync(data)).toThrow();
 		expect(() => gunzipSync(data, 100_000)).toThrow();
 	}
 });
