@@ -49,6 +49,15 @@ beforeEach<LocalTestContext>(async ({ context, expect }) => {
 	await fsp.mkdir(context.tempDir, { recursive: true });
 });
 
+async function createUserDir(dir: string, name: string): Promise<void> {
+	await fsp.mkdir(path.join(dir, name));
+	await fsp.writeFile(
+		path.join(dir, name, "user-data.txt"),
+		"keep me",
+		"utf8",
+	);
+}
+
 test.sequential("syncExternalConfigDir() syncs the external config dir if it does not exist", async ({
 	context,
 	expect,
@@ -103,6 +112,60 @@ test.sequential("syncExternalConfigDir() leaves the external config dir alone if
 
 	expect(await fsp.readFile(path.join(configDir, "version"), "utf8")).toBe(
 		otherVersion,
+	);
+}, 60000);
+
+for (const [name, createEntry] of [
+	[
+		"an unrelated file",
+		(dir: string) =>
+			fsp.writeFile(path.join(dir, "notes.txt"), "keep me", "utf8"),
+	],
+	[
+		"a directory named version",
+		(dir: string) => createUserDir(dir, "version"),
+	],
+	[
+		"a directory named .DS_Store",
+		(dir: string) => createUserDir(dir, ".DS_Store"),
+	],
+] as const) {
+	test.sequential(`syncExternalConfigDir() refuses to wipe a directory containing ${name}`, async ({
+		context,
+		expect,
+	}) => {
+		const { tempDir, logger } = context;
+
+		const configDir = path.join(tempDir, "extconfig");
+		await fsp.mkdir(configDir, { recursive: true });
+		await createEntry(configDir);
+		const entriesBefore = await fsp.readdir(configDir, { recursive: true });
+
+		expect(await syncExternalConfigDir(fs, configDir, logger)).toEqual({
+			success: false,
+		});
+		expect(await fsp.readdir(configDir, { recursive: true })).toEqual(
+			entriesBefore,
+		);
+	});
+}
+
+test.sequential("syncExternalConfigDir() syncs a directory that only contains OS metadata files", async ({
+	context,
+	expect,
+}) => {
+	const { tempDir, logger } = context;
+
+	const configDir = path.join(tempDir, "extconfig");
+	await fsp.mkdir(configDir, { recursive: true });
+	await fsp.writeFile(path.join(configDir, ".DS_Store"), "", "utf8");
+	await fsp.writeFile(path.join(configDir, "Thumbs.db"), "", "utf8");
+
+	expect(await syncExternalConfigDir(fs, configDir, logger)).toMatchObject({
+		success: true,
+	});
+	expect(await fsp.readFile(path.join(configDir, "version"), "utf8")).toBe(
+		ownVersion,
 	);
 }, 60000);
 
