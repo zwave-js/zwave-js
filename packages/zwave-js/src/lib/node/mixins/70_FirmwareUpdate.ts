@@ -107,7 +107,7 @@ export function isFirmwareUpdateOTATask(t: Task<unknown>): boolean {
 
 export interface NodeFirmwareUpdate {
 	/**
-	 * Aborts an active firmware update process, including downloading the update files
+	 * Aborts an active firmware update process
 	 */
 	abortFirmwareUpdate(): Promise<void>;
 
@@ -260,15 +260,14 @@ export abstract class FirmwareUpdateMixin
 		}
 
 		// Don't allow starting two firmware updates for the same node
-		const downloadAborted = new ZWaveError(
-			"The firmware download was aborted",
-			ZWaveErrorCodes.FirmwareUpdateCC_FailedToStart,
-		);
-		const task = this.getUpdateFirmwareTask(
-			updates,
-			options,
-			downloadAborted,
-		);
+		let downloadAborted: ZWaveError | undefined;
+		const task = this.getUpdateFirmwareTask(updates, options, () => {
+			downloadAborted = new ZWaveError(
+				"The firmware download was aborted",
+				ZWaveErrorCodes.FirmwareUpdateCC_FailedToStart,
+			);
+			return downloadAborted;
+		});
 		if (task instanceof Promise) {
 			throw new ZWaveError(
 				`Failed to start the update: A firmware update is already in progress for this node!`,
@@ -279,7 +278,7 @@ export abstract class FirmwareUpdateMixin
 		try {
 			return await this.driver.scheduler.queueTask(task);
 		} catch (e) {
-			if (e !== downloadAborted) throw e;
+			if (!downloadAborted || e !== downloadAborted) throw e;
 			return this.finishAbortedFirmwareUpdate();
 		}
 	}
@@ -301,7 +300,7 @@ export abstract class FirmwareUpdateMixin
 	private getUpdateFirmwareTask(
 		updates: Firmware[] | FirmwareUpdateInfo,
 		options: FirmwareUpdateOptions,
-		downloadAborted: ZWaveError,
+		createDownloadAbortedError: () => ZWaveError,
 	): Promise<FirmwareUpdateResult> | TaskBuilder<FirmwareUpdateResult> {
 		const self = this;
 
@@ -331,13 +330,14 @@ export abstract class FirmwareUpdateMixin
 						);
 						await self.driver.scheduler.removeTasks(
 							isThisTask,
-							downloadAborted,
+							createDownloadAbortedError(),
 						);
 					};
 					firmwares = (yield self.getDownloadFirmwareTask(
 						updates,
 					)) as Firmware[];
 					assertValidFirmwareUpdates(firmwares);
+					yield self.getValidateFirmwareDeviceIdTask(updates.device);
 				}
 
 				return (yield self.getInstallFirmwareTask(
@@ -367,6 +367,31 @@ export abstract class FirmwareUpdateMixin
 			},
 			async cleanup() {
 				download.abort();
+			},
+		};
+	}
+
+	private getValidateFirmwareDeviceIdTask(
+		deviceId: FirmwareUpdateDeviceID,
+	): TaskBuilder<void> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Lower,
+			tag: { id: "firmware-update-ota", nodeId: self.id },
+			task: async function* validateFirmwareDeviceIdTask() {
+				// Make sure we're not applying the update to the wrong device
+				self.driver.controllerLog.logNode(
+					self.id,
+					`All updates downloaded, validating device IDs...`,
+				);
+				yield* waitFor(self.ensureFirmwareDeviceIdMatches(deviceId));
+				self.driver.controllerLog.logNode(
+					self.id,
+					`Device IDs match, installing firmware updates...`,
+				);
+			},
+			async cleanup() {
 				await self.driver.rejectTransactions(
 					(t) =>
 						t.message.getNodeId() === self.id
@@ -704,7 +729,7 @@ export abstract class FirmwareUpdateMixin
 		};
 	}
 
-	/** Downloads the files of the given update and checks that the update is meant for this node */
+	/** Downloads the files of the given update */
 	private async downloadFirmwareUpdates(
 		updateInfo: FirmwareUpdateInfo,
 		signal: AbortSignal,
@@ -762,17 +787,6 @@ export abstract class FirmwareUpdateMixin
 				);
 			}
 		}
-
-		// Make sure we're not applying the update to the wrong device
-		this.driver.controllerLog.logNode(
-			this.id,
-			`All updates downloaded, validating device IDs...`,
-		);
-		await this.ensureFirmwareDeviceIdMatches(updateInfo.device);
-		this.driver.controllerLog.logNode(
-			this.id,
-			`Device IDs match, installing firmware updates...`,
-		);
 
 		return firmwares;
 	}
