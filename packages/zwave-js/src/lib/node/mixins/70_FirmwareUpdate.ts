@@ -377,13 +377,7 @@ export abstract class FirmwareUpdateMixin
 				if (!Array.isArray(updates)) {
 					download = new AbortController();
 					firmwares = yield* waitFor(
-						self.downloadFirmwareUpdates(
-							updates,
-							AbortSignal.any([
-								download.signal,
-								self.driver.destroySignal,
-							]),
-						),
+						self.downloadFirmwareUpdates(updates, download.signal),
 					);
 					download = undefined;
 
@@ -711,9 +705,6 @@ export abstract class FirmwareUpdateMixin
 				const firmware = await downloadFirmwareUpdate(update, signal);
 				firmwares.push(firmware);
 			} catch (e: any) {
-				// Pass aborts through unchanged
-				if (signal.aborted) throw e;
-
 				let message = `Downloading the firmware update for node ${this.id} failed:\n`;
 				if (isZWaveError(e)) {
 					// Pass "real" Z-Wave errors through

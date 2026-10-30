@@ -3862,15 +3862,6 @@ export class Driver
 		return !!this._destroyPromise;
 	}
 
-	private readonly _destroyAbort = new AbortController();
-	/**
-	 * @internal
-	 * Gets aborted when the driver is destroyed
-	 */
-	public get destroySignal(): AbortSignal {
-		return this._destroyAbort.signal;
-	}
-
 	/**
 	 * Ensures that the driver is ready to communicate (serial port open and not destroyed).
 	 * If desired, also checks that the controller interview has been completed.
@@ -3925,13 +3916,6 @@ export class Driver
 		this._destroyPromise = createDeferredPromise();
 
 		this.driverLog.print("destroying driver instance...");
-
-		this._destroyAbort.abort(
-			new ZWaveError(
-				"The driver instance was destroyed",
-				ZWaveErrorCodes.Driver_Destroyed,
-			),
-		);
 
 		// First stop the scheduler, all queues and close the serial port, so nothing happens anymore
 		await this._scheduler.stop();
@@ -9205,13 +9189,6 @@ ${handlers.length} left`,
 	public async firmwareUpdateOTW(
 		data: BytesView | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
-		// If the data is provided as a FirmwareUpdateInfo, we need to download the firmware first.
-		// This must happen before the busy checks, so no concurrent update can slip in between them
-		// and queueing the task.
-		if (isFirmwareUpdateInfo(data)) {
-			data = await this.extractOTWUpdateInfo(data);
-		}
-
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
 			const message = `Failed to start the update: A firmware update is already in progress on this network!`;
@@ -9226,7 +9203,36 @@ ${handlers.length} left`,
 			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
 		}
 
-		return this._scheduler.queueTask(this.getFirmwareUpdateOTWTask(data));
+		return this._scheduler.queueTask(
+			isFirmwareUpdateInfo(data)
+				? this.getDownloadAndFirmwareUpdateOTWTask(data)
+				: this.getFirmwareUpdateOTWTask(data),
+		);
+	}
+
+	private getDownloadAndFirmwareUpdateOTWTask(
+		updateInfo: FirmwareUpdateInfo,
+	): TaskBuilder<OTWFirmwareUpdateResult> {
+		const self = this;
+		const download = new AbortController();
+
+		return {
+			priority: TaskPriority.Normal,
+			// Shares the tag with the update itself, so no other update can start during the download
+			tag: { id: "firmware-update-otw" },
+			task: async function* downloadFirmwareUpdateOTWTask() {
+				const data = yield* waitFor(
+					self.extractOTWUpdateInfo(updateInfo, download.signal),
+				);
+				return (yield self.getFirmwareUpdateOTWTask(
+					data,
+				)) as OTWFirmwareUpdateResult;
+			},
+			cleanup() {
+				download.abort();
+				return Promise.resolve();
+			},
+		};
 	}
 
 	private getFirmwareUpdateOTWTask(
@@ -9288,6 +9294,7 @@ ${handlers.length} left`,
 	 */
 	private async extractOTWUpdateInfo(
 		updateInfo: FirmwareUpdateInfo,
+		signal: AbortSignal,
 	): Promise<BytesView> {
 		// Controller updates must have exactly one file
 		if (updateInfo.files?.length !== 1) {
@@ -9342,7 +9349,7 @@ ${handlers.length} left`,
 
 		let firmware: Firmware;
 		try {
-			firmware = await downloadFirmwareUpdate(update, this.destroySignal);
+			firmware = await downloadFirmwareUpdate(update, signal);
 		} catch (e: any) {
 			let message = `Downloading the OTW firmware update failed:\n`;
 			if (isZWaveError(e)) {
