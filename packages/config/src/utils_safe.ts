@@ -29,7 +29,9 @@ export function throwInvalidConfig(which: string, reason?: string): never {
 	);
 }
 
-export function tryParseCCId(from: string): CommandClasses | undefined {
+export function tryParseCCIdFromString(
+	from: string,
+): CommandClasses | undefined {
 	let ccId: number | undefined;
 	if (/^\d+$/.test(from)) {
 		// Decimal CC ID

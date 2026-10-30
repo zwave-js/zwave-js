@@ -9,7 +9,7 @@ import {
 } from "fflate";
 
 export function deflateSync(data: BytesView, opts?: DeflateOptions): BytesView {
-	return defflateSync(data, opts) as BytesView;
+	return defflateSync(data, opts);
 }
 
 export function inflateSync(data: BytesView, opts?: InflateOptions): BytesView {
@@ -24,7 +24,7 @@ export function gunzipSync(
 	data: BytesView,
 	maxOutputLength?: number,
 ): BytesView {
-	if (maxOutputLength == undefined) return fgunzipSync(data) as BytesView;
+	if (maxOutputLength == undefined) return fgunzipSync(data);
 
 	// The streaming decompressor silently accepts empty or truncated input,
 	// so check what fflate's gunzipSync would check: the minimum size (header + trailer)...

@@ -11,6 +11,7 @@ import {
 	zeroPad,
 } from "../shared.js";
 
+/** Returns the given number of cryptographically secure random bytes */
 function randomBytes(length: number): BytesView {
 	const buffer = new Uint8Array(length);
 	return crypto.getRandomValues(buffer);
@@ -39,22 +40,23 @@ async function encryptAES128CBC(
 		true,
 		["encrypt"],
 	);
+	// Like the Node.js implementation, zero-pad the plaintext to a multiple of the block size
+	const { output: paddedPlaintext } = zeroPad(plaintext, BLOCK_SIZE);
 	const ciphertext = await crypto.subtle.encrypt(
 		{
 			name: "AES-CBC",
 			iv,
 		},
 		cryptoKey,
-		plaintext,
+		paddedPlaintext,
 	);
 
-	// The WebCrypto API adds 16 bytes PKCS#7 padding, but we're only interested
+	// The WebCrypto API adds PKCS#7 padding, but we're only interested
 	// in the blocks which correspond to the plaintext
-	const paddedLength = Math.ceil(plaintext.length / BLOCK_SIZE) * BLOCK_SIZE;
-	return new Uint8Array(ciphertext, 0, paddedLength);
+	return new Uint8Array(ciphertext, 0, paddedPlaintext.length);
 }
 
-/** Decrypts a payload using AES-256-CBC */
+/** Decrypts a PKCS#7-padded payload using AES-256-CBC and removes the padding */
 async function decryptAES256CBC(
 	ciphertext: BytesView,
 	key: BytesView,
@@ -111,7 +113,7 @@ async function encryptAESOFB(
 	const ret = new Uint8Array(plaintext.length);
 	let counter = zeroPad(iv, BLOCK_SIZE).output;
 
-	for (let offset = 0; offset < plaintext.length - 1; offset += BLOCK_SIZE) {
+	for (let offset = 0; offset < plaintext.length; offset += BLOCK_SIZE) {
 		const input = plaintext.slice(offset, offset + BLOCK_SIZE);
 		const ciphertextBuffer = await crypto.subtle.encrypt(
 			{
@@ -154,7 +156,7 @@ async function decryptAESOFB(
 	const ret = new Uint8Array(ciphertext.length);
 	let counter = zeroPad(iv, BLOCK_SIZE).output;
 
-	for (let offset = 0; offset < ciphertext.length - 1; offset += BLOCK_SIZE) {
+	for (let offset = 0; offset < ciphertext.length; offset += BLOCK_SIZE) {
 		const input = ciphertext.slice(offset, offset + BLOCK_SIZE);
 		const plaintextBuffer = await crypto.subtle.decrypt(
 			{
@@ -215,6 +217,7 @@ function decryptAES256OFB(
 	return decryptAESOFB(ciphertext, key, iv);
 }
 
+/** Encrypts and authenticates a payload using AES-128-CCM */
 async function encryptAES128CCM(
 	plaintext: BytesView,
 	key: BytesView,
@@ -343,6 +346,7 @@ function getCCMAuthenticationBlocks(
 	return B;
 }
 
+/** Decrypts and verifies a payload using AES-128-CCM */
 async function decryptAES128CCM(
 	ciphertext: BytesView,
 	key: BytesView,
@@ -417,6 +421,7 @@ async function decryptAES128CCM(
 	}
 }
 
+/** Computes the hash of a payload with the given algorithm */
 async function digest(
 	algorithm: "md5" | "sha-1" | "sha-256",
 	data: BytesView,
@@ -431,6 +436,7 @@ async function digest(
 	return new Uint8Array(output);
 }
 
+/** Computes HMAC-SHA256 */
 async function hmacSHA256(key: BytesView, data: BytesView): Promise<BytesView> {
 	const cryptoKey = await crypto.subtle.importKey(
 		"raw",
@@ -447,6 +453,7 @@ async function hmacSHA256(key: BytesView, data: BytesView): Promise<BytesView> {
 // Web Crypto API does not provide ChaCha20-Poly1305.
 // These functions will throw if called; a proper solution needs to be implemented.
 
+/** Encrypts and authenticates a payload using ChaCha20-Poly1305 */
 async function encryptChaCha20Poly1305(
 	_key: BytesView,
 	_nonce: BytesView,
@@ -458,6 +465,7 @@ async function encryptChaCha20Poly1305(
 	);
 }
 
+/** Decrypts and verifies a payload using ChaCha20-Poly1305 */
 async function decryptChaCha20Poly1305(
 	_key: BytesView,
 	_nonce: BytesView,
@@ -470,6 +478,7 @@ async function decryptChaCha20Poly1305(
 	);
 }
 
+/** Generates an x25519 / ECDH key pair */
 async function generateECDHKeyPair(): Promise<KeyPair> {
 	const pair = (await crypto.subtle.generateKey("X25519", true, [
 		"deriveKey",
@@ -485,6 +494,7 @@ async function generateECDHKeyPair(): Promise<KeyPair> {
 	return { publicKey, privateKey };
 }
 
+/** Expand an x25519 / ECDH private key into the full key pair */
 async function keyPairFromRawECDHPrivateKey(
 	privateKey: BytesView,
 ): Promise<KeyPair> {
@@ -516,6 +526,7 @@ async function keyPairFromRawECDHPrivateKey(
 	return { publicKey, privateKey };
 }
 
+/** Derives the shared ECDH secret from an x25519 / ECDH key pair */
 async function deriveSharedECDHSecret(keyPair: KeyPair): Promise<BytesView> {
 	const publicKey = await crypto.subtle.importKey(
 		"raw",

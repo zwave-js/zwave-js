@@ -491,6 +491,12 @@ export function nvmObjectsToJSON(
 		delete node.nodeId;
 	}
 
+	// Virtual nodes without node info are not part of the node list,
+	// so the virtual node mask is the only place they are recorded
+	for (const id of isVirtual) {
+		if (!nodes.has(id)) nodes.set(id, { isVirtual: true });
+	}
+
 	// If they exist, read info about LR nodes
 	const lrNodeIds = getFile<ProtocolLRNodeListFile>(
 		ProtocolLRNodeListFileID,
@@ -948,6 +954,12 @@ export async function nvmToJSON(
 		delete node.nodeId;
 	}
 
+	// Virtual nodes without node info are not part of the node list,
+	// so the virtual node mask is the only place they are recorded
+	for (const id of virtualNodeIds) {
+		if (!nodes.has(id)) nodes.set(id, { isVirtual: true });
+	}
+
 	// If they exist, read info about LR nodes
 	const lrNodeIds = await adapter.get({
 		domain: "controller",
@@ -958,7 +970,7 @@ export async function nvmToJSON(
 			const node = getLRNode(id);
 
 			// Find node info
-			const nodeInfo = await adapter.get(
+			const { nodeId, ...nodeInfo } = await adapter.get(
 				{
 					domain: "lrnode",
 					nodeId: id,
@@ -1836,6 +1848,7 @@ export async function jsonToNVM500(
 			virtualNodeIds.push(nodeId);
 			continue;
 		}
+		if (node.isVirtual) virtualNodeIds.push(nodeId);
 		if (node.appRouteLock) appRouteLock.push(nodeId);
 		if (node.routeSlaveSUC) routeSlaveSUC.push(nodeId);
 		if (node.pendingDiscovery) pendingDiscovery.push(nodeId);
@@ -2227,9 +2240,10 @@ export async function migrateNVM(
 		return sourceNVM;
 	}
 
-	// TypeScript doesn't understand multi-variable narrowings (yet)
-	source = source as Exclude<ParsedNVM, { type: "unknown" }>;
-	target = target as Exclude<ParsedNVM, { type: "unknown" }>;
+	// // TypeScript doesn't understand multi-variable narrowings (yet)
+	if (source.type === "unknown" || target.type === "unknown") {
+		throw new Error("This must not happen");
+	}
 
 	// Some 700 series NVMs have a strange 255.x application version - fix that first
 	if (

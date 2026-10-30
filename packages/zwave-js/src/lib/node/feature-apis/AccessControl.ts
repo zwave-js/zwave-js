@@ -16,6 +16,7 @@ import {
 	type UserCredentialCCCredentialReport,
 	type UserCredentialCCUserReport,
 	UserCredentialCCValues,
+	encodeCredentialData,
 	normalizeCredentialData,
 } from "@zwave-js/cc/UserCredentialCC";
 import {
@@ -1140,10 +1141,7 @@ export class AccessControlAPI extends FeatureAPI {
 				type,
 				slot,
 			);
-			const credentialData =
-				typeof data === "string"
-					? Bytes.from(data, "utf-8")
-					: Bytes.from(data);
+			const credentialData = encodeCredentialData(type, data);
 			const raw = await api.setCredential({
 				operationType: existing
 					? UserCredentialOperationType.Modify
@@ -1180,7 +1178,14 @@ export class AccessControlAPI extends FeatureAPI {
 			const existingCred = this.#getCredentialCached_UC(type, userId);
 
 			const codeData = typeof data === "string" ? data : Bytes.from(data);
-			const result = await api.set(userId, status as number, codeData);
+			const result = await api.set(
+				userId,
+				status as Exclude<
+					UserIDStatus,
+					UserIDStatus.Available | UserIDStatus.StatusNotAvailable
+				>,
+				codeData,
+			);
 			let succeeded: boolean;
 			let failure = SetCredentialResult.Error_Unknown;
 			if (result == undefined) {
@@ -1265,7 +1270,7 @@ export class AccessControlAPI extends FeatureAPI {
 			);
 		}
 		const userId = userIdOrType ?? 0;
-		const type = typeOrSlot as UserCredentialType;
+		const type = typeOrSlot;
 
 		if (this.#usesUserCredentialCC) {
 			// userId 0 is the wildcard owner, so only range-check a specific user.
@@ -1565,15 +1570,11 @@ export class AccessControlAPI extends FeatureAPI {
 	}
 
 	#ucAPI(): UserCodeCCAPI {
-		return this.endpoint.commandClasses[
-			"User Code"
-		] as unknown as UserCodeCCAPI;
+		return this.endpoint.commandClasses["User Code"];
 	}
 
 	#u3cAPI(): UserCredentialCCAPI {
-		return this.endpoint.commandClasses[
-			"User Credential"
-		] as unknown as UserCredentialCCAPI;
+		return this.endpoint.commandClasses["User Credential"];
 	}
 
 	#supportsCredentialType(type: UserCredentialType): boolean {

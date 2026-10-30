@@ -431,3 +431,111 @@ test("deriveSharedECDHSecret is compatible between all implementations", async (
 
 	t.expect(secretBrowser).toStrictEqual(new Uint8Array(secretNode));
 });
+
+test("AES-OFB and AES-CBC are compatible between all implementations for partial blocks", async (t) => {
+	const browser: CryptoPrimitives = (await import("./primitives.browser.js"))
+		.primitives;
+	const node: CryptoPrimitives = (await import("./primitives.node.js"))
+		.primitives;
+
+	const crypto = await import("node:crypto");
+
+	const key = Bytes.from("2b7e151628aed2a6abf7158809cf4f3c", "hex");
+	const key256 = Bytes.from(
+		"603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+		"hex",
+	);
+	const iv = Bytes.from("000102030405060708090a0b0c0d0e0f", "hex");
+
+	for (const length of [1, 15, 16, 17, 31, 33]) {
+		const plaintext = node.randomBytes(length);
+
+		const ofbBrowser = await browser.encryptAES128OFB(plaintext, key, iv);
+		const ofbNode = await node.encryptAES128OFB(plaintext, key, iv);
+		assertBufferEquals(t.expect, ofbBrowser, ofbNode);
+		assertBufferEquals(
+			t.expect,
+			await browser.decryptAES128OFB(ofbNode, key, iv),
+			plaintext,
+		);
+
+		const cbcBrowser = await browser.encryptAES128CBC(plaintext, key, iv);
+		const cbcNode = await node.encryptAES128CBC(plaintext, key, iv);
+		assertBufferEquals(t.expect, cbcBrowser, cbcNode);
+
+		const cipher = crypto.createCipheriv("aes-256-cbc", key256, iv);
+		const cbc256 = Bytes.concat([cipher.update(plaintext), cipher.final()]);
+		assertBufferEquals(
+			t.expect,
+			await browser.decryptAES256CBC(cbc256, key256, iv),
+			plaintext,
+		);
+		assertBufferEquals(
+			t.expect,
+			await node.decryptAES256CBC(cbc256, key256, iv),
+			plaintext,
+		);
+	}
+});
+
+test("decryptAES128CCM returns no plaintext when authentication fails in all implementations", async (t) => {
+	for (const primitives of [
+		"./primitives.browser.js",
+		"./primitives.node.js",
+	] as const) {
+		const { encryptAES128CCM, decryptAES128CCM }: CryptoPrimitives = (
+			await import(primitives)
+		).primitives;
+		const key = Bytes.from("2b7e151628aed2a6abf7158809cf4f3c", "hex");
+		const iv = Bytes.from("000102030405060708090a0b0c", "hex");
+		const aad = Bytes.from("0102", "hex");
+		const { ciphertext, authTag } = await encryptAES128CCM(
+			Bytes.from("deadbeef", "hex"),
+			key,
+			iv,
+			aad,
+			8,
+		);
+		authTag[0] ^= 0xff;
+		const result = await decryptAES128CCM(
+			ciphertext,
+			key,
+			iv,
+			aad,
+			authTag,
+		);
+		t.expect(result.authOK).toBe(false);
+		t.expect(result.plaintext.length).toBe(0);
+	}
+});
+
+test("decryptAES128CCM rejects a modified auth tag for empty payloads in all implementations", async (t) => {
+	for (const primitives of [
+		"./primitives.browser.js",
+		"./primitives.node.js",
+	] as const) {
+		const { encryptAES128CCM, decryptAES128CCM }: CryptoPrimitives = (
+			await import(primitives)
+		).primitives;
+		const key = Bytes.from("2b7e151628aed2a6abf7158809cf4f3c", "hex");
+		const iv = Bytes.from("000102030405060708090a0b0c", "hex");
+		for (const aad of [new Bytes(), Bytes.from("0102", "hex")]) {
+			const { ciphertext, authTag } = await encryptAES128CCM(
+				new Bytes(),
+				key,
+				iv,
+				aad,
+				8,
+			);
+			t.expect(
+				(await decryptAES128CCM(ciphertext, key, iv, aad, authTag))
+					.authOK,
+			).toBe(true);
+			authTag[0] ^= 0x01;
+			t.expect(
+				(await decryptAES128CCM(ciphertext, key, iv, aad, authTag))
+					.authOK,
+			).toBe(false);
+		}
+	}
+});
