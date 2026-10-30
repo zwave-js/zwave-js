@@ -3,6 +3,7 @@ import type { BinarySensorCCAPI } from "@zwave-js/cc/BinarySensorCC";
 import { BinarySwitchCCAPI } from "@zwave-js/cc/BinarySwitchCC";
 import {
 	CommandClasses,
+	TransmitOptions,
 	ZWaveErrorCodes,
 	assertZWaveError,
 } from "@zwave-js/core";
@@ -375,7 +376,37 @@ describe("VirtualEndpoint", { timeout: 30_000 }, () => {
 				&& msg.nodeIds.includes(2)
 				&& msg.nodeIds.includes(3)
 				&& msg.serializedCC?.[0] === CommandClasses.Basic
-				&& msg.serializedCC?.[1] === BasicCommand.Set,
+				&& msg.serializedCC?.[1] === BasicCommand.Set
+				&& msg.transmitOptions === TransmitOptions.DEFAULT,
+		);
+	});
+
+	test.sequential("multicast setValue forwards custom transmit options", async ({
+		context,
+		expect,
+	}) => {
+		const { driver, controller, makePhysicalNode } = context;
+		await makePhysicalNode(2);
+		await makePhysicalNode(3);
+		const multicast = driver.controller.getMulticastGroup([2, 3]);
+		const transmitOptions =
+			TransmitOptions.AutoRoute | TransmitOptions.Explore;
+		multicast
+			.setValue(
+				{
+					commandClass: CommandClasses.Basic,
+					property: "targetValue",
+				},
+				99,
+				{ transmitOptions },
+			)
+			.catch(noop);
+		await wait(1);
+		controller.assertReceivedHostMessage(
+			(msg) =>
+				msg instanceof SendDataMulticastRequest
+				&& msg.nodeIds.length === 2
+				&& msg.transmitOptions === transmitOptions,
 		);
 	});
 });
