@@ -284,7 +284,7 @@ export abstract class FirmwareUpdateMixin
 				this.id,
 				`Aborting firmware update...`,
 			);
-			aborted = new ZWaveError(
+			aborted ??= new ZWaveError(
 				"The firmware update was aborted",
 				ZWaveErrorCodes.FirmwareUpdateCC_FailedToStart,
 			);
@@ -298,10 +298,11 @@ export abstract class FirmwareUpdateMixin
 			return await this.driver.scheduler.queueTask(task);
 		} catch (e) {
 			if (!aborted || e !== aborted) throw e;
-			return this.finishAbortedFirmwareUpdate();
 		} finally {
 			this._abortFirmwareUpdate = undefined;
 		}
+		// Emit the event after clearing the abort hook, because a listener may start the next update
+		return this.finishAbortedFirmwareUpdate();
 	}
 
 	private finishAbortedFirmwareUpdate(): FirmwareUpdateResult {
