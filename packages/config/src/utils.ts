@@ -67,12 +67,7 @@ export type SyncExternalConfigDirResult =
 			version: string;
 	  };
 
-const osManagedEntries = new Set([
-	".DS_Store",
-	"Thumbs.db",
-	"desktop.ini",
-	"lost+found",
-]);
+const osManagedEntries = new Set([".DS_Store", "Thumbs.db", "desktop.ini"]);
 
 /**
  * Synchronizes or updates the external config directory and returns whether the directory is in a state that can be used
@@ -133,15 +128,11 @@ export async function syncExternalConfigDir(
 	if (!wipe) return { success: true, version: externalVersion! };
 
 	// The directory is configured by the user and might point to the wrong location.
-	// Only wipe it if it was created by us, which is indicated by the version file.
-	// Otherwise only populate it if it is empty.
-	let isOwnedByUs: boolean;
+	// Only wipe it if it was created by us, which is indicated by the version file,
+	// or if it contains nothing but files the OS creates when browsing a folder.
 	try {
 		const entries = await fs.readDir(extConfigDir);
-		isOwnedByUs = entries.includes("version");
-		if (!isOwnedByUs) {
-			// Tolerate entries the OS or file system creates on its own. They are left in place,
-			// because without the version file, we cannot be sure the directory is ours to delete.
+		if (!entries.includes("version")) {
 			const unexpectedEntries = entries.filter(
 				(e) => !osManagedEntries.has(e),
 			);
@@ -171,13 +162,11 @@ export async function syncExternalConfigDir(
 		return { success: false };
 	}
 
-	// Wipe (if ours) and populate the external dir
+	// Wipe and populate the external dir
 	try {
 		logger.print(`Synchronizing external config dir ${extConfigDir}...`);
-		if (isOwnedByUs) {
-			await fs.deleteDir(extConfigDir);
-			await fs.ensureDir(extConfigDir);
-		}
+		await fs.deleteDir(extConfigDir);
+		await fs.ensureDir(extConfigDir);
 		// Mark the directory as ours before copying, so an interrupted sync can be wiped
 		// on the next start. The empty version is invalid, which forces that wipe.
 		await writeTextFile(fs, externalVersionFilename, "", "utf8");
