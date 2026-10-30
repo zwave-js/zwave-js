@@ -1,0 +1,19 @@
+{
+	"manufacturer": "Fakro",
+	"manufacturerId": "0x0085",
+	"label": "ARZ Z-Wave Solar",
+	"description": "Roller Shutter",
+	"devices": [
+		{
+			// Older, non-Z-Wave+ revision. Verified on 2 units that the root device
+			// does not support the Configuration CC (ZW0302), therefore this device
+			// intentionally has no paramInformation.
+			"productType": "0x0003",
+			"productId": "0x0002"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	}
+}
