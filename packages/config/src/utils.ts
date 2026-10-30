@@ -132,24 +132,12 @@ export async function syncExternalConfigDir(
 	// or if it contains nothing but files the OS creates when browsing a folder.
 	try {
 		const entries = await fs.readDir(extConfigDir);
-		if (!entries.includes("version")) {
-			const unexpectedEntries = entries.filter(
-				(e) => !osManagedEntries.has(e),
-			);
-			if (unexpectedEntries.length > 0) {
-				logger.print(
-					`External config dir ${extConfigDir} is not empty and does not look like a Z-Wave JS config directory (unexpected entries: ${unexpectedEntries
-						.slice(0, 5)
-						.join(", ")}${
-						unexpectedEntries.length > 5 ? ", ..." : ""
-					}), refusing to overwrite it - using embedded config`,
-					"error",
-				);
-				return { success: false };
-			}
-		} else if (!(await fs.stat(externalVersionFilename)).isFile()) {
+		const isOwnedByUs =
+			entries.includes("version")
+			&& (await fs.stat(externalVersionFilename)).isFile();
+		if (!isOwnedByUs && entries.some((e) => !osManagedEntries.has(e))) {
 			logger.print(
-				`External config dir ${extConfigDir} does not look like a Z-Wave JS config directory (version is not a file), refusing to overwrite it - using embedded config`,
+				`External config dir ${extConfigDir} contains unexpected entries. Delete it to let Z-Wave JS recreate it - using embedded config`,
 				"error",
 			);
 			return { success: false };
