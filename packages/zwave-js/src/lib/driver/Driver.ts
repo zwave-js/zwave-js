@@ -9250,9 +9250,8 @@ ${handlers.length} left`,
 					self.extractOTWUpdateInfo(updateInfo, download.signal),
 				);
 			},
-			cleanup() {
+			async cleanup() {
 				download.abort();
-				return Promise.resolve();
 			},
 		};
 	}

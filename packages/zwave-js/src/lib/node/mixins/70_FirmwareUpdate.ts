@@ -345,9 +345,8 @@ export abstract class FirmwareUpdateMixin
 					options,
 				)) as FirmwareUpdateResult;
 			},
-			cleanup() {
+			async cleanup() {
 				self._abortFirmwareUpdate = undefined;
-				return Promise.resolve();
 			},
 		};
 	}
