@@ -3849,9 +3849,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 		}
 
-		// The source node ID of a frame can be spoofed unless it is authenticated
-		// by the encapsulation, so require the sender's highest security class.
-		// An unknown security class must not be treated as permission to accept plaintext.
+		// CC:0074.01.01.11.001: The command MUST be ignored if it was not received with the highest
+		// common security class, and non-secure commands are only acceptable if we know the inclusion
+		// controller was included non-securely. This also authenticates the spoofable source node ID.
 		const secClass = sender.getHighestSecurityClass();
 		let receivedSecurely = false;
 		if (secClass === SecurityClass.None) {
