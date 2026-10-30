@@ -10,6 +10,18 @@ test("gunzipSync() decompresses data within the limit", () => {
 	expect(new Uint8Array(gunzipSync(compressed))).toEqual(data);
 });
 
+test("gunzipSync() decompresses concatenated gzip members", () => {
+	const first = gzipSync(new Uint8Array(5_120).fill(0x01));
+	const second = gzipSync(new Uint8Array(5_120).fill(0x02));
+	const compressed = new Uint8Array(first.length + second.length);
+	compressed.set(first);
+	compressed.set(second, first.length);
+
+	const expected = new Uint8Array(10_240).fill(0x01);
+	expected.fill(0x02, 5_120);
+	expect(new Uint8Array(gunzipSync(compressed, 10_240))).toEqual(expected);
+});
+
 test("gunzipSync() throws when the decompressed data exceeds the limit", () => {
 	const compressed = gzipSync(new Uint8Array(100_000).fill(0x42));
 	expect(() => gunzipSync(compressed, 99_999)).toThrow();

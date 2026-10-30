@@ -32,6 +32,21 @@ export function gunzipSync(
 
 	const chunks: Uint8Array[] = [];
 	let outputLength = 0;
+
+	// ...and that each member's output size matches the one stored in its trailer (modulo 2^32)
+	const view = Bytes.view(data);
+	let memberOutputStart = 0;
+	const checkMemberLength = (memberEnd: number) => {
+		const expectedLength = view.readUInt32LE(memberEnd - 4);
+		if (
+			(outputLength - memberOutputStart) % 0x1_0000_0000
+			!== expectedLength
+		) {
+			throw new Error("Invalid or truncated gzip data");
+		}
+		memberOutputStart = outputLength;
+	};
+
 	const gunzip = new Gunzip((chunk) => {
 		outputLength += chunk.length;
 		if (outputLength > maxOutputLength) {
@@ -41,6 +56,8 @@ export function gunzipSync(
 		}
 		chunks.push(chunk);
 	});
+	// The output of the previous member has been passed to the callback at this point
+	gunzip.onmember = checkMemberLength;
 	// Each push is fully decompressed before the callback is called, so feeding small
 	// input chunks limits how much memory a highly compressed input can allocate at once
 	const inputChunkSize = 16 * 1024;
@@ -51,11 +68,7 @@ export function gunzipSync(
 		offset = end;
 	} while (offset < data.length);
 
-	// ...and that the output size matches the one stored in the trailer (modulo 2^32)
-	const expectedLength = Bytes.view(data).readUInt32LE(data.length - 4);
-	if (outputLength % 0x1_0000_0000 !== expectedLength) {
-		throw new Error("Invalid or truncated gzip data");
-	}
+	checkMemberLength(data.length);
 
 	return Bytes.concat(chunks);
 }
