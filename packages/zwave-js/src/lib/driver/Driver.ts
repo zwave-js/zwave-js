@@ -3642,8 +3642,14 @@ export class Driver
 
 		this.isSoftResetting = false;
 
-		// Clean up and interview the controller again
-		await this.destroyController((task) => task === callingTask);
+		// Clean up and interview the controller again. Removing a parent would also remove
+		// the calling task, so keep the tasks waiting for it.
+		await this.destroyController((task) => {
+			for (let t = callingTask; t; t = t.parent) {
+				if (t === task) return true;
+			}
+			return false;
+		});
 		void this.initializeControllerAndNodes();
 	}
 
