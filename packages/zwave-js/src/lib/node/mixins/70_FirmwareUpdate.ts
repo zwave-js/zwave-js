@@ -241,7 +241,9 @@ export abstract class FirmwareUpdateMixin
 	): Promise<FirmwareUpdateResult> {
 		if (Array.isArray(updates)) {
 			assertValidFirmwareUpdates(updates);
-		} else if (updates.files.length === 0) {
+			// We made a breaking change to the method signature. files should never be undefined, unless applications still
+			// use the old signature.
+		} else if (updates.files?.length === 0) {
 			// The downloaded files are validated after the download
 			throw new ZWaveError(
 				`At least one update must be provided`,
