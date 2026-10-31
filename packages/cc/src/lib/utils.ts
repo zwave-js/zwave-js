@@ -41,6 +41,7 @@ import {
 	AssociationCheckResult,
 	type AssociationGroup,
 	AssociationGroupInfoProfile,
+	BasicCommand,
 	type EndpointAddress,
 } from "./_Types.js";
 
@@ -233,6 +234,13 @@ export function checkAssociation(
 	);
 	if (!groupCommandList || !groupCommandList.size) {
 		// We don't know which CCs this group controls, just allow it
+		return AssociationCheckResult.OK;
+	}
+
+	// Basic Set may be handled even when the destination does not advertise Basic or actuator CCs.
+	if (
+		groupCommandList.get(CommandClasses.Basic)?.includes(BasicCommand.Set)
+	) {
 		return AssociationCheckResult.OK;
 	}
 	const groupCCs = [...groupCommandList.keys()];

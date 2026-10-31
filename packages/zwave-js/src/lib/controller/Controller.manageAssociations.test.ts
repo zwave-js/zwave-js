@@ -2,11 +2,12 @@ import {
 	AssociationCheckResult,
 	AssociationGroupInfoCCValues,
 	BasicCommand,
+	BinarySwitchCommand,
 	utils as ccUtils,
 } from "@zwave-js/cc";
 import { CommandClasses, SecurityClass } from "@zwave-js/core";
 import { createTestingHost } from "@zwave-js/host";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 import { type CreateTestNodeOptions, createTestNode } from "../test/mocks.js";
 
@@ -70,3 +71,74 @@ test("associations between insecure nodes are allowed", (t) => {
 		}),
 	).toBe(AssociationCheckResult.OK);
 });
+
+test.each([
+	[CommandClasses.Basic, BasicCommand.Set, AssociationCheckResult.OK],
+	[
+		CommandClasses.Basic,
+		BasicCommand.Get,
+		AssociationCheckResult.Forbidden_NoSupportedCCs,
+	],
+	[
+		CommandClasses["Binary Switch"],
+		BinarySwitchCommand.Set,
+		AssociationCheckResult.Forbidden_NoSupportedCCs,
+	],
+])(
+	"association compatibility for CC %i command %i without advertised receiving CCs",
+	(cc, command, expected) => {
+		const host = createTestingHost();
+		const source = createTestNode(host, {
+			id: 2,
+			commandClasses: {
+				[CommandClasses.Association]: { version: 3 },
+				[CommandClasses["Multi Channel Association"]]: { version: 4 },
+				[CommandClasses["Association Group Information"]]: {
+					version: 1,
+				},
+			},
+		});
+		const target = createTestNode(host, {
+			id: 3,
+			endpoints: { 1: {} },
+		});
+		host.setNode(source.id, source);
+		host.setNode(target.id, target);
+		source.setSecurityClass(SecurityClass.S2_Unauthenticated, true);
+		target.setSecurityClass(SecurityClass.S2_Unauthenticated, true);
+
+		host.getValueDB(source.id).setValue(
+			AssociationGroupInfoCCValues.commands(2).endpoint(0),
+			new Map<CommandClasses, number[]>([[cc, [command]]]),
+		);
+
+		for (const endpoint of [undefined, 0, 1]) {
+			expect(
+				ccUtils.checkAssociation(host, source, 2, {
+					nodeId: target.id,
+					endpoint,
+				}),
+			).toBe(expected);
+		}
+
+		if (cc === CommandClasses.Basic && command === BasicCommand.Set) {
+			expect(
+				ccUtils.checkAssociation(host, source, 2, {
+					nodeId: source.id,
+				}),
+			).toBe(AssociationCheckResult.Forbidden_SelfAssociation);
+
+			target.setSecurityClass(SecurityClass.S2_Authenticated, true);
+			for (const endpoint of [undefined, 0, 1]) {
+				expect(
+					ccUtils.checkAssociation(host, source, 2, {
+						nodeId: target.id,
+						endpoint,
+					}),
+				).toBe(
+					AssociationCheckResult.Forbidden_DestinationSecurityClassNotGranted,
+				);
+			}
+		}
+	},
+);
