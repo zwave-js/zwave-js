@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
 import type { OxlintCompatibleRule } from "../utils.js";
-import { findBinding } from "../utils/bindings.js";
+import { findBinding, getScopeBindings } from "../utils/bindings.js";
 
 // Parameter types that indicate a function parses untrusted data
 const RAW_PARAM_TYPE = /(?:Raw|^Bytes|^BytesView|^Uint8Array)$/;
@@ -12,14 +12,6 @@ type FunctionNode =
 	| TSESTree.FunctionDeclaration
 	| TSESTree.FunctionExpression
 	| TSESTree.ArrowFunctionExpression;
-
-function isFunctionNode(node: TSESTree.Node): node is FunctionNode {
-	return (
-		node.type === AST_NODE_TYPES.FunctionDeclaration
-		|| node.type === AST_NODE_TYPES.FunctionExpression
-		|| node.type === AST_NODE_TYPES.ArrowFunctionExpression
-	);
-}
 
 function hasRawParameter(fn: FunctionNode): boolean {
 	const param = fn.params[0];
@@ -107,7 +99,10 @@ function isUnexpectedThrow(node: TSESTree.ThrowStatement): boolean {
 	return !isExpectedError(arg);
 }
 
-/** Finds throw statements in a function body, excluding nested functions */
+/**
+ * Finds throw statements in a function body, excluding nested classes.
+ * Nested functions are included, because they are typically callbacks that run synchronously.
+ */
 function findUnexpectedThrows(node: TSESTree.Node): TSESTree.ThrowStatement[] {
 	const ret: TSESTree.ThrowStatement[] = [];
 	const visit = (n: TSESTree.Node): void => {
@@ -123,7 +118,10 @@ function findUnexpectedThrows(node: TSESTree.Node): TSESTree.ThrowStatement[] {
 					child
 					&& typeof child === "object"
 					&& typeof (child as TSESTree.Node).type === "string"
-					&& !isFunctionNode(child as TSESTree.Node)
+					&& (child as TSESTree.Node).type
+						!== AST_NODE_TYPES.ClassDeclaration
+					&& (child as TSESTree.Node).type
+						!== AST_NODE_TYPES.ClassExpression
 				) {
 					visit(child as TSESTree.Node);
 				}
@@ -132,6 +130,17 @@ function findUnexpectedThrows(node: TSESTree.Node): TSESTree.ThrowStatement[] {
 	};
 	visit(node);
 	return ret;
+}
+
+function isTopLevelBinding(node: TSESTree.Identifier): boolean {
+	let scope: TSESTree.Node | undefined = node.parent;
+	while (scope) {
+		if (getScopeBindings(scope).has(node.name)) {
+			return scope.type === AST_NODE_TYPES.Program;
+		}
+		scope = scope.parent;
+	}
+	return false;
 }
 
 function getConstructor(
@@ -212,7 +221,10 @@ export const noUnexpectedParseErrors: OxlintCompatibleRule = {
 				if (!isInParseFunction()) return;
 				let className: string | undefined;
 				if (node.callee.type === AST_NODE_TYPES.Identifier) {
-					className = node.callee.name;
+					// Only top-level classes are analyzed, so shadowing bindings must not match them
+					if (isTopLevelBinding(node.callee)) {
+						className = node.callee.name;
+					}
 				} else if (node.callee.type === AST_NODE_TYPES.ThisExpression) {
 					// `new this(...)` in a static method creates an instance of the containing class
 					let cls: TSESTree.Node | undefined = node.parent;
