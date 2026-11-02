@@ -41,7 +41,13 @@ import {
 	supervisedCommandSucceeded,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, getEnumMemberName, num2hex, pick } from "@zwave-js/shared";
+import {
+	Bytes,
+	stripControlCharacters,
+	getEnumMemberName,
+	num2hex,
+	pick,
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 import { distinct } from "alcalzone-shared/arrays";
 
@@ -254,7 +260,7 @@ function bulkMergePartialParamValues(
 			});
 		}
 	}
-	return allParams as any;
+	return allParams;
 }
 
 /** Determines whether a partial parameter needs to be interpreted as signed */
@@ -725,7 +731,7 @@ export class ConfigurationCCAPI extends CCAPI {
 				valueBitMask,
 			);
 			return parsePartial(
-				response.value as any,
+				response.value,
 				valueBitMask,
 				isSignedPartial(valueBitMask, paramInfo.format),
 			);
@@ -1989,7 +1995,7 @@ export class ConfigurationCCReport extends ConfigurationCC {
 							param.propertyKey,
 						),
 						parsePartial(
-							this.value as any,
+							this.value,
 							param.propertyKey,
 							isSignedPartial(
 								param.propertyKey,
@@ -2449,6 +2455,10 @@ export class ConfigurationCCBulkReport extends ConfigurationCC {
 		const defaultValues = !!(raw.payload[4] & 0b1000_0000);
 		const isHandshakeResponse = !!(raw.payload[4] & 0b0100_0000);
 		const valueSize = raw.payload[4] & 0b111;
+		// The value size is irrelevant if no parameters are reported
+		if (numParams !== 0 && !isValidValueSize(valueSize)) {
+			validatePayload.fail(`Invalid value size ${valueSize}`);
+		}
 		// Ensure the payload is long enough for all reported values
 		validatePayload(raw.payload.length >= 5 + numParams * valueSize);
 		const values: Record<number, ConfigValue> = {};
@@ -2693,18 +2703,23 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const name: string = raw.payload.subarray(3).toString("utf8");
+		const rawName = raw.payload.subarray(3).toString("utf8");
 
-		return new this({
+		const ret = new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			reportsToFollow,
-			name,
+			name: stripControlCharacters(rawName),
 		});
+		ret.rawName = rawName;
+		return ret;
 	}
 
 	public readonly parameter: number;
 	public name: string;
+	// Line breaks and NUL terminators may be split across reports, so the
+	// merged text must be sanitized as a whole
+	private rawName: string | undefined;
 	public readonly reportsToFollow: number;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -2765,9 +2780,11 @@ export class ConfigurationCCNameReport extends ConfigurationCC {
 		_ctx: CCParsingContext,
 	): Promise<void> {
 		// Concat the name
-		this.name = [...partials, this]
-			.map((report) => report.name)
-			.reduce((prev, cur) => prev + cur, "");
+		this.name = stripControlCharacters(
+			[...partials, this]
+				.map((report) => report.rawName ?? report.name)
+				.join(""),
+		);
 		return Promise.resolve();
 	}
 
@@ -2850,18 +2867,23 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 			// If more reports follow, the info must at least be one byte
 			validatePayload(raw.payload.length >= 4);
 		}
-		const info: string = raw.payload.subarray(3).toString("utf8");
+		const rawInfo = raw.payload.subarray(3).toString("utf8");
 
-		return new this({
+		const ret = new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,
 			reportsToFollow,
-			info,
+			info: stripControlCharacters(rawInfo, { keepNewlines: true }),
 		});
+		ret.rawInfo = rawInfo;
+		return ret;
 	}
 
 	public readonly parameter: number;
 	public info: string;
+	// Line breaks and NUL terminators may be split across reports, so the
+	// merged text must be sanitized as a whole
+	private rawInfo: string | undefined;
 	public readonly reportsToFollow: number;
 
 	public persistValues(ctx: PersistValuesContext): boolean {
@@ -2937,9 +2959,12 @@ export class ConfigurationCCInfoReport extends ConfigurationCC {
 		_ctx: CCParsingContext,
 	): Promise<void> {
 		// Concat the info
-		this.info = [...partials, this]
-			.map((report) => report.info)
-			.reduce((prev, cur) => prev + cur, "");
+		this.info = stripControlCharacters(
+			[...partials, this]
+				.map((report) => report.rawInfo ?? report.info)
+				.join(""),
+			{ keepNewlines: true },
+		);
 		return Promise.resolve();
 	}
 
@@ -3054,6 +3079,10 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 		const valueFormat: ConfigValueFormat =
 			(raw.payload[2] & 0b111000) >>> 3;
 		const valueSize = raw.payload[2] & 0b111;
+		// A value size of 0 is used to indicate unassigned parameters
+		if (valueSize !== 0 && !isValidValueSize(valueSize)) {
+			validatePayload.fail(`Invalid value size ${valueSize}`);
+		}
 
 		// GH#1309 Some devices don't tell us the first parameter if we query #0
 		// Instead, they contain 0x000000
@@ -3404,6 +3433,10 @@ function parseValue(
 		case ConfigValueFormat.BitField:
 			return raw.readUIntBE(0, size);
 	}
+}
+
+function isValidValueSize(valueSize: number): valueSize is 1 | 2 | 4 {
+	return valueSize === 1 || valueSize === 2 || valueSize === 4;
 }
 
 function throwInvalidValueError(

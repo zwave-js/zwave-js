@@ -11,7 +11,7 @@ test("constructor() -> should remember the given value and unit", (t) => {
 		{ unit: "seconds", value: 8 },
 	] as const;
 	for (const { unit, value } of tests) {
-		const duration = new Duration(value, unit as any);
+		const duration = new Duration(value, unit);
 		t.expect(duration.unit).toBe(unit);
 		t.expect(duration.value).toBe(value);
 	}
@@ -23,7 +23,7 @@ test("constructor() -> should set the duration to zero for unknown and default",
 		{ unit: "default", value: 8 },
 	] as const;
 	for (const { unit, value } of tests) {
-		const duration = new Duration(value, unit as any);
+		const duration = new Duration(value, unit);
 		t.expect(duration.unit).toBe(unit);
 		t.expect(duration.value).toBe(0);
 	}
@@ -117,6 +117,30 @@ test("serializeSet() -> should correctly serialize valid durations", (t) => {
 	}
 });
 
+test("serializeSet() -> should not encode negative or zero minutes as the default duration", (t) => {
+	t.expect(new Duration(-5, "minutes").serializeSet()).toBe(0x00);
+	const duration = new Duration(5, "minutes");
+	duration.value = 0;
+	t.expect(duration.serializeSet()).toBe(0x00);
+	t.expect(duration.unit).toBe("seconds");
+});
+
+test("the value is rounded to whole seconds or minutes", (t) => {
+	t.expect(new Duration(1.5, "seconds").serializeSet()).toBe(0x02);
+	t.expect(new Duration(2.5, "minutes")).toStrictEqual(
+		new Duration(3, "minutes"),
+	);
+});
+
+test("fractional minutes are converted to seconds if they fit", (t) => {
+	t.expect(new Duration(0.4, "minutes")).toStrictEqual(
+		new Duration(24, "seconds"),
+	);
+	t.expect(new Duration(1.5, "minutes")).toStrictEqual(
+		new Duration(90, "seconds"),
+	);
+});
+
 test(`toJSON() -> should return a string for "unknown" and "default"`, (t) => {
 	t.expect(new Duration(1, "default").toJSON()).toBe("default");
 	t.expect(new Duration(1, "unknown").toJSON()).toBe("unknown");
@@ -140,6 +164,9 @@ test("parseString() -> should return undefined for unknown or unrepresentable va
 	t.expect(Duration.parseString("")).toBeUndefined();
 	t.expect(Duration.parseString("15")).toBeUndefined();
 	t.expect(Duration.parseString("33h")).toBeUndefined();
+	t.expect(Duration.parseString("2h8m")).toBeUndefined();
+	t.expect(Duration.parseString("128m")).toBeUndefined();
+	t.expect(Duration.parseString("127m30s")).toBeUndefined();
 	t.expect(Duration.parseString("not_a_number")).toBeUndefined();
 });
 
@@ -173,6 +200,9 @@ test("parseString() -> should return a duration for hours", (t) => {
 	);
 	t.expect(Duration.parseString("1h8s")).toStrictEqual(
 		new Duration(60, "minutes"),
+	);
+	t.expect(Duration.parseString("2h7m")).toStrictEqual(
+		new Duration(127, "minutes"),
 	);
 });
 

@@ -35,7 +35,25 @@
 			// ["CommandClass", "API method", ...arguments]
 			["Battery", "get"],
 			["Thermostat Setpoint", "get", 1]
-		]
+		],
+		// Thermostat Setpoint V2 has no way to report the supported range.
+		// The device uses 4-28 °C and turns lower setpoints into 4 °C.
+		"overrideQueries": {
+			"Thermostat Setpoint": [
+				{
+					"method": "getSupportedSetpointTypes",
+					"result": [
+						1 // Heating
+					],
+					"extendMetadata": {
+						"setpoint(1)": {
+							"min": 4,
+							"max": 28
+						}
+					}
+				}
+			]
+		}
 	},
 	"metadata": {
 		"reset": "Remove the battery cover and take out one battery. While reinserting the battery, press and hold the (o) button for about 10 seconds.",

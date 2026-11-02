@@ -11,14 +11,14 @@ on:
   roles: all
   steps:
   - name: Checkout repository
-    uses: actions/checkout@v6
+    uses: actions/checkout@v7.0.1
     with:
       persist-credentials: false
   - name: Setup bot scripts
     uses: zwave-js/bot-workflows/actions/setup-bot@v1
   - id: extract
     name: Extract log file from discussion body
-    uses: actions/github-script@v9
+    uses: actions/github-script@v9.0.0
     with:
       github-token: ${{ secrets.BOT_TOKEN }}
       result-encoding: string
@@ -45,7 +45,7 @@ on:
       SHOULD_CONTINUE: ${{ steps.extract.outputs.shouldContinue }}
     id: feedback
     name: Classify logfile and give feedback
-    uses: actions/github-script@v9
+    uses: actions/github-script@v9.0.0
     with:
       github-token: ${{ secrets.BOT_TOKEN }}
       result-encoding: string
@@ -63,7 +63,7 @@ on:
   - id: changed
     if: steps.feedback.outputs.result == 'OK'
     name: Check whether the logfile changed
-    uses: actions/github-script@v9
+    uses: actions/github-script@v9.0.0
     with:
       result-encoding: string
       script: |
@@ -92,7 +92,7 @@ steps:
   uses: zwave-js/bot-workflows/actions/setup-bot@v1
 - id: get_logfile_url
   name: Get logfile URL from discussion
-  uses: actions/github-script@v9
+  uses: actions/github-script@v9.0.0
   with:
     github-token: ${{ secrets.BOT_TOKEN }}
     result-encoding: string

@@ -8,7 +8,7 @@ import {
 import { type JSONObject, pick } from "@zwave-js/shared";
 import { isArray, isObject } from "alcalzone-shared/typeguards";
 
-import { throwInvalidConfig, tryParseCCId } from "../utils_safe.js";
+import { throwInvalidConfig, tryParseCCIdFromString } from "../utils_safe.js";
 
 import { type ConditionalItem, conditionApplies } from "./ConditionalItem.js";
 import type { DeviceID } from "./shared.js";
@@ -507,7 +507,7 @@ All values in compat option commandClasses.add must be objects`,
 					definition.commandClasses.add,
 				)) {
 					// Parse the key into a CC ID
-					const cc = tryParseCCId(key);
+					const cc = tryParseCCIdFromString(key);
 					if (cc == undefined) {
 						throwInvalidConfig(
 							"devices",
@@ -538,7 +538,7 @@ error in compat option commandClasses.remove`,
 					definition.commandClasses.remove,
 				)) {
 					// Parse the key into a CC ID
-					const cc = tryParseCCId(key);
+					const cc = tryParseCCIdFromString(key);
 					if (cc == undefined) {
 						throwInvalidConfig(
 							"devices",
@@ -554,7 +554,7 @@ Invalid Command Class "${key}" specified in compat option commandClasses.remove!
 									(i) => typeof i === "number",
 								))
 						) {
-							removeCCs.set(cc, info.endpoints as any);
+							removeCCs.set(cc, info.endpoints);
 						} else {
 							throwInvalidConfig(
 								"devices",
@@ -699,7 +699,7 @@ compat option overrideQueries must be an object!`,
 			"useUTCInTimeParametersCC",
 			"queryOnWakeup",
 		]);
-		return stripUndefined(ret) as CompatConfig;
+		return stripUndefined(ret);
 	}
 }
 
@@ -1090,7 +1090,7 @@ Property "extendMetadata" in compat option overrideQueries, CC ${getCCName(
 
 		for (const [key, value] of Object.entries(definition)) {
 			// Parse the key into a CC ID
-			const cc = tryParseCCId(key);
+			const cc = tryParseCCIdFromString(key);
 			if (cc == undefined) {
 				throwInvalidConfig(
 					"devices",

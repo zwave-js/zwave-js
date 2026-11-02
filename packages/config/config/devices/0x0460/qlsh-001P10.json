@@ -22,6 +22,9 @@
 			// Only active when in Venetian Blind mode
 		}
 	},
+	"endpointGroups": {
+		"1": { "label": "Shutter", "endpoints": [1, 2], "isMainDevice": true }
+	},
 	"paramInformation": [
 		{
 			"#": "5",

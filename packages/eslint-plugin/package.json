@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/eslint-plugin",
-  "version": "15.29.0",
+  "version": "15.31.2",
   "description": "zwave-js: custom lint rules",
   "private": true,
   "keywords": [],
@@ -44,6 +44,6 @@
     "typescript": "npm:@typescript/typescript6@6.0.2"
   },
   "dependencies": {
-    "@oxlint/plugins": "^1.80.0"
+    "@oxlint/plugins": "^1.89.0"
   }
 }

@@ -26,7 +26,7 @@ steps:
     COMMENT_BODY: ${{ github.event.comment.body }}
   id: parse_command
   name: Parse command
-  uses: actions/github-script@v9
+  uses: actions/github-script@v9.0.0
   with:
     script: |
       const body = process.env.COMMENT_BODY ?? "";

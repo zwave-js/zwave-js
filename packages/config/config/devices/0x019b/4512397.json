@@ -1,0 +1,47 @@
+{
+	"manufacturer": "Heatit",
+	"manufacturerId": "0x019b",
+	"label": "Z-Smoke2 230V",
+	"description": "Wired Smoke Detector",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0027"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "1",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Smoke Detection",
+			"defaultValue": 1
+		},
+		{
+			"#": "2",
+			"$import": "templates/heatit_template.json#temperature_sensor_calibration_60",
+			"label": "Temperature Sensor Calibration"
+		}
+	],
+	"compat": {
+		// The siren is controlled with Basic Set, which interconnected detectors send to each other.
+		// Notification Sensors must not support Basic CC, so it is not discovered automatically.
+		"commandClasses": {
+			"add": {
+				"Basic": {
+					"version": 1,
+					"isSupported": true
+				}
+			}
+		}
+	},
+	"metadata": {
+		"inclusion": "Press the function button 3 times within 1.5 seconds. The smoke detector will emit a 2-tone beep and the LED will flash once.",
+		"exclusion": "Press the function button 3 times within 1.5 seconds. The smoke detector will emit a 2-tone beep and the LED will flash once.",
+		"reset": "Press and hold the function button for 20 seconds. The smoke detector beeps after 7 seconds to indicate that the reset has started, and beeps again after 20 seconds to confirm the reset.",
+		"manual": "https://media.heatit.com/4680"
+	}
+}

@@ -3,6 +3,7 @@ import { test } from "vitest";
 import { Bytes } from "./Bytes.js";
 import {
 	cpp2js,
+	stripControlCharacters,
 	isPrintableASCIIWithWhitespace,
 	num2hex,
 	stringToUint8ArrayUTF16BE,
@@ -72,4 +73,32 @@ test("stringToUint8ArrayUTF16BE / uint8ArrayToStringUTF16BE", (t) => {
 		// And back
 		t.expect(uint8ArrayToStringUTF16BE(Bytes.from(out))).toBe(inp);
 	}
+});
+
+test("stripControlCharacters() -> should remove C0 and C1 control characters", (t) => {
+	t.expect(stripControlCharacters("a\x1b[31mb\nc\x9b")).toBe("a[31mbc");
+});
+
+test("stripControlCharacters() -> should remove bidi controls and line/paragraph separators", (t) => {
+	t.expect(
+		stripControlCharacters(
+			"a\u202eb\u2066c\u2069d\u2028e\u2029f\u061cg\u200eh\u200f",
+		),
+	).toBe("abcdefgh");
+});
+
+test("stripControlCharacters() -> should cut off at the first NUL character", (t) => {
+	t.expect(stripControlCharacters("name\0\0\0")).toBe("name");
+	t.expect(stripControlCharacters("name\0garbage")).toBe("name");
+	t.expect(stripControlCharacters("\0".repeat(100_000))).toBe("");
+});
+
+test("stripControlCharacters() -> should keep normalized newlines if requested", (t) => {
+	t.expect(
+		stripControlCharacters("a\r\nb\rc\nd\x1b", { keepNewlines: true }),
+	).toBe("a\nb\nc\nd");
+});
+
+test("stripControlCharacters() -> should keep printable characters", (t) => {
+	t.expect(stripControlCharacters("Küche 🔥")).toBe("Küche 🔥");
 });

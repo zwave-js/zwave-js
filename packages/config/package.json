@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/config",
-  "version": "15.31.1",
+  "version": "15.31.2",
   "description": "zwave-js: configuration files",
   "keywords": [],
   "publishConfig": {
@@ -98,7 +98,7 @@
     "@types/json-logic-js": "^2.0.8",
     "@types/node": "^20.19.35",
     "@types/semver": "^7.8.0",
-    "@types/sinon": "^21.0.0",
+    "@types/sinon": "^21.0.1",
     "@types/xml2js": "^0.4.14",
     "@types/yargs": "^17.0.35",
     "@typescript/native": "npm:typescript@7.0.2",
