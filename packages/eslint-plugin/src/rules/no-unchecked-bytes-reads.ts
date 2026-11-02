@@ -339,9 +339,11 @@ function isNonNegativeExpression(
 				case "/":
 					return left() && right();
 				case "%":
-				case ">>":
 				case "**":
 					return left();
+				case ">>":
+					// The input is converted to a signed 32-bit integer first
+					return left() && fitsInInt32(node.left, h, visiting);
 				case ">>>":
 					return true;
 				case "&": {
@@ -487,6 +489,228 @@ const NEGATED_OPERATOR: Record<string, string> = {
 	"!=": "==",
 };
 
+/** Whether a value is known to be in the non-negative range of a signed 32-bit integer */
+function fitsInInt32(
+	node: TSESTree.Node,
+	h: Helpers,
+	visiting: Set<TSESTree.Node>,
+): boolean {
+	switch (node.type) {
+		case AST_NODE_TYPES.Literal:
+			return (
+				typeof node.value === "number"
+				&& node.value >= 0
+				&& node.value <= MAX_INT32
+			);
+		case AST_NODE_TYPES.MemberExpression:
+			// Indexed access is assumed to read from a byte array
+			return node.computed;
+		case AST_NODE_TYPES.Identifier: {
+			const binding = findBinding(node);
+			if (binding?.kind !== "const") return false;
+			if (!binding.init || visiting.has(binding.init)) return false;
+			visiting.add(binding.init);
+			return fitsInInt32(binding.init, h, visiting);
+		}
+		case AST_NODE_TYPES.CallExpression:
+			return (
+				node.callee.type === AST_NODE_TYPES.MemberExpression
+				&& !node.callee.computed
+				&& node.callee.property.type === AST_NODE_TYPES.Identifier
+				&& /^readUInt(?:8|16|24)/.test(node.callee.property.name)
+			);
+		case AST_NODE_TYPES.BinaryExpression:
+			if (node.operator === "&") {
+				return (
+					(isNonNegativeExpression(node.left, h, visiting)
+						&& fitsInInt32(node.left, h, visiting))
+					|| (isNonNegativeExpression(node.right, h, visiting)
+						&& fitsInInt32(node.right, h, visiting))
+				);
+			}
+			if (node.operator === ">>>") {
+				return (
+					node.right.type === AST_NODE_TYPES.Literal
+					&& typeof node.right.value === "number"
+					&& node.right.value % 32 >= 1
+				);
+			}
+			return false;
+		case AST_NODE_TYPES.TSNonNullExpression:
+		case AST_NODE_TYPES.TSAsExpression:
+		case AST_NODE_TYPES.ChainExpression:
+			return fitsInInt32(node.expression, h, visiting);
+	}
+	return false;
+}
+
+/** Whether an expression contains indexed access, which yields undefined when out of bounds */
+function containsIndexedAccess(node: TSESTree.Node): boolean {
+	if (node.type === AST_NODE_TYPES.MemberExpression && node.computed) {
+		return true;
+	}
+	for (const [key, child] of Object.entries(node)) {
+		if (key === "parent") continue;
+		const children = Array.isArray(child) ? child : [child];
+		for (const c of children) {
+			if (
+				c
+				&& typeof c === "object"
+				&& typeof (c as TSESTree.Node).type === "string"
+				&& containsIndexedAccess(c as TSESTree.Node)
+			) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+/** Whether a variable write keeps an integer value an integer */
+function isIntegerWrite(
+	write: TSESTree.Node,
+	h: Helpers,
+	visiting: Set<TSESTree.Node>,
+): boolean {
+	if (write.type === AST_NODE_TYPES.UpdateExpression) return true;
+	if (
+		write.type !== AST_NODE_TYPES.AssignmentExpression
+		|| write.left.type !== AST_NODE_TYPES.Identifier
+	) {
+		return false;
+	}
+	switch (write.operator) {
+		case "=":
+		case "+=":
+		case "-=":
+		case "*=":
+		case "%=":
+			return isIntegerExpression(write.right, h, visiting);
+		case "&=":
+		case "|=":
+		case "^=":
+		case "<<=":
+		case ">>=":
+		case ">>>=":
+			return true;
+	}
+	return false;
+}
+
+/** Whether an expression is known to evaluate to an integer */
+function isIntegerExpression(
+	node: TSESTree.Node,
+	h: Helpers,
+	visiting: Set<TSESTree.Node> = new Set(),
+): boolean {
+	switch (node.type) {
+		case AST_NODE_TYPES.Literal:
+			return (
+				typeof node.value === "number" && Number.isInteger(node.value)
+			);
+		case AST_NODE_TYPES.MemberExpression:
+			return (
+				node.computed
+				|| (node.property.type === AST_NODE_TYPES.Identifier
+					&& (node.property.name === "length"
+						|| node.property.name === "byteLength"))
+			);
+		case AST_NODE_TYPES.Identifier: {
+			const binding = findBinding(node);
+			if (binding?.kind === "const") {
+				if (!binding.init || visiting.has(binding.init)) return false;
+				visiting.add(binding.init);
+				return isIntegerExpression(binding.init, h, visiting);
+			}
+			if (binding?.kind !== "let") return false;
+			const decl = binding.declarator;
+			if (visiting.has(decl)) return true;
+			if (!h.root || !contains(h.root, decl)) return false;
+			visiting.add(decl);
+			return (
+				(!decl.init || isIntegerExpression(decl.init, h, visiting))
+				&& (h.writes.names.get(node.name) ?? []).every((w) =>
+					isIntegerWrite(w.node, h, visiting),
+				)
+			);
+		}
+		case AST_NODE_TYPES.CallExpression: {
+			const callee = node.callee;
+			if (
+				callee.type !== AST_NODE_TYPES.MemberExpression
+				|| callee.computed
+				|| callee.property.type !== AST_NODE_TYPES.Identifier
+			) {
+				return false;
+			}
+			const method = callee.property.name;
+			if (/^read(?:U?Int|BigU?Int)/.test(method)) return true;
+			if (
+				callee.object.type !== AST_NODE_TYPES.Identifier
+				|| callee.object.name !== "Math"
+			) {
+				return false;
+			}
+			switch (method) {
+				case "floor":
+				case "ceil":
+				case "round":
+				case "trunc":
+					return true;
+				case "abs":
+				case "min":
+				case "max":
+					return (
+						node.arguments.length > 0
+						&& node.arguments.every((arg) =>
+							isIntegerExpression(arg, h, visiting),
+						)
+					);
+			}
+			return false;
+		}
+		case AST_NODE_TYPES.BinaryExpression: {
+			if (node.left.type === AST_NODE_TYPES.PrivateIdentifier) {
+				return false;
+			}
+			switch (node.operator) {
+				case "+":
+				case "-":
+				case "*":
+				case "%":
+					return (
+						isIntegerExpression(node.left, h, visiting)
+						&& isIntegerExpression(node.right, h, visiting)
+					);
+				case "&":
+				case "|":
+				case "^":
+				case "<<":
+				case ">>":
+				case ">>>":
+					return true;
+			}
+			return false;
+		}
+		case AST_NODE_TYPES.ConditionalExpression:
+			return (
+				isIntegerExpression(node.consequent, h, visiting)
+				&& isIntegerExpression(node.alternate, h, visiting)
+			);
+		case AST_NODE_TYPES.UnaryExpression:
+			return (
+				node.operator === "~"
+				|| ((node.operator === "-" || node.operator === "+")
+					&& isIntegerExpression(node.argument, h, visiting))
+			);
+		case AST_NODE_TYPES.TSNonNullExpression:
+		case AST_NODE_TYPES.TSAsExpression:
+		case AST_NODE_TYPES.ChainExpression:
+			return isIntegerExpression(node.expression, h, visiting);
+	}
+	return false;
+}
+
 /** Converts a condition that is known to be true (or false if `negated`) into facts of the form `fact >= 0` */
 function conditionToFacts(
 	node: TSESTree.Node,
@@ -518,6 +742,17 @@ function conditionToFacts(
 
 	const operator = negated ? NEGATED_OPERATOR[node.operator] : node.operator;
 	if (!operator) return [];
+	// Out-of-bounds indexed access yields undefined, which makes every comparison false.
+	// So a false comparison does not imply that the opposite one holds.
+	if (
+		negated
+		&& operator !== "==="
+		&& operator !== "=="
+		&& (containsIndexedAccess(node.left)
+			|| containsIndexedAccess(node.right))
+	) {
+		return [];
+	}
 
 	const left = toLinear(node.left, h);
 	const right = toLinear(node.right, h);
@@ -1092,6 +1327,11 @@ function collectWrites(root: TSESTree.Node, h: Helpers): Writes {
 				add(writes.names, target.name, write);
 				break;
 			case AST_NODE_TYPES.MemberExpression: {
+				if (target.computed) {
+					// Element writes change the contents of the buffer, which facts may depend on
+					addTarget(target.object, write);
+					break;
+				}
 				const path = getMemberPath(target, h);
 				if (path) add(writes.paths, path, write);
 				break;
@@ -1221,9 +1461,21 @@ export const noUncheckedBytesReads: OxlintCompatibleRule = {
 				// readUIntBE etc. throw for byte lengths that are not supported
 				const maxByteLength = getMaxByteLength(method);
 				const sizeRange = sizeArg && constantRange(sizeArg, h);
-				if (
-					fixedSize == undefined
-					&& !(
+				if (fixedSize != undefined) {
+					// No byte length to check
+				} else if (!isIntegerExpression(sizeArg, h)) {
+					context.report({
+						node: sizeArg,
+						messageId: "unchecked-byte-length",
+						data: {
+							method,
+							size: getText(sizeArg),
+							max: maxByteLength,
+						},
+					});
+					return;
+				} else if (
+					!(
 						sizeRange
 						&& sizeRange[0] >= 1
 						&& sizeRange[1] <= maxByteLength
@@ -1320,7 +1572,7 @@ export const noUncheckedBytesReads: OxlintCompatibleRule = {
 			"unchecked-read":
 				"{{method}}() throws a RangeError if the offset is negative or {{buffer}} is too short. Ensure that the offset is non-negative and {{buffer}}.length >= {{required}} first, e.g. using validatePayload().",
 			"unchecked-byte-length":
-				"{{method}}() throws a RangeError unless 1 <= {{size}} <= {{max}}. Validate the byte length first, e.g. using validatePayload().",
+				"{{method}}() throws a RangeError unless {{size}} is an integer between 1 and {{max}}. Validate the byte length first, e.g. using validatePayload().",
 		},
 	},
 	defaultOptions: [],

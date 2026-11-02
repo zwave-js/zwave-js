@@ -3438,10 +3438,12 @@ function parseValue(
 		case ConfigValueFormat.SignedInteger:
 			// Signed reads are not implemented for 5 and 6 byte values
 			validatePayload(size <= 4);
+			// oxlint-disable-next-line @zwave-js/no-unchecked-bytes-reads -- callers only pass integer value sizes
 			return raw.readIntBE(0, size);
 		case ConfigValueFormat.UnsignedInteger:
 		case ConfigValueFormat.Enumerated:
 		case ConfigValueFormat.BitField:
+			// oxlint-disable-next-line @zwave-js/no-unchecked-bytes-reads -- callers only pass integer value sizes
 			return raw.readUIntBE(0, size);
 	}
 }
