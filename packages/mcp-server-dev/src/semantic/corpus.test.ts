@@ -1,6 +1,13 @@
+import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
+import { getCheckout } from "../checkout.js";
+
 import {
+	buildCorpus,
 	buildSemanticText,
 	extractSemantics,
 	extractStructure,
@@ -117,5 +124,97 @@ describe("buildSemanticText", () => {
 	it("omits absent fields instead of emitting empty segments", () => {
 		const text = buildSemanticText({ optionLabels: [] });
 		expect(text).toBe("");
+	});
+});
+
+describe("buildCorpus", () => {
+	async function createCheckout(
+		root: string,
+		files: Record<string, unknown>,
+	): Promise<void> {
+		await mkdir(join(root, "packages/config"), { recursive: true });
+		await writeFile(
+			join(root, "packages/config/package.json"),
+			JSON.stringify({ name: "@zwave-js/config" }),
+		);
+		for (const [file, content] of Object.entries(files)) {
+			const path = join(root, "packages/config/config/devices", file);
+			await mkdir(join(path, ".."), { recursive: true });
+			await writeFile(path, JSON.stringify(content));
+		}
+	}
+
+	function device(params: Record<string, unknown>[]) {
+		return {
+			manufacturer: "Test",
+			manufacturerId: "0x0001",
+			label: "T1",
+			description: "Test device",
+			devices: [{ productType: "0x0001", productId: "0x0001" }],
+			paramInformation: params,
+		};
+	}
+
+	it("indexes only the given checkout and resolves imports within it", async () => {
+		const tmp = await realpath(
+			await mkdtemp(join(tmpdir(), "zwave-dev-corpus-")),
+		);
+		try {
+			const mainRoot = join(tmp, "master");
+			const worktreeRoot = join(mainRoot, ".claude/worktrees/feature");
+			const importedParam = {
+				"#": "1",
+				$import: "~/templates/master_template.json#timeout",
+			};
+			await createCheckout(mainRoot, {
+				"templates/master_template.json": {
+					timeout: { label: "Timeout", valueSize: 1 },
+				},
+				"0x0001/t1.json": device([importedParam]),
+			});
+			await createCheckout(worktreeRoot, {
+				"templates/master_template.json": {
+					timeout: { label: "Auto-off timeout", valueSize: 2 },
+				},
+				"0x0001/t1.json": device([
+					importedParam,
+					{ "#": "2", label: "Worktree only", valueSize: 1 },
+				]),
+			});
+			const main = (await getCheckout(mainRoot))!;
+			const worktree = (await getCheckout(worktreeRoot))!;
+
+			const mainCorpus = await buildCorpus(main);
+			expect(mainCorpus.warnings).toEqual([]);
+			expect(
+				mainCorpus.parameters.map((p) => [p.semantics.label, p.file]),
+			).toEqual([["Timeout", join(main.devicesDir, "0x0001/t1.json")]]);
+
+			const worktreeCorpus = await buildCorpus(worktree);
+			expect(worktreeCorpus.warnings).toEqual([]);
+			expect(
+				worktreeCorpus.parameters.map((p) => [
+					p.semantics.label,
+					p.file,
+					p.templateFile,
+				]),
+			).toEqual([
+				[
+					"Auto-off timeout",
+					join(worktree.devicesDir, "0x0001/t1.json"),
+					join(worktree.devicesDir, "templates/master_template.json"),
+				],
+				[
+					"Worktree only",
+					join(worktree.devicesDir, "0x0001/t1.json"),
+					undefined,
+				],
+			]);
+			expect(worktreeCorpus.templates).toMatchObject([
+				{ templateName: "timeout", referenceCount: 1 },
+			]);
+		} finally {
+			await rm(tmp, { recursive: true, force: true });
+		}
 	});
 });

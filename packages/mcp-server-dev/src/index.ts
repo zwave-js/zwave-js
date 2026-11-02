@@ -1,13 +1,21 @@
 #!/usr/bin/env node
 
+import { fileURLToPath } from "node:url";
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
 	CallToolRequestSchema,
 	ListToolsRequestSchema,
+	RootsListChangedNotificationSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { DEVICES_DIR, resolveDeviceConfigPath } from "./configEnv.js";
+import {
+	type Checkout,
+	LAUNCH_ROOT,
+	findCheckoutContaining,
+	resolveToolCheckout,
+} from "./checkout.js";
 import { McpToolRegistry } from "./registry.js";
 import type { ConsentPrompt, ElicitConsentFn } from "./semantic/embedding.js";
 import { SemanticSearchService } from "./semantic/service.js";
@@ -25,10 +33,21 @@ import {
 } from "./tools/index.js";
 import { errorResult } from "./tools/results.js";
 
+const PATH_ARGUMENTS = ["filename", "templateFile"];
+
+const ROOT_ARGUMENT = {
+	type: "string",
+	description:
+		"Optional path to the zwave-js checkout (e.g. a git worktree) to work "
+		+ "in. Defaults to the checkout containing the file argument, then the "
+		+ "client's workspace.",
+};
+
 class DevMCPServer {
 	private server: Server;
 	private registry: McpToolRegistry;
 	private semanticSearch: SemanticSearchService;
+	private workspaceCheckout: Promise<Checkout | undefined> | undefined;
 
 	constructor() {
 		this.server = new Server(
@@ -99,6 +118,33 @@ class DevMCPServer {
 		};
 	}
 
+	/** Returns the first zwave-js checkout among the client's MCP roots */
+	private getWorkspaceCheckout(): Promise<Checkout | undefined> {
+		this.workspaceCheckout ??= this.findWorkspaceCheckout();
+		return this.workspaceCheckout;
+	}
+
+	private async findWorkspaceCheckout(): Promise<Checkout | undefined> {
+		if (!this.server.getClientCapabilities()?.roots) return undefined;
+		let roots: { uri: string }[];
+		try {
+			({ roots } = await this.server.listRoots(undefined, {
+				timeout: 5000,
+			}));
+		} catch (error) {
+			console.error("Failed to list the client's roots:", error);
+			// Ask again on the next call
+			this.workspaceCheckout = undefined;
+			return undefined;
+		}
+		for (const { uri } of roots) {
+			if (!uri.startsWith("file://")) continue;
+			const checkout = await findCheckoutContaining(fileURLToPath(uri));
+			if (checkout) return checkout;
+		}
+		return undefined;
+	}
+
 	private registerTools() {
 		// Register all available tools
 		this.registry.register(formatTool);
@@ -120,12 +166,25 @@ class DevMCPServer {
 	}
 
 	private setupToolHandlers() {
+		this.server.setNotificationHandler(
+			RootsListChangedNotificationSchema,
+			() => {
+				this.workspaceCheckout = undefined;
+			},
+		);
+
 		this.server.setRequestHandler(ListToolsRequestSchema, () => {
 			return {
 				tools: this.registry.getAll().map((tool) => ({
 					name: tool.name,
 					description: tool.description,
-					inputSchema: tool.inputSchema,
+					inputSchema: {
+						...tool.inputSchema,
+						properties: {
+							...tool.inputSchema.properties,
+							root: ROOT_ARGUMENT,
+						},
+					},
 					annotations: tool.annotations,
 				})),
 			};
@@ -141,21 +200,26 @@ class DevMCPServer {
 					throw new Error(`Unknown tool: ${name}`);
 				}
 
-				// Tools must only read and write device config files
-				const pathArgs = { ...args };
-				for (const key of ["filename", "templateFile"]) {
-					const value = pathArgs[key];
-					if (typeof value !== "string" || !value) continue;
-					const resolved = await resolveDeviceConfigPath(value);
-					if (!resolved) {
-						return errorResult(
-							`Error: ${key} must be located inside ${DEVICES_DIR}`,
-						);
-					}
-					pathArgs[key] = resolved;
+				const { root, ...toolArgs } = args ?? {};
+				const paths: Record<string, string> = {};
+				for (const key of PATH_ARGUMENTS) {
+					const value = toolArgs[key];
+					if (typeof value === "string" && value) paths[key] = value;
 				}
 
-				return await tool.handler(pathArgs);
+				// Tools must only read and write device config files
+				const resolved = await resolveToolCheckout({
+					root: typeof root === "string" && root ? root : undefined,
+					paths,
+					getWorkspaceCheckout: () => this.getWorkspaceCheckout(),
+					fallbackRoot: LAUNCH_ROOT,
+				});
+				if ("error" in resolved) return errorResult(resolved.error);
+
+				return await tool.handler(
+					{ ...toolArgs, ...resolved.paths },
+					{ checkout: resolved.checkout },
+				);
 			},
 		);
 	}

@@ -1,8 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { clearTemplateCache, resolveTemplateImport } from "@zwave-js/config";
 
-import { DEVICES_DIR, fs } from "../configEnv.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 import { errorResult, jsonResult } from "./results.js";
 
@@ -15,6 +14,7 @@ interface ResolveConfigImportArgs {
 
 async function handleResolveConfigImport(
 	args: ResolveConfigImportArgs,
+	{ checkout }: ToolContext,
 ): Promise<CallToolResult> {
 	const { filename, specifier } = args;
 
@@ -26,10 +26,10 @@ async function handleResolveConfigImport(
 
 	try {
 		const resolved = await resolveTemplateImport(
-			fs,
+			checkout.fs,
 			filename,
 			specifier,
-			DEVICES_DIR,
+			checkout.devicesDir,
 		);
 		return jsonResult(resolved);
 	} catch (error: any) {

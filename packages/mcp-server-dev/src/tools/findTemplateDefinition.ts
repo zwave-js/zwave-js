@@ -5,9 +5,9 @@ import { clearTemplateCache, resolveImportPath } from "@zwave-js/config";
 import { tryParseParamNumber } from "@zwave-js/core";
 import { parse as parseJsonC } from "jsonc-parser";
 
+import { resolveDeviceConfigPath } from "../checkout.js";
 import { parseSymbols } from "../configDoc/configDocument.js";
-import { DEVICES_DIR, fs, resolveDeviceConfigPath } from "../configEnv.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 import { errorResult, textResult } from "./results.js";
 
@@ -42,6 +42,7 @@ async function findParamImport(
 
 async function handleFindTemplateDefinition(
 	args: FindTemplateDefinitionArgs,
+	{ checkout }: ToolContext,
 ): Promise<CallToolResult> {
 	const { filename, parameter } = args;
 	let { specifier } = args;
@@ -66,10 +67,10 @@ async function handleFindTemplateDefinition(
 		}
 
 		const importPath = await resolveImportPath(
-			fs,
+			checkout.fs,
 			filename,
 			specifier,
-			DEVICES_DIR,
+			checkout.devicesDir,
 		);
 		if (!importPath) {
 			return errorResult(
@@ -77,10 +78,10 @@ async function handleFindTemplateDefinition(
 			);
 		}
 		// The specifier may point anywhere, so the import target must be checked too
-		const targetFile = await resolveDeviceConfigPath(importPath);
+		const targetFile = await resolveDeviceConfigPath(checkout, importPath);
 		if (!targetFile) {
 			return errorResult(
-				`Error: the import target must be located inside ${DEVICES_DIR}`,
+				`Error: the import target must be located inside ${checkout.devicesDir}`,
 			);
 		}
 

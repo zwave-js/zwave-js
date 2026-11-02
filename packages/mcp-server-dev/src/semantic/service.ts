@@ -3,7 +3,7 @@ import { relative, resolve as resolvePath, sep } from "node:path";
 import { clearTemplateCache } from "@zwave-js/config";
 import PQueue from "p-queue";
 
-import { DEVICES_DIR } from "../configEnv.js";
+import type { Checkout } from "../checkout.js";
 import { resolveParamsForFirmware } from "../tools/resolveParam.js";
 
 import {
@@ -304,12 +304,12 @@ export class SemanticSearchService {
 		}
 	}
 
-	async prepareIndex(): Promise<{
+	async prepareIndex(checkout: Checkout): Promise<{
 		parameters: number;
 		templates: number;
 		warnings: number;
 	}> {
-		const corpus = await buildCorpus();
+		const corpus = await buildCorpus(checkout);
 		await this.buildIndex(corpus);
 		return {
 			parameters: corpus.parameters.length,
@@ -357,11 +357,12 @@ export class SemanticSearchService {
 	}
 
 	async search(
+		checkout: Checkout,
 		query: string,
 		filters: SearchFilters | undefined,
 		limit: number,
 	): Promise<SearchResponse> {
-		const corpus = await buildCorpus();
+		const corpus = await buildCorpus(checkout);
 		const queryEmbedding = await this.prepare(corpus, query);
 		const rankingQuery: RankingQuery = {
 			text: query,
@@ -395,6 +396,7 @@ export class SemanticSearchService {
 	 * the corpus (conditionals preserved as-is) or, if `firmwareVersion` is given,
 	 * fully evaluated the same way `resolve_config_param` does. */
 	private async resolveQueryParameter(
+		checkout: Checkout,
 		corpus: Corpus,
 		filename: string,
 		parameter: number,
@@ -402,11 +404,12 @@ export class SemanticSearchService {
 		firmwareVersion: string | undefined,
 	): Promise<QueryParameter> {
 		const absFile = resolvePath(filename);
-		const relativeFile = relative(DEVICES_DIR, absFile);
+		const relativeFile = relative(checkout.devicesDir, absFile);
 
 		if (firmwareVersion != undefined) {
 			clearTemplateCache();
 			const matches = await resolveParamsForFirmware(
+				checkout,
 				absFile,
 				parameter,
 				valueBitMask,
@@ -497,14 +500,16 @@ export class SemanticSearchService {
 	}
 
 	async findSimilar(
+		checkout: Checkout,
 		filename: string,
 		parameter: number,
 		valueBitMask: number | undefined,
 		firmwareVersion: string | undefined,
 		limit: number,
 	): Promise<FindSimilarResponse> {
-		const corpus = await buildCorpus();
+		const corpus = await buildCorpus(checkout);
 		const queryParam = await this.resolveQueryParameter(
+			checkout,
 			corpus,
 			filename,
 			parameter,
@@ -554,8 +559,10 @@ export class SemanticSearchService {
 			.slice(0, NEIGHBOR_EVIDENCE_LIMIT)
 			.filter((r) => r.score >= NEIGHBOR_EVIDENCE_MIN_SCORE);
 
-		const templateImportSuggestions =
-			this.buildTemplateSuggestions(neighbors);
+		const templateImportSuggestions = this.buildTemplateSuggestions(
+			checkout,
+			neighbors,
+		);
 		const purposeSuggestions = this.buildPurposeSuggestions(
 			queryEmbedding,
 			await this.getPurposePrototypes(corpus),
@@ -582,6 +589,7 @@ export class SemanticSearchService {
 	}
 
 	private buildTemplateSuggestions(
+		checkout: Checkout,
 		neighbors: {
 			record: ParameterCorpusRecord;
 			score: number;
@@ -595,7 +603,7 @@ export class SemanticSearchService {
 			const key = `${templateFile}#${templateName}`;
 			if (seen.has(key)) continue;
 			seen.add(key);
-			const posixRelative = relative(DEVICES_DIR, templateFile)
+			const posixRelative = relative(checkout.devicesDir, templateFile)
 				.split(sep)
 				.join("/");
 			suggestions.push({
@@ -644,10 +652,11 @@ export class SemanticSearchService {
 	}
 
 	async suggestPurposesForText(
+		checkout: Checkout,
 		query: string,
 		limit: number,
 	): Promise<PurposeSuggestionResponse> {
-		const corpus = await buildCorpus();
+		const corpus = await buildCorpus(checkout);
 		const queryEmbedding = await this.prepare(corpus, query);
 		return {
 			query: { text: query },
@@ -662,14 +671,16 @@ export class SemanticSearchService {
 	}
 
 	async suggestPurposesForParameter(
+		checkout: Checkout,
 		filename: string,
 		parameter: number,
 		valueBitMask: number | undefined,
 		firmwareVersion: string | undefined,
 		limit: number,
 	): Promise<PurposeSuggestionResponse> {
-		const corpus = await buildCorpus();
+		const corpus = await buildCorpus(checkout);
 		const query = await this.resolveQueryParameter(
+			checkout,
 			corpus,
 			filename,
 			parameter,

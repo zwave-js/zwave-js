@@ -1,7 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import type { SemanticSearchService } from "../semantic/service.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 import { clampLimit, invalidArgument, jsonResult } from "./results.js";
 import { handleSemanticError } from "./semanticErrors.js";
@@ -29,6 +29,7 @@ export function createSearchParameterDefinitionsTool(
 ): ToolHandler<SearchParameterDefinitionsArgs> {
 	async function handle(
 		args: SearchParameterDefinitionsArgs = {},
+		{ checkout }: ToolContext,
 	): Promise<CallToolResult> {
 		const { query, manufacturer, purpose, kind } = args;
 		if (!query || typeof query !== "string" || query.trim() === "") {
@@ -53,6 +54,7 @@ export function createSearchParameterDefinitionsTool(
 
 		try {
 			const result = await service.search(
+				checkout,
 				query,
 				{ manufacturer, purpose, kind },
 				limit,

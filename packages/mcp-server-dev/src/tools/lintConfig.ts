@@ -1,8 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import spawn from "nano-spawn";
 
-import { REPO_ROOT } from "../configEnv.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 export const TOOL_NAME = "lint_config";
 
@@ -10,7 +9,10 @@ interface LintConfigArgs {
 	filename?: string;
 }
 
-async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
+async function handleLintConfig(
+	args: LintConfigArgs,
+	{ checkout }: ToolContext,
+): Promise<CallToolResult> {
 	const { filename } = args;
 
 	// Check in two steps:
@@ -22,7 +24,7 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 			"yarn",
 			["workspace", "@zwave-js/config", "run", "lint:config:custom"],
 			{
-				cwd: REPO_ROOT,
+				cwd: checkout.root,
 				stdio: "pipe",
 			},
 		);
@@ -67,7 +69,7 @@ async function handleLintConfig(args: LintConfigArgs): Promise<CallToolResult> {
 				filename,
 			],
 			{
-				cwd: REPO_ROOT,
+				cwd: checkout.root,
 				stdio: "pipe",
 			},
 		);
