@@ -1,6 +1,4 @@
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
-import { ZWaveErrorCodes } from "@zwave-js/core";
-import { droppedDecodeErrors } from "@zwave-js/serial/safe";
 
 import type { OxlintCompatibleRule } from "../utils.js";
 import { findBinding } from "../utils/bindings.js";
@@ -65,10 +63,21 @@ function isParseFunction(node: FunctionNode): boolean {
 	return !!name && PARSE_FUNCTION_NAME.test(name);
 }
 
-// The receive path drops messages that fail to parse with one of these error codes and re-throws all others
-const EXPECTED_ERROR_CODES = new Set(
-	[...droppedDecodeErrors.keys()].map((code) => ZWaveErrorCodes[code]),
-);
+// The receive path drops messages that fail to parse with one of these error codes and re-throws all others.
+// This mirrors droppedDecodeErrors from @zwave-js/serial, which cannot be imported here because building
+// @zwave-js/serial requires the CC codegen, which in turn runs this plugin. A unit test keeps both in sync.
+export const EXPECTED_ERROR_CODES: ReadonlySet<string> = new Set([
+	"PacketFormat_Invalid",
+	"PacketFormat_Checksum",
+	"PacketFormat_Truncated",
+	"PacketFormat_InvalidPayload",
+	"Deserialization_NotImplemented",
+	"CC_NotImplemented",
+	"Driver_NotReady",
+	"Driver_NoSecurity",
+	"Security2CC_NotInitialized",
+	"Controller_NodeNotFound",
+]);
 
 /** ZWaveErrors with one of the expected codes are the correct way to reject invalid payloads */
 function isExpectedError(node: TSESTree.Expression): boolean {
