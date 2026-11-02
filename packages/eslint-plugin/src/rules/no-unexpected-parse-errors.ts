@@ -9,12 +9,12 @@ const RAW_PARAM_TYPE = /(?:Raw|^Bytes|^BytesView|^Uint8Array)$/;
 const PARSE_METHOD_NAMES = new Set(["from", "parse"]);
 const PARSE_FUNCTION_NAME = /^(?:parse|decode)/;
 
-function isFunctionNode(
-	node: TSESTree.Node,
-): node is
+type FunctionNode =
 	| TSESTree.FunctionDeclaration
 	| TSESTree.FunctionExpression
-	| TSESTree.ArrowFunctionExpression {
+	| TSESTree.ArrowFunctionExpression;
+
+function isFunctionNode(node: TSESTree.Node): node is FunctionNode {
 	return (
 		node.type === AST_NODE_TYPES.FunctionDeclaration
 		|| node.type === AST_NODE_TYPES.FunctionExpression
@@ -22,9 +22,7 @@ function isFunctionNode(
 	);
 }
 
-function hasRawParameter(
-	fn: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression,
-): boolean {
+function hasRawParameter(fn: FunctionNode): boolean {
 	const param = fn.params[0];
 	if (param?.type !== AST_NODE_TYPES.Identifier) return false;
 	const type = param.typeAnnotation?.typeAnnotation;
@@ -35,28 +33,35 @@ function hasRawParameter(
 	);
 }
 
-/** Whether this function parses untrusted data, e.g. `static from(raw: CCRaw)` or `parseFoo(data: BytesView)` */
-function isParseFunction(node: TSESTree.Node): boolean {
+function isMethod(node: FunctionNode): boolean {
+	return node.parent.type === AST_NODE_TYPES.MethodDefinition;
+}
+
+function getFunctionName(node: FunctionNode): string | undefined {
 	if (node.type === AST_NODE_TYPES.FunctionDeclaration) {
-		return (
-			!!node.id
-			&& PARSE_FUNCTION_NAME.test(node.id.name)
-			&& hasRawParameter(node)
-		);
+		return node.id?.name;
 	}
 	if (
-		node.type === AST_NODE_TYPES.FunctionExpression
-		&& node.parent.type === AST_NODE_TYPES.MethodDefinition
+		node.parent.type === AST_NODE_TYPES.VariableDeclarator
+		&& node.parent.id.type === AST_NODE_TYPES.Identifier
 	) {
-		const method = node.parent;
+		return node.parent.id.name;
+	}
+}
+
+/** Whether this function parses untrusted data, e.g. `static from(raw: CCRaw)` or `parseFoo(data: BytesView)` */
+function isParseFunction(node: FunctionNode): boolean {
+	if (!hasRawParameter(node)) return false;
+	if (isMethod(node)) {
+		const method = node.parent as TSESTree.MethodDefinition;
 		return (
 			method.static
 			&& method.key.type === AST_NODE_TYPES.Identifier
 			&& PARSE_METHOD_NAMES.has(method.key.name)
-			&& hasRawParameter(node)
 		);
 	}
-	return false;
+	const name = getFunctionName(node);
+	return !!name && PARSE_FUNCTION_NAME.test(name);
 }
 
 // The receive path drops messages that fail to parse with one of these error codes and re-throws all others
@@ -134,14 +139,16 @@ export const noUnexpectedParseErrors: OxlintCompatibleRule = {
 		// Classes in the current file whose constructor may throw unexpected errors
 		let throwingClasses = new Map<string, TSESTree.ThrowStatement>();
 		// Whether each enclosing function is part of a parse function.
-		// Inline callbacks are considered part of their parent
+		// Nested functions other than methods are considered part of their parent,
+		// because they are typically callbacks that run while parsing
 		let parseFunctionStack: boolean[] = [];
 		const isInParseFunction = (): boolean =>
 			parseFunctionStack.at(-1) ?? false;
-		const enterFunction = (
-			node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression,
-		): void => {
-			parseFunctionStack.push(isParseFunction(node));
+		const enterFunction = (node: FunctionNode): void => {
+			parseFunctionStack.push(
+				isParseFunction(node)
+					|| (!isMethod(node) && isInParseFunction()),
+			);
 		};
 		const exitFunction = (): void => {
 			parseFunctionStack.pop();
@@ -156,9 +163,7 @@ export const noUnexpectedParseErrors: OxlintCompatibleRule = {
 			"FunctionDeclaration:exit": exitFunction,
 			FunctionExpression: enterFunction,
 			"FunctionExpression:exit": exitFunction,
-			ArrowFunctionExpression() {
-				parseFunctionStack.push(isInParseFunction());
-			},
+			ArrowFunctionExpression: enterFunction,
 			"ArrowFunctionExpression:exit": exitFunction,
 			Program(node) {
 				const visitClass = (cls: TSESTree.Node | null | undefined) => {
