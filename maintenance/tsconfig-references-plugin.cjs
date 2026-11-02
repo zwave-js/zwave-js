@@ -10,8 +10,6 @@ const ignoredDependencies = {
 	// Codegen replaces the `validateArgs` imports with generated local helpers,
 	// so the compiled src_gen directory never references the transformers
 	"@zwave-js/cc": ["@zwave-js/transformers"],
-	// Only the tests import the eslint plugin, to check that it matches the driver
-	"zwave-js": ["@zwave-js/eslint-plugin"],
 };
 
 exports.plugin = (options) => {

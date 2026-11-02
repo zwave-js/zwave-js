@@ -56,9 +56,8 @@ function isParseFunction(node: FunctionNode): boolean {
 }
 
 // The receive path drops messages that fail to parse with one of these error codes and re-throws all others.
-// This mirrors droppedDecodeErrors in zwave-js, which cannot be imported here because building
-// zwave-js requires the CC codegen, which in turn runs this plugin. A unit test in zwave-js keeps both in sync.
-export const EXPECTED_ERROR_CODES: ReadonlySet<string> = new Set([
+// Keep this in sync with handleDecodeError in Driver.ts and RCPHost.ts.
+const EXPECTED_ERROR_CODES = new Set([
 	"PacketFormat_Invalid",
 	"PacketFormat_Checksum",
 	"PacketFormat_Truncated",

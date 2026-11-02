@@ -527,6 +527,8 @@ export class RCPHost
 	/** Handles a decoding error and returns the desired reply to the stick */
 	private handleDecodeError(e: Error): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
+			// The @zwave-js/no-unexpected-parse-errors lint rule allows parsers to throw exactly the
+			// error codes handled here. Keep its EXPECTED_ERROR_CODES in sync when changing this.
 			switch (e.code) {
 				case ZWaveErrorCodes.PacketFormat_Invalid:
 				case ZWaveErrorCodes.PacketFormat_Checksum:
