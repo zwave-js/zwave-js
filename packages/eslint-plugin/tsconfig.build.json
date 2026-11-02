@@ -10,6 +10,9 @@
 	"references": [
 		{
 			"path": "../core/tsconfig.build.json"
+		},
+		{
+			"path": "../serial/tsconfig.build.json"
 		}
 	],
 	"include": ["src/**/*.ts"],

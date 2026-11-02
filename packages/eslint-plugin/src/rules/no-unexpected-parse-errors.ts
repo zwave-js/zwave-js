@@ -1,5 +1,6 @@
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
-import { ZWaveErrorCodes, droppedDecodeErrors } from "@zwave-js/core";
+import { ZWaveErrorCodes } from "@zwave-js/core";
+import { droppedDecodeErrors } from "@zwave-js/serial/safe";
 
 import type { OxlintCompatibleRule } from "../utils.js";
 import { findBinding } from "../utils/bindings.js";
