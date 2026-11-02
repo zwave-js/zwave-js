@@ -12,11 +12,13 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	convertRawRSSI,
-	droppedDecodeErrors,
 	isZWaveError,
 	protocolDataRateToString,
 } from "@zwave-js/core";
 import {
+	droppedDecodeErrors,
+	isSuccessIndicator,
+	isZWaveSerialPortImplementation,
 	MessageHeaders,
 	RCPFunctionType,
 	RCPMessage,
@@ -24,11 +26,9 @@ import {
 	RCPSerialFrameType,
 	type RCPSerialStream,
 	RCPSerialStreamFactory,
+	wrapLegacySerialBinding,
 	type ZWaveSerialBindingFactory,
 	type ZWaveSerialPortImplementation,
-	isSuccessIndicator,
-	isZWaveSerialPortImplementation,
-	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
 	AbortBeamRequest,
@@ -529,11 +529,9 @@ export class RCPHost
 	private handleDecodeError(e: Error): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
 			const response = droppedDecodeErrors.get(e.code);
-			if (response) {
+			if (response != undefined) {
 				this.logDroppedMessage(e);
-				return response === "NAK"
-					? MessageHeaders.NAK
-					: MessageHeaders.ACK;
+				return response;
 			}
 		} else if (/database is not open/.test(e.message)) {
 			// The JSONL-DB is not open yet

@@ -115,7 +115,6 @@ import {
 	isMissingControllerACK,
 	isMissingControllerCallback,
 	isMissingControllerResponse,
-	droppedDecodeErrors,
 	isZWaveError,
 	keyPairFromRawECDHPrivateKey,
 	logDict,
@@ -132,15 +131,22 @@ import {
 	BootloaderChunkType,
 	type CLIChunk,
 	CLIChunkType,
+	droppedDecodeErrors,
 	type EnumeratedPort,
 	FunctionType,
+	getDefaultPriority,
+	hasNodeId,
 	type HasNodeId,
+	isSuccessIndicator,
+	isZWaveSerialBindingFactory,
+	isZWaveSerialPortImplementation,
 	Message,
 	type MessageEncodingContext,
 	MessageHeaders,
 	type MessageParsingContext,
 	MessageType,
 	type SuccessIndicator,
+	wrapLegacySerialBinding,
 	XModemMessageHeaders,
 	type ZWaveSerialBindingFactory,
 	ZWaveSerialFrameType,
@@ -148,12 +154,6 @@ import {
 	type ZWaveSerialPortImplementation,
 	type ZWaveSerialStream,
 	ZWaveSerialStreamFactory,
-	getDefaultPriority,
-	hasNodeId,
-	isSuccessIndicator,
-	isZWaveSerialBindingFactory,
-	isZWaveSerialPortImplementation,
-	wrapLegacySerialBinding,
 } from "@zwave-js/serial";
 import {
 	ApplicationUpdateRequest,
@@ -4400,11 +4400,9 @@ export class Driver
 	): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
 			const response = droppedDecodeErrors.get(e.code);
-			if (response) {
+			if (response != undefined) {
 				this.logDroppedMessage(e, data, msg);
-				return response === "NAK"
-					? MessageHeaders.NAK
-					: MessageHeaders.ACK;
+				return response;
 			}
 		} else if (isDatabaseNotOpenError(e)) {
 			this.driverLog.print(
