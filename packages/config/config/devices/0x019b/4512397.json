@@ -1,0 +1,28 @@
+{
+	"manufacturer": "Heatit",
+	"manufacturerId": "0x019b",
+	"label": "Z-Smoke2 230V",
+	"description": "Wired Smoke Detector",
+	"devices": [
+		{
+			"productType": "0x0003",
+			"productId": "0x0027"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		// The siren is controlled with Basic Set, which interconnected detectors send to each other.
+		// Notification Sensors must not support Basic CC, so it is not discovered automatically.
+		"commandClasses": {
+			"add": {
+				"Basic": {
+					"version": 1,
+					"isSupported": true
+				}
+			}
+		}
+	}
+}
