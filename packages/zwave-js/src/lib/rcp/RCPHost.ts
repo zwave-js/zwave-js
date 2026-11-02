@@ -564,25 +564,6 @@ export class RCPHost
 						"warn",
 					);
 					return MessageHeaders.ACK;
-
-				case ZWaveErrorCodes.Driver_NoSecurity:
-				case ZWaveErrorCodes.Security2CC_NotInitialized:
-					this.rcpLog.print(
-						`Dropping message because network keys are not set or the driver is not yet ready to receive secure messages.`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
-
-				case ZWaveErrorCodes.Controller_NodeNotFound:
-					this.rcpLog.print(
-						`Dropping message because ${
-							typeof e.context === "number"
-								? `node ${e.context}`
-								: "the node"
-						} does not exist.`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
 			}
 		} else {
 			if (/database is not open/.test(e.message)) {
