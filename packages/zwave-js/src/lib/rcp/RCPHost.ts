@@ -12,6 +12,7 @@ import {
 	ZWaveError,
 	ZWaveErrorCodes,
 	convertRawRSSI,
+	droppedDecodeErrors,
 	isZWaveError,
 	protocolDataRateToString,
 } from "@zwave-js/core";
@@ -527,43 +528,68 @@ export class RCPHost
 	/** Handles a decoding error and returns the desired reply to the stick */
 	private handleDecodeError(e: Error): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
-			switch (e.code) {
-				case ZWaveErrorCodes.PacketFormat_Invalid:
-				case ZWaveErrorCodes.PacketFormat_Checksum:
-				case ZWaveErrorCodes.PacketFormat_Truncated:
-					this.rcpLog.print(
-						`Dropping message because it contains invalid data`,
-						"warn",
-					);
-					return MessageHeaders.NAK;
-
-				case ZWaveErrorCodes.Deserialization_NotImplemented:
-				case ZWaveErrorCodes.CC_NotImplemented:
-					this.rcpLog.print(
-						`Dropping message because it could not be deserialized: ${e.message}`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
-
-				case ZWaveErrorCodes.Driver_NotReady:
-					this.rcpLog.print(
-						`Dropping message because the driver is not ready to handle it yet.`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
+			const response = droppedDecodeErrors.get(e.code);
+			if (response) {
+				this.logDroppedMessage(e);
+				return response === "NAK"
+					? MessageHeaders.NAK
+					: MessageHeaders.ACK;
 			}
-		} else {
-			if (/database is not open/.test(e.message)) {
-				// The JSONL-DB is not open yet
+		} else if (/database is not open/.test(e.message)) {
+			// The JSONL-DB is not open yet
+			this.rcpLog.print(
+				`Dropping message because the driver is not ready to handle it yet.`,
+				"warn",
+			);
+			return MessageHeaders.ACK;
+		}
+		// Pass all other errors through
+		throw e;
+	}
+
+	private logDroppedMessage(e: ZWaveError): void {
+		switch (e.code) {
+			case ZWaveErrorCodes.PacketFormat_Invalid:
+			case ZWaveErrorCodes.PacketFormat_Checksum:
+			case ZWaveErrorCodes.PacketFormat_Truncated:
+				this.rcpLog.print(
+					`Dropping message because it contains invalid data`,
+					"warn",
+				);
+				break;
+
+			case ZWaveErrorCodes.Deserialization_NotImplemented:
+			case ZWaveErrorCodes.CC_NotImplemented:
+				this.rcpLog.print(
+					`Dropping message because it could not be deserialized: ${e.message}`,
+					"warn",
+				);
+				break;
+
+			case ZWaveErrorCodes.Driver_NotReady:
 				this.rcpLog.print(
 					`Dropping message because the driver is not ready to handle it yet.`,
 					"warn",
 				);
-				return MessageHeaders.ACK;
-			}
+				break;
+
+			case ZWaveErrorCodes.PacketFormat_InvalidPayload:
+				this.rcpLog.print(
+					`Dropping message with invalid payload${
+						typeof e.context === "string"
+							? ` (Reason: ${e.context})`
+							: ""
+					}`,
+					"warn",
+				);
+				break;
+
+			default:
+				this.rcpLog.print(
+					`Dropping message because it could not be decoded: ${e.message}`,
+					"warn",
+				);
 		}
-		// Pass all other errors through
-		throw e;
 	}
 
 	/**

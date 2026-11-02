@@ -115,6 +115,7 @@ import {
 	isMissingControllerACK,
 	isMissingControllerCallback,
 	isMissingControllerResponse,
+	droppedDecodeErrors,
 	isZWaveError,
 	keyPairFromRawECDHPrivateKey,
 	logDict,
@@ -4398,102 +4399,117 @@ export class Driver
 		msg: Message | undefined,
 	): MessageHeaders | undefined {
 		if (isZWaveError(e)) {
-			switch (e.code) {
-				case ZWaveErrorCodes.PacketFormat_Invalid:
-				case ZWaveErrorCodes.PacketFormat_Checksum:
-				case ZWaveErrorCodes.PacketFormat_Truncated:
-					this.driverLog.print(
-						`Dropping message because it contains invalid data`,
-						"warn",
-					);
-					return MessageHeaders.NAK;
-
-				case ZWaveErrorCodes.Deserialization_NotImplemented:
-				case ZWaveErrorCodes.CC_NotImplemented:
-					this.driverLog.print(
-						`Dropping message because it could not be deserialized: ${e.message}`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
-
-				case ZWaveErrorCodes.Driver_NotReady:
-					this.driverLog.print(
-						`Dropping message because the driver is not ready to handle it yet.`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
-
-				case ZWaveErrorCodes.PacketFormat_InvalidPayload:
-					if (msg) {
-						const nodeId = msg.getNodeId();
-						const message = `Dropping message with invalid payload${
-							typeof e.context === "string"
-								? ` (Reason: ${e.context})`
-								: ""
-						}`;
-						if (nodeId != undefined) {
-							this.controllerLog.logNode(nodeId, {
-								message,
-								direction: "inbound",
-								level: "warn",
-							});
-						} else {
-							this.driverLog.print(message, "warn");
-						}
-						try {
-							this.driverLog.logMessage(msg, {
-								direction: "inbound",
-							});
-						} catch (e) {
-							// We shouldn't throw just because logging a message fails
-							this.driverLog.print(
-								`Logging a message failed: ${getErrorMessage(
-									e,
-								)}`,
-							);
-						}
-					} else {
-						this.driverLog.print(
-							`Dropping message with invalid payload${
-								typeof e.context === "string"
-									? ` (Reason: ${e.context})`
-									: ""
-							}:\n${buffer2hex(data)}`,
-							"warn",
-						);
-					}
-					return MessageHeaders.ACK;
-
-				case ZWaveErrorCodes.Driver_NoSecurity:
-				case ZWaveErrorCodes.Security2CC_NotInitialized:
-					this.driverLog.print(
-						`Dropping message because network keys are not set or the driver is not yet ready to receive secure messages.`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
-
-				case ZWaveErrorCodes.Controller_NodeNotFound:
-					this.driverLog.print(
-						`Dropping message because ${
-							typeof e.context === "number"
-								? `node ${e.context}`
-								: "the node"
-						} does not exist.`,
-						"warn",
-					);
-					return MessageHeaders.ACK;
+			const response = droppedDecodeErrors.get(e.code);
+			if (response) {
+				this.logDroppedMessage(e, data, msg);
+				return response === "NAK"
+					? MessageHeaders.NAK
+					: MessageHeaders.ACK;
 			}
-		} else {
-			if (isDatabaseNotOpenError(e)) {
+		} else if (isDatabaseNotOpenError(e)) {
+			this.driverLog.print(
+				`Dropping message because the driver is not ready to handle it yet.`,
+				"warn",
+			);
+			return MessageHeaders.ACK;
+		}
+		// Pass all other errors through
+		throw e;
+	}
+
+	private logDroppedMessage(
+		e: ZWaveError,
+		data: BytesView,
+		msg: Message | undefined,
+	): void {
+		switch (e.code) {
+			case ZWaveErrorCodes.PacketFormat_Invalid:
+			case ZWaveErrorCodes.PacketFormat_Checksum:
+			case ZWaveErrorCodes.PacketFormat_Truncated:
+				this.driverLog.print(
+					`Dropping message because it contains invalid data`,
+					"warn",
+				);
+				break;
+
+			case ZWaveErrorCodes.Deserialization_NotImplemented:
+			case ZWaveErrorCodes.CC_NotImplemented:
+				this.driverLog.print(
+					`Dropping message because it could not be deserialized: ${e.message}`,
+					"warn",
+				);
+				break;
+
+			case ZWaveErrorCodes.Driver_NotReady:
 				this.driverLog.print(
 					`Dropping message because the driver is not ready to handle it yet.`,
 					"warn",
 				);
-				return MessageHeaders.ACK;
-			}
+				break;
+
+			case ZWaveErrorCodes.PacketFormat_InvalidPayload:
+				if (msg) {
+					const nodeId = msg.getNodeId();
+					const message = `Dropping message with invalid payload${
+						typeof e.context === "string"
+							? ` (Reason: ${e.context})`
+							: ""
+					}`;
+					if (nodeId != undefined) {
+						this.controllerLog.logNode(nodeId, {
+							message,
+							direction: "inbound",
+							level: "warn",
+						});
+					} else {
+						this.driverLog.print(message, "warn");
+					}
+					try {
+						this.driverLog.logMessage(msg, {
+							direction: "inbound",
+						});
+					} catch (e) {
+						// We shouldn't throw just because logging a message fails
+						this.driverLog.print(
+							`Logging a message failed: ${getErrorMessage(e)}`,
+						);
+					}
+				} else {
+					this.driverLog.print(
+						`Dropping message with invalid payload${
+							typeof e.context === "string"
+								? ` (Reason: ${e.context})`
+								: ""
+						}:\n${buffer2hex(data)}`,
+						"warn",
+					);
+				}
+				break;
+
+			case ZWaveErrorCodes.Driver_NoSecurity:
+			case ZWaveErrorCodes.Security2CC_NotInitialized:
+				this.driverLog.print(
+					`Dropping message because network keys are not set or the driver is not yet ready to receive secure messages.`,
+					"warn",
+				);
+				break;
+
+			case ZWaveErrorCodes.Controller_NodeNotFound:
+				this.driverLog.print(
+					`Dropping message because ${
+						typeof e.context === "number"
+							? `node ${e.context}`
+							: "the node"
+					} does not exist.`,
+					"warn",
+				);
+				break;
+			default:
+				this.driverLog.print(
+					`Dropping message because it could not be decoded: ${e.message}`,
+					"warn",
+				);
 		}
-		// Pass all other errors through
-		throw e;
 	}
 
 	private mustReplyWithSecurityS2MOS(

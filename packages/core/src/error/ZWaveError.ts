@@ -259,6 +259,27 @@ export function isZWaveError(e: unknown): e is ZWaveError {
 	return e instanceof Error && Object.getPrototypeOf(e).name === "ZWaveError";
 }
 
+/**
+ * Error codes for which a received message that fails to decode is dropped,
+ * mapped to the response that is sent to the controller.
+ * Decode errors with any other code are re-thrown, so parsers must not throw them.
+ */
+export const droppedDecodeErrors: ReadonlyMap<ZWaveErrorCodes, "ACK" | "NAK"> =
+	new Map([
+		// These indicate a transmission problem, so the controller should retransmit
+		[ZWaveErrorCodes.PacketFormat_Invalid, "NAK"],
+		[ZWaveErrorCodes.PacketFormat_Checksum, "NAK"],
+		[ZWaveErrorCodes.PacketFormat_Truncated, "NAK"],
+		// The message was received correctly, but cannot be handled
+		[ZWaveErrorCodes.PacketFormat_InvalidPayload, "ACK"],
+		[ZWaveErrorCodes.Deserialization_NotImplemented, "ACK"],
+		[ZWaveErrorCodes.CC_NotImplemented, "ACK"],
+		[ZWaveErrorCodes.Driver_NotReady, "ACK"],
+		[ZWaveErrorCodes.Driver_NoSecurity, "ACK"],
+		[ZWaveErrorCodes.Security2CC_NotInitialized, "ACK"],
+		[ZWaveErrorCodes.Controller_NodeNotFound, "ACK"],
+	]);
+
 export function isTransmissionError(e: unknown): e is ZWaveError & {
 	code:
 		| ZWaveErrorCodes.Controller_Timeout
