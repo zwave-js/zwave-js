@@ -14,6 +14,8 @@ import {
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleManufacturerSpecificGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -38,12 +40,8 @@ export async function handleManufacturerSpecificGet(
 			productType: vendorInfo?.productType ?? 0xffff,
 			productId: vendorInfo?.productId ?? 0xffff,
 		});
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -67,11 +65,7 @@ export async function handleManufacturerSpecificDeviceSpecificGet(
 				: DeviceIdType.PseudoRandom,
 			deviceId: vendorInfo?.deviceId ?? randomBytes(16),
 		});
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }

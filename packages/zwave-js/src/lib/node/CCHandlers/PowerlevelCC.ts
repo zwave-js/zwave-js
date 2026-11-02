@@ -20,6 +20,8 @@ import { noop, pick } from "@zwave-js/shared";
 import type { Driver } from "../../driver/Driver.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export function handlePowerlevelSet(
 	driver: Driver,
 	node: ZWaveNode,
@@ -88,12 +90,8 @@ export async function handlePowerlevelGet(
 				timeout: timeoutSeconds,
 			});
 		}
-	} catch (e: any) {
-		driver.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(driver, node.id, e);
 	}
 }
 
@@ -195,12 +193,8 @@ export async function handlePowerlevelTestNodeGet(
 				acknowledgedFrames: 0,
 			});
 		}
-	} catch (e: any) {
-		driver.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(driver, node.id, e);
 	}
 }
 

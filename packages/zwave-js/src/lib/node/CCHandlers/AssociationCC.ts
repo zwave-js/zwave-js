@@ -16,7 +16,7 @@ import {
 import type { ZWaveController } from "../../controller/Controller.js";
 import type { ZWaveNode } from "../Node.js";
 
-import { MAX_ASSOCIATIONS } from "./_shared.js";
+import { MAX_ASSOCIATIONS, logCommandHandlerError } from "./_shared.js";
 
 export async function handleAssociationGet(
 	ctx: PersistValuesContext & LogNode,
@@ -52,12 +52,8 @@ export async function handleAssociationGet(
 			nodeIds,
 			reportsToFollow: 0,
 		});
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -144,11 +140,7 @@ export async function handleAssociationSpecificGroupGet(
 	// It is RECOMMENDED that the value 0 is returned by non-supporting devices.
 	try {
 		await api.reportSpecificGroup(0);
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }

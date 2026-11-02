@@ -14,6 +14,8 @@ import {
 import type { ZWaveController } from "../../controller/Controller.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export function handleIndicatorSupportedGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -114,12 +116,8 @@ export async function handleIndicatorGet(
 			// V1+ report
 			await api.sendReport({ value: 0 });
 		}
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -146,11 +144,7 @@ export async function handleIndicatorDescriptionGet(
 	// So we can just always do that.
 	try {
 		await api.reportDescription(command.indicatorId, "");
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }

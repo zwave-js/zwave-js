@@ -15,6 +15,8 @@ import {
 
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleAGINameGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -40,12 +42,8 @@ export async function handleAGINameGet(
 
 	try {
 		await api.reportGroupName(1, "Lifeline");
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -85,12 +83,8 @@ export async function handleAGIInfoGet(
 				},
 			],
 		});
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -127,12 +121,8 @@ export async function handleAGICommandListGet(
 				],
 			]),
 		);
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -157,11 +147,7 @@ export async function handleAssociationSupportedGroupingsGet(
 	// We only "support" the lifeline group
 	try {
 		await api.reportGroupCount(1);
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }

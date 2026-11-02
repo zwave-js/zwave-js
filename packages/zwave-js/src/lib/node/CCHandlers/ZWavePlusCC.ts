@@ -13,6 +13,8 @@ import {
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleZWavePlusGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -40,11 +42,7 @@ export async function handleZWavePlusGet(
 				installerIcon: vendorInfo?.installerIcon ?? 0x0500, // Generic Gateway
 				userIcon: vendorInfo?.userIcon ?? 0x0500, // Generic Gateway
 			});
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }

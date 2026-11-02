@@ -17,6 +17,8 @@ import { libVersion } from "../../driver/Driver.js";
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleVersionGet(
 	ctx: PersistValuesContext & LogNode,
 	controller: ZWaveController,
@@ -49,12 +51,8 @@ export async function handleVersionGet(
 			],
 			hardwareVersion: vendorInfo?.hardwareVersion,
 		});
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -77,12 +75,8 @@ export async function handleVersionCommandClassGet(
 
 	try {
 		await api.reportCCVersion(command.requestedCC, reportVersion);
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -104,11 +98,7 @@ export async function handleVersionCapabilitiesGet(
 
 	try {
 		await api.reportCapabilities();
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
