@@ -1,6 +1,7 @@
 export { SerialLogger } from "./log/Logger.js";
 export type { SerialLogContext } from "./log/Logger_safe.js";
 export * from "./message/Constants.js";
+export * from "./message/DroppedDecodeErrors.js";
 export * from "./message/Message.js";
 export * from "./message/MessageHeaders.js";
 export * from "./message/RCPMessages.js";
