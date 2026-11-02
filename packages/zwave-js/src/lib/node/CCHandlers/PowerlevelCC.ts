@@ -20,6 +20,8 @@ import { noop, pick } from "@zwave-js/shared";
 import type { Driver } from "../../driver/Driver.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 // CTT uses 260 frames, so this leaves plenty of headroom while limiting how long the radio can be kept busy
 const MAX_TEST_FRAME_COUNT = 1000;
 
@@ -67,25 +69,32 @@ export async function handlePowerlevelGet(
 
 	const { powerlevel, until } = driver.controller.powerlevel;
 
-	if (
-		// Setting elapsed
-		until.getTime() < Date.now()
-		// or it is already set to normal power
-		|| powerlevel === Powerlevel["Normal Power"]
-	) {
-		await api.reportPowerlevel({
-			powerlevel: Powerlevel["Normal Power"],
-		});
-	} else {
-		const timeoutSeconds = Math.max(
-			0,
-			Math.min(Math.round((until.getTime() - Date.now()) / 1000), 255),
-		);
+	try {
+		if (
+			// Setting elapsed
+			until.getTime() < Date.now()
+			// or it is already set to normal power
+			|| powerlevel === Powerlevel["Normal Power"]
+		) {
+			await api.reportPowerlevel({
+				powerlevel: Powerlevel["Normal Power"],
+			});
+		} else {
+			const timeoutSeconds = Math.max(
+				0,
+				Math.min(
+					Math.round((until.getTime() - Date.now()) / 1000),
+					255,
+				),
+			);
 
-		await api.reportPowerlevel({
-			powerlevel,
-			timeout: timeoutSeconds,
-		});
+			await api.reportPowerlevel({
+				powerlevel,
+				timeout: timeoutSeconds,
+			});
+		}
+	} catch (e) {
+		logCommandHandlerError(driver, node.id, e);
 	}
 }
 
@@ -191,22 +200,26 @@ export async function handlePowerlevelTestNodeGet(
 
 	const status = driver.getNOPPowerTestStatus();
 
-	if (status) {
-		await api.sendNodeTestReport({
-			status: status.inProgress
-				? PowerlevelTestStatus["In Progress"]
-				: status.acknowledgedFrames > 0
-					? PowerlevelTestStatus.Success
-					: PowerlevelTestStatus.Failed,
-			...status,
-		});
-	} else {
-		// No test was done
-		await api.sendNodeTestReport({
-			status: PowerlevelTestStatus.Success,
-			testNodeId: 0,
-			acknowledgedFrames: 0,
-		});
+	try {
+		if (status) {
+			await api.sendNodeTestReport({
+				status: status.inProgress
+					? PowerlevelTestStatus["In Progress"]
+					: status.acknowledgedFrames > 0
+						? PowerlevelTestStatus.Success
+						: PowerlevelTestStatus.Failed,
+				...status,
+			});
+		} else {
+			// No test was done
+			await api.sendNodeTestReport({
+				status: PowerlevelTestStatus.Success,
+				testNodeId: 0,
+				acknowledgedFrames: 0,
+			});
+		}
+	} catch (e) {
+		logCommandHandlerError(driver, node.id, e);
 	}
 }
 
