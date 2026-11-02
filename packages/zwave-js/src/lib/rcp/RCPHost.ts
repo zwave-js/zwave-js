@@ -16,7 +16,6 @@ import {
 	protocolDataRateToString,
 } from "@zwave-js/core";
 import {
-	droppedDecodeErrors,
 	isSuccessIndicator,
 	isZWaveSerialPortImplementation,
 	MessageHeaders,
@@ -83,6 +82,7 @@ import {
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 
+import { droppedDecodeErrors } from "../driver/DroppedDecodeErrors.js";
 import {
 	type SerialAPICommandMachineInput,
 	createSerialAPICommandMachine,

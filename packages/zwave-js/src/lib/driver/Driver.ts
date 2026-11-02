@@ -131,7 +131,6 @@ import {
 	BootloaderChunkType,
 	type CLIChunk,
 	CLIChunkType,
-	droppedDecodeErrors,
 	type EnumeratedPort,
 	FunctionType,
 	getDefaultPriority,
@@ -259,6 +258,7 @@ import {
 
 import { Bootloader } from "./Bootloader.js";
 import { DriverMode } from "./DriverMode.js";
+import { droppedDecodeErrors } from "./DroppedDecodeErrors.js";
 import { EndDeviceCLI } from "./EndDeviceCLI.js";
 import {
 	createMessageGenerator,
