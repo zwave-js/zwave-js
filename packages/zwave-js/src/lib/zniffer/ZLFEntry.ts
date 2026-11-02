@@ -46,7 +46,6 @@ export function parseZLFHeader(buffer: BytesView): {
 	bytesRead: number;
 } {
 	if (buffer.length < 2048) {
-		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- capture files are provided by the user, so this is an invalid argument
 		throw new ZWaveError(
 			"Invalid ZLF file: header too small",
 			ZWaveErrorCodes.Argument_Invalid,

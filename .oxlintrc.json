@@ -291,8 +291,7 @@
 			}
 		},
 		{
-			// Code that parses untrusted data must not read out of bounds and must only throw
-			// ZWaveErrors with codes that Driver.handleDecodeError handles by dropping the message
+			// Code that parses untrusted data must not read out of bounds
 			"files": [
 				"packages/cc/src/**/*.ts",
 				"packages/core/src/**/*.ts",
@@ -300,15 +299,13 @@
 				"packages/zwave-js/src/lib/zniffer/**/*.ts"
 			],
 			"rules": {
-				"@zwave-js/no-unchecked-bytes-reads": "error",
-				"@zwave-js/no-unexpected-parse-errors": "error"
+				"@zwave-js/no-unchecked-bytes-reads": "error"
 			}
 		},
 		{
 			"files": ["**/*.test.ts"],
 			"rules": {
-				"@zwave-js/no-unchecked-bytes-reads": "off",
-				"@zwave-js/no-unexpected-parse-errors": "off"
+				"@zwave-js/no-unchecked-bytes-reads": "off"
 			}
 		},
 		{

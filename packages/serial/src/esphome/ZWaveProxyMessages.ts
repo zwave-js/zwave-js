@@ -51,7 +51,7 @@ export class ZWaveProxyFrame extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for data",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const dataResult = decodeLengthDelimitedField(

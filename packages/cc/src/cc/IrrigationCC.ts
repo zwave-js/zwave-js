@@ -2707,7 +2707,6 @@ export class IrrigationCCValveTableRun extends IrrigationCC {
 		ctx: CCParsingContext,
 	): IrrigationCCValveTableRun {
 		validatePayload(raw.payload.length >= 1);
-		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- payload length is validated above
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			tableIDs: [...raw.payload],

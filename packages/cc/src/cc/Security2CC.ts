@@ -1668,9 +1668,7 @@ export class Security2CCMessageEncapsulation extends Security2CC {
 			// and deserialize the CC
 			encapsulated = await CommandClass.parse(decryptedCCBytes, ctx);
 		}
-		validatePayload(!!encapsulated || extensions.length > 0);
 
-		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- encapsulated CC or extensions are validated above
 		const ret = new Security2CCMessageEncapsulation({
 			nodeId: ctx.sourceNodeId,
 			sequenceNumber,

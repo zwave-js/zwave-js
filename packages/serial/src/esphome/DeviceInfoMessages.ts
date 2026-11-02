@@ -88,7 +88,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.Varint) {
 							throw new ZWaveError(
 								"Invalid wire type for usesPassword",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const usesPasswordResult = decodeVarInt(data, offset);
@@ -99,7 +99,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for name",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const nameResult = decodeStringField(data, offset);
@@ -110,7 +110,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for macAddress",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const macAddressResult = decodeStringField(
@@ -124,7 +124,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for esphomeVersion",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const esphomeVersionResult = decodeStringField(
@@ -138,7 +138,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for compilationTime",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const compilationTimeResult = decodeStringField(
@@ -152,7 +152,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for model",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const modelResult = decodeStringField(data, offset);
@@ -163,7 +163,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.Varint) {
 							throw new ZWaveError(
 								"Invalid wire type for hasDeepSleep",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const hasDeepSleepResult = decodeVarInt(data, offset);
@@ -174,7 +174,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for projectName",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const projectNameResult = decodeStringField(
@@ -188,7 +188,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for projectVersion",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const projectVersionResult = decodeStringField(
@@ -202,7 +202,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.Varint) {
 							throw new ZWaveError(
 								"Invalid wire type for webserverPort",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const webserverPortResult = decodeVarInt(data, offset);
@@ -213,7 +213,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for manufacturer",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const manufacturerResult = decodeStringField(
@@ -227,7 +227,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for friendlyName",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const friendlyNameResult = decodeStringField(
@@ -241,7 +241,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for suggestedArea",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const suggestedAreaResult = decodeStringField(
@@ -255,7 +255,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.LengthDelimited) {
 							throw new ZWaveError(
 								"Invalid wire type for bluetoothMacAddress",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const bluetoothMacAddressResult = decodeStringField(
@@ -269,7 +269,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.Varint) {
 							throw new ZWaveError(
 								"Invalid wire type for apiEncryptionSupported",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const apiEncryptionSupportedResult = decodeVarInt(
@@ -284,7 +284,7 @@ export class DeviceInfoResponse extends ESPHomeMessage {
 						if (wireType !== WireType.Varint) {
 							throw new ZWaveError(
 								"Invalid wire type for zwaveProxyFeatureFlags",
-								ZWaveErrorCodes.PacketFormat_InvalidPayload,
+								ZWaveErrorCodes.Argument_Invalid,
 							);
 						}
 						const zwaveProxyFeatureFlagsResult = decodeVarInt(

@@ -983,7 +983,6 @@ export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
 			.filter((t) => t != undefined);
 		validatePayload(supportedSetpointTypes.length > 0);
 
-		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- at least one setpoint type is validated above
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedSetpointTypes,
