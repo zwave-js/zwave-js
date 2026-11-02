@@ -56,7 +56,7 @@ function isParseFunction(node: FunctionNode): boolean {
 }
 
 // The receive path drops messages that fail to parse with one of these error codes and re-throws all others.
-// Keep this in sync with handleDecodeError in Driver.ts and RCPHost.ts.
+// Keep this in sync with Driver.handleDecodeError. RCPHost.handleDecodeError handles the subset that RCP messages can throw.
 const EXPECTED_ERROR_CODES = new Set([
 	"PacketFormat_Invalid",
 	"PacketFormat_Checksum",
