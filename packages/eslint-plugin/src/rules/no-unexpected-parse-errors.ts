@@ -56,8 +56,8 @@ function isParseFunction(node: FunctionNode): boolean {
 }
 
 // The receive path drops messages that fail to parse with one of these error codes and re-throws all others.
-// This mirrors droppedDecodeErrors from @zwave-js/serial, which cannot be imported here because building
-// @zwave-js/serial requires the CC codegen, which in turn runs this plugin. A unit test keeps both in sync.
+// This mirrors droppedDecodeErrors in zwave-js, which cannot be imported here because building
+// zwave-js requires the CC codegen, which in turn runs this plugin. A unit test in zwave-js keeps both in sync.
 export const EXPECTED_ERROR_CODES: ReadonlySet<string> = new Set([
 	"PacketFormat_Invalid",
 	"PacketFormat_Checksum",

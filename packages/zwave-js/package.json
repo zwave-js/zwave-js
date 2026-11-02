@@ -159,6 +159,7 @@
     "@types/sinon": "^21.0.1",
     "@types/source-map-support": "^0.5.10",
     "@typescript/native": "npm:typescript@7.0.2",
+    "@zwave-js/eslint-plugin": "workspace:*",
     "@zwave-js/maintenance": "workspace:*",
     "del-cli": "^7.0.0",
     "mockdate": "^3.0.5",
