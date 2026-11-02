@@ -3829,11 +3829,12 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	}
 
 	/**
-	 * Ensures that an Inclusion Controller Initiate command may be acted upon and returns its sender.
+	 * Returns the inclusion controller that sent an Inclusion Controller Initiate command,
+	 * or throws if the command must not be acted upon.
 	 * Acting on it removes or replaces node instances and re-runs security bootstrapping,
 	 * so it must only be accepted from actual controllers.
 	 */
-	private assertValidInclusionControllerInitiate(
+	private getVerifiedInclusionController(
 		initiate: InclusionControllerCCInitiate,
 	): ZWaveNode {
 		const sender = this._nodes.get(initiate.nodeId as number);
@@ -3853,21 +3854,21 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		// common security class, and non-secure commands are only acceptable if we know the inclusion
 		// controller was included non-securely. This also authenticates the spoofable source node ID.
 		const secClass = sender.getHighestSecurityClass();
-		let receivedSecurely = false;
+		let receivedWithHighestClass = false;
 		if (secClass === SecurityClass.None) {
-			receivedSecurely = true;
+			receivedWithHighestClass = true;
 		} else if (secClass != undefined && securityClassIsS2(secClass)) {
 			const encapS2 = initiate.getEncapsulatingCC(
 				CommandClasses["Security 2"],
 				Security2Command.MessageEncapsulation,
 			) as Security2CCMessageEncapsulation | undefined;
-			receivedSecurely = encapS2?.securityClass === secClass;
+			receivedWithHighestClass = encapS2?.securityClass === secClass;
 		} else if (secClass === SecurityClass.S0_Legacy) {
-			receivedSecurely = initiate.isEncapsulatedWith(
+			receivedWithHighestClass = initiate.isEncapsulatedWith(
 				CommandClasses.Security,
 			);
 		}
-		if (!receivedSecurely) {
+		if (!receivedWithHighestClass) {
 			this.rejectInclusionControllerInitiate(
 				sender.id,
 				`Ignoring inclusion controller request that was not received with the sender's highest security class`,
@@ -3913,7 +3914,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 		}
 
-		const sender = this.assertValidInclusionControllerInitiate(initiate);
+		const inclCtrlr = this.getVerifiedInclusionController(initiate);
 
 		// A node that was just included by the inclusion controller is already known
 		// if its NIF arrived first. Any other known node must not be replaced.
@@ -3924,12 +3925,12 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		if (!isPendingNode) {
 			if (!this.canHandleInclusionControllerRequest()) {
 				this.rejectInclusionControllerInitiate(
-					sender.id,
+					inclCtrlr.id,
 					`Ignoring proxy inclusion request because the controller is busy`,
 				);
 			} else if (this._nodes.has(initiate.includedNodeId)) {
 				this.rejectInclusionControllerInitiate(
-					sender.id,
+					inclCtrlr.id,
 					`Ignoring proxy inclusion request for node ${initiate.includedNodeId}, which is already part of the network`,
 				);
 			}
@@ -3938,7 +3939,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		void this.updateProxyInclusionMachine({
 			value: "INITIATE",
 			step: initiate.step,
-			inclusionControllerNodeId: sender.id,
+			inclusionControllerNodeId: inclCtrlr.id,
 			includedNodeId: initiate.includedNodeId,
 		}).catch(noop);
 	}
@@ -3957,7 +3958,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 		}
 
-		const inclCtrlr = this.assertValidInclusionControllerInitiate(initiate);
+		const inclCtrlr = this.getVerifiedInclusionController(initiate);
 		if (!this.canHandleInclusionControllerRequest()) {
 			this.rejectInclusionControllerInitiate(
 				inclCtrlr.id,
