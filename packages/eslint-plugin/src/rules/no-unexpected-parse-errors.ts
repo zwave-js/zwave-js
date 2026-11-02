@@ -85,6 +85,7 @@ function isExpectedError(node: TSESTree.Expression): boolean {
 		code?.type === AST_NODE_TYPES.MemberExpression
 		&& code.object.type === AST_NODE_TYPES.Identifier
 		&& code.object.name === "ZWaveErrorCodes"
+		&& !code.computed
 		&& code.property.type === AST_NODE_TYPES.Identifier
 		&& EXPECTED_ERROR_CODES.has(code.property.name)
 	);
@@ -231,10 +232,21 @@ export const noUnexpectedParseErrors: OxlintCompatibleRule = {
 					while (
 						cls
 						&& cls.type !== AST_NODE_TYPES.ClassDeclaration
+						&& cls.type !== AST_NODE_TYPES.ClassExpression
 					) {
 						cls = cls.parent;
 					}
-					className = cls?.id?.name;
+					// Only top-level classes are analyzed
+					if (
+						cls?.type === AST_NODE_TYPES.ClassDeclaration
+						&& (cls.parent.type === AST_NODE_TYPES.Program
+							|| cls.parent.type
+								=== AST_NODE_TYPES.ExportNamedDeclaration
+							|| cls.parent.type
+								=== AST_NODE_TYPES.ExportDefaultDeclaration)
+					) {
+						className = cls.id?.name;
+					}
 				}
 				if (!className) return;
 				const throwStmt = throwingClasses.get(className);
