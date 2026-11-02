@@ -1,6 +1,5 @@
-import { ZWaveErrorCodes } from "@zwave-js/core/error";
-
-import { MessageHeaders } from "./MessageHeaders.js";
+import { ZWaveErrorCodes } from "@zwave-js/core";
+import { MessageHeaders } from "@zwave-js/serial";
 
 /**
  * Error codes for which a received message that fails to decode is dropped,
