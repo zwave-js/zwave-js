@@ -58,22 +58,6 @@ function isParseFunction(node: TSESTree.Node): boolean {
 	return false;
 }
 
-/** Returns the enclosing parse function, if the node is part of one. Inline callbacks are considered part of their parent */
-function getEnclosingParseFunction(
-	node: TSESTree.Node,
-): TSESTree.Node | undefined {
-	let current: TSESTree.Node | undefined = node.parent;
-	while (current) {
-		if (isFunctionNode(current)) {
-			if (isParseFunction(current)) return current;
-			if (current.type !== AST_NODE_TYPES.ArrowFunctionExpression) {
-				return;
-			}
-		}
-		current = current.parent;
-	}
-}
-
 // Driver.handleDecodeError drops messages that fail to parse with one of these error codes.
 // Other errors, including other PacketFormat_* codes, are re-thrown.
 const EXPECTED_ERROR_CODES = new Set([
@@ -158,11 +142,33 @@ export const noUnexpectedParseErrors: OxlintCompatibleRule = {
 	createOnce(context) {
 		// Classes in the current file whose constructor may throw unexpected errors
 		let throwingClasses = new Map<string, TSESTree.ThrowStatement>();
+		// Whether each enclosing function is part of a parse function.
+		// Inline callbacks are considered part of their parent
+		let parseFunctionStack: boolean[] = [];
+		const isInParseFunction = (): boolean =>
+			parseFunctionStack.at(-1) ?? false;
+		const enterFunction = (
+			node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression,
+		): void => {
+			parseFunctionStack.push(isParseFunction(node));
+		};
+		const exitFunction = (): void => {
+			parseFunctionStack.pop();
+		};
 
 		return {
 			before() {
 				throwingClasses = new Map();
+				parseFunctionStack = [];
 			},
+			FunctionDeclaration: enterFunction,
+			"FunctionDeclaration:exit": exitFunction,
+			FunctionExpression: enterFunction,
+			"FunctionExpression:exit": exitFunction,
+			ArrowFunctionExpression() {
+				parseFunctionStack.push(isInParseFunction());
+			},
+			"ArrowFunctionExpression:exit": exitFunction,
 			Program(node) {
 				const visitClass = (cls: TSESTree.Node | null | undefined) => {
 					if (
@@ -189,14 +195,15 @@ export const noUnexpectedParseErrors: OxlintCompatibleRule = {
 				}
 			},
 			ThrowStatement(node) {
+				if (!isInParseFunction()) return;
 				if (!isUnexpectedThrow(node)) return;
-				if (!getEnclosingParseFunction(node)) return;
 				context.report({
 					node,
 					messageId: "unexpected-throw",
 				});
 			},
 			NewExpression(node) {
+				if (!isInParseFunction()) return;
 				let className: string | undefined;
 				if (node.callee.type === AST_NODE_TYPES.Identifier) {
 					className = node.callee.name;
@@ -214,7 +221,6 @@ export const noUnexpectedParseErrors: OxlintCompatibleRule = {
 				if (!className) return;
 				const throwStmt = throwingClasses.get(className);
 				if (!throwStmt) return;
-				if (!getEnclosingParseFunction(node)) return;
 
 				context.report({
 					node,
