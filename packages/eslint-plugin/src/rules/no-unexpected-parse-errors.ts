@@ -14,8 +14,15 @@ type FunctionNode =
 	| TSESTree.ArrowFunctionExpression;
 
 function hasRawParameter(fn: FunctionNode): boolean {
-	const param = fn.params[0];
-	if (param?.type !== AST_NODE_TYPES.Identifier) return false;
+	let param = fn.params[0];
+	if (param?.type === AST_NODE_TYPES.AssignmentPattern) param = param.left;
+	if (
+		param?.type !== AST_NODE_TYPES.Identifier
+		&& param?.type !== AST_NODE_TYPES.ObjectPattern
+		&& param?.type !== AST_NODE_TYPES.ArrayPattern
+	) {
+		return false;
+	}
 	const type = param.typeAnnotation?.typeAnnotation;
 	return (
 		type?.type === AST_NODE_TYPES.TSTypeReference
@@ -149,7 +156,9 @@ function getConstructor(
 	return node.body.body.find(
 		(m): m is TSESTree.MethodDefinition =>
 			m.type === AST_NODE_TYPES.MethodDefinition
-			&& m.kind === "constructor",
+			&& m.kind === "constructor"
+			// Overload signatures have no body
+			&& !!m.value.body,
 	);
 }
 
