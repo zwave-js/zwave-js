@@ -5,6 +5,7 @@ export type AllOrNone<T extends Record<string, any>> =
 	| T
 	| { [key in keyof T]?: undefined };
 
+// oxlint-disable-next-line typescript/no-generated-empty-object-type
 export type DeepPartial<T> = { [P in keyof T]+?: DeepPartial<T[P]> };
 
 export type JSONObject = Record<string, any>;

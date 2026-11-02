@@ -536,10 +536,10 @@ export function mpduToZWaveFrame(
 			hop: mpdu.hop,
 			repeaters: [...mpdu.repeaters],
 			repeaterRSSI: mpdu.repeaterRSSI && [...mpdu.repeaterRSSI],
-			routedAck: mpdu.routedAck as any,
-			routedError: mpdu.routedError as any,
+			routedAck: mpdu.routedAck,
+			routedError: mpdu.routedError,
 			failedHop: mpdu.failedHop,
-		};
+		} as ZWaveFrame;
 	} else if (mpdu instanceof ExplorerZWaveMPDU) {
 		const explorerBase = {
 			...retBase,

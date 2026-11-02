@@ -15,7 +15,8 @@
 	},
 	"endpoints": {
 		"1": { "label": "Switch 1" },
-		"2": { "label": "Switch 2" }
+		"2": { "label": "Switch 2" },
+		"3": { "label": "Switch 3" }
 	},
 	"paramInformation": [
 		{

@@ -473,22 +473,35 @@ function checkOptions(options: ZWaveOptions): void {
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
-	if (options.securityKeys != undefined) {
-		const keys = Object.entries(options.securityKeys);
-		for (let i = 0; i < keys.length; i++) {
-			const [secClass, key] = keys[i];
-			if (key.length !== 16) {
-				throw new ZWaveError(
-					`The security key for class ${secClass} must be a buffer with length 16!`,
-					ZWaveErrorCodes.Driver_InvalidOptions,
-				);
-			}
-			if (keys.findIndex(([, k]) => areUint8ArraysEqual(k, key)) !== i) {
-				throw new ZWaveError(
-					`The security key for class ${secClass} was used multiple times!`,
-					ZWaveErrorCodes.Driver_InvalidOptions,
-				);
-			}
+	const allKeys: { name: string; key: BytesView }[] = [
+		...Object.entries(options.securityKeys ?? {}).map(
+			([secClass, key]) => ({
+				name: `security key for class ${secClass}`,
+				key,
+			}),
+		),
+		...Object.entries(options.securityKeysLongRange ?? {}).map(
+			([secClass, key]) => ({
+				name: `Long Range security key for class ${secClass}`,
+				key,
+			}),
+		),
+	];
+	for (let i = 0; i < allKeys.length; i++) {
+		const { name, key } = allKeys[i];
+		if (key.length !== 16) {
+			throw new ZWaveError(
+				`The ${name} must be a buffer with length 16!`,
+				ZWaveErrorCodes.Driver_InvalidOptions,
+			);
+		}
+		if (
+			allKeys.findIndex(({ key: k }) => areUint8ArraysEqual(k, key)) !== i
+		) {
+			throw new ZWaveError(
+				`The ${name} was used multiple times!`,
+				ZWaveErrorCodes.Driver_InvalidOptions,
+			);
 		}
 	}
 	if (options.attempts.controller < 1 || options.attempts.controller > 3) {
@@ -702,7 +715,7 @@ interface TransportServiceSession {
 	machine: TransportServiceRXMachine;
 	/** The reassembled datagram. Segments are copied here as they are received. */
 	datagram: Bytes;
-	timeout?: NodeJS.Timeout;
+	timeout?: Timer;
 }
 
 interface Sessions {
@@ -1692,7 +1705,7 @@ export class Driver
 			try {
 				await this.openSerialport();
 			} catch (e) {
-				spOpenPromise.reject(e as Error);
+				spOpenPromise.reject(e);
 				void this.destroy();
 				return;
 			}
@@ -3629,8 +3642,16 @@ export class Driver
 
 		this.isSoftResetting = false;
 
-		// Clean up and interview the controller again
-		await this.destroyController((task) => task === callingTask);
+		// Clean up and interview the controller again. Removing a parent would also remove
+		// the calling task, so keep the tasks waiting for it.
+		await this.destroyController((task) => {
+			let t = callingTask;
+			while (t) {
+				if (t === task) return true;
+				t = t.parent;
+			}
+			return false;
+		});
 		void this.initializeControllerAndNodes();
 	}
 
@@ -4005,10 +4026,8 @@ export class Driver
 	}
 
 	private clearAllTimeouts() {
-		for (const timeout of [this._powerlevelTestNodeContext?.timeout]) {
-			if (timeout) clearTimeout(timeout);
-		}
 		for (const timeout of [
+			this._powerlevelTestNodeContext?.timeout,
 			...this.autoRefreshNodeValueTimers.values(),
 			...this.reinterviewTimers.values(),
 			this.statisticsTimeout,
@@ -4023,6 +4042,9 @@ export class Driver
 				[...batches].map((batch) => batch.timer),
 			),
 			this._pollDelayTimer,
+			...[...this.nodeSessions.values()].flatMap((sessions) =>
+				[...sessions.transportService.values()].map((s) => s.timeout),
+			),
 		]) {
 			timeout?.clear();
 		}
@@ -4039,11 +4061,19 @@ export class Driver
 					if (this.wasDestroyed) return;
 
 					if (frame.type === ZWaveSerialFrameType.SerialAPI) {
-						void this.serialport_onData(frame.data);
+						this.serialport_onData(frame.data).catch((e) =>
+							this.handleReceiveError(e),
+						);
 					} else if (frame.type === ZWaveSerialFrameType.Bootloader) {
-						void this.serialport_onBootloaderData(frame.data);
+						try {
+							this.serialport_onBootloaderData(frame.data);
+						} catch (e) {
+							this.handleReceiveError(e);
+						}
 					} else if (frame.type === ZWaveSerialFrameType.CLI) {
-						void this.serialport_onCLIData(frame.data);
+						this.serialport_onCLIData(frame.data).catch((e) =>
+							this.handleReceiveError(e),
+						);
 					} else {
 						// Handle discarded data?
 					}
@@ -4063,8 +4093,26 @@ export class Driver
 				void this.handleSerialPortClosedUnexpectedly();
 				return;
 			}
-			throw e;
+			if (this.wasDestroyed) return;
+			// Nothing can be received after the stream failed, so the driver cannot continue
+			void this.destroyWithMessage(
+				`Failed to read from the serial port: ${getErrorMessage(e)}`,
+			);
 		}
+	}
+
+	/**
+	 * Last line of defense for errors while handling received data.
+	 * These are unexpected errors, but they must not take down the host application.
+	 */
+	private handleReceiveError(e: unknown): void {
+		this.driverLog.print(
+			`Unexpected error while handling received data: ${getErrorMessage(
+				e,
+				true,
+			)}`,
+			"error",
+		);
 	}
 
 	private async handleSerialPortClosedUnexpectedly(): Promise<void> {
@@ -4336,7 +4384,9 @@ export class Driver
 			// 		message: msg,
 			// 	});
 			// } else {
-			void this.handleUnsolicitedMessage(msg);
+			this.handleUnsolicitedMessage(msg).catch((e) =>
+				this.handleReceiveError(e),
+			);
 			// }
 		}
 	}
@@ -5260,6 +5310,15 @@ export class Driver
 			| TransportServiceCCFirstSegment
 			| TransportServiceCCSubsequentSegment,
 	): Promise<CommandClass | undefined> {
+		// Don't let unknown nodes allocate sessions
+		if (!this._controller?.nodes.has(command.nodeId)) {
+			this.controllerLog.logNode(command.nodeId, {
+				message: `Ignoring Transport Service segment from unknown node`,
+				level: "warn",
+				direction: "inbound",
+			});
+			return;
+		}
 		const nodeSessions = this.ensureNodeSessions(command.nodeId);
 
 		// TODO: Figure out how to know which timeout is the correct one. For now use the larger one
@@ -5320,18 +5379,14 @@ export class Driver
 					});
 					// TODO: Update statistics
 					nodeSessions.transportService.delete(command.sessionId);
-					if (session.timeout) {
-						clearTimeout(session.timeout);
-					}
+					session.timeout?.clear();
 				} else if (machine.state.value === "success") {
 					this.controllerLog.logNode(command.nodeId, {
 						message: `Transport Service RX session #${command.sessionId} complete`,
 						level: "debug",
 						direction: "inbound",
 					});
-					if (session.timeout) {
-						clearTimeout(session.timeout);
-					}
+					session.timeout?.clear();
 
 					sendSegmentComplete();
 					return "completed";
@@ -5344,15 +5399,20 @@ export class Driver
 			}
 		};
 
+		// A new First Segment replaces the session, but a pending SegmentRequest of the
+		// replaced session may still finish later. Its timer must not touch the new session.
+		const isCurrentSession = (session: TransportServiceSession) =>
+			nodeSessions.transportService.get(command.sessionId) === session;
+
 		function startMissingSegmentTimeout(
 			session: TransportServiceSession,
 		): void {
-			if (session.timeout) {
-				clearTimeout(session.timeout);
-			}
+			session.timeout?.clear();
+			if (!isCurrentSession(session)) return;
 
-			session.timeout = setTimeout(() => {
+			session.timeout = setTimer(() => {
 				session.timeout = undefined;
+				if (!isCurrentSession(session)) return;
 				advanceTransportServiceSession(session, {
 					value: "timeout",
 				});
@@ -5367,6 +5427,9 @@ export class Driver
 			// We don't delete finished sessions when the last message is received in order to be able to
 			// handle when the SegmentComplete message gets lost. As soon as the node initializes a new session,
 			// we do know that the previous one is finished.
+			for (const oldSession of nodeSessions.transportService.values()) {
+				oldSession.timeout?.clear();
+			}
 			nodeSessions.transportService.clear();
 
 			this.controllerLog.logNode(command.nodeId, {
@@ -5427,12 +5490,14 @@ export class Driver
 
 		// The datagram is complete, reassemble the command it contains
 		try {
-			return await CommandClass.parse(session.datagram, {
+			const reassembled = await CommandClass.parse(session.datagram, {
 				...this.getCCParsingContext(),
 				sourceNodeId: command.nodeId,
 				// Transport Service is only used for singlecast commands
 				frameType: command.frameType ?? "singlecast",
 			});
+			assertValidCCs({ command: reassembled });
+			return reassembled;
 		} catch (e) {
 			this.driverLog.print(
 				`Dropping Transport Service datagram because the contained command could not be deserialized: ${getErrorMessage(
@@ -7082,7 +7147,7 @@ ${handlers.length} left`,
 					}
 
 					// In all other cases, reject the transaction
-					result.reject(e as Error);
+					result.reject(e);
 				} finally {
 					this._currentSerialAPICommandPromise = undefined;
 				}
@@ -9160,13 +9225,6 @@ ${handlers.length} left`,
 	public async firmwareUpdateOTW(
 		data: BytesView | FirmwareUpdateInfo,
 	): Promise<OTWFirmwareUpdateResult> {
-		// If the data is provided as a FirmwareUpdateInfo, we need to download the firmware first.
-		// This must happen before the busy checks, so no concurrent update can slip in between them
-		// and queueing the task.
-		if (isFirmwareUpdateInfo(data)) {
-			data = await this.extractOTWUpdateInfo(data);
-		}
-
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
 			const message = `Failed to start the update: A firmware update is already in progress on this network!`;
@@ -9185,6 +9243,48 @@ ${handlers.length} left`,
 	}
 
 	private getFirmwareUpdateOTWTask(
+		data: BytesView | FirmwareUpdateInfo,
+	): TaskBuilder<OTWFirmwareUpdateResult> {
+		const self = this;
+
+		return {
+			priority: TaskPriority.Normal,
+			// Covers both the download and the installation, so no other update can start in between
+			tag: { id: "firmware-update-otw" },
+			task: async function* firmwareUpdateOTWTask() {
+				if (isFirmwareUpdateInfo(data)) {
+					data = (yield self.getDownloadFirmwareOTWTask(
+						data,
+					)) as BytesView;
+				}
+				return (yield self.getInstallFirmwareOTWTask(
+					data,
+				)) as OTWFirmwareUpdateResult;
+			},
+		};
+	}
+
+	private getDownloadFirmwareOTWTask(
+		updateInfo: FirmwareUpdateInfo,
+	): TaskBuilder<BytesView> {
+		const self = this;
+		const download = new AbortController();
+
+		return {
+			priority: TaskPriority.Normal,
+			tag: { id: "firmware-update-otw" },
+			task: async function* downloadFirmwareOTWTask() {
+				return yield* waitFor(
+					self.extractOTWUpdateInfo(updateInfo, download.signal),
+				);
+			},
+			async cleanup() {
+				download.abort();
+			},
+		};
+	}
+
+	private getInstallFirmwareOTWTask(
 		data: BytesView,
 	): TaskBuilder<OTWFirmwareUpdateResult> {
 		const self = this;
@@ -9195,7 +9295,7 @@ ${handlers.length} left`,
 			group: { id: "controller-exclusive" },
 			// An interrupted update may leave the controller in recovery mode
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* firmwareUpdateOTWTask(thisTask) {
+			task: async function* installFirmwareOTWTask(thisTask) {
 				// When in bootloader mode, we can use the 700 series update method
 				if (self.mode === DriverMode.Bootloader) {
 					return yield* self.firmwareUpdateOTW700(data);
@@ -9243,6 +9343,7 @@ ${handlers.length} left`,
 	 */
 	private async extractOTWUpdateInfo(
 		updateInfo: FirmwareUpdateInfo,
+		signal: AbortSignal,
 	): Promise<BytesView> {
 		// Controller updates must have exactly one file
 		if (updateInfo.files?.length !== 1) {
@@ -9297,7 +9398,7 @@ ${handlers.length} left`,
 
 		let firmware: Firmware;
 		try {
-			firmware = await downloadFirmwareUpdate(update);
+			firmware = await downloadFirmwareUpdate(update, signal);
 		} catch (e: any) {
 			let message = `Downloading the OTW firmware update failed:\n`;
 			if (isZWaveError(e)) {
@@ -9969,18 +10070,14 @@ ${handlers.length} left`,
 						(c) => c.type === CLIChunkType.Message,
 						timeout ?? 1000,
 					)
-						.then(
-							(c) =>
-								(c as CLIChunk & { type: CLIChunkType.Message })
-									.message,
-						)
+						.then((c) => c.message)
 						.catch(() => undefined),
 			);
 
 			if (!(await this.ensureCLIReady())) {
-				throw new ZWaveError(
+				if (this.wasDestroyed) return;
+				await this.destroyWithMessage(
 					"Failed to detect available CLI commands",
-					ZWaveErrorCodes.Driver_Failed,
 				);
 			}
 		}
@@ -10079,7 +10176,7 @@ ${handlers.length} left`,
 	private _powerlevelTestNodeContext:
 		| {
 				testNodeId: number;
-				timeout: NodeJS.Timeout | undefined;
+				timeout: Timer | undefined;
 				acknowledgedFrames: number;
 		  }
 		| undefined;
@@ -10095,7 +10192,7 @@ ${handlers.length} left`,
 	): Promise<number> {
 		if (this._powerlevelTestNodeContext) {
 			// Cancel the previous test
-			clearTimeout(this._powerlevelTestNodeContext.timeout);
+			this._powerlevelTestNodeContext.timeout?.clear();
 			this._powerlevelTestNodeContext = undefined;
 		}
 
@@ -10107,7 +10204,7 @@ ${handlers.length} left`,
 			testNodeId,
 			acknowledgedFrames: 0,
 			// This is set below after defining sendFrame
-			timeout: undefined as NodeJS.Timeout | undefined,
+			timeout: undefined as Timer | undefined,
 		};
 		this._powerlevelTestNodeContext = context;
 
@@ -10115,21 +10212,29 @@ ${handlers.length} left`,
 		const interval = 50;
 
 		const sendFrame = async () => {
-			const result = await this.sendTestFrame(testNodeId, powerlevel);
+			let result: TransmitStatus | undefined;
+			try {
+				result = await this.sendTestFrame(testNodeId, powerlevel);
+			} catch (e) {
+				// Mark the test as finished, so it doesn't block future tests
+				context.timeout = undefined;
+				ret.reject(e);
+				return;
+			}
 			if (result === TransmitStatus.OK) {
 				context.acknowledgedFrames++;
 			}
 			frameCount--;
 
 			if (frameCount > 0) {
-				context.timeout = setTimeout(sendFrame, interval);
+				context.timeout = setTimer(sendFrame, interval);
 			} else {
 				context.timeout = undefined;
 				ret.resolve(context.acknowledgedFrames);
 			}
 		};
 
-		context.timeout = setTimeout(sendFrame, interval);
+		context.timeout = setTimer(sendFrame, interval);
 
 		return ret;
 	}

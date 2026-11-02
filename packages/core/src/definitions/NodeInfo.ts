@@ -94,13 +94,27 @@ export function parseCCId(
 	payload: BytesView,
 	offset: number = 0,
 ): { ccId: CommandClasses; bytesRead: number } {
-	validatePayload(offset >= 0);
+	const ret = tryParseCCId(payload, offset);
+	if (!ret) validatePayload.fail("Truncated CC id");
+	return ret;
+}
+
+/**
+ * Reads a CC id from the given buffer, returning the parsed CC id and the number of bytes read,
+ * or `undefined` if the buffer is too short to contain a CC id at the given offset
+ * @param offset The offset at which the CC id is located
+ */
+export function tryParseCCId(
+	payload: BytesView,
+	offset: number = 0,
+): { ccId: CommandClasses; bytesRead: number } | undefined {
+	if (offset < 0) return;
 	const view = Bytes.view(payload);
 	if (isExtendedCCId(payload[offset])) {
-		validatePayload(payload.length >= offset + 2);
+		if (payload.length < offset + 2) return;
 		return { ccId: view.readUInt16BE(offset), bytesRead: 2 };
 	} else {
-		validatePayload(payload.length >= offset + 1);
+		if (payload.length < offset + 1) return;
 		return { ccId: view.readUInt8(offset), bytesRead: 1 };
 	}
 }

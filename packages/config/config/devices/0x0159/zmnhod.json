@@ -15,7 +15,11 @@
 	},
 	"endpoints": {
 		"1": { "label": "Shutter" },
-		"2": { "label": "Temperature Sensor" }
+		"2": { "label": "Slat Tilt" },
+		"3": { "label": "Temperature Sensor" }
+	},
+	"endpointGroups": {
+		"1": { "label": "Shutter", "endpoints": [1, 2], "isMainDevice": true }
 	},
 	"paramInformation": [
 		{

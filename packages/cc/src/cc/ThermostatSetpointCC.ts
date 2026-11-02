@@ -977,12 +977,13 @@ export class ThermostatSetpointCCSupportedReport extends ThermostatSetpointCC {
 		const supported = parseBitMask(bitMask, ThermostatSetpointType["N/A"]);
 		// We use this command only when we are sure that bitmask interpretation A is used
 		// FIXME: Figure out if we can do this without the CC version
-		const supportedSetpointTypes: ThermostatSetpointType[] = supported.map(
-			(i) => thermostatSetpointTypeMap[i],
-		);
+		const supportedSetpointTypes: ThermostatSetpointType[] = supported
+			.map((i) => thermostatSetpointTypeMap[i])
+			// Reserved bits have no mapping and must be ignored
+			.filter((t) => t != undefined);
 		validatePayload(supportedSetpointTypes.length > 0);
 
-		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- supported setpoint types are validated above
+		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- at least one setpoint type is validated above
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			supportedSetpointTypes,

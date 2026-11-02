@@ -100,43 +100,39 @@ export function* tokenize(input: string): Generator<Token> {
 				break;
 			}
 			case "|": {
-				if (input[i + 1] === "|") {
-					yield { kind: TokenKind.BarBar, start: i };
-					i++;
-				}
+				if (input[i + 1] !== "|") throwUnexpectedCharacter(input, i);
+				yield { kind: TokenKind.BarBar, start: i };
+				i++;
 				break;
 			}
 			case "&": {
-				if (input[i + 1] === "&") {
-					yield { kind: TokenKind.AmpAmp, start: i };
-					i++;
-				}
+				if (input[i + 1] !== "&") throwUnexpectedCharacter(input, i);
+				yield { kind: TokenKind.AmpAmp, start: i };
+				i++;
 				break;
 			}
 			case "=": {
-				if (input[i + 1] === "=") {
-					if (input[i + 2] === "=") {
-						yield { kind: TokenKind.EqualsEqualsEquals, start: i };
-						i += 2;
-					} else {
-						yield { kind: TokenKind.EqualsEquals, start: i };
-						i++;
-					}
+				if (input[i + 1] !== "=") throwUnexpectedCharacter(input, i);
+				if (input[i + 2] === "=") {
+					yield { kind: TokenKind.EqualsEqualsEquals, start: i };
+					i += 2;
+				} else {
+					yield { kind: TokenKind.EqualsEquals, start: i };
+					i++;
 				}
 				break;
 			}
 			case "!": {
-				if (input[i + 1] === "=") {
-					if (input[i + 2] === "=") {
-						yield {
-							kind: TokenKind.ExclamationEqualsEquals,
-							start: i,
-						};
-						i += 2;
-					} else {
-						yield { kind: TokenKind.ExclamationEquals, start: i };
-						i++;
-					}
+				if (input[i + 1] !== "=") throwUnexpectedCharacter(input, i);
+				if (input[i + 2] === "=") {
+					yield {
+						kind: TokenKind.ExclamationEqualsEquals,
+						start: i,
+					};
+					i += 2;
+				} else {
+					yield { kind: TokenKind.ExclamationEquals, start: i };
+					i++;
 				}
 				break;
 			}
@@ -173,6 +169,7 @@ export function* tokenize(input: string): Generator<Token> {
 						hex += input[i];
 						i++;
 					}
+					if (hex.length === 2) throwUnexpectedCharacter(input, i);
 					yield {
 						kind: TokenKind.NumberLiteral,
 						value: hex,
@@ -212,12 +209,18 @@ export function* tokenize(input: string): Generator<Token> {
 					continue;
 				}
 
-				throw new Error(
-					`Unexpected character '${input[i]}' at index ${i}`,
-				);
+				throwUnexpectedCharacter(input, i);
 			}
 		}
 	}
+}
+
+function throwUnexpectedCharacter(input: string, index: number): never {
+	throw new Error(
+		index < input.length
+			? `Unexpected character '${input[index]}' at index ${index}`
+			: "Unexpected end of input",
+	);
 }
 
 interface ParserState {
@@ -245,98 +248,67 @@ export function parse(input: string): Expression | undefined {
 	return ret;
 }
 
+// The grammar is parsed with a single token of lookahead, so parsing time is linear in the input length:
+// expression := and ("||" and)*
+// and        := primary ("&&" primary)*
+// primary    := comparison | "(" expression ")"
+
 function parseExpression(s: ParserState): Expression | undefined {
-	return parseOr(s) || parseAnd(s) || parseComparison(s) || parseGroup(s);
+	return parseOr(s);
 }
 
-function parseAnd(s: ParserState): And | undefined {
-	// <comparison|group> && <comparison|group> && ...
-	let startPos = s.pos;
-	const first = parseComparison(s) || parseGroup(s);
-	if (!first) {
-		s.pos = startPos;
-		return;
-	}
-	// Expect a "&&" operator
-	if (s.tokens[s.pos]?.kind !== TokenKind.AmpAmp) {
-		s.pos = startPos;
-		return;
-	}
-	s.pos++; // consume "&&"
-	const second = parseComparison(s) || parseGroup(s);
-	if (!second) {
-		s.pos = startPos;
-		return;
-	}
+function parseOr(s: ParserState): Expression | undefined {
+	// <and|comparison|group> || <and|comparison|group> || ...
+	const first = parseAnd(s);
+	if (!first) return;
 
-	// Parsing succeeded so far, update the parser start position,
-	// so we don't rewind too much on failure
-	startPos = s.pos;
-
-	// Now optionally parse further sequences of "&&" <comparison|group>
-	const operands: Expression[] = [first, second];
-	while (s.tokens[s.pos]?.kind === TokenKind.AmpAmp) {
-		s.pos++; // consume "&&"
-		const next = parseComparison(s) || parseGroup(s);
+	// Now optionally parse further sequences of "||" <and|comparison|group>
+	const operands: Expression[] = [first];
+	while (s.tokens[s.pos]?.kind === TokenKind.BarBar) {
+		const startPos = s.pos;
+		s.pos++; // consume "||"
+		const next = parseAnd(s);
 		if (!next) {
 			s.pos = startPos;
 			break;
 		}
 		operands.push(next);
-		// update the parser start position,
-		// so we don't rewind too much on failure
-		startPos = s.pos;
 	}
 
+	if (operands.length === 1) return first;
+	return {
+		kind: SyntaxKind.Or,
+		operands,
+	};
+}
+
+function parseAnd(s: ParserState): Expression | undefined {
+	// <comparison|group> && <comparison|group> && ...
+	const first = parsePrimary(s);
+	if (!first) return;
+
+	// Now optionally parse further sequences of "&&" <comparison|group>
+	const operands: Expression[] = [first];
+	while (s.tokens[s.pos]?.kind === TokenKind.AmpAmp) {
+		const startPos = s.pos;
+		s.pos++; // consume "&&"
+		const next = parsePrimary(s);
+		if (!next) {
+			s.pos = startPos;
+			break;
+		}
+		operands.push(next);
+	}
+
+	if (operands.length === 1) return first;
 	return {
 		kind: SyntaxKind.And,
 		operands,
 	};
 }
 
-function parseOr(s: ParserState): Or | undefined {
-	// <and|comparison|group> || <and|comparison|group> || ...
-	let startPos = s.pos;
-	const first = parseAnd(s) || parseComparison(s) || parseGroup(s);
-	if (!first) {
-		s.pos = startPos;
-		return;
-	}
-	// Expect a "||" operator
-	if (s.tokens[s.pos]?.kind !== TokenKind.BarBar) {
-		s.pos = startPos;
-		return;
-	}
-	s.pos++; // consume "||"
-	const second = parseAnd(s) || parseComparison(s) || parseGroup(s);
-	if (!second) {
-		s.pos = startPos;
-		return;
-	}
-
-	// Parsing succeeded so far, update the parser start position,
-	// so we don't rewind too much on failure
-	startPos = s.pos;
-
-	// Now optionally parse further sequences of "||" <and|comparison|group>
-	const operands: Expression[] = [first, second];
-	while (s.tokens[s.pos]?.kind === TokenKind.BarBar) {
-		s.pos++; // consume "||"
-		const next = parseAnd(s) || parseComparison(s) || parseGroup(s);
-		if (!next) {
-			s.pos = startPos;
-			break;
-		}
-		operands.push(next);
-		// update the parser start position,
-		// so we don't rewind too much on failure
-		startPos = s.pos;
-	}
-
-	return {
-		kind: SyntaxKind.Or,
-		operands,
-	};
+function parsePrimary(s: ParserState): Expression | undefined {
+	return parseComparison(s) || parseGroup(s);
 }
 
 function parseGroup(s: ParserState): Expression | undefined {

@@ -156,6 +156,42 @@ test("encodeFloatWithScale() -> should correctly determine the minimum necessary
 	}
 });
 
+test("encodeFloatWithScale() -> should terminate for values too small to be represented", (t) => {
+	for (const value of [1e-310, -5e-324, Number.MIN_VALUE]) {
+		t.expect(encodeFloatWithScale(value, 0)).toStrictEqual(
+			Bytes.from([0b000_00_001, 0x00]),
+		);
+	}
+});
+
+test("encodeFloatWithScale() -> should ignore floating point errors when determining the precision", (t) => {
+	const tests = [
+		// precision 1, size 2: 223
+		{ value: 22.30000000004, expected: [0b001_00_010, 0x00, 0xdf] },
+		// The largest double below 21
+		{ value: 20.999999999999996, expected: [0b000_00_001, 0x15] },
+		// 0.30000000000000004
+		{ value: 0.1 + 0.2, expected: [0b001_00_001, 0x03] },
+		// -0.30000000000000004
+		{ value: -0.1 - 0.2, expected: [0b001_00_001, 0xfd] },
+		// 3.3000000000000003
+		{ value: 1.1 * 3, expected: [0b001_00_001, 0x21] },
+		// 0.7999999999999999
+		{ value: 0.7 + 0.1, expected: [0b001_00_001, 0x08] },
+		// 56.99999999999999
+		{ value: 0.57 * 100, expected: [0b000_00_001, 0x39] },
+		// 434.99999999999994, which would not fit into 4 bytes with precision 7
+		{ value: 4.35 * 100, expected: [0b000_00_010, 0x01, 0xb3] },
+		// 300.30000000000001
+		{ value: 300.1 + 0.2, expected: [0b001_00_010, 0x0b, 0xbb] },
+	];
+	for (const { value, expected } of tests) {
+		t.expect(encodeFloatWithScale(value, 0)).toStrictEqual(
+			Bytes.from(expected),
+		);
+	}
+});
+
 test("encodeFloatWithScale() -> should correctly detect the necessary precision and serialize the given values", (t) => {
 	const tests = [
 		{

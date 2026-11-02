@@ -1,4 +1,5 @@
 import { CommandClasses, ZWaveError, ZWaveErrorCodes } from "@zwave-js/core";
+import { isEnumMember } from "@zwave-js/shared";
 
 export const hexKeyRegexNDigits = /^0x[a-f0-9]+$/;
 export const hexKeyRegex4Digits = /^0x[a-f0-9]{4}$/;
@@ -28,7 +29,9 @@ export function throwInvalidConfig(which: string, reason?: string): never {
 	);
 }
 
-export function tryParseCCId(from: string): CommandClasses | undefined {
+export function tryParseCCIdFromString(
+	from: string,
+): CommandClasses | undefined {
 	let ccId: number | undefined;
 	if (/^\d+$/.test(from)) {
 		// Decimal CC ID
@@ -36,12 +39,14 @@ export function tryParseCCId(from: string): CommandClasses | undefined {
 	} else if (hexKeyRegexNDigits.test(from)) {
 		// Hexadecimal CC ID
 		ccId = parseInt(from.slice(2), 16);
-	} else if (from in CommandClasses) {
+	} else if (Object.hasOwn(CommandClasses, from)) {
 		// CC name
-		return (CommandClasses as any)[from];
+		const value = (CommandClasses as any)[from];
+		if (typeof value === "number") return value;
+		return;
 	}
 
-	if (ccId != undefined && ccId in CommandClasses) {
+	if (ccId != undefined && isEnumMember(CommandClasses, ccId)) {
 		// This is a valid CC ID
 		return ccId;
 	}

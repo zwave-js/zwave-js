@@ -17,6 +17,8 @@ import { libVersion } from "../../driver/Driver.js";
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleVersionGet(
 	ctx: PersistValuesContext & LogNode,
 	controller: ZWaveController,
@@ -37,17 +39,21 @@ export async function handleVersionGet(
 
 	const firmwareVersion1 = semverParse(libVersion, { loose: true })!;
 
-	await api.sendReport({
-		libraryType: ZWaveLibraryTypes["Static Controller"],
-		protocolVersion: controller.protocolVersion!,
-		firmwareVersions: [
-			// Firmware 0 is the Z-Wave chip firmware
-			controller.firmwareVersion!,
-			// Firmware 1 is Z-Wave JS itself
-			`${firmwareVersion1.major}.${firmwareVersion1.minor}.${firmwareVersion1.patch}`,
-		],
-		hardwareVersion: vendorInfo?.hardwareVersion,
-	});
+	try {
+		await api.sendReport({
+			libraryType: ZWaveLibraryTypes["Static Controller"],
+			protocolVersion: controller.protocolVersion!,
+			firmwareVersions: [
+				// Firmware 0 is the Z-Wave chip firmware
+				controller.firmwareVersion!,
+				// Firmware 1 is Z-Wave JS itself
+				`${firmwareVersion1.major}.${firmwareVersion1.minor}.${firmwareVersion1.patch}`,
+			],
+			hardwareVersion: vendorInfo?.hardwareVersion,
+		});
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export async function handleVersionCommandClassGet(
@@ -67,7 +73,11 @@ export async function handleVersionCommandClassGet(
 			command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 	});
 
-	await api.reportCCVersion(command.requestedCC, reportVersion);
+	try {
+		await api.reportCCVersion(command.requestedCC, reportVersion);
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export async function handleVersionCapabilitiesGet(
@@ -86,5 +96,9 @@ export async function handleVersionCapabilitiesGet(
 			command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 	});
 
-	await api.reportCapabilities();
+	try {
+		await api.reportCapabilities();
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }

@@ -13,64 +13,75 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Controller Updates",
-			"description": "Lifeline group",
-			"maxNodes": 1,
-			"isLifeline": true
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Controller Updates",
+					"description": "Lifeline group",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "I1 basic on/off",
+					"description": "Triggered at change of the input I1 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"3": {
+					"label": "I1 start/stop level change",
+					"description": "Triggered at change of the input I1 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"4": {
+					"label": "Multilevel",
+					"description": "Triggered at changes of state/value of the Flush Dimmer",
+					"maxNodes": 16
+				},
+				"5": {
+					"label": "I2 basic on/off",
+					"description": "Triggered at change of the input I2 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"6": {
+					"label": "I2 notification report",
+					"description": "Triggered at change of the input I2 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"7": {
+					"label": "I2 binary sensor",
+					"description": "Triggered at change of the input I2 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"8": {
+					"label": "I3 basic on/off",
+					"description": "Triggered at change of the input I3 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"9": {
+					"label": "I3 notification report",
+					"description": "Triggered at change of the input I3 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"10": {
+					"label": "I3 binary sensor",
+					"description": "Triggered at change of the input I3 state and reflecting its state",
+					"maxNodes": 16
+				},
+				"11": {
+					"label": "Multilevel sensor",
+					"description": "Triggered at change of temperature sensor",
+					"maxNodes": 16,
+					"isLifeline": true
+				}
+			}
 		},
-		"2": {
-			"label": "I1 basic on/off",
-			"description": "Triggered at change of the input I1 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"3": {
-			"label": "I1 start/stop level change",
-			"description": "Triggered at change of the input I1 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"4": {
-			"label": "Multilevel",
-			"description": "Triggered at changes of state/value of the Flush Dimmer",
-			"maxNodes": 16
-		},
-		"5": {
-			"label": "I2 basic on/off",
-			"description": "Triggered at change of the input I2 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"6": {
-			"label": "I2 notification report",
-			"description": "Triggered at change of the input I2 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"7": {
-			"label": "I2 binary sensor",
-			"description": "Triggered at change of the input I2 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"8": {
-			"label": "I3 basic on/off",
-			"description": "Triggered at change of the input I3 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"9": {
-			"label": "I3 notification report",
-			"description": "Triggered at change of the input I3 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"10": {
-			"label": "I3 binary sensor",
-			"description": "Triggered at change of the input I3 state and reflecting its state",
-			"maxNodes": 16
-		},
-		"11": {
-			"label": "Multilevel sensor",
-			"description": "Triggered at change of temperature sensor",
-			"maxNodes": 16,
-			"isLifeline": true
-		}
+		"1": { "label": "Dimmer" },
+		"2": { "label": "I2" },
+		"3": { "label": "I3" },
+		"4": { "label": "Temperature Sensor" }
+	},
+	"endpointGroups": {
+		"1": { "label": "Dimmer", "endpoints": [1], "isMainDevice": true }
 	},
 	"paramInformation": [
 		{
@@ -426,5 +437,9 @@
 				}
 			]
 		}
-	]
+	],
+	"compat": {
+		// The root endpoint does not mirror the inputs or the load-only meter of the endpoints
+		"preserveEndpoints": "*"
+	}
 }
