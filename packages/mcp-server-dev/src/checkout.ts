@@ -1,4 +1,4 @@
-import { readFile, realpath, stat } from "node:fs/promises";
+import { realpath, stat } from "node:fs/promises";
 import {
 	basename,
 	dirname,
@@ -11,7 +11,7 @@ import {
 import { fileURLToPath } from "node:url";
 
 import { fs as nodeFS } from "@zwave-js/core/bindings/fs/node";
-import type { BytesView } from "@zwave-js/shared";
+import { type BytesView, readJSON } from "@zwave-js/shared";
 import type { FileSystem } from "@zwave-js/shared/bindings";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -55,22 +55,20 @@ function isInside(dir: string, file: string): boolean {
 }
 
 /**
- * Resolves a file path (relative paths against the checkout root) and returns its
- * canonical absolute path, or `undefined` if it points outside the checkout's
- * device config directory.
+ * Returns the canonical path of `file`, or `undefined` if it points outside `devicesDir`
  */
 export async function resolveDeviceConfigPath(
-	checkout: Pick<Checkout, "root" | "devicesDir">,
+	devicesDir: string,
 	file: string,
 ): Promise<string | undefined> {
 	let ret: string;
 	try {
 		// Compare canonical paths, so symlinks cannot escape the device config directory
-		ret = await realpathAllowMissing(resolve(checkout.root, file));
+		ret = await realpathAllowMissing(file);
 	} catch {
 		return undefined;
 	}
-	return isInside(checkout.devicesDir, ret) ? ret : undefined;
+	return isInside(devicesDir, ret) ? ret : undefined;
 }
 
 /**
@@ -78,16 +76,14 @@ export async function resolveDeviceConfigPath(
  * read must be checked here to keep symlinks from pulling in content from outside
  * the device config directory.
  */
-function createGuardedFS(
-	checkout: Pick<Checkout, "root" | "devicesDir">,
-): FileSystem {
+function createGuardedFS(devicesDir: string): FileSystem {
 	return {
 		...nodeFS,
 		async readFile(file: string): Promise<BytesView> {
-			const resolved = await resolveDeviceConfigPath(checkout, file);
+			const resolved = await resolveDeviceConfigPath(devicesDir, file);
 			if (!resolved) {
 				throw new Error(
-					`Refusing to read ${file}, which is located outside ${checkout.devicesDir}`,
+					`Refusing to read ${file}, which is located outside ${devicesDir}`,
 				);
 			}
 			return nodeFS.readFile(resolved);
@@ -95,27 +91,23 @@ function createGuardedFS(
 	};
 }
 
+/** Returns the zwave-js checkout rooted at the canonical path `root`, if it is one */
 async function loadCheckout(root: string): Promise<Checkout | undefined> {
 	try {
-		const pkg = JSON.parse(
-			await readFile(join(root, "packages/config/package.json"), "utf8"),
+		const pkg = await readJSON(
+			nodeFS,
+			join(root, "packages/config/package.json"),
 		);
 		if (pkg?.name !== "@zwave-js/config") return undefined;
 		const devicesDir = await realpath(join(root, DEVICES_SUBDIR));
 		if (!(await stat(devicesDir)).isDirectory()) return undefined;
-		return { root, devicesDir, fs: createGuardedFS({ root, devicesDir }) };
+		return { root, devicesDir, fs: createGuardedFS(devicesDir) };
 	} catch {
 		return undefined;
 	}
 }
 
-// Only successful lookups are cached, so a worktree created later is still found
-const checkouts = new Map<string, Promise<Checkout | undefined>>();
-
-/**
- * Returns the zwave-js checkout rooted at `root`, or `undefined` if `root` is not one.
- * Every canonical root maps to a single `Checkout` instance.
- */
+/** Returns the zwave-js checkout rooted at `root`, or `undefined` if `root` is not one */
 export async function getCheckout(root: string): Promise<Checkout | undefined> {
 	let canonical: string;
 	try {
@@ -123,48 +115,23 @@ export async function getCheckout(root: string): Promise<Checkout | undefined> {
 	} catch {
 		return undefined;
 	}
-	let ret = checkouts.get(canonical);
-	if (!ret) {
-		ret = loadCheckout(canonical);
-		checkouts.set(canonical, ret);
-	}
-	const checkout = await ret;
-	if (!checkout && checkouts.get(canonical) === ret) {
-		checkouts.delete(canonical);
-	}
-	return checkout;
+	return loadCheckout(canonical);
 }
 
-/** Returns the checkout `dir` is located in, if any, by walking up from `dir` */
+/** Returns the checkout `path` is located in, if any, by walking up from `path` */
 export async function findCheckoutContaining(
-	dir: string,
+	path: string,
 ): Promise<Checkout | undefined> {
-	let start: string;
+	let cur: string;
 	try {
 		// Walk up the canonical path so a symlinked root finds its target's checkout
-		start = await realpathAllowMissing(resolve(dir));
+		cur = await realpathAllowMissing(resolve(path));
 	} catch {
 		return undefined;
 	}
-	for (let cur = start; ; cur = dirname(cur)) {
-		const checkout = await getCheckout(cur);
+	for (; ; cur = dirname(cur)) {
+		const checkout = await loadCheckout(cur);
 		if (checkout) return checkout;
-		if (dirname(cur) === cur) return undefined;
-	}
-}
-
-/**
- * Returns the checkout whose device config directory contains the canonical path
- * `file`, by walking up to the nearest `packages/config/config/devices` directory.
- */
-export async function findCheckoutForDeviceFile(
-	file: string,
-): Promise<Checkout | undefined> {
-	for (let cur = file; ; cur = dirname(cur)) {
-		if (cur.endsWith(sep + DEVICES_SUBDIR)) {
-			const checkout = await getCheckout(resolve(cur, "../../../.."));
-			if (checkout?.devicesDir === cur) return checkout;
-		}
 		if (dirname(cur) === cur) return undefined;
 	}
 }
@@ -174,10 +141,8 @@ export interface CheckoutHints {
 	root?: string;
 	/** Path arguments of the tool call, keyed by argument name */
 	paths: Record<string, string>;
-	/** Returns the checkout of the client's workspace, if any */
-	getWorkspaceCheckout: () => Promise<Checkout | undefined>;
-	/** Root to use when nothing else determines the checkout */
-	fallbackRoot: string;
+	/** Returns the checkout to use when there is no `root` argument */
+	getDefaultCheckout: () => Promise<Checkout | undefined>;
 }
 
 export type ResolvedCheckout =
@@ -189,9 +154,9 @@ export type ResolvedCheckout =
 	| { error: string };
 
 /**
- * Determines the checkout a tool call works in. In order of precedence, this is
- * the explicit `root`, the checkout containing the path arguments, the client's
- * workspace, and finally the fallback root.
+ * Determines the checkout a tool call works in. This is the checkout containing the
+ * path arguments, or else the explicit `root`, or else the default checkout. Relative
+ * path arguments are resolved against `root` or the default checkout.
  */
 export async function resolveToolCheckout(
 	hints: CheckoutHints,
@@ -206,54 +171,33 @@ export async function resolveToolCheckout(
 		}
 	}
 
-	let defaultCheckout: Checkout | undefined;
-	const getDefaultCheckout = async (): Promise<Checkout | undefined> => {
-		defaultCheckout ??=
-			explicit
-			?? (await hints.getWorkspaceCheckout())
-			?? (await getCheckout(hints.fallbackRoot));
-		return defaultCheckout;
-	};
-
-	let checkout = explicit;
+	let checkout: Checkout | undefined;
 	const paths: Record<string, string> = {};
 	for (const [key, value] of Object.entries(hints.paths)) {
 		const notInside = {
-			error:
-				`Error: ${key} must be located inside the ${DEVICES_SUBDIR} `
-				+ `directory of a zwave-js checkout${
-					explicit ? ` (root: ${explicit.root})` : ""
-				}`,
+			error: `Error: ${key} must be located inside the ${DEVICES_SUBDIR} directory of a zwave-js checkout`,
 		};
 
 		let file = value;
 		if (!isAbsolute(file)) {
-			const base = await getDefaultCheckout();
+			const base = explicit ?? (await hints.getDefaultCheckout());
 			if (!base) return notInside;
 			file = resolve(base.root, file);
 		}
-		try {
-			file = await realpathAllowMissing(file);
-		} catch {
-			return notInside;
-		}
-
-		const owner = explicit
-			? isInside(explicit.devicesDir, file)
-				? explicit
-				: undefined
-			: await findCheckoutForDeviceFile(file);
+		const owner = await findCheckoutContaining(file);
 		if (!owner) return notInside;
-		if (checkout && owner !== checkout) {
+		const canonical = await resolveDeviceConfigPath(owner.devicesDir, file);
+		if (!canonical) return notInside;
+		if (checkout && owner.root !== checkout.root) {
 			return {
 				error: `Error: all file arguments must be located in the same checkout (${checkout.root})`,
 			};
 		}
 		checkout = owner;
-		paths[key] = file;
+		paths[key] = canonical;
 	}
 
-	checkout ??= await getDefaultCheckout();
+	checkout ??= explicit ?? (await hints.getDefaultCheckout());
 	if (!checkout) {
 		return {
 			error: `Error: could not find a zwave-js checkout. Pass the root argument.`,

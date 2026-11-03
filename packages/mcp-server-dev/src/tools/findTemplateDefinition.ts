@@ -78,7 +78,10 @@ async function handleFindTemplateDefinition(
 			);
 		}
 		// The specifier may point anywhere, so the import target must be checked too
-		const targetFile = await resolveDeviceConfigPath(checkout, importPath);
+		const targetFile = await resolveDeviceConfigPath(
+			checkout.devicesDir,
+			importPath,
+		);
 		if (!targetFile) {
 			return errorResult(
 				`Error: the import target must be located inside ${checkout.devicesDir}`,

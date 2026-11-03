@@ -13,8 +13,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
 	type Checkout,
+	type CheckoutHints,
 	findCheckoutContaining,
-	findCheckoutForDeviceFile,
 	getCheckout,
 	resolveDeviceConfigPath,
 	resolveToolCheckout,
@@ -65,21 +65,14 @@ afterAll(async () => {
 });
 
 describe("getCheckout", () => {
-	it("returns one cached instance per canonical root", async () => {
+	it("canonicalizes the root", async () => {
 		expect(main.root).toBe(mainRoot);
 		expect(main.devicesDir).toBe(join(mainRoot, DEVICES_SUBDIR));
-		expect(await getCheckout(mainRoot)).toBe(main);
-		expect(await getCheckout(`${mainRoot}/`)).toBe(main);
+		expect((await getCheckout(`${mainRoot}/`))?.root).toBe(mainRoot);
 
 		const link = join(tmp, "master-link");
 		await symlink(mainRoot, link);
-		expect(await getCheckout(link)).toBe(main);
-	});
-
-	it("keeps separate instances for different checkouts", () => {
-		expect(worktree).not.toBe(main);
-		expect(worktree.devicesDir).toBe(join(worktreeRoot, DEVICES_SUBDIR));
-		expect(worktree.fs).not.toBe(main.fs);
+		expect((await getCheckout(link))?.root).toBe(mainRoot);
 	});
 
 	it("rejects directories that are not a zwave-js checkout", async () => {
@@ -90,46 +83,28 @@ describe("getCheckout", () => {
 		await createCheckout(other, "some-other-package");
 		expect(await getCheckout(other)).toBeUndefined();
 	});
-
-	it("finds a checkout created after a failed lookup", async () => {
-		const late = join(tmp, "late");
-		expect(await getCheckout(late)).toBeUndefined();
-		await createCheckout(late);
-		expect((await getCheckout(late))?.root).toBe(late);
-	});
-});
-
-describe("findCheckoutForDeviceFile", () => {
-	it("returns the checkout with the nearest devices directory", async () => {
-		expect(await findCheckoutForDeviceFile(mainFile)).toBe(main);
-		expect(await findCheckoutForDeviceFile(worktreeFile)).toBe(worktree);
-		expect(
-			await findCheckoutForDeviceFile(
-				join(worktreeRoot, DEVICES_SUBDIR, "new/file.json"),
-			),
-		).toBe(worktree);
-	});
-
-	it("rejects files outside of a devices directory", async () => {
-		expect(
-			await findCheckoutForDeviceFile(join(worktreeRoot, "package.json")),
-		).toBeUndefined();
-		expect(
-			await findCheckoutForDeviceFile(
-				join(tmp, "other", DEVICES_SUBDIR, "file.json"),
-			),
-		).toBeUndefined();
-	});
 });
 
 describe("findCheckoutContaining", () => {
 	it("walks up to the nearest checkout root", async () => {
 		expect(
-			await findCheckoutContaining(join(worktreeRoot, "packages")),
-		).toBe(worktree);
-		expect(await findCheckoutContaining(join(mainRoot, ".claude"))).toBe(
-			main,
+			(await findCheckoutContaining(join(worktreeRoot, "packages")))
+				?.root,
+		).toBe(worktreeRoot);
+		expect(
+			(await findCheckoutContaining(join(mainRoot, ".claude")))?.root,
+		).toBe(mainRoot);
+		expect((await findCheckoutContaining(mainFile))?.root).toBe(mainRoot);
+		expect((await findCheckoutContaining(worktreeFile))?.root).toBe(
+			worktreeRoot,
 		);
+		expect(
+			(
+				await findCheckoutContaining(
+					join(worktreeRoot, DEVICES_SUBDIR, "new/file.json"),
+				)
+			)?.root,
+		).toBe(worktreeRoot);
 		expect(await findCheckoutContaining(tmp)).toBeUndefined();
 	});
 });
@@ -145,71 +120,63 @@ describe("Checkout.fs", () => {
 		);
 	});
 
-	it("resolves relative paths against the checkout root", async () => {
+	it("rejects paths outside its devices directory", async () => {
 		expect(
-			await resolveDeviceConfigPath(
-				worktree,
-				`${DEVICES_SUBDIR}/0x0001/device.json`,
-			),
+			await resolveDeviceConfigPath(worktree.devicesDir, worktreeFile),
 		).toBe(worktreeFile);
+		expect(
+			await resolveDeviceConfigPath(worktree.devicesDir, mainFile),
+		).toBeUndefined();
 	});
 });
 
 describe("resolveToolCheckout", () => {
-	function hints(
-		overrides: Partial<Parameters<typeof resolveToolCheckout>[0]> = {},
-	) {
+	function hints(overrides: Partial<CheckoutHints> = {}): CheckoutHints {
 		return {
 			paths: {},
-			getWorkspaceCheckout: vi.fn(async () => undefined),
-			fallbackRoot: mainRoot,
+			getDefaultCheckout: async () => main,
 			...overrides,
 		};
 	}
 
 	it("uses the checkout of the file argument", async () => {
-		const getWorkspaceCheckout = vi.fn(async () => main);
+		const getDefaultCheckout = vi.fn(async () => main);
 		const result = await resolveToolCheckout(
-			hints({ paths: { filename: worktreeFile }, getWorkspaceCheckout }),
+			hints({ paths: { filename: worktreeFile }, getDefaultCheckout }),
 		);
 		expect(result).toEqual({
-			checkout: worktree,
+			checkout: expect.objectContaining({ root: worktreeRoot }),
 			paths: { filename: worktreeFile },
 		});
-		expect(getWorkspaceCheckout).not.toHaveBeenCalled();
+		expect(getDefaultCheckout).not.toHaveBeenCalled();
 	});
 
-	it("uses the workspace checkout when there is no file argument", async () => {
+	it("uses the default checkout when there is no file argument", async () => {
 		const result = await resolveToolCheckout(
-			hints({ getWorkspaceCheckout: async () => worktree }),
+			hints({ getDefaultCheckout: async () => worktree }),
 		);
 		expect(result).toEqual({ checkout: worktree, paths: {} });
 	});
 
-	it("falls back to the fallback root without a workspace checkout", async () => {
-		const result = await resolveToolCheckout(hints());
-		expect(result).toEqual({ checkout: main, paths: {} });
-	});
-
-	it("prefers an explicit root over the workspace", async () => {
+	it("prefers an explicit root over the default checkout", async () => {
 		const result = await resolveToolCheckout(
-			hints({
-				root: join(worktreeRoot, "packages"),
-				getWorkspaceCheckout: async () => main,
-			}),
+			hints({ root: join(worktreeRoot, "packages") }),
 		);
-		expect(result).toEqual({ checkout: worktree, paths: {} });
+		expect(result).toEqual({
+			checkout: expect.objectContaining({ root: worktreeRoot }),
+			paths: {},
+		});
 	});
 
-	it("resolves relative file arguments against the workspace checkout", async () => {
+	it("resolves relative file arguments against the default checkout", async () => {
 		const result = await resolveToolCheckout(
 			hints({
 				paths: { filename: `${DEVICES_SUBDIR}/0x0001/device.json` },
-				getWorkspaceCheckout: async () => worktree,
+				getDefaultCheckout: async () => worktree,
 			}),
 		);
 		expect(result).toEqual({
-			checkout: worktree,
+			checkout: expect.objectContaining({ root: worktreeRoot }),
 			paths: { filename: worktreeFile },
 		});
 	});
@@ -223,12 +190,26 @@ describe("resolveToolCheckout", () => {
 		});
 	});
 
-	it("rejects files outside of an explicit root", async () => {
+	it("prefers the checkout of the file argument over an explicit root", async () => {
 		const result = await resolveToolCheckout(
 			hints({ root: worktreeRoot, paths: { filename: mainFile } }),
 		);
-		expect(result).toMatchObject({
-			error: expect.stringContaining(worktreeRoot),
+		expect(result).toEqual({
+			checkout: expect.objectContaining({ root: mainRoot }),
+			paths: { filename: mainFile },
+		});
+	});
+
+	it("resolves relative file arguments against an explicit root", async () => {
+		const result = await resolveToolCheckout(
+			hints({
+				root: worktreeRoot,
+				paths: { filename: `${DEVICES_SUBDIR}/0x0001/device.json` },
+			}),
+		);
+		expect(result).toEqual({
+			checkout: expect.objectContaining({ root: worktreeRoot }),
+			paths: { filename: worktreeFile },
 		});
 	});
 

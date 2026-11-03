@@ -14,6 +14,7 @@ import {
 	type Checkout,
 	LAUNCH_ROOT,
 	findCheckoutContaining,
+	getCheckout,
 	resolveToolCheckout,
 } from "./checkout.js";
 import { McpToolRegistry } from "./registry.js";
@@ -32,6 +33,7 @@ import {
 	resolveParamTool,
 } from "./tools/index.js";
 import { errorResult } from "./tools/results.js";
+import type { ToolHandler } from "./types.js";
 
 const PATH_ARGUMENTS = ["filename", "templateFile"];
 
@@ -39,9 +41,16 @@ const ROOT_ARGUMENT = {
 	type: "string",
 	description:
 		"Optional path to the zwave-js checkout (e.g. a git worktree) to work "
-		+ "in. Defaults to the checkout containing the file argument, then the "
-		+ "client's workspace.",
+		+ "in. Defaults to the client's workspace. A file argument always uses "
+		+ "the checkout it is located in.",
 };
+
+// Tools with a required file argument always work in that file's checkout
+function acceptsRoot(tool: ToolHandler): boolean {
+	return !tool.inputSchema.required?.some((key) =>
+		PATH_ARGUMENTS.includes(key),
+	);
+}
 
 class DevMCPServer {
 	private server: Server;
@@ -178,13 +187,15 @@ class DevMCPServer {
 				tools: this.registry.getAll().map((tool) => ({
 					name: tool.name,
 					description: tool.description,
-					inputSchema: {
-						...tool.inputSchema,
-						properties: {
-							...tool.inputSchema.properties,
-							root: ROOT_ARGUMENT,
-						},
-					},
+					inputSchema: acceptsRoot(tool)
+						? {
+								...tool.inputSchema,
+								properties: {
+									...tool.inputSchema.properties,
+									root: ROOT_ARGUMENT,
+								},
+							}
+						: tool.inputSchema,
 					annotations: tool.annotations,
 				})),
 			};
@@ -211,8 +222,9 @@ class DevMCPServer {
 				const resolved = await resolveToolCheckout({
 					root: typeof root === "string" && root ? root : undefined,
 					paths,
-					getWorkspaceCheckout: () => this.getWorkspaceCheckout(),
-					fallbackRoot: LAUNCH_ROOT,
+					getDefaultCheckout: async () =>
+						(await this.getWorkspaceCheckout())
+						?? (await getCheckout(LAUNCH_ROOT)),
 				});
 				if ("error" in resolved) return errorResult(resolved.error);
 
