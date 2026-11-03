@@ -4,6 +4,56 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+This release is the result of two security and correctness reviews of the entire codebase. No major issues have been found, but the reviews uncovered a number of edge cases that could negatively influence stability and lead to unexpected behavior.
+
+### Features
+* ESPHome encryption keys no longer have to be manually URL-encoded (#9427)
+
+### Bugfixes
+* Fixes a number of situations where unexpected errors while receiving data could crash the process (#9371)
+* Commands from inclusion controllers are now only accepted in specific valid states and only from known controllers (#9368)
+* All stages of firmware updates are now abortable (#9430)
+* Harden config updates and config file parsing (#9380)
+* Harden S2 message parsing and bootstrapping (#9377)
+* Harden ESPHome protobuf and frame parsing (#9370)
+* Limit the size of extracted and downloaded firmware files (#9372)
+* Unexpected errors while parsing nested CCs in Notification event parameters are now handled correctly (#9369)
+* Strip control characters from strings received from nodes (#9386)
+* Fixed an issue where `$if` conditions in config files could cause the parser to take excessively long or hang (#9379)
+* Reject incomplete operators and hex literals in `$if` conditions (#9402)
+* Preserve virtual nodes, LR node shape and device class 0 in NVM conversions (#9401)
+* Fixed several edge cases when encoding floats, durations, time zones, `Meter` values and several message classes (#9397)
+* Validate edge cases in several parsers (#9385)
+* Align our portable `Bytes` implementation with Node.js's `Buffer` for 5/6 byte reads, empty `includes()` and BOMs (#9398)
+* Encode plain and extended ASCII user names in User Credential CC correctly (#9403)
+* Encode User Credential CC passwords as UTF-16BE (#9396)
+* Fix broken HEC firmware file decryption under Node.js, throw `ZWaveError`s for invalid HEX files (#9399)
+* Do not assume the security class stays constant across calls to `SecurityManager2.createMulticastGroup` (#9400)
+* Harden Transport Service session handling (#9382)
+* Use portable `Timer` implementation for `Powerlevel` test frames (#9422)
+* Fixed an issue with some Node.js versions that do not check the AES-CCM auth code when the backing buffer for the ciphertext is empty
+* Limit the number of outstanding S0 nonces (#9375)
+* Avoid the possibility of endless loops during NVM backup and restore (#9383)
+* Align browser AES-OFB and AES-CBC with the Node.js implementation (#9381)
+* Internal encryption details are only logged when explicitly enabled using the env variable `ZWAVEJS_LOG_SECURITY_DETAILS=true` instead of being enabled implictly through `NODE_ENV=development` or `test` (#9384)
+* Validate config parameter value size in Configuration Bulk and Properties Reports (#9376)
+* Validate incoming Powerlevel Test Node Set commands (#9374)
+* Ignore Alarm Sensor reports forwarded on behalf of other nodes (#9373)
+* Fix parsing of the color table for incoming Color Switch Set commands (#9378)
+
+### Config file changes
+* Add Heatit Z-Smoke2 230V, allow Basic Set interconnects (#9441)
+* Add setpoint range 4-28 °C to Danfoss LC-13 (#9440)
+* Preserve and label endpoints on Qubino Flush Dimmer Plus (ZMNHDD) (#9432)
+* Remove undocumented endpoint labels on Heatit Z-Push Button 4 (#9421)
+* Add missing third switch label on McoHome MH-S513 (#9420)
+* Group shutter endpoints on Shelly Wave Shutter (QLSH-001P10EU) (#9408)
+* Correct endpoint 2 and group the blind on Qubino Flush Shutter DC (ZMNHOD) (#9409)
+
+### Changes under the hood
+* The development MCP server now restricts tool file paths to the device config directory (#9387)
+
 ## 15.31.2 (2026-10-22)
 ### Bugfixes
 * Reject invalid statuses in Powerlevel Test Node Report (#9357)
