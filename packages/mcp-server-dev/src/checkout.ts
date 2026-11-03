@@ -139,7 +139,14 @@ export async function getCheckout(root: string): Promise<Checkout | undefined> {
 export async function findCheckoutContaining(
 	dir: string,
 ): Promise<Checkout | undefined> {
-	for (let cur = resolve(dir); ; cur = dirname(cur)) {
+	let start: string;
+	try {
+		// Walk up the canonical path so a symlinked root finds its target's checkout
+		start = await realpathAllowMissing(resolve(dir));
+	} catch {
+		return undefined;
+	}
+	for (let cur = start; ; cur = dirname(cur)) {
 		const checkout = await getCheckout(cur);
 		if (checkout) return checkout;
 		if (dirname(cur) === cur) return undefined;
