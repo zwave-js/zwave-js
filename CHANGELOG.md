@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.32.0 (2026-11-03)
 This release is the result of two security and correctness reviews of the entire codebase. No major issues have been found, but the reviews uncovered a number of edge cases that could negatively influence stability and lead to unexpected behavior.
 
 ### Features
