@@ -100,11 +100,6 @@ function assertValidFirmwareUpdates(updates: Firmware[]): void {
 	}
 }
 
-/** Checks if a task belongs to a route rebuilding process */
-export function isFirmwareUpdateOTATask(t: Task<unknown>): boolean {
-	return t.tag?.id === "firmware-update-ota";
-}
-
 function isFirmwareUpdateOTATaskOfNode(
 	t: Task<unknown>,
 	nodeId: number,
@@ -316,7 +311,9 @@ export abstract class FirmwareUpdateMixin
 	}
 
 	public isFirmwareUpdateInProgress(): boolean {
-		return !!this.driver.scheduler.findTask(isFirmwareUpdateOTATask);
+		return !!this.driver.scheduler.findTask((t) =>
+			isFirmwareUpdateOTATaskOfNode(t, this.id),
+		);
 	}
 
 	private getUpdateFirmwareTask(
