@@ -4,6 +4,11 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* `ZWaveNode.isFirmwareUpdateInProgress()` no longer returns `true` if any other node is undergoing an OTA firmware update (#9450)
+* `Controller.firmwareUpdateOTA` now allows queueing OTA updates for multiple nodes, like it was already possible through `ZWaveNode.updateFirmware` (#9452)
+
 ## 15.32.0 (2026-11-03)
 This release is the result of two security and correctness reviews of the entire codebase. No major issues have been found, but the reviews uncovered a number of edge cases that could negatively influence stability and lead to unexpected behavior.
 
