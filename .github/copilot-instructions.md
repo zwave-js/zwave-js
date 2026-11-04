@@ -11,7 +11,7 @@
 
 - Read `AI_POLICY.md` in the repository root before helping with an issue, discussion or pull request. Agents must not open or post them on their own. Draft the text for your user to review and submit.
 - Bug reports start as a discussion in the `request-support-investigate-issue` category, using its form. Feature requests go to the `feature-requests` category.
-- Driver logs must be on loglevel debug and uploaded as a file, never pasted. The GitHub API can't attach files, so your user adds the log through the web form.
+- Driver logs must be on loglevel debug and attached as a file, never pasted. The `--attach` flag of the `gh` CLI only takes images and videos and isn't available for discussions, so leave attaching the log to your user.
 
 ## Tools and Tasks
 
