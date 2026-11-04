@@ -9388,16 +9388,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		updateInfo: FirmwareUpdateInfo,
 		options?: FirmwareUpdateOptions,
 	): Promise<FirmwareUpdateResult> {
-		// Don't let two firmware updates happen in parallel
-		if (this.isAnyOTAFirmwareUpdateInProgress()) {
-			const message = `Failed to start the update: A firmware update is already in progress on this network!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.FirmwareUpdateCC_NetworkBusy,
-			);
-		}
-
 		// Don't allow updating firmware when the controller is currently updating its own firmware
 		if (this.driver.isOTWFirmwareUpdateInProgress()) {
 			const message = `Failed to start the update: The controller is currently being updated!`;
