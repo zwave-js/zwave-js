@@ -14,11 +14,11 @@ accepted.
 ## Do you have a problem? Something not working? Configuration missing?
 
 Please read the [troubleshooting](https://zwave-js.github.io/zwave-js/#/troubleshooting/index) section of the documentation. Your problem might already be answered there.
-If not, consider opening an issue. Please **use the issue templates** and fill them out as best as you can.
+If not, start a discussion in the [Request support / investigate issue](https://github.com/zwave-js/zwave-js/discussions/new?category=request-support-investigate-issue) category and fill out the form. Bug reports need a driver log on loglevel debug, uploaded as a file. A maintainer will open an issue once a bug is confirmed.
 
 ## Do you want to propose a new feature?
 
-Open an issue with the **feature request template** and fill it out. For complicated features or ones that need some brainstorming, you can join us on [Slack](https://join.slack.com/t/zwave2mqtt/shared_invite/enQtNjc4NjgyNjc3NDI2LTc3OGQzYmJlZDIzZTJhMzUzZWQ3M2Q3NThmMjY5MGY1MTc4NjFiOWZhZWE5YjNmNGE0OWRjZjJiMjliZGQyYmU) and discuss there.
+Start a discussion in the [Feature requests](https://github.com/zwave-js/zwave-js/discussions/new?category=feature-requests) category and fill out the form. For complicated features or ones that need some brainstorming, you can join us on [Slack](https://join.slack.com/t/zwave2mqtt/shared_invite/enQtNjc4NjgyNjc3NDI2LTc3OGQzYmJlZDIzZTJhMzUzZWQ3M2Q3NThmMjY5MGY1MTc4NjFiOWZhZWE5YjNmNGE0OWRjZjJiMjliZGQyYmU) and discuss there.
 
 ## Do you want to contribute device configuration files?
 
