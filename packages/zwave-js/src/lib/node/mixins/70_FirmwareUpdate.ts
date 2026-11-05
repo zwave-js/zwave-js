@@ -653,9 +653,9 @@ export abstract class FirmwareUpdateMixin
 
 						self.driver.controllerLog.logNode(
 							self.id,
-							`The node fell asleep, continuing the firmware update (part ${
+							`The node fell asleep, transferring part ${
 								i + 1
-							} / ${updatesWithChecksum.length}) when it wakes up...`,
+							} / ${updatesWithChecksum.length} again when it wakes up...`,
 						);
 						// Continue where the transfer stopped, if the node supports it
 						resume =

@@ -2702,8 +2702,9 @@ export class Driver
 			);
 		}
 
-		// Reject a running firmware transfer's pending transactions the same way, so it releases
-		// the transfer group. The firmware update continues the transfer when the node wakes up.
+		// Reject a running firmware transfer's pending transactions the same way, so it releases the transfer group.
+		// When the node wakes up, the firmware update transfers the current file again.
+		// The transfer picks up at the last received fragment if the node supports resuming.
 		const firmwareTransferTask = this.scheduler.findTask(
 			(t) =>
 				t.tag?.id === "firmware-update-ota"
