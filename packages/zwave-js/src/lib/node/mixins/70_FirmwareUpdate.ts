@@ -651,6 +651,16 @@ export abstract class FirmwareUpdateMixin
 						})) as PartialFirmwareUpdateResult;
 						if (!updateResult.nodeAsleep) break;
 
+						// End an aborted update here because the sleeping node cannot acknowledge the abort
+						if (abortContext.abort) {
+							abortContext.abortPromise.resolve(false);
+							updateResult = {
+								success: false,
+								status: FirmwareUpdateStatus.Error_TransmissionFailed,
+							};
+							break;
+						}
+
 						self.driver.controllerLog.logNode(
 							self.id,
 							`The node fell asleep, transferring part ${
@@ -1122,15 +1132,21 @@ export abstract class FirmwareUpdateMixin
 		timeout: number,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
+			const nodeAsleep = () =>
+				new ZWaveError(
+					`The node is asleep`,
+					ZWaveErrorCodes.Controller_MessageDropped,
+				);
+			// The sleep event may have fired already
+			if (this.status === NodeStatus.Asleep) {
+				reject(nodeAsleep());
+				return;
+			}
+
 			const stopWaiting = new AbortController();
 			const onSleep = () => {
 				stopWaiting.abort();
-				reject(
-					new ZWaveError(
-						`The node is asleep`,
-						ZWaveErrorCodes.Controller_MessageDropped,
-					),
-				);
+				reject(nodeAsleep());
 			};
 			this._once("sleep", onSleep);
 			this.driver
@@ -1324,6 +1340,7 @@ export abstract class FirmwareUpdateMixin
 				.withOptions({
 					// Only encapsulate if the transfer is secure
 					autoEncapsulate: !nonSecureTransfer,
+					tag: "firmware-update-ota",
 				})
 				.sendFirmwareFragment(reportNum, true, fragment);
 		} catch {
@@ -1411,6 +1428,9 @@ export abstract class FirmwareUpdateMixin
 					randomBytes(fragmentSize),
 					nonSecureTransfer,
 				);
+				if (this.status === NodeStatus.Asleep) {
+					return NODE_ASLEEP_RESULT;
+				}
 				// This will cause the node to abort the process, wait for that
 				break update;
 			}
@@ -1438,6 +1458,9 @@ export abstract class FirmwareUpdateMixin
 						randomBytes(fragment.length),
 						nonSecureTransfer,
 					);
+					if (this.status === NodeStatus.Asleep) {
+						return NODE_ASLEEP_RESULT;
+					}
 					// This will cause the node to abort the process, wait for that
 					break update;
 				} else {
