@@ -103,20 +103,36 @@ steps:
   uses: zwave-js/bot-workflows/actions/download-logfile@v1
   with:
     url: ${{ steps.get_logfile_url.outputs.result }}
+- name: Write discussion content
+  uses: actions/github-script@v9.0.0
+  with:
+    script: |
+      const path = require("path");
+      const fs = require("fs");
+      const actionsDir = path.join(process.env.RUNNER_TEMP, "gh-aw", "actions");
+      const { setupGlobals } = require(path.join(actionsDir, "setup_globals.cjs"));
+      setupGlobals(core, github, context, exec, io, getOctokit);
+      const { sanitizeIncomingText } = require(path.join(actionsDir, "sanitize_incoming_text.cjs"));
+      
+      const title = context.payload.discussion?.title ?? "";
+      const body = context.payload.discussion?.body ?? "";
+      fs.mkdirSync("/tmp/gh-aw/agent", { recursive: true });
+      fs.writeFileSync(
+        "/tmp/gh-aw/agent/discussion.md",
+        sanitizeIncomingText(`${title}\n\n${body}`),
+      );
 description: Automatically analyze Z-Wave JS logfiles posted in new discussions
 engine: copilot
 model: claude-opus-4.8
 runs-on-slim: ubuntu-latest
-source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d
+source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91
 timeout-minutes: 30
 ---
 # Z-Wave JS Logfile Analysis
 
 A user opened a GitHub discussion asking for help and attached a Z-Wave JS driver logfile. The logfile has been downloaded to `/tmp/gh-aw/agent/logfile.log` on this runner.
 
-This is the discussion content (sanitized):
-
-"${{ steps.sanitized.outputs.text }}"
+First read `/tmp/gh-aw/agent/discussion.md`. It contains the discussion title and body (sanitized).
 
 Determine what the user wants to know. The discussion follows a support template, so the problem is described in prose spread over sections like "Describe the issue", "Steps to reproduce the behavior" and "Device information". Read all of them. The description of what happens and what the user expected instead is the question to answer, even when the body contains no question mark and nothing phrased as a question. When a node ID is given, the problem is about that node. Screenshots are not available to you, so rely on the surrounding text.
 
