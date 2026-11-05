@@ -13,12 +13,6 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"metadata": {
-		"inclusion": "Press the upper or lower paddle once to add the device. The switch also supports SmartStart: scan the QR code on the device or on the packaging box.",
-		"exclusion": "Press the upper or lower paddle once to remove the device.",
-		"reset": "Pull the air gap switch. Press and hold the bottom paddle, push the air gap switch back in and continue holding the bottom paddle for 10 seconds. The LED flashes each of the eight colors once, then stops. Please use this procedure only when the primary controller is missing or otherwise inoperable.",
-		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80710/2BSVZ-NVN-110UserManual.pdf"
-	},
 	"paramInformation": [
 		{
 			"#": "3",
@@ -72,5 +66,11 @@
 			"#": "84",
 			"$import": "templates/novon_template.json#factory_reset"
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Press the upper or lower paddle once.",
+		"exclusion": "Press the upper or lower paddle once.",
+		"reset": "1. Pull the air gap switch.\n2. Press and hold the bottom paddle.\n3. Push the air gap switch back in while holding the bottom paddle.\n4. Keep holding the bottom paddle for 10 seconds. The LED flashes each of the eight colors once, then stops.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80710/2BSVZ-NVN-110UserManual.pdf"
+	}
 }

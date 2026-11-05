@@ -13,12 +13,6 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"metadata": {
-		"inclusion": "Tap the button once to add the device. The plug also supports SmartStart: scan the QR code on the side of the case or on the packaging box.",
-		"exclusion": "Tap the button once to remove the device.",
-		"reset": "Unplug the device. Press and hold the manual button, plug the device back in and continue holding the button for 3 seconds. Please use this procedure only when the primary controller is missing or otherwise inoperable.",
-		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80718/NVN-200-V2UserManual.pdf"
-	},
 	"paramInformation": [
 		{
 			"#": "3",
@@ -38,5 +32,11 @@
 			"#": "84",
 			"$import": "templates/novon_template.json#factory_reset"
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Tap the button once.",
+		"exclusion": "Tap the button once.",
+		"reset": "1. Unplug the device.\n2. Press and hold the button.\n3. Plug the device back in and keep holding the button for 3 seconds.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80718/NVN-200-V2UserManual.pdf"
+	}
 }

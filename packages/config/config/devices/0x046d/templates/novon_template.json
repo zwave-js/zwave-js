@@ -1,8 +1,13 @@
 {
 	"auto_timer": {
 		"$import": "~/templates/master_template.json#base_0-65535",
-		"description": "Setting this to 0 disables the timer.",
-		"unit": "minutes"
+		"unit": "minutes",
+		"options": [
+			{
+				"label": "Disable",
+				"value": 0
+			}
+		]
 	},
 	"three_way_type": {
 		"$import": "~/templates/master_template.json#base_options_nounit",
@@ -21,7 +26,6 @@
 	"alternate_exclusion": {
 		"$import": "~/templates/master_template.json#base_options_nounit",
 		"label": "Alternate Exclusion",
-		"description": "Selects which button press starts exclusion.",
 		"options": [
 			{
 				"label": "Press a paddle once",

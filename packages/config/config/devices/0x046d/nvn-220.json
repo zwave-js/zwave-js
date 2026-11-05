@@ -13,11 +13,13 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"metadata": {
-		"inclusion": "Tap the button three times to add the device. The plug also supports SmartStart: scan the QR code on the side of the housing or on the packaging box.",
-		"exclusion": "Tap the button three times to remove the device.",
-		"reset": "Click the Z-Wave button two times quickly, then hold it for at least 10 seconds. Please use this procedure only when the primary controller is missing or otherwise inoperable.",
-		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80717/NVN-220UserManual.pdf"
+	"endpoints": {
+		"1": {
+			"label": "Left Outlet"
+		},
+		"2": {
+			"label": "Right Outlet"
+		}
 	},
 	"paramInformation": [
 		{
@@ -27,22 +29,22 @@
 		{
 			"#": "2",
 			"$import": "templates/novon_template.json#auto_timer",
-			"label": "Outlet 1: Auto-Off Timer"
+			"label": "Left Outlet: Auto-Off Timer"
 		},
 		{
 			"#": "3",
 			"$import": "templates/novon_template.json#auto_timer",
-			"label": "Outlet 2: Auto-Off Timer"
+			"label": "Right Outlet: Auto-Off Timer"
 		},
 		{
 			"#": "4",
 			"$import": "templates/novon_template.json#auto_timer",
-			"label": "Outlet 1: Auto-On Timer"
+			"label": "Left Outlet: Auto-On Timer"
 		},
 		{
 			"#": "5",
 			"$import": "templates/novon_template.json#auto_timer",
-			"label": "Outlet 2: Auto-On Timer"
+			"label": "Right Outlet: Auto-On Timer"
 		},
 		{
 			"#": "6",
@@ -59,5 +61,11 @@
 			"label": "Manual Control",
 			"defaultValue": 1
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "Tap the button three times.",
+		"exclusion": "Tap the button three times.",
+		"reset": "Tap the button twice quickly, then hold it for at least 10 seconds.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80717/NVN-220UserManual.pdf"
+	}
 }
