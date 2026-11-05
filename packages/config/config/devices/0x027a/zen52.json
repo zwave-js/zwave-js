@@ -164,6 +164,16 @@
 			"description": "Synchronize relay 1 and relay 2 so they cannot be activated at the same time."
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "S1 Input",
+			"description": "Only sent when parameter 16 enables it"
+		},
+		"2": {
+			"label": "S2 Input",
+			"description": "Only sent when parameter 16 enables it"
+		}
+	},
 	"metadata": {
 		"$import": "templates/zooz_template.json#zen5x_metadata",
 		"manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-700-series-z-wave-plus-double-relay-zen52-manual.pdf"

@@ -525,6 +525,14 @@
 			"label": "Prevent Simultaneous Switching of Outputs"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "S1 Switch"
+		},
+		"2": {
+			"label": "S2 Switch"
+		}
+	},
 	"metadata": {
 		"inclusion": "Power the device, then quickly press the switch connected to S1 or the B-button three times. The LED starts blinking yellow.",
 		"exclusion": "Make sure the device is powered, then quickly press the B-button three times. The LED starts blinking yellow.",

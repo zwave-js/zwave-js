@@ -145,6 +145,14 @@
 			"defaultValue": 0
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Lower Paddle"
+		},
+		"2": {
+			"label": "Upper Paddle"
+		}
+	},
 	"metadata": {
 		"inclusion": "Tap the upper paddle 3 times quickly. The LED indicators will blink to signal communication and remain on for 2 seconds to confirm inclusion.",
 		"exclusion": "Tap the lower paddle 3 times quickly. The LED indicator will flash to confirm exclusion.",

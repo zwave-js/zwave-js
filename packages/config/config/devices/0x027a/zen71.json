@@ -134,6 +134,18 @@
 			"$import": "templates/zooz_template.json#led_indicator_multi_color"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		},
+		"3": {
+			"label": "Remote Switch",
+			"description": "Only sent when parameter 18 enables scene control from a ZAC99 momentary switch in a 3-way setup"
+		}
+	},
 	"compat": {
 		// The device sends Configuration CC info reports in 4-byte chunks, causing each query to block the network for roughly 1.5 seconds.
 		"skipConfigurationNameQuery": true,

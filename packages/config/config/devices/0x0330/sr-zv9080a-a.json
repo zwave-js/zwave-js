@@ -235,6 +235,16 @@
 			"defaultValue": 3600
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "S1 Input",
+			"description": "Only sent when parameter 9 enables it"
+		},
+		"2": {
+			"label": "S2 Input",
+			"description": "Only sent when parameter 9 enables it"
+		}
+	},
 	"metadata": {
 		"inclusion": "Press button K2 on the unit 3 times, or when S1 is enabled press the switch 3 times",
 		"exclusion": "Press button K2 on the unit 3 times, or when S1 is enabled press the switch 3 times",

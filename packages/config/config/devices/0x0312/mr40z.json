@@ -44,6 +44,14 @@
 			"$import": "templates/minoston_template.json#led_indicator_brightness_mr40z"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Refer to your primary controller instructions to process the inclusion / exclusion setup procedure.\n2. When prompted by your primary controller, click the first button five times in one second",
 		"exclusion": "1. Refer to your primary controller instructions to process the inclusion / exclusion setup procedure.\n2. When prompted by your primary controller, click the second button five times in one second",

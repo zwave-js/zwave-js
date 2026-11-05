@@ -157,6 +157,14 @@
 			"label": "Flirs"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Top Button"
+		},
+		"2": {
+			"label": "Bottom Button"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Turn your Z-Wave gateway/ controller into adding mode.\n2. Tap once the top/ bottom button, then the device will enter pairing mode",
 		"exclusion": "1. Turn your Z-Wave gateway/ controller into removing mode.\n2. Tap 6 times the top/ bottom button, then the device will enter exclusion mode",

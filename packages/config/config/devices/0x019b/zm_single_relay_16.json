@@ -193,6 +193,16 @@
 			"defaultValue": 75
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "S1 Input",
+			"description": "Only sent when the relay is in momentary switch mode and parameter 5 enables it"
+		},
+		"2": {
+			"label": "S2 Input",
+			"description": "Only sent when the relay is in momentary switch mode and parameter 5 enables it"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Add mode is indicated on the device by a blinking green LED\n2. This lasts until timeout occurs after 90 seconds\n3. The LED will light up for 3 seconds if adding is successful",
 		"exclusion": "1. Remove mode is indicated on the device by a blinking green LED\n2. This lasts until timeout occurs after 90 seconds\n3. The LED will light up for 3 seconds if removing is successful",

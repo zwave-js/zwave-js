@@ -95,6 +95,26 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Up Button 1"
+		},
+		"2": {
+			"label": "Down Button 1"
+		},
+		"3": {
+			"label": "Up Button 2"
+		},
+		"4": {
+			"label": "Down Button 2"
+		},
+		"5": {
+			"label": "Up Button 3"
+		},
+		"6": {
+			"label": "Down Button 3"
+		}
+	},
 	"metadata": {
 		"inclusion": "Press any UP button 6 times within 3 seconds.",
 		"exclusion": "Press any UP button 6 times within 3 seconds.",

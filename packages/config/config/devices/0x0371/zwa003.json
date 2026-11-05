@@ -58,6 +58,32 @@
 			"label": "Low Battery Buzzer"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Button 1 Tap"
+		},
+		"2": {
+			"label": "Button 1 Hold"
+		},
+		"3": {
+			"label": "Button 2 Tap"
+		},
+		"4": {
+			"label": "Button 2 Hold"
+		},
+		"5": {
+			"label": "Button 3 Tap"
+		},
+		"6": {
+			"label": "Button 3 Hold"
+		},
+		"7": {
+			"label": "Button 4 Tap"
+		},
+		"8": {
+			"label": "Button 4 Hold"
+		}
+	},
 	"metadata": {
 		"reset": "Pressing and holding a button for 20 seconds. Release the button after 20 seconds, LED will keep in yellow for 3 seconds. Scene Controller will be reset to factory defaults if you short press the button within this 3 seconds.\nPlease use this procedure only when the network primary controller is missing or otherwise inoperable",
 		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2817/NanoMote%20Quad%20USER%20MANUAL%20.pdf"

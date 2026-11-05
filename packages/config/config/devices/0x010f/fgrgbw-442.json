@@ -694,6 +694,24 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "IN1 Input",
+			"description": "Only sent when parameter 20 configures the input as a momentary or toggle switch (Central Scene)"
+		},
+		"2": {
+			"label": "IN2 Input",
+			"description": "Only sent when parameter 21 configures the input as a momentary or toggle switch (Central Scene)"
+		},
+		"3": {
+			"label": "IN3 Input",
+			"description": "Only sent when parameter 22 configures the input as a momentary or toggle switch (Central Scene)"
+		},
+		"4": {
+			"label": "IN4 Input",
+			"description": "Only sent when parameter 23 configures the input as a momentary or toggle switch (Central Scene)"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Power the device.\n2. Quickly press the service button three times.\n3. The LED starts blinking yellow while the process is in progress, then turns green or magenta if successful, or red if not.",
 		"exclusion": "1. Make sure the device is powered.\n2. Quickly press the service button three times.\n3. The LED starts blinking yellow while the process is in progress, then turns red if successful.",
