@@ -45,8 +45,7 @@
 		},
 		{
 			"#": "39",
-			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev",
-			"defaultValue": 0
+			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off_on"
 		},
 		{
 			"#": "41",

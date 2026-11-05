@@ -18,5 +18,25 @@
 		"exclusion": "Tap the button once to remove the device.",
 		"reset": "Unplug the device. Press and hold the manual button, plug the device back in and continue holding the button for 3 seconds. Please use this procedure only when the primary controller is missing or otherwise inoperable.",
 		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80718/NVN-200-V2UserManual.pdf"
-	}
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options",
+			"defaultValue": 1
+		},
+		{
+			"#": "41",
+			"$import": "templates/novon_template.json#indicator_brightness",
+			"label": "LED Brightness"
+		},
+		{
+			"#": "42",
+			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off_on"
+		},
+		{
+			"#": "84",
+			"$import": "templates/novon_template.json#factory_reset"
+		}
+	]
 }
