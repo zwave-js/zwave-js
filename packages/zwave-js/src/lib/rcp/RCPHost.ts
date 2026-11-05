@@ -551,6 +551,17 @@ export class RCPHost
 						"warn",
 					);
 					return MessageHeaders.ACK;
+
+				case ZWaveErrorCodes.PacketFormat_InvalidPayload:
+					this.rcpLog.print(
+						`Dropping message with invalid payload${
+							typeof e.context === "string"
+								? ` (Reason: ${e.context})`
+								: ""
+						}`,
+						"warn",
+					);
+					return MessageHeaders.ACK;
 			}
 		} else {
 			if (/database is not open/.test(e.message)) {
