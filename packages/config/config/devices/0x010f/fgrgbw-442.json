@@ -697,19 +697,19 @@
 	"scenes": {
 		"1": {
 			"label": "IN1 Input",
-			"description": "Only sent when parameter 20 configures the input as a momentary or toggle switch (Central Scene)"
+			"description": "Only sent when parameter 20 sets a Central Scene mode and parameter 40 enables it"
 		},
 		"2": {
 			"label": "IN2 Input",
-			"description": "Only sent when parameter 21 configures the input as a momentary or toggle switch (Central Scene)"
+			"description": "Only sent when parameter 21 sets a Central Scene mode and parameter 41 enables it"
 		},
 		"3": {
 			"label": "IN3 Input",
-			"description": "Only sent when parameter 22 configures the input as a momentary or toggle switch (Central Scene)"
+			"description": "Only sent when parameter 22 sets a Central Scene mode and parameter 42 enables it"
 		},
 		"4": {
 			"label": "IN4 Input",
-			"description": "Only sent when parameter 23 configures the input as a momentary or toggle switch (Central Scene)"
+			"description": "Only sent when parameter 23 sets a Central Scene mode and parameter 43 enables it"
 		}
 	},
 	"metadata": {
