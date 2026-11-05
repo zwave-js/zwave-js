@@ -8,12 +8,19 @@ import { parseBitMask } from "../values/Primitive.js";
 
 import {
 	ProvisioningInformationType,
+	type ProvisioningInformation_ProductId,
 	QRCodeVersion,
 	type QRProvisioningInformation,
 	minQRCodeLength,
-	onlyDigitsRegex,
 } from "./definitions.js";
-import { fail, parseTLV, readLevel, readUInt16, readUInt8 } from "./utils.js";
+import {
+	fail,
+	parseTLV,
+	parseTLVData,
+	readLevel,
+	readUInt16,
+	readUInt8,
+} from "./utils.js";
 
 // Regex to find "90" followed by at least (minQRCodeLength - 2) digits
 const qrCodeCandidateRegex = new RegExp(`90\\d{${minQRCodeLength - 2},}`, "g");
@@ -30,6 +37,31 @@ async function computeChecksum(
 	return Bytes.view(hashResult).readUInt16BE(0);
 }
 
+/**
+ * Parses a ProductId TLV that was cut off at an invalid character. Only the
+ * application version may be incomplete. Its remaining digits are used as-is,
+ * even though the resulting value is not what the label generator intended.
+ */
+function parseTruncatedProductId(
+	tlv: string,
+): ProvisioningInformation_ProductId {
+	if (
+		tlv.length < 4
+		|| readLevel(tlv, 0) >>> 1 !== ProvisioningInformationType.ProductId
+	) {
+		fail("incomplete TLV block");
+	}
+	const data = tlv.slice(4);
+	// Manufacturer ID, product type and product ID take 15 digits, followed by
+	// at least one, but not all 5 digits of the application version
+	if (data.length <= 15 || data.length >= 20) fail("incomplete TLV block");
+
+	return parseTLVData(
+		ProvisioningInformationType.ProductId,
+		data.slice(0, 15) + data.slice(15).padStart(5, "0"),
+	) as ProvisioningInformation_ProductId;
+}
+
 /** Internal parsing function that expects a clean QR code string */
 async function parseQRCodeStringInternal(
 	qr: string,
@@ -37,7 +69,17 @@ async function parseQRCodeStringInternal(
 ): Promise<QRProvisioningInformation> {
 	if (!qr.startsWith("90")) fail("must start with 90");
 	if (qr.length < minQRCodeLength) fail("too short");
-	if (!onlyDigitsRegex.test(qr)) fail("contains invalid characters");
+
+	// Some labels are generated with invalid characters in the last TLV, e.g. the
+	// application version written as a float. Their checksum covers the raw string,
+	// so these characters are tolerated after the DSK if that checksum matches.
+	const firstInvalidChar = qr.search(/\D/);
+	if (
+		firstInvalidChar !== -1
+		&& (parseSubsets || firstInvalidChar < minQRCodeLength)
+	) {
+		fail("contains invalid characters");
+	}
 
 	const version = readLevel(qr, 2);
 	if (version > QRCodeVersion.SmartStart) fail("invalid version");
@@ -49,6 +91,9 @@ async function parseQRCodeStringInternal(
 			fail("invalid checksum");
 		}
 	}
+
+	const isTruncated = firstInvalidChar !== -1;
+	if (isTruncated) qr = qr.slice(0, firstInvalidChar);
 
 	const requestedKeysBitmask = readUInt8(qr, 9);
 	const requestedSecurityClasses = parseBitMask(
@@ -108,13 +153,22 @@ async function parseQRCodeStringInternal(
 		}
 	}
 
+	if (isTruncated && offset < qr.length) {
+		Object.assign(ret, parseTruncatedProductId(qr.slice(offset)));
+		hasProductID = true;
+	}
+
 	// Ensure the required fields are present
 	if (!hasProductID || !hasProductType) {
 		fail("missing required fields");
 	}
 
-	// Final checksum validation
-	if ((await computeChecksum(qr, offset)) !== expectedChecksum) {
+	// Final checksum validation. For truncated QR codes, the checksum was
+	// already validated against the raw input.
+	if (
+		!isTruncated
+		&& (await computeChecksum(qr, offset)) !== expectedChecksum
+	) {
 		fail("invalid checksum");
 	}
 
@@ -125,6 +179,10 @@ async function parseQRCodeStringInternal(
  * Parses a string that has been decoded from a Z-Wave (S2 or SmartStart) QR code.
  * Automatically handles whitespace and tries to find a valid QR code within
  * longer strings that may contain extraneous characters.
+ *
+ * Invalid characters after the DSK are tolerated if the checksum matches the
+ * raw input. Parsing stops at the first invalid character, which may leave the
+ * application version incomplete and therefore incorrect.
  */
 export async function parseQRCodeString(
 	qr: string,
