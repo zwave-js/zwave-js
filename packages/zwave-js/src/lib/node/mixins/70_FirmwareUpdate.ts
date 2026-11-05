@@ -586,6 +586,11 @@ export abstract class FirmwareUpdateMixin
 						} / ${updatesWithChecksum.length})...`,
 					);
 
+					// Let a sleeping node go back to sleep while it waits for another node's transfer to finish.
+					// The transfer task keeps it awake again once it starts.
+					self.keepAwake = keepAwake;
+					if (!keepAwake) self.driver.debounceSendNodeToSleep(self);
+
 					updateResult = (yield self.getOTATransferTask({
 						data,
 						manufacturerId: meta.manufacturerId,
@@ -728,6 +733,8 @@ export abstract class FirmwareUpdateMixin
 			group: { id: "firmware-update-ota-transfer" },
 			task: async function* transferFirmwareTask() {
 				abortContext.transferActive = true;
+				// Keep battery powered nodes awake during the transfer
+				self.keepAwake = true;
 
 				// For determining the initial fragment size, assume the node respects our choice.
 				// If the node is not secure, these two values are identical anyways.
