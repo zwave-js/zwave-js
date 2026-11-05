@@ -595,10 +595,32 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 				});
 			}
 
-			// If the caller wants progress updates, they shall have them
-			if (typeof options.onProgress === "function") {
+			// If the caller wants progress updates or custom transmit options, use them
+			if (
+				typeof options.onProgress === "function"
+				|| options.transmitOptions != undefined
+			) {
+				let transmitOptions = options.transmitOptions;
+				if (transmitOptions != undefined) {
+					// Secure (S0/S2) singlecast relies on ACK for nonce/SPAN resync
+					// and dead-node detection, so never allow dropping ACK on a
+					// secure command.
+					const securityClass = this.getHighestSecurityClass();
+					if (
+						securityClass == undefined
+						|| securityClassIsS2(securityClass)
+						|| securityClass === SecurityClass.S0_Legacy
+					) {
+						transmitOptions |= TransmitOptions.ACK;
+					}
+				}
 				api = api.withOptions({
-					onProgress: options.onProgress,
+					...(typeof options.onProgress === "function"
+						? { onProgress: options.onProgress }
+						: {}),
+					...(transmitOptions != undefined
+						? { transmitOptions }
+						: {}),
 				});
 			}
 
