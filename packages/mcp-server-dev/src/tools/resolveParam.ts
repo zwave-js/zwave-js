@@ -11,8 +11,8 @@ import { tryParseParamNumber } from "@zwave-js/core";
 import { num2hex } from "@zwave-js/shared";
 import { parse as parseJsonC } from "jsonc-parser";
 
-import { DEVICES_DIR, fs } from "../configEnv.js";
-import type { ToolHandler } from "../types.js";
+import type { Checkout } from "../checkout.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 import { errorResult, jsonResult } from "./results.js";
 
@@ -38,6 +38,7 @@ function paramLabel(parameter: number, valueBitMask?: number): string {
  * templates a second time before DeviceConfig.from.
  */
 export async function resolveParamsForFirmware(
+	checkout: Checkout,
 	filename: string,
 	parameter: number,
 	valueBitMask: number | undefined,
@@ -51,8 +52,8 @@ export async function resolveParamsForFirmware(
 		productId: Number(firstDevice?.productId),
 		firmwareVersion,
 	};
-	const config = await DeviceConfig.from(fs, filename, true, {
-		rootDir: DEVICES_DIR,
+	const config = await DeviceConfig.from(checkout.fs, filename, true, {
+		rootDir: checkout.devicesDir,
 		deviceId,
 	});
 	return [...(config.paramInformation?.values() ?? [])].filter(
@@ -64,6 +65,7 @@ export async function resolveParamsForFirmware(
 
 async function handleResolveConfigParam(
 	args: ResolveConfigParamArgs,
+	{ checkout }: ToolContext,
 ): Promise<CallToolResult> {
 	const { filename, parameter, valueBitMask, firmwareVersion } = args;
 
@@ -78,6 +80,7 @@ async function handleResolveConfigParam(
 	try {
 		if (firmwareVersion != undefined) {
 			const matches = await resolveParamsForFirmware(
+				checkout,
 				filename,
 				parameter,
 				valueBitMask,
@@ -94,7 +97,11 @@ async function handleResolveConfigParam(
 			return jsonResult(matches.length === 1 ? matches[0] : matches);
 		} else {
 			// Templates only, conditionals preserved (matches the editor preview)
-			const json = await readJsonWithTemplate(fs, filename, DEVICES_DIR);
+			const json = await readJsonWithTemplate(
+				checkout.fs,
+				filename,
+				checkout.devicesDir,
+			);
 			const params = json.paramInformation;
 			if (!Array.isArray(params)) {
 				return errorResult(
