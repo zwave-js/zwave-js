@@ -21,6 +21,7 @@ import {
 } from "@zwave-js/cc";
 import {
 	CRC16_CCITT,
+	type CCId,
 	CommandClasses,
 	EncapsulationFlags,
 	type Firmware,
@@ -1115,6 +1116,30 @@ export abstract class FirmwareUpdateMixin
 		}
 	}
 
+	/** Waits for a command from this node. Rejects with `Controller_MessageDropped` when the node falls asleep first. */
+	private waitForCommandUntilAsleep<T extends CCId>(
+		predicate: (cc: CCId) => cc is T,
+		timeout: number,
+	): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			const stopWaiting = new AbortController();
+			const onSleep = () => {
+				stopWaiting.abort();
+				reject(
+					new ZWaveError(
+						`The node is asleep`,
+						ZWaveErrorCodes.Controller_MessageDropped,
+					),
+				);
+			};
+			this._once("sleep", onSleep);
+			this.driver
+				.waitForCommand<T, T>(predicate, timeout, stopWaiting.signal)
+				.then(resolve, reject)
+				.finally(() => this._off("sleep", onSleep));
+		});
+	}
+
 	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer */
 	private async *beginFirmwareUpdateInternal(
 		data: BytesView,
@@ -1156,7 +1181,7 @@ export abstract class FirmwareUpdateMixin
 		// probably because of a manual out-of-band activation.
 		if (!result) {
 			result = yield* waitFor(
-				this.driver.waitForCommand(
+				this.waitForCommandUntilAsleep(
 					(cc): cc is FirmwareUpdateMetaDataCCRequestReport =>
 						cc instanceof FirmwareUpdateMetaDataCCRequestReport
 						&& cc.nodeId === this.id,
@@ -1344,8 +1369,8 @@ export abstract class FirmwareUpdateMixin
 			} else {
 				try {
 					fragmentRequest = yield* waitFor(
-						this.driver.waitForCommand<FirmwareUpdateMetaDataCCGet>(
-							(cc) =>
+						this.waitForCommandUntilAsleep(
+							(cc): cc is FirmwareUpdateMetaDataCCGet =>
 								cc.nodeId === this.id
 								&& cc instanceof FirmwareUpdateMetaDataCCGet,
 							// Wait up to 2 minutes for each fragment request.
@@ -1354,6 +1379,10 @@ export abstract class FirmwareUpdateMixin
 						),
 					);
 				} catch {
+					if (this.status === NodeStatus.Asleep) {
+						return NODE_ASLEEP_RESULT;
+					}
+
 					// In some cases it can happen that the device stops requesting update frames
 					// We need to timeout the update in this case so it can be restarted
 					this.driver.controllerLog.logNode(this.id, {
