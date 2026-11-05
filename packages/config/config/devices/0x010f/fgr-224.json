@@ -290,6 +290,14 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "S1 Switch"
+		},
+		"2": {
+			"label": "S2 Switch"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Power the device.\n2. Quickly press the PROG button or the S1 or S2 switch three times.\n3. The LED indicator blinks yellow while the process is in progress, then turns green or magenta if successful, or red if not.",
 		"exclusion": "1. Make sure the device is powered.\n2. Quickly press the PROG button or the S1 or S2 switch three times within 10 minutes of powering up the device.\n3. The LED indicator turns red if unsuccessful.",
