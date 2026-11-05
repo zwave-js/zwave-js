@@ -2701,6 +2701,25 @@ export class Driver
 				ZWaveErrorCodes.Controller_MessageDropped,
 			);
 		}
+
+		// Reject a running firmware transfer's pending transactions the same way, so it releases the transfer group.
+		// When the node wakes up, the firmware update transfers the current file again.
+		// The transfer picks up at the last received fragment if the node supports resuming.
+		const firmwareTransferTask = this.scheduler.findTask(
+			(t) =>
+				t.tag?.id === "firmware-update-ota"
+				&& t.tag.nodeId === node.id
+				&& t.group?.id === "firmware-update-ota-transfer",
+		);
+		if (firmwareTransferTask) {
+			void this.rejectTransactions(
+				(t) =>
+					t.message.getNodeId() === node.id
+					&& t.tag === "firmware-update-ota",
+				"The node is asleep",
+				ZWaveErrorCodes.Controller_MessageDropped,
+			);
+		}
 	}
 
 	/** Is called when a previously dead node starts communicating again */

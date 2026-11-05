@@ -7,8 +7,6 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
 import {
@@ -870,18 +868,34 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): FirmwareUpdateMetaDataCCReport {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		validatePayload(raw.payload.length >= 2);
+		const header = raw.payload.readUInt16BE(0);
+		let firmwareData = raw.payload.subarray(2);
 
-		// return new FirmwareUpdateMetaDataCCReport({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		// V2+ appends a checksum. The CC version is unknown here, so strip the last 2 bytes if they are the checksum of the rest.
+		if (firmwareData.length >= 2) {
+			const withoutChecksum = raw.payload.subarray(0, -2);
+			let crc = CRC16_CCITT(
+				Bytes.from([
+					CommandClasses["Firmware Update Meta Data"],
+					FirmwareUpdateMetaDataCommand.Report,
+				]),
+			);
+			crc = CRC16_CCITT(withoutChecksum, crc);
+			if (crc === raw.payload.readUInt16BE(raw.payload.length - 2)) {
+				firmwareData = firmwareData.subarray(0, -2);
+			}
+		}
+
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			reportNumber: header & 0x7fff,
+			isLast: !!(header & 0x8000),
+			firmwareData,
+		});
 	}
 
 	public isLast: boolean;
