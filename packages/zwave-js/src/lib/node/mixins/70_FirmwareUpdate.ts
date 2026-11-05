@@ -82,6 +82,8 @@ interface OTATransferOptions {
 	resume?: boolean;
 	nonSecureTransfer?: boolean;
 	abortContext: AbortFirmwareUpdateContext;
+	/** Called when the node accepted the transfer. `resumed` tells whether it continues an earlier transfer. */
+	onStart: (resumed: boolean) => void;
 	onProgress: (fragment: number, total: number, fragmentSize: number) => void;
 }
 
@@ -93,6 +95,9 @@ type PartialFirmwareUpdateResult = Pick<
 	/** Set when the node fell asleep before the transfer could finish. The update continues when it wakes up. */
 	nodeAsleep?: true;
 };
+
+// Battery powered nodes stay awake during a transfer, so a node that falls asleep has given up on it
+const MAX_OTA_ATTEMPTS_FROM_START = 3;
 
 const NODE_ASLEEP_RESULT: PartialFirmwareUpdateResult = {
 	success: false,
@@ -599,6 +604,7 @@ export abstract class FirmwareUpdateMixin
 					);
 
 					let resume = shouldResume;
+					let attemptsFromStart = 0;
 					while (true) {
 						// Let a sleeping node go back to sleep while it waits for another node's transfer to finish.
 						// The transfer task keeps it awake again once it starts.
@@ -612,6 +618,7 @@ export abstract class FirmwareUpdateMixin
 							yield* waitFor(self.waitForWakeup());
 						}
 
+						let resumed = false;
 						updateResult = (yield self.getOTATransferTask({
 							data,
 							manufacturerId: meta.manufacturerId,
@@ -624,6 +631,9 @@ export abstract class FirmwareUpdateMixin
 							resume,
 							nonSecureTransfer: options.nonSecureTransfer,
 							abortContext,
+							onStart: (accepted) => {
+								resumed = accepted;
+							},
 							onProgress: (fragment, total, fragmentSize) => {
 								const progress: FirmwareUpdateProgress = {
 									currentFile: i + 1,
@@ -654,6 +664,22 @@ export abstract class FirmwareUpdateMixin
 						// End an aborted update here because the sleeping node cannot acknowledge the abort
 						if (abortContext.abort) {
 							abortContext.abortPromise.resolve(false);
+							updateResult = {
+								success: false,
+								status: FirmwareUpdateStatus.Error_TransmissionFailed,
+							};
+							break;
+						}
+
+						if (!resumed) attemptsFromStart++;
+						if (attemptsFromStart >= MAX_OTA_ATTEMPTS_FROM_START) {
+							self.driver.controllerLog.logNode(
+								self.id,
+								`The node fell asleep during ${attemptsFromStart} attempts to transfer part ${
+									i + 1
+								} / ${updatesWithChecksum.length}, giving up...`,
+								"warn",
+							);
 							updateResult = {
 								success: false,
 								status: FirmwareUpdateStatus.Error_TransmissionFailed,
@@ -823,6 +849,7 @@ export abstract class FirmwareUpdateMixin
 
 				// Remember the checksum, so we can resume if necessary
 				self._previousFirmwareCRC = checksum;
+				options.onStart(resume);
 
 				if (options.resume) {
 					self.driver.controllerLog.logNode(
