@@ -759,6 +759,8 @@ export abstract class FirmwareUpdateMixin
 	): TaskBuilder<PartialFirmwareUpdateResult> {
 		const self = this;
 		const { data, checksum, abortContext } = options;
+		// The status must be read through a function because TypeScript keeps a narrowed `self.status` across yields
+		const isAsleep = (): boolean => self.status === NodeStatus.Asleep;
 
 		return {
 			priority: TaskPriority.Lower,
@@ -766,7 +768,7 @@ export abstract class FirmwareUpdateMixin
 			group: { id: "firmware-update-ota-transfer" },
 			task: async function* transferFirmwareTask() {
 				// Release the transfer group right away if the node fell asleep while waiting for it
-				if (self.status === NodeStatus.Asleep) {
+				if (isAsleep()) {
 					return NODE_ASLEEP_RESULT;
 				}
 
@@ -797,7 +799,7 @@ export abstract class FirmwareUpdateMixin
 							options.nonSecureTransfer,
 						));
 				} catch (e) {
-					if (self.status === NodeStatus.Asleep) {
+					if (isAsleep()) {
 						return NODE_ASLEEP_RESULT;
 					}
 					throw e;
