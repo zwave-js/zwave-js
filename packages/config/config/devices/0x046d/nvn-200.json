@@ -1,0 +1,42 @@
+{
+	"manufacturer": "NOVON",
+	"manufacturerId": "0x046d",
+	"label": "NVN-200",
+	"description": "On/Off Plug",
+	"devices": [
+		{
+			"productType": "0x27d8",
+			"productId": "0x1a2f"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "3",
+			"$import": "~/templates/master_template.json#led_indicator_four_options",
+			"defaultValue": 1
+		},
+		{
+			"#": "41",
+			"$import": "templates/novon_template.json#indicator_brightness",
+			"label": "LED Brightness"
+		},
+		{
+			"#": "42",
+			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off_on"
+		},
+		{
+			"#": "84",
+			"$import": "templates/novon_template.json#factory_reset"
+		}
+	],
+	"metadata": {
+		"inclusion": "Tap the button once.",
+		"exclusion": "Tap the button once.",
+		"reset": "1. Unplug the device.\n2. Press and hold the button.\n3. Plug the device back in and keep holding the button for 3 seconds.",
+		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80718/NVN-200-V2UserManual.pdf"
+	}
+}
