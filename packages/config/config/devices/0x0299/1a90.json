@@ -110,5 +110,17 @@
 				}
 			]
 		}
-	]
+	],
+	"scenes": {
+		"1": {
+			"label": "Button T1"
+		},
+		"2": {
+			"label": "Button T2"
+		},
+		"3": {
+			"label": "Input S",
+			"description": "Only sent when parameter 6 maps input S to its own scene"
+		}
+	}
 }

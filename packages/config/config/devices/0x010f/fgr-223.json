@@ -25,6 +25,16 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"scenes": {
+		"1": {
+			"label": "Switch S1",
+			"description": "Only sent when parameter 40 enables it"
+		},
+		"2": {
+			"label": "Switch S2",
+			"description": "Only sent when parameter 41 enables it"
+		}
+	},
 	"proprietary": {
 		"fibaroCCs": [38 /* 0x26 (Venetian Blinds) */]
 	},

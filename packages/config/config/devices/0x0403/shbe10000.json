@@ -14,6 +14,16 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"scenes": {
+		"1": {
+			"label": "Button 1",
+			"description": "Top button (I)"
+		},
+		"2": {
+			"label": "Button 2",
+			"description": "Bottom button (II)"
+		}
+	},
 	"metadata": {
 		"inclusion": "Activate the inclusion mode (teach-in mode) on the gateway. (for further details please refer to the gateways manual)\nPress the \"+\" key (Add / Inclusion) in your Z-Wave app and follow the instructions to set the gateway to Inclusion mode.\n\nKeep the device within range of the gateway.\nRemove the fuse strip from the battery compartment.\nThe device supports automatic inclusion, i.e. it automatically goes into inclusion mode when it is powered and not yet connected to a gateway.\nAlternative Inclusion:\nIf the security strip has already been removed, instead press the Link button 3 times quickly (within 1.5 seconds) to start the inclusion on the device",
 		"exclusion": "Activate the exclusion mode (learn-out mode) at the gateway. (for further details please refer to the gateways manual)\nPress the \"-\" key (Remove / Exclusion) in your Z-Wave app and follow the instructions to set the gateway to exclusion mode.\n\nPress the Link button 3 times quickly (within 1.5 seconds) to start the exclusion on the device.\n\nThe successful exclusion is displayed in the app or at the gateway",

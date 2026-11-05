@@ -68,6 +68,14 @@
 			"$import": "templates/jasco_template.json#factory_default"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		}
+	},
 	"compat": {
 		// Needed for double-tap support
 		"mapBasicSet": "event"

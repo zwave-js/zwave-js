@@ -694,6 +694,24 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Input IN1",
+			"description": "Only sent when parameter 20 sets a Central Scene mode and parameter 40 enables it"
+		},
+		"2": {
+			"label": "Input IN2",
+			"description": "Only sent when parameter 21 sets a Central Scene mode and parameter 41 enables it"
+		},
+		"3": {
+			"label": "Input IN3",
+			"description": "Only sent when parameter 22 sets a Central Scene mode and parameter 42 enables it"
+		},
+		"4": {
+			"label": "Input IN4",
+			"description": "Only sent when parameter 23 sets a Central Scene mode and parameter 43 enables it"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Power the device.\n2. Quickly press the service button three times.\n3. The LED starts blinking yellow while the process is in progress, then turns green or magenta if successful, or red if not.",
 		"exclusion": "1. Make sure the device is powered.\n2. Quickly press the service button three times.\n3. The LED starts blinking yellow while the process is in progress, then turns red if successful.",

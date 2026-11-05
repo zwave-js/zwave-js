@@ -35,6 +35,14 @@
 			"$import": "~/0x0447/templates/schneider_template.json#child_lock"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		}
+	},
 	"metadata": {
 		"inclusion": "A. SmartStart inclusion: The feature assumes the gateway has implemented SmartStart. Users could use the APP of the gateway or the gateway camera to scan the QR code on device or on the enclosed label inside the package before powering on the device, and then when the device is powered on, it shall be automatically added to the gateway.\nB. Manual inclusion (Figure 4): When the gateway is in adding mode (please refer to the instruction of the Z-Wave gateway for the operations on gateway itself), quick click the upper paddle or lower paddle 3 times within 1.5 seconds",
 		"exclusion": "When the gateway is in removing mode (please refer to the instruction of the Z-Wave gateway for the operations on gateway itself), quick click the upper paddle or lower paddle 3 times within 1.5 seconds",

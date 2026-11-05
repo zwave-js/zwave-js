@@ -381,6 +381,23 @@
 			"defaultValue": 10
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Button 1"
+		},
+		"2": {
+			"label": "Button 2"
+		},
+		"3": {
+			"label": "Button 3"
+		},
+		"4": {
+			"label": "Button 4"
+		},
+		"5": {
+			"label": "Switch Button"
+		}
+	},
 	"metadata": {
 		"inclusion": "Tap the switch button 3 times quickly. The LED indicator will blink green to signal communication and turn green for 3 seconds if inclusion is successful or turn red for 3 seconds if inclusion fails.",
 		"exclusion": "1. Tap the switch button 3 times quickly.\n2. The LED indicator will start blinking green, then turn green for 3 seconds if exclusion is successful or turn red for 3 seconds if exclusion fails.",

@@ -66,6 +66,24 @@
 			"label": "Serial Number: Part 3"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Input S1",
+			"description": "Only sent when SW1 is configured as a push-button"
+		},
+		"2": {
+			"label": "Input S2",
+			"description": "Only sent when SW2 is configured as a push-button"
+		},
+		"3": {
+			"label": "Input S3",
+			"description": "Only sent when SW3 is configured as a push-button"
+		},
+		"4": {
+			"label": "Input S4",
+			"description": "Only sent when SW4 is configured as a push-button"
+		}
+	},
 	"metadata": {
 		"$import": "templates/wave_template.json#default_metadata"
 	}

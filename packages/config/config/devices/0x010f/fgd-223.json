@@ -301,6 +301,16 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Switch S1",
+			"description": "Only sent when parameter 40 enables it"
+		},
+		"2": {
+			"label": "Switch S2",
+			"description": "Only sent when parameter 41 enables it"
+		}
+	},
 	"metadata": {
 		"inclusion": "Quickly press the S1 or S2 switch, or the PROG button, three times. The S1 and S2 switches only work during the first 10 minutes after powering the device. The LED indicator turns green (non-secure, S0, S2 Unauthenticated) or magenta (S2 Authenticated) when successful, red when not.",
 		"exclusion": "Quickly press the S1 or S2 switch, or the PROG button, three times. The S1 and S2 switches only work during the first 10 minutes after powering the device. The LED indicator turns red when the removal was successful.",

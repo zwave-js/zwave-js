@@ -106,6 +106,14 @@
 			"$import": "templates/zooz_template.json#led_indicator_multi_color"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Upper Paddle"
+		},
+		"2": {
+			"label": "Lower Paddle"
+		}
+	},
 	"metadata": {
 		"inclusion": "Tap the upper paddle 3 times quickly.",
 		"exclusion": "Tap the lower paddle 3 times quickly. The LED indicator will start blinking blue during the exclusion process, then turn green for 3 seconds when exclusion is complete.",

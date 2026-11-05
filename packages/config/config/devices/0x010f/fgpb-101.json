@@ -403,6 +403,11 @@
 			"defaultValue": 1
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Push Button"
+		}
+	},
 	"metadata": {
 		"inclusion": "Click the Button at least six times.",
 		"exclusion": "Click the Button at least six times.",

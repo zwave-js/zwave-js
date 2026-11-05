@@ -399,6 +399,16 @@
 			"$import": "templates/fibaro_template.json#reports_include_self"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Switch S1",
+			"description": "Only sent when parameter 28 enables it"
+		},
+		"2": {
+			"label": "Switch S2",
+			"description": "Only sent when parameter 29 enables it"
+		}
+	},
 	"metadata": {
 		"$import": "templates/fibaro_template.json#default_metadata",
 		"manual": "https://manuals.fibaro.com/content/manuals/en/FGS-2x3/FGS-2x3-EN-T-v1.3.pdf"

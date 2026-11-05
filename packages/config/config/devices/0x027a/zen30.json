@@ -391,6 +391,17 @@
 			"description": "Selects the LED indicator color in the opposite switch state when parameter 1 is set to value 0 or 1."
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Dimmer Upper Paddle"
+		},
+		"2": {
+			"label": "Dimmer Lower Paddle"
+		},
+		"3": {
+			"label": "Relay Button"
+		}
+	},
 	"compat": [
 		{
 			// This device exposes a Multilevel Switch (Dimmer) on endpoint 0, and a Binary Switch (Relay) on endpoint 1

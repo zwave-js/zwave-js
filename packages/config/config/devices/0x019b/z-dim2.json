@@ -216,6 +216,16 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Rotary Knob",
+			"description": "Only sent when parameter 6 is set to scene controller function"
+		},
+		"2": {
+			"label": "External Switch",
+			"description": "Only sent when parameter 7 is set to scene controller function"
+		}
+	},
 	"metadata": {
 		"inclusion": "Press the Reset button or the external switch connected to P 3 times in rapid succession.",
 		"exclusion": "Press the Reset button or the external switch connected to P 3 times in rapid succession.",

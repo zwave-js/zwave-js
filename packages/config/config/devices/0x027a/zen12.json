@@ -507,6 +507,21 @@
 			"unsigned": true
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Main Button"
+		},
+		"2": {
+			"label": "Left Dimmer Button"
+		},
+		"3": {
+			"label": "Right Dimmer Button"
+		},
+		"4": {
+			"label": "Remote Switch",
+			"description": "Only sent when parameter 37 enables it, with a ZAC99 momentary switch in a 3-way setup"
+		}
+	},
 	"metadata": {
 		"inclusion": "Click the top button 3 times quickly.",
 		"exclusion": "Click the top button 3 times quickly.",

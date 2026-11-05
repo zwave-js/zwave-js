@@ -431,6 +431,16 @@
 			"label": "Reverse Outputs"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Input IN1",
+			"description": "Only sent when parameter 40 enables it and parameter 20 is set to 2 or 3"
+		},
+		"2": {
+			"label": "Input IN2",
+			"description": "Only sent when parameter 41 enables it and parameter 21 is set to 2 or 3"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Power the device.\n2. Quickly, triple click the button on the device housing or a switch connected to IN1 or IN2.\n3. The LED will start blinking yellow.",
 		"exclusion": "1. Power the device.\n2. Quickly, triple click the button on the device housing or a switch connected to IN1 or IN2.\n3. The LED will start blinking yellow.",

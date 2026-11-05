@@ -249,6 +249,14 @@
 			"description": "Use for non-dimmable loads."
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Input S1"
+		},
+		"2": {
+			"label": "Input S2"
+		}
+	},
 	"metadata": {
 		"inclusion": "1. Press the reset button 3 times in rapid succession\n2. Add mode is indicated on the device by a blinking green LED for 90 seconds until a timeout occurs\n3. The LED will light up in solid green for 3 seconds if add is successful",
 		"exclusion": "1. Press the reset button 3 times in rapid succession\n2. Remove mode is indicated on the device by a blinking green LED for 90 seconds until a timeout occurs\n3. The LED will light up in solid green for 3 seconds if remove is successful",

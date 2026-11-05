@@ -426,6 +426,17 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Down Paddle"
+		},
+		"2": {
+			"label": "Up Paddle"
+		},
+		"3": {
+			"label": "Config Button"
+		}
+	},
 	"metadata": {
 		"inclusion": "Tap the configuration button three times. The LED bar will indicate red if not within range or green if within range.",
 		"exclusion": "Press the configuration button three times.",
