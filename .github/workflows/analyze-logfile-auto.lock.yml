@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"ef1fc95904fb89ef21ccc3d1271dfa132fade00b710d76b1b4365af9631ce041","body_hash":"d83606d941633956379bf846b2ff64b084b96e0990c0d0ebc13449d2b4decc3d","compiler_version":"v0.89.21","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.8","engine_versions":{"copilot":"1.0.87"}}
-# gh-aw-manifest: {"version":1,"secrets":["BOT_TOKEN","COPILOT_GITHUB_TOKEN","GH_AW_DEFAULT_OTLP_ENDPOINT","GH_AW_DEFAULT_OTLP_HEADERS","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"9000827ccba6bdab643e8b6fd33ac0654aef8333","version":"v8.0.2"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"actions/upload-artifact","sha":"cf430e030ddbb5b0abf93d22962f4752f3646cd9","version":"v7.0.2"},{"repo":"github/gh-aw-actions/setup","sha":"924af5fdc64061cfbf66fb584c8b07e2ac230c60","version":"v0.89.21"},{"repo":"zwave-js/bot-workflows/actions/download-logfile","sha":"124f3a48e884febf74a2abbe457ad76b3c7e901d","version":"v1"},{"repo":"zwave-js/bot-workflows/actions/setup-bot","sha":"124f3a48e884febf74a2abbe457ad76b3c7e901d","version":"v1"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23","digest":"sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23","digest":"sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23","digest":"sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.25","digest":"sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f","pinned_image":"ghcr.io/github/gh-aw-node@sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f"},{"image":"node:lts-alpine","digest":"sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53","pinned_image":"node:lts-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53"}],"mcp_servers":[{"name":"safeoutputs","tools":["add_comment","missing_data","missing_tool","noop"]},{"name":"zwave-log-analyzer","tools":["*"]}]}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"1f4a4abd241a7067bc792ce468fb0f6b950506bdc3b75b67578c822544933454","body_hash":"ca24075ec26d22a7bc0f98c0343eed1ad4de61573470b5702feb7c6c52f9e2f6","compiler_version":"v0.89.21","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.8","engine_versions":{"copilot":"1.0.87"}}
+# gh-aw-manifest: {"version":1,"secrets":["BOT_TOKEN","COPILOT_GITHUB_TOKEN","GH_AW_DEFAULT_OTLP_ENDPOINT","GH_AW_DEFAULT_OTLP_HEADERS","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"9000827ccba6bdab643e8b6fd33ac0654aef8333","version":"v8.0.2"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"actions/upload-artifact","sha":"cf430e030ddbb5b0abf93d22962f4752f3646cd9","version":"v7.0.2"},{"repo":"github/gh-aw-actions/setup","sha":"924af5fdc64061cfbf66fb584c8b07e2ac230c60","version":"v0.89.21"},{"repo":"zwave-js/bot-workflows/actions/download-logfile","sha":"6e95c90f53efc77bd804027ec6d17b667740ee91","version":"v1"},{"repo":"zwave-js/bot-workflows/actions/setup-bot","sha":"6e95c90f53efc77bd804027ec6d17b667740ee91","version":"v1"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23","digest":"sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23","digest":"sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23","digest":"sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.25","digest":"sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:9c5b5ac81fb106352ca467966aeff760c449114e21d521af866596c3bc6778f1","pinned_image":"ghcr.io/github/gh-aw-node@sha256:9c5b5ac81fb106352ca467966aeff760c449114e21d521af866596c3bc6778f1"},{"image":"node:lts-alpine","digest":"sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94","pinned_image":"node:lts-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94"}],"mcp_servers":[{"name":"safeoutputs","tools":["add_comment","missing_data","missing_tool","noop"]},{"name":"zwave-log-analyzer","tools":["*"]}]}
 # This file was automatically generated by gh-aw (v0.89.21). DO NOT EDIT. To debug this workflow, load the skill at https://github.com/github/gh-aw/blob/main/debug.md
 #
 #    ___                   _   _
@@ -17,7 +17,7 @@
 #  \/  \/ \___/|_| |_|\_\|_| |_|\___/ \_/\_/ |___/
 #
 #
-# To update this file, edit zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d and run:
+# To update this file, edit zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91 and run:
 #   gh aw compile
 # Not all edits will cause changes to this file.
 #
@@ -25,7 +25,7 @@
 #
 # Automatically analyze Z-Wave JS logfiles posted in new discussions
 #
-# Source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d
+# Source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91
 #
 # Resolved workflow manifest:
 #   Imports:
@@ -49,16 +49,16 @@
 #   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
 #   - actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
 #   - github/gh-aw-actions/setup@924af5fdc64061cfbf66fb584c8b07e2ac230c60 # v0.89.21
-#   - zwave-js/bot-workflows/actions/download-logfile@124f3a48e884febf74a2abbe457ad76b3c7e901d # v1
-#   - zwave-js/bot-workflows/actions/setup-bot@124f3a48e884febf74a2abbe457ad76b3c7e901d # v1
+#   - zwave-js/bot-workflows/actions/download-logfile@6e95c90f53efc77bd804027ec6d17b667740ee91 # v1
+#   - zwave-js/bot-workflows/actions/setup-bot@6e95c90f53efc77bd804027ec6d17b667740ee91 # v1
 #
 # Container images used:
 #   - ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2
 #   - ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64
 #   - ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0
 #   - ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086
-#   - ghcr.io/github/gh-aw-node@sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f
-#   - node:lts-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53
+#   - ghcr.io/github/gh-aw-node@sha256:9c5b5ac81fb106352ca467966aeff760c449114e21d521af866596c3bc6778f1
+#   - node:lts-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94
 
 name: "Z-Wave JS Logfile Analysis"
 on:
@@ -219,7 +219,7 @@ jobs:
           GH_AW_INFO_AWMG_VERSION: ""
           GH_AW_INFO_FIREWALL_TYPE: "squid"
           GH_AW_INFO_AGENT_RUNTIME: ""
-          GH_AW_INFO_FRONTMATTER_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
+          GH_AW_INFO_FRONTMATTER_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
           GH_AW_INFO_BODY_MODIFIED: "false"
           GH_AW_COMPILED_STRICT: "true"
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -363,7 +363,6 @@ jobs:
           GH_AW_SAFE_OUTPUTS: ${{ runner.temp }}/gh-aw/safeoutputs/outputs.jsonl
           GH_AW_PROMPT_CONFIG: "{\"items\":[{\"content_env\":\"GH_AW_PROMPT_CONTENT_0000\"},{\"file\":\"xpia.md\"},{\"file\":\"temp_folder_prompt.md\"},{\"file\":\"markdown.md\"},{\"file\":\"safe_outputs_prompt.md\"},{\"content_env\":\"GH_AW_PROMPT_CONTENT_0001\"},{\"content_env\":\"GH_AW_PROMPT_CONTENT_0002\"},{\"file\":\"mcp_cli_tools_with_safeoutputs_prompt.md\"},{\"content_env\":\"GH_AW_PROMPT_CONTENT_0003\"},{\"content_env\":\"GH_AW_PROMPT_CONTENT_0004\"},{\"content_env\":\"GH_AW_PROMPT_CONTENT_0005\"},{\"content_env\":\"GH_AW_PROMPT_CONTENT_0006\"}]}"
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
           GH_AW_PROMPT_CONTENT_0000: "<system>\n"
           GH_AW_PROMPT_CONTENT_0001: "<safe-output-tools>\nTools: add_comment, missing_tool, missing_data, noop\n"
           GH_AW_PROMPT_CONTENT_0002: "</safe-output-tools>\n"
@@ -383,7 +382,6 @@ jobs:
           GH_AW_PROMPT: ${{ runner.temp }}/gh-aw/aw-prompts/prompt.txt
           GH_AW_ENGINE_ID: "copilot"
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
         with:
           script: |
             const path = require('path');
@@ -399,7 +397,6 @@ jobs:
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
           GH_AW_MCP_CLI_SERVERS_LIST: "- `safeoutputs` — run `safeoutputs --help` to see available tools\n- `zwave-log-analyzer` — run `zwave-log-analyzer --help` to see available tools"
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
         with:
           script: |
             const path = require('path');
@@ -415,8 +412,7 @@ jobs:
               substitutions: {
                 GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: process.env.GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER,
                 GH_AW_MCP_CLI_SERVERS_LIST: process.env.GH_AW_MCP_CLI_SERVERS_LIST,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
-                GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: process.env.GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED
               }
             });
       - name: Validate prompt placeholders
@@ -564,7 +560,7 @@ jobs:
           name: activation
           path: /tmp/gh-aw
       - name: Setup bot scripts
-        uses: zwave-js/bot-workflows/actions/setup-bot@124f3a48e884febf74a2abbe457ad76b3c7e901d # v1
+        uses: zwave-js/bot-workflows/actions/setup-bot@6e95c90f53efc77bd804027ec6d17b667740ee91 # v1
       - id: get_logfile_url
         name: Get logfile URL from discussion
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -575,9 +571,13 @@ jobs:
             const bot = require(`${process.env.BOT_SCRIPTS_DIR}/index.cjs`);
             return bot.extractLogfileUrlFromDiscussion({github, context});
       - name: Download logfile
-        uses: zwave-js/bot-workflows/actions/download-logfile@124f3a48e884febf74a2abbe457ad76b3c7e901d # v1
+        uses: zwave-js/bot-workflows/actions/download-logfile@6e95c90f53efc77bd804027ec6d17b667740ee91 # v1
         with:
           url: ${{ steps.get_logfile_url.outputs.result }}
+      - name: Write discussion content
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: "const path = require(\"path\");\nconst fs = require(\"fs\");\nconst actionsDir = path.join(process.env.RUNNER_TEMP, \"gh-aw\", \"actions\");\nconst { setupGlobals } = require(path.join(actionsDir, \"setup_globals.cjs\"));\nsetupGlobals(core, github, context, exec, io, getOctokit);\nconst { sanitizeIncomingText } = require(path.join(actionsDir, \"sanitize_incoming_text.cjs\"));\n\nconst title = context.payload.discussion?.title ?? \"\";\nconst body = context.payload.discussion?.body ?? \"\";\nfs.mkdirSync(\"/tmp/gh-aw/agent\", { recursive: true });\nfs.writeFileSync(\n  \"/tmp/gh-aw/agent/discussion.md\",\n  sanitizeIncomingText(`${title}\\n\\n${body}`),\n);"
 
       - name: Configure Git credentials
         env:
@@ -624,7 +624,7 @@ jobs:
           GH_AW_SKILL_DIR: ".github/skills"
         run: bash "${RUNNER_TEMP}/gh-aw/actions/restore_inline_skills.sh"
       - name: Download container images
-        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2 ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64 ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0 ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086 ghcr.io/github/gh-aw-node@sha256:2c2ea524e648b91c8333ce246e3838fcf5b19ac70e45baac1a51b9207299749f node:lts-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2 ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64 ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0 ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086 ghcr.io/github/gh-aw-node@sha256:9c5b5ac81fb106352ca467966aeff760c449114e21d521af866596c3bc6778f1 node:lts-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94
       - name: Prepare Safe Outputs Directories
         run: |
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
@@ -1350,8 +1350,8 @@ jobs:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
           GH_AW_WORKFLOW_NAME: "Z-Wave JS Logfile Analysis"
-          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/124f3a48e884febf74a2abbe457ad76b3c7e901d/workflows/analyze-logfile-auto.md"
+          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/6e95c90f53efc77bd804027ec6d17b667740ee91/workflows/analyze-logfile-auto.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_REPORT_AS_ISSUE: "false"
@@ -1374,8 +1374,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_WORKFLOW_NAME: "Z-Wave JS Logfile Analysis"
-          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/124f3a48e884febf74a2abbe457ad76b3c7e901d/workflows/analyze-logfile-auto.md"
+          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/6e95c90f53efc77bd804027ec6d17b667740ee91/workflows/analyze-logfile-auto.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
           GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
@@ -1396,8 +1396,8 @@ jobs:
           GH_AW_MISSING_TOOL_CREATE_ISSUE: "false"
           GH_AW_MISSING_TOOL_TITLE_PREFIX: "[missing tool]"
           GH_AW_WORKFLOW_NAME: "Z-Wave JS Logfile Analysis"
-          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/124f3a48e884febf74a2abbe457ad76b3c7e901d/workflows/analyze-logfile-auto.md"
+          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/6e95c90f53efc77bd804027ec6d17b667740ee91/workflows/analyze-logfile-auto.md"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1415,8 +1415,8 @@ jobs:
           GH_AW_REPORT_INCOMPLETE_CREATE_ISSUE: "false"
           GH_AW_REPORT_INCOMPLETE_TITLE_PREFIX: "[incomplete]"
           GH_AW_WORKFLOW_NAME: "Z-Wave JS Logfile Analysis"
-          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/124f3a48e884febf74a2abbe457ad76b3c7e901d/workflows/analyze-logfile-auto.md"
+          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/6e95c90f53efc77bd804027ec6d17b667740ee91/workflows/analyze-logfile-auto.md"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1433,8 +1433,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_WORKFLOW_NAME: "Z-Wave JS Logfile Analysis"
-          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/124f3a48e884febf74a2abbe457ad76b3c7e901d/workflows/analyze-logfile-auto.md"
+          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/6e95c90f53efc77bd804027ec6d17b667740ee91/workflows/analyze-logfile-auto.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "analyze-logfile-auto"
@@ -1489,8 +1489,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_WORKFLOW_NAME: "Z-Wave JS Logfile Analysis"
-          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/124f3a48e884febf74a2abbe457ad76b3c7e901d/workflows/analyze-logfile-auto.md"
+          GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/6e95c90f53efc77bd804027ec6d17b667740ee91/workflows/analyze-logfile-auto.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_REPORT_FAILED_JOBS: "true"
         with:
@@ -1822,7 +1822,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Setup bot scripts
-        uses: zwave-js/bot-workflows/actions/setup-bot@124f3a48e884febf74a2abbe457ad76b3c7e901d # v1
+        uses: zwave-js/bot-workflows/actions/setup-bot@6e95c90f53efc77bd804027ec6d17b667740ee91 # v1
       - name: Extract log file from discussion body
         id: extract
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -1908,8 +1908,8 @@ jobs:
       GH_AW_THREAT_DETECTION_AIC: ${{ needs.detection.outputs.aic }}
       GH_AW_WORKFLOW_ID: "analyze-logfile-auto"
       GH_AW_WORKFLOW_NAME: "Z-Wave JS Logfile Analysis"
-      GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@124f3a48e884febf74a2abbe457ad76b3c7e901d"
-      GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/124f3a48e884febf74a2abbe457ad76b3c7e901d/workflows/analyze-logfile-auto.md"
+      GH_AW_WORKFLOW_SOURCE: "zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6e95c90f53efc77bd804027ec6d17b667740ee91"
+      GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/zwave-js/bot-workflows/blob/6e95c90f53efc77bd804027ec6d17b667740ee91/workflows/analyze-logfile-auto.md"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
