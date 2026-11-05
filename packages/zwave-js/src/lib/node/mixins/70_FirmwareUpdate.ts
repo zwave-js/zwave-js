@@ -486,12 +486,14 @@ export abstract class FirmwareUpdateMixin
 					if (skipFinishedFiles === -1) shouldResume = false;
 				}
 
-				// From here on, aborting requires telling the node
+				// While a transfer is running, aborting requires telling the node
 				const abortContext = {
 					abort: false,
 					tooLateToAbort: false,
 					abortPromise: createDeferredPromise<boolean>(),
 				};
+				let transferActive = false;
+				const abortWithoutTransfer = self._abortFirmwareUpdate;
 
 				self._abortFirmwareUpdate = async () => {
 					if (abortContext.tooLateToAbort) {
@@ -499,6 +501,12 @@ export abstract class FirmwareUpdateMixin
 							`The firmware update was transmitted completely, cannot abort anymore.`,
 							ZWaveErrorCodes.FirmwareUpdateCC_FailedToAbort,
 						);
+					}
+
+					// Outside of a transfer, the node is not updating, so removing the tasks is enough.
+					// This includes waiting for another node's transfer to finish.
+					if (!transferActive && abortWithoutTransfer) {
+						return abortWithoutTransfer();
 					}
 
 					self.driver.controllerLog.logNode(self.id, {
@@ -562,82 +570,109 @@ export abstract class FirmwareUpdateMixin
 						} / ${updatesWithChecksum.length})...`,
 					);
 
-					// For determining the initial fragment size, assume the node respects our choice.
-					// If the node is not secure, these two values are identical anyways.
-					let fragmentSize = options.nonSecureTransfer
-						? fragmentSizeNonSecure
-						: fragmentSizeSecure;
+					// Firmware transfers cause a lot of traffic, so only one node at a time may receive fragments.
+					// Updates of other nodes keep waiting for their node to wake up in the meantime.
+					const transferTask: TaskBuilder<PartialFirmwareUpdateResult> =
+						{
+							priority: TaskPriority.Lower,
+							tag: { id: "firmware-update-ota", nodeId: self.id },
+							group: { id: "firmware-update-ota-transfer" },
+							task: async function* transferFirmwareTask() {
+								transferActive = true;
 
-					// Tell the node to start requesting fragments
-					const { resume, nonSecureTransfer } =
-						yield* self.beginFirmwareUpdateInternal(
-							data,
-							meta.manufacturerId,
-							target,
-							firmwareId,
-							fragmentSize,
-							checksum,
-							hardwareVersion,
-							shouldResume,
-							options.nonSecureTransfer,
-						);
+								// For determining the initial fragment size, assume the node respects our choice.
+								// If the node is not secure, these two values are identical anyways.
+								let fragmentSize = options.nonSecureTransfer
+									? fragmentSizeNonSecure
+									: fragmentSizeSecure;
 
-					// If the node did not accept non-secure transfer, revisit our choice of fragment size
-					if (options.nonSecureTransfer && !nonSecureTransfer) {
-						fragmentSize = fragmentSizeSecure;
-					}
+								// Tell the node to start requesting fragments
+								const { resume, nonSecureTransfer } =
+									yield* self.beginFirmwareUpdateInternal(
+										data,
+										meta.manufacturerId,
+										target,
+										firmwareId,
+										fragmentSize,
+										checksum,
+										hardwareVersion,
+										shouldResume,
+										options.nonSecureTransfer,
+									);
 
-					// Remember the checksum, so we can resume if necessary
-					self._previousFirmwareCRC = checksum;
+								// If the node did not accept non-secure transfer, revisit our choice of fragment size
+								if (
+									options.nonSecureTransfer
+									&& !nonSecureTransfer
+								) {
+									fragmentSize = fragmentSizeSecure;
+								}
 
-					if (shouldResume) {
-						self.driver.controllerLog.logNode(
-							self.id,
-							`Node ${
-								resume ? "accepted" : "did not accept"
-							} resuming the update...`,
-						);
-					}
-					if (nonSecureTransfer) {
-						self.driver.controllerLog.logNode(
-							self.id,
-							`Firmware will be transferred without encryption...`,
-						);
-					}
+								// Remember the checksum, so we can resume if necessary
+								self._previousFirmwareCRC = checksum;
 
-					yield; // Give the task scheduler time to do something else
+								if (shouldResume) {
+									self.driver.controllerLog.logNode(
+										self.id,
+										`Node ${
+											resume
+												? "accepted"
+												: "did not accept"
+										} resuming the update...`,
+									);
+								}
+								if (nonSecureTransfer) {
+									self.driver.controllerLog.logNode(
+										self.id,
+										`Firmware will be transferred without encryption...`,
+									);
+								}
 
-					// Listen for firmware update fragment requests and handle them
-					updateResult = yield* self.doFirmwareUpdateInternal(
-						data,
-						fragmentSize,
-						nonSecureTransfer,
-						abortContext,
-						(fragment, total) => {
-							const progress: FirmwareUpdateProgress = {
-								currentFile: i + 1,
-								totalFiles: updatesWithChecksum.length,
-								sentFragments: fragment,
-								totalFragments: total,
-								progress: roundTo(
-									((sentBytesOfPreviousFiles
-										+ Math.min(
-											fragment * fragmentSize,
-											data.length,
-										))
-										/ totalBytes)
-										* 100,
-									2,
-								),
-							};
-							notifyProgress(progress);
+								yield; // Give the task scheduler time to do something else
 
-							// When this file is done, add the fragments to the total, so we can compute the total progress correctly
-							if (fragment === total) {
-								sentBytesOfPreviousFiles += data.length;
-							}
-						},
-					);
+								// Listen for firmware update fragment requests and handle them
+								return yield* self.doFirmwareUpdateInternal(
+									data,
+									fragmentSize,
+									nonSecureTransfer,
+									abortContext,
+									(fragment, total) => {
+										const progress: FirmwareUpdateProgress =
+											{
+												currentFile: i + 1,
+												totalFiles:
+													updatesWithChecksum.length,
+												sentFragments: fragment,
+												totalFragments: total,
+												progress: roundTo(
+													((sentBytesOfPreviousFiles
+														+ Math.min(
+															fragment
+																* fragmentSize,
+															data.length,
+														))
+														/ totalBytes)
+														* 100,
+													2,
+												),
+											};
+										notifyProgress(progress);
+
+										// When this file is done, add the fragments to the total, so we can compute the total progress correctly
+										if (fragment === total) {
+											sentBytesOfPreviousFiles +=
+												data.length;
+										}
+									},
+								);
+							},
+							cleanup() {
+								transferActive = false;
+								return Promise.resolve();
+							},
+						};
+					updateResult =
+						(yield transferTask) as PartialFirmwareUpdateResult;
 
 					// If we wait, wait a bit longer than the device told us, so it is actually ready to use
 					conservativeWaitTime =
