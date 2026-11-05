@@ -303,11 +303,11 @@
 	],
 	"scenes": {
 		"1": {
-			"label": "S1 Switch",
+			"label": "Switch S1",
 			"description": "Only sent when parameter 40 enables it"
 		},
 		"2": {
-			"label": "S2 Switch",
+			"label": "Switch S2",
 			"description": "Only sent when parameter 41 enables it"
 		}
 	},

@@ -696,19 +696,19 @@
 	],
 	"scenes": {
 		"1": {
-			"label": "IN1 Input",
+			"label": "Input IN1",
 			"description": "Only sent when parameter 20 sets a Central Scene mode and parameter 40 enables it"
 		},
 		"2": {
-			"label": "IN2 Input",
+			"label": "Input IN2",
 			"description": "Only sent when parameter 21 sets a Central Scene mode and parameter 41 enables it"
 		},
 		"3": {
-			"label": "IN3 Input",
+			"label": "Input IN3",
 			"description": "Only sent when parameter 22 sets a Central Scene mode and parameter 42 enables it"
 		},
 		"4": {
-			"label": "IN4 Input",
+			"label": "Input IN4",
 			"description": "Only sent when parameter 23 sets a Central Scene mode and parameter 43 enables it"
 		}
 	},

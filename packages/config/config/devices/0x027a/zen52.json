@@ -166,11 +166,11 @@
 	],
 	"scenes": {
 		"1": {
-			"label": "S1 Input",
+			"label": "Input S1",
 			"description": "Only sent when parameter 16 enables it"
 		},
 		"2": {
-			"label": "S2 Input",
+			"label": "Input S2",
 			"description": "Only sent when parameter 16 enables it"
 		}
 	},

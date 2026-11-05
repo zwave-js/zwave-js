@@ -433,11 +433,11 @@
 	],
 	"scenes": {
 		"1": {
-			"label": "IN1 Input",
+			"label": "Input IN1",
 			"description": "Only sent when parameter 40 enables it and parameter 20 is set to 2 or 3"
 		},
 		"2": {
-			"label": "IN2 Input",
+			"label": "Input IN2",
 			"description": "Only sent when parameter 41 enables it and parameter 21 is set to 2 or 3"
 		}
 	},

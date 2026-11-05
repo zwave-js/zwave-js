@@ -195,11 +195,11 @@
 	],
 	"scenes": {
 		"1": {
-			"label": "S1 Input",
+			"label": "Input S1",
 			"description": "Only sent when the relay is in momentary switch mode and parameter 5 enables it"
 		},
 		"2": {
-			"label": "S2 Input",
+			"label": "Input S2",
 			"description": "Only sent when the relay is in momentary switch mode and parameter 5 enables it"
 		}
 	},

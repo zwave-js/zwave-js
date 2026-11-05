@@ -89,7 +89,7 @@
 	],
 	"scenes": {
 		"1": {
-			"label": "S1 Input",
+			"label": "Input S1",
 			"description": "Only sent when parameter 5 enables it"
 		}
 	},

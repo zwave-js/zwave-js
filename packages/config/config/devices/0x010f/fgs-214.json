@@ -401,10 +401,10 @@
 	],
 	"scenes": {
 		"1": {
-			"label": "S1 Switch"
+			"label": "Switch S1"
 		},
 		"2": {
-			"label": "S2 Switch"
+			"label": "Switch S2"
 		}
 	},
 	"metadata": {
