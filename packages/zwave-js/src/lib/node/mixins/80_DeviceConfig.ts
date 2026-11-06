@@ -1,3 +1,4 @@
+import { refreshSceneMetadataFromConfigFile } from "@zwave-js/cc/CentralSceneCC";
 import { refreshConfigParamMetadataFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
 import { DeviceConfig, parseDeviceConfigHash } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
@@ -258,11 +259,16 @@ export abstract class DeviceConfigMixin
 				this._currentDeviceConfigHash = this.cachedDeviceConfigHash;
 			}
 
-			// Apply all param metadata from the device config dynamically.
+			// Apply all param metadata and scene labels from the device config dynamically.
 			// This handles updates to existing params, addition of new params,
 			// and removal/hiding of old params.
 			for (const ep of this.getAllEndpoints()) {
 				refreshConfigParamMetadataFromConfigFile(
+					this.driver,
+					this.id,
+					ep.index,
+				);
+				refreshSceneMetadataFromConfigFile(
 					this.driver,
 					this.id,
 					ep.index,
