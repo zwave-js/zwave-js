@@ -43,6 +43,8 @@ The **Command Classes API** provides a high-to-mid level entrypoint which allows
 - [Manufacturer Proprietary CC](api/CCs/ManufacturerProprietary.md) · `0x91`
 - [Manufacturer Specific CC](api/CCs/ManufacturerSpecific.md) · `0x72`
 - [Meter CC](api/CCs/Meter.md) · `0x32`
+- [Meter Table Monitor CC](api/CCs/MeterTableMonitor.md) · `0x3d`
+- [Meter Table Push Configuration CC](api/CCs/MeterTablePushConfiguration.md) · `0x3e`
 - [Multi Channel Association CC](api/CCs/MultiChannelAssociation.md) · `0x8e`
 - [Multi Channel CC](api/CCs/MultiChannel.md) · `0x60`
 - [Multi Command CC](api/CCs/MultiCommand.md) · `0x8f`

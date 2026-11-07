@@ -1071,6 +1071,120 @@ export interface MeterReading {
 	scale: MeterScale;
 }
 
+export enum MeterTableMonitorCommand {
+	TablePointAdmNoGet = 0x01,
+	TablePointAdmNoReport = 0x02,
+	TableIdGet = 0x03,
+	TableIdReport = 0x04,
+	TableCapabilityGet = 0x05,
+	TableCapabilityReport = 0x06,
+	StatusSupportedGet = 0x07,
+	StatusSupportedReport = 0x08,
+	StatusDepthGet = 0x09,
+	StatusDateGet = 0x0a,
+	StatusReport = 0x0b,
+	CurrentDataGet = 0x0c,
+	CurrentDataReport = 0x0d,
+	HistoricalDataGet = 0x0e,
+	HistoricalDataReport = 0x0f,
+}
+
+export enum MeterTableMeterType {
+	"Single-E electric" = 0x01,
+	Gas = 0x02,
+	Water = 0x03,
+	"Twin-E electric" = 0x04,
+	"3P single direct electric" = 0x05,
+	"3P single ECT electric" = 0x06,
+	"1 phase direct electric" = 0x07,
+	Heating = 0x08,
+	Cooling = 0x09,
+	"Combined heating and cooling" = 0x0a,
+	"Electric sub-meter" = 0x0b,
+}
+
+export enum MeterTableRateType {
+	Unspecified = 0x00,
+	Import = 0x01,
+	Export = 0x02,
+	/** Only in the capability report: the meter measures both directions */
+	"Import and export" = 0x03,
+}
+
+export enum MeterTablePayMeter {
+	"Credit meter" = 0x01,
+	"Prepayment meter" = 0x02,
+	"Prepayment meter debt" = 0x03,
+}
+
+export interface MeterTableScale {
+	key: number;
+	unit?: string;
+	label: string;
+}
+
+export function isElectricMeterTableType(meterType: number): boolean {
+	return (
+		meterType === MeterTableMeterType["Single-E electric"]
+		|| (meterType >= MeterTableMeterType["Twin-E electric"]
+			&& meterType <= MeterTableMeterType["1 phase direct electric"])
+		|| meterType === MeterTableMeterType["Electric sub-meter"]
+	);
+}
+
+/**
+ * The scales whose meaning has been confirmed with a device (a P1 meter
+ * reader). Others are reported with their number until the full list is
+ * filled in.
+ */
+export function getMeterTableScale(
+	meterType: number,
+	key: number,
+): MeterTableScale {
+	if (isElectricMeterTableType(meterType)) {
+		if (key === 0x00) return { key, unit: "kWh", label: "Energy" };
+		if (key === 0x07) return { key, unit: "kW", label: "Power" };
+	} else if (
+		meterType === MeterTableMeterType.Gas
+		|| meterType === MeterTableMeterType.Water
+	) {
+		if (key === 0x00) return { key, unit: "m³", label: "Volume" };
+		if (key === 0x08) return { key, unit: "m³/h", label: "Flow" };
+	}
+	return { key, label: `Scale ${key}` };
+}
+
+export interface MeterTableReading {
+	/** Bit number of the dataset this value belongs to */
+	dataset: number;
+	/**
+	 * The rate type of the report this value came in. A meter that measures
+	 * both directions can send import and export in one chain of reports.
+	 */
+	rateType: MeterTableRateType;
+	scale: MeterTableScale;
+	value: number;
+}
+
+export enum MeterTablePushConfigurationCommand {
+	Set = 0x01,
+	Get = 0x02,
+	Report = 0x03,
+}
+
+export interface MeterTablePushConfiguration {
+	/** Which operating status changes are pushed (0-15) */
+	operatingStatusPushMode: number;
+	pushStatus: boolean;
+	/** Bit mask of the datasets that are pushed */
+	pushDataset: number;
+	intervalMonths: number;
+	intervalDays: number;
+	intervalHours: number;
+	intervalMinutes: number;
+	pushNodeId: number;
+}
+
 export enum MultiChannelAssociationCommand {
 	Set = 0x01,
 	Get = 0x02,
