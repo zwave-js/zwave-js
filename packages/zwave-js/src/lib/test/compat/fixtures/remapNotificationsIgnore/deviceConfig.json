@@ -1,0 +1,34 @@
+{
+	"manufacturer": "Test Manufacturer",
+	"manufacturerId": "0xdead",
+	"label": "Test Lock",
+	"description": "With ignored manual lock notifications",
+	"devices": [
+		{
+			"productType": "0xbeef",
+			"productId": "0xcafe"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"remapNotifications": [
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 1
+				},
+				"ignore": true
+			},
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 2
+				},
+				"ignore": true
+			}
+		]
+	}
+}

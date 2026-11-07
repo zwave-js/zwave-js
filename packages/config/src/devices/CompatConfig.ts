@@ -906,7 +906,8 @@ export interface CompatRemapNotificationTo {
 export type CompatRemapNotificationAction =
 	| { type: "remap"; to: CompatRemapNotificationTo }
 	| { type: "clear"; targets: CompatRemapNotificationTo[] }
-	| { type: "idle"; targets: CompatRemapNotificationTo[] };
+	| { type: "idle"; targets: CompatRemapNotificationTo[] }
+	| { type: "ignore" };
 
 export class CompatRemapNotification {
 	public constructor(
@@ -1007,11 +1008,20 @@ error in compat option remapNotifications, mapping #${index}: property "${label}
 					pick(target, ["notificationType", "notificationEvent"])
 				),
 			};
+		} else if (definition.ignore != undefined) {
+			if (definition.ignore !== true) {
+				throwInvalidConfig(
+					"devices",
+					`config/devices/${filename}:
+error in compat option remapNotifications, mapping #${index}: property "ignore" must be true!`,
+				);
+			}
+			this.action = { type: "ignore" };
 		} else {
 			throwInvalidConfig(
 				"devices",
 				`config/devices/${filename}:
-error in compat option remapNotifications, mapping #${index}: exactly one of "to", "clear", or "idle" must be defined!`,
+error in compat option remapNotifications, mapping #${index}: exactly one of "to", "clear", "idle", or "ignore" must be defined!`,
 			);
 		}
 	}

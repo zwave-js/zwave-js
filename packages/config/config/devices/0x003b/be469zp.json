@@ -242,6 +242,26 @@
 			}
 		},
 		// The device is known to randomly take literal ages to respond to commands
-		"reportTimeout": 10000
+		"reportTimeout": 10000,
+		// This lock repeats Manual (un)lock notifications several seconds later.
+		// Those repeats can overwrite a newer Door Lock CC state. Lock state is
+		// already reported through Door Lock CC, so these notifications are redundant.
+		// https://github.com/zwave-js/zwave-js/issues/9134
+		"remapNotifications": [
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 1 // Manual lock operation
+				},
+				"ignore": true
+			},
+			{
+				"from": {
+					"notificationType": 6,
+					"notificationEvent": 2 // Manual unlock operation
+				},
+				"ignore": true
+			}
+		]
 	}
 }

@@ -915,7 +915,7 @@ export class NotificationCC extends CommandClass {
 				}
 			}
 
-			// Only add target events for normal remaps
+			// Only add target events for normal remaps; clear/idle/ignore only remove
 			if (mapping.action.type === "remap") {
 				const to = mapping.action.to;
 				supportedTypes.add(to.notificationType);

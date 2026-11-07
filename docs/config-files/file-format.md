@@ -618,6 +618,14 @@ This property has the following shape:
 				{ "notificationType": 6, "notificationEvent": 24 },
 				{ "notificationType": 6, "notificationEvent": 25 }
 			]
+		},
+		// Example with action: ignore the notification entirely
+		{
+			"from": {
+				"notificationType": 6,
+				"notificationEvent": 1,
+			},
+			"ignore": true
 		}
 	]
 }
@@ -628,8 +636,9 @@ The `from` object specifies which incoming notification event should be remapped
 - With `to`: the incoming notification is treated as if the device sent the target notification event instead.
 - With `clear`: receiving the source notification causes each listed target notification value to be set to unknown state (`UNKNOWN_STATE`).
 - With `idle`: receiving the source notification causes each listed target notification value to be set to idle (0).
+- With `ignore`: the incoming notification is discarded entirely.
 
-When a notification is remapped, the original notification event is removed from the list of supported events and the mapping target is added instead. Mappings with `clear` or `idle` do not add to the list of supported notification events.
+When a notification is remapped, the original notification event is removed from the list of supported events and the mapping target is added instead. Mappings with `clear`, `idle`, or `ignore` do not add to the list of supported notification events.
 
 ### `removeEndpoints`
 

@@ -731,6 +731,10 @@
 									"$ref": "#/definitions/remapNotificationsTarget"
 								},
 								"minItems": 1
+							},
+							"ignore": {
+								"type": "boolean",
+								"const": true
 							}
 						},
 						"additionalProperties": false,
@@ -746,6 +750,9 @@
 							},
 							{
 								"required": ["from", "idle"]
+							},
+							{
+								"required": ["from", "ignore"]
 							}
 						]
 					},
