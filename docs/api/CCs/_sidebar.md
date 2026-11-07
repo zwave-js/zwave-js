@@ -61,6 +61,8 @@
     - [Manufacturer Proprietary CC](api/CCs/ManufacturerProprietary.md)
     - [Manufacturer Specific CC](api/CCs/ManufacturerSpecific.md)
     - [Meter CC](api/CCs/Meter.md)
+    - [Meter Table Monitor CC](api/CCs/MeterTableMonitor.md)
+    - [Meter Table Push Configuration CC](api/CCs/MeterTablePushConfiguration.md)
     - [Multi Channel Association CC](api/CCs/MultiChannelAssociation.md)
     - [Multi Channel CC](api/CCs/MultiChannel.md)
     - [Multi Command CC](api/CCs/MultiCommand.md)
