@@ -41,6 +41,7 @@
 			}
 		},
 		"1": {
+			"label": "Output 1",
 			"associations": {
 				"1": {
 					"$import": "#endpoints/0/associations/2",
@@ -52,6 +53,7 @@
 			}
 		},
 		"2": {
+			"label": "Output 2",
 			"associations": {
 				"1": {
 					"$import": "#endpoints/0/associations/4",
