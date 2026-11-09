@@ -154,11 +154,16 @@ async function waitForLogEntry(log: string[], entry: string, count = 1) {
 					t.expect(result.success).toBe(true);
 				}
 
-				const fragments = mock.log.filter((e) => /:\d+$/.test(e));
-				t.expect([
-					[...fragmentsOf(2), ...fragmentsOf(3)],
-					[...fragmentsOf(3), ...fragmentsOf(2)],
-				]).toContainEqual(fragments);
+				const fragments = mock.log.filter(
+					(e) => !e.endsWith(":meta") && !e.endsWith(":request"),
+				);
+				// Either node may go first, but it must receive all of its fragments before the other node gets any
+				const firstNode = fragments[0] === "2:1" ? 2 : 3;
+				const secondNode = firstNode === 2 ? 3 : 2;
+				t.expect(fragments).toEqual([
+					...fragmentsOf(firstNode),
+					...fragmentsOf(secondNode),
+				]);
 			},
 		},
 	);
