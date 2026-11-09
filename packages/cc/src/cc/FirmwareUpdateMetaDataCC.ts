@@ -871,24 +871,10 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 		raw: CCRaw,
 		ctx: CCParsingContext,
 	): FirmwareUpdateMetaDataCCReport {
-		validatePayload(raw.payload.length >= 2);
+		// Only mock nodes parse this command. Assume they implement V2+, where the last 2 bytes are a checksum.
+		validatePayload(raw.payload.length >= 4);
 		const header = raw.payload.readUInt16BE(0);
-		let firmwareData = raw.payload.subarray(2);
-
-		// Determine if we are dealing with a V1 command, or V2+ which contains a checksum
-		if (firmwareData.length >= 2) {
-			const withoutChecksum = raw.payload.subarray(0, -2);
-			let crc = CRC16_CCITT(
-				Bytes.from([
-					CommandClasses["Firmware Update Meta Data"],
-					FirmwareUpdateMetaDataCommand.Report,
-				]),
-			);
-			crc = CRC16_CCITT(withoutChecksum, crc);
-			if (crc === raw.payload.readUInt16BE(raw.payload.length - 2)) {
-				firmwareData = firmwareData.subarray(0, -2);
-			}
-		}
+		const firmwareData = raw.payload.subarray(2, -2);
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
