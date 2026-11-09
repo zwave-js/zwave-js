@@ -25,57 +25,69 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "RGBW Sync",
+					"description": "Allows to synchronize state of other FIBARO RGBW Controller devices - do not use with other devices.",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off (IN1)",
+					"description": "Devices in this group will be switched on or off when the IN1 input is triggered (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Dimmer (IN1)",
+					"description": "Devices in this group will change their level when the IN1 input is triggered (uses Multilevel Switch command class).",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "On/Off (IN2)",
+					"description": "Devices in this group will be switched on or off when the IN2 input is triggered (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"6": {
+					"label": "Dimmer (IN2)",
+					"description": "Devices in this group will change their level when the IN2 input is triggered (uses Multilevel Switch command class).",
+					"maxNodes": 5
+				},
+				"7": {
+					"label": "On/Off (IN3)",
+					"description": "Devices in this group will be switched on or off when the IN3 input is triggered (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"8": {
+					"label": "Dimmer (IN3)",
+					"description": "Devices in this group will change their level when the IN3 input is triggered (uses Multilevel Switch command class).",
+					"maxNodes": 5
+				},
+				"9": {
+					"label": "On/Off (IN4)",
+					"description": "Devices in this group will be switched on or off when the IN4 input is triggered (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"10": {
+					"label": "Dimmer (IN4)",
+					"description": "Devices in this group will change their level when the IN4 input is triggered (uses Multilevel Switch command class).",
+					"maxNodes": 5
+				}
+			}
 		},
-		"2": {
-			"label": "RGBW Sync",
-			"description": "Allows to synchronize state of other FIBARO RGBW Controller devices - do not use with other devices.",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "On/Off (IN1)",
-			"description": "Devices in this group will be switched on or off when the IN1 input is triggered (uses Basic command class).",
-			"maxNodes": 5
-		},
-		"4": {
-			"label": "Dimmer (IN1)",
-			"description": "Devices in this group will change their level when the IN1 input is triggered (uses Multilevel Switch command class).",
-			"maxNodes": 5
-		},
-		"5": {
-			"label": "On/Off (IN2)",
-			"description": "Devices in this group will be switched on or off when the IN2 input is triggered (uses Basic command class).",
-			"maxNodes": 5
-		},
-		"6": {
-			"label": "Dimmer (IN2)",
-			"description": "Devices in this group will change their level when the IN2 input is triggered (uses Multilevel Switch command class).",
-			"maxNodes": 5
-		},
-		"7": {
-			"label": "On/Off (IN3)",
-			"description": "Devices in this group will be switched on or off when the IN3 input is triggered (uses Basic command class).",
-			"maxNodes": 5
-		},
-		"8": {
-			"label": "Dimmer (IN3)",
-			"description": "Devices in this group will change their level when the IN3 input is triggered (uses Multilevel Switch command class).",
-			"maxNodes": 5
-		},
-		"9": {
-			"label": "On/Off (IN4)",
-			"description": "Devices in this group will be switched on or off when the IN4 input is triggered (uses Basic command class).",
-			"maxNodes": 5
-		},
-		"10": {
-			"label": "Dimmer (IN4)",
-			"description": "Devices in this group will change their level when the IN4 input is triggered (uses Multilevel Switch command class).",
-			"maxNodes": 5
-		}
+		"2": { "label": "Output 1" },
+		"3": { "label": "Output 2" },
+		"4": { "label": "Output 3" },
+		"5": { "label": "Output 4" },
+		"6": { "label": "Input 1" },
+		"7": { "label": "Input 2" },
+		"8": { "label": "Input 3" },
+		"9": { "label": "Input 4" }
 	},
 	"paramInformation": [
 		{
