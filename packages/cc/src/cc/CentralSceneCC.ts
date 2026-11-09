@@ -1,3 +1,4 @@
+import type { GetDeviceConfig } from "@zwave-js/config";
 import {
 	CommandClasses,
 	type GetValueDB,
@@ -85,6 +86,47 @@ export const CentralSceneCCValues = V.defineCCValues(
 		),
 	},
 );
+
+/**
+ * Updates the label and description of all stored scene metadata from the device config file.
+ */
+export function refreshSceneMetadataFromConfigFile(
+	ctx: GetValueDB & GetDeviceConfig,
+	nodeId: number,
+	endpointIndex: number,
+): void {
+	const deviceConfig = ctx.getDeviceConfig?.(nodeId);
+	const valueDB = ctx.getValueDB(nodeId);
+
+	for (const { metadata, ...valueId } of valueDB.getAllMetadata(
+		CommandClasses["Central Scene"],
+	)) {
+		if (
+			(valueId.endpoint ?? 0) !== endpointIndex
+			|| !CentralSceneCCValues.scene.is(valueId)
+		) {
+			continue;
+		}
+
+		const sceneNumber = parseInt(valueId.propertyKey as string, 10);
+		const sceneConfig = deviceConfig?.scenes?.get(sceneNumber);
+		const label =
+			sceneConfig?.label
+			?? CentralSceneCCValues.scene(sceneNumber).meta.label;
+		const description = sceneConfig?.description;
+		if (metadata.label === label && metadata.description === description) {
+			continue;
+		}
+
+		const newMetadata = { ...metadata, label };
+		if (description != undefined) {
+			newMetadata.description = description;
+		} else {
+			delete newMetadata.description;
+		}
+		valueDB.setMetadata(valueId, newMetadata);
+	}
+}
 
 @API(CommandClasses["Central Scene"])
 export class CentralSceneCCAPI extends CCAPI {
