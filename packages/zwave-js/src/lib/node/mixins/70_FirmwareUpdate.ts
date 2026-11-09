@@ -820,7 +820,7 @@ export abstract class FirmwareUpdateMixin
 				// Tell the node to start requesting fragments
 				let started:
 					| { resume: boolean; nonSecureTransfer: boolean }
-					| "node asleep";
+					| undefined;
 				try {
 					started = yield* self.beginFirmwareUpdateInternal(
 						data,
@@ -839,7 +839,7 @@ export abstract class FirmwareUpdateMixin
 					}
 					throw e;
 				}
-				if (started === "node asleep") {
+				if (!started) {
 					return NODE_ASLEEP_RESULT;
 				}
 				const { resume, nonSecureTransfer } = started;
@@ -1155,21 +1155,21 @@ export abstract class FirmwareUpdateMixin
 		}
 	}
 
-	/** Waits for a command from this node. Resolves with `"node asleep"` when the node falls asleep first. */
+	/** Waits for a command from this node. Resolves with `undefined` when the node falls asleep first. */
 	private waitForCommandUntilAsleep<T extends CCId>(
 		predicate: (cc: CCId) => cc is T,
 		timeout: number,
-	): Promise<T | "node asleep"> {
+	): Promise<T | undefined> {
 		// Handle the case where the node fell asleep before we started waiting
 		if (this.status === NodeStatus.Asleep) {
-			return Promise.resolve("node asleep");
+			return Promise.resolve(undefined);
 		}
 
 		return new Promise((resolve, reject) => {
 			const stopWaiting = new AbortController();
 			const onSleep = () => {
 				stopWaiting.abort();
-				resolve("node asleep");
+				resolve(undefined);
 			};
 			this._once("sleep", onSleep);
 			this.driver
@@ -1179,7 +1179,7 @@ export abstract class FirmwareUpdateMixin
 		});
 	}
 
-	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer, or `"node asleep"`. */
+	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer, or `undefined` if the node fell asleep. */
 	private async *beginFirmwareUpdateInternal(
 		data: BytesView,
 		manufacturerId: number,
@@ -1219,7 +1219,7 @@ export abstract class FirmwareUpdateMixin
 		// On some devices the response can take a minute or so to be received,
 		// probably because of a manual out-of-band activation.
 		if (!result) {
-			const report = yield* waitFor(
+			result = yield* waitFor(
 				this.waitForCommandUntilAsleep(
 					(cc): cc is FirmwareUpdateMetaDataCCRequestReport =>
 						cc instanceof FirmwareUpdateMetaDataCCRequestReport
@@ -1227,8 +1227,7 @@ export abstract class FirmwareUpdateMixin
 					60000,
 				),
 			);
-			if (report === "node asleep") return "node asleep";
-			result = report;
+			if (!result) return;
 		}
 
 		switch (result.status) {
@@ -1420,7 +1419,7 @@ export abstract class FirmwareUpdateMixin
 							timespan.minutes(2),
 						),
 					);
-					if (received === "node asleep") {
+					if (!received) {
 						return NODE_ASLEEP_RESULT;
 					}
 					fragmentRequest = received;
