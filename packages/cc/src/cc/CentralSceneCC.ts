@@ -118,12 +118,13 @@ export function refreshSceneMetadataFromConfigFile(
 			continue;
 		}
 
-		const { description: _, ...rest } = metadata;
-		valueDB.setMetadata(valueId, {
-			...rest,
-			label,
-			...(description != undefined ? { description } : {}),
-		});
+		const newMetadata = { ...metadata, label };
+		if (description != undefined) {
+			newMetadata.description = description;
+		} else {
+			delete newMetadata.description;
+		}
+		valueDB.setMetadata(valueId, newMetadata);
 	}
 }
 
