@@ -49,6 +49,20 @@
 			"label": "Heat"
 		}
 	},
+	"endpointGroups": {
+		"1": {
+			"label": "Gas/Heat Port",
+			"endpoints": [1, 8]
+		},
+		"2": {
+			"label": "Analog Sensor",
+			"endpoints": [2, 3]
+		},
+		"3": {
+			"label": "P1",
+			"endpoints": [4, 5, 6, 7]
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
