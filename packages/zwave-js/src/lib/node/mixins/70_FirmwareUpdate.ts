@@ -82,6 +82,8 @@ interface OTATransferOptions {
 	resume?: boolean;
 	nonSecureTransfer?: boolean;
 	abortContext: AbortFirmwareUpdateContext;
+	/** Called right before the node is asked to start the transfer */
+	onRequestUpdate: () => void;
 	/** Called when the node accepted the transfer. `resumed` tells whether it continues an earlier transfer. */
 	onStart: (resumed: boolean) => void;
 	onProgress: (fragment: number, total: number, fragmentSize: number) => void;
@@ -616,6 +618,7 @@ export abstract class FirmwareUpdateMixin
 							yield* waitFor(self.waitForWakeup());
 						}
 
+						let requestedUpdate = false;
 						let resumed = false;
 						updateResult = (yield self.getOTATransferTask({
 							data,
@@ -629,6 +632,9 @@ export abstract class FirmwareUpdateMixin
 							resume,
 							nonSecureTransfer: options.nonSecureTransfer,
 							abortContext,
+							onRequestUpdate: () => {
+								requestedUpdate = true;
+							},
 							onStart: (accepted) => {
 								resumed = accepted;
 							},
@@ -669,7 +675,7 @@ export abstract class FirmwareUpdateMixin
 							break;
 						}
 
-						if (!resumed) attemptsFromStart++;
+						if (requestedUpdate && !resumed) attemptsFromStart++;
 						if (attemptsFromStart >= MAX_OTA_ATTEMPTS_FROM_START) {
 							self.driver.controllerLog.logNode(
 								self.id,
@@ -810,6 +816,7 @@ export abstract class FirmwareUpdateMixin
 				abortContext.transferActive = true;
 				// Keep battery powered nodes awake during the transfer
 				self.keepAwake = true;
+				options.onRequestUpdate();
 
 				// For determining the initial fragment size, assume the node respects our choice.
 				// If the node is not secure, these two values are identical anyways.
