@@ -473,35 +473,27 @@ function checkOptions(options: ZWaveOptions): void {
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
-	const allKeys: { name: string; key: BytesView }[] = [
-		...Object.entries(options.securityKeys ?? {}).map(
-			([secClass, key]) => ({
-				name: `security key for class ${secClass}`,
-				key,
-			}),
-		),
-		...Object.entries(options.securityKeysLongRange ?? {}).map(
-			([secClass, key]) => ({
-				name: `Long Range security key for class ${secClass}`,
-				key,
-			}),
-		),
-	];
-	for (let i = 0; i < allKeys.length; i++) {
-		const { name, key } = allKeys[i];
-		if (key.length !== 16) {
-			throw new ZWaveError(
-				`The ${name} must be a buffer with length 16!`,
-				ZWaveErrorCodes.Driver_InvalidOptions,
-			);
-		}
-		if (
-			allKeys.findIndex(({ key: k }) => areUint8ArraysEqual(k, key)) !== i
-		) {
-			throw new ZWaveError(
-				`The ${name} was used multiple times!`,
-				ZWaveErrorCodes.Driver_InvalidOptions,
-			);
+	for (const [prefix, keys] of [
+		["security key", options.securityKeys],
+		["Long Range security key", options.securityKeysLongRange],
+	] as const) {
+		const entries = Object.entries(keys ?? {});
+		for (let i = 0; i < entries.length; i++) {
+			const [secClass, key] = entries[i];
+			if (key.length !== 16) {
+				throw new ZWaveError(
+					`The ${prefix} for class ${secClass} must be a buffer with length 16!`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
+			if (
+				entries.findIndex(([, k]) => areUint8ArraysEqual(k, key)) !== i
+			) {
+				throw new ZWaveError(
+					`The ${prefix} for class ${secClass} was used multiple times!`,
+					ZWaveErrorCodes.Driver_InvalidOptions,
+				);
+			}
 		}
 	}
 	if (options.attempts.controller < 1 || options.attempts.controller > 3) {
@@ -1656,6 +1648,7 @@ export class Driver
 		this.driverLog.print("", "info");
 
 		this.driverLog.print("starting driver...");
+		this.warnAboutSharedSecurityKeys();
 
 		// Open the serial port
 		let binding: ZWaveSerialBindingFactory;
@@ -1843,6 +1836,24 @@ export class Driver
 		});
 
 		return spOpenPromise;
+	}
+
+	private warnAboutSharedSecurityKeys(): void {
+		const lrKeys = Object.entries(
+			this._options.securityKeysLongRange ?? {},
+		);
+		for (const [secClass, key] of Object.entries(
+			this._options.securityKeys ?? {},
+		)) {
+			for (const [lrSecClass, lrKey] of lrKeys) {
+				if (areUint8ArraysEqual(key, lrKey)) {
+					this.driverLog.print(
+						`The security key for class ${secClass} is also used as the Long Range security key for class ${lrSecClass}. Z-Wave Classic and Long Range should use different keys.`,
+						"warn",
+					);
+				}
+			}
+		}
 	}
 
 	private async detectMode(): Promise<DriverMode> {
