@@ -231,7 +231,7 @@ async function waitForLogEntry(log: string[], entry: string, count = 1) {
 {
 	const mock = createFirmwareUpdateMock();
 	integrationTest.sequential(
-		"A node that falls asleep during the firmware transfer lets the next node go and transfers the file again after waking up",
+		"A node that falls asleep during the firmware transfer fails its update and lets the next node go",
 		{
 			nodeCapabilities: [
 				nodeCapabilities(2, false),
@@ -259,14 +259,15 @@ async function waitForLogEntry(log: string[], entry: string, count = 1) {
 				mock.paused.add(3);
 				node3.markAsAsleep();
 
+				const result3 = await update3;
+				t.expect(result3.success).toBe(false);
+				t.expect(result3.status).toBe(
+					FirmwareUpdateStatus.Error_TransmissionFailed,
+				);
+
 				node2.markAsAwake();
 				t.expect((await update2).success).toBe(true);
 
-				mock.paused.delete(3);
-				node3.markAsAwake();
-				t.expect((await update3).success).toBe(true);
-
-				// Node 3 cannot resume and starts over
 				t.expect(mock.log).toEqual([
 					"3:meta",
 					"3:request",
@@ -275,57 +276,7 @@ async function waitForLogEntry(log: string[], entry: string, count = 1) {
 					"2:meta",
 					"2:request",
 					...fragmentsOf(2),
-					"3:request",
-					...fragmentsOf(3),
 				]);
-			},
-		},
-	);
-}
-
-{
-	const mock = createFirmwareUpdateMock();
-	integrationTest.sequential(
-		"A firmware update fails after the node fell asleep during 3 transfers that started over",
-		{
-			nodeCapabilities: [nodeCapabilities(2, false)],
-			additionalDriverOptions: {
-				testingHooks: { skipNodeInterview: true },
-			},
-			customSetup: async (driver, mockController, mockNodes) => {
-				for (const mockNode of mockNodes) {
-					mockNode.defineBehavior(mock.behavior);
-				}
-			},
-
-			testBody: async (t, driver, nodes) => {
-				const [node2] = nodes;
-				setupNode(node2, false);
-
-				let finished = false;
-				const update = node2.updateFirmware(firmware).finally(() => {
-					finished = true;
-				});
-
-				for (let attempt = 1; attempt <= 3; attempt++) {
-					mock.paused.delete(2);
-					node2.markAsAwake();
-					await waitForLogEntry(mock.log, "2:2", attempt);
-					// Node 2 stops requesting fragments and falls asleep
-					mock.paused.add(2);
-					node2.markAsAsleep();
-					await wait(150);
-					t.expect(finished).toBe(attempt === 3);
-				}
-
-				const result = await update;
-				t.expect(result.success).toBe(false);
-				t.expect(result.status).toBe(
-					FirmwareUpdateStatus.Error_TransmissionFailed,
-				);
-				t.expect(
-					mock.log.filter((e) => e === "2:request"),
-				).toHaveLength(3);
 			},
 		},
 	);
