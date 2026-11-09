@@ -99,6 +99,9 @@ type PartialFirmwareUpdateResult = Pick<
 // How many times a transfer may start over after the node fell asleep
 const MAX_OTA_ATTEMPTS_FROM_START = 3;
 
+// Waiting for a command from a node resolves with this when the node falls asleep
+const NODE_FELL_ASLEEP = Symbol("node fell asleep");
+
 const NODE_ASLEEP_RESULT: PartialFirmwareUpdateResult = {
 	success: false,
 	status: FirmwareUpdateStatus.Error_TransmissionFailed,
@@ -818,27 +821,31 @@ export abstract class FirmwareUpdateMixin
 					: options.fragmentSizeSecure;
 
 				// Tell the node to start requesting fragments
-				let resume: boolean;
-				let nonSecureTransfer: boolean;
+				let started:
+					| { resume: boolean; nonSecureTransfer: boolean }
+					| typeof NODE_FELL_ASLEEP;
 				try {
-					({ resume, nonSecureTransfer } =
-						yield* self.beginFirmwareUpdateInternal(
-							data,
-							options.manufacturerId,
-							options.target,
-							options.firmwareId,
-							fragmentSize,
-							checksum,
-							options.hardwareVersion,
-							options.resume,
-							options.nonSecureTransfer,
-						));
+					started = yield* self.beginFirmwareUpdateInternal(
+						data,
+						options.manufacturerId,
+						options.target,
+						options.firmwareId,
+						fragmentSize,
+						checksum,
+						options.hardwareVersion,
+						options.resume,
+						options.nonSecureTransfer,
+					);
 				} catch (e) {
 					if (isAsleep()) {
 						return NODE_ASLEEP_RESULT;
 					}
 					throw e;
 				}
+				if (started === NODE_FELL_ASLEEP) {
+					return NODE_ASLEEP_RESULT;
+				}
+				const { resume, nonSecureTransfer } = started;
 
 				// If the node did not accept non-secure transfer, revisit our choice of fragment size
 				if (options.nonSecureTransfer && !nonSecureTransfer) {
@@ -1151,27 +1158,21 @@ export abstract class FirmwareUpdateMixin
 		}
 	}
 
-	/** Waits for a command from this node. Rejects with `Controller_MessageDropped` when the node falls asleep first. */
+	/** Waits for a command from this node. Resolves with `NODE_FELL_ASLEEP` when the node falls asleep first. */
 	private waitForCommandUntilAsleep<T extends CCId>(
 		predicate: (cc: CCId) => cc is T,
 		timeout: number,
-	): Promise<T> {
-		return new Promise<T>((resolve, reject) => {
-			const nodeAsleep = () =>
-				new ZWaveError(
-					`The node is asleep`,
-					ZWaveErrorCodes.Controller_MessageDropped,
-				);
-			// Handle the case where the node fell asleep before we started waiting
-			if (this.status === NodeStatus.Asleep) {
-				reject(nodeAsleep());
-				return;
-			}
+	): Promise<T | typeof NODE_FELL_ASLEEP> {
+		// Handle the case where the node fell asleep before we started waiting
+		if (this.status === NodeStatus.Asleep) {
+			return Promise.resolve(NODE_FELL_ASLEEP);
+		}
 
+		return new Promise((resolve, reject) => {
 			const stopWaiting = new AbortController();
 			const onSleep = () => {
 				stopWaiting.abort();
-				reject(nodeAsleep());
+				resolve(NODE_FELL_ASLEEP);
 			};
 			this._once("sleep", onSleep);
 			this.driver
@@ -1181,7 +1182,7 @@ export abstract class FirmwareUpdateMixin
 		});
 	}
 
-	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer */
+	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer, or `NODE_FELL_ASLEEP`. */
 	private async *beginFirmwareUpdateInternal(
 		data: BytesView,
 		manufacturerId: number,
@@ -1221,7 +1222,7 @@ export abstract class FirmwareUpdateMixin
 		// On some devices the response can take a minute or so to be received,
 		// probably because of a manual out-of-band activation.
 		if (!result) {
-			result = yield* waitFor(
+			const report = yield* waitFor(
 				this.waitForCommandUntilAsleep(
 					(cc): cc is FirmwareUpdateMetaDataCCRequestReport =>
 						cc instanceof FirmwareUpdateMetaDataCCRequestReport
@@ -1229,6 +1230,8 @@ export abstract class FirmwareUpdateMixin
 					60000,
 				),
 			);
+			if (report === NODE_FELL_ASLEEP) return NODE_FELL_ASLEEP;
+			result = report;
 		}
 
 		switch (result.status) {
@@ -1410,7 +1413,7 @@ export abstract class FirmwareUpdateMixin
 				this._firmwareUpdatePrematureRequest = undefined;
 			} else {
 				try {
-					fragmentRequest = yield* waitFor(
+					const received = yield* waitFor(
 						this.waitForCommandUntilAsleep(
 							(cc): cc is FirmwareUpdateMetaDataCCGet =>
 								cc.nodeId === this.id
@@ -1420,11 +1423,11 @@ export abstract class FirmwareUpdateMixin
 							timespan.minutes(2),
 						),
 					);
-				} catch {
-					if (this.status === NodeStatus.Asleep) {
+					if (received === NODE_FELL_ASLEEP) {
 						return NODE_ASLEEP_RESULT;
 					}
-
+					fragmentRequest = received;
+				} catch {
 					// In some cases it can happen that the device stops requesting update frames
 					// We need to timeout the update in this case so it can be restarted
 					this.driver.controllerLog.logNode(this.id, {
