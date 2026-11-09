@@ -103,7 +103,7 @@ function nodeCapabilities(id: number, isListening: boolean) {
 	};
 }
 
-// The interview is skipped, so the driver must be told what the nodes support
+// Set up what the skipped interview would normally discover
 function setupNode(node: ZWaveNode, isListening: boolean) {
 	node.addCC(CommandClasses["Firmware Update Meta Data"], {
 		isSupported: true,
@@ -195,10 +195,10 @@ async function waitForLogEntry(log: string[], entry: string, count = 1) {
 				node3.markAsAwake();
 				await waitForLogEntry(mock.log, "3:1");
 
-				// Node 2 wakes up during node 3's transfer and falls asleep again before its turn.
-				// The wait lets the Meta Data Get finish first.
+				// Node 2 wakes up during node 3's transfer and falls asleep again before its turn
 				node2.markAsAwake();
 				await waitForLogEntry(mock.log, "2:meta");
+				// Let the Meta Data Get finish first
 				await wait(150);
 				node2.markAsAsleep();
 
@@ -261,7 +261,7 @@ async function waitForLogEntry(log: string[], entry: string, count = 1) {
 				node3.markAsAwake();
 				t.expect((await update3).success).toBe(true);
 
-				// The mock node does not support resuming, so node 3 starts over
+				// Node 3 cannot resume and starts over
 				t.expect(mock.log).toEqual([
 					"3:meta",
 					"3:request",

@@ -875,7 +875,7 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 		const header = raw.payload.readUInt16BE(0);
 		let firmwareData = raw.payload.subarray(2);
 
-		// V2+ appends a checksum. The CC version is unknown here, so strip the last 2 bytes if they are the checksum of the rest.
+		// Determine if we are dealing with a V1 command, or V2+ which contains a checksum
 		if (firmwareData.length >= 2) {
 			const withoutChecksum = raw.payload.subarray(0, -2);
 			let crc = CRC16_CCITT(

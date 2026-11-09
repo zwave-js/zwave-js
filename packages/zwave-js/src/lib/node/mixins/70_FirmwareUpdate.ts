@@ -96,7 +96,7 @@ type PartialFirmwareUpdateResult = Pick<
 	nodeAsleep?: true;
 };
 
-// Battery powered nodes stay awake during a transfer, so a node that falls asleep has given up on it
+// How many times a transfer may start over after the node fell asleep
 const MAX_OTA_ATTEMPTS_FROM_START = 3;
 
 const NODE_ASLEEP_RESULT: PartialFirmwareUpdateResult = {
@@ -519,7 +519,7 @@ export abstract class FirmwareUpdateMixin
 					if (skipFinishedFiles === -1) shouldResume = false;
 				}
 
-				// While a transfer is running, aborting requires telling the node
+				// The abort hook uses this to tell a running transfer to abort the update on the node
 				const abortContext: AbortFirmwareUpdateContext = {
 					transferActive: false,
 					abort: false,
@@ -536,8 +536,7 @@ export abstract class FirmwareUpdateMixin
 						);
 					}
 
-					// Outside of a transfer, the node is not updating, so removing the tasks is enough.
-					// This includes waiting for another node's transfer to finish.
+					// Before the transfer starts or while waiting for another node's transfer, just remove the tasks
 					if (!abortContext.transferActive && abortWithoutTransfer) {
 						return abortWithoutTransfer();
 					}
@@ -606,14 +605,13 @@ export abstract class FirmwareUpdateMixin
 					let resume = shouldResume;
 					let attemptsFromStart = 0;
 					while (true) {
-						// Let a sleeping node go back to sleep while it waits for another node's transfer to finish.
-						// The transfer task keeps it awake again once it starts.
+						// Allow the node to sleep while it waits for its turn
 						self.keepAwake = keepAwake;
 						if (!keepAwake) {
 							self.driver.debounceSendNodeToSleep(self);
 						}
 
-						// Queue the transfer only once the node is awake, so the transfer group goes to nodes that can receive fragments
+						// Wait until the node is awake before it takes its turn
 						if (self.status === NodeStatus.Asleep) {
 							yield* waitFor(self.waitForWakeup());
 						}
@@ -789,7 +787,7 @@ export abstract class FirmwareUpdateMixin
 
 	/**
 	 * Creates the task that transfers one firmware file to this node.
-	 * Firmware transfers cause a lot of traffic, so only one node at a time may receive fragments.
+	 * Transfers run one node at a time to limit the network traffic.
 	 */
 	private getOTATransferTask(
 		options: OTATransferOptions,
@@ -1164,7 +1162,7 @@ export abstract class FirmwareUpdateMixin
 					`The node is asleep`,
 					ZWaveErrorCodes.Controller_MessageDropped,
 				);
-			// The sleep event may have fired already
+			// Handle the case where the node fell asleep before we started waiting
 			if (this.status === NodeStatus.Asleep) {
 				reject(nodeAsleep());
 				return;
