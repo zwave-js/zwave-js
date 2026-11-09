@@ -99,9 +99,6 @@ type PartialFirmwareUpdateResult = Pick<
 // How many times a transfer may start over after the node fell asleep
 const MAX_OTA_ATTEMPTS_FROM_START = 3;
 
-// Waiting for a command from a node resolves with this when the node falls asleep
-const NODE_FELL_ASLEEP = Symbol("node fell asleep");
-
 const NODE_ASLEEP_RESULT: PartialFirmwareUpdateResult = {
 	success: false,
 	status: FirmwareUpdateStatus.Error_TransmissionFailed,
@@ -823,7 +820,7 @@ export abstract class FirmwareUpdateMixin
 				// Tell the node to start requesting fragments
 				let started:
 					| { resume: boolean; nonSecureTransfer: boolean }
-					| typeof NODE_FELL_ASLEEP;
+					| "node asleep";
 				try {
 					started = yield* self.beginFirmwareUpdateInternal(
 						data,
@@ -842,7 +839,7 @@ export abstract class FirmwareUpdateMixin
 					}
 					throw e;
 				}
-				if (started === NODE_FELL_ASLEEP) {
+				if (started === "node asleep") {
 					return NODE_ASLEEP_RESULT;
 				}
 				const { resume, nonSecureTransfer } = started;
@@ -1158,21 +1155,21 @@ export abstract class FirmwareUpdateMixin
 		}
 	}
 
-	/** Waits for a command from this node. Resolves with `NODE_FELL_ASLEEP` when the node falls asleep first. */
+	/** Waits for a command from this node. Resolves with `"node asleep"` when the node falls asleep first. */
 	private waitForCommandUntilAsleep<T extends CCId>(
 		predicate: (cc: CCId) => cc is T,
 		timeout: number,
-	): Promise<T | typeof NODE_FELL_ASLEEP> {
+	): Promise<T | "node asleep"> {
 		// Handle the case where the node fell asleep before we started waiting
 		if (this.status === NodeStatus.Asleep) {
-			return Promise.resolve(NODE_FELL_ASLEEP);
+			return Promise.resolve("node asleep");
 		}
 
 		return new Promise((resolve, reject) => {
 			const stopWaiting = new AbortController();
 			const onSleep = () => {
 				stopWaiting.abort();
-				resolve(NODE_FELL_ASLEEP);
+				resolve("node asleep");
 			};
 			this._once("sleep", onSleep);
 			this.driver
@@ -1182,7 +1179,7 @@ export abstract class FirmwareUpdateMixin
 		});
 	}
 
-	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer, or `NODE_FELL_ASLEEP`. */
+	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer, or `"node asleep"`. */
 	private async *beginFirmwareUpdateInternal(
 		data: BytesView,
 		manufacturerId: number,
@@ -1230,7 +1227,7 @@ export abstract class FirmwareUpdateMixin
 					60000,
 				),
 			);
-			if (report === NODE_FELL_ASLEEP) return NODE_FELL_ASLEEP;
+			if (report === "node asleep") return "node asleep";
 			result = report;
 		}
 
@@ -1423,7 +1420,7 @@ export abstract class FirmwareUpdateMixin
 							timespan.minutes(2),
 						),
 					);
-					if (received === NODE_FELL_ASLEEP) {
+					if (received === "node asleep") {
 						return NODE_ASLEEP_RESULT;
 					}
 					fragmentRequest = received;
