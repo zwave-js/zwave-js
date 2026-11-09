@@ -20,6 +20,7 @@ import { validateArgs } from "@zwave-js/transformers";
 import {
 	CCAPI,
 	POLL_VALUE,
+	PhysicalCCAPI,
 	type PollValueImplementation,
 	throwUnsupportedProperty,
 } from "../lib/API.js";
@@ -221,7 +222,7 @@ export const MeterTableMonitorCCValues = V.defineCCValues(
 // @noSetValueAPI This CC is read-only
 
 @API(CommandClasses["Meter Table Monitor"])
-export class MeterTableMonitorCCAPI extends CCAPI {
+export class MeterTableMonitorCCAPI extends PhysicalCCAPI {
 	public supportsCommand(
 		cmd: MeterTableMonitorCommand,
 	): MaybeNotKnown<boolean> {

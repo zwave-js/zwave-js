@@ -14,6 +14,7 @@ import {
 } from "@zwave-js/core";
 import { Bytes, num2hex, pick } from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
+import { wait } from "alcalzone-shared/async";
 
 import { CCAPI } from "../lib/API.js";
 import {
@@ -116,8 +117,9 @@ export class MeterTablePushConfigurationCCAPI extends CCAPI {
 	): MaybeNotKnown<boolean> {
 		switch (cmd) {
 			case MeterTablePushConfigurationCommand.Get:
+				return this.isSinglecast();
 			case MeterTablePushConfigurationCommand.Set:
-				return true; // These are mandatory
+				return true; // This is mandatory
 		}
 		return super.supportsCommand(cmd);
 	}
@@ -266,10 +268,19 @@ export class MeterTablePushConfigurationCC extends CommandClass {
 	): Promise<void> {
 		const result = await api.set(config);
 		if (result?.status === SupervisionStatus.Working) {
-			// The meter is still applying it, a read-back would be too early
-			return;
-		}
-		if (!isUnsupervisedOrSucceeded(result)) {
+			// The meter is still applying it, read it back once it is done
+			const remaining = result.remainingDuration?.toMilliseconds();
+			if (remaining == undefined || remaining > 10000) {
+				ctx.logNode(this.nodeId as number, {
+					endpoint: this.endpointIndex,
+					message:
+						"the meter is still applying the push configuration, it was not verified",
+					level: "warn",
+				});
+				return;
+			}
+			await wait(remaining + 500, true);
+		} else if (!isUnsupervisedOrSucceeded(result)) {
 			ctx.logNode(this.nodeId as number, {
 				endpoint: this.endpointIndex,
 				message: "the meter did not accept the push configuration",
