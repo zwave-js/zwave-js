@@ -1848,7 +1848,7 @@ export class Driver
 			for (const [lrSecClass, lrKey] of lrKeys) {
 				if (areUint8ArraysEqual(key, lrKey)) {
 					this.driverLog.print(
-						`The security key for class ${secClass} is also used as the Long Range security key for class ${lrSecClass}. Z-Wave Classic and Long Range should use different keys.`,
+						`The security key for class ${secClass} is also used as the Long Range security key for class ${lrSecClass}. All keys should be unique.`,
 						"warn",
 					);
 				}
