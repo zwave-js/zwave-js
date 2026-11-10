@@ -122,6 +122,9 @@ export class VirtualNode extends VirtualEndpoint {
 	/**
 	 * Updates a value for a given property of a given CommandClass.
 	 * This will communicate with the physical node(s) this virtual node represents!
+	 *
+	 * The `transmitOptions` option overrides the transmit options for the
+	 * resulting command; see `SetValueAPIOptions` for the semantics.
 	 */
 	public async setValue(
 		valueId: ValueID,
@@ -182,10 +185,18 @@ export class VirtualNode extends VirtualEndpoint {
 				});
 			}
 
-			// If the caller wants progress updates, they shall have them
-			if (typeof options?.onProgress === "function") {
+			// If the caller wants progress updates or custom transmit options, use them
+			if (
+				typeof options?.onProgress === "function"
+				|| options?.transmitOptions != undefined
+			) {
 				api = api.withOptions({
-					onProgress: options.onProgress,
+					...(typeof options?.onProgress === "function"
+						? { onProgress: options.onProgress }
+						: {}),
+					...(options?.transmitOptions != undefined
+						? { transmitOptions: options.transmitOptions }
+						: {}),
 				});
 			}
 
