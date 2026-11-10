@@ -4,6 +4,24 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+Release 15.32.0 prevented driver startup for some users who reused their mesh security keys for Long Range as well.
+While this should never be done, Z-Wave JS now simply warns instead of throwing an error.
+
+Affected users should look into changing their duplicate keys. If they are in use by devices, this requires a re-inclusion.
+
+### Bugfixes
+* Modified Central Scene labels in device config files are now automatically applied on startup (#9460)
+* Warn instead of throw when Classic and LR security keys are shared (#9467)
+
+### Config file changes
+* Add digital port mode and endpoint names to Quby 6500-1400-6000 (#9461)
+* Add endpoint labels to several Fibaro and Shelly devices (#9463)
+* Add NOVON manufacturer and five devices (#9458)
+* Add Central Scene labels for 61 devices (#9456)
+
+### Changes under the hood
+
 ## 15.32.1 (2026-11-04)
 ### Bugfixes
 * `ZWaveNode.isFirmwareUpdateInProgress()` no longer returns `true` if any other node is undergoing an OTA firmware update (#9450)
