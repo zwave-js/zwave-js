@@ -21,6 +21,7 @@ import {
 } from "@zwave-js/cc";
 import {
 	CRC16_CCITT,
+	type CCId,
 	CommandClasses,
 	EncapsulationFlags,
 	type Firmware,
@@ -58,6 +59,7 @@ import {
 	TaskPriority,
 } from "../../driver/Task.js";
 import type { Transaction } from "../../driver/Transaction.js";
+import { NodeStatus } from "../_Types.js";
 
 import { SchedulePollMixin } from "./60_ScheduledPoll.js";
 
@@ -71,6 +73,12 @@ type PartialFirmwareUpdateResult = Pick<
 	FirmwareUpdateResult,
 	"status" | "waitTime"
 > & { success: boolean };
+
+// A node that falls asleep during the transfer has given up on the update
+const NODE_ASLEEP_RESULT: PartialFirmwareUpdateResult = {
+	success: false,
+	status: FirmwareUpdateStatus.Error_TransmissionFailed,
+};
 
 function assertValidFirmwareUpdates(updates: Firmware[]): void {
 	if (updates.length === 0) {
@@ -272,7 +280,7 @@ export abstract class FirmwareUpdateMixin
 
 		// Until the transfer starts, the node does not need to be told about the abort.
 		// Removing the task stops the download or the node queries in the subtasks' cleanup.
-		// The install task replaces this right before the transfer.
+		// The transfer task replaces this while it runs.
 		let aborted: ZWaveError | undefined;
 		this._abortFirmwareUpdate = async () => {
 			this.driver.controllerLog.logNode(
@@ -486,14 +494,15 @@ export abstract class FirmwareUpdateMixin
 					if (skipFinishedFiles === -1) shouldResume = false;
 				}
 
-				// From here on, aborting requires telling the node
-				const abortContext = {
+				const abortContext: AbortFirmwareUpdateContext = {
 					abort: false,
 					tooLateToAbort: false,
 					abortPromise: createDeferredPromise<boolean>(),
 				};
-
-				self._abortFirmwareUpdate = async () => {
+				// Outside of a transfer, the node is not updating and aborting only removes the tasks
+				const abortWithoutTransfer = self._abortFirmwareUpdate;
+				// During a transfer, the node must be told to abort
+				const abortTransfer = async () => {
 					if (abortContext.tooLateToAbort) {
 						throw new ZWaveError(
 							`The firmware update was transmitted completely, cannot abort anymore.`,
@@ -520,6 +529,10 @@ export abstract class FirmwareUpdateMixin
 						direction: "inbound",
 					});
 				};
+
+				// The status must be read through a function because TypeScript keeps a narrowed `self.status` across yields
+				const isAsleep = (): boolean =>
+					self.status === NodeStatus.Asleep;
 
 				// Perform all firmware updates in sequence
 				let updateResult!: PartialFirmwareUpdateResult;
@@ -562,82 +575,147 @@ export abstract class FirmwareUpdateMixin
 						} / ${updatesWithChecksum.length})...`,
 					);
 
-					// For determining the initial fragment size, assume the node respects our choice.
-					// If the node is not secure, these two values are identical anyways.
-					let fragmentSize = options.nonSecureTransfer
-						? fragmentSizeNonSecure
-						: fragmentSizeSecure;
+					// Transfers run one node at a time to limit the network traffic.
+					// The task resolves to `undefined` if the node was asleep when its turn came.
+					const createTransferTask = (): TaskBuilder<
+						PartialFirmwareUpdateResult | undefined
+					> => ({
+						priority: TaskPriority.Lower,
+						tag: { id: "firmware-update-ota", nodeId: self.id },
+						group: { id: "firmware-update-ota-transfer" },
+						task: async function* transferFirmwareTask() {
+							// Release the transfer group right away so an awake node can go next
+							if (isAsleep()) return;
 
-					// Tell the node to start requesting fragments
-					const { resume, nonSecureTransfer } =
-						yield* self.beginFirmwareUpdateInternal(
-							data,
-							meta.manufacturerId,
-							target,
-							firmwareId,
-							fragmentSize,
-							checksum,
-							hardwareVersion,
-							shouldResume,
-							options.nonSecureTransfer,
-						);
+							self._abortFirmwareUpdate = abortTransfer;
+							// Keep battery powered nodes awake during the transfer
+							self.keepAwake = true;
 
-					// If the node did not accept non-secure transfer, revisit our choice of fragment size
-					if (options.nonSecureTransfer && !nonSecureTransfer) {
-						fragmentSize = fragmentSizeSecure;
-					}
+							// For determining the initial fragment size, assume the node respects our choice.
+							// If the node is not secure, these two values are identical anyways.
+							let fragmentSize = options.nonSecureTransfer
+								? fragmentSizeNonSecure
+								: fragmentSizeSecure;
 
-					// Remember the checksum, so we can resume if necessary
-					self._previousFirmwareCRC = checksum;
-
-					if (shouldResume) {
-						self.driver.controllerLog.logNode(
-							self.id,
-							`Node ${
-								resume ? "accepted" : "did not accept"
-							} resuming the update...`,
-						);
-					}
-					if (nonSecureTransfer) {
-						self.driver.controllerLog.logNode(
-							self.id,
-							`Firmware will be transferred without encryption...`,
-						);
-					}
-
-					yield; // Give the task scheduler time to do something else
-
-					// Listen for firmware update fragment requests and handle them
-					updateResult = yield* self.doFirmwareUpdateInternal(
-						data,
-						fragmentSize,
-						nonSecureTransfer,
-						abortContext,
-						(fragment, total) => {
-							const progress: FirmwareUpdateProgress = {
-								currentFile: i + 1,
-								totalFiles: updatesWithChecksum.length,
-								sentFragments: fragment,
-								totalFragments: total,
-								progress: roundTo(
-									((sentBytesOfPreviousFiles
-										+ Math.min(
-											fragment * fragmentSize,
-											data.length,
-										))
-										/ totalBytes)
-										* 100,
-									2,
-								),
-							};
-							notifyProgress(progress);
-
-							// When this file is done, add the fragments to the total, so we can compute the total progress correctly
-							if (fragment === total) {
-								sentBytesOfPreviousFiles += data.length;
+							// Tell the node to start requesting fragments
+							let started:
+								| {
+										resume: boolean;
+										nonSecureTransfer: boolean;
+								  }
+								| undefined;
+							try {
+								started =
+									yield* self.beginFirmwareUpdateInternal(
+										data,
+										meta.manufacturerId,
+										target,
+										firmwareId,
+										fragmentSize,
+										checksum,
+										hardwareVersion,
+										shouldResume,
+										options.nonSecureTransfer,
+									);
+							} catch (e) {
+								if (isAsleep()) return NODE_ASLEEP_RESULT;
+								throw e;
 							}
+							if (!started) return NODE_ASLEEP_RESULT;
+							const { resume, nonSecureTransfer } = started;
+
+							// If the node did not accept non-secure transfer, revisit our choice of fragment size
+							if (
+								options.nonSecureTransfer
+								&& !nonSecureTransfer
+							) {
+								fragmentSize = fragmentSizeSecure;
+							}
+
+							// Remember the checksum, so we can resume if necessary
+							self._previousFirmwareCRC = checksum;
+
+							if (shouldResume) {
+								self.driver.controllerLog.logNode(
+									self.id,
+									`Node ${
+										resume ? "accepted" : "did not accept"
+									} resuming the update...`,
+								);
+							}
+							if (nonSecureTransfer) {
+								self.driver.controllerLog.logNode(
+									self.id,
+									`Firmware will be transferred without encryption...`,
+								);
+							}
+
+							yield; // Give the task scheduler time to do something else
+
+							// Listen for firmware update fragment requests and handle them
+							return yield* self.doFirmwareUpdateInternal(
+								data,
+								fragmentSize,
+								nonSecureTransfer,
+								abortContext,
+								(fragment, total) => {
+									const progress: FirmwareUpdateProgress = {
+										currentFile: i + 1,
+										totalFiles: updatesWithChecksum.length,
+										sentFragments: fragment,
+										totalFragments: total,
+										progress: roundTo(
+											((sentBytesOfPreviousFiles
+												+ Math.min(
+													fragment * fragmentSize,
+													data.length,
+												))
+												/ totalBytes)
+												* 100,
+											2,
+										),
+									};
+									notifyProgress(progress);
+
+									// When this file is done, add the fragments to the total, so we can compute the total progress correctly
+									if (fragment === total) {
+										sentBytesOfPreviousFiles += data.length;
+									}
+								},
+							);
 						},
-					);
+						cleanup() {
+							// The update may have ended and cleared the abort hook already
+							if (self._abortFirmwareUpdate === abortTransfer) {
+								self._abortFirmwareUpdate =
+									abortWithoutTransfer;
+							}
+							return Promise.resolve();
+						},
+					});
+
+					let transferResult: PartialFirmwareUpdateResult | undefined;
+					do {
+						// Allow the node to sleep while it waits for its turn
+						self.keepAwake = keepAwake;
+						if (!keepAwake) {
+							self.driver.debounceSendNodeToSleep(self);
+						}
+
+						if (isAsleep()) {
+							yield* waitFor(self.waitForWakeup());
+						}
+
+						transferResult = (yield createTransferTask()) as
+							| PartialFirmwareUpdateResult
+							| undefined;
+					} while (!transferResult);
+					updateResult = transferResult;
+
+					// A node that fell asleep cannot acknowledge the abort
+					if (abortContext.abort) {
+						abortContext.abortPromise.resolve(false);
+					}
 
 					// If we wait, wait a bit longer than the device told us, so it is actually ready to use
 					conservativeWaitTime =
@@ -995,7 +1073,31 @@ export abstract class FirmwareUpdateMixin
 		}
 	}
 
-	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer */
+	/** Waits for a command from this node. Resolves with `undefined` when the node falls asleep first. */
+	private waitForCommandUntilAsleep<T extends CCId>(
+		predicate: (cc: CCId) => cc is T,
+		timeout: number,
+	): Promise<T | undefined> {
+		// Handle the case where the node fell asleep before we started waiting
+		if (this.status === NodeStatus.Asleep) {
+			return Promise.resolve(undefined);
+		}
+
+		return new Promise((resolve, reject) => {
+			const stopWaiting = new AbortController();
+			const onSleep = () => {
+				stopWaiting.abort();
+				resolve(undefined);
+			};
+			this._once("sleep", onSleep);
+			this.driver
+				.waitForCommand<T, T>(predicate, timeout, stopWaiting.signal)
+				.then(resolve, reject)
+				.finally(() => this._off("sleep", onSleep));
+		});
+	}
+
+	/** Kicks off a firmware update of a single target. Returns whether the node accepted resuming and non-secure transfer, or `undefined` if the node fell asleep. */
 	private async *beginFirmwareUpdateInternal(
 		data: BytesView,
 		manufacturerId: number,
@@ -1018,29 +1120,32 @@ export abstract class FirmwareUpdateMixin
 		});
 
 		// Request the node to start the upgrade
-		let result = await api.requestUpdate({
-			// TODO: Should manufacturer id be provided externally?
-			manufacturerId,
-			firmwareId,
-			firmwareTarget: target,
-			fragmentSize,
-			checksum,
-			hardwareVersion,
-			resume,
-			nonSecureTransfer,
-		});
+		let result = yield* waitFor(
+			api.withOptions({ tag: "firmware-update-ota" }).requestUpdate({
+				// TODO: Should manufacturer id be provided externally?
+				manufacturerId,
+				firmwareId,
+				firmwareTarget: target,
+				fragmentSize,
+				checksum,
+				hardwareVersion,
+				resume,
+				nonSecureTransfer,
+			}),
+		);
 
 		// On some devices the response can take a minute or so to be received,
 		// probably because of a manual out-of-band activation.
 		if (!result) {
 			result = yield* waitFor(
-				this.driver.waitForCommand(
+				this.waitForCommandUntilAsleep(
 					(cc): cc is FirmwareUpdateMetaDataCCRequestReport =>
 						cc instanceof FirmwareUpdateMetaDataCCRequestReport
 						&& cc.nodeId === this.id,
 					60000,
 				),
 			);
+			if (!result) return;
 		}
 
 		switch (result.status) {
@@ -1177,6 +1282,7 @@ export abstract class FirmwareUpdateMixin
 				.withOptions({
 					// Only encapsulate if the transfer is secure
 					autoEncapsulate: !nonSecureTransfer,
+					tag: "firmware-update-ota",
 				})
 				.sendFirmwareFragment(reportNum, true, fragment);
 		} catch {
@@ -1221,9 +1327,9 @@ export abstract class FirmwareUpdateMixin
 				this._firmwareUpdatePrematureRequest = undefined;
 			} else {
 				try {
-					fragmentRequest = yield* waitFor(
-						this.driver.waitForCommand<FirmwareUpdateMetaDataCCGet>(
-							(cc) =>
+					const received = yield* waitFor(
+						this.waitForCommandUntilAsleep(
+							(cc): cc is FirmwareUpdateMetaDataCCGet =>
 								cc.nodeId === this.id
 								&& cc instanceof FirmwareUpdateMetaDataCCGet,
 							// Wait up to 2 minutes for each fragment request.
@@ -1231,6 +1337,10 @@ export abstract class FirmwareUpdateMixin
 							timespan.minutes(2),
 						),
 					);
+					if (!received) {
+						return NODE_ASLEEP_RESULT;
+					}
+					fragmentRequest = received;
 				} catch {
 					// In some cases it can happen that the device stops requesting update frames
 					// We need to timeout the update in this case so it can be restarted
@@ -1260,6 +1370,9 @@ export abstract class FirmwareUpdateMixin
 					randomBytes(fragmentSize),
 					nonSecureTransfer,
 				);
+				if (this.status === NodeStatus.Asleep) {
+					return NODE_ASLEEP_RESULT;
+				}
 				// This will cause the node to abort the process, wait for that
 				break update;
 			}
@@ -1287,6 +1400,9 @@ export abstract class FirmwareUpdateMixin
 						randomBytes(fragment.length),
 						nonSecureTransfer,
 					);
+					if (this.status === NodeStatus.Asleep) {
+						return NODE_ASLEEP_RESULT;
+					}
 					// This will cause the node to abort the process, wait for that
 					break update;
 				} else {
@@ -1310,6 +1426,7 @@ export abstract class FirmwareUpdateMixin
 							.withOptions({
 								// Only encapsulate if the transfer is secure
 								autoEncapsulate: !nonSecureTransfer,
+								tag: "firmware-update-ota",
 							})
 							.sendFirmwareFragment(num, isLast, fragment);
 
@@ -1321,6 +1438,10 @@ export abstract class FirmwareUpdateMixin
 							break update;
 						}
 					} catch {
+						if (this.status === NodeStatus.Asleep) {
+							return NODE_ASLEEP_RESULT;
+						}
+
 						// When transmitting fails, simply stop responding to this request and wait for the node to re-request the fragment
 						this.driver.controllerLog.logNode(this.id, {
 							message: `Failed to send firmware fragment ${num} / ${numFragments}`,

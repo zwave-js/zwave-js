@@ -2712,6 +2712,24 @@ export class Driver
 				ZWaveErrorCodes.Controller_MessageDropped,
 			);
 		}
+
+		// Stop a running firmware transfer too, so other nodes can be updated in the meantime.
+		// The transfer starts again when the node wakes up.
+		const firmwareTransferTask = this.scheduler.findTask(
+			(t) =>
+				t.tag?.id === "firmware-update-ota"
+				&& t.tag.nodeId === node.id
+				&& t.group?.id === "firmware-update-ota-transfer",
+		);
+		if (firmwareTransferTask) {
+			void this.rejectTransactions(
+				(t) =>
+					t.message.getNodeId() === node.id
+					&& t.tag === "firmware-update-ota",
+				"The node is asleep",
+				ZWaveErrorCodes.Controller_MessageDropped,
+			);
+		}
 	}
 
 	/** Is called when a previously dead node starts communicating again */

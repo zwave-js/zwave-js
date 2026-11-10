@@ -7,8 +7,6 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type WithAddress,
-	ZWaveError,
-	ZWaveErrorCodes,
 	validatePayload,
 } from "@zwave-js/core";
 import {
@@ -870,18 +868,20 @@ export class FirmwareUpdateMetaDataCCReport extends FirmwareUpdateMetaDataCC {
 	}
 
 	public static from(
-		_raw: CCRaw,
-		_ctx: CCParsingContext,
+		raw: CCRaw,
+		ctx: CCParsingContext,
 	): FirmwareUpdateMetaDataCCReport {
-		// TODO: Deserialize payload
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		// Only mock nodes parse this command. Assume they implement V2+, where the last 2 bytes are a checksum.
+		validatePayload(raw.payload.length >= 4);
+		const header = raw.payload.readUInt16BE(0);
+		const firmwareData = raw.payload.subarray(2, -2);
 
-		// return new FirmwareUpdateMetaDataCCReport({
-		// 	nodeId: ctx.sourceNodeId,
-		// });
+		return new this({
+			nodeId: ctx.sourceNodeId,
+			reportNumber: header & 0x7fff,
+			isLast: !!(header & 0x8000),
+			firmwareData,
+		});
 	}
 
 	public isLast: boolean;

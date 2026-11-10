@@ -4612,4 +4612,11 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 	): this {
 		return this.once(event, callback);
 	}
+
+	protected _off<TEvent extends keyof AllNodeEvents>(
+		event: TEvent,
+		callback: AllNodeEvents[TEvent],
+	): this {
+		return this.off(event, callback);
+	}
 }
