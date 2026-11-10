@@ -206,3 +206,80 @@ test("QR code parsing -> Example case: Acme Light Dimmer w/o SmartStart", async 
 		t.expect(result).toStrictEqual(expectedResult);
 	});
 }
+
+{
+	// Based on the Acme Light Dimmer example, with the application version written
+	// as a float (577.9999999999999 instead of 00578). The checksum covers the raw
+	// string, as observed on affected labels.
+	const floatArtifactQRCode =
+		"9001468690035152535455414243444531323334352122232425001004353015370220655200010000003577.9999999999999";
+	const expectedResult = {
+		version: QRCodeVersion.SmartStart,
+		securityClasses: [
+			SecurityClass.S2_Unauthenticated,
+			SecurityClass.S2_Authenticated,
+		],
+		requestedSecurityClasses: [
+			SecurityClass.S2_Unauthenticated,
+			SecurityClass.S2_Authenticated,
+		],
+		dsk: "51525-35455-41424-34445-31323-33435-21222-32425",
+		genericDeviceClass: 0x11,
+		specificDeviceClass: 0x01,
+		installerIconType: 0x0601,
+		manufacturerId: 0xfff0,
+		productType: 0x0064,
+		productId: 0x0003,
+	};
+
+	test("QR code parsing -> stops at an invalid character in the application version", async (t) => {
+		const result = await parseQRCodeString(floatArtifactQRCode);
+		t.expect(result).toStrictEqual({
+			...expectedResult,
+			// 577 instead of 578 due to the truncation
+			applicationVersion: "2.65",
+		});
+	});
+
+	test("QR code parsing -> stops at an invalid character after a complete QR code", async (t) => {
+		const result = await parseQRCodeString(
+			"900140985003515253545541424344453132333435212223242500100435301537022065520001000000300578.9999999999999",
+		);
+		t.expect(result).toStrictEqual({
+			...expectedResult,
+			applicationVersion: "2.66",
+		});
+	});
+
+	const invalidCases = [
+		{
+			// Checksum of the original Acme Light Dimmer QR code
+			code: "9001327820035152535455414243444531323334352122232425001004353015370220655200010000003577.9999999999999",
+			reason: "the checksum does not match the raw input",
+		},
+		{
+			code: "900149438003515253545541424344.53132333435212223242500100435301537022065520001000000300578",
+			reason: "the invalid character is in the DSK",
+		},
+		{
+			code: "90013670400351525354554142434445313233343521222324250010043530153702206552000100000.9999999999999",
+			reason: "the product ID is incomplete",
+		},
+		{
+			code: "9001036400035152535455414243444531323334352122232425001004353015370220655200010000003.9999999999999",
+			reason: "the application version has no digits",
+		},
+		{
+			code: "900143877003515253545541424344453132333435212223242500100435.9999999999999",
+			reason: "the ProductType TLV is incomplete",
+		},
+	];
+
+	for (const { code, reason } of invalidCases) {
+		test(`QR code parsing -> throws on invalid characters when ${reason}`, async (t) => {
+			await assertZWaveError(t.expect, () => parseQRCodeString(code), {
+				errorCode: ZWaveErrorCodes.Security2CC_InvalidQRCode,
+			});
+		});
+	}
+}
