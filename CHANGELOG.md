@@ -4,6 +4,10 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+### Bugfixes
+* Limit active OTA firmware update transfers to one node at a time
+
 ## 15.32.2 (2026-11-10)
 Release 15.32.0 prevented driver startup for some users who reused their mesh security keys for Long Range as well.
 While this should never be done, Z-Wave JS now simply warns instead of throwing an error.
