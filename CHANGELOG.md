@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.32.3 (2026-11-10)
 ### Bugfixes
 * Limit active OTA firmware update transfers to one node at a time
 
