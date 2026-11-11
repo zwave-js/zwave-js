@@ -1,0 +1,26 @@
+{
+	"manufacturer": "Monster Cable",
+	"manufacturerId": "0x007e",
+	"label": "IWS1000S",
+	"description": "Scene Capable Switch On/Off",
+	"devices": [
+		{
+			"productType": "0x0300",
+			"productId": "0x014e"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"associations": {
+		"1": {
+			"label": "Lifeline",
+			"maxNodes": 5,
+			"isLifeline": true
+		}
+	},
+	"compat": {
+		"manualValueRefreshDelayMs": 1000
+	}
+}
