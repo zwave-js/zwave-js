@@ -627,6 +627,13 @@ export function stringify(arg: unknown, space?: 4 | "\t"): string;
 // @public (undocumented)
 export function stringToUint8ArrayUTF16BE(str: string): BytesView;
 
+// Warning: (ae-missing-release-tag) "stripControlCharacters" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function stripControlCharacters(str: string, options?: {
+    keepNewlines?: boolean;
+}): string;
+
 // Warning: (ae-missing-release-tag) "sum" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
