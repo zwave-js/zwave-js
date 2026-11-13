@@ -163,7 +163,7 @@ import {
 	type FirmwareUpdateCallback,
 	FirmwareUpdateCommandStatus,
 	type FirmwareUpdateRequest,
-	type FirmwareUpdateResponse,
+	FirmwareUpdateResponse,
 	FirmwareUpdate_PerformRequest,
 	FirmwareUpdate_PrepareRequest,
 	FirmwareUpdate_WriteChunkRequest,
@@ -9606,9 +9606,18 @@ ${handlers.length} left`,
 		};
 		const fail = (
 			step: string,
-			status: FirmwareUpdateCommandStatus | "timeout",
+			status: FirmwareUpdateCommandStatus | "timeout" | "not accepted",
 		): OTWFirmwareUpdateResult => {
-			if (status === "timeout") {
+			if (status === "not accepted") {
+				this.controllerLog.print(
+					`OTW update failed: The controller did not accept ${step}`,
+					"error",
+				);
+				return finish({
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Aborted,
+				});
+			} else if (status === "timeout") {
 				this.controllerLog.print(
 					`OTW update failed: ${step} timed out`,
 					"error",
@@ -9620,7 +9629,7 @@ ${handlers.length} left`,
 			}
 
 			this.controllerLog.print(
-				`OTW update failed: ${step} was rejected with status ${getEnumMemberName(
+				`OTW update failed: ${step} failed with status ${getEnumMemberName(
 					FirmwareUpdateCommandStatus,
 					status,
 				)}`,
@@ -9643,12 +9652,16 @@ ${handlers.length} left`,
 		// sendMessage returns a rejecting response or a failed callback instead of throwing
 		const execute = async (
 			msg: FirmwareUpdateRequest,
-		): Promise<FirmwareUpdateCommandStatus | "timeout"> => {
+		): Promise<
+			FirmwareUpdateCommandStatus | "timeout" | "not accepted"
+		> => {
 			try {
 				const result = await this.sendMessage<
 					FirmwareUpdateResponse | FirmwareUpdateCallback
 				>(msg);
-				return result.status;
+				return result instanceof FirmwareUpdateResponse
+					? "not accepted"
+					: result.status;
 			} catch (e) {
 				if (
 					isZWaveError(e)
@@ -9671,16 +9684,21 @@ ${handlers.length} left`,
 			new FirmwareUpdate_PrepareRequest(),
 		);
 		if (
-			prepareStatus
+			prepareStatus === "not accepted"
+			|| prepareStatus
 				=== FirmwareUpdateCommandStatus.Error_FirmwareUpdateNotSupported
 			|| prepareStatus
 				=== FirmwareUpdateCommandStatus.Error_SubCommandNotSupported
 		) {
+			const reason =
+				prepareStatus === "not accepted"
+					? "it did not accept Prepare"
+					: `status ${getEnumMemberName(
+							FirmwareUpdateCommandStatus,
+							prepareStatus,
+						)}`;
 			this.controllerLog.print(
-				`The controller cannot stage firmware updates (status ${getEnumMemberName(
-					FirmwareUpdateCommandStatus,
-					prepareStatus,
-				)}), uploading through the bootloader instead`,
+				`The controller cannot stage firmware updates (${reason}), uploading through the bootloader instead`,
 				"warn",
 			);
 			return undefined;

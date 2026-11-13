@@ -41,8 +41,8 @@ const firmware = new Bytes(5 * FIRMWARE_UPDATE_MAX_CHUNK_SIZE + 100);
 for (let i = 0; i < firmware.length; i++) firmware[i] = (i * 7) & 0xff;
 
 interface MockFirmwareUpdateOptions {
-	/** Reject this sub command with the given status in the response */
-	rejectInResponse?: [FirmwareUpdateSubCommand, FirmwareUpdateCommandStatus];
+	/** Do not accept this sub command in the response */
+	rejectInResponse?: FirmwareUpdateSubCommand;
 	/** Report this status for the sub command in the callback */
 	failInCallback?: [FirmwareUpdateSubCommand, FirmwareUpdateCommandStatus];
 	/** Send no callback for this sub command */
@@ -65,24 +65,14 @@ function createFirmwareUpdateBehavior(
 		async onHostMessage(controller, msg) {
 			if (!(msg instanceof FirmwareUpdateRequest)) return;
 
-			const [rejectSubCommand, rejectStatus] =
-				options.rejectInResponse ?? [];
-			if (rejectSubCommand === msg.subCommand) {
-				await controller.sendMessageToHost(
-					new FirmwareUpdateResponse({
-						subCommand: msg.subCommand,
-						status: rejectStatus!,
-					}),
-				);
-				return true;
-			}
-
+			const accepted = options.rejectInResponse !== msg.subCommand;
 			await controller.sendMessageToHost(
 				new FirmwareUpdateResponse({
 					subCommand: msg.subCommand,
-					status: FirmwareUpdateCommandStatus.OK,
+					accepted,
 				}),
 			);
+			if (!accepted) return true;
 
 			if (msg instanceof FirmwareUpdate_WriteChunkRequest) {
 				state.image.set(msg.data, msg.offset);
@@ -227,18 +217,6 @@ const failureCases: {
 	expectedSubCommands: number;
 }[] = [
 	{
-		name: "Prepare is rejected in the response",
-		options: {
-			rejectInResponse: [
-				FirmwareUpdateSubCommand.Prepare,
-				FirmwareUpdateCommandStatus.Error_PrepareFailed,
-			],
-		},
-		expectedStatus: OTWFirmwareUpdateStatus.Error_Aborted,
-		expectedErrorCode: FirmwareUpdateCommandStatus.Error_PrepareFailed,
-		expectedSubCommands: 1,
-	},
-	{
 		name: "Prepare fails in the callback",
 		options: {
 			failInCallback: [
@@ -251,15 +229,11 @@ const failureCases: {
 		expectedSubCommands: 1,
 	},
 	{
-		name: "Write Chunk is rejected in the response",
+		name: "Write Chunk is not accepted",
 		options: {
-			rejectInResponse: [
-				FirmwareUpdateSubCommand.WriteChunk,
-				FirmwareUpdateCommandStatus.Error_TooBig,
-			],
+			rejectInResponse: FirmwareUpdateSubCommand.WriteChunk,
 		},
 		expectedStatus: OTWFirmwareUpdateStatus.Error_Aborted,
-		expectedErrorCode: FirmwareUpdateCommandStatus.Error_TooBig,
 		expectedSubCommands: 2,
 	},
 	{
@@ -275,9 +249,17 @@ const failureCases: {
 		expectedSubCommands: 2,
 	},
 	{
-		name: "Perform is rejected in the response",
+		name: "Perform is not accepted",
 		options: {
-			rejectInResponse: [
+			rejectInResponse: FirmwareUpdateSubCommand.Perform,
+		},
+		expectedStatus: OTWFirmwareUpdateStatus.Error_Aborted,
+		expectedSubCommands: 8,
+	},
+	{
+		name: "Perform reports an unsupported target in the callback",
+		options: {
+			failInCallback: [
 				FirmwareUpdateSubCommand.Perform,
 				FirmwareUpdateCommandStatus.Error_UnsupportedTarget,
 			],
@@ -298,6 +280,14 @@ const failureCases: {
 		expectedErrorCode:
 			FirmwareUpdateCommandStatus.Error_InvalidSignatureOrKey,
 		expectedSubCommands: 8,
+	},
+	{
+		name: "the Prepare callback is missing",
+		options: {
+			omitCallback: FirmwareUpdateSubCommand.Prepare,
+		},
+		expectedStatus: OTWFirmwareUpdateStatus.Error_Timeout,
+		expectedSubCommands: 1,
 	},
 	{
 		name: "the Write Chunk callback is missing",
@@ -386,10 +376,35 @@ for (const c of failureCases) {
 	);
 }
 
-{
+const fallbackCases: [string, MockFirmwareUpdateOptions][] = [
+	[
+		"does not accept Prepare",
+		{ rejectInResponse: FirmwareUpdateSubCommand.Prepare },
+	],
+	[
+		"reports that firmware updates are not supported",
+		{
+			failInCallback: [
+				FirmwareUpdateSubCommand.Prepare,
+				FirmwareUpdateCommandStatus.Error_FirmwareUpdateNotSupported,
+			],
+		},
+	],
+	[
+		"reports that Prepare is not supported",
+		{
+			failInCallback: [
+				FirmwareUpdateSubCommand.Prepare,
+				FirmwareUpdateCommandStatus.Error_SubCommandNotSupported,
+			],
+		},
+	],
+];
+
+for (const [name, options] of fallbackCases) {
 	const state = createState();
 	integrationTest(
-		"OTW update falls back to the bootloader when the controller cannot stage updates",
+		`OTW update falls back to the bootloader when the controller ${name}`,
 		{
 			controllerCapabilities: capabilitiesWithFirmwareUpdate,
 			additionalDriverOptions: {
@@ -399,15 +414,7 @@ for (const c of failureCases) {
 			},
 			customSetup: async (driver, mockController) => {
 				mockController.defineBehavior(
-					createFirmwareUpdateBehavior(
-						{
-							rejectInResponse: [
-								FirmwareUpdateSubCommand.Prepare,
-								FirmwareUpdateCommandStatus.Error_FirmwareUpdateNotSupported,
-							],
-						},
-						state,
-					),
+					createFirmwareUpdateBehavior(options, state),
 				);
 			},
 			testBody: async (t, driver, node, mockController) => {

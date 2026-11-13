@@ -305,11 +305,11 @@ export class FirmwareUpdate_PerformRequest extends FirmwareUpdateRequest {
 
 export interface FirmwareUpdateResponseOptions {
 	subCommand: FirmwareUpdateSubCommand;
-	status: FirmwareUpdateCommandStatus;
+	accepted: boolean;
 }
 
-// The spec's description of the Response Status field is ambiguous. We treat 0x00 as
-// "accepted, a callback follows". Any other value rejects the command and uses the status table.
+// The Response Status field follows the generic definition in the Host API spec:
+// A non-zero value accepts the command and a callback follows. 0x00 rejects it without a callback.
 @messageTypes(MessageType.Response, FunctionType.FirmwareUpdate)
 export class FirmwareUpdateResponse
 	extends Message
@@ -320,7 +320,7 @@ export class FirmwareUpdateResponse
 	) {
 		super(options);
 		this.subCommand = options.subCommand;
-		this.status = options.status;
+		this.accepted = options.accepted;
 	}
 
 	public static from(
@@ -329,20 +329,20 @@ export class FirmwareUpdateResponse
 	): FirmwareUpdateResponse {
 		validatePayload(raw.payload.length >= 2);
 		const subCommand: FirmwareUpdateSubCommand = raw.payload[0];
-		const status: FirmwareUpdateCommandStatus = raw.payload[1];
+		const accepted = raw.payload[1] !== 0;
 
-		return new this({ subCommand, status });
+		return new this({ subCommand, accepted });
 	}
 
 	public readonly subCommand: FirmwareUpdateSubCommand;
-	public readonly status: FirmwareUpdateCommandStatus;
+	public readonly accepted: boolean;
 
 	public isOK(): boolean {
-		return this.status === FirmwareUpdateCommandStatus.OK;
+		return this.accepted;
 	}
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([this.subCommand, this.status]);
+		this.payload = Bytes.from([this.subCommand, this.accepted ? 0x01 : 0]);
 		return super.serialize(ctx);
 	}
 
@@ -354,10 +354,7 @@ export class FirmwareUpdateResponse
 					FirmwareUpdateSubCommand,
 					this.subCommand,
 				),
-				status: getEnumMemberName(
-					FirmwareUpdateCommandStatus,
-					this.status,
-				),
+				accepted: this.accepted,
 			},
 		};
 	}
