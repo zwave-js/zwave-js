@@ -14,11 +14,27 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 5,
+					"isLifeline": true
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
+			"label": "Socket 1"
+		},
+		"2": {
+			"label": "Socket 2"
+		},
+		"3": {
+			"label": "Socket 3"
+		},
+		"4": {
+			"label": "Socket 4"
 		}
 	},
 	"paramInformation": [
