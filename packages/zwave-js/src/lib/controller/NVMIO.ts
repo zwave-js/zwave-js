@@ -6,6 +6,28 @@ import type { BytesView } from "@zwave-js/shared";
 
 import type { ZWaveController } from "./Controller.js";
 
+/**
+ * Shortens a 700+ series NVM write that ends exactly at the end of the NVM by dropping its trailing 0xFF bytes.
+ * Returns the data unchanged if the write ends elsewhere or its last byte is not 0xFF.
+ *
+ * **Note:** Only call this when the target flash is erased before or by this write, because the dropped bytes are never written.
+ */
+export function trimNVMWriteAtEnd(
+	offset: number,
+	data: BytesView,
+	nvmSize: number,
+): BytesView {
+	// Silicon Labs' ZPAL erases the page that contains the first byte after a write.
+	// For a write ending exactly at the end of the NVM, that is the page after it,
+	// which can hold the manufacturing tokens and bootloader keys.
+	if (offset + data.length !== nvmSize) return data;
+
+	let end = data.length;
+	// Keep at least one byte, so a write that starts a page still makes ZPAL erase that page
+	while (end > 1 && data[end - 1] === 0xff) end--;
+	return data.subarray(0, end);
+}
+
 /** NVM IO over serial for 500 series controllers */
 export class SerialNVMIO500 implements NVMIO {
 	public constructor(controller: ZWaveController) {
@@ -242,7 +264,7 @@ export class SerialNVMIO700 implements NVMIO {
 
 		const { endOfFile } = await this._write(
 			offset,
-			data.subarray(0, writeSize),
+			trimNVMWriteAtEnd(offset, data.subarray(0, writeSize), size),
 		);
 		return {
 			bytesWritten: writeSize,
