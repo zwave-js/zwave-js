@@ -309,7 +309,10 @@ Updates a subset of the driver options without having to restart the driver. The
 ### Updating the firmware of the Z-Wave module (OTW)
 
 ```ts
-firmwareUpdateOTW(data: Buffer | FirmwareUpdateInfo): Promise<OTWFirmwareUpdateResult>
+firmwareUpdateOTW(
+	data: Buffer | FirmwareUpdateInfo,
+	options?: OTWFirmwareUpdateOptions,
+): Promise<OTWFirmwareUpdateResult>
 ```
 
 > [!WARNING] We don't take any responsibility if devices upgraded using Z-Wave JS don't work after an update. Always double-check that the correct update is about to be installed.
@@ -319,6 +322,23 @@ Besides the raw firmware image, you can also pass a `FirmwareUpdateInfo` object 
 Performs an over-the-wire (OTW) firmware update for the Z-Wave module (controller) using the given firmware image. To do so, the device gets put in bootloader mode where a new firmware image can be uploaded. This method can be called in bootloader mode, while connected to a Serial API controller, or with a CLI based firmware that has an option to return to bootloader.
 
 > [!WARNING] A failure during this process may leave your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded.
+
+If the controller supports the Firmware Update Serial API command (`0x3E`), Z-Wave JS uses it instead of the bootloader. The controller stores the uploaded file while the Serial API keeps running. It installs the file after a restart, so an interrupted upload leaves the current firmware intact. Z-Wave JS waits up to `timeouts.firmwareUpdateInstall` for the controller to start again. If the controller reports that it can't store updates, Z-Wave JS uploads through the bootloader instead.
+
+The encrypted file doesn't tell the controller what it contains. For the Firmware Update command, pass the target in the options. It defaults to the firmware:
+
+<!-- #import OTWFirmwareUpdateOptions from "zwave-js" -->
+
+```ts
+interface OTWFirmwareUpdateOptions {
+	/**
+	 * Which part of the Z-Wave module's software the file updates. Default: `OTWFirmwareUpdateTarget.Firmware`.
+	 * The module can't tell from the encrypted file, so it must be specified.
+	 * Only used when the module supports the Firmware Update Serial API command (0x3E).
+	 */
+	target?: OTWFirmwareUpdateTarget;
+}
+```
 
 To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` driver events](api/driver#quotfirmware-update-progressquot).
 
@@ -332,7 +352,10 @@ The return value indicates whether the update was successful and includes an err
 interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
-	/** The bootloader error code, if available when the update fails */
+	/**
+	 * The error code reported by the bootloader or by the Z-Wave module, if available when the update fails.
+	 * For updates through the Firmware Update Serial API command, this is a `FirmwareUpdateCommandStatus`.
+	 */
 	errorCode?: number;
 }
 ```
@@ -504,7 +527,10 @@ The firmware update process is finished. The `result` argument looks like this i
 interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
-	/** The bootloader error code, if available when the update fails */
+	/**
+	 * The error code reported by the bootloader or by the Z-Wave module, if available when the update fails.
+	 * For updates through the Firmware Update Serial API command, this is a `FirmwareUpdateCommandStatus`.
+	 */
 	errorCode?: number;
 }
 ```
@@ -890,6 +916,13 @@ interface ZWaveOptions {
 		 * to polling the API for the responsiveness check.
 		 */
 		serialAPIStarted: number; // [1000...30000], default: 5000 ms
+
+		/**
+		 * How long to wait for the Z-Wave module to start its application after an OTW firmware update.
+		 * This includes the time a bootloader with a storage slot needs to verify and install the update.
+		 * It also limits the wait when entering the bootloader installs a pending update.
+		 */
+		firmwareUpdateInstall: number; // [1000...600000], default: 60000 ms
 
 		/**
 		 * The minimum time to wait before and between automatic polling of nodes.
