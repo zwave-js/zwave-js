@@ -2312,6 +2312,7 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 			});
 		}
 		const values = parameters.map((_, i) =>
+			// oxlint-disable-next-line @zwave-js/no-unchecked-bytes-reads -- the payload length is validated for all parameters above
 			raw.payload.readIntBE(4 + i * valueSize, valueSize),
 		);
 		return new this({
@@ -3425,12 +3426,17 @@ function parseValue(
 	size: number,
 	format: ConfigValueFormat,
 ): ConfigValue {
+	validatePayload(size >= 1, size <= 6, raw.length >= size);
 	switch (format) {
 		case ConfigValueFormat.SignedInteger:
+			// Signed reads are not implemented for 5 and 6 byte values
+			validatePayload(size <= 4);
+			// oxlint-disable-next-line @zwave-js/no-unchecked-bytes-reads -- callers only pass integer value sizes
 			return raw.readIntBE(0, size);
 		case ConfigValueFormat.UnsignedInteger:
 		case ConfigValueFormat.Enumerated:
 		case ConfigValueFormat.BitField:
+			// oxlint-disable-next-line @zwave-js/no-unchecked-bytes-reads -- callers only pass integer value sizes
 			return raw.readUIntBE(0, size);
 	}
 }

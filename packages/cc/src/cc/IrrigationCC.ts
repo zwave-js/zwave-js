@@ -2584,7 +2584,7 @@ export class IrrigationCCValveTableReport extends IrrigationCC {
 		validatePayload((raw.payload.length - 1) % 3 === 0);
 		const tableId = raw.payload[0];
 		const entries: ValveTableEntry[] = [];
-		for (let offset = 1; offset < raw.payload.length; offset += 3) {
+		for (let offset = 1; offset + 3 <= raw.payload.length; offset += 3) {
 			entries.push({
 				valveId: raw.payload[offset],
 				duration: raw.payload.readUInt16BE(offset + 1),
