@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { Checkout } from "../checkout.js";
 import { ConsentRequiredError } from "../semantic/consent.js";
 import type { SemanticSearchService } from "../semantic/service.js";
 
 import { createSearchParameterDefinitionsTool } from "./searchParameterDefinitions.js";
+
+const checkout = { root: "/repo" } as Checkout;
+const context = { checkout };
 
 function fakeService(
 	overrides: Partial<SemanticSearchService> = {},
@@ -27,7 +31,7 @@ describe("createSearchParameterDefinitionsTool", () => {
 	it("rejects a missing query without calling the service", async () => {
 		const service = fakeService();
 		const tool = createSearchParameterDefinitionsTool(service);
-		const result = await tool.handler(undefined as any);
+		const result = await tool.handler(undefined as any, context);
 		expect(result.isError).toBe(true);
 		expect(JSON.stringify(result.content)).toContain("invalid_argument");
 		expect(service.search).not.toHaveBeenCalled();
@@ -36,7 +40,7 @@ describe("createSearchParameterDefinitionsTool", () => {
 	it("rejects an empty/whitespace-only query", async () => {
 		const service = fakeService();
 		const tool = createSearchParameterDefinitionsTool(service);
-		const result = await tool.handler({ query: "   " });
+		const result = await tool.handler({ query: "   " }, context);
 		expect(result.isError).toBe(true);
 		expect(service.search).not.toHaveBeenCalled();
 	});
@@ -44,10 +48,13 @@ describe("createSearchParameterDefinitionsTool", () => {
 	it("rejects an invalid kind filter", async () => {
 		const service = fakeService();
 		const tool = createSearchParameterDefinitionsTool(service);
-		const result = await tool.handler({
-			query: "ramp rate",
-			kind: "bogus",
-		} as any);
+		const result = await tool.handler(
+			{
+				query: "ramp rate",
+				kind: "bogus",
+			} as any,
+			context,
+		);
 		expect(result.isError).toBe(true);
 		expect(JSON.stringify(result.content)).toContain("kind");
 		expect(service.search).not.toHaveBeenCalled();
@@ -57,22 +64,25 @@ describe("createSearchParameterDefinitionsTool", () => {
 		const service = fakeService();
 		const tool = createSearchParameterDefinitionsTool(service);
 
-		await tool.handler({ query: "ramp rate" });
+		await tool.handler({ query: "ramp rate" }, context);
 		expect(service.search).toHaveBeenLastCalledWith(
+			checkout,
 			"ramp rate",
 			expect.anything(),
 			10,
 		);
 
-		await tool.handler({ query: "ramp rate", limit: 999 });
+		await tool.handler({ query: "ramp rate", limit: 999 }, context);
 		expect(service.search).toHaveBeenLastCalledWith(
+			checkout,
 			"ramp rate",
 			expect.anything(),
 			50,
 		);
 
-		await tool.handler({ query: "ramp rate", limit: 0 });
+		await tool.handler({ query: "ramp rate", limit: 0 }, context);
 		expect(service.search).toHaveBeenLastCalledWith(
+			checkout,
 			"ramp rate",
 			expect.anything(),
 			1,
@@ -82,13 +92,17 @@ describe("createSearchParameterDefinitionsTool", () => {
 	it("passes manufacturer/purpose/kind filters through to the service", async () => {
 		const service = fakeService();
 		const tool = createSearchParameterDefinitionsTool(service);
-		await tool.handler({
-			query: "ramp rate",
-			manufacturer: "Fibaro",
-			purpose: "dimming.ramp_rate",
-			kind: "parameter",
-		} as any);
+		await tool.handler(
+			{
+				query: "ramp rate",
+				manufacturer: "Fibaro",
+				purpose: "dimming.ramp_rate",
+				kind: "parameter",
+			} as any,
+			context,
+		);
 		expect(service.search).toHaveBeenCalledWith(
+			checkout,
 			"ramp rate",
 			{
 				manufacturer: "Fibaro",
@@ -107,7 +121,7 @@ describe("createSearchParameterDefinitionsTool", () => {
 			}),
 		});
 		const tool = createSearchParameterDefinitionsTool(service);
-		const result = await tool.handler({ query: "ramp rate" });
+		const result = await tool.handler({ query: "ramp rate" }, context);
 		expect(result.isError).toBeFalsy();
 		expect(JSON.stringify(result.content)).toContain("p1");
 	});
@@ -124,7 +138,7 @@ describe("createSearchParameterDefinitionsTool", () => {
 				),
 		});
 		const tool = createSearchParameterDefinitionsTool(service);
-		const result = await tool.handler({ query: "ramp rate" });
+		const result = await tool.handler({ query: "ramp rate" }, context);
 		expect(result.isError).toBe(true);
 		expect(JSON.stringify(result.content)).toContain(
 			"model_download_consent_required",

@@ -1,7 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import type { SemanticSearchService } from "../semantic/service.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 import { clampLimit, invalidArgument, jsonResult } from "./results.js";
 import { handleSemanticError } from "./semanticErrors.js";
@@ -28,6 +28,7 @@ export function createFindSimilarParametersTool(
 ): ToolHandler<FindSimilarParametersArgs> {
 	async function handle(
 		args: FindSimilarParametersArgs = {},
+		{ checkout }: ToolContext,
 	): Promise<CallToolResult> {
 		const { filename, parameter, valueBitMask, firmwareVersion } = args;
 		if (!filename) {
@@ -41,6 +42,7 @@ export function createFindSimilarParametersTool(
 
 		try {
 			const result = await service.findSimilar(
+				checkout,
 				filename,
 				parameter,
 				valueBitMask,
