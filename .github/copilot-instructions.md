@@ -7,6 +7,12 @@
 - Canonical agent skills live in `.agents/skills/`. The entries in `.claude/skills/` are symlinks to them for Claude Code. Always edit the canonical files, never the symlinks.
 - The rules for authoring, editing and reviewing device configuration files live in `.agents/instructions/config-files.md`. Read and follow that file when working on `*.json` files in `packages/config/config/devices`.
 
+## Issues, discussions and pull requests
+
+- Read `AI_POLICY.md` in the repository root before helping with an issue, discussion or pull request. Agents must not open or post them on their own. Draft the text for your user to review and submit.
+- Bug reports start as a discussion in the `request-support-investigate-issue` category, using its form. Feature requests go to the `feature-requests` category.
+- Driver logs must be on loglevel debug and attached as a file, never pasted. The `--attach` flag of the `gh` CLI only takes images and videos and isn't available for discussions, so leave attaching the log to your user.
+
 ## Tools and Tasks
 
 - To compile the project, prefer building the entire project with `yarn build`. If absolutely necessary, you can build a single package with `yarn build <package-name>`.
