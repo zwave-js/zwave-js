@@ -46,6 +46,7 @@ export * from "./serialapi/nvm/ExtNVMReadLongByteMessages.js";
 export * from "./serialapi/nvm/ExtNVMWriteLongBufferMessages.js";
 export * from "./serialapi/nvm/ExtNVMWriteLongByteMessages.js";
 export * from "./serialapi/nvm/ExtendedNVMOperationsMessages.js";
+export * from "./serialapi/nvm/FirmwareUpdateMessages.js";
 export * from "./serialapi/nvm/FirmwareUpdateNVMMessages.js";
 export * from "./serialapi/nvm/GetNVMIdMessages.js";
 export * from "./serialapi/nvm/NVMOperationsMessages.js";

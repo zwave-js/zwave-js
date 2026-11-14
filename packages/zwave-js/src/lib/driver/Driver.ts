@@ -159,8 +159,17 @@ import {
 	type CommandRequest,
 	type ContainsCC,
 	EnterBootloaderRequest,
+	FIRMWARE_UPDATE_MAX_CHUNK_SIZE,
+	type FirmwareUpdateCallback,
+	FirmwareUpdateCommandStatus,
+	type FirmwareUpdateRequest,
+	FirmwareUpdateResponse,
+	FirmwareUpdate_PerformRequest,
+	FirmwareUpdate_PrepareRequest,
+	FirmwareUpdate_WriteChunkRequest,
 	GetControllerVersionRequest,
 	MAX_SEND_ATTEMPTS,
+	OTWFirmwareUpdateTarget,
 	SendDataAbort,
 	SendDataBridgeRequest,
 	type SendDataMessage,
@@ -194,6 +203,7 @@ import {
 	buffer2hex,
 	cloneDeep,
 	createWrappingCounter,
+	getEnumMemberName,
 	getErrorMessage,
 	getenv,
 	isAbortError,
@@ -307,6 +317,7 @@ import type {
 	ZWaveOptions,
 } from "./ZWaveOptions.js";
 import {
+	type OTWFirmwareUpdateOptions,
 	type OTWFirmwareUpdateProgress,
 	type OTWFirmwareUpdateResult,
 	OTWFirmwareUpdateStatus,
@@ -345,6 +356,7 @@ const defaultOptions: ZWaveOptions = {
 		refreshValue: 5000, // Default should handle most slow devices until we have a better solution
 		refreshValueAfterTransition: 1000, // To account for delays in the device
 		serialAPIStarted: 5000,
+		firmwareUpdateInstall: 60000,
 		pollTime: 10000, // PollTime SHOULD be 10 seconds + CommandTime as per the spec
 	},
 	attempts: {
@@ -470,6 +482,15 @@ function checkOptions(options: ZWaveOptions): void {
 	) {
 		throw new ZWaveError(
 			`The Serial API started timeout must be between 1000 and 30000 milliseconds!`,
+			ZWaveErrorCodes.Driver_InvalidOptions,
+		);
+	}
+	if (
+		options.timeouts.firmwareUpdateInstall < 1000
+		|| options.timeouts.firmwareUpdateInstall > 600000
+	) {
+		throw new ZWaveError(
+			`The firmware update install timeout must be between 1000 and 600000 milliseconds!`,
 			ZWaveErrorCodes.Driver_InvalidOptions,
 		);
 	}
@@ -9250,9 +9271,12 @@ ${handlers.length} left`,
 	 * **WARNING:** After a successful update, the Z-Wave driver will destroy itself so it can be restarted.
 	 *
 	 * **WARNING:** A failure during this process may put your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded. Use at your own risk!
+	 *
+	 * @param options.target Which part of the module's software the file updates. Only used when the controller supports the Firmware Update Serial API command.
 	 */
 	public async firmwareUpdateOTW(
 		data: BytesView | FirmwareUpdateInfo,
+		options: OTWFirmwareUpdateOptions = {},
 	): Promise<OTWFirmwareUpdateResult> {
 		// Don't interrupt ongoing OTA firmware updates
 		if (this._controller?.isAnyOTAFirmwareUpdateInProgress()) {
@@ -9268,11 +9292,14 @@ ${handlers.length} left`,
 			throw new ZWaveError(message, ZWaveErrorCodes.OTW_Update_Busy);
 		}
 
-		return this._scheduler.queueTask(this.getFirmwareUpdateOTWTask(data));
+		return this._scheduler.queueTask(
+			this.getFirmwareUpdateOTWTask(data, options),
+		);
 	}
 
 	private getFirmwareUpdateOTWTask(
 		data: BytesView | FirmwareUpdateInfo,
+		options: OTWFirmwareUpdateOptions,
 	): TaskBuilder<OTWFirmwareUpdateResult> {
 		const self = this;
 
@@ -9288,6 +9315,7 @@ ${handlers.length} left`,
 				}
 				return (yield self.getInstallFirmwareOTWTask(
 					data,
+					options,
 				)) as OTWFirmwareUpdateResult;
 			},
 		};
@@ -9315,6 +9343,7 @@ ${handlers.length} left`,
 
 	private getInstallFirmwareOTWTask(
 		data: BytesView,
+		options: OTWFirmwareUpdateOptions,
 	): TaskBuilder<OTWFirmwareUpdateResult> {
 		const self = this;
 
@@ -9329,7 +9358,22 @@ ${handlers.length} left`,
 				if (self.mode === DriverMode.Bootloader) {
 					return yield* self.firmwareUpdateOTW700(data);
 				} else if (self.mode === DriverMode.SerialAPI) {
-					if (self.controller.sdkVersionGte("7.0")) {
+					if (
+						self.controller.isFunctionSupported(
+							FunctionType.FirmwareUpdate,
+						)
+					) {
+						const result = yield* waitFor(
+							self.firmwareUpdateOTWSerialAPI(
+								data,
+								options.target
+									?? OTWFirmwareUpdateTarget.Firmware,
+							),
+						);
+						if (result) return result;
+						// The module can't stage the update, e.g. because its bootloader has no storage
+						return yield* self.firmwareUpdateOTW700(data);
+					} else if (self.controller.sdkVersionGte("7.0")) {
 						// This is at least a 700 series controller, so we can use the 700 series update method
 						return yield* self.firmwareUpdateOTW700(data);
 					} else if (
@@ -9544,6 +9588,228 @@ ${handlers.length} left`,
 		}
 	}
 
+	/**
+	 * Uploads the firmware using the Firmware Update Serial API command (0x3E).
+	 * The module stores the file while the Serial API keeps running and installs it after a restart.
+	 *
+	 * Returns `undefined` when the module can't stage updates, so the caller can fall back to XMODEM.
+	 */
+	private async firmwareUpdateOTWSerialAPI(
+		data: BytesView,
+		target: OTWFirmwareUpdateTarget,
+	): Promise<OTWFirmwareUpdateResult | undefined> {
+		const finish = (
+			result: OTWFirmwareUpdateResult,
+		): OTWFirmwareUpdateResult => {
+			this.emit("firmware update finished", result);
+			return result;
+		};
+		const fail = (
+			step: string,
+			status: FirmwareUpdateCommandStatus | "timeout" | "not accepted",
+		): OTWFirmwareUpdateResult => {
+			if (status === "not accepted") {
+				this.controllerLog.print(
+					`OTW update failed: The controller did not accept ${step}`,
+					"error",
+				);
+				return finish({
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Aborted,
+				});
+			} else if (status === "timeout") {
+				this.controllerLog.print(
+					`OTW update failed: ${step} timed out`,
+					"error",
+				);
+				return finish({
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Timeout,
+				});
+			}
+
+			this.controllerLog.print(
+				`OTW update failed: ${step} failed with status ${getEnumMemberName(
+					FirmwareUpdateCommandStatus,
+					status,
+				)}`,
+				"error",
+			);
+			const notSupported = [
+				FirmwareUpdateCommandStatus.Error_FirmwareUpdateNotSupported,
+				FirmwareUpdateCommandStatus.Error_BootloaderUpdateNotSupported,
+				FirmwareUpdateCommandStatus.Error_UnsupportedTarget,
+				FirmwareUpdateCommandStatus.Error_SubCommandNotSupported,
+			].includes(status);
+			return finish({
+				success: false,
+				status: notSupported
+					? OTWFirmwareUpdateStatus.Error_NotSupported
+					: OTWFirmwareUpdateStatus.Error_Aborted,
+				errorCode: status,
+			});
+		};
+		// sendMessage returns a rejecting response or a failed callback instead of throwing
+		const execute = async (
+			msg: FirmwareUpdateRequest,
+		): Promise<
+			FirmwareUpdateCommandStatus | "timeout" | "not accepted"
+		> => {
+			try {
+				const result = await this.sendMessage<
+					FirmwareUpdateResponse | FirmwareUpdateCallback
+				>(msg);
+				return result instanceof FirmwareUpdateResponse
+					? "not accepted"
+					: result.status;
+			} catch (e) {
+				if (
+					isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.Controller_Timeout
+				) {
+					return "timeout";
+				}
+				throw e;
+			}
+		};
+
+		this.controllerLog.print(
+			`Beginning firmware update using the Firmware Update command (target: ${getEnumMemberName(
+				OTWFirmwareUpdateTarget,
+				target,
+			)})`,
+		);
+
+		const prepareStatus = await execute(
+			new FirmwareUpdate_PrepareRequest(),
+		);
+		if (
+			prepareStatus === "not accepted"
+			|| prepareStatus
+				=== FirmwareUpdateCommandStatus.Error_FirmwareUpdateNotSupported
+			|| prepareStatus
+				=== FirmwareUpdateCommandStatus.Error_SubCommandNotSupported
+		) {
+			const reason =
+				prepareStatus === "not accepted"
+					? "it did not accept Prepare"
+					: `status ${getEnumMemberName(
+							FirmwareUpdateCommandStatus,
+							prepareStatus,
+						)}`;
+			this.controllerLog.print(
+				`The controller cannot stage firmware updates (${reason}), uploading through the bootloader instead`,
+				"warn",
+			);
+			return undefined;
+		} else if (prepareStatus !== FirmwareUpdateCommandStatus.OK) {
+			return fail("Prepare", prepareStatus);
+		}
+
+		const numFragments = Math.ceil(
+			data.length / FIRMWARE_UPDATE_MAX_CHUNK_SIZE,
+		);
+		for (let fragment = 0; fragment < numFragments; fragment++) {
+			const offset = fragment * FIRMWARE_UPDATE_MAX_CHUNK_SIZE;
+			const writeStatus = await execute(
+				new FirmwareUpdate_WriteChunkRequest({
+					offset,
+					data: data.subarray(
+						offset,
+						offset + FIRMWARE_UPDATE_MAX_CHUNK_SIZE,
+					),
+				}),
+			);
+			if (writeStatus !== FirmwareUpdateCommandStatus.OK) {
+				return fail(
+					`Writing the chunk at offset ${offset}`,
+					writeStatus,
+				);
+			}
+
+			const progress: OTWFirmwareUpdateProgress = {
+				sentFragments: fragment + 1,
+				totalFragments: numFragments,
+				progress: roundTo(((fragment + 1) / numFragments) * 100, 2),
+			};
+			this.emit("firmware update progress", progress);
+		}
+
+		// The module restarts right after the Perform callback. Listen for the
+		// Serial API Started notification before sending Perform so it can't be missed.
+		// The timeout is applied separately because destroyController() clears all wait timers.
+		const stopWaiting = new AbortController();
+		const serialAPIStarted = this.waitForMessage<SerialAPIStartedRequest>(
+			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+			undefined,
+			undefined,
+			stopWaiting.signal,
+		).then(() => true as const);
+
+		const performStatus = await execute(
+			new FirmwareUpdate_PerformRequest({ target }),
+		).catch((e) => {
+			stopWaiting.abort();
+			throw e;
+		});
+		if (performStatus !== FirmwareUpdateCommandStatus.OK) {
+			stopWaiting.abort();
+			return fail("Perform", performStatus);
+		}
+
+		this.controllerLog.print(
+			"Firmware upload succeeded, waiting for the controller to install it...",
+		);
+		await this.destroyController(
+			(task) => task.tag?.id === "firmware-update-otw",
+		);
+		// The module may come back as the Serial API, the bootloader or a CLI
+		this.serial!.mode = undefined;
+
+		const started = await Promise.race([
+			serialAPIStarted,
+			wait(this._options.timeouts.firmwareUpdateInstall, true).then(
+				() => false as const,
+			),
+		]);
+		if (!started) {
+			stopWaiting.abort();
+			if (this._bootloader) {
+				this.controllerLog.print(
+					"OTW update failed: The controller stayed in the bootloader after installing the update",
+					"error",
+				);
+				return finish({
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Aborted,
+				});
+			}
+			this.controllerLog.print(
+				"Did not receive notification that the Serial API has started, checking if it responds...",
+				"warn",
+			);
+		}
+
+		try {
+			await this.initializeControllerAndNodes();
+		} catch (e) {
+			this.controllerLog.print(
+				`OTW update failed: The controller did not respond after installing the update: ${getErrorMessage(e)}`,
+				"error",
+			);
+			return finish({
+				success: false,
+				status: OTWFirmwareUpdateStatus.Error_Timeout,
+			});
+		}
+
+		this.controllerLog.print("Firmware update succeeded");
+		return finish({
+			success: true,
+			status: OTWFirmwareUpdateStatus.OK,
+		});
+	}
+
 	private async *firmwareUpdateOTW700(
 		data: BytesView,
 	): AsyncGenerator<
@@ -9594,7 +9860,24 @@ ${handlers.length} left`,
 	): Promise<OTWFirmwareUpdateResult> {
 		try {
 			await this.enterBootloader();
+		} catch (e) {
+			if (
+				isZWaveError(e)
+				&& e.code === ZWaveErrorCodes.Controller_Reset
+			) {
+				this.controllerLog.print(
+					`OTW update failed: ${e.message}`,
+					"error",
+				);
+				return {
+					success: false,
+					status: OTWFirmwareUpdateStatus.Error_Aborted,
+				};
+			}
+			throw e;
+		}
 
+		try {
 			// Start the update process
 			this.controllerLog.print("Beginning firmware upload");
 			await this.bootloader.beginUpload();
@@ -9806,21 +10089,66 @@ ${handlers.length} left`,
 
 		this.controllerLog.print("Entering bootloader...");
 		this._enteringBootloader = true;
+		const fromSerialAPI = this.mode === DriverMode.SerialAPI;
+		const stopWaiting = new AbortController();
 		try {
-			if (this.mode === DriverMode.SerialAPI) {
+			// A bootloader with a valid image in its storage slot installs it instead of showing
+			// the menu, and the application restarts. Listen for that before sending the command.
+			const serialAPIStarted = fromSerialAPI
+				? this.waitForMessage<SerialAPIStartedRequest>(
+						(msg) =>
+							msg.functionType === FunctionType.SerialAPIStarted,
+						undefined,
+						undefined,
+						stopWaiting.signal,
+					).then(() => "serialAPIStarted" as const)
+				: new Promise<never>(noop);
+
+			if (fromSerialAPI) {
 				await this.enterBootloaderFromSerialAPI();
 			} else if (this.mode === DriverMode.CLI) {
 				await this.enterBootloaderFromCLI();
 			}
 
-			// Wait if the menu shows up
+			// The menu shows up after about 3.6 s when the storage slot holds an invalid file
 			this._enterBootloaderPromise = createDeferredPromise();
-			const success = await Promise.race([
-				this._enterBootloaderPromise.then(() => true),
-				wait(5000, true).then(() => false),
+			const menuShown = this._enterBootloaderPromise.then(
+				() => "menu" as const,
+			);
+			let outcome = await Promise.race([
+				menuShown,
+				serialAPIStarted,
+				wait(10000, true).then(() => "timeout" as const),
 			]);
-			if (success) {
+			if (outcome === "timeout" && fromSerialAPI) {
+				this.controllerLog.print(
+					"The bootloader menu did not show up, waiting in case the controller is installing a pending update...",
+					"warn",
+				);
+				outcome = await Promise.race([
+					menuShown,
+					serialAPIStarted,
+					wait(
+						this._options.timeouts.firmwareUpdateInstall,
+						true,
+					).then(() => "timeout" as const),
+				]);
+			}
+
+			if (outcome === "menu") {
 				this.controllerLog.print("Entered bootloader");
+			} else if (outcome === "serialAPIStarted") {
+				this._enterBootloaderPromise = undefined;
+				this.controllerLog.print(
+					"The controller installed a pending firmware update instead of entering the bootloader",
+					"error",
+				);
+				this._enteringBootloader = false;
+				await this.initializeControllerAndNodes();
+				throw new ZWaveError(
+					"Failed to enter bootloader: The controller installed a pending firmware update and restarted instead",
+					ZWaveErrorCodes.Controller_Reset,
+				);
 			} else {
 				throw new ZWaveError(
 					"Failed to enter bootloader",
@@ -9828,6 +10156,7 @@ ${handlers.length} left`,
 				);
 			}
 		} finally {
+			stopWaiting.abort();
 			this._enteringBootloader = false;
 		}
 	}
@@ -9875,13 +10204,27 @@ ${handlers.length} left`,
 
 		// We may end up in a Serial API or CLI application. CLI is detected
 		// automatically, Serial API should send a SerialAPIStartedRequest.
-		// Give both a second to respond.
-		const isSerialAPI = await this.waitForMessage<SerialAPIStartedRequest>(
-			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
-			1000,
-		)
-			.then(() => true as const)
-			.catch(() => false as const);
+		// A bootloader that installs a staged update first takes about 15 s.
+		// If the installation fails, the bootloader menu shows up again.
+		const stopWaiting = new AbortController();
+		const isSerialAPI = await Promise.race([
+			this.waitForMessage<SerialAPIStartedRequest>(
+				(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+				this._options.timeouts.firmwareUpdateInstall,
+				undefined,
+				stopWaiting.signal,
+			)
+				.then(() => true as const)
+				.catch(() => false as const),
+			(async () => {
+				while (!stopWaiting.signal.aborted) {
+					if (this._cli || this._bootloader) return false as const;
+					await wait(100, true);
+				}
+				return false as const;
+			})(),
+		]);
+		stopWaiting.abort();
 
 		if (isSerialAPI) {
 			// Re-initialize the controller

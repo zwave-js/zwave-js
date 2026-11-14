@@ -1,5 +1,6 @@
 import { Bytes, type BytesView, getenv } from "@zwave-js/shared";
 
+import { MessageHeaders } from "../message/MessageHeaders.js";
 import { bootloaderMenuPreamble } from "../parsers/BootloaderParsers.js";
 import { ZWaveSerialMode } from "../serialport/definitions.js";
 
@@ -85,6 +86,13 @@ export class SerialModeSwitch extends WritableStream<BytesView> {
 							this.mode = ZWaveSerialMode.SerialAPI;
 						}
 					}
+				} else if (
+					this.mode === ZWaveSerialMode.Bootloader
+					&& chunk[0] === MessageHeaders.SOF
+				) {
+					// The Gecko bootloader never sends SOF. Switch back when the application
+					// starts instead, e.g. because the bootloader installed a staged update.
+					this.mode = ZWaveSerialMode.SerialAPI;
 				}
 
 				// On Windows, writing to the parsers immediately seems to lag the event loop
