@@ -353,7 +353,7 @@ import {
 	SecurityBootstrapFailure,
 	type SmartStartProvisioningEntry,
 } from "./Inclusion.js";
-import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
+import { SerialNVMIO500, SerialNVMIO700, trimNVMWriteAtEnd } from "./NVMIO.js";
 import { determineNIF } from "./NodeInformationFrame.js";
 import {
 	type ControllerProprietary,
@@ -9092,14 +9092,26 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		// data, default to a sane (but maybe slow) size
 		const chunkSize = (await read(0, 0xff)).buffer.length || 48;
 
+		if (nvmData.at(-1) !== 0xff) {
+			this.driver.controllerLog.print(
+				"The last byte of the NVM backup is not 0xFF. On some controllers, restoring it erases the flash page after the NVM, which can hold the bootloader keys.",
+				"warn",
+			);
+		}
+
 		// Close NVM and re-open again for writing
 		await close();
 		await open();
 
 		for (let offset = 0; offset < nvmData.length; offset += chunkSize) {
+			// The last NVM page is erased by the time the last chunk is written
 			const { endOfFile } = await write(
 				offset,
-				nvmData.subarray(offset, offset + chunkSize),
+				trimNVMWriteAtEnd(
+					offset,
+					nvmData.subarray(offset, offset + chunkSize),
+					size,
+				),
 			);
 
 			// Report progress for listeners
