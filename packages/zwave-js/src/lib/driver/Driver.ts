@@ -9800,6 +9800,8 @@ ${handlers.length} left`,
 			return result;
 		} finally {
 			let cancelled = true;
+			// After a failed transfer the bootloader keeps waiting for blocks and never times out.
+			// It treats the next command as an invalid block header and drops it, so it must be cancelled first.
 			if (uploadInProgress && this._bootloader) {
 				cancelled = await this.cancelBootloaderUpload();
 			}
