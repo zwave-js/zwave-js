@@ -9662,20 +9662,19 @@ ${handlers.length} left`,
 					};
 					try {
 						result = await this.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.FlowControl,
-							1000,
+							(c) =>
+								c.type === BootloaderChunkType.FlowControl
+								&& c.command !== XModemMessageHeaders.C,
+							// The bootloader sends a NAK after waiting 3 s for a complete block
+							5000,
 						);
 					} catch {
+						// The bootloader ACKs a block it already accepted, so sending it again is safe
 						this.controllerLog.print(
-							"OTW update failed: The bootloader did not acknowledge the start of transfer.",
-							"error",
+							`The bootloader did not respond to block ${fragment}, sending it again...`,
+							"warn",
 						);
-
-						const result: OTWFirmwareUpdateResult = {
-							success: false,
-							status: OTWFirmwareUpdateStatus.Error_Timeout,
-						};
-						return result;
+						continue retry;
 					}
 
 					switch (result.command) {
@@ -9693,7 +9692,10 @@ ${handlers.length} left`,
 							continue transfer;
 						}
 						case XModemMessageHeaders.NAK:
-							// The fragment was rejected, try again
+							this.controllerLog.print(
+								`The bootloader rejected block ${fragment}, sending it again...`,
+								"warn",
+							);
 							continue retry;
 						case XModemMessageHeaders.CAN:
 							// The bootloader aborted the update. We'll receive the reason afterwards as a message

@@ -22,6 +22,8 @@ export type MockXModemFault =
 	| "drop-host-byte"
 	// The bootloader accepts the block, but its ACK never reaches the host
 	| "drop-ack"
+	// The bootloader accepts the block, but its ACK and the next NAK never reach the host
+	| "drop-ack-and-nak"
 	// The bootloader takes this long to process the block before it ACKs
 	| { delayAck: number };
 
@@ -260,6 +262,16 @@ export function createMockGeckoBootloader(
 		attempts.clear();
 		let lastBlock = 0;
 		let started = false;
+		let dropNextNak = false;
+
+		async function acknowledge(fault: MockXModemFault | undefined) {
+			if (typeof fault === "object") await delay(fault.delayAck, signal);
+			if (fault === "drop-ack-and-nak") {
+				dropNextNak = true;
+			} else if (fault !== "drop-ack") {
+				sendFlowControl(XModemMessageHeaders.ACK);
+			}
+		}
 
 		send("\r\nbegin upload\r\n\0");
 		await delay(5, signal);
@@ -279,7 +291,11 @@ export function createMockGeckoBootloader(
 		while (!signal.aborted) {
 			const received = await receivePacket();
 			if (!received) {
-				sendFlowControl(XModemMessageHeaders.NAK);
+				if (dropNextNak) {
+					dropNextNak = false;
+				} else {
+					sendFlowControl(XModemMessageHeaders.NAK);
+				}
 				continue;
 			}
 			const { packet, fault } = received;
@@ -319,11 +335,7 @@ export function createMockGeckoBootloader(
 			const [, block, blockC] = packet;
 			if (started && block === lastBlock) {
 				// Replay of the last accepted block
-				if (typeof fault === "object")
-					await delay(fault.delayAck, signal);
-				if (fault !== "drop-ack") {
-					sendFlowControl(XModemMessageHeaders.ACK);
-				}
+				await acknowledge(fault);
 				continue;
 			}
 			if (
@@ -347,10 +359,7 @@ export function createMockGeckoBootloader(
 			// The standalone bootloader writes the new image over the application
 			state.appValid = false;
 
-			if (typeof fault === "object") await delay(fault.delayAck, signal);
-			if (fault !== "drop-ack") {
-				sendFlowControl(XModemMessageHeaders.ACK);
-			}
+			await acknowledge(fault);
 		}
 	}
 
