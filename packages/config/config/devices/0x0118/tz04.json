@@ -18,7 +18,7 @@
 		"0": {
 			"associations": {
 				"1": {
-					"label": "Relay 1 + 2",
+					"label": "Both Relays",
 					"maxNodes": 1
 				},
 				"2": {
@@ -80,7 +80,7 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Relay 1 + 2",
+					"label": "Both Relays",
 					"value": 1
 				},
 				{

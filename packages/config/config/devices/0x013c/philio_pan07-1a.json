@@ -73,15 +73,15 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Relay1",
+					"label": "Relay 1",
 					"value": 1
 				},
 				{
-					"label": "Relay2",
+					"label": "Relay 2",
 					"value": 2
 				},
 				{
-					"label": "Relay1 & Relay2",
+					"label": "Both Relays",
 					"value": 3
 				}
 			]

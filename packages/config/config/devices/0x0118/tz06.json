@@ -18,7 +18,7 @@
 		"0": {
 			"associations": {
 				"1": {
-					"label": "Relay 1 + 2",
+					"label": "Both Relays",
 					"maxNodes": 1,
 					"isLifeline": true
 				},
