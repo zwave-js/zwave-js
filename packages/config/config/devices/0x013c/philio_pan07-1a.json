@@ -36,6 +36,9 @@
 		},
 		"2": {
 			"label": "Relay 2"
+		},
+		"3": {
+			"label": "Both Relays"
 		}
 	},
 	"endpointGroups": {
