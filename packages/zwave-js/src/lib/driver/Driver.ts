@@ -9557,17 +9557,27 @@ ${handlers.length} left`,
 			result = yield* waitFor(this.firmwareUpdateOTW700Internal(data));
 			if (result.success) break;
 
-			// If this was an aborted update, check if it's an XMODEM communication error
-			if (
+			// The bootloader rejects images that fail verification. Restarting the
+			// upload helps only for transfer problems.
+			const isXModemError =
 				result.status === OTWFirmwareUpdateStatus.Error_Aborted
 				&& result.errorCode != undefined
-				&& (result.errorCode & 0xf0) === 0x20
-			) {
+				&& (result.errorCode & 0xf0) === 0x20;
+			const isTransferError =
+				result.status === OTWFirmwareUpdateStatus.Error_Timeout
+				|| result.status
+					=== OTWFirmwareUpdateStatus.Error_RetryLimitReached;
+
+			if (isXModemError || isTransferError) {
 				if (attempt < maxAttempts) {
+					const reason = isXModemError
+						? `XMODEM communication error ${num2hex(result.errorCode)}`
+						: result.status
+							  === OTWFirmwareUpdateStatus.Error_Timeout
+							? "a timeout"
+							: "too many failed attempts for one block";
 					this.controllerLog.print(
-						`Retrying firmware update after XMODEM communication error ${num2hex(
-							result.errorCode,
-						)}, attempt ${attempt}/${maxAttempts}...`,
+						`Retrying firmware update after ${reason}, attempt ${attempt}/${maxAttempts}...`,
 						"warn",
 					);
 					yield* waitFor(wait(250));

@@ -142,3 +142,21 @@ otwTest(
 		t.expect(bl.state.completedUploads).toBe(1);
 	},
 );
+
+otwTest(
+	"OTW update: the upload is restarted when a block keeps failing",
+	{
+		bootloader: {
+			injectFault: ({ block, upload }) =>
+				block === 3 && upload === 1 ? "drop-ack" : undefined,
+		},
+	},
+	async (t, driver, bl) => {
+		const result = await driver.firmwareUpdateOTW(firmware);
+
+		t.expect(result.status).toBe(OTWFirmwareUpdateStatus.OK);
+		t.expect(bl.state.uploads).toBe(2);
+		t.expect(bl.state.completedUploads).toBe(1);
+		t.expect(bl.state.mode).toBe("app");
+	},
+);
