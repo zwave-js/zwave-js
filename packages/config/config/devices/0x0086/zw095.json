@@ -23,13 +23,26 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 5,
+					"isLifeline": true,
+					// The device does not like Endpoint Associations for the lifeline
+					"multiChannel": false
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true,
-			// The device does not like Endpoint Associations for the lifeline
-			"multiChannel": false
+			"label": "Clamp 1"
+		},
+		"2": {
+			"label": "Clamp 2"
+		},
+		"3": {
+			"label": "Clamp 3"
 		}
 	},
 	"paramInformation": [

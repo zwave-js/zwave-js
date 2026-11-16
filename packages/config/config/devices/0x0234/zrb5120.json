@@ -13,67 +13,77 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
-		},
-		"2": {
-			"label": "Button 1 (Basic Report)",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "Button 1 (Binary Switch Set)",
-			"maxNodes": 5
-		},
-		"4": {
-			"label": "Button 1 (Multilevel Set)",
-			"maxNodes": 5
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Button 1 (Basic Report)",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Button 1 (Binary Switch Set)",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Button 1 (Multilevel Set)",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Button 2 (Basic Report)",
+					"maxNodes": 5
+				},
+				"6": {
+					"label": "Button 2 (Binary Switch Set)",
+					"maxNodes": 5
+				},
+				"7": {
+					"label": "Button 2 (Multilevel Set)",
+					"maxNodes": 5
+				},
+				"8": {
+					"label": "Button 3 (Basic Report)",
+					"maxNodes": 5
+				},
+				"9": {
+					"label": "Button 3  (Binary Switch Set)",
+					"maxNodes": 5
+				},
+				"10": {
+					"label": "Button 3 (Multilevel Set)",
+					"maxNodes": 5
+				},
+				"11": {
+					"label": "Button 4 (Basic Report)",
+					"maxNodes": 5
+				},
+				"12": {
+					"label": "Button 4 (Binary Switch Set)",
+					"maxNodes": 5
+				},
+				"13": {
+					"label": "Button 4 (Multilevel Set)",
+					"maxNodes": 5
+				},
+				"14": {
+					"label": "Relay 1 (Binary Report)",
+					"maxNodes": 5
+				},
+				"15": {
+					"label": "Relay 2 (Binary Report",
+					"maxNodes": 5
+				}
+			}
 		},
 		"5": {
-			"label": "Button 2 (Basic Report)",
-			"maxNodes": 5
+			"label": "Relay Output 1"
 		},
 		"6": {
-			"label": "Button 2 (Binary Switch Set)",
-			"maxNodes": 5
-		},
-		"7": {
-			"label": "Button 2 (Multilevel Set)",
-			"maxNodes": 5
-		},
-		"8": {
-			"label": "Button 3 (Basic Report)",
-			"maxNodes": 5
-		},
-		"9": {
-			"label": "Button 3  (Binary Switch Set)",
-			"maxNodes": 5
-		},
-		"10": {
-			"label": "Button 3 (Multilevel Set)",
-			"maxNodes": 5
-		},
-		"11": {
-			"label": "Button 4 (Basic Report)",
-			"maxNodes": 5
-		},
-		"12": {
-			"label": "Button 4 (Binary Switch Set)",
-			"maxNodes": 5
-		},
-		"13": {
-			"label": "Button 4 (Multilevel Set)",
-			"maxNodes": 5
-		},
-		"14": {
-			"label": "Relay 1 (Binary Report)",
-			"maxNodes": 5
-		},
-		"15": {
-			"label": "Relay 2 (Binary Report",
-			"maxNodes": 5
+			"label": "Relay Output 2"
 		}
 	},
 	"paramInformation": [

@@ -13,155 +13,186 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Button 1 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Button 1 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Button 1 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Button 1 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"6": {
+					"label": "Button 2 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"7": {
+					"label": "Button 2 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"8": {
+					"label": "Button 2 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"9": {
+					"label": "Button 2 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"10": {
+					"label": "Button 3 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"11": {
+					"label": "Button 3 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"12": {
+					"label": "Button 3 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"13": {
+					"label": "Button 3 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"14": {
+					"label": "Button 4 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"15": {
+					"label": "Button 4 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"16": {
+					"label": "Button 4 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"17": {
+					"label": "Button 4 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"18": {
+					"label": "Button 5 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"19": {
+					"label": "Button 5 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"20": {
+					"label": "Button 5 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"21": {
+					"label": "Button 5 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"22": {
+					"label": "Button 6 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"23": {
+					"label": "Button 6 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"24": {
+					"label": "Button 6 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"25": {
+					"label": "Button 6 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"26": {
+					"label": "Button 7 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"27": {
+					"label": "Button 7 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"28": {
+					"label": "Button 7 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"29": {
+					"label": "Button 7 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"30": {
+					"label": "Button 8 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"31": {
+					"label": "Button 8 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"32": {
+					"label": "Button 8 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"33": {
+					"label": "Button 8 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				},
+				"34": {
+					"label": "Button 9 - SWITCH_BINARY_SET",
+					"maxNodes": 5
+				},
+				"35": {
+					"label": "Button 9 - SWITCH_BINARY_REPORT",
+					"maxNodes": 5
+				},
+				"36": {
+					"label": "Button 9 - SWITCH_MULTILEVEL_SET",
+					"maxNodes": 5
+				},
+				"37": {
+					"label": "Button 9 - SWITCH_MULTILEVEL_REPORT",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
+			"label": "Button 1"
 		},
 		"2": {
-			"label": "Button 1 - SWITCH_BINARY_SET",
-			"maxNodes": 5
+			"label": "Button 2"
 		},
 		"3": {
-			"label": "Button 1 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
+			"label": "Button 3"
 		},
 		"4": {
-			"label": "Button 1 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
+			"label": "Button 4"
 		},
 		"5": {
-			"label": "Button 1 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
+			"label": "Button 5"
 		},
 		"6": {
-			"label": "Button 2 - SWITCH_BINARY_SET",
-			"maxNodes": 5
+			"label": "Button 6"
 		},
 		"7": {
-			"label": "Button 2 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
+			"label": "Button 7"
 		},
 		"8": {
-			"label": "Button 2 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
+			"label": "Button 8"
 		},
 		"9": {
-			"label": "Button 2 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
-		},
-		"10": {
-			"label": "Button 3 - SWITCH_BINARY_SET",
-			"maxNodes": 5
-		},
-		"11": {
-			"label": "Button 3 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
-		},
-		"12": {
-			"label": "Button 3 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
-		},
-		"13": {
-			"label": "Button 3 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
-		},
-		"14": {
-			"label": "Button 4 - SWITCH_BINARY_SET",
-			"maxNodes": 5
-		},
-		"15": {
-			"label": "Button 4 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
-		},
-		"16": {
-			"label": "Button 4 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
-		},
-		"17": {
-			"label": "Button 4 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
-		},
-		"18": {
-			"label": "Button 5 - SWITCH_BINARY_SET",
-			"maxNodes": 5
-		},
-		"19": {
-			"label": "Button 5 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
-		},
-		"20": {
-			"label": "Button 5 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
-		},
-		"21": {
-			"label": "Button 5 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
-		},
-		"22": {
-			"label": "Button 6 - SWITCH_BINARY_SET",
-			"maxNodes": 5
-		},
-		"23": {
-			"label": "Button 6 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
-		},
-		"24": {
-			"label": "Button 6 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
-		},
-		"25": {
-			"label": "Button 6 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
-		},
-		"26": {
-			"label": "Button 7 - SWITCH_BINARY_SET",
-			"maxNodes": 5
-		},
-		"27": {
-			"label": "Button 7 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
-		},
-		"28": {
-			"label": "Button 7 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
-		},
-		"29": {
-			"label": "Button 7 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
-		},
-		"30": {
-			"label": "Button 8 - SWITCH_BINARY_SET",
-			"maxNodes": 5
-		},
-		"31": {
-			"label": "Button 8 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
-		},
-		"32": {
-			"label": "Button 8 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
-		},
-		"33": {
-			"label": "Button 8 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
-		},
-		"34": {
-			"label": "Button 9 - SWITCH_BINARY_SET",
-			"maxNodes": 5
-		},
-		"35": {
-			"label": "Button 9 - SWITCH_BINARY_REPORT",
-			"maxNodes": 5
-		},
-		"36": {
-			"label": "Button 9 - SWITCH_MULTILEVEL_SET",
-			"maxNodes": 5
-		},
-		"37": {
-			"label": "Button 9 - SWITCH_MULTILEVEL_REPORT",
-			"maxNodes": 5
+			"label": "Button 9"
 		}
 	},
 	"paramInformation": [
