@@ -8,7 +8,6 @@ import {
 } from "@zwave-js/serial";
 import { Bytes, type BytesView } from "@zwave-js/shared";
 import type { MockController, MockControllerBehavior } from "@zwave-js/testing";
-import { wait } from "alcalzone-shared/async";
 
 // Timeouts used by the XMODEM receiver in Gecko Bootloader 3.0.x
 const C_INTERVAL_MS = 1000;
@@ -60,6 +59,20 @@ export interface MockGeckoBootloader {
 	destroy(): void;
 }
 
+/** Waits for `ms` milliseconds or until `signal` aborts */
+function delay(ms: number, signal: AbortSignal): Promise<void> {
+	return new Promise((resolve) => {
+		if (signal.aborted) return resolve();
+		const timer = setTimeout(done, ms);
+		signal.addEventListener("abort", done, { once: true });
+		function done() {
+			clearTimeout(timer);
+			signal.removeEventListener("abort", done);
+			resolve();
+		}
+	});
+}
+
 class ByteQueue {
 	private buffer: number[] = [];
 	private waiter: (() => void) | undefined;
@@ -86,7 +99,7 @@ class ByteQueue {
 		while (this.buffer.length === 0 && !signal.aborted) {
 			const remaining = deadline - Date.now();
 			if (remaining <= 0) break;
-			await this.waitForPush(remaining);
+			await this.waitForPush(remaining, signal);
 		}
 		return this.buffer.length > 0;
 	}
@@ -101,16 +114,21 @@ class ByteQueue {
 		while (this.buffer.length < count && !signal.aborted) {
 			const remaining = deadline - Date.now();
 			if (remaining <= 0) break;
-			await this.waitForPush(remaining);
+			await this.waitForPush(remaining, signal);
 		}
 		return this.buffer.splice(0, count);
 	}
 
-	private async waitForPush(timeoutMs: number): Promise<void> {
+	private async waitForPush(
+		timeoutMs: number,
+		signal: AbortSignal,
+	): Promise<void> {
 		await new Promise<void>((resolve) => {
 			const timer = setTimeout(done, timeoutMs);
+			signal.addEventListener("abort", done, { once: true });
 			function done() {
 				clearTimeout(timer);
+				signal.removeEventListener("abort", done);
 				resolve();
 			}
 			this.waiter = done;
@@ -152,6 +170,8 @@ export function createMockGeckoBootloader(
 	let running = false;
 
 	function send(data: string | number[]): void {
+		// The mock must stay silent once the test has destroyed it
+		if (signal.aborted) return;
 		const bytes =
 			typeof data === "string"
 				? Bytes.from(data, "ascii")
@@ -184,7 +204,7 @@ export function createMockGeckoBootloader(
 		state.mode = "app";
 		running = false;
 		rx.flush();
-		await wait(10);
+		await delay(10, signal);
 		const msg = new SerialAPIStartedRequest({
 			wakeUpReason: SerialAPIWakeUpReason.Reset,
 			watchdogEnabled: false,
@@ -195,6 +215,7 @@ export function createMockGeckoBootloader(
 			controlledCCs: [],
 			supportsLongRange: false,
 		});
+		if (signal.aborted) return;
 		await controller?.sendMessageToHost(msg).catch(() => {});
 	}
 
@@ -241,7 +262,7 @@ export function createMockGeckoBootloader(
 		let started = false;
 
 		send("\r\nbegin upload\r\n\0");
-		await wait(5);
+		await delay(5, signal);
 		rx.flush();
 
 		// Send C until the host starts the transfer
@@ -268,14 +289,14 @@ export function createMockGeckoBootloader(
 				if (state.acceptedBlocks > 0) {
 					sendFlowControl(XModemMessageHeaders.ACK);
 					rx.flush();
-					await wait(10);
+					await delay(10, signal);
 					send("\r\nSerial upload complete\r\n\0");
 					state.appValid = true;
 					state.completedUploads++;
 				} else {
 					sendFlowControl(XModemMessageHeaders.CAN);
 					rx.flush();
-					await wait(10);
+					await delay(10, signal);
 					printAborted(0x18);
 				}
 				return;
@@ -284,7 +305,7 @@ export function createMockGeckoBootloader(
 				// CAN, C, Ctrl+C and unknown headers cancel the transfer
 				sendFlowControl(XModemMessageHeaders.CAN);
 				rx.flush();
-				await wait(10);
+				await delay(10, signal);
 				printAborted(
 					header === XModemMessageHeaders.CAN
 						|| header === XModemMessageHeaders.C
@@ -298,7 +319,8 @@ export function createMockGeckoBootloader(
 			const [, block, blockC] = packet;
 			if (started && block === lastBlock) {
 				// Replay of the last accepted block
-				if (typeof fault === "object") await wait(fault.delayAck);
+				if (typeof fault === "object")
+					await delay(fault.delayAck, signal);
 				if (fault !== "drop-ack") {
 					sendFlowControl(XModemMessageHeaders.ACK);
 				}
@@ -325,7 +347,7 @@ export function createMockGeckoBootloader(
 			// The standalone bootloader writes the new image over the application
 			state.appValid = false;
 
-			if (typeof fault === "object") await wait(fault.delayAck);
+			if (typeof fault === "object") await delay(fault.delayAck, signal);
 			if (fault !== "drop-ack") {
 				sendFlowControl(XModemMessageHeaders.ACK);
 			}
@@ -336,7 +358,7 @@ export function createMockGeckoBootloader(
 	async function run(): Promise<void> {
 		if (running) return;
 		running = true;
-		await wait(10);
+		await delay(10, signal);
 		printMenu();
 		while (!signal.aborted && state.mode === "bootloader") {
 			const [c] = await rx.read(1, 1000, signal);
@@ -352,7 +374,7 @@ export function createMockGeckoBootloader(
 						return;
 					}
 					// Reset into the bootloader again
-					await wait(10);
+					await delay(10, signal);
 					printMenu();
 					break;
 				default:
