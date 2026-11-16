@@ -110,6 +110,23 @@ otwTest(
 );
 
 otwTest(
+	"OTW update: a block is sent again when the bootloader does not respond",
+	{
+		bootloader: {
+			injectFault: ({ block, attempt }) =>
+				block === 3 && attempt === 1 ? "drop-ack-and-nak" : undefined,
+		},
+	},
+	async (t, driver, bl) => {
+		const result = await driver.firmwareUpdateOTW(firmware);
+
+		t.expect(result.status).toBe(OTWFirmwareUpdateStatus.OK);
+		t.expect(bl.state.uploads).toBe(1);
+		t.expect(bl.state.completedUploads).toBe(1);
+	},
+);
+
+otwTest(
 	"OTW update: a block is sent again when one of its bytes is lost",
 	{
 		bootloader: {
