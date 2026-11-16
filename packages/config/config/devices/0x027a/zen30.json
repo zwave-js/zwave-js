@@ -28,19 +28,31 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Dimmer Status",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Relay Status",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"$if": "firmwareVersion >= 3.20",
+			"label": "Dimmer"
 		},
 		"2": {
-			"label": "Dimmer Status",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "Relay Status",
-			"maxNodes": 5
+			"$if": "firmwareVersion >= 3.20",
+			"label": "Relay"
 		}
 	},
 	"paramInformation": [

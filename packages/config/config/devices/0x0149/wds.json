@@ -13,27 +13,37 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off control (Switch 1)",
+					"maxNodes": 8
+				},
+				"3": {
+					"label": "Dimming control (Switch 1)",
+					"maxNodes": 8
+				},
+				"4": {
+					"label": "On/Off control (Switch 2)",
+					"maxNodes": 8
+				},
+				"5": {
+					"label": "Dimming control (Switch 2)",
+					"maxNodes": 8
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Output 1"
 		},
 		"2": {
-			"label": "On/Off control (Switch 1)",
-			"maxNodes": 8
-		},
-		"3": {
-			"label": "Dimming control (Switch 1)",
-			"maxNodes": 8
-		},
-		"4": {
-			"label": "On/Off control (Switch 2)",
-			"maxNodes": 8
-		},
-		"5": {
-			"label": "Dimming control (Switch 2)",
-			"maxNodes": 8
+			"label": "Output 2"
 		}
 	},
 	"paramInformation": [

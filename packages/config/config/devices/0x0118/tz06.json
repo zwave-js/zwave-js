@@ -14,21 +14,41 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Relay 1 + 2",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Relay 1",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"3": {
+					"label": "Relay 2",
+					"maxNodes": 1,
+					"isLifeline": true
+				}
+			}
+		},
 		"1": {
-			"label": "Relay 1 + 2",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Relay 1 + 2"
 		},
 		"2": {
-			"label": "Relay 1",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Relay 1"
 		},
 		"3": {
-			"label": "Relay 2",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Relay 2"
+		}
+	},
+	"endpointGroups": {
+		"1": {
+			"label": "Relay 1 + 2",
+			"endpoints": [1],
+			"isMainDevice": true
 		}
 	},
 	"paramInformation": [

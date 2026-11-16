@@ -13,6 +13,26 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": {
+			"label": "Output 1"
+		},
+		"2": {
+			"label": "Output 2"
+		},
+		"3": {
+			"label": "Input 1"
+		},
+		"4": {
+			"label": "Input 2"
+		},
+		"5": {
+			"label": "Input 3"
+		},
+		"6": {
+			"label": "Input 4"
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",

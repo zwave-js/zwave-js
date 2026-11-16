@@ -13,6 +13,14 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": {
+			"label": "LED"
+		},
+		"2": {
+			"label": "Relay"
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",

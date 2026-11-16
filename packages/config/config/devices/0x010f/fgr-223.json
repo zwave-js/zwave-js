@@ -25,6 +25,13 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpointGroups": {
+		"1": {
+			"label": "Roller Shutter",
+			"endpoints": [1, 2],
+			"isMainDevice": true
+		}
+	},
 	"scenes": {
 		"1": {
 			"label": "Switch S1",

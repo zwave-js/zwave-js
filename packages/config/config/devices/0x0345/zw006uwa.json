@@ -44,6 +44,14 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": {
+			"label": "Controlled Receptacle"
+		},
+		"2": {
+			"label": "Always-On Receptacle"
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",

@@ -13,21 +13,28 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
-		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off (Button)",
+					"description": "Devices in this group will be switched on or off when the relay status is changed using the button.",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off (Plug Power)",
+					"description": "Devices in this group will be switched on or off depending on the current load of the plugged device.",
+					"maxNodes": 5
+				}
+			}
 		},
 		"2": {
-			"label": "On/Off (Button)",
-			"description": "Devices in this group will be switched on or off when the relay status is changed using the button.",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "On/Off (Plug Power)",
-			"description": "Devices in this group will be switched on or off depending on the current load of the plugged device.",
-			"maxNodes": 5
+			"label": "USB Port"
 		}
 	},
 	"paramInformation": [

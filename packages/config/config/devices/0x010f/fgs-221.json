@@ -54,21 +54,31 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "On/Off (S1)",
+					"description": "Devices in this group will be switched on or off with the S1 switch (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"2": {
+					"label": "On/Off (S2)",
+					"description": "Devices in this group will be switched on or off with the S2 switch (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				}
+			}
+		},
 		"1": {
-			"label": "On/Off (S1)",
-			"description": "Devices in this group will be switched on or off with the S1 switch (uses Basic command class).",
-			"maxNodes": 5
+			"label": "Relay 1"
 		},
 		"2": {
-			"label": "On/Off (S2)",
-			"description": "Devices in this group will be switched on or off with the S2 switch (uses Basic command class).",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Relay 2"
 		}
 	},
 	"paramInformation": [

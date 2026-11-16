@@ -25,19 +25,29 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "All Status Reports",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Switch Button Group 1",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Switch Button Group 2",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "All Status Reports",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Switch 1"
 		},
 		"2": {
-			"label": "Switch Button Group 1",
-			"maxNodes": 5
-		},
-		"5": {
-			"label": "Switch Button Group 2",
-			"maxNodes": 5
+			"label": "Switch 2"
 		}
 	},
 	"paramInformation": [
