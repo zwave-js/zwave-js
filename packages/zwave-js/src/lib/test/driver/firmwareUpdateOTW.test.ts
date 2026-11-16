@@ -91,3 +91,54 @@ otwTest(
 		t.expect(bl.state.mode).toBe("app");
 	},
 );
+
+otwTest(
+	"OTW update: a block is sent again when its ACK is lost",
+	{
+		bootloader: {
+			injectFault: ({ block, attempt }) =>
+				block === 3 && attempt === 1 ? "drop-ack" : undefined,
+		},
+	},
+	async (t, driver, bl) => {
+		const result = await driver.firmwareUpdateOTW(firmware);
+
+		t.expect(result.status).toBe(OTWFirmwareUpdateStatus.OK);
+		t.expect(bl.state.uploads).toBe(1);
+		t.expect(bl.state.completedUploads).toBe(1);
+	},
+);
+
+otwTest(
+	"OTW update: a block is sent again when one of its bytes is lost",
+	{
+		bootloader: {
+			injectFault: ({ block, attempt }) =>
+				block === 3 && attempt === 1 ? "drop-host-byte" : undefined,
+		},
+	},
+	async (t, driver, bl) => {
+		const result = await driver.firmwareUpdateOTW(firmware);
+
+		t.expect(result.status).toBe(OTWFirmwareUpdateStatus.OK);
+		t.expect(bl.state.uploads).toBe(1);
+		t.expect(bl.state.completedUploads).toBe(1);
+	},
+);
+
+otwTest(
+	"OTW update: an ACK that takes longer than 1 s does not fail the update",
+	{
+		bootloader: {
+			injectFault: ({ block }) =>
+				block === 3 ? { delayAck: 1500 } : undefined,
+		},
+	},
+	async (t, driver, bl) => {
+		const result = await driver.firmwareUpdateOTW(firmware);
+
+		t.expect(result.status).toBe(OTWFirmwareUpdateStatus.OK);
+		t.expect(bl.state.uploads).toBe(1);
+		t.expect(bl.state.completedUploads).toBe(1);
+	},
+);
