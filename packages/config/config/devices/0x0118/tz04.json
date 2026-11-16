@@ -80,7 +80,7 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Both Relays",
+					"label": "Both relays",
 					"value": 1
 				},
 				{
