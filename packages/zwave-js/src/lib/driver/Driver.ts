@@ -9799,10 +9799,12 @@ ${handlers.length} left`,
 			};
 			return result;
 		} finally {
+			let cancelled = true;
 			if (uploadInProgress && this._bootloader) {
-				await this.cancelBootloaderUpload();
+				cancelled = await this.cancelBootloaderUpload();
 			}
-			if (this._options.bootloaderMode !== "stay") {
+			// The bootloader only accepts the run command from its menu
+			if (cancelled && this._options.bootloaderMode !== "stay") {
 				await this.leaveBootloader();
 			}
 		}
@@ -9825,7 +9827,7 @@ ${handlers.length} left`,
 			if (await menu) return true;
 		}
 		this.controllerLog.print(
-			"The bootloader did not return to its menu after cancelling the upload",
+			"The bootloader did not return to its menu after cancelling the upload, staying in bootloader mode",
 			"warn",
 		);
 		return false;
