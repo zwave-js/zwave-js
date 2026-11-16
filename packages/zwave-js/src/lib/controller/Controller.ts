@@ -9104,7 +9104,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		await open();
 
 		for (let offset = 0; offset < nvmData.length; offset += chunkSize) {
-			// The last NVM page is erased by the time the last chunk is written
+			// Trimming the last chunk is safe because the earlier chunks already erased the last NVM page
 			const { endOfFile } = await write(
 				offset,
 				trimNVMWriteAtEnd(

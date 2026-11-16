@@ -8,6 +8,7 @@ import type { ZWaveController } from "./Controller.js";
 
 /**
  * Shortens a 700+ series NVM write that ends exactly at the end of the NVM by dropping its trailing 0xFF bytes.
+ * This works around a firmware bug that can erase the flash page after the NVM.
  * Returns the data unchanged if the write ends elsewhere or its last byte is not 0xFF.
  *
  * **Note:** Only call this when the target flash is erased before or by this write, because the dropped bytes are never written.
@@ -17,9 +18,9 @@ export function trimNVMWriteAtEnd(
 	data: BytesView,
 	nvmSize: number,
 ): BytesView {
-	// Silicon Labs' ZPAL erases the page that contains the first byte after a write.
-	// For a write ending exactly at the end of the NVM, that is the page after it,
-	// which can hold the manufacturing tokens and bootloader keys.
+	// Some versions of Silicon Labs' ZPAL have a bug that erases the next flash page
+	// when a write ends exactly on a page boundary. For the last write, that is the page
+	// after the NVM, which can hold the manufacturing tokens and bootloader keys.
 	if (offset + data.length !== nvmSize) return data;
 
 	let end = data.length;
