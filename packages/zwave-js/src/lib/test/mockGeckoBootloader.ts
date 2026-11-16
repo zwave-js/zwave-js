@@ -204,7 +204,11 @@ export function createMockGeckoBootloader(
 		if (header == undefined) return undefined;
 		if (header !== XModemMessageHeaders.SOF) return { packet: [header] };
 
-		const blockHeader = await rx.read(2, PACKET_TIMEOUT_MS, signal);
+		// The rest of the packet must arrive within one packet timeout
+		const deadline = Date.now() + PACKET_TIMEOUT_MS;
+		const remaining = () => Math.max(0, deadline - Date.now());
+
+		const blockHeader = await rx.read(2, remaining(), signal);
 		const block = blockHeader[0];
 		const attempt = (attempts.get(block) ?? 0) + 1;
 		attempts.set(block, attempt);
@@ -217,14 +221,10 @@ export function createMockGeckoBootloader(
 					})
 				: undefined;
 		if (fault === "drop-host-byte") {
-			await rx.read(1, PACKET_TIMEOUT_MS, signal);
+			await rx.read(1, remaining(), signal);
 		}
 
-		const rest = await rx.read(
-			XMODEM_PACKET_SIZE - 3,
-			PACKET_TIMEOUT_MS,
-			signal,
-		);
+		const rest = await rx.read(XMODEM_PACKET_SIZE - 3, remaining(), signal);
 		const packet = [header, ...blockHeader, ...rest];
 		if (packet.length !== XMODEM_PACKET_SIZE) return undefined;
 		return { packet, fault };
@@ -295,6 +295,7 @@ export function createMockGeckoBootloader(
 			const [, block, blockC] = packet;
 			if (started && block === lastBlock) {
 				// Replay of the last accepted block
+				if (typeof fault === "object") await wait(fault.delayAck);
 				if (fault !== "drop-ack") {
 					sendFlowControl(XModemMessageHeaders.ACK);
 				}
