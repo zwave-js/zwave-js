@@ -177,3 +177,22 @@ otwTest(
 		t.expect(bl.state.mode).toBe("app");
 	},
 );
+
+otwTest(
+	"OTW update: the driver stays in bootloader mode when the upload cannot be cancelled",
+	{
+		bootloader: {
+			ignoreCancel: true,
+			injectFault: ({ block }) => (block === 3 ? "drop-ack" : undefined),
+		},
+		// One attempt, so each call does a single upload
+		driver: { attempts: { firmwareUpdateOTW: 1 } },
+	},
+	async (t, driver, bl) => {
+		const result = await driver.firmwareUpdateOTW(firmware);
+
+		t.expect(result.success).toBe(false);
+		t.expect(bl.state.mode).toBe("bootloader");
+		t.expect(driver.mode).toBe(DriverMode.Bootloader);
+	},
+);
