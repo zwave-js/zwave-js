@@ -51,3 +51,43 @@ otwTest("OTW update: a clean transfer succeeds", {}, async (t, driver, bl) => {
 	t.expect(bl.state.mode).toBe("app");
 	t.expect(driver.mode).toBe(DriverMode.SerialAPI);
 });
+
+otwTest(
+	"OTW update: after a failed transfer, the driver is still in bootloader mode",
+	{
+		bootloader: {
+			injectFault: ({ block }) => (block === 3 ? "drop-ack" : undefined),
+		},
+		// One attempt, so each call does a single upload
+		driver: { attempts: { firmwareUpdateOTW: 1 } },
+	},
+	async (t, driver, bl) => {
+		const result = await driver.firmwareUpdateOTW(firmware);
+
+		t.expect(result.success).toBe(false);
+		t.expect(bl.state.mode).toBe("bootloader");
+		t.expect(bl.state.appValid).toBe(false);
+		t.expect(driver.mode).toBe(DriverMode.Bootloader);
+	},
+);
+
+otwTest(
+	"OTW update: after a failed transfer, a second update succeeds",
+	{
+		bootloader: {
+			injectFault: ({ block, upload }) =>
+				block === 3 && upload === 1 ? "drop-ack" : undefined,
+		},
+		// One attempt, so each call does a single upload
+		driver: { attempts: { firmwareUpdateOTW: 1 } },
+	},
+	async (t, driver, bl) => {
+		const first = await driver.firmwareUpdateOTW(firmware);
+		t.expect(first.success).toBe(false);
+
+		const second = await driver.firmwareUpdateOTW(firmware);
+		t.expect(second.status).toBe(OTWFirmwareUpdateStatus.OK);
+		t.expect(bl.state.completedUploads).toBe(1);
+		t.expect(bl.state.mode).toBe("app");
+	},
+);

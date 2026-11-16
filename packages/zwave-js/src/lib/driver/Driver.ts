@@ -9592,11 +9592,14 @@ ${handlers.length} left`,
 	private async firmwareUpdateOTW700Internal(
 		data: BytesView,
 	): Promise<OTWFirmwareUpdateResult> {
+		// Whether the bootloader may still be waiting for XMODEM data
+		let uploadInProgress = false;
 		try {
 			await this.enterBootloader();
 
 			// Start the update process
 			this.controllerLog.print("Beginning firmware upload");
+			uploadInProgress = true;
 			await this.bootloader.beginUpload();
 
 			// Wait for the bootloader to accept fragments
@@ -9711,6 +9714,7 @@ ${handlers.length} left`,
 			}
 
 			if (aborted) {
+				uploadInProgress = false;
 				// wait for the reason to craft a good error message
 				const error = await this.waitForBootloaderChunk<
 					BootloaderChunk & { type: BootloaderChunkType.Message }
@@ -9769,6 +9773,7 @@ ${handlers.length} left`,
 							1000,
 						),
 					]);
+					uploadInProgress = false;
 				} catch {
 					this.controllerLog.print(
 						"OTW update failed: The bootloader did not acknowledge the end of transfer.",
@@ -9790,10 +9795,36 @@ ${handlers.length} left`,
 			};
 			return result;
 		} finally {
+			if (uploadInProgress && this._bootloader) {
+				await this.cancelBootloaderUpload();
+			}
 			if (this._options.bootloaderMode !== "stay") {
 				await this.leaveBootloader();
 			}
 		}
+	}
+
+	/** Cancels an XMODEM upload and waits until the bootloader shows its menu again */
+	private async cancelBootloaderUpload(): Promise<boolean> {
+		this.controllerLog.print("Cancelling the firmware upload...");
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			// Wait longer than the 3 s the bootloader gives an incomplete block.
+			// A CAN sent during that time becomes part of the block, so it must be sent again.
+			const menu = this.waitForBootloaderChunk(
+				(c) => c.type === BootloaderChunkType.Menu,
+				4000,
+			).then(
+				() => true,
+				() => false,
+			);
+			await this.bootloader.cancelUpload();
+			if (await menu) return true;
+		}
+		this.controllerLog.print(
+			"The bootloader did not return to its menu after cancelling the upload",
+			"warn",
+		);
+		return false;
 	}
 
 	// region Bootloader

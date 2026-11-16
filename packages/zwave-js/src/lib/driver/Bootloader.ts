@@ -88,6 +88,10 @@ export class Bootloader {
 		await this.writeSerial(command);
 	}
 
+	public async cancelUpload(): Promise<void> {
+		await this.writeSerial(Bytes.from([XModemMessageHeaders.CAN]));
+	}
+
 	public async finishUpload(): Promise<void> {
 		await this.writeSerial(Bytes.from([XModemMessageHeaders.EOT]));
 	}
