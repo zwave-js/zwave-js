@@ -9664,9 +9664,7 @@ ${handlers.length} left`,
 						result = await this.waitForBootloaderChunk(
 							(c) =>
 								c.type === BootloaderChunkType.FlowControl
-								&& (c.command === XModemMessageHeaders.ACK
-									|| c.command === XModemMessageHeaders.NAK
-									|| c.command === XModemMessageHeaders.CAN),
+								&& c.command !== XModemMessageHeaders.C,
 							// The bootloader sends a NAK after waiting 3 s for a complete block
 							5000,
 						);
