@@ -2606,10 +2606,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node20@npm:^20.1.10":
-  version: 20.1.10
-  resolution: "@tsconfig/node20@npm:20.1.10"
-  checksum: 10/d57747bc85d3ab0e51d0d3804b2f26acb3c1488bc4bcd396ce8b27a0f83fb0414c58abc9150bb14ff0230f32f3b0546b25d58f43fc05dde15514141a7e23f4ca
+"@tsconfig/node22@npm:^22.0.0":
+  version: 22.0.6
+  resolution: "@tsconfig/node22@npm:22.0.6"
+  checksum: 10/a74c1bf95086b80e8436da7e3e710bebab4c35ab7cf99348ae68c8fab6032387516e9e9b80a868908c570c5af937e0a75821fc994e14a0495e04c5fab04d3c63
   languageName: node
   linkType: hard
 
@@ -3545,7 +3545,7 @@ __metadata:
     "@commitlint/config-conventional": "npm:^20.5.3"
     "@microsoft/api-extractor": "npm:^7.58.7"
     "@monorepo-utils/workspaces-to-typescript-project-references": "npm:^2.11.0"
-    "@tsconfig/node20": "npm:^20.1.10"
+    "@tsconfig/node22": "npm:^22.0.0"
     "@types/js-yaml": "npm:^4"
     "@types/node": "npm:^20.19.35"
     "@types/semver": "npm:^7.8.0"
