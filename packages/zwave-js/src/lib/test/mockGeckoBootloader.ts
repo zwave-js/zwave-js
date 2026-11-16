@@ -30,6 +30,8 @@ export interface MockGeckoBootloaderOptions {
 	startInBootloader?: boolean;
 	/** Whether the application can be started. Default: true */
 	appValid?: boolean;
+	/** Ignore CAN and other unknown headers during an upload, like a receiver that is stuck */
+	ignoreCancel?: boolean;
 	/**
 	 * Gets called for every XMODEM block the bootloader receives.
 	 * `attempt` counts how often this block number was received during the current upload, starting at 1.
@@ -299,6 +301,7 @@ export function createMockGeckoBootloader(
 				}
 				return;
 			} else if (header !== XModemMessageHeaders.SOF) {
+				if (options.ignoreCancel) continue;
 				// CAN, C, Ctrl+C and unknown headers cancel the transfer
 				sendFlowControl(XModemMessageHeaders.CAN);
 				rx.flush();
