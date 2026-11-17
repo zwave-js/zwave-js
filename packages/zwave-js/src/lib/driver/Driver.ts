@@ -242,6 +242,7 @@ import {
 } from "../controller/Inclusion.js";
 import { determineNIF } from "../controller/NodeInformationFrame.js";
 import {
+	type FirmwareUpdateFileInfo,
 	type FirmwareUpdateInfo,
 	isFirmwareUpdateInfo,
 } from "../controller/_Types.js";
@@ -709,6 +710,17 @@ type AwaitedMessageEntry = AwaitedThing<Message>;
 type AwaitedCommandEntry = AwaitedThing<CCId>;
 type AwaitedCLIChunkEntry = AwaitedThing<CLIChunk>;
 export type AwaitedBootloaderChunkEntry = AwaitedThing<BootloaderChunk>;
+
+/** A file of an OTW firmware update and the part of the module's software it replaces */
+interface OTWFirmwareUpdateFile {
+	data: BytesView;
+	target: OTWFirmwareUpdateTarget;
+}
+
+type OTWFragmentProgressCallback = (
+	sentFragments: number,
+	totalFragments: number,
+) => void;
 type AwaitedIdleEntry = Omit<
 	AwaitedThing<void>,
 	"predicate" | "refreshPredicate"
@@ -9308,14 +9320,22 @@ ${handlers.length} left`,
 			// Covers both the download and the installation, so no other update can start in between
 			tag: { id: "firmware-update-otw" },
 			task: async function* firmwareUpdateOTWTask() {
-				if (isFirmwareUpdateInfo(data)) {
-					data = (yield self.getDownloadFirmwareOTWTask(
-						data,
-					)) as BytesView;
-				}
-				return (yield self.getInstallFirmwareOTWTask(
+				const files: OTWFirmwareUpdateFile[] = isFirmwareUpdateInfo(
 					data,
-					options,
+				)
+					? ((yield self.getDownloadFirmwareOTWTask(
+							data,
+						)) as OTWFirmwareUpdateFile[])
+					: [
+							{
+								data,
+								target:
+									options.target
+									?? OTWFirmwareUpdateTarget.Firmware,
+							},
+						];
+				return (yield self.getInstallFirmwareOTWTask(
+					files,
 				)) as OTWFirmwareUpdateResult;
 			},
 		};
@@ -9323,7 +9343,7 @@ ${handlers.length} left`,
 
 	private getDownloadFirmwareOTWTask(
 		updateInfo: FirmwareUpdateInfo,
-	): TaskBuilder<BytesView> {
+	): TaskBuilder<OTWFirmwareUpdateFile[]> {
 		const self = this;
 		const download = new AbortController();
 
@@ -9332,7 +9352,7 @@ ${handlers.length} left`,
 			tag: { id: "firmware-update-otw" },
 			task: async function* downloadFirmwareOTWTask() {
 				return yield* waitFor(
-					self.extractOTWUpdateInfo(updateInfo, download.signal),
+					self.downloadOTWUpdateFiles(updateInfo, download.signal),
 				);
 			},
 			async cleanup() {
@@ -9342,8 +9362,7 @@ ${handlers.length} left`,
 	}
 
 	private getInstallFirmwareOTWTask(
-		data: BytesView,
-		options: OTWFirmwareUpdateOptions,
+		files: OTWFirmwareUpdateFile[],
 	): TaskBuilder<OTWFirmwareUpdateResult> {
 		const self = this;
 
@@ -9354,37 +9373,33 @@ ${handlers.length} left`,
 			// An interrupted update may leave the controller in recovery mode
 			interrupt: TaskInterruptBehavior.Forbidden,
 			task: async function* installFirmwareOTWTask(thisTask) {
-				// When in bootloader mode, we can use the 700 series update method
-				if (self.mode === DriverMode.Bootloader) {
-					return yield* self.firmwareUpdateOTW700(data);
-				} else if (self.mode === DriverMode.SerialAPI) {
+				if (self.mode === DriverMode.Unknown) {
+					throw new ZWaveError(
+						`Firmware updates are not supported on this Z-Wave module`,
+						ZWaveErrorCodes.Controller_NotSupported,
+					);
+				} else if (
+					self.mode === DriverMode.SerialAPI
+					&& !self.controller.isFunctionSupported(
+						FunctionType.FirmwareUpdate,
+					)
+					&& !self.controller.sdkVersionGte("7.0")
+				) {
 					if (
-						self.controller.isFunctionSupported(
-							FunctionType.FirmwareUpdate,
-						)
-					) {
-						const result = yield* waitFor(
-							self.firmwareUpdateOTWSerialAPI(
-								data,
-								options.target
-									?? OTWFirmwareUpdateTarget.Firmware,
-							),
-						);
-						if (result) return result;
-						// The module can't stage the update, e.g. because its bootloader has no storage
-						return yield* self.firmwareUpdateOTW700(data);
-					} else if (self.controller.sdkVersionGte("7.0")) {
-						// This is at least a 700 series controller, so we can use the 700 series update method
-						return yield* self.firmwareUpdateOTW700(data);
-					} else if (
 						self.controller.sdkVersionGte("6.50.0")
 						&& self.controller.supportedFunctionTypes?.includes(
 							FunctionType.FirmwareUpdateNVM,
 						)
 					) {
+						if (files.length !== 1) {
+							throw new ZWaveError(
+								`500 series controllers can only be updated with a single file`,
+								ZWaveErrorCodes.Argument_Invalid,
+							);
+						}
 						// This is a 500 series controller, use the 500 series update method
 						const wasUpdated = yield* waitFor(
-							self.firmwareUpdateOTW500(data),
+							self.firmwareUpdateOTW500(files[0].data),
 						);
 						if (wasUpdated.success) {
 							// After updating the firmware on 500 series sticks, we MUST soft-reset them
@@ -9395,37 +9410,125 @@ ${handlers.length} left`,
 						}
 						return wasUpdated;
 					}
-				} else if (self.mode === DriverMode.CLI) {
-					// If the CLI has an option to enter bootloader, we can use the 700 series update method,
-					// since it tries to execute that.
-					return yield* self.firmwareUpdateOTW700(data);
+					throw new ZWaveError(
+						`Firmware updates are not supported on this Z-Wave module`,
+						ZWaveErrorCodes.Controller_NotSupported,
+					);
 				}
 
-				throw new ZWaveError(
-					`Firmware updates are not supported on this Z-Wave module`,
-					ZWaveErrorCodes.Controller_NotSupported,
-				);
+				const result = yield* self.firmwareUpdateOTWFiles(files);
+				self.emit("firmware update finished", result);
+				return result;
 			},
 		};
 	}
 
 	/**
-	 * Downloads the desired firmware update from the Z-Wave JS firmware update service and extracts the firmware data.
+	 * Installs the files one after the other, in the given order.
+	 * Each file is installed through the Firmware Update Serial API command if the controller supports it,
+	 * otherwise all remaining files are uploaded through the bootloader.
+	 */
+	private async *firmwareUpdateOTWFiles(
+		files: readonly OTWFirmwareUpdateFile[],
+	): AsyncGenerator<
+		(() => Promise<unknown>) | undefined,
+		OTWFirmwareUpdateResult
+	> {
+		const totalBytes = files.reduce((sum, f) => sum + f.data.length, 0);
+		const getProgressCallback = (
+			fileIndex: number,
+		): OTWFragmentProgressCallback => {
+			const sentBytesOfPreviousFiles = files
+				.slice(0, fileIndex)
+				.reduce((sum, f) => sum + f.data.length, 0);
+			const fileBytes = files[fileIndex].data.length;
+			return (sentFragments, totalFragments) => {
+				const progress: OTWFirmwareUpdateProgress = {
+					currentFile: fileIndex + 1,
+					totalFiles: files.length,
+					sentFragments,
+					totalFragments,
+					progress: roundTo(
+						((sentBytesOfPreviousFiles
+							+ (fileBytes * sentFragments) / totalFragments)
+							/ totalBytes)
+							* 100,
+						2,
+					),
+				};
+				this.emit("firmware update progress", progress);
+			};
+		};
+
+		let result!: OTWFirmwareUpdateResult;
+		for (let i = 0; i < files.length; i++) {
+			if (
+				this.mode !== DriverMode.SerialAPI
+				|| !this.controller.isFunctionSupported(
+					FunctionType.FirmwareUpdate,
+				)
+			) {
+				return yield* this.firmwareUpdateOTW700(
+					files,
+					getProgressCallback,
+					i,
+				);
+			}
+
+			if (files.length > 1) {
+				this.controllerLog.print(
+					`Installing file ${i + 1} of ${files.length}`,
+				);
+			}
+			const fileResult = yield* waitFor(
+				this.firmwareUpdateOTWSerialAPI(
+					files[i],
+					getProgressCallback(i),
+				),
+			);
+			// The module can't stage the update, e.g. because its bootloader has no storage
+			if (!fileResult) {
+				return yield* this.firmwareUpdateOTW700(
+					files,
+					getProgressCallback,
+					i,
+				);
+			}
+			result = fileResult;
+			if (!result.success) break;
+		}
+		return result;
+	}
+
+	/**
+	 * Downloads all files of the desired firmware update from the Z-Wave JS firmware update service, in the given order.
 	 * @param updateInfo The desired entry from the updates array that was returned by {@link getAvailableFirmwareUpdates}.
 	 * Before applying the update, Z-Wave JS will check whether the device IDs, firmware version and region match.
 	 */
-	private async extractOTWUpdateInfo(
+	private async downloadOTWUpdateFiles(
 		updateInfo: FirmwareUpdateInfo,
 		signal: AbortSignal,
-	): Promise<BytesView> {
-		// Controller updates must have exactly one file
-		if (updateInfo.files?.length !== 1) {
+	): Promise<OTWFirmwareUpdateFile[]> {
+		if (!updateInfo.files?.length) {
 			throw new ZWaveError(
 				`Invalid number of update files for OTW firmware updates.`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		const update = updateInfo.files[0];
+		const targets = updateInfo.files.map((file) => {
+			// The firmware update service numbers the targets like the controller's firmware versions
+			switch (file.target) {
+				case 0:
+					return OTWFirmwareUpdateTarget.Firmware;
+				case 1:
+					return OTWFirmwareUpdateTarget.Bootloader;
+				default:
+					throw new ZWaveError(
+						`Invalid update file: OTW firmware updates do not support target ${file.target}!`,
+						ZWaveErrorCodes.Argument_Invalid,
+					);
+			}
+		});
 
 		// The controller must also not be downgraded this way
 		if (updateInfo.downgrade) {
@@ -9455,9 +9558,33 @@ ${handlers.length} left`,
 			);
 		}
 
+		const files: OTWFirmwareUpdateFile[] = [];
+		for (let i = 0; i < updateInfo.files.length; i++) {
+			files.push({
+				data: await this.downloadOTWUpdateFile(
+					updateInfo.files[i],
+					i,
+					updateInfo.files.length,
+					signal,
+				),
+				target: targets[i],
+			});
+		}
+		return files;
+	}
+
+	private async downloadOTWUpdateFile(
+		update: FirmwareUpdateFileInfo,
+		index: number,
+		total: number,
+		signal: AbortSignal,
+	): Promise<BytesView> {
 		const loglevel = this.getLogConfig().level;
 
-		const logMessage = "Downloading OTW firmware update...";
+		const logMessage =
+			total > 1
+				? `Downloading OTW firmware update file ${index + 1} of ${total}...`
+				: "Downloading OTW firmware update...";
 		this.controllerLog.print(
 			loglevel === "silly"
 				? logText(logMessage, {
@@ -9542,6 +9669,8 @@ ${handlers.length} left`,
 
 				// This progress is technically too low, but we can keep 100% for after CRC checking this way
 				const progress: OTWFirmwareUpdateProgress = {
+					currentFile: 1,
+					totalFiles: 1,
 					sentFragments: fragment,
 					totalFragments: numFragments,
 					progress: roundTo((fragment / numFragments) * 100, 2),
@@ -9567,6 +9696,8 @@ ${handlers.length} left`,
 			}
 
 			this.emit("firmware update progress", {
+				currentFile: 1,
+				totalFiles: 1,
 				sentFragments: numFragments,
 				totalFragments: numFragments,
 				progress: 100,
@@ -9595,15 +9726,9 @@ ${handlers.length} left`,
 	 * Returns `undefined` when the module can't stage updates, so the caller can fall back to XMODEM.
 	 */
 	private async firmwareUpdateOTWSerialAPI(
-		data: BytesView,
-		target: OTWFirmwareUpdateTarget,
+		{ data, target }: OTWFirmwareUpdateFile,
+		onProgress: OTWFragmentProgressCallback,
 	): Promise<OTWFirmwareUpdateResult | undefined> {
-		const finish = (
-			result: OTWFirmwareUpdateResult,
-		): OTWFirmwareUpdateResult => {
-			this.emit("firmware update finished", result);
-			return result;
-		};
 		const fail = (
 			step: string,
 			status: FirmwareUpdateCommandStatus | "timeout" | "not accepted",
@@ -9613,19 +9738,19 @@ ${handlers.length} left`,
 					`OTW update failed: The controller did not accept ${step}`,
 					"error",
 				);
-				return finish({
+				return {
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Aborted,
-				});
+				};
 			} else if (status === "timeout") {
 				this.controllerLog.print(
 					`OTW update failed: ${step} timed out`,
 					"error",
 				);
-				return finish({
+				return {
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Timeout,
-				});
+				};
 			}
 
 			this.controllerLog.print(
@@ -9641,13 +9766,13 @@ ${handlers.length} left`,
 				FirmwareUpdateCommandStatus.Error_UnsupportedTarget,
 				FirmwareUpdateCommandStatus.Error_SubCommandNotSupported,
 			].includes(status);
-			return finish({
+			return {
 				success: false,
 				status: notSupported
 					? OTWFirmwareUpdateStatus.Error_NotSupported
 					: OTWFirmwareUpdateStatus.Error_Aborted,
 				errorCode: status,
-			});
+			};
 		};
 		// sendMessage returns a rejecting response or a failed callback instead of throwing
 		const execute = async (
@@ -9727,12 +9852,7 @@ ${handlers.length} left`,
 				);
 			}
 
-			const progress: OTWFirmwareUpdateProgress = {
-				sentFragments: fragment + 1,
-				totalFragments: numFragments,
-				progress: roundTo(((fragment + 1) / numFragments) * 100, 2),
-			};
-			this.emit("firmware update progress", progress);
+			onProgress(fragment + 1, numFragments);
 		}
 
 		// The module restarts right after the Perform callback. Listen for the
@@ -9779,10 +9899,10 @@ ${handlers.length} left`,
 					"OTW update failed: The controller stayed in the bootloader after installing the update",
 					"error",
 				);
-				return finish({
+				return {
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Aborted,
-				});
+				};
 			}
 			this.controllerLog.print(
 				"Did not receive notification that the Serial API has started, checking if it responds...",
@@ -9797,21 +9917,56 @@ ${handlers.length} left`,
 				`OTW update failed: The controller did not respond after installing the update: ${getErrorMessage(e)}`,
 				"error",
 			);
-			return finish({
+			return {
 				success: false,
 				status: OTWFirmwareUpdateStatus.Error_Timeout,
-			});
+			};
 		}
 
 		this.controllerLog.print("Firmware update succeeded");
-		return finish({
+		return {
 			success: true,
 			status: OTWFirmwareUpdateStatus.OK,
-		});
+		};
 	}
 
+	/**
+	 * Uploads the files through the bootloader in the given order. The bootloader is left
+	 * only after the last file, so the module never runs an application with a partial update.
+	 */
 	private async *firmwareUpdateOTW700(
+		files: readonly OTWFirmwareUpdateFile[],
+		getProgressCallback: (fileIndex: number) => OTWFragmentProgressCallback,
+		firstFileIndex: number = 0,
+	): AsyncGenerator<
+		(() => Promise<unknown>) | undefined,
+		OTWFirmwareUpdateResult
+	> {
+		try {
+			let result!: OTWFirmwareUpdateResult;
+			for (let i = firstFileIndex; i < files.length; i++) {
+				if (files.length > 1) {
+					this.controllerLog.print(
+						`Uploading file ${i + 1} of ${files.length} through the bootloader`,
+					);
+				}
+				result = yield* this.firmwareUpdateOTW700File(
+					files[i].data,
+					getProgressCallback(i),
+				);
+				if (!result.success) break;
+			}
+			return result;
+		} finally {
+			if (this._bootloader && this._options.bootloaderMode !== "stay") {
+				yield* waitFor(this.leaveBootloader());
+			}
+		}
+	}
+
+	private async *firmwareUpdateOTW700File(
 		data: BytesView,
+		onProgress: OTWFragmentProgressCallback,
 	): AsyncGenerator<
 		(() => Promise<unknown>) | undefined,
 		OTWFirmwareUpdateResult
@@ -9820,7 +9975,9 @@ ${handlers.length} left`,
 		let result!: OTWFirmwareUpdateResult;
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-			result = yield* waitFor(this.firmwareUpdateOTW700Internal(data));
+			result = yield* waitFor(
+				this.firmwareUpdateOTW700Internal(data, onProgress),
+			);
 			if (result.success) break;
 
 			// If this was an aborted update, check if it's an XMODEM communication error
@@ -9831,7 +9988,7 @@ ${handlers.length} left`,
 			) {
 				if (attempt < maxAttempts) {
 					this.controllerLog.print(
-						`Retrying firmware update after XMODEM communication error ${num2hex(
+						`Retrying firmware upload after XMODEM communication error ${num2hex(
 							result.errorCode,
 						)}, attempt ${attempt}/${maxAttempts}...`,
 						"warn",
@@ -9850,13 +10007,12 @@ ${handlers.length} left`,
 			break;
 		}
 
-		// If we get here, all attempts failed - use the last result or create a default one
-		this.emit("firmware update finished", result);
 		return result;
 	}
 
 	private async firmwareUpdateOTW700Internal(
 		data: BytesView,
+		onProgress: OTWFragmentProgressCallback,
 	): Promise<OTWFirmwareUpdateResult> {
 		try {
 			await this.enterBootloader();
@@ -9877,28 +10033,166 @@ ${handlers.length} left`,
 			throw e;
 		}
 
-		try {
-			// Start the update process
-			this.controllerLog.print("Beginning firmware upload");
-			await this.bootloader.beginUpload();
+		// Start the update process
+		this.controllerLog.print("Beginning firmware upload");
+		await this.bootloader.beginUpload();
 
-			// Wait for the bootloader to accept fragments
+		// Wait for the bootloader to accept fragments
+		try {
+			await this.waitForBootloaderChunk(
+				(c) =>
+					c.type === BootloaderChunkType.Message
+					&& c.message === "begin upload",
+				5000,
+			);
+			await this.waitForBootloaderChunk(
+				(c) =>
+					c.type === BootloaderChunkType.FlowControl
+					&& c.command === XModemMessageHeaders.C,
+				1000,
+			);
+		} catch {
+			this.controllerLog.print(
+				"OTW update failed: Expected response not received from the bootloader",
+				"error",
+			);
+			const result: OTWFirmwareUpdateResult = {
+				success: false,
+				status: OTWFirmwareUpdateStatus.Error_Timeout,
+			};
+			return result;
+		}
+
+		const BLOCK_SIZE = 128;
+		if (data.length % BLOCK_SIZE !== 0) {
+			// Pad the data to a multiple of BLOCK_SIZE
+			data = Bytes.concat([
+				data,
+				new Bytes(BLOCK_SIZE - (data.length % BLOCK_SIZE)).fill(0xff),
+			]);
+		}
+		const numFragments = Math.ceil(data.length / BLOCK_SIZE);
+
+		let aborted = false;
+
+		transfer: for (let fragment = 1; fragment <= numFragments; fragment++) {
+			const fragmentData = data.subarray(
+				(fragment - 1) * BLOCK_SIZE,
+				fragment * BLOCK_SIZE,
+			);
+
+			retry: for (let retry = 0; retry < 3; retry++) {
+				await this.bootloader.uploadFragment(fragment, fragmentData);
+				let result: BootloaderChunk & {
+					type: BootloaderChunkType.FlowControl;
+				};
+				try {
+					result = await this.waitForBootloaderChunk(
+						(c) => c.type === BootloaderChunkType.FlowControl,
+						1000,
+					);
+				} catch {
+					this.controllerLog.print(
+						"OTW update failed: The bootloader did not acknowledge the start of transfer.",
+						"error",
+					);
+
+					const result: OTWFirmwareUpdateResult = {
+						success: false,
+						status: OTWFirmwareUpdateStatus.Error_Timeout,
+					};
+					return result;
+				}
+
+				switch (result.command) {
+					case XModemMessageHeaders.ACK: {
+						// The fragment was accepted
+						onProgress(fragment, numFragments);
+						continue transfer;
+					}
+					case XModemMessageHeaders.NAK:
+						// The fragment was rejected, try again
+						continue retry;
+					case XModemMessageHeaders.CAN:
+						// The bootloader aborted the update. We'll receive the reason afterwards as a message
+						aborted = true;
+						break transfer;
+				}
+			}
+
+			this.controllerLog.print(
+				"OTW update failed: Maximum retry attempts reached",
+				"error",
+			);
+			const result: OTWFirmwareUpdateResult = {
+				success: false,
+				status: OTWFirmwareUpdateStatus.Error_RetryLimitReached,
+			};
+			return result;
+		}
+
+		if (aborted) {
+			// wait for the reason to craft a good error message
+			const error = await this.waitForBootloaderChunk<
+				BootloaderChunk & { type: BootloaderChunkType.Message }
+			>(
+				(c) =>
+					c.type === BootloaderChunkType.Message
+					&& c.message.includes("error 0x"),
+				1000,
+			).catch(() => undefined);
+
+			// wait for the menu screen so it doesn't show up in logs
+			await this.waitForBootloaderChunk(
+				(c) => c.type === BootloaderChunkType.Menu,
+				1000,
+			).catch(() => undefined);
+
+			let message = `OTW update was aborted by the bootloader.`;
+			let errorCode: number | undefined;
+			if (error) {
+				message += ` ${error.message}`;
+				// Parse error code from the message
+				const errorMatch = error.message.match(
+					/error 0x([0-9a-fA-F]+)/,
+				);
+				if (errorMatch) {
+					const errorCodeStr = errorMatch[1];
+					errorCode = parseInt(errorCodeStr, 16);
+				}
+			}
+			this.controllerLog.print(message, "error");
+
+			const result: OTWFirmwareUpdateResult = {
+				success: false,
+				status: OTWFirmwareUpdateStatus.Error_Aborted,
+				errorCode,
+			};
+			return result;
+		} else {
+			// We're done, send EOT and wait for the menu screen
+			await this.bootloader.finishUpload();
 			try {
-				await this.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.Message
-						&& c.message === "begin upload",
-					5000,
-				);
-				await this.waitForBootloaderChunk(
-					(c) =>
-						c.type === BootloaderChunkType.FlowControl
-						&& c.command === XModemMessageHeaders.C,
-					1000,
-				);
+				// The bootloader sends the confirmation and the menu screen very quickly.
+				// Waiting for them separately can cause us to miss the menu screen and
+				// incorrectly assume the update timed out.
+
+				await Promise.all([
+					this.waitForBootloaderChunk(
+						(c) =>
+							c.type === BootloaderChunkType.Message
+							&& c.message.includes("upload complete"),
+						1000,
+					),
+
+					this.waitForBootloaderChunk(
+						(c) => c.type === BootloaderChunkType.Menu,
+						1000,
+					),
+				]);
 			} catch {
 				this.controllerLog.print(
-					"OTW update failed: Expected response not received from the bootloader",
+					"OTW update failed: The bootloader did not acknowledge the end of transfer.",
 					"error",
 				);
 				const result: OTWFirmwareUpdateResult = {
@@ -9907,176 +10201,15 @@ ${handlers.length} left`,
 				};
 				return result;
 			}
-
-			const BLOCK_SIZE = 128;
-			if (data.length % BLOCK_SIZE !== 0) {
-				// Pad the data to a multiple of BLOCK_SIZE
-				data = Bytes.concat([
-					data,
-					new Bytes(BLOCK_SIZE - (data.length % BLOCK_SIZE)).fill(
-						0xff,
-					),
-				]);
-			}
-			const numFragments = Math.ceil(data.length / BLOCK_SIZE);
-
-			let aborted = false;
-
-			transfer: for (
-				let fragment = 1;
-				fragment <= numFragments;
-				fragment++
-			) {
-				const fragmentData = data.subarray(
-					(fragment - 1) * BLOCK_SIZE,
-					fragment * BLOCK_SIZE,
-				);
-
-				retry: for (let retry = 0; retry < 3; retry++) {
-					await this.bootloader.uploadFragment(
-						fragment,
-						fragmentData,
-					);
-					let result: BootloaderChunk & {
-						type: BootloaderChunkType.FlowControl;
-					};
-					try {
-						result = await this.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.FlowControl,
-							1000,
-						);
-					} catch {
-						this.controllerLog.print(
-							"OTW update failed: The bootloader did not acknowledge the start of transfer.",
-							"error",
-						);
-
-						const result: OTWFirmwareUpdateResult = {
-							success: false,
-							status: OTWFirmwareUpdateStatus.Error_Timeout,
-						};
-						return result;
-					}
-
-					switch (result.command) {
-						case XModemMessageHeaders.ACK: {
-							// The fragment was accepted
-							const progress: OTWFirmwareUpdateProgress = {
-								sentFragments: fragment,
-								totalFragments: numFragments,
-								progress: roundTo(
-									(fragment / numFragments) * 100,
-									2,
-								),
-							};
-							this.emit("firmware update progress", progress);
-							continue transfer;
-						}
-						case XModemMessageHeaders.NAK:
-							// The fragment was rejected, try again
-							continue retry;
-						case XModemMessageHeaders.CAN:
-							// The bootloader aborted the update. We'll receive the reason afterwards as a message
-							aborted = true;
-							break transfer;
-					}
-				}
-
-				this.controllerLog.print(
-					"OTW update failed: Maximum retry attempts reached",
-					"error",
-				);
-				const result: OTWFirmwareUpdateResult = {
-					success: false,
-					status: OTWFirmwareUpdateStatus.Error_RetryLimitReached,
-				};
-				return result;
-			}
-
-			if (aborted) {
-				// wait for the reason to craft a good error message
-				const error = await this.waitForBootloaderChunk<
-					BootloaderChunk & { type: BootloaderChunkType.Message }
-				>(
-					(c) =>
-						c.type === BootloaderChunkType.Message
-						&& c.message.includes("error 0x"),
-					1000,
-				).catch(() => undefined);
-
-				// wait for the menu screen so it doesn't show up in logs
-				await this.waitForBootloaderChunk(
-					(c) => c.type === BootloaderChunkType.Menu,
-					1000,
-				).catch(() => undefined);
-
-				let message = `OTW update was aborted by the bootloader.`;
-				let errorCode: number | undefined;
-				if (error) {
-					message += ` ${error.message}`;
-					// Parse error code from the message
-					const errorMatch = error.message.match(
-						/error 0x([0-9a-fA-F]+)/,
-					);
-					if (errorMatch) {
-						const errorCodeStr = errorMatch[1];
-						errorCode = parseInt(errorCodeStr, 16);
-					}
-				}
-				this.controllerLog.print(message, "error");
-
-				const result: OTWFirmwareUpdateResult = {
-					success: false,
-					status: OTWFirmwareUpdateStatus.Error_Aborted,
-					errorCode,
-				};
-				return result;
-			} else {
-				// We're done, send EOT and wait for the menu screen
-				await this.bootloader.finishUpload();
-				try {
-					// The bootloader sends the confirmation and the menu screen very quickly.
-					// Waiting for them separately can cause us to miss the menu screen and
-					// incorrectly assume the update timed out.
-
-					await Promise.all([
-						this.waitForBootloaderChunk(
-							(c) =>
-								c.type === BootloaderChunkType.Message
-								&& c.message.includes("upload complete"),
-							1000,
-						),
-
-						this.waitForBootloaderChunk(
-							(c) => c.type === BootloaderChunkType.Menu,
-							1000,
-						),
-					]);
-				} catch {
-					this.controllerLog.print(
-						"OTW update failed: The bootloader did not acknowledge the end of transfer.",
-						"error",
-					);
-					const result: OTWFirmwareUpdateResult = {
-						success: false,
-						status: OTWFirmwareUpdateStatus.Error_Timeout,
-					};
-					return result;
-				}
-			}
-
-			this.controllerLog.print("Firmware update succeeded");
-
-			const result: OTWFirmwareUpdateResult = {
-				success: true,
-				status: OTWFirmwareUpdateStatus.OK,
-			};
-			return result;
-		} finally {
-			if (this._options.bootloaderMode !== "stay") {
-				await this.leaveBootloader();
-			}
 		}
+
+		this.controllerLog.print("Firmware update succeeded");
+
+		const result: OTWFirmwareUpdateResult = {
+			success: true,
+			status: OTWFirmwareUpdateStatus.OK,
+		};
+		return result;
 	}
 
 	// region Bootloader
