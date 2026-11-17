@@ -1,11 +1,15 @@
 import type { OTWFirmwareUpdateTarget } from "@zwave-js/serial/serialapi";
 
 export interface OTWFirmwareUpdateProgress {
-	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
+	/** Which file of the update is being transmitted, starting at 1 */
+	currentFile: number;
+	/** How many files the update consists of */
+	totalFiles: number;
+	/** How many fragments of the current file have been transmitted. */
 	sentFragments: number;
-	/** How many fragments the firmware update consists of. */
+	/** How many fragments the current file consists of. */
 	totalFragments: number;
-	/** The total progress of the firmware update in %, rounded to two digits. */
+	/** The total progress of the firmware update over all files in %, rounded to two digits. */
 	progress: number;
 }
 
@@ -37,6 +41,7 @@ export interface OTWFirmwareUpdateOptions {
 	 * Which part of the Z-Wave module's software the file updates. Default: `OTWFirmwareUpdateTarget.Firmware`.
 	 * The module can't tell from the encrypted file, so it must be specified.
 	 * Only used when the module supports the Firmware Update Serial API command (0x3E).
+	 * Updates from the firmware update service define the target of each file, so this option does not apply to them.
 	 */
 	target?: OTWFirmwareUpdateTarget;
 }

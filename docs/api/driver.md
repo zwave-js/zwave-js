@@ -319,13 +319,15 @@ firmwareUpdateOTW(
 
 Besides the raw firmware image, you can also pass a `FirmwareUpdateInfo` object as returned from the [`getAvailableFirmwareUpdates` controller method](api/controller.md#getavailablefirmwareupdates). In that case, the firmware image will automatically be downloaded and validated before performing the update.
 
+An update from the firmware update service can consist of several files, for example a bootloader and a firmware. Z-Wave JS downloads all files first, then installs them one after the other. The bootloader always comes first, because a bootloader upgrade erases the application area. Through the bootloader, all files are uploaded in one bootloader session. The module only runs its application again after the last file. Through the Firmware Update command, each file is installed with the target the service defines for it. The update stops at the first file that fails.
+
 Performs an over-the-wire (OTW) firmware update for the Z-Wave module (controller) using the given firmware image. To do so, the device gets put in bootloader mode where a new firmware image can be uploaded. This method can be called in bootloader mode, while connected to a Serial API controller, or with a CLI based firmware that has an option to return to bootloader.
 
 > [!WARNING] A failure during this process may leave your controller in recovery mode, rendering it unusable until a correct firmware image is uploaded.
 
 If the controller supports the Firmware Update Serial API command (`0x3E`), Z-Wave JS uses it instead of the bootloader. The controller stores the uploaded file while the Serial API keeps running. It installs the file after a restart, so an interrupted upload leaves the current firmware intact. Z-Wave JS waits up to `timeouts.firmwareUpdateInstall` for the controller to start again. If the controller reports that it can't store updates, Z-Wave JS uploads through the bootloader instead.
 
-The encrypted file doesn't tell the controller what it contains. For the Firmware Update command, pass the target in the options. It defaults to the firmware:
+The encrypted file doesn't tell the controller what it contains. When passing a raw firmware image to the Firmware Update command, pass the target in the options. It defaults to the firmware:
 
 <!-- #import OTWFirmwareUpdateOptions from "zwave-js" -->
 
@@ -335,6 +337,7 @@ interface OTWFirmwareUpdateOptions {
 	 * Which part of the Z-Wave module's software the file updates. Default: `OTWFirmwareUpdateTarget.Firmware`.
 	 * The module can't tell from the encrypted file, so it must be specified.
 	 * Only used when the module supports the Firmware Update Serial API command (0x3E).
+	 * Updates from the firmware update service define the target of each file, so this option does not apply to them.
 	 */
 	target?: OTWFirmwareUpdateTarget;
 }
@@ -342,7 +345,7 @@ interface OTWFirmwareUpdateOptions {
 
 To keep track of the update progress, use the [`"firmware update progress"` and `"firmware update finished"` driver events](api/driver#quotfirmware-update-progressquot).
 
-> [!NOTE] In case of a communication issue (checksum, dropped frames, etc.), Z-Wave JS will retry the upgrade up to the configured number of times. In this case, the progress can jump back to 0.
+> [!NOTE] In case of a communication issue (checksum, dropped frames, etc.), Z-Wave JS will retry the upload of the affected file up to the configured number of times. In this case, the progress can jump back to where that file started.
 
 The return value indicates whether the update was successful and includes an error code that can be used to determine the reason for a failure. This is the same information that is emitted using the `"firmware update finished"` event:
 
@@ -504,11 +507,15 @@ An OTW firmware update has made progress. The callback arguments gives informati
 
 ```ts
 interface OTWFirmwareUpdateProgress {
-	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
+	/** Which file of the update is being transmitted, starting at 1 */
+	currentFile: number;
+	/** How many files the update consists of */
+	totalFiles: number;
+	/** How many fragments of the current file have been transmitted. */
 	sentFragments: number;
-	/** How many fragments the firmware update consists of. */
+	/** How many fragments the current file consists of. */
 	totalFragments: number;
-	/** The total progress of the firmware update in %, rounded to two digits. */
+	/** The total progress of the firmware update over all files in %, rounded to two digits. */
 	progress: number;
 }
 ```
