@@ -254,6 +254,16 @@ export class NVM3 implements NVM<number, BytesView> {
 				}
 			}
 
+			// Drop files whose most recent object is a deletion marker
+			for (const [key, pageIndex] of objectLocations) {
+				const latest = pages[pageIndex].objects.findLast(
+					(o) => o.key === key,
+				);
+				if (latest?.type === ObjectType.Deleted) {
+					objectLocations.delete(key);
+				}
+			}
+
 			return {
 				pages,
 				offsetInPage: offset,
