@@ -9501,7 +9501,8 @@ ${handlers.length} left`,
 	}
 
 	/**
-	 * Downloads all files of the desired firmware update from the Z-Wave JS firmware update service, in the given order.
+	 * Downloads all files of the desired firmware update from the Z-Wave JS firmware update service.
+	 * The returned files are in installation order, with the bootloader first.
 	 * @param updateInfo The desired entry from the updates array that was returned by {@link getAvailableFirmwareUpdates}.
 	 * Before applying the update, Z-Wave JS will check whether the device IDs, firmware version and region match.
 	 */
@@ -9515,20 +9516,33 @@ ${handlers.length} left`,
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		const targets = updateInfo.files.map((file) => {
-			// The firmware update service numbers the targets like the controller's firmware versions
-			switch (file.target) {
-				case 0:
-					return OTWFirmwareUpdateTarget.Firmware;
-				case 1:
-					return OTWFirmwareUpdateTarget.Bootloader;
-				default:
-					throw new ZWaveError(
-						`Invalid update file: OTW firmware updates do not support target ${file.target}!`,
-						ZWaveErrorCodes.Argument_Invalid,
-					);
-			}
-		});
+		const updates = updateInfo.files
+			.map((file) => {
+				// The firmware update service numbers the targets like the controller's firmware versions
+				switch (file.target) {
+					case 0:
+						return {
+							file,
+							target: OTWFirmwareUpdateTarget.Firmware,
+						};
+					case 1:
+						return {
+							file,
+							target: OTWFirmwareUpdateTarget.Bootloader,
+						};
+					default:
+						throw new ZWaveError(
+							`Invalid update file: OTW firmware updates do not support target ${file.target}!`,
+							ZWaveErrorCodes.Argument_Invalid,
+						);
+				}
+			})
+			// The bootloader must be installed first because a bootloader upgrade erases the application area
+			.toSorted(
+				(a, b) =>
+					Number(b.target === OTWFirmwareUpdateTarget.Bootloader)
+					- Number(a.target === OTWFirmwareUpdateTarget.Bootloader),
+			);
 
 		// The controller must also not be downgraded this way
 		if (updateInfo.downgrade) {
@@ -9559,15 +9573,15 @@ ${handlers.length} left`,
 		}
 
 		const files: OTWFirmwareUpdateFile[] = [];
-		for (let i = 0; i < updateInfo.files.length; i++) {
+		for (let i = 0; i < updates.length; i++) {
 			files.push({
 				data: await this.downloadOTWUpdateFile(
-					updateInfo.files[i],
+					updates[i].file,
 					i,
-					updateInfo.files.length,
+					updates.length,
 					signal,
 				),
-				target: targets[i],
+				target: updates[i].target,
 			});
 		}
 		return files;
