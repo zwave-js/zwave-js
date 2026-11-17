@@ -1012,7 +1012,7 @@ By default, everything is preserved. However, omitting all these optional entrie
 restoreNVMRaw(nvmData: Buffer, onProgress?: (bytesWritten: number, total: number) => void): Promise<void>
 ```
 
-Restores an NVM backup that was created with `backupNVMRaw`. The optional 2nd argument can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size. The Z-Wave radio will be turned off during this time.
+Restores an NVM backup that was created with `backupNVMRaw`. The optional 2nd argument can be used to monitor the progress of the operation, which may take several seconds up to a few minutes depending on the NVM size. The Z-Wave radio will be turned off during this time. Afterwards, the controller is soft-reset to activate the restored NVM, and the driver initializes the controller and its nodes again.
 
 > [!WARNING] The given buffer is **NOT** checked for compatibility with the current stick. To have Z-Wave JS do that, use the `restoreNVM` method instead.
 
