@@ -992,6 +992,15 @@ export class Driver
 					return true;
 				}
 
+				// The queue stays paused for the whole soft reset, so the reset and the readiness probe must pass it.
+				// This must come before the jammed check, because jam recovery soft resets while the controller is jammed.
+				if (this.queuePaused && this.isSoftResetting) {
+					return (
+						t.message instanceof SoftResetRequest
+						|| t.message instanceof GetControllerVersionRequest
+					);
+				}
+
 				// While the controller is unresponsive, only soft resetting is allowed.
 				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
 				// allow that too.
@@ -1005,14 +1014,6 @@ export class Driver
 				// While the controller is jammed, only soft resetting is allowed
 				if (this.controller.status === ControllerStatus.Jammed) {
 					return t.message instanceof SoftResetRequest;
-				}
-
-				// The queue stays paused for the whole soft reset, so the reset and the readiness probe must pass it
-				if (this.queuePaused && this.isSoftResetting) {
-					return (
-						t.message instanceof SoftResetRequest
-						|| t.message instanceof GetControllerVersionRequest
-					);
 				}
 
 				// All other messages on the immediate queue may always be sent as long as the controller is ready to send
