@@ -1,5 +1,5 @@
 {
-	"manufacturer": "UltraPro",
+	"manufacturer": "Enbrighten",
 	"manufacturerId": "0x0063",
 	"label": "76595 / ZWN3019",
 	"description": "In-Wall Smart Toggle Dimmer, 800S",
@@ -94,7 +94,7 @@
 	"metadata": {
 		"inclusion": "Press and release the top or bottom of the smart dimmer.",
 		"exclusion": "Press and release the top or bottom of the smart dimmer.",
-		"reset": "1. Pull up the air gap switch.\n2. While pressing the bottom button, push in the air gap and continue pressing the bottom button.\n3. The LED flashes through the eight colors once.",
+		"reset": "1. Slide the air gap switch right.\n2. While pressing the bottom of the toggle, slide the air gap switch left and continue pressing the bottom of the toggle.\n3. The LED flashes through the eight colors once.",
 		"manual": "https://byjasco.com/cdn/shop/files/76595_Manual.pdf?v=709443005243144541"
 	}
 }
