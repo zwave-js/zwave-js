@@ -9,9 +9,14 @@ import {
 	type PartialCCSessionManagerHost,
 } from "./PartialCCSessionManager.js";
 
-function report(reportsToFollow: number, nodeIds: number[]) {
+function report(
+	reportsToFollow: number,
+	nodeIds: number[],
+	endpointIndex: number = 0,
+) {
 	return new AssociationCCReport({
 		nodeId: 2,
+		endpointIndex,
 		groupId: 1,
 		maxNodes: 10,
 		nodeIds,
@@ -59,6 +64,29 @@ test("a complete series is merged in transmission order, despite duplicates", (t
 			),
 		).toStrictEqual([2, 1]);
 		t.expect(update.finalMsg).toBe(finalMsg);
+	}
+
+	manager.clear();
+});
+
+test("interleaved sessions on different endpoints are not merged", (t) => {
+	const { manager } = setup();
+
+	manager.handleCommand(report(1, [1], 1), dummyMsg());
+	const ep2First = manager.handleCommand(report(1, [2], 2), dummyMsg());
+	t.expect(ep2First).toMatchObject({ type: "segment", duplicate: false });
+
+	for (const endpoint of [1, 2]) {
+		const update = manager.handleCommand(
+			report(0, [3], endpoint),
+			dummyMsg(),
+		);
+		t.expect(update?.type).toBe("complete");
+		if (update?.type === "complete") {
+			t.expect(
+				update.partials.map((cc) => cc.endpointIndex),
+			).toStrictEqual([endpoint]);
+		}
 	}
 
 	manager.clear();
