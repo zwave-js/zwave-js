@@ -986,15 +986,19 @@ export class Driver
 		this.immediateQueue = new TransactionQueue({
 			name: "immediate",
 			mayStartNextTransaction: (t) => {
+				// A soft reset restores the node ID type before it unpauses the queue or marks the controller as ready.
+				// This request must pass the unresponsive, jammed and paused restrictions below.
+				if (t.message instanceof SerialAPISetup_SetNodeIDTypeRequest) {
+					return true;
+				}
+
 				// While the controller is unresponsive, only soft resetting is allowed.
 				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
-				// allow that too. The node ID type must be restored before the controller counts as responsive again.
+				// allow that too.
 				if (this.controller.status === ControllerStatus.Unresponsive) {
 					return (
 						t.message instanceof SoftResetRequest
 						|| t.message instanceof GetControllerVersionRequest
-						|| t.message
-							instanceof SerialAPISetup_SetNodeIDTypeRequest
 					);
 				}
 
