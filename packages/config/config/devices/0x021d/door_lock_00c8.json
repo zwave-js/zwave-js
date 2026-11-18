@@ -1,0 +1,47 @@
+{
+	"manufacturer": "Shenzhen Kaadas Intelligent Technology Co., Ltd.",
+	"manufacturerId": "0x021d",
+	"label": "Door Lock",
+	"description": "Door Lock",
+	"devices": [
+		{
+			"productType": "0x0103",
+			"productId": "0x00c8"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"compat": {
+		"overrideQueries": {
+			// The lock reports the key values 0 to 9 as its supported keypad characters.
+			// Replace them with the ASCII codes of the digits.
+			"User Code": [
+				{
+					"method": "getCapabilities",
+					"result": {
+						"supportsAdminCode": true,
+						"supportsAdminCodeDeactivation": false,
+						"supportsUserCodeChecksum": false,
+						"supportsMultipleUserCodeReport": false,
+						"supportsMultipleUserCodeSet": false,
+						"supportedUserIDStatuses": [0, 1, 2],
+						"supportedKeypadModes": [0, 1, 2],
+						"supportedASCIIChars": "0123456789"
+					},
+					"persistValues": {
+						"supportsAdminCode": true,
+						"supportsAdminCodeDeactivation": false,
+						"supportsUserCodeChecksum": false,
+						"supportsMultipleUserCodeReport": false,
+						"supportsMultipleUserCodeSet": false,
+						"supportedUserIDStatuses": [0, 1, 2],
+						"supportedKeypadModes": [0, 1, 2],
+						"supportedASCIIChars": "0123456789"
+					}
+				}
+			]
+		}
+	}
+}
