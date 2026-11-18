@@ -1007,6 +1007,14 @@ export class Driver
 					return t.message instanceof SoftResetRequest;
 				}
 
+				// The queue stays paused for the whole soft reset, so the reset and the readiness probe must pass it
+				if (this.queuePaused && this.isSoftResetting) {
+					return (
+						t.message instanceof SoftResetRequest
+						|| t.message instanceof GetControllerVersionRequest
+					);
+				}
+
 				// All other messages on the immediate queue may always be sent as long as the controller is ready to send
 				return (
 					!this.queuePaused
@@ -3592,6 +3600,9 @@ export class Driver
 
 		try {
 			this.isSoftResetting = true;
+			// Hold back all other commands until the node ID type is restored,
+			// because they are serialized with it
+			this.pauseSendQueue();
 			await this.sendMessage(new SoftResetRequest(), {
 				supportCheck: false,
 				pauseSendThread: true,
@@ -3604,6 +3615,7 @@ export class Driver
 			// Don't continue if the controller is unresponsive
 			if (isMissingControllerACK(e)) {
 				this.isSoftResetting = false;
+				this.unpauseSendQueue();
 				throw e;
 			}
 		}
@@ -3762,14 +3774,17 @@ export class Driver
 		// We don't need to use any specific command here. However we're going to use this one in the interview
 		// anyways, so we might aswell use it here too
 		const pollController = async () => {
+			// A soft reset keeps the queue paused until the node ID type is restored.
+			// The immediate queue lets the probe through anyway.
+			const keepPaused = this.isSoftResetting && this.queuePaused;
 			try {
 				// And resume sending - this requires us to unpause the send thread
-				this.unpauseSendQueue();
+				if (!keepPaused) this.unpauseSendQueue();
 				await this.sendMessage(new GetControllerVersionRequest(), {
 					supportCheck: false,
 					priority: MessagePriority.ControllerImmediate,
 				});
-				this.pauseSendQueue();
+				if (!keepPaused) this.pauseSendQueue();
 				this.controllerLog.print("Serial API responded");
 				return true;
 			} catch {
