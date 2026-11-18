@@ -1825,12 +1825,20 @@ export class UserCodeCCCapabilitiesReport extends UserCodeCC {
 		offset += 1;
 
 		validatePayload(raw.payload.length >= offset + keysBitMaskLength);
-		const supportedASCIIChars = Bytes.from(
+		let supportedASCIIChars = Bytes.from(
 			parseBitMask(
 				raw.payload.subarray(offset, offset + keysBitMaskLength),
 				0,
 			),
 		).toString("ascii");
+		// Some locks mark the key values 0x00 to 0x09 instead of the ASCII digits.
+		// Fall back to the digits, which User Code CC V1 mandates for all nodes.
+		if (
+			supportedASCIIChars.length > 0
+			&& !/[\x20-\x7e]/.test(supportedASCIIChars)
+		) {
+			supportedASCIIChars = "0123456789";
+		}
 
 		return new this({
 			nodeId: ctx.sourceNodeId,
