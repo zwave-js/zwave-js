@@ -14,12 +14,6 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"metadata": {
-		"inclusion": "Power up the device. If the LED starts blinking continuously, the sensor was not successfully added. Remove the battery for 10 seconds if adding fails.",
-		"exclusion": "Open the case and remove the battery for 1 second. Replace the battery.",
-		"reset": "Remove the device from the Z-Wave network.",
-		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2929/51557%20%20Z-Wave%20FLF%20H214104%20ZWAVE_Ver04.pdf"
-	},
 	"compat": {
 		// When the probe dries, this device does not send an idle notification.
 		// It sends Water Alarm event 0x04 ("Water level dropped"), which the manual
@@ -40,5 +34,11 @@
 				]
 			}
 		]
+	},
+	"metadata": {
+		"inclusion": "Power up the device. If the LED starts blinking continuously, the sensor was not successfully added. Remove the battery for 10 seconds if adding fails.",
+		"exclusion": "Open the case and remove the battery for 1 second. Replace the battery.",
+		"reset": "Remove the device from the Z-Wave network.",
+		"manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2929/51557%20%20Z-Wave%20FLF%20H214104%20ZWAVE_Ver04.pdf"
 	}
 }
