@@ -8927,6 +8927,10 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					// If the process fails, at least turn the Z-Wave radio back on
 					yield* waitFor(self.toggleRF(true));
 					rfRestored = true;
+					// Without the soft reset, nothing else turns the watchdog back on
+					if (self.driver.options.features.watchdog) {
+						yield* waitFor(self.startWatchdog());
+					}
 					throw e;
 				}
 
@@ -8935,6 +8939,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				rfRestored = true;
 
 				// The restored NVM may contain different nodes than the cache file
+				self._nodes.forEach((node) => node.destroy());
 				self._nodes.clear();
 
 				yield* waitFor(self.driver.softResetAndRestart(thisTask));
