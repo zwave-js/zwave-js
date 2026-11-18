@@ -406,15 +406,14 @@ export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetNodeIDTypeRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		const nodeIdType: NodeIDType = raw.payload[0];
 
-		// return new SerialAPISetup_SetNodeIDTypeRequest({});
+		return new this({
+			nodeIdType,
+		});
 	}
 
 	public nodeIdType: NodeIDType;

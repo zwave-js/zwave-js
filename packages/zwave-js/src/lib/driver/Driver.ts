@@ -169,6 +169,8 @@ import {
 	SendDataRequest,
 	SendTestFrameRequest,
 	SendTestFrameTransmitReport,
+	SerialAPISetup_SetNodeIDTypeRequest,
+	SerialAPISetup_SetNodeIDTypeResponse,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
@@ -986,11 +988,13 @@ export class Driver
 			mayStartNextTransaction: (t) => {
 				// While the controller is unresponsive, only soft resetting is allowed.
 				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
-				// allow that too.
+				// allow that too. The node ID type must be restored before the controller counts as responsive again.
 				if (this.controller.status === ControllerStatus.Unresponsive) {
 					return (
 						t.message instanceof SoftResetRequest
 						|| t.message instanceof GetControllerVersionRequest
+						|| t.message
+							instanceof SerialAPISetup_SetNodeIDTypeRequest
 					);
 				}
 
@@ -3634,8 +3638,10 @@ export class Driver
 				void this._controller?.startWatchdog();
 			}
 
-			// If desired, re-configure the controller to use 16 bit node IDs
-			void this._controller?.trySetNodeIDType(NodeIDType.Long);
+			// Some controllers keep using 16 bit node IDs after a soft reset.
+			// Restore the node ID type before anything else is sent, because
+			// all following commands are serialized with it.
+			await this._controller?.trySetNodeIDType(NodeIDType.Long);
 
 			// Resume sending
 			this.unpauseSendQueue();
@@ -7162,6 +7168,15 @@ ${handlers.length} left`,
 						msg,
 						transactionSource,
 					);
+					// Update the node ID type before the next queued command is serialized
+					if (
+						this._controller
+						&& msg instanceof SerialAPISetup_SetNodeIDTypeRequest
+						&& ret instanceof SerialAPISetup_SetNodeIDTypeResponse
+						&& ret.success
+					) {
+						this._controller.nodeIdType = msg.nodeIdType;
+					}
 					result.resolve(ret);
 				} catch (e) {
 					if (
