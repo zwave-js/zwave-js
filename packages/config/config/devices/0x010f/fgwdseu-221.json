@@ -17,31 +17,41 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off (1)",
+					"description": "Devices in this group will be switched on or off reflecting the button operation for the 1st channel (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Dimmer (1)",
+					"description": "Devices in this group will change their level reflecting the button operation for the 1st channel (uses Multilevel Switch command class).",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "On/Off (2)",
+					"description": "Devices in this group will be switched on or off reflecting the button operation for the 2nd channel (uses Basic command class). Only in double switch mode.",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Dimmer (2)",
+					"description": "Devices in this group will change their level reflecting the button operation for the 2nd channel (uses Multilevel Switch command class). Only in double switch mode.",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Output 1"
 		},
 		"2": {
-			"label": "On/Off (1)",
-			"description": "Devices in this group will be switched on or off reflecting the button operation for the 1st channel (uses Basic command class).",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "Dimmer (1)",
-			"description": "Devices in this group will change their level reflecting the button operation for the 1st channel (uses Multilevel Switch command class).",
-			"maxNodes": 5
-		},
-		"4": {
-			"label": "On/Off (2)",
-			"description": "Devices in this group will be switched on or off reflecting the button operation for the 2nd channel (uses Basic command class). Only in double switch mode.",
-			"maxNodes": 5
-		},
-		"5": {
-			"label": "Dimmer (2)",
-			"description": "Devices in this group will change their level reflecting the button operation for the 2nd channel (uses Multilevel Switch command class). Only in double switch mode.",
-			"maxNodes": 5
+			"label": "Output 2"
 		}
 	},
 	"paramInformation": [
@@ -699,6 +709,16 @@
 			"defaultValue": 99
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Button 1",
+			"description": "Only sent when parameter 40 enables it"
+		},
+		"2": {
+			"label": "Button 2",
+			"description": "Only sent when parameter 41 enables it"
+		}
+	},
 	"metadata": {
 		"inclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",
 		"exclusion": "Power the device, then quickly click one of the buttons three times. The LED starts blinking yellow.",

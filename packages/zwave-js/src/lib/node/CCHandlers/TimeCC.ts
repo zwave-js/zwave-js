@@ -13,6 +13,8 @@ import {
 
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleTimeGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -35,12 +37,8 @@ export async function handleTimeGet(
 				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 		await api.reportTime(hours, minutes, seconds);
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -66,12 +64,8 @@ export async function handleDateGet(
 				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 		await api.reportDate(year, month, day);
-	} catch (e: any) {
-		ctx.logNode(node.id, {
-			message: e.message,
-			level: "error",
-		});
-		// ignore
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 

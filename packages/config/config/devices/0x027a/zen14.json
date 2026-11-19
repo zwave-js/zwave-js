@@ -15,19 +15,29 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Group 2",
+					"maxNodes": 2
+				},
+				"3": {
+					"label": "Group 3",
+					"maxNodes": 2
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Socket 1"
 		},
 		"2": {
-			"label": "Group 2",
-			"maxNodes": 2
-		},
-		"3": {
-			"label": "Group 3",
-			"maxNodes": 2
+			"label": "Socket 2"
 		}
 	},
 	"paramInformation": [

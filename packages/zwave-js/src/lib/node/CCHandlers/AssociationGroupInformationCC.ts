@@ -15,6 +15,8 @@ import {
 
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleAGINameGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -38,7 +40,11 @@ export async function handleAGINameGet(
 				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
-	await api.reportGroupName(1, "Lifeline");
+	try {
+		await api.reportGroupName(1, "Lifeline");
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export async function handleAGIInfoGet(
@@ -64,18 +70,22 @@ export async function handleAGIInfoGet(
 				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
-	await api.reportGroupInfo({
-		isListMode: command.listMode ?? false,
-		hasDynamicInfo: false,
-		groups: [
-			{
-				groupId: 1,
-				eventCode: 0, // ignored anyways
-				profile: AssociationGroupInfoProfile["General: Lifeline"],
-				mode: 0, // ignored anyways
-			},
-		],
-	});
+	try {
+		await api.reportGroupInfo({
+			isListMode: command.listMode ?? false,
+			hasDynamicInfo: false,
+			groups: [
+				{
+					groupId: 1,
+					eventCode: 0, // ignored anyways
+					profile: AssociationGroupInfoProfile["General: Lifeline"],
+					mode: 0, // ignored anyways
+				},
+			],
+		});
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export async function handleAGICommandListGet(
@@ -101,15 +111,19 @@ export async function handleAGICommandListGet(
 				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
-	await api.reportCommands(
-		command.groupId,
-		new Map([
-			[
-				CommandClasses["Device Reset Locally"],
-				[DeviceResetLocallyCommand.Notification],
-			],
-		]),
-	);
+	try {
+		await api.reportCommands(
+			command.groupId,
+			new Map([
+				[
+					CommandClasses["Device Reset Locally"],
+					[DeviceResetLocallyCommand.Notification],
+				],
+			]),
+		);
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export async function handleAssociationSupportedGroupingsGet(
@@ -131,5 +145,9 @@ export async function handleAssociationSupportedGroupingsGet(
 		});
 
 	// We only "support" the lifeline group
-	await api.reportGroupCount(1);
+	try {
+		await api.reportGroupCount(1);
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }

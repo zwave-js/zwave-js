@@ -63,13 +63,13 @@ export function assertMessage(
 	// By default, strip away the timestamp and placeholder
 	if (options.ignoreTimestamp !== false) {
 		actualMessage = actualMessage
-			.replace(timestampPrefixRegex, "")
+			.replaceAll(timestampPrefixRegex, "")
 			.replaceAll(/^ {13}/gm, "");
 	}
 	// by default, strip away the channel label and placeholder
 	if (options.ignoreChannel !== false) {
 		actualMessage = actualMessage
-			.replace(channelPrefixRegex, "")
+			.replaceAll(channelPrefixRegex, "")
 			.replaceAll(/^ {7}/gm, "");
 	}
 	if (typeof options.message === "string") {

@@ -10,7 +10,11 @@ import {
 	CentralSceneKeys,
 	CommandClass,
 } from "@zwave-js/cc";
-import { CommandClasses } from "@zwave-js/core";
+import {
+	CentralSceneCCValues,
+	refreshSceneMetadataFromConfigFile,
+} from "@zwave-js/cc/CentralSceneCC";
+import { CommandClasses, ValueDB } from "@zwave-js/core";
 import { Bytes } from "@zwave-js/shared";
 import { test, vi } from "vitest";
 
@@ -354,4 +358,47 @@ test("CentralSceneCCNotification should use custom scene labels from device conf
 	// Check the call to ensureMetadata
 	const call = mockValueDB3.setMetadata.mock.calls[0];
 	t.expect(call[1]?.label).toBe("Release");
+});
+
+test("refreshSceneMetadataFromConfigFile should update stored scene labels from device config", (t) => {
+	const valueDB = new ValueDB(2, new Map() as any, new Map() as any);
+	const scene1 = CentralSceneCCValues.scene(1);
+	const scene2 = CentralSceneCCValues.scene(2);
+	const scene3 = CentralSceneCCValues.scene(3);
+	const states = { "0": "KeyPressed" };
+	valueDB.setMetadata(scene1.id, { ...scene1.meta, states });
+	valueDB.setMetadata(scene2.id, {
+		...scene2.meta,
+		label: "Old label",
+		description: "Old description",
+		states,
+	});
+	valueDB.setMetadata(scene3.endpoint(1), { ...scene3.meta, states });
+
+	const scenes = new Map([
+		[1, { sceneId: 1, label: "Button 1", description: "Top button" }],
+		[3, { sceneId: 3, label: "Button 3" }],
+	]);
+	refreshSceneMetadataFromConfigFile(
+		{
+			getValueDB: () => valueDB,
+			getDeviceConfig: () => ({ scenes }) as any,
+		},
+		2,
+		0,
+	);
+
+	t.expect(valueDB.getMetadata(scene1.id)).toStrictEqual({
+		...scene1.meta,
+		label: "Button 1",
+		description: "Top button",
+		states,
+	});
+	// Scene 2 is no longer in the config file
+	t.expect(valueDB.getMetadata(scene2.id)).toStrictEqual({
+		...scene2.meta,
+		states,
+	});
+	// Other endpoints are refreshed separately
+	t.expect(valueDB.getMetadata(scene3.endpoint(1))?.label).toBe("Scene 003");
 });

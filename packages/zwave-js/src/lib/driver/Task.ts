@@ -5,6 +5,7 @@ import {
 	TaskInterruptBehavior,
 	TaskPriority,
 	type TaskReturnType,
+	type TaskHandle,
 	TaskScheduler as WaddleTaskScheduler,
 } from "@zwave-js/waddle";
 
@@ -70,4 +71,4 @@ export type TaskBuilder<T> = WaddleTaskBuilder<T, TaskTag>;
 export class TaskScheduler extends WaddleTaskScheduler<TaskTag, ZWaveError> {}
 
 export { TaskInterruptBehavior, TaskPriority };
-export type { TaskReturnType };
+export type { TaskHandle, TaskReturnType };

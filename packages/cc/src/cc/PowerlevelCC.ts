@@ -9,6 +9,7 @@ import {
 	type WithAddress,
 	ZWaveError,
 	ZWaveErrorCodes,
+	parseEnumValue,
 	validatePayload,
 } from "@zwave-js/core";
 import { Bytes, getEnumMemberName, pick } from "@zwave-js/shared";
@@ -423,7 +424,7 @@ export class PowerlevelCCTestNodeReport extends PowerlevelCC {
 	): PowerlevelCCTestNodeReport {
 		validatePayload(raw.payload.length >= 4);
 		const testNodeId = raw.payload[0];
-		const status: PowerlevelTestStatus = raw.payload[1];
+		const status = parseEnumValue(PowerlevelTestStatus, raw.payload[1]);
 		const acknowledgedFrames = raw.payload.readUInt16BE(2);
 
 		return new this({

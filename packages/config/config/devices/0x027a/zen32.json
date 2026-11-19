@@ -324,6 +324,32 @@
 			"defaultValue": 0
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Button 1",
+			"description": "Small button, top left"
+		},
+		"2": {
+			"label": "Button 2",
+			"description": "Small button, top right"
+		},
+		"3": {
+			"label": "Button 3",
+			"description": "Small button, bottom left"
+		},
+		"4": {
+			"label": "Button 4",
+			"description": "Small button, bottom right"
+		},
+		"5": {
+			"label": "Switch Button",
+			"description": "The large center button"
+		},
+		"6": {
+			"label": "Remote Switch",
+			"description": "Only sent when parameter 26 enables it, with a ZAC99 momentary switch in a 3-way setup"
+		}
+	},
 	"compat": {
 		// The device sends Configuration CC info reports in 4-byte chunks, causing each query to block the network for roughly 1.5 seconds.
 		"skipConfigurationNameQuery": true,

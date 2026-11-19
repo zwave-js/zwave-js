@@ -443,7 +443,8 @@ export async function addAssociations(
 	const groupIsMultiChannel =
 		!!mcInstance
 		&& group <= mcGroupCount
-		&& deviceConfig?.associations?.get(group)?.multiChannel !== false;
+		&& deviceConfig?.getAssociationConfigForEndpoint(endpoint.index, group)
+			?.multiChannel !== false;
 
 	if (groupIsMultiChannel) {
 		// Check that all associations are allowed

@@ -14,6 +14,8 @@ import {
 import type { ZWaveController } from "../../controller/Controller.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export function handleIndicatorSupportedGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -91,27 +93,31 @@ export async function handleIndicatorGet(
 		});
 
 	// We only support "identify"
-	if (command.indicatorId === 0x50) {
-		const values = controller.indicatorValues.get(0x50) ?? [
-			{ indicatorId: 0x50, propertyId: 0x03, value: 0 },
-			{ indicatorId: 0x50, propertyId: 0x04, value: 0 },
-			{ indicatorId: 0x50, propertyId: 0x05, value: 0 },
-		];
-		await api.sendReport({ values });
-	} else if (typeof command.indicatorId === "number") {
-		// V2+ report
-		await api.sendReport({
-			values: [
-				{
-					indicatorId: command.indicatorId,
-					propertyId: 0,
-					value: 0,
-				},
-			],
-		});
-	} else {
-		// V1+ report
-		await api.sendReport({ value: 0 });
+	try {
+		if (command.indicatorId === 0x50) {
+			const values = controller.indicatorValues.get(0x50) ?? [
+				{ indicatorId: 0x50, propertyId: 0x03, value: 0 },
+				{ indicatorId: 0x50, propertyId: 0x04, value: 0 },
+				{ indicatorId: 0x50, propertyId: 0x05, value: 0 },
+			];
+			await api.sendReport({ values });
+		} else if (typeof command.indicatorId === "number") {
+			// V2+ report
+			await api.sendReport({
+				values: [
+					{
+						indicatorId: command.indicatorId,
+						propertyId: 0,
+						value: 0,
+					},
+				],
+			});
+		} else {
+			// V1+ report
+			await api.sendReport({ value: 0 });
+		}
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
 	}
 }
 
@@ -136,5 +142,9 @@ export async function handleIndicatorDescriptionGet(
 	// We only support "identify" (0x50) and requests for indicators outside the 0x80...0x9f range
 	// MUST return an Indicator Description Report with the Description Length set to 0.
 	// So we can just always do that.
-	await api.reportDescription(command.indicatorId, "");
+	try {
+		await api.reportDescription(command.indicatorId, "");
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }

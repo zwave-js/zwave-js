@@ -313,6 +313,20 @@
 			"label": "Button 4 - Double Press (Duration)"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Button 1"
+		},
+		"2": {
+			"label": "Button 2"
+		},
+		"3": {
+			"label": "Button 3"
+		},
+		"4": {
+			"label": "Button 4"
+		}
+	},
 	"metadata": {
 		"inclusion": "Remove white pushbutton cover and press on the center switch with a non-conductive object. The LEDs will now start blinking on pushbutton 1 (upper left pushbutton)",
 		"exclusion": "Remove white pushbutton cover and press on the center switch with a non-conductive object. The LEDs will now start blinking on pushbutton 1 (upper left pushbutton)",

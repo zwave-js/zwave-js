@@ -15,16 +15,45 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"metadata": {
-		"inclusion": "1. Turn your gateway/ main controller into adding mode.\n2. Press once the Action Button on the product",
-		"exclusion": "1. Turn your gateway/ main controller into removing mode.\n2. Press once the Action Button on the product",
-		"reset": "Press and hold the Action Button on product for 10s.\n\nNote: Please use this procedure only when the network's primary controller is missing or otherwise inoperable."
-	},
-	"associations": {
+	"endpoints": {
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
+			"label": "Clamp 1 Consumption"
+		},
+		"2": {
+			"label": "Clamp 1 Production"
+		},
+		"3": {
+			"label": "Clamp 2 Consumption"
+		},
+		"4": {
+			"label": "Clamp 2 Production"
+		},
+		"5": {
+			"label": "Total Consumption"
+		},
+		"6": {
+			"label": "Total Production"
+		},
+		"7": {
+			"label": "Net Consumption"
+		},
+		"8": {
+			"label": "Net Generation"
+		}
+	},
+	"endpointGroups": {
+		"1": {
+			"label": "Clamp 1",
+			"endpoints": [1, 2]
+		},
+		"2": {
+			"label": "Clamp 2",
+			"endpoints": [3, 4]
+		},
+		"3": {
+			"label": "Total",
+			"endpoints": [5, 6, 7, 8],
+			"isMainDevice": true
 		}
 	},
 	"paramInformation": [
@@ -719,5 +748,10 @@
 			"#": "252",
 			"$import": "~/0x0086/templates/aeotec_template.json#lock_configuration"
 		}
-	]
+	],
+	"metadata": {
+		"inclusion": "1. Turn your gateway/ main controller into adding mode.\n2. Press once the Action Button on the product",
+		"exclusion": "1. Turn your gateway/ main controller into removing mode.\n2. Press once the Action Button on the product",
+		"reset": "Press and hold the Action Button on product for 10s.\n\nNote: Please use this procedure only when the network's primary controller is missing or otherwise inoperable."
+	}
 }

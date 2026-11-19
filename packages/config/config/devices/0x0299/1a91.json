@@ -64,5 +64,19 @@
 				}
 			]
 		}
-	]
+	],
+	"scenes": {
+		"1": {
+			"label": "Button T1"
+		},
+		"2": {
+			"label": "Button T2"
+		},
+		"3": {
+			"label": "Button T3"
+		},
+		"4": {
+			"label": "Button T4"
+		}
+	}
 }

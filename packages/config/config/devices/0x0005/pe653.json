@@ -515,6 +515,9 @@
 			"label": "P5043ME Pool/Spa Mode"
 		}
 	},
+	"endpointGroups": {
+		"1": { "label": "Variable Speed Pump", "endpoints": [16, 17, 18, 19] }
+	},
 	"compat": [
 		{
 			// Fixes #4588: Firmware v3.4 has numerous bugs related to multi-endpoint support.

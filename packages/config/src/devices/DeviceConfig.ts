@@ -35,7 +35,12 @@ import { configDir } from "#config_dir";
 
 import { clearTemplateCache, readJsonWithTemplate } from "../JsonTemplate.js";
 import type { ConfigLogger } from "../Logger.js";
-import { hexKeyRegex4Digits, throwInvalidConfig } from "../utils_safe.js";
+import {
+	firmwareVersionFormatHint,
+	hexKeyRegex4Digits,
+	isFirmwareVersion,
+	throwInvalidConfig,
+} from "../utils_safe.js";
 
 import {
 	type AssociationConfig,
@@ -55,6 +60,10 @@ import {
 	ConditionalEndpointConfig,
 	type EndpointConfig,
 } from "./EndpointConfig.js";
+import {
+	ConditionalEndpointGroupConfig,
+	type EndpointGroupConfig,
+} from "./EndpointGroupConfig.js";
 import {
 	type ConditionalParamInfoMap,
 	type ParamInfoMap,
@@ -395,18 +404,6 @@ function isHexKeyWith4Digits(val: any): val is string {
 	return typeof val === "string" && hexKeyRegex4Digits.test(val);
 }
 
-const firmwareVersionRegex = /^\d{1,3}\.\d{1,3}(\.\d{1,3})?$/;
-function isFirmwareVersion(val: any): val is string {
-	return (
-		typeof val === "string"
-		&& firmwareVersionRegex.test(val)
-		&& val
-			.split(".")
-			.map((str) => parseInt(str, 10))
-			.every((num) => num >= 0 && num <= 255)
-	);
-}
-
 const deflateDict = Bytes.from(
 	// Substrings appearing in the device config files in descending order of frequency
 	// except for very short ones like 0, 1, ...
@@ -522,7 +519,7 @@ devices is malformed (not an object or type/id that is not a lowercase 4-digit h
 			throwInvalidConfig(
 				`device`,
 				`packages/config/config/devices/${filename}:
-firmwareVersion is malformed or invalid. Must be x.y or x.y.z where x, y, and z are integers between 0 and 255`,
+firmwareVersion is malformed or invalid. ${firmwareVersionFormatHint}`,
 			);
 		} else {
 			const { min, max } = definition.firmwareVersion;
@@ -573,6 +570,48 @@ found non-numeric endpoint index "${key}" in endpoints`,
 				);
 			}
 			this.endpoints = endpoints;
+		}
+
+		if (definition.endpointGroups !== undefined) {
+			if (!isObject(definition.endpointGroups)) {
+				throwInvalidConfig(
+					"device",
+					`packages/config/config/devices/${filename}:
+endpointGroups is not an object`,
+				);
+			}
+			const endpointGroups = new Map<
+				number,
+				ConditionalEndpointGroupConfig
+			>();
+			for (const [key, group] of Object.entries(
+				definition.endpointGroups,
+			)) {
+				const id = Number(key);
+				if (!/^[1-9][0-9]*$/.test(key) || !Number.isSafeInteger(id)) {
+					throwInvalidConfig(
+						"device",
+						`packages/config/config/devices/${filename}:
+found invalid group id "${key}" in endpointGroups`,
+					);
+				}
+				endpointGroups.set(
+					id,
+					new ConditionalEndpointGroupConfig(filename, id, group),
+				);
+			}
+			if (
+				![...endpointGroups.keys()]
+					.toSorted((a, b) => a - b)
+					.every((id, index) => id === index + 1)
+			) {
+				throwInvalidConfig(
+					"device",
+					`packages/config/config/devices/${filename}:
+endpointGroups must be numbered consecutively, starting at 1`,
+				);
+			}
+			this.endpointGroups = endpointGroups;
 		}
 
 		if (definition.associations != undefined) {
@@ -730,6 +769,10 @@ scene number ${keyNum} must be between 1 and 255`,
 	/** Mark this configuration as preferred over other config files with an overlapping firmware range */
 	public readonly preferred: boolean;
 	public readonly endpoints?: ReadonlyMap<number, ConditionalEndpointConfig>;
+	public readonly endpointGroups?: ReadonlyMap<
+		number,
+		ConditionalEndpointGroupConfig
+	>;
 	public readonly associations?: ReadonlyMap<
 		number,
 		ConditionalAssociationConfig
@@ -769,6 +812,7 @@ scene number ${keyNum} must be between 1 and 255`,
 			this.proprietary,
 			evaluateDeep(this.compat, deviceId),
 			evaluateDeep(this.metadata, deviceId),
+			evaluateDeep(this.endpointGroups, deviceId),
 		);
 	}
 }
@@ -816,6 +860,7 @@ export class DeviceConfig {
 		proprietary?: Record<string, unknown>,
 		compat?: CompatConfig,
 		metadata?: DeviceMetadata,
+		endpointGroups?: ReadonlyMap<number, EndpointGroupConfig>,
 	) {
 		this.filename = filename;
 		this.isEmbedded = isEmbedded;
@@ -833,6 +878,7 @@ export class DeviceConfig {
 		this.proprietary = proprietary;
 		this.compat = compat;
 		this.metadata = metadata;
+		this.endpointGroups = endpointGroups;
 	}
 
 	public readonly filename: string;
@@ -850,6 +896,7 @@ export class DeviceConfig {
 	/** Mark this configuration as preferred over other config files with an overlapping firmware range */
 	public readonly preferred: boolean;
 	public readonly endpoints?: ReadonlyMap<number, EndpointConfig>;
+	public readonly endpointGroups?: ReadonlyMap<number, EndpointGroupConfig>;
 	public readonly associations?: ReadonlyMap<number, AssociationConfig>;
 	public readonly scenes?: ReadonlyMap<number, SceneConfig>;
 	public readonly paramInformation?: ParamInfoMap;

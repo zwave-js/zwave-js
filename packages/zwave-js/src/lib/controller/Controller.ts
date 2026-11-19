@@ -20,6 +20,7 @@ import {
 	Security2CCKEXGet,
 	type Security2CCKEXReport,
 	Security2CCKEXSet,
+	type Security2CCMessageEncapsulation,
 	Security2CCNetworkKeyGet,
 	Security2CCNetworkKeyReport,
 	Security2CCNetworkKeyVerify,
@@ -31,7 +32,6 @@ import {
 	SecurityCCSchemeGet,
 	SecurityCCSchemeInherit,
 	VersionCCValues,
-	VersionCommand,
 	ZWaveProtocolCCAssignReturnRoute,
 	ZWaveProtocolCCAssignReturnRoutePriority,
 	ZWaveProtocolCCAssignSUCReturnRoute,
@@ -48,7 +48,6 @@ import {
 	ControllerRole,
 	ControllerStatus,
 	EMPTY_ROUTE,
-	type Firmware,
 	LongRangeChannel,
 	MAX_NODES,
 	type MaybeNotKnown,
@@ -330,10 +329,7 @@ import {
 	ControllerStatisticsHost,
 } from "./ControllerStatistics.js";
 import { ZWaveFeature, minFeatureVersions } from "./Features.js";
-import {
-	downloadFirmwareUpdate,
-	getAvailableFirmwareUpdatesBulk,
-} from "./FirmwareUpdateService.js";
+import { getAvailableFirmwareUpdatesBulk } from "./FirmwareUpdateService.js";
 import {
 	type ExclusionOptions,
 	ExclusionStrategy,
@@ -357,7 +353,7 @@ import {
 	SecurityBootstrapFailure,
 	type SmartStartProvisioningEntry,
 } from "./Inclusion.js";
-import { SerialNVMIO500, SerialNVMIO700 } from "./NVMIO.js";
+import { SerialNVMIO500, SerialNVMIO700, trimNVMWriteAtEnd } from "./NVMIO.js";
 import { determineNIF } from "./NodeInformationFrame.js";
 import {
 	type ControllerProprietary,
@@ -409,6 +405,15 @@ interface ControllerEventCallbacks extends StatisticsEventCallbacks<ControllerSt
 	) => void;
 	identify: (node: ZWaveNode) => void;
 	"status changed": (status: ControllerStatus) => void;
+}
+
+const FALLBACK_NVM_CHUNK_SIZE = 48;
+
+function throwEmptyNVMChunk(offset: number): never {
+	throw new ZWaveError(
+		`Cannot back up the NVM: The controller returned no data at offset ${offset}`,
+		ZWaveErrorCodes.Controller_CommandError,
+	);
 }
 
 export type ControllerEvents = Extract<keyof ControllerEventCallbacks, string>;
@@ -2229,7 +2234,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 							),
 						);
 					} else {
-						startedPromise.reject(e as Error);
+						startedPromise.reject(e);
 					}
 					return;
 				}
@@ -2340,7 +2345,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				} catch (e) {
 					self.setInclusionState(InclusionState.Idle);
 					// Error handling for this happens at the call site
-					startedPromise.reject(e as Error);
+					startedPromise.reject(e);
 					return;
 				}
 
@@ -3208,7 +3213,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 							),
 						);
 					} else {
-						startedPromise.reject(e as Error);
+						startedPromise.reject(e);
 					}
 					return;
 				}
@@ -3818,6 +3823,87 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		}
 	}
 
+	/** Logs why an Inclusion Controller Initiate command is rejected and signals the failure to the sender */
+	private rejectInclusionControllerInitiate(
+		nodeId: number,
+		reason: string,
+	): never {
+		this.driver.controllerLog.logNode(nodeId, reason, "warn");
+		throw new ZWaveError(reason, ZWaveErrorCodes.CC_OperationFailed);
+	}
+
+	/**
+	 * Returns the inclusion controller that sent an Inclusion Controller Initiate command,
+	 * or throws if the command must not be acted upon.
+	 * Acting on it removes or replaces node instances and re-runs security bootstrapping,
+	 * so it must only be accepted from actual controllers.
+	 */
+	private getVerifiedInclusionController(
+		initiate: InclusionControllerCCInitiate,
+	): ZWaveNode {
+		const sender = this._nodes.get(initiate.nodeId as number);
+		if (sender?.nodeType !== NodeType.Controller) {
+			this.rejectInclusionControllerInitiate(
+				initiate.nodeId as number,
+				`Ignoring inclusion controller request from a node that is not a controller`,
+			);
+		} else if (sender.id === this._ownNodeId) {
+			this.rejectInclusionControllerInitiate(
+				sender.id,
+				`Ignoring inclusion controller request that claims to originate from this controller`,
+			);
+		}
+
+		// CC:0074.01.01.11.001: The command MUST be ignored if it was not received with the highest
+		// common security class, and non-secure commands are only acceptable if we know the inclusion
+		// controller was included non-securely. This also authenticates the spoofable source node ID.
+		const secClass = sender.getHighestSecurityClass();
+		let receivedWithHighestClass = false;
+		if (secClass === SecurityClass.None) {
+			receivedWithHighestClass = true;
+		} else if (secClass != undefined && securityClassIsS2(secClass)) {
+			const encapS2 = initiate.getEncapsulatingCC(
+				CommandClasses["Security 2"],
+				Security2Command.MessageEncapsulation,
+			) as Security2CCMessageEncapsulation | undefined;
+			receivedWithHighestClass = encapS2?.securityClass === secClass;
+		} else if (secClass === SecurityClass.S0_Legacy) {
+			receivedWithHighestClass = initiate.isEncapsulatedWith(
+				CommandClasses.Security,
+			);
+		}
+		if (!receivedWithHighestClass) {
+			this.rejectInclusionControllerInitiate(
+				sender.id,
+				`Ignoring inclusion controller request that was not received with the sender's highest security class`,
+			);
+		}
+
+		const targetNodeId = initiate.includedNodeId;
+		if (
+			targetNodeId === this._ownNodeId
+			|| targetNodeId === sender.id
+			|| targetNodeId < 1
+			|| targetNodeId > MAX_NODES
+		) {
+			this.rejectInclusionControllerInitiate(
+				sender.id,
+				`Ignoring inclusion controller request for invalid node ${targetNodeId}`,
+			);
+		}
+
+		return sender;
+	}
+
+	/** Whether the controller is free to act on a request from an inclusion controller */
+	private canHandleInclusionControllerRequest(): boolean {
+		// Passive SmartStart listening stays enabled while there are pending provisioning entries
+		return (
+			this._inclusionState === InclusionState.Idle
+			|| this._inclusionState === InclusionState.SmartStart
+		);
+	}
+
 	/**
 	 * @internal
 	 * Handles proxy inclusion requests from an inclusion controller
@@ -3832,10 +3918,32 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 		}
 
+		const inclCtrlr = this.getVerifiedInclusionController(initiate);
+
+		// A node that was just included by the inclusion controller is already known
+		// if its NIF arrived first. Any other known node must not be replaced.
+		const proxyState = this._proxyInclusionMachine?.state;
+		const isPendingNode =
+			proxyState?.value === "hasNIF"
+			&& proxyState.newNode.id === initiate.includedNodeId;
+		if (!isPendingNode) {
+			if (!this.canHandleInclusionControllerRequest()) {
+				this.rejectInclusionControllerInitiate(
+					inclCtrlr.id,
+					`Ignoring proxy inclusion request because the controller is busy`,
+				);
+			} else if (this._nodes.has(initiate.includedNodeId)) {
+				this.rejectInclusionControllerInitiate(
+					inclCtrlr.id,
+					`Ignoring proxy inclusion request for node ${initiate.includedNodeId}, which is already part of the network`,
+				);
+			}
+		}
+
 		void this.updateProxyInclusionMachine({
 			value: "INITIATE",
 			step: initiate.step,
-			inclusionControllerNodeId: initiate.nodeId as number,
+			inclusionControllerNodeId: inclCtrlr.id,
 			includedNodeId: initiate.includedNodeId,
 		}).catch(noop);
 	}
@@ -3853,9 +3961,16 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
-		this.setInclusionState(InclusionState.Busy);
 
-		const inclCtrlr = this.nodes.getOrThrow(initiate.nodeId as number);
+		const inclCtrlr = this.getVerifiedInclusionController(initiate);
+		if (!this.canHandleInclusionControllerRequest()) {
+			this.rejectInclusionControllerInitiate(
+				inclCtrlr.id,
+				`Ignoring replace request because the controller is busy`,
+			);
+		}
+
+		this.setInclusionState(InclusionState.Busy);
 
 		const replacedNodeId = initiate.includedNodeId;
 		const oldNode = this.nodes.get(replacedNodeId);
@@ -4409,8 +4524,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					Security2CCPublicKeyReport | Security2CCKEXFail
 				>(
 					(cc) =>
-						cc instanceof Security2CCPublicKeyReport
-						|| cc instanceof Security2CCKEXFail,
+						cc.nodeId === node.id
+						&& (cc instanceof Security2CCPublicKeyReport
+							|| cc instanceof Security2CCKEXFail),
 					inclusionTimeouts.TA2,
 				)
 				.catch(() => "timeout" as const);
@@ -4486,10 +4602,22 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			}
 
 			// After the user has verified the DSK, we can derive the shared secret
-			const sharedSecret = await deriveSharedECDHSecret({
-				publicKey: nodePublicKey,
-				privateKey: keyPair.privateKey,
-			});
+			let sharedSecret: BytesView;
+			try {
+				sharedSecret = await deriveSharedECDHSecret({
+					publicKey: nodePublicKey,
+					privateKey: keyPair.privateKey,
+				});
+			} catch {
+				// The crypto backends reject invalid public keys, e.g. low-order points
+				// that would result in a predictable all-zero secret
+				this.driver.controllerLog.logNode(node.id, {
+					message: `Security S2 bootstrapping failed: the public key is invalid`,
+					level: "warn",
+				});
+				await abort(KEXFailType.BootstrappingCanceled);
+				return SecurityBootstrapFailure.Unknown;
+			}
 
 			// Derive temporary key from ECDH key pair - this will allow us to receive the node's KEX SET commands
 			const tempKeys = await deriveTempKeys(
@@ -4520,8 +4648,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				this.driver
 					.waitForCommand<Security2CCKEXSet | Security2CCKEXFail>(
 						(cc) =>
-							cc instanceof Security2CCKEXSet
-							|| cc instanceof Security2CCKEXFail,
+							cc.nodeId === node.id
+							&& (cc instanceof Security2CCKEXSet
+								|| cc instanceof Security2CCKEXFail),
 						tai2RemainingMs,
 					)
 					.catch(() => "timeout" as const),
@@ -4599,8 +4728,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 						Security2CCNetworkKeyGet | Security2CCKEXFail
 					>(
 						(cc) =>
-							cc instanceof Security2CCNetworkKeyGet
-							|| cc instanceof Security2CCKEXFail,
+							cc.nodeId === node.id
+							&& (cc instanceof Security2CCNetworkKeyGet
+								|| cc instanceof Security2CCKEXFail),
 						inclusionTimeouts.TA3,
 					)
 					.catch(() => "timeout" as const);
@@ -4670,8 +4800,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 						Security2CCNetworkKeyVerify | Security2CCKEXFail
 					>(
 						(cc) =>
-							cc instanceof Security2CCNetworkKeyVerify
-							|| cc instanceof Security2CCKEXFail,
+							cc.nodeId === node.id
+							&& (cc instanceof Security2CCNetworkKeyVerify
+								|| cc instanceof Security2CCKEXFail),
 						inclusionTimeouts.TA4,
 					)
 					.catch(() => "timeout" as const);
@@ -4713,7 +4844,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			// After all keys were sent and verified, we need to wait for the node to confirm that it is done
 			const transferEnd = await this.driver
 				.waitForCommand<Security2CCTransferEnd>(
-					(cc) => cc instanceof Security2CCTransferEnd,
+					(cc) =>
+						cc.nodeId === node.id
+						&& cc instanceof Security2CCTransferEnd,
 					inclusionTimeouts.TA5,
 				)
 				.catch(() => "timeout" as const);
@@ -8491,12 +8624,19 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			if (chunk.length === 0) {
 				// Some SDK versions return an empty buffer when trying to read a buffer that is too long
 				// Fallback to a sane (but maybe slow) size
-				chunkSize = 48;
-				continue;
+				if (chunkSize > FALLBACK_NVM_CHUNK_SIZE) {
+					chunkSize = FALLBACK_NVM_CHUNK_SIZE;
+					continue;
+				}
+				throwEmptyNVMChunk(offset);
 			}
-			ret.set(chunk, offset);
-			offset += chunk.length;
-			if (chunkSize > chunk.length) chunkSize = chunk.length;
+			// Avoid overflowing the result buffer if the controller returns too much data
+			const usableChunk = chunk.subarray(0, ret.length - offset);
+			ret.set(usableChunk, offset);
+			offset += usableChunk.length;
+			if (chunkSize > usableChunk.length) {
+				chunkSize = usableChunk.length;
+			}
 
 			// Report progress for listeners
 			if (onProgress) setImmediate(() => onProgress(offset, size));
@@ -8547,15 +8687,24 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					offset,
 					Math.min(chunkSize, ret.length - offset),
 				);
-				if (chunkSize === 0xff && chunk.length === 0) {
+				if (chunk.length === 0) {
 					// Some SDK versions return an empty buffer when trying to read a buffer that is too long
 					// Fallback to a sane (but maybe slow) size
-					chunkSize = 48;
-					continue;
+					if (chunkSize > FALLBACK_NVM_CHUNK_SIZE) {
+						chunkSize = FALLBACK_NVM_CHUNK_SIZE;
+						continue;
+					}
+					// A read may legitimately end exactly at the end of the NVM
+					if (endOfFile) break;
+					throwEmptyNVMChunk(offset);
 				}
-				ret.set(chunk, offset);
-				offset += chunk.length;
-				if (chunkSize > chunk.length) chunkSize = chunk.length;
+				// Avoid overflowing the result buffer if the controller returns too much data
+				const usableChunk = chunk.subarray(0, ret.length - offset);
+				ret.set(usableChunk, offset);
+				offset += usableChunk.length;
+				if (chunkSize > usableChunk.length) {
+					chunkSize = usableChunk.length;
+				}
 
 				// Report progress for listeners
 				if (onProgress) setImmediate(() => onProgress(offset, size));
@@ -8615,7 +8764,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			group: { id: "controller-exclusive" },
 			// The radio is off during the restore, so other tasks cannot communicate anyways
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* restoreNVMTask() {
+			task: async function* restoreNVMTask(thisTask) {
 				// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
 				if (!(yield* waitFor(self.toggleRF(false)))) {
 					throw new ZWaveError(
@@ -8706,7 +8855,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				// Reset all info about all nodes, so they get re-interviewed.
 				self._nodes.clear();
 
-				yield* waitFor(self.driver.softResetAndRestart());
+				yield* waitFor(self.driver.softResetAndRestart(thisTask));
 			},
 			cleanup: async () => {
 				// Turn the radio back on when the task is dropped before it could do so itself
@@ -8865,8 +9014,20 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			this._productId,
 		);
 		// The write requests need 5 bytes more than the read response, so subtract 5 from the returned length
-		const chunkSize =
+		let chunkSize =
 			(await this.externalNVMReadBuffer(0, initialChunkSize)).length - 5;
+		if (chunkSize <= 0 && initialChunkSize > FALLBACK_NVM_CHUNK_SIZE) {
+			// Some SDK versions return an empty buffer when trying to read a buffer that is too long
+			chunkSize =
+				(await this.externalNVMReadBuffer(0, FALLBACK_NVM_CHUNK_SIZE))
+					.length - 5;
+		}
+		if (chunkSize <= 0) {
+			throw new ZWaveError(
+				`Cannot restore the NVM: The controller did not return a usable chunk size`,
+				ZWaveErrorCodes.Controller_CommandError,
+			);
+		}
 
 		for (let offset = 0; offset < nvmData.length; offset += chunkSize) {
 			await this.externalNVMWriteBuffer(
@@ -8934,14 +9095,26 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		// data, default to a sane (but maybe slow) size
 		const chunkSize = (await read(0, 0xff)).buffer.length || 48;
 
+		if (nvmData.at(-1) !== 0xff) {
+			this.driver.controllerLog.print(
+				"The last byte of the NVM backup is not 0xFF. On some controllers, restoring it erases the flash page after the NVM, which can hold the bootloader keys.",
+				"warn",
+			);
+		}
+
 		// Close NVM and re-open again for writing
 		await close();
 		await open();
 
 		for (let offset = 0; offset < nvmData.length; offset += chunkSize) {
+			// Trimming the last chunk is safe because the earlier chunks already erased the last NVM page
 			const { endOfFile } = await write(
 				offset,
-				nvmData.subarray(offset, offset + chunkSize),
+				trimNVMWriteAtEnd(
+					offset,
+					nvmData.subarray(offset, offset + chunkSize),
+					size,
+				),
 			);
 
 			// Report progress for listeners
@@ -9217,71 +9390,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	}
 
 	/** Ensures that the device ID used to request a firmware update matches the device the firmware update is for */
-	private async ensureFirmwareDeviceIdMatches(
-		node: ZWaveNode,
-		deviceId: FirmwareUpdateDeviceID,
-	): Promise<void> {
-		if (
-			deviceId.rfRegion !== undefined
-			&& this.rfRegion !== NOT_KNOWN
-			&& deviceId.rfRegion !== this.rfRegion
-		) {
-			throw new ZWaveError(
-				`Cannot update firmware for node ${node.id}: The firmware update is for a different region!`,
-				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
-			);
-		}
-
-		const manufacturerResponse =
-			await node.commandClasses["Manufacturer Specific"].get();
-
-		if (!manufacturerResponse) {
-			throw new ZWaveError(
-				`Cannot check for firmware updates for node ${node.id}: Failed to query fingerprint from the node!`,
-				ZWaveErrorCodes.FWUpdateService_MissingInformation,
-			);
-		}
-
-		// Query the version using both possible commands to ensure we have the full version
-		const versionResponse = await node.commandClasses.Version.get();
-		if (!versionResponse) {
-			throw new ZWaveError(
-				`Cannot check for firmware updates for node ${node.id}: Failed to query firmware version from the node!`,
-				ZWaveErrorCodes.FWUpdateService_MissingInformation,
-			);
-		}
-		if (
-			node.commandClasses.Version.supportsCommand(
-				VersionCommand.ZWaveSoftwareGet,
-			)
-		) {
-			const softwareResponse =
-				await node.commandClasses.Version.getZWaveSoftware();
-			if (!softwareResponse) {
-				throw new ZWaveError(
-					`Cannot check for firmware updates for node ${node.id}: Failed to query firmware version from the node!`,
-					ZWaveErrorCodes.FWUpdateService_MissingInformation,
-				);
-			}
-		}
-
-		if (
-			node.manufacturerId !== deviceId.manufacturerId
-			|| node.productType !== deviceId.productType
-			|| node.productId !== deviceId.productId
-		) {
-			throw new ZWaveError(
-				`Cannot update firmware for node ${node.id}: The firmware update is for a different device!`,
-				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
-			);
-		} else if (node.firmwareVersion !== deviceId.firmwareVersion) {
-			throw new ZWaveError(
-				`Cannot update firmware for node ${node.id}: The update is for a different original firmware version!`,
-				ZWaveErrorCodes.FWUpdateService_DeviceMismatch,
-			);
-		}
-	}
-
 	/**
 	 * Downloads the desired firmware update(s) from the Z-Wave JS firmware update service and updates the firmware of the given node.
 	 * @param updateInfo The desired entry from the updates array that was returned by {@link getAvailableFirmwareUpdates}.
@@ -9295,16 +9403,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		updateInfo: FirmwareUpdateInfo,
 		options?: FirmwareUpdateOptions,
 	): Promise<FirmwareUpdateResult> {
-		// Don't let two firmware updates happen in parallel
-		if (this.isAnyOTAFirmwareUpdateInProgress()) {
-			const message = `Failed to start the update: A firmware update is already in progress on this network!`;
-			this.driver.controllerLog.print(message, "error");
-			throw new ZWaveError(
-				message,
-				ZWaveErrorCodes.FirmwareUpdateCC_NetworkBusy,
-			);
-		}
-
 		// Don't allow updating firmware when the controller is currently updating its own firmware
 		if (this.driver.isOTWFirmwareUpdateInProgress()) {
 			const message = `Failed to start the update: The controller is currently being updated!`;
@@ -9315,93 +9413,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 		}
 
-		const files = updateInfo.files;
-		const validateDeviceId = updateInfo.device;
-
-		// We made a breaking change to the method signature. files should never be undefined, unless applications still
-		// use the old signature.
-		if (files?.length === 0) {
-			throw new ZWaveError(
-				`At least one update must be provided`,
-				ZWaveErrorCodes.Argument_Invalid,
-			);
-		}
-
 		const node = this.nodes.getOrThrow(nodeId);
-		this.driver.controllerLog.logNode(
-			nodeId,
-			`OTA firmware update started, downloading ${files.length} updates...`,
-		);
-
-		const loglevel = this.driver.getLogConfig().level;
-
-		const firmwares: Firmware[] = [];
-		for (let i = 0; i < files.length; i++) {
-			const update = files[i];
-			const logMessage = `Downloading firmware update ${i} of ${files.length}...`;
-			this.driver.controllerLog.logNode(nodeId, {
-				message:
-					loglevel === "silly"
-						? logText(logMessage, {
-								nested: logDict({
-									URL: update.url,
-									integrity: update.integrity,
-								}),
-							})
-						: logMessage,
-			});
-
-			try {
-				const firmware = await downloadFirmwareUpdate(update);
-				firmwares.push(firmware);
-			} catch (e: any) {
-				let message = `Downloading the firmware update for node ${nodeId} failed:\n`;
-				if (isZWaveError(e)) {
-					// Pass "real" Z-Wave errors through
-					throw new ZWaveError(message + e.message, e.code);
-				} else if (e.response) {
-					// And construct a better error message for HTTP errors
-					if (
-						isObject(e.response.data)
-						&& typeof e.response.data.message === "string"
-					) {
-						message += `${e.response.data.message} `;
-					}
-					message += `[${e.response.status} ${e.response.statusText}]`;
-				} else if (typeof e.message === "string") {
-					message += e.message;
-				} else {
-					message += `Failed to download firmware update!`;
-				}
-
-				throw new ZWaveError(
-					message,
-					ZWaveErrorCodes.FWUpdateService_RequestError,
-				);
-			}
-		}
-
-		// Make sure we're not applying the update to the wrong device
-		if (validateDeviceId) {
-			this.driver.controllerLog.logNode(
-				nodeId,
-				`All updates downloaded, validating device IDs...`,
-			);
-
-			await this.ensureFirmwareDeviceIdMatches(node, validateDeviceId);
-
-			this.driver.controllerLog.logNode(
-				nodeId,
-				`Device IDs match, installing firmware updates...`,
-			);
-		} else {
-			this.driver.controllerLog.logNode(
-				nodeId,
-				`All updates downloaded, installing...`,
-			);
-		}
-
-		return node.updateFirmware(firmwares, options);
+		return node.updateFirmware(updateInfo, options);
 	}
 
 	private _currentLearnMode: LearnModeIntent | undefined;
@@ -9870,8 +9883,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			const kexSet = await this.driver
 				.waitForCommand<Security2CCKEXSet | Security2CCKEXFail>(
 					(cc) =>
-						cc instanceof Security2CCKEXSet
-						|| cc instanceof Security2CCKEXFail,
+						cc.nodeId === bootstrappingNode.id
+						&& (cc instanceof Security2CCKEXSet
+							|| cc instanceof Security2CCKEXFail),
 					inclusionTimeouts.TB2,
 				)
 				.catch(() => "timeout" as const);
@@ -9914,12 +9928,18 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				return SecurityBootstrapFailure.ParameterMismatch;
 			}
 
-			const matchingKeys = kexSet.grantedKeys.filter(
-				(k) =>
-					securityClassOrder.includes(k as any)
-					&& requested.securityClasses.includes(k),
-			);
-			if (!matchingKeys.length) {
+			if (
+				kexSet.grantedKeys.some(
+					(k) => !requested.securityClasses.includes(k),
+				)
+			) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message: `Security S2 bootstrapping failed: Security classes were granted that were not requested.`,
+					level: "warn",
+				});
+				await abort(KEXFailType.NoKeyMatch);
+				return SecurityBootstrapFailure.ParameterMismatch;
+			} else if (!kexSet.grantedKeys.length) {
 				this.driver.controllerLog.logNode(bootstrappingNode.id, {
 					message: `Security S2 bootstrapping failed: None of the requested security classes are granted.`,
 					level: "warn",
@@ -9928,7 +9948,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				return SecurityBootstrapFailure.ParameterMismatch;
 			}
 
-			const highestGranted = getHighestSecurityClass(matchingKeys);
+			const highestGranted = getHighestSecurityClass(kexSet.grantedKeys);
 			const requiresAuthentication =
 				highestGranted === SecurityClass.S2_AccessControl
 				|| highestGranted === SecurityClass.S2_Authenticated;
@@ -9959,8 +9979,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					Security2CCPublicKeyReport | Security2CCKEXFail
 				>(
 					(cc) =>
-						cc instanceof Security2CCPublicKeyReport
-						|| cc instanceof Security2CCKEXFail,
+						cc.nodeId === bootstrappingNode.id
+						&& (cc instanceof Security2CCPublicKeyReport
+							|| cc instanceof Security2CCKEXFail),
 					inclusionTimeouts.TB3,
 				)
 				.catch(() => "timeout" as const);
@@ -9968,13 +9989,33 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			if (pubKeyReport === "timeout") return abortTimeout();
 			if (pubKeyReport instanceof Security2CCKEXFail) {
 				return abortCanceled();
+			} else if (!pubKeyReport.includingNode) {
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message: `Security S2 bootstrapping failed: Public Key Report has invalid fields.`,
+					direction: "inbound",
+					level: "warn",
+				});
+				await abort(KEXFailType.BootstrappingCanceled);
+				return SecurityBootstrapFailure.ParameterMismatch;
 			}
 
 			const includingNodePubKey = pubKeyReport.publicKey;
-			const sharedSecret = await deriveSharedECDHSecret({
-				publicKey: includingNodePubKey,
-				privateKey: keyPair.privateKey,
-			});
+			let sharedSecret: BytesView;
+			try {
+				sharedSecret = await deriveSharedECDHSecret({
+					publicKey: includingNodePubKey,
+					privateKey: keyPair.privateKey,
+				});
+			} catch {
+				// The crypto backends reject invalid public keys, e.g. low-order points
+				// that would result in a predictable all-zero secret
+				this.driver.controllerLog.logNode(bootstrappingNode.id, {
+					message: `Security S2 bootstrapping failed: the public key is invalid`,
+					level: "warn",
+				});
+				await abort(KEXFailType.BootstrappingCanceled);
+				return SecurityBootstrapFailure.Unknown;
+			}
 
 			// Derive temporary key from ECDH key pair - this will allow us to receive the node's KEX SET commands
 			const tempKeys = await deriveTempKeys(
@@ -10088,8 +10129,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 						Security2CCNetworkKeyReport | Security2CCKEXFail
 					>(
 						(cc) =>
-							cc instanceof Security2CCNetworkKeyReport
-							|| cc instanceof Security2CCKEXFail,
+							cc.nodeId === bootstrappingNode.id
+							&& (cc instanceof Security2CCNetworkKeyReport
+								|| cc instanceof Security2CCKEXFail),
 						inclusionTimeouts.TB4,
 					)
 					.catch(() => "timeout" as const);
@@ -10176,8 +10218,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 						Security2CCTransferEnd | Security2CCKEXFail
 					>(
 						(cc) =>
-							cc instanceof Security2CCTransferEnd
-							|| cc instanceof Security2CCKEXFail,
+							cc.nodeId === bootstrappingNode.id
+							&& (cc instanceof Security2CCTransferEnd
+								|| cc instanceof Security2CCKEXFail),
 						inclusionTimeouts.TB5,
 					)
 					.catch(() => "timeout" as const);
@@ -10188,7 +10231,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				}
 
 				if (
-					!keyReport.isEncapsulatedWith(
+					!transferEnd.isEncapsulatedWith(
 						CommandClasses["Security 2"],
 						Security2Command.MessageEncapsulation,
 					)

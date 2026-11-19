@@ -173,6 +173,16 @@
 			"defaultValue": 99
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Button 1",
+			"description": "Only sent in Scene Controller mode (parameter 20 = 0)"
+		},
+		"2": {
+			"label": "Button 2",
+			"description": "Only sent in Scene Controller mode (parameter 20 = 0)"
+		}
+	},
 	"metadata": {
 		"inclusion": "Quickly click one of the buttons three times. The LED starts blinking yellow.",
 		"exclusion": "1. Quickly click one of the buttons three times, then press and hold it for 12 seconds.\n2. Release the button when the device glows green.\n3. Quickly click the button to confirm. The LED starts blinking yellow.",

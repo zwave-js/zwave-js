@@ -22,7 +22,11 @@ export const serial: Serial = {
 			// ESPHome connection: esphome://host:port or esphome://host:port?key=base64key
 			// If key parameter is present, use encrypted (Noise) connection
 			const url = new URL(path);
-			const encryptionKey = url.searchParams.get("key") ?? undefined;
+			// URLSearchParams decodes "+" as a space. Base64 keys never contain spaces,
+			// so restore them to accept keys pasted from ESPHome without URL-encoding.
+			const encryptionKey = url.searchParams
+				.get("key")
+				?.replaceAll(" ", "+");
 
 			return createESPHomeFactory({
 				host: url.hostname,

@@ -67,6 +67,8 @@ export type SyncExternalConfigDirResult =
 			version: string;
 	  };
 
+const osManagedEntries = new Set([".DS_Store", "Thumbs.db", "desktop.ini"]);
+
 /**
  * Synchronizes or updates the external config directory and returns whether the directory is in a state that can be used
  */
@@ -125,11 +127,51 @@ export async function syncExternalConfigDir(
 	// Nothing to wipe, the external dir is good to go
 	if (!wipe) return { success: true, version: externalVersion! };
 
-	// Wipe and override the external dir
+	// The directory is configured by the user and might point to the wrong location.
+	// Only wipe it if it was created by us, which is indicated by the version file,
+	// or if it contains nothing but files the OS creates when browsing a folder.
+	try {
+		const entries = await fs.readDir(extConfigDir);
+		let isSafeToWipe = true;
+		if (entries.includes("version")) {
+			const stat = await fs.stat(externalVersionFilename);
+			isSafeToWipe = stat.isFile();
+		} else {
+			for (const entry of entries) {
+				if (!osManagedEntries.has(entry)) {
+					isSafeToWipe = false;
+					break;
+				}
+				const stat = await fs.stat(path.join(extConfigDir, entry));
+				if (!stat.isFile()) {
+					isSafeToWipe = false;
+					break;
+				}
+			}
+		}
+		if (!isSafeToWipe) {
+			logger.print(
+				`External config dir ${extConfigDir} contains unexpected entries. Delete it to let Z-Wave JS recreate it - using embedded config`,
+				"error",
+			);
+			return { success: false };
+		}
+	} catch {
+		logger.print(
+			`Synchronizing external config dir failed - using embedded config`,
+			"error",
+		);
+		return { success: false };
+	}
+
+	// Wipe and populate the external dir
 	try {
 		logger.print(`Synchronizing external config dir ${extConfigDir}...`);
 		await fs.deleteDir(extConfigDir);
 		await fs.ensureDir(extConfigDir);
+		// Mark the directory as ours before copying, so an interrupted sync can be wiped
+		// on the next start. The empty version is invalid, which forces that wipe.
+		await writeTextFile(fs, externalVersionFilename, "", "utf8");
 		await copyFilesRecursive(fs, configDir, extConfigDir, (src) =>
 			src.endsWith(".json"),
 		);

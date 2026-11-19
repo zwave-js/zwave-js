@@ -77,5 +77,21 @@
 			"label": "Buzzer Confirmation",
 			"defaultValue": 1
 		}
-	]
+	],
+	"scenes": {
+		"20": {
+			"label": "Valid Code",
+			"description": "With parameter 5 = 1, the user code number (1-20) is sent as the scene ID instead"
+		},
+		"21": {
+			"label": "Bell Button Single Press"
+		},
+		"22": {
+			"label": "Bell Button Double Press"
+		},
+		"23": {
+			"label": "Invalid Code",
+			"description": "Sent when an invalid code is entered"
+		}
+	}
 }

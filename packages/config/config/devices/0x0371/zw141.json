@@ -359,6 +359,14 @@
 			"$import": "~/0x0086/templates/aeotec_template.json#factory_reset_exclude"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Switch S1"
+		},
+		"2": {
+			"label": "Switch S2"
+		}
+	},
 	"metadata": {
 		"inclusion": "3.5.2 Classic inclusion Learn Mode\n1. Set your Z-Wave Controller into its 'Add Device' mode in order to add the product into your Z-Wave system. Refer to the Controller's manual if you are unsure of how to perform this step.\n2. Make sure the product is powered. If not, plug it into a wall socket and power on; its LED will be breathing blue light all the time.\n3. Click Action Button once, it will quickly flash blue light for 30 seconds until it is added into the network. It will become constantly bright yellow light after being assigned a NodeID.\n4. If your Z-Wave Controller supports S2 encryption, enter the first 5 digits of DSK into your Controller's interface if/when requested. The DSK is printed on its housing.\n5. If Adding fails, it will bright red light for 2s and then become breathing blue light; repeat steps 1 to 4. Contact us for further support if needed.\n6. If Adding succeeds, it will bright blue light for 2s and then turn to Load Indicator Mode. Now, this product is a part of your Z-Wave home control system. You can configure it and its automations via your Z-Wave system; please refer to your software's user guide for precise instructions",
 		"exclusion": "3.6 How to Remove the device from Z-Wave network\n1. Set your Z-Wave Controller into its 'Remove Device' mode in order to remove the product from your Z-Wave system.Refer to the Controller's manual if you are unsure of how to perform this step.\n2. Click Action Button/S1/S2(external switch need to be identified first) 6 times will enter exclusion mode.\n3. If Removing fails, it will bright red light for 2s then turn back to Regular Light Mode, repeat steps 1-2. Contact us for further support if needed.\n4. If Removing succeeds, it will become breathing blue light. Now, it is removed from Z-Wave network successfully",

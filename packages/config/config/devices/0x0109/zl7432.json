@@ -19,11 +19,21 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Update Controller",
+					"maxNodes": 5,
+					"isLifeline": true
+				}
+			}
+		},
 		"1": {
-			"label": "Update Controller",
-			"maxNodes": 5,
-			"isLifeline": true
+			"label": "Relay 1"
+		},
+		"2": {
+			"label": "Relay 2"
 		}
 	},
 	"compat": {

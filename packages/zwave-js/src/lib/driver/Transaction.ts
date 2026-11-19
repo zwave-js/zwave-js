@@ -269,6 +269,7 @@ export class Transaction implements Comparable<Transaction> {
 			"tag",
 			"requestWakeUpOnDemand",
 			"requestStatusUpdates",
+			"busyAttempts",
 		] as const) {
 			(ret as any)[prop] = this[prop];
 		}
@@ -418,6 +419,9 @@ export class Transaction implements Comparable<Transaction> {
 
 	/** Whether follow-up Supervision status updates are requested. */
 	public requestStatusUpdates: boolean = false;
+
+	/** How often the node answered this transaction with Application Busy */
+	public busyAttempts: number = 0;
 
 	/** Internal information used to identify or mark this transaction */
 	public tag?: any;

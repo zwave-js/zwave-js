@@ -35,6 +35,7 @@ import type { Driver } from "../../driver/Driver.js";
 import { cacheKeys } from "../../driver/NetworkCache.js";
 import type { DeviceClass } from "../DeviceClass.js";
 import type { EndpointDump } from "../Dump.js";
+import type { EndpointGroup } from "../EndpointGroup.js";
 import type { ZWaveNode } from "../Node.js";
 
 /**
@@ -129,6 +130,15 @@ export class EndpointBase
 	public get endpointLabel(): string | undefined {
 		return this.tryGetNode()?.deviceConfig?.endpoints?.get(this.index)
 			?.label;
+	}
+
+	/** Returns the endpoint group this endpoint belongs to */
+	public getGroup(): EndpointGroup | undefined {
+		const groups = this.tryGetNode()?.endpointGroups;
+		if (!groups) return;
+		for (const group of groups.values()) {
+			if (group.endpointIndices.includes(this.index)) return group;
+		}
 	}
 
 	/** Resets all stored information of this endpoint */
@@ -360,7 +370,7 @@ export class EndpointBase
 		requireSupport: boolean = true,
 	): CommandClasses extends T ? CCAPI : CCToAPI<T> {
 		// Trust me on this, TypeScript :)
-		return CCAPI.create(ccId, this.driver, this, requireSupport) as any;
+		return CCAPI.create(ccId, this.driver, this, requireSupport);
 	}
 
 	private _commandClassAPIs = new Map<CommandClasses, CCAPI>();
@@ -499,6 +509,7 @@ export class EndpointBase
 	public createEndpointDump(): EndpointDump {
 		const ret: EndpointDump = {
 			index: this.index,
+			endpointLabel: this.endpointLabel,
 			deviceClass: "unknown",
 			commandClasses: {},
 			maySupportBasicCC: this.maySupportBasicCC(),

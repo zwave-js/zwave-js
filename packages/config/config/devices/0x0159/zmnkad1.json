@@ -14,27 +14,44 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "LEDs On/Off",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Brightness Change",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Color Change",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Relay On/Off",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "LEDs"
 		},
 		"2": {
-			"label": "LEDs On/Off",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "Brightness Change",
-			"maxNodes": 5
-		},
-		"4": {
-			"label": "Color Change",
-			"maxNodes": 5
-		},
-		"5": {
-			"label": "Relay On/Off",
-			"maxNodes": 5
+			"label": "Relay"
+		}
+	},
+	"endpointGroups": {
+		"1": {
+			"label": "LEDs",
+			"endpoints": [1],
+			"isMainDevice": true
 		}
 	},
 	"paramInformation": [

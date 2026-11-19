@@ -10,6 +10,9 @@
 		".github/workflows/agentics-maintenance.yml",
 	],
 	postUpdateOptions: ["yarnDedupeHighest"],
+	// Let GitHub merge once renovate-approve.yml has approved and CI is green,
+	// instead of waiting for the next Renovate run
+	platformAutomerge: true,
 	customManagers: [
 		{
 			// gh-aw is installed by version pin in several workflows. Bumping the pin regenerates
@@ -28,6 +31,12 @@
 			// Raise together with the minimum supported Node.js version
 			matchPackageNames: ["@types/node"],
 			allowedVersions: "<21",
+		},
+		{
+			// Switch the @tsconfig base by hand when the minimum supported Node.js version changes
+			matchPackageNames: ["@tsconfig/node**"],
+			matchUpdateTypes: ["replacement"],
+			enabled: false,
 		},
 		{
 			// All gh-aw pins move in one PR so the recompiled workflows match

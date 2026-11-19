@@ -1,9 +1,11 @@
+import { refreshSceneMetadataFromConfigFile } from "@zwave-js/cc/CentralSceneCC";
 import { refreshConfigParamMetadataFromConfigFile } from "@zwave-js/cc/ConfigurationCC";
 import { DeviceConfig, parseDeviceConfigHash } from "@zwave-js/config";
 import { InterviewStage, type MaybeNotKnown, NOT_KNOWN } from "@zwave-js/core";
 import { Bytes, type BytesView, formatId } from "@zwave-js/shared";
 
 import { cacheKeys } from "../../driver/NetworkCache.js";
+import { EndpointGroup } from "../EndpointGroup.js";
 
 import { FirmwareUpdateMixin } from "./70_FirmwareUpdate.js";
 
@@ -12,6 +14,9 @@ export interface NodeDeviceConfig {
 	 * Contains additional information about this node, loaded from a config file
 	 */
 	get deviceConfig(): MaybeNotKnown<DeviceConfig>;
+
+	/** The endpoint groups defined in the device configuration */
+	readonly endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
 
 	/**
 	 * Returns the manufacturer/brand name defined in the device configuration,
@@ -59,6 +64,15 @@ export abstract class DeviceConfigMixin
 	}
 	protected set deviceConfig(value: MaybeNotKnown<DeviceConfig>) {
 		this._deviceConfig = value;
+	}
+
+	protected _endpointGroups: ReadonlyMap<number, EndpointGroup> | undefined;
+
+	/** The endpoint groups defined in the device configuration */
+	public get endpointGroups():
+		| ReadonlyMap<number, EndpointGroup>
+		| undefined {
+		return this._endpointGroups;
 	}
 
 	/**
@@ -166,6 +180,14 @@ export abstract class DeviceConfigMixin
 			this.firmwareVersion,
 			this.sdkVersion,
 		);
+		this._endpointGroups =
+			this.deviceConfig?.endpointGroups
+			&& new Map(
+				[...this.deviceConfig.endpointGroups].map(([id, config]) => [
+					id,
+					new EndpointGroup(this.id, this.driver, config),
+				]),
+			);
 
 		if (!this.deviceConfig) {
 			this.driver.controllerLog.logNode(
@@ -237,11 +259,16 @@ export abstract class DeviceConfigMixin
 				this._currentDeviceConfigHash = this.cachedDeviceConfigHash;
 			}
 
-			// Apply all param metadata from the device config dynamically.
+			// Apply all param metadata and scene labels from the device config dynamically.
 			// This handles updates to existing params, addition of new params,
 			// and removal/hiding of old params.
 			for (const ep of this.getAllEndpoints()) {
 				refreshConfigParamMetadataFromConfigFile(
+					this.driver,
+					this.id,
+					ep.index,
+				);
+				refreshSceneMetadataFromConfigFile(
 					this.driver,
 					this.id,
 					ep.index,

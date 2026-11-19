@@ -28,19 +28,31 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Dimmer Status",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Relay Status",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"$if": "firmwareVersion >= 3.20",
+			"label": "Dimmer"
 		},
 		"2": {
-			"label": "Dimmer Status",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "Relay Status",
-			"maxNodes": 5
+			"$if": "firmwareVersion >= 3.20",
+			"label": "Relay"
 		}
 	},
 	"paramInformation": [
@@ -391,6 +403,17 @@
 			"description": "Selects the LED indicator color in the opposite switch state when parameter 1 is set to value 0 or 1."
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Dimmer Upper Paddle"
+		},
+		"2": {
+			"label": "Dimmer Lower Paddle"
+		},
+		"3": {
+			"label": "Relay Button"
+		}
+	},
 	"compat": [
 		{
 			// This device exposes a Multilevel Switch (Dimmer) on endpoint 0, and a Binary Switch (Relay) on endpoint 1

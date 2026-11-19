@@ -17,6 +17,9 @@
 		"1": { "label": "Shutter" },
 		"2": { "label": "Slat Tilt" }
 	},
+	"endpointGroups": {
+		"1": { "label": "Shutter", "endpoints": [1, 2], "isMainDevice": true }
+	},
 	"paramInformation": [
 		{
 			"#": "10",

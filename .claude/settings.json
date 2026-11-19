@@ -1,4 +1,10 @@
 {
+	"attribution": {
+		"commit": "",
+		"pr": "",
+		"sessionUrl": false
+	},
+	"enabledMcpjsonServers": ["zwave-dev"],
 	"permissions": {
 		"allow": [
 			"Bash(yarn workspace @zwave-js/bindings-browser run build:*)",

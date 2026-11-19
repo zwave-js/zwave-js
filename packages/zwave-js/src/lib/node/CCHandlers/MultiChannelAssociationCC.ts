@@ -16,7 +16,7 @@ import {
 import type { ZWaveController } from "../../controller/Controller.js";
 import type { ZWaveNode } from "../Node.js";
 
-import { MAX_ASSOCIATIONS } from "./_shared.js";
+import { MAX_ASSOCIATIONS, logCommandHandlerError } from "./_shared.js";
 
 export async function handleMultiChannelAssociationSupportedGroupingsGet(
 	ctx: PersistValuesContext & LogNode,
@@ -37,7 +37,11 @@ export async function handleMultiChannelAssociationSupportedGroupingsGet(
 		});
 
 	// We only "support" the lifeline group
-	await api.reportGroupCount(1);
+	try {
+		await api.reportGroupCount(1);
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export async function handleMultiChannelAssociationGet(
@@ -74,13 +78,17 @@ export async function handleMultiChannelAssociationGet(
 				endpoint: endpoint!,
 			})) ?? [];
 
-	await api.sendReport({
-		groupId,
-		maxNodes: MAX_ASSOCIATIONS,
-		nodeIds,
-		endpoints,
-		reportsToFollow: 0,
-	});
+	try {
+		await api.sendReport({
+			groupId,
+			maxNodes: MAX_ASSOCIATIONS,
+			nodeIds,
+			endpoints,
+			reportsToFollow: 0,
+		});
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export function handleMultiChannelAssociationSet(

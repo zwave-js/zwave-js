@@ -14,27 +14,43 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Button 1",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Button 2",
+					"maxNodes": 5
+				},
+				"8": {
+					"label": "Button 3",
+					"maxNodes": 5
+				},
+				"11": {
+					"label": "Button 4",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Switch 1"
 		},
 		"2": {
-			"label": "Button 1",
-			"maxNodes": 5
+			"label": "Switch 2"
 		},
-		"5": {
-			"label": "Button 2",
-			"maxNodes": 5
+		"3": {
+			"label": "Switch 3"
 		},
-		"8": {
-			"label": "Button 3",
-			"maxNodes": 5
-		},
-		"11": {
-			"label": "Button 4",
-			"maxNodes": 5
+		"4": {
+			"label": "Switch 4"
 		}
 	},
 	"paramInformation": [

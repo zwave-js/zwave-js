@@ -18,20 +18,30 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true,
+					"multiChannel": true
+				},
+				"2": {
+					"label": "Binary Switch Report EP1",
+					"maxNodes": 3
+				},
+				"3": {
+					"label": "Binary Switch Report EP2",
+					"maxNodes": 3
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true,
-			"multiChannel": true
+			"label": "Load 1"
 		},
 		"2": {
-			"label": "Binary Switch Report EP1",
-			"maxNodes": 3
-		},
-		"3": {
-			"label": "Binary Switch Report EP2",
-			"maxNodes": 3
+			"label": "Load 2"
 		}
 	},
 	"paramInformation": [

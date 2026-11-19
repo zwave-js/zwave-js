@@ -1010,5 +1010,25 @@
 				}
 			]
 		}
-	]
+	],
+	"scenes": {
+		"1": {
+			"label": "Button 1"
+		},
+		"2": {
+			"label": "Button 2"
+		},
+		"3": {
+			"label": "Button 3"
+		},
+		"4": {
+			"label": "Button 4"
+		},
+		"5": {
+			"label": "Button 5"
+		},
+		"6": {
+			"label": "Button 6"
+		}
+	}
 }

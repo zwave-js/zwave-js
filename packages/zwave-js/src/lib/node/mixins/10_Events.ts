@@ -43,4 +43,8 @@ export abstract class NodeEventsMixin extends NodeSecurityMixin {
 		event: TEvent,
 		callback: AbstractNodeEvents<this>[TEvent],
 	): this;
+	protected abstract _off<TEvent extends keyof AbstractNodeEvents<this>>(
+		event: TEvent,
+		callback: AbstractNodeEvents<this>[TEvent],
+	): this;
 }

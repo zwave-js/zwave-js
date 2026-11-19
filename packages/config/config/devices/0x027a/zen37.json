@@ -186,6 +186,20 @@
 			"defaultValue": 0
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Button 1"
+		},
+		"2": {
+			"label": "Button 2"
+		},
+		"3": {
+			"label": "Button 3"
+		},
+		"4": {
+			"label": "Button 4"
+		}
+	},
 	"metadata": {
 		"inclusion": "Click the upper paddle 6 times quickly. The LED indicator will blink blue during the process and light up green once added successfully. It will light up red if failed.",
 		"exclusion": "Click the lower paddle 6 times very quickly.",

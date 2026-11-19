@@ -37,7 +37,7 @@
 		},
 		{
 			"#": "7",
-			"$if": "firmwareVersion >= 13.00",
+			"$if": "firmwareVersion >= 13.0",
 			"$import": "templates/wave_template.json#detached_mode",
 			"label": "Detach O Output"
 		},
@@ -78,31 +78,31 @@
 		},
 		{
 			"#": "91",
-			"$if": "firmwareVersion < 13.00",
+			"$if": "firmwareVersion < 13.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Water"
 		},
 		{
 			"#": "92",
-			"$if": "firmwareVersion < 13.00",
+			"$if": "firmwareVersion < 13.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Smoke"
 		},
 		{
 			"#": "93",
-			"$if": "firmwareVersion < 13.00",
+			"$if": "firmwareVersion < 13.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: CO"
 		},
 		{
 			"#": "94",
-			"$if": "firmwareVersion < 13.00",
+			"$if": "firmwareVersion < 13.0",
 			"$import": "templates/wave_template.json#alarm_configuration",
 			"label": "Alarm Configuration: Heat"
 		},
 		{
 			"#": "117",
-			"$if": "firmwareVersion >= 13.00",
+			"$if": "firmwareVersion >= 13.0",
 			"$import": "templates/wave_template.json#remote_reboot"
 		},
 		{

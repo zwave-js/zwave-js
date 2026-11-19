@@ -308,6 +308,23 @@
 			]
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Center Button"
+		},
+		"2": {
+			"label": "Up Button"
+		},
+		"3": {
+			"label": "Down Button"
+		},
+		"4": {
+			"label": "Left Button"
+		},
+		"5": {
+			"label": "Right Button"
+		}
+	},
 	"metadata": {
 		"inclusion": "Network Wide Inclusion To A Z-Wave™ Network\nRefer to your primary controller instructions to process the inclusion / exclusion setup procedure.\nWhen prompted by your primary controller, click the z-wave button Three times",
 		"exclusion": "Network Wide Inclusion To A Z-Wave™ Network\nRefer to your primary controller instructions to process the inclusion / exclusion setup procedure.\nWhen prompted by your primary controller, click the z-wave button Three times .\nREMOVE/Exclusion to a Z-Wave Network Same operation",

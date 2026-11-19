@@ -22,6 +22,9 @@
 			// Only active when in Venetian Blind mode
 		}
 	},
+	"endpointGroups": {
+		"1": { "label": "Shutter", "endpoints": [1, 2], "isMainDevice": true }
+	},
 	"paramInformation": [
 		{
 			"#": "5",
@@ -90,7 +93,9 @@
 		},
 		{
 			"#": "81",
-			"$import": "templates/wave_template.json#max_moving_time"
+			"$import": "templates/wave_template.json#max_moving_time",
+			"unit": "0.01 seconds",
+			"defaultValue": 6000
 		},
 		{
 			"#": "105",

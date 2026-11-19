@@ -56,7 +56,7 @@ on:
       docs-age-days: ${{ steps.docs-index.outputs.age-days }}
       docs-source: ${{ steps.docs-index.outputs.source }}
       docs-status: ${{ steps.docs-index.outputs.status }}
-      github-token: ${{ secrets.BOT_TOKEN }}
+      github-token: ${{ github.token }}
       posts: ${{ steps.posts-index.outputs.found }}
       posts-age-days: ${{ steps.posts-index.outputs.age-days }}
       posts-source: ${{ steps.posts-index.outputs.source }}
@@ -85,7 +85,7 @@ on:
         core.setOutput("shouldContinue", shouldContinue ? "true" : "false");
   - if: steps.prepare.outputs.shouldContinue == 'true'
     name: Upload handoff for the judge
-    uses: actions/upload-artifact@v7.0.1
+    uses: actions/upload-artifact@v7.0.2
     with:
       name: docs-answer-handoff
       overwrite: true
@@ -100,13 +100,13 @@ permissions:
 if: needs.pre_activation.outputs.gate_result == 'success'
 network: {}
 imports:
-- zwave-js/bot-workflows/workflows/shared/hardening.md@75148e07b701ca92e052212a9b7710864068ef6e
-- zwave-js/bot-workflows/workflows/shared/docs-answer-judge.md@75148e07b701ca92e052212a9b7710864068ef6e
+- zwave-js/bot-workflows/workflows/shared/hardening.md@6cc2957100d8ebbcf1c21d9233165642f2868d4d
+- zwave-js/bot-workflows/workflows/shared/docs-answer-judge.md@6cc2957100d8ebbcf1c21d9233165642f2868d4d
 safe-outputs:
   timeout-minutes: 10
 steps:
 - name: Download handoff
-  uses: actions/download-artifact@v8.0.1
+  uses: actions/download-artifact@v8.0.2
   with:
     name: docs-answer-handoff
     path: /tmp/gh-aw/agent/
@@ -114,8 +114,9 @@ description: Answer questions in issues and discussions based on the documentati
 engine:
   id: copilot
   max-turns: 5
+model: claude-sonnet-5
 runs-on-slim: ubuntu-latest
-source: zwave-js/bot-workflows/workflows/answer-from-docs.md@bb324b62a0e6b629d59a081bbf0391bb851c8c1d
+source: zwave-js/bot-workflows/workflows/answer-from-docs.md@6e95c90f53efc77bd804027ec6d17b667740ee91
 timeout-minutes: 15
 ---
 Follow the Documentation Answer Judge instructions below.

@@ -4,6 +4,16 @@ import { evaluate } from "./Logic.js";
 
 const tests = [
 	{
+		logic: "firmwareVersion >= 13.00",
+		context: { firmwareVersion: "13.0" },
+		expected: false,
+	},
+	{
+		logic: "firmwareVersion >= 13.0",
+		context: { firmwareVersion: "13.0" },
+		expected: true,
+	},
+	{
 		logic: "firmwareVersion > 1.0",
 		context: { firmwareVersion: "1.5" },
 		expected: true,

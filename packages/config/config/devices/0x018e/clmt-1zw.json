@@ -14,6 +14,14 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"1": {
+			"label": "CT1"
+		},
+		"2": {
+			"label": "CT2"
+		}
+	},
 	"metadata": {
 		"inclusion": "Plug the AC Input cable into the socket to power on the Clamp Meter, then press the Function Button 3 times within 1.5 seconds.",
 		"exclusion": "Press the Function Button 3 times within 1.5 seconds. The device will be removed from the Z-Wave network.",

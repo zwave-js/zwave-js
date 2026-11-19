@@ -19,6 +19,7 @@ import {
 	logText,
 	parseBitMask,
 	supervisedCommandSucceeded,
+	parseEnumValue,
 	validatePayload,
 } from "@zwave-js/core";
 import {
@@ -757,8 +758,7 @@ export class ColorSwitchCCReport extends ColorSwitchCC {
 
 	public static from(raw: CCRaw, ctx: CCParsingContext): ColorSwitchCCReport {
 		validatePayload(raw.payload.length >= 2);
-		const colorComponent: ColorComponent = raw.payload[0];
-		validatePayload(isEnumMember(ColorComponent, colorComponent));
+		const colorComponent = parseEnumValue(ColorComponent, raw.payload[0]);
 		const currentValue = raw.payload[1];
 		let targetValue: number | undefined;
 		let duration: Duration | undefined;
@@ -976,16 +976,13 @@ export class ColorSwitchCCSet extends ColorSwitchCC {
 		const populatedColorCount = raw.payload[0] & 0b11111;
 
 		validatePayload(raw.payload.length >= 1 + populatedColorCount * 2);
-		const colorTable: ColorTable = {};
+		const colorTable: Partial<Record<ColorKey, number>> = {};
 		let offset = 1;
 		for (let color = 0; color < populatedColorCount; color++) {
 			const component = raw.payload[offset];
 			const value = raw.payload[offset + 1];
 			const key = colorComponentToTableKey(component);
-			if (key) {
-				// @ts-expect-error
-				this.colorTable[key] = value;
-			}
+			if (key) colorTable[key] = value;
 			offset += 2;
 		}
 

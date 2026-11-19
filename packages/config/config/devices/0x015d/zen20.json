@@ -19,11 +19,30 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Outlet 1"
+		},
+		"2": {
+			"label": "Outlet 2"
+		},
+		"3": {
+			"label": "Outlet 3"
+		},
+		"4": {
+			"label": "Outlet 4"
+		},
+		"5": {
+			"label": "Outlet 5"
 		}
 	},
 	"paramInformation": [

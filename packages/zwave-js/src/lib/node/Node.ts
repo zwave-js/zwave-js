@@ -1134,6 +1134,7 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
 			this.supportsSecurity = undefined;
 			this.supportsBeaming = undefined;
 			this.deviceConfig = undefined;
+			this._endpointGroups = undefined;
 			this.currentDeviceConfigHash = undefined;
 			this.cachedDeviceConfigHash = undefined;
 			this._hasEmittedNoS0NetworkKeyError = false;
@@ -3369,7 +3370,7 @@ protocol version:      ${this.protocolVersion}`;
 
 				const start = Date.now();
 				// Reset TX report before each ping
-				txReport = undefined as any;
+				txReport = undefined as TXReport | undefined;
 				const pingResult = await pingAPI.send().then(
 					() => true,
 					() => false,
@@ -4005,7 +4006,7 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 
 			lastStart = Date.now();
 			// Reset TX report before each command
-			txReport = undefined as any;
+			txReport = undefined as TXReport | undefined;
 
 			try {
 				await basicSetAPI.set(round % 2 === 1 ? 0xff : 0x00);
@@ -4558,6 +4559,17 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 			ret.endpoints[endpoint.index] = endpointDump;
 		}
 
+		if (this.endpointGroups) {
+			ret.endpointGroups = [...this.endpointGroups.values()].map(
+				(group) => ({
+					id: group.id,
+					label: group.label,
+					isMainDevice: group.isMainDevice,
+					endpointIndices: [...group.endpointIndices],
+				}),
+			);
+		}
+
 		if (this.deviceConfig) {
 			const relativePath = path.relative(
 				embeddedDevicesDir,
@@ -4602,5 +4614,12 @@ ${formatRouteHealthCheckSummary(this.id, otherNode.id, summary)}`,
 		callback: AllNodeEvents[TEvent],
 	): this {
 		return this.once(event, callback);
+	}
+
+	protected _off<TEvent extends keyof AllNodeEvents>(
+		event: TEvent,
+		callback: AllNodeEvents[TEvent],
+	): this {
+		return this.off(event, callback);
 	}
 }

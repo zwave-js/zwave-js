@@ -14,6 +14,8 @@ import {
 import type { ZWaveOptions } from "../../driver/ZWaveOptions.js";
 import type { ZWaveNode } from "../Node.js";
 
+import { logCommandHandlerError } from "./_shared.js";
+
 export async function handleManufacturerSpecificGet(
 	ctx: PersistValuesContext & LogNode,
 	node: ZWaveNode,
@@ -31,12 +33,16 @@ export async function handleManufacturerSpecificGet(
 				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
-	await api.sendReport({
-		// Reserved manufacturer ID, definitely invalid!
-		manufacturerId: vendorInfo?.manufacturerId ?? 0xffff,
-		productType: vendorInfo?.productType ?? 0xffff,
-		productId: vendorInfo?.productId ?? 0xffff,
-	});
+	try {
+		await api.sendReport({
+			// Reserved manufacturer ID, definitely invalid!
+			manufacturerId: vendorInfo?.manufacturerId ?? 0xffff,
+			productType: vendorInfo?.productType ?? 0xffff,
+			productId: vendorInfo?.productId ?? 0xffff,
+		});
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }
 
 export async function handleManufacturerSpecificDeviceSpecificGet(
@@ -52,10 +58,14 @@ export async function handleManufacturerSpecificDeviceSpecificGet(
 				command.encapsulationFlags & ~EncapsulationFlags.Supervision,
 		});
 
-	await api.sendDeviceSpecificReport({
-		type: vendorInfo?.deviceId
-			? DeviceIdType.SerialNumber
-			: DeviceIdType.PseudoRandom,
-		deviceId: vendorInfo?.deviceId ?? randomBytes(16),
-	});
+	try {
+		await api.sendDeviceSpecificReport({
+			type: vendorInfo?.deviceId
+				? DeviceIdType.SerialNumber
+				: DeviceIdType.PseudoRandom,
+			deviceId: vendorInfo?.deviceId ?? randomBytes(16),
+		});
+	} catch (e) {
+		logCommandHandlerError(ctx, node.id, e);
+	}
 }

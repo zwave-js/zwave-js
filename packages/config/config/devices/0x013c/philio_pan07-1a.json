@@ -13,19 +13,39 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Group 1",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Group 2",
+					"maxNodes": 1
+				},
+				"3": {
+					"label": "Group 3",
+					"maxNodes": 1
+				}
+			}
+		},
 		"1": {
-			"label": "Group 1",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Relay 1"
 		},
 		"2": {
-			"label": "Group 2",
-			"maxNodes": 1
+			"label": "Relay 2"
 		},
 		"3": {
-			"label": "Group 3",
-			"maxNodes": 1
+			"label": "Both Relays"
+		}
+	},
+	"endpointGroups": {
+		"1": {
+			"label": "Both Relays",
+			"endpoints": [3],
+			"isMainDevice": true
 		}
 	},
 	"paramInformation": [
@@ -53,15 +73,15 @@
 			"allowManualEntry": false,
 			"options": [
 				{
-					"label": "Relay1",
+					"label": "Relay 1",
 					"value": 1
 				},
 				{
-					"label": "Relay2",
+					"label": "Relay 2",
 					"value": 2
 				},
 				{
-					"label": "Relay1 & Relay2",
+					"label": "Both relays",
 					"value": 3
 				}
 			]

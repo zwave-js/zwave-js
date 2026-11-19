@@ -55,6 +55,7 @@ import type { DeviceID } from '@zwave-js/config';
 import { Duration } from '@zwave-js/core';
 import { DurationLike } from '@zwave-js/core';
 import { DurationUnit } from '@zwave-js/core';
+import type { EndpointGroupConfig } from '@zwave-js/config';
 import { EndpointId } from '@zwave-js/core';
 import { EntryControlDataTypes } from '@zwave-js/cc';
 import { EntryControlEventTypes } from '@zwave-js/cc';
@@ -192,6 +193,7 @@ import { SpecificDeviceClass } from '@zwave-js/core';
 import { SupervisionResult } from '@zwave-js/core';
 import { SupportsCC } from '@zwave-js/core';
 import { Switchpoint } from '@zwave-js/cc';
+import { TaskHandle } from '@zwave-js/waddle';
 import { TaskScheduler as TaskScheduler_2 } from '@zwave-js/waddle';
 import { TransactionProgress } from '@zwave-js/core';
 import { TransactionProgressListener } from '@zwave-js/core';
@@ -832,7 +834,8 @@ export class Driver extends TypedEventTarget<DriverEventCallbacks> implements CC
     setSecurityClass(nodeId: number, securityClass: SecurityClass, granted: boolean): void;
     shutdown(): Promise<boolean>;
     softReset(): Promise<void>;
-    softResetAndRestart(): Promise<void>;
+    // Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+    softResetAndRestart(callingTask?: TaskHandle): Promise<void>;
     start(): Promise<void>;
     get statisticsEnabled(): boolean;
     // (undocumented)
@@ -956,6 +959,38 @@ export type EditableZWaveOptions = Expand<Pick<PartialZWaveOptions, "attempts" |
 //
 // @public (undocumented)
 export class Endpoint extends EndpointMixins {
+}
+
+// Warning: (ae-missing-release-tag) "EndpointGroup" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export class EndpointGroup {
+    constructor(
+    nodeId: number,
+    driver: Driver, config: EndpointGroupConfig);
+    protected readonly driver: Driver;
+    readonly endpointIndices: readonly number[];
+    getEndpoints(): Endpoint[];
+    // (undocumented)
+    readonly id: number;
+    readonly isMainDevice: boolean;
+    // (undocumented)
+    readonly label: string;
+    readonly nodeId: number;
+}
+
+// Warning: (ae-missing-release-tag) "EndpointGroupDump" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export interface EndpointGroupDump {
+    // (undocumented)
+    endpointIndices: number[];
+    // (undocumented)
+    id: number;
+    // (undocumented)
+    isMainDevice: boolean;
+    // (undocumented)
+    label: string;
 }
 
 export { EntryControlDataTypes }
@@ -1633,6 +1668,10 @@ export interface NodeDump {
     deviceClass: DeviceClassesDump | "unknown";
     // (undocumented)
     dsk?: string;
+    // (undocumented)
+    endpointGroups?: EndpointGroupDump[];
+    // (undocumented)
+    endpointLabel?: string;
     // Warning: (ae-forgotten-export) The symbol "EndpointDump" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2952,6 +2991,8 @@ export class ZWaveNode extends ZWaveNodeMixins implements QuerySecurityClasses {
     get name(): MaybeNotKnown<string>;
     set name(value: string | undefined);
     // (undocumented)
+    protected _off<TEvent extends keyof AllNodeEvents>(event: TEvent, callback: AllNodeEvents[TEvent]): this;
+    // (undocumented)
     protected _on<TEvent extends keyof AllNodeEvents>(event: TEvent, callback: AllNodeEvents[TEvent]): this;
     // (undocumented)
     protected _once<TEvent extends keyof AllNodeEvents>(event: TEvent, callback: AllNodeEvents[TEvent]): this;
@@ -3370,12 +3411,22 @@ export * from "@zwave-js/cc";
 //
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/API.ts:107:4 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
 // /home/runner/work/zwave-js/zwave-js/packages/cc/src/lib/Security2/shared.ts:11:5 - (tsdoc-undefined-tag) The TSDoc tag "@publicAPI" is not defined in this configuration
-// src/lib/controller/Controller.ts:929:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
-// src/lib/driver/Driver.ts:1109:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/driver/Driver.ts:8125:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/controller/Controller.ts:934:2 - (ae-missing-getter) The property "provisioningList" has a setter but no getter.
+// src/lib/driver/Driver.ts:1121:24 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
+// src/lib/driver/Driver.ts:5543:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:7260:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
+// src/lib/driver/Driver.ts:8034:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8035:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8075:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8076:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:8229:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:9370:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/driver/Driver.ts:9373:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "getAvailableFirmwareUpdates"
 // src/lib/driver/ZWaveOptions.ts:383:120 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/lib/node/Node.ts:2608:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/node/Node.ts:2609:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/rcp/RCPHost.ts:571:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/lib/rcp/RCPHost.ts:603:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "zwave-js" does not have an export "drainSerialAPIQueue"
+// src/lib/rcp/RCPHost.ts:1080:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:737:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 // src/lib/zniffer/Zniffer.ts:738:5 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 

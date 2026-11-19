@@ -13,10 +13,15 @@ import {
 	logDict,
 	logList,
 	logText,
-	parseCCId,
+	tryParseCCId,
 	validatePayload,
 } from "@zwave-js/core";
-import { Bytes, cpp2js, getEnumMemberName, num2hex } from "@zwave-js/shared";
+import {
+	Bytes,
+	stripControlCharacters,
+	getEnumMemberName,
+	num2hex,
+} from "@zwave-js/shared";
 import { validateArgs } from "@zwave-js/transformers";
 
 import { CCAPI, PhysicalCCAPI } from "../lib/API.js";
@@ -493,9 +498,9 @@ export class AssociationGroupInfoCCNameReport extends AssociationGroupInfoCC {
 		// CC:0059.01.02.11.001: The Name Length field MUST be in the range 0..42
 		validatePayload(nameLength <= 42);
 		validatePayload(raw.payload.length >= 2 + nameLength);
-		// The specs don't allow 0-terminated string, but some devices use them
-		// So we need to cut them off
-		const name = cpp2js(
+		// The specs don't allow 0-terminated strings, but some devices use them.
+		// stripControlCharacters cuts them off at the first NUL character.
+		const name = stripControlCharacters(
 			raw.payload.subarray(2, 2 + nameLength).toString("utf8"),
 		);
 
@@ -815,7 +820,10 @@ export class AssociationGroupInfoCCCommandListReport extends AssociationGroupInf
 		let offset = 0;
 		const commands = new Map<CommandClasses, number[]>();
 		while (offset < listLength) {
-			const { ccId, bytesRead } = parseCCId(listBytes, offset);
+			// Ignore a truncated entry at the end of the list
+			const parsed = tryParseCCId(listBytes, offset);
+			if (!parsed || offset + parsed.bytesRead >= listLength) break;
+			const { ccId, bytesRead } = parsed;
 			const command = listBytes[offset + bytesRead];
 			if (!commands.has(ccId)) commands.set(ccId, []);
 			commands.get(ccId)!.push(command);

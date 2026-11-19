@@ -64,7 +64,7 @@ Files without root-level associations are safe to update directly.
 
 ## 5. Apply the Labels
 
-Insert the `endpoints` block in property order position 8 (after `firmwareVersion`/`preferred`, before `associations`). Only include endpoints that have a label. The `label` field is the only required field for a label-only endpoint entry:
+Insert the `endpoints` block in property order position 8 (after `firmwareVersion`/`preferred`, before `endpointGroups`/`associations`). Only include endpoints that have a label. The `label` field is the only required field for a label-only endpoint entry:
 
 ```json
 "endpoints": {
@@ -77,7 +77,31 @@ Insert the `endpoints` block in property order position 8 (after `firmwareVersio
 
 If an endpoint also has existing `associations` or `paramInformation`, keep them and add `label` alongside.
 
-## 6. Validate
+## 6. Record Documented Endpoint Groups
+
+When the documentation explicitly identifies several endpoints as the same physical part, add `endpointGroups` after `endpoints`. Follow the "Endpoint Groups" rules in `.agents/instructions/config-files.md`.
+
+```json
+"endpointGroups": {
+    "1": { "label": "Clamp 1", "endpoints": [1, 2] },
+    "2": { "label": "Clamp 2", "endpoints": [3, 4] }
+}
+```
+
+- **Evidence:** Use an explicit relationship documented in the device's **product manual** — fetch and read the manual PDF, since the OpenSmartHouse and Z-Wave Alliance listings usually omit the endpoint-architecture explanation. Matching device classes, labels, or adjacent indices are insufficient.
+- **Re-verify existing labels.** When the config already has endpoint labels, check each against the manual before grouping. A prior label can be wrong — e.g. an endpoint labeled "Temperature Sensor" that the manual documents as the slat-tilt control — and the group you form depends on what each endpoint really is.
+- **IDs:** Start at `"1"` without gaps in the authored file.
+- **Members:** Include each endpoint at most once among active groups. Root endpoint 0 cannot be a member. Mutually exclusive `$if` groups may share indices.
+- **Labels:** Name the physical part using the endpoint-label style rules.
+- **Singletons:** Use one-member groups only in edge cases, like conditional endpoints or a single-endpoint whole-device total. A singleton `isMainDevice` group is allowed and not warned about; other singletons cause a lint warning.
+- **Main device:** Ordinary part groups omit `isMainDevice`. Always put a whole-device total in its own group with `"isMainDevice": true` — even a single-endpoint total — so it is distinguishable from the individual endpoints.
+- **Independence:** Grouped endpoints require no label or entry in `endpoints`. Adding only `endpointGroups` requires no root-association migration.
+- **Virtual endpoints of a single device:** When the manual describes the endpoints as virtual or logical application resources of one physical device (e.g. a siren with a single speaker and light that exposes several sound/notification endpoints), group **all** of its endpoints into one group with `"isMainDevice": true`. This grouping is recommended, not optional — otherwise the virtual endpoints are presented as separate devices.
+- **Cover with a slat endpoint:** A shutter/blind that exposes its up/down position and its slat/lamella tilt as two endpoints is one physical blind — group both with `"isMainDevice": true`.
+
+Leave undocumented relationships ungrouped.
+
+## 7. Validate
 
 Run the `zwave-dev` MCP validation chain in order — do not finalize until all pass clean:
 
@@ -120,6 +144,8 @@ After (excerpt, labels sourced from "Channel 1: S1 input" / "Channel 2: S2 input
 ```
 
 # Processing Multiple Candidates
+
+The `findMultiEndpointDevices.ts` script has two modes. The default mode lists multi-endpoint devices that have **no** endpoint labels yet (for a labeling pass). The `--review-groups` flag instead lists devices that **already have labeled endpoints but no `endpointGroups`** — candidates for a groups-only review pass. In that mode each candidate includes an `existingLabels` map so you can judge grouping without opening the config file; apply groups per Task 6 only where the documentation explicitly supports it.
 
 When working from the `findMultiEndpointDevices.ts` output, process candidates one at a time:
 

@@ -16,6 +16,7 @@ import {
 } from "@zwave-js/core";
 import {
 	Bytes,
+	stripControlCharacters,
 	getEnumMemberName,
 	pick,
 	stringToUint8ArrayUTF16BE,
@@ -77,13 +78,32 @@ export function normalizeCredentialData(
 	credentialType: UserCredentialType,
 	credentialData: Bytes,
 ): string | Bytes {
-	if (
-		credentialType === UserCredentialType.PINCode
-		|| credentialType === UserCredentialType.Password
-	) {
+	if (credentialType === UserCredentialType.PINCode) {
 		return credentialData.toString("utf8");
 	}
+	if (credentialType === UserCredentialType.Password) {
+		// Passwords are UTF-16BE on the wire (CC:0083.01.0A.11.021). Received
+		// commands with an odd length are rejected when they are parsed.
+		return uint8ArrayToStringUTF16BE(credentialData);
+	}
 	return credentialData;
+}
+
+/**
+ * Converts a credential to the bytes transmitted to the node. Strings are
+ * encoded according to the credential type, the inverse of
+ * {@link normalizeCredentialData}.
+ */
+export function encodeCredentialData(
+	credentialType: UserCredentialType,
+	credentialData: string | Uint8Array,
+): Bytes {
+	if (typeof credentialData !== "string") return Bytes.from(credentialData);
+	if (credentialType === UserCredentialType.Password) {
+		// CC:0083.01.0A.11.021
+		return Bytes.from(stringToUint8ArrayUTF16BE(credentialData));
+	}
+	return Bytes.from(credentialData, "utf-8");
 }
 
 // All of these values are internal, and not meant to be used by applications directly.
@@ -456,6 +476,35 @@ export class UserCredentialCCAPI extends PhysicalCCAPI {
 			UserCredentialCommand,
 			UserCredentialCommand.UserSet,
 		);
+
+		if (
+			options.operationType !== UserCredentialOperationType.Delete
+			&& options.nameEncoding == undefined
+		) {
+			const userName = options.userName ?? "";
+			const supportedEncodings = this.tryGetValueDB()?.getValue<
+				UserCredentialNameEncoding[]
+			>(
+				UserCredentialCCValues.supportedUserNameEncodings.endpoint(
+					this.endpoint.index,
+				),
+			) ?? [
+				UserCredentialNameEncoding.ASCII,
+				UserCredentialNameEncoding.ExtendedASCII,
+				UserCredentialNameEncoding.UTF16BE,
+			];
+			const nameEncoding = chooseNameEncoding(
+				userName,
+				supportedEncodings,
+			);
+			if (nameEncoding == undefined) {
+				throw new ZWaveError(
+					`The user name "${userName}" cannot be encoded with any of the encodings supported by the node`,
+					ZWaveErrorCodes.Argument_Invalid,
+				);
+			}
+			options = { ...options, nameEncoding };
+		}
 
 		const cc = new UserCredentialCCUserSet({
 			nodeId: this.endpoint.nodeId,
@@ -1973,6 +2022,62 @@ function testResponseForUserCredentialUserSet(
 	);
 }
 
+// ASCII and Extended ASCII user names use a single byte per character, so they are
+// interpreted as ISO-8859-1, whose code points match the byte values
+function decodeSingleByteName(data: Uint8Array): string {
+	return String.fromCharCode(...data);
+}
+
+function encodeSingleByteName(
+	name: string,
+	encoding:
+		| UserCredentialNameEncoding.ASCII
+		| UserCredentialNameEncoding.ExtendedASCII,
+): Bytes {
+	const maxCharCode =
+		encoding === UserCredentialNameEncoding.ExtendedASCII ? 0xff : 0x7f;
+	const ret = new Bytes(name.length);
+	for (let i = 0; i < name.length; i++) {
+		const code = name.charCodeAt(i);
+		if (code > maxCharCode) {
+			throw new ZWaveError(
+				`The user name "${name}" cannot be encoded as ${
+					encoding === UserCredentialNameEncoding.ExtendedASCII
+						? "Extended ASCII"
+						: "ASCII"
+				}`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		ret[i] = code;
+	}
+	return ret;
+}
+
+/** Returns the most compact encoding out of `supported` that can represent the user name */
+function chooseNameEncoding(
+	name: string,
+	supported: readonly UserCredentialNameEncoding[],
+): UserCredentialNameEncoding | undefined {
+	let maxCharCode = 0;
+	for (let i = 0; i < name.length; i++) {
+		maxCharCode = Math.max(maxCharCode, name.charCodeAt(i));
+	}
+	if (
+		maxCharCode <= 0x7f
+		&& supported.includes(UserCredentialNameEncoding.ASCII)
+	) {
+		return UserCredentialNameEncoding.ASCII;
+	} else if (
+		maxCharCode <= 0xff
+		&& supported.includes(UserCredentialNameEncoding.ExtendedASCII)
+	) {
+		return UserCredentialNameEncoding.ExtendedASCII;
+	} else if (supported.includes(UserCredentialNameEncoding.UTF16BE)) {
+		return UserCredentialNameEncoding.UTF16BE;
+	}
+}
+
 @CCCommand(UserCredentialCommand.UserSet)
 // The response class is forward-declared here, so use a dynamic CC response
 // that resolves the class lazily.
@@ -2040,14 +2145,16 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		validatePayload(raw.payload.length >= 10 + nameLength);
 		let userName: string;
 		if (nameEncoding === UserCredentialNameEncoding.UTF16BE) {
+			validatePayload(nameLength % 2 === 0);
 			userName = uint8ArrayToStringUTF16BE(
 				raw.payload.subarray(10, 10 + nameLength),
 			);
 		} else {
-			userName = raw.payload
-				.subarray(10, 10 + nameLength)
-				.toString("ascii");
+			userName = decodeSingleByteName(
+				raw.payload.subarray(10, 10 + nameLength),
+			);
 		}
+		userName = stripControlCharacters(userName);
 
 		if (userType === UserCredentialUserType.Expiring) {
 			return new this({
@@ -2096,6 +2203,12 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 				ZWaveErrorCodes.Argument_Invalid,
 			);
 		}
+		if (this.nameEncoding == undefined) {
+			throw new ZWaveError(
+				`${this.constructor.name}: name encoding must be set for Add/Modify operations`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
 
 		// Credential rule defaults to Single
 		const credentialRule = this.credentialRule ?? UserCredentialRule.Single;
@@ -2112,17 +2225,23 @@ export class UserCredentialCCUserSet extends UserCredentialCC {
 		} else {
 			expiringTimeoutMinutes = 0;
 		}
-		// Name encoding defaults to ASCII
-		const nameEncoding =
-			this.nameEncoding ?? UserCredentialNameEncoding.ASCII;
 		// User name defaults to empty string
 		const userName = this.userName ?? "";
+		const nameEncoding = this.nameEncoding;
 
 		let nameBuffer: Uint8Array;
 		if (nameEncoding === UserCredentialNameEncoding.UTF16BE) {
 			nameBuffer = stringToUint8ArrayUTF16BE(userName);
+		} else if (nameEncoding === UserCredentialNameEncoding.ExtendedASCII) {
+			nameBuffer = encodeSingleByteName(
+				userName,
+				UserCredentialNameEncoding.ExtendedASCII,
+			);
 		} else {
-			nameBuffer = Bytes.from(userName, "ascii");
+			nameBuffer = encodeSingleByteName(
+				userName,
+				UserCredentialNameEncoding.ASCII,
+			);
 		}
 		this.payload = Bytes.alloc(10 + nameBuffer.length);
 		this.payload[0] = this.operationType & 0b11;
@@ -2246,14 +2365,16 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		validatePayload(raw.payload.length >= 15 + nameLength);
 		let userName: string;
 		if (nameEncoding === UserCredentialNameEncoding.UTF16BE) {
+			validatePayload(nameLength % 2 === 0);
 			userName = uint8ArrayToStringUTF16BE(
 				raw.payload.subarray(15, 15 + nameLength),
 			);
 		} else {
-			userName = raw.payload
-				.subarray(15, 15 + nameLength)
-				.toString("ascii");
+			userName = decodeSingleByteName(
+				raw.payload.subarray(15, 15 + nameLength),
+			);
 		}
+		userName = stripControlCharacters(userName);
 
 		const common = {
 			nodeId: ctx.sourceNodeId,
@@ -2290,8 +2411,18 @@ export class UserCredentialCCUserReport extends UserCredentialCC {
 		let nameBuffer: Uint8Array;
 		if (this.nameEncoding === UserCredentialNameEncoding.UTF16BE) {
 			nameBuffer = stringToUint8ArrayUTF16BE(this.userName);
+		} else if (
+			this.nameEncoding === UserCredentialNameEncoding.ExtendedASCII
+		) {
+			nameBuffer = encodeSingleByteName(
+				this.userName,
+				UserCredentialNameEncoding.ExtendedASCII,
+			);
 		} else {
-			nameBuffer = Bytes.from(this.userName, "ascii");
+			nameBuffer = encodeSingleByteName(
+				this.userName,
+				UserCredentialNameEncoding.ASCII,
+			);
 		}
 		this.payload = Bytes.alloc(15 + nameBuffer.length);
 		this.payload[0] = this.reportType;
@@ -2664,6 +2795,11 @@ export class UserCredentialCCCredentialSet extends UserCredentialCC {
 		if (raw.payload.length >= 7) {
 			const credentialLength = raw.payload[6];
 			validatePayload(raw.payload.length >= 7 + credentialLength);
+			// Passwords are UTF-16BE (CC:0083.01.0A.11.021)
+			validatePayload(
+				credentialType !== UserCredentialType.Password
+					|| credentialLength % 2 === 0,
+			);
 			credentialData = Bytes.from(
 				raw.payload.subarray(7, 7 + credentialLength),
 			);
@@ -2801,6 +2937,20 @@ export class UserCredentialCCCredentialReport extends UserCredentialCC {
 		const credentialReadBack = !!(raw.payload[6] & 0b1000_0000);
 		const credentialLength = raw.payload[7];
 		validatePayload(raw.payload.length >= 8 + credentialLength + 6);
+		if (
+			credentialType === UserCredentialType.Password
+			&& credentialLength % 2 !== 0
+		) {
+			// CC:0083.01.0C.11.000: If the credential cannot be read back
+			// (CRB is zero), the node MUST instead report a hash sum of the credential.
+			if (credentialReadBack) {
+				// CC:0083.01.0A.11.021: Passwords MUST be transmitted in Unicode
+				// UTF-16 format, in big endian order.
+				validatePayload.fail(
+					"Password credentials must have an even length",
+				);
+			}
+		}
 
 		const offset = 8 + credentialLength;
 		const modifierType: UserCredentialModifierType = raw.payload[offset];

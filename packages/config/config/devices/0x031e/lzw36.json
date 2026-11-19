@@ -13,35 +13,45 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 5,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "Basic Set Light",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "Multilevel Switch Set Light",
+					"maxNodes": 5
+				},
+				"4": {
+					"label": "Multilevel Switch Start/Stop Light",
+					"maxNodes": 5
+				},
+				"5": {
+					"label": "Basic Set Fan",
+					"maxNodes": 5
+				},
+				"6": {
+					"label": "Multilevel Switch Set Fan",
+					"maxNodes": 5
+				},
+				"7": {
+					"label": "Multilevel Switch Start/Stop Fan",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 5,
-			"isLifeline": true
+			"label": "Light"
 		},
 		"2": {
-			"label": "Basic Set Light",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "Multilevel Switch Set Light",
-			"maxNodes": 5
-		},
-		"4": {
-			"label": "Multilevel Switch Start/Stop Light",
-			"maxNodes": 5
-		},
-		"5": {
-			"label": "Basic Set Fan",
-			"maxNodes": 5
-		},
-		"6": {
-			"label": "Multilevel Switch Set Fan",
-			"maxNodes": 5
-		},
-		"7": {
-			"label": "Multilevel Switch Start/Stop Fan",
-			"maxNodes": 5
+			"label": "Fan"
 		}
 	},
 	"paramInformation": [

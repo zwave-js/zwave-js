@@ -18,23 +18,45 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Wheel position change",
+					"maxNodes": 1
+				},
+				"2": {
+					"label": "Current leakage on relay",
+					"maxNodes": 1
+				},
+				"3": {
+					"label": "Power level change",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"4": {
+					"label": "Over-current detection",
+					"maxNodes": 1
+				}
+			}
+		},
 		"1": {
-			"label": "Wheel position change",
-			"maxNodes": 1
+			"label": "Port 1"
 		},
 		"2": {
-			"label": "Current leakage on relay",
-			"maxNodes": 1
+			"label": "Port 2"
 		},
 		"3": {
-			"label": "Power level change",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Port 3"
 		},
 		"4": {
-			"label": "Over-current detection",
-			"maxNodes": 1
+			"label": "Port 4"
+		},
+		"5": {
+			"label": "Port 5"
+		},
+		"6": {
+			"label": "Port 6"
 		}
 	},
 	"paramInformation": [

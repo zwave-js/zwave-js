@@ -10,6 +10,19 @@ const {
 } = require("./utils.cjs");
 
 /**
+ * The labels an escalated issue gets, by the category of its discussion
+ * @param {string | undefined} slug
+ * @returns {string[]}
+ */
+function labelsForCategory(slug) {
+	if (config.escalate?.bugCategorySlugs.includes(slug)) return ["bug"];
+	if (config.escalate?.enhancementCategorySlugs.includes(slug)) {
+		return ["enhancement"];
+	}
+	return [];
+}
+
+/**
  * @param {{github: Github, context: Context, core: any}} param
  */
 async function main(param) {
@@ -65,6 +78,9 @@ ${context.payload.discussion.body}
 			repo: context.repo.repo,
 			title: issueTitle,
 			body: issueBody,
+			labels: labelsForCategory(
+				context.payload.discussion.category?.slug,
+			),
 		});
 
 		const newIssue = createIssueResponse.data;
@@ -217,3 +233,4 @@ async function findBotAnalysisComment(github, context) {
 }
 
 module.exports = main;
+module.exports.labelsForCategory = labelsForCategory;

@@ -221,15 +221,27 @@ type ParsedNVM =
 	  };
 
 /**
- * Ensures that the controller node is marked as listening.
+ * Ensures that the controller node is marked as listening and uses the Static Controller generic device class.
  * Failure to do so causes the radio to stop after one RX event on SDK 8.0.0+.
  */
-function setControllerIsListening(json: NVMJSON): void {
+function normalizeControllerNodeInfo(json: NVMJSON): void {
 	json.controller.isListening = true;
+	// SDK 8.1.2+ corrects the listening flag automatically, but only for Static Controllers.
+	// This is the role Z-Wave JS takes, so we should reflect it in the NVM too.
+	if (json.controller.genericDeviceClass !== 0x02) {
+		// Static PC Controller
+		json.controller.genericDeviceClass = 0x02;
+		json.controller.specificDeviceClass = 0x01;
+	}
 
 	const controllerNode = json.nodes[json.controller.nodeId || 1];
-	if (controllerNode && "isListening" in controllerNode) {
+	if (controllerNode && nodeHasInfo(controllerNode)) {
 		controllerNode.isListening = true;
+		if (controllerNode.genericDeviceClass !== 0x02) {
+			// Static PC Controller
+			controllerNode.genericDeviceClass = 0x02;
+			controllerNode.specificDeviceClass = 0x01;
+		}
 	}
 }
 
@@ -477,6 +489,12 @@ export function nvmObjectsToJSON(
 
 		// @ts-expect-error Some fields include a nodeId, but we don't need it
 		delete node.nodeId;
+	}
+
+	// Virtual nodes without node info are not part of the node list,
+	// so the virtual node mask is the only place they are recorded
+	for (const id of isVirtual) {
+		if (!nodes.has(id)) nodes.set(id, { isVirtual: true });
 	}
 
 	// If they exist, read info about LR nodes
@@ -936,6 +954,12 @@ export async function nvmToJSON(
 		delete node.nodeId;
 	}
 
+	// Virtual nodes without node info are not part of the node list,
+	// so the virtual node mask is the only place they are recorded
+	for (const id of virtualNodeIds) {
+		if (!nodes.has(id)) nodes.set(id, { isVirtual: true });
+	}
+
 	// If they exist, read info about LR nodes
 	const lrNodeIds = await adapter.get({
 		domain: "controller",
@@ -946,7 +970,7 @@ export async function nvmToJSON(
 			const node = getLRNode(id);
 
 			// Find node info
-			const nodeInfo = await adapter.get(
+			const { nodeId, ...nodeInfo } = await adapter.get(
 				{
 					domain: "lrnode",
 					nodeId: id,
@@ -1824,6 +1848,7 @@ export async function jsonToNVM500(
 			virtualNodeIds.push(nodeId);
 			continue;
 		}
+		if (node.isVirtual) virtualNodeIds.push(nodeId);
 		if (node.appRouteLock) appRouteLock.push(nodeId);
 		if (node.routeSlaveSUC) routeSlaveSUC.push(nodeId);
 		if (node.pendingDiscovery) pendingDiscovery.push(nodeId);
@@ -1898,6 +1923,12 @@ export function json500To700(
 		let start = 0;
 		while (start < raw.length && raw[start] === 0) {
 			start++;
+		}
+		// Some 500 series controllers pad the zeroes with unwritten 0xff bytes
+		if (start > 0) {
+			while (start < raw.length && raw[start] === 0xff) {
+				start++;
+			}
 		}
 		let end = raw.length - 1;
 		while (end > start && raw[end] === 0) {
@@ -2162,8 +2193,9 @@ export async function migrateNVM(
 			=== target.json.meta.sharedFileSystem
 		// ...everything should be preserved,...
 		&& preserveAll
-		// ...and the application node is correctly configured as always listening
+		// ...and the application node is correctly configured as an always listening Static Controller
 		&& source.json.controller.isListening
+		&& source.json.controller.genericDeviceClass === 0x02
 	) {
 		// ... the source and target protocol versions are compatible without conversion
 		const sourceProtocolVersion = source.json.controller.protocolVersion;
@@ -2208,9 +2240,10 @@ export async function migrateNVM(
 		return sourceNVM;
 	}
 
-	// TypeScript doesn't understand multi-variable narrowings (yet)
-	source = source as Exclude<ParsedNVM, { type: "unknown" }>;
-	target = target as Exclude<ParsedNVM, { type: "unknown" }>;
+	// // TypeScript doesn't understand multi-variable narrowings (yet)
+	if (source.type === "unknown" || target.type === "unknown") {
+		throw new Error("This must not happen");
+	}
 
 	// Some 700 series NVMs have a strange 255.x application version - fix that first
 	if (
@@ -2275,7 +2308,7 @@ export async function migrateNVM(
 		};
 		// The target is a different series, try to preserve the RF config of the target stick
 		json.controller.rfConfig = target.json.controller.rfConfig;
-		setControllerIsListening(json);
+		normalizeControllerNodeInfo(json);
 		// 700 series distinguishes the NVM format by the application version
 		return jsonToNVM(json, target.json.controller.applicationVersion);
 	} else if (source.type === 700 && target.type === 500) {
@@ -2293,7 +2326,7 @@ export async function migrateNVM(
 			...(source.json as NVMJSONWithMeta),
 			meta: (target.json as NVMJSONWithMeta).meta,
 		};
-		setControllerIsListening(json);
+		normalizeControllerNodeInfo(json);
 		// 700 series distinguishes the NVM format by the application version
 		return jsonToNVM(json, target.json.controller.applicationVersion);
 	}

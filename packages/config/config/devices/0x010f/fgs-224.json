@@ -21,21 +21,31 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
-	"associations": {
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				},
+				"2": {
+					"label": "On/Off (1)",
+					"description": "Devices in this group will be switched on or off with the S1 switch (uses Basic command class).",
+					"maxNodes": 5
+				},
+				"3": {
+					"label": "On/Off (2)",
+					"description": "Devices in this group will be switched on or off with the S2 switch (uses Basic command class).",
+					"maxNodes": 5
+				}
+			}
+		},
 		"1": {
-			"label": "Lifeline",
-			"maxNodes": 1,
-			"isLifeline": true
+			"label": "Output 1"
 		},
 		"2": {
-			"label": "On/Off (1)",
-			"description": "Devices in this group will be switched on or off with the S1 switch (uses Basic command class).",
-			"maxNodes": 5
-		},
-		"3": {
-			"label": "On/Off (2)",
-			"description": "Devices in this group will be switched on or off with the S2 switch (uses Basic command class).",
-			"maxNodes": 5
+			"label": "Output 2"
 		}
 	},
 	"paramInformation": [
@@ -525,6 +535,14 @@
 			"label": "Prevent Simultaneous Switching of Outputs"
 		}
 	],
+	"scenes": {
+		"1": {
+			"label": "Switch S1"
+		},
+		"2": {
+			"label": "Switch S2"
+		}
+	},
 	"metadata": {
 		"inclusion": "Power the device, then quickly press the switch connected to S1 or the B-button three times. The LED starts blinking yellow.",
 		"exclusion": "Make sure the device is powered, then quickly press the B-button three times. The LED starts blinking yellow.",

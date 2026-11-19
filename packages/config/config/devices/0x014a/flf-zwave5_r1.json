@@ -14,6 +14,27 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"compat": {
+		// When the probe dries, this device does not send an idle notification.
+		// It sends Water Alarm event 0x04 ("Water level dropped"), which the manual
+		// calls "Water No Longer Detected". That event is not a state variable, so
+		// the "Sensor status" value stays stuck on "Water leak detected" forever.
+		// Translate it into an explicit idle for the leak variable.
+		"remapNotifications": [
+			{
+				"from": {
+					"notificationType": 5,
+					"notificationEvent": 4
+				},
+				"idle": [
+					{
+						"notificationType": 5,
+						"notificationEvent": 2
+					}
+				]
+			}
+		]
+	},
 	"metadata": {
 		"inclusion": "Power up the device. If the LED starts blinking continuously, the sensor was not successfully added. Remove the battery for 10 seconds if adding fails.",
 		"exclusion": "Open the case and remove the battery for 1 second. Replace the battery.",

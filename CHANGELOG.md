@@ -4,6 +4,147 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## 15.32.3 (2026-11-10)
+### Bugfixes
+* Limit active OTA firmware update transfers to one node at a time
+
+## 15.32.2 (2026-11-10)
+Release 15.32.0 prevented driver startup for some users who reused their mesh security keys for Long Range as well.
+While this should never be done, Z-Wave JS now simply warns instead of throwing an error.
+
+Affected users should look into changing their duplicate keys. If they are in use by devices, this requires a re-inclusion.
+
+### Bugfixes
+* Modified Central Scene labels in device config files are now automatically applied on startup (#9460)
+* Warn instead of throw when Classic and LR security keys are shared (#9467)
+
+### Config file changes
+* Add digital port mode and endpoint names to Quby 6500-1400-6000 (#9461)
+* Add endpoint labels to several Fibaro and Shelly devices (#9463)
+* Add NOVON manufacturer and five devices (#9458)
+* Add Central Scene labels for 61 devices (#9456)
+
+### Changes under the hood
+
+## 15.32.1 (2026-11-04)
+### Bugfixes
+* `ZWaveNode.isFirmwareUpdateInProgress()` no longer returns `true` if any other node is undergoing an OTA firmware update (#9450)
+* `Controller.firmwareUpdateOTA` now allows queueing OTA updates for multiple nodes, like it was already possible through `ZWaveNode.updateFirmware` (#9452)
+
+## 15.32.0 (2026-11-03)
+This release is the result of two security and correctness reviews of the entire codebase. No major issues have been found, but the reviews uncovered a number of edge cases that could negatively influence stability and lead to unexpected behavior.
+
+### Features
+* ESPHome encryption keys no longer have to be manually URL-encoded (#9427)
+
+### Bugfixes
+* Fixes a number of situations where unexpected errors while receiving data could crash the process (#9371)
+* Commands from inclusion controllers are now only accepted in specific valid states and only from known controllers (#9368)
+* All stages of firmware updates are now abortable (#9430)
+* Harden config updates and config file parsing (#9380)
+* Harden S2 message parsing and bootstrapping (#9377)
+* Harden ESPHome protobuf and frame parsing (#9370)
+* Limit the size of extracted and downloaded firmware files (#9372)
+* Unexpected errors while parsing nested CCs in Notification event parameters are now handled correctly (#9369)
+* Strip control characters from strings received from nodes (#9386)
+* Fixed an issue where `$if` conditions in config files could cause the parser to take excessively long or hang (#9379)
+* Reject incomplete operators and hex literals in `$if` conditions (#9402)
+* Preserve virtual nodes, LR node shape and device class 0 in NVM conversions (#9401)
+* Fixed several edge cases when encoding floats, durations, time zones, `Meter` values and several message classes (#9397)
+* Validate edge cases in several parsers (#9385)
+* Align our portable `Bytes` implementation with Node.js's `Buffer` for 5/6 byte reads, empty `includes()` and BOMs (#9398)
+* Encode plain and extended ASCII user names in User Credential CC correctly (#9403)
+* Encode User Credential CC passwords as UTF-16BE (#9396)
+* Fix broken HEC firmware file decryption under Node.js, throw `ZWaveError`s for invalid HEX files (#9399)
+* Do not assume the security class stays constant across calls to `SecurityManager2.createMulticastGroup` (#9400)
+* Harden Transport Service session handling (#9382)
+* Use portable `Timer` implementation for `Powerlevel` test frames (#9422)
+* Fixed an issue with some Node.js versions that do not check the AES-CCM auth code when the backing buffer for the ciphertext is empty
+* Limit the number of outstanding S0 nonces (#9375)
+* Avoid the possibility of endless loops during NVM backup and restore (#9383)
+* Align browser AES-OFB and AES-CBC with the Node.js implementation (#9381)
+* Internal encryption details are only logged when explicitly enabled using the env variable `ZWAVEJS_LOG_SECURITY_DETAILS=true` instead of being enabled implictly through `NODE_ENV=development` or `test` (#9384)
+* Validate config parameter value size in Configuration Bulk and Properties Reports (#9376)
+* Validate incoming Powerlevel Test Node Set commands (#9374)
+* Ignore Alarm Sensor reports forwarded on behalf of other nodes (#9373)
+* Fix parsing of the color table for incoming Color Switch Set commands (#9378)
+
+### Config file changes
+* Add Heatit Z-Smoke2 230V, allow Basic Set interconnects (#9441)
+* Add setpoint range 4-28 °C to Danfoss LC-13 (#9440)
+* Preserve and label endpoints on Qubino Flush Dimmer Plus (ZMNHDD) (#9432)
+* Remove undocumented endpoint labels on Heatit Z-Push Button 4 (#9421)
+* Add missing third switch label on McoHome MH-S513 (#9420)
+* Group shutter endpoints on Shelly Wave Shutter (QLSH-001P10EU) (#9408)
+* Correct endpoint 2 and group the blind on Qubino Flush Shutter DC (ZMNHOD) (#9409)
+
+### Changes under the hood
+* The development MCP server now restricts tool file paths to the device config directory (#9387)
+
+## 15.31.2 (2026-10-22)
+### Bugfixes
+* Reject invalid statuses in Powerlevel Test Node Report (#9357)
+* The `nvmedit` utility now ignores stale SUC update entry bytes and `0xff` app data padding (#9327)
+* When migrating controllers to 700/800 series, the device class is now set to Static Controller (#9363)
+* Fixed an issue where Z-Wave JS could override values in driver preset objects owned by the application (#9306)
+
+### Config file changes
+* Group whole-device control aggregate on Zipato/Philio PAN04 (#9393)
+* Group whole-device control aggregate on Vemmio DS100 (#9392)
+* Group whole-device total on Zipato/Philio PAB01 energy meter (#9391)
+* Group whole-device total on Qubino 3-Phase Smart Meter (ZMNHXD) (#9390)
+* Group all endpoints on Aeotec Indoor Siren 6 (ZW164) (#9389)
+* Group variable-speed pump endpoints for Intermatic PE653 (#9303)
+* Group shutter endpoints for Shelly Wave Shutter (QNSH-001P10) (#9305)
+* Group shutter endpoints for Qubino Flush Shutter DC (ZMNHCD) (#9304)
+* Correct Merten 506004 device config (#9310)
+* Send Multilevel Switch v1 frames to the Springs RSZ1 (#9360)
+
+### Changes under the hood
+* Dependency updates (#9325, #9329, #9330, #9331, #9333)
+* Z-Wave JS is now compiled using TypeScript 7.0.2 (#9366)
+
+## 15.31.1 (2026-10-07)
+### Bugfixes
+* Prevent `restoreNVM()` and 500-series OTW update from self-aborting during soft-reset (#9277)
+* After the node responds with Application Busy instead of the expected response to a command, the original command is now retried after a delay (#9294)
+* Fixed an issue where `maxDataRate` could be `-Infinity` for ready nodes where known data rates were missing (#9297)
+* Fixed an issue where a network wide route rebuild could be started while another one was still running (#9292)
+
+### Config file changes
+* Name and group endpoints on Aeotec HEM 8 (#9289)
+* Delay manual value refresh for Leviton VRI06 (#9296)
+* Add manual refresh delay for Leviton VRMX1 and VRS15 (#9293)
+
+## 15.31.0 (2026-09-28)
+### Features
+* Support grouping endpoints through configuration files (#9205)
+
+### Bugfixes
+* Added lint rules for correct firmware version formatting, fix conditions that never matched (#9279)
+
+### Changes under the hood
+* Config file lints now check all possible firmware and SDK version ranges config files with `$if` conditions (#9282)
+
+## 15.30.0 (2026-09-28)
+### Features
+* Implemented parsing and serialization for several commands that normally don't appear in everyday communication
+
+### Bugfixes
+* Enforce the Thermostat Mode Set manufacturer-data byte limit (#9222)
+
+### Config file changes
+* Add manual refresh delay for Leviton DZ6HD (#9272)
+* Correct Shelly Wave Shutter moving-time units (#9269)
+* Polish Aeotec ZWA056 config file (#9213)
+* Correct acceleration sensor unit factor for Aeotec ZWA055 (#9258)
+* Add Aeotec ZWA066 MultiSensor 8 (#9214)
+* Add Shenzhen Neo NAS-WS02Z Water Sensor (#8777)
+* Add Nice FGD-223 Double Dimmer-Control (#9212)
+* Fix several Qubino ZMNHTD parameter errors (#9256)
+* Change Qubino ZMNHTD parameter 40 value size to 1 (#9250)
+* Map root reports to endpoint 1 on Remotec ZXT-800, add fingerprint (#9215)
+
 ## 15.29.0 (2026-09-10)
 ### Features
 * Redundant and superseded commands are now automatically deduplicated. The corresponding API calls can now be aborted or will share a single transaction, depending on the specific situation (#9136, #9137)
