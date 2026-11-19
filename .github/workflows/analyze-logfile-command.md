@@ -67,7 +67,7 @@ steps:
 description: Analyze a Z-Wave JS logfile on demand via /analyze-logfile <url>
 engine: copilot
 model: claude-opus-4.8
-source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@6e95c90f53efc77bd804027ec6d17b667740ee91
+source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@6d806c00d2a4195612805eca122f019f223fba5d
 timeout-minutes: 30
 ---
 # Z-Wave JS Logfile Analysis
