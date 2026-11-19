@@ -1,6 +1,6 @@
 {
   "name": "@zwave-js/cc",
-  "version": "15.32.3",
+  "version": "15.32.4",
   "description": "zwave-js: Command Classes",
   "keywords": [],
   "publishConfig": {

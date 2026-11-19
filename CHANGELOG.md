@@ -4,7 +4,7 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
-## __WORK IN PROGRESS__
+## 15.32.4 (2026-11-19)
 This release comes with improvements to OTW firmware upgrades, including better handling of timeouts and retries. This should make it much less likely to end up "stuck in bootloader".
 
 ### Bugfixes
@@ -34,7 +34,6 @@ This release comes with improvements to OTW firmware upgrades, including better 
 ### Changes under the hood
 * For Claude users, the `zwave-dev` MCP server should not be automatically enabled in the repository (#9493)
 * Add a mock Gecko bootloader for OTW update tests (#9481)
-
 
 ## 15.32.3 (2026-11-10)
 ### Bugfixes
