@@ -1677,6 +1677,11 @@ export function getNotificationValueName(type: number, event: number): string;
 // @public
 export function getNumericEnumValues(enumeration: Record<string, any>): readonly number[];
 
+// Warning: (ae-missing-release-tag) "getPrecision" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getPrecision(num: number): number;
+
 // Warning: (ae-missing-release-tag) "getProtocolHeaderFormat" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -1769,8 +1774,8 @@ export function guessFirmwareFileFormat(filename: string, rawData: BytesView): F
 
 // Warning: (ae-missing-release-tag) "gunzipSync" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public (undocumented)
-export function gunzipSync(data: BytesView): BytesView;
+// @public
+export function gunzipSync(data: BytesView, maxOutputLength?: number): BytesView;
 
 // Warning: (ae-missing-release-tag) "highResTimestamp" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2193,6 +2198,11 @@ export function isEmptyRoute(route: Route): boolean;
 //
 // @public
 export function isEncapsulationCC(cc: CommandClasses): boolean;
+
+// Warning: (ae-missing-release-tag) "isExtendedCCId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export function isExtendedCCId(ccId: CommandClasses): boolean;
 
 // Warning: (ae-missing-release-tag) "isLogPayload" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -2622,6 +2632,11 @@ export interface LongRangeMPDURawOptions {
 // @public
 export const managementCCs: readonly CommandClasses[];
 
+// Warning: (ae-missing-release-tag) "MAX_FIRMWARE_SIZE" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const MAX_FIRMWARE_SIZE: number;
+
 // Warning: (ae-missing-release-tag) "MAX_NODES" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -2631,6 +2646,11 @@ export const MAX_NODES = 232;
 //
 // @public
 export const MAX_NODES_LR = 4000;
+
+// Warning: (ae-missing-release-tag) "MAX_OWN_NONCES" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public (undocumented)
+export const MAX_OWN_NONCES = 128;
 
 // Warning: (ae-missing-release-tag) "MAX_REPEATERS" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3286,6 +3306,13 @@ export function parseCCList(payload: BytesView): {
     supportedCCs: CommandClasses[];
     controlledCCs: CommandClasses[];
 };
+
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (ae-missing-release-tag) "parseEnumValue" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function parseEnumValue<T extends Record<string, string | number>>(enumeration: T, value: number): Extract<T[keyof T], number>;
 
 // Warning: (ae-missing-release-tag) "parseFloatWithScale" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 // Warning: (ae-missing-release-tag) "parseFloatWithScale" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -4603,6 +4630,15 @@ export enum TransmitStatus {
     OK = 0
 }
 
+// Warning: (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// Warning: (ae-missing-release-tag) "tryParseCCId" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function tryParseCCId(payload: BytesView, offset?: number): {
+    ccId: CommandClasses;
+    bytesRead: number;
+} | undefined;
+
 // Warning: (ae-missing-release-tag) "tryParseDSKFromQRCodeString" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public (undocumented)
@@ -5732,7 +5768,7 @@ export interface ZWaveMPDURawOptions {
 // src/qr/definitions.ts:62:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
 // src/security/Manager2.ts:67:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/security/Manager2.ts:67:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
-// src/util/misc.ts:21:4 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
+// src/util/misc.ts:23:4 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
 
 // (No @packageDocumentation comment for this package)
 
