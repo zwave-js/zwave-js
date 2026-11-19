@@ -275,7 +275,7 @@ test("QR code parsing -> Example case: Acme Light Dimmer w/o SmartStart", async 
 		},
 		{
 			code: "90010876000351525354554142434445313233343521222324250010043530153702176552000100000035.9999999999999",
-			reason: "the ProductId TLV declares a length other than 20",
+			reason: "the ProductId TLV declares an invalid length",
 		},
 	];
 

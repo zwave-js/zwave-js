@@ -48,14 +48,14 @@ function parseTruncatedProductId(
 	if (
 		tlv.length < 4
 		|| readLevel(tlv, 0) >>> 1 !== ProvisioningInformationType.ProductId
-		|| readLevel(tlv, 2) !== 20
 	) {
 		fail("incomplete TLV block");
 	}
+	if (readLevel(tlv, 2) !== 20) fail("invalid TLV length");
 	const data = tlv.slice(4);
 	// Manufacturer ID, product type and product ID take 15 digits, followed by
-	// at least one, but not all 5 digits of the application version
-	if (data.length <= 15 || data.length >= 20) fail("incomplete TLV block");
+	// at least one digit of the application version
+	if (data.length <= 15) fail("incomplete TLV block");
 
 	return parseTLVData(
 		ProvisioningInformationType.ProductId,
