@@ -273,6 +273,10 @@ test("QR code parsing -> Example case: Acme Light Dimmer w/o SmartStart", async 
 			code: "900143877003515253545541424344453132333435212223242500100435.9999999999999",
 			reason: "the ProductType TLV is incomplete",
 		},
+		{
+			code: "90010876000351525354554142434445313233343521222324250010043530153702176552000100000035.9999999999999",
+			reason: "the ProductId TLV declares a length other than 20",
+		},
 	];
 
 	for (const { code, reason } of invalidCases) {

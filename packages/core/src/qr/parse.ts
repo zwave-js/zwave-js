@@ -48,6 +48,7 @@ function parseTruncatedProductId(
 	if (
 		tlv.length < 4
 		|| readLevel(tlv, 0) >>> 1 !== ProvisioningInformationType.ProductId
+		|| readLevel(tlv, 2) !== 20
 	) {
 		fail("incomplete TLV block");
 	}
@@ -62,7 +63,10 @@ function parseTruncatedProductId(
 	) as ProvisioningInformation_ProductId;
 }
 
-/** Internal parsing function that expects a clean QR code string */
+/**
+ * Internal parsing function that expects a QR code string without whitespace.
+ * If `parseSubsets` is false, invalid characters after the DSK are tolerated.
+ */
 async function parseQRCodeStringInternal(
 	qr: string,
 	parseSubsets: boolean,
