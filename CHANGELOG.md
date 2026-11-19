@@ -4,6 +4,38 @@
 <!--
 	Add placeholder for next release with `wip` snippet
 -->
+## __WORK IN PROGRESS__
+This release comes with improvements to OTW firmware upgrades, including better handling of timeouts and retries. This should make it much less likely to end up "stuck in bootloader".
+
+### Bugfixes
+* Fixed an issue on some systems where the bootloader was not correctly detected if the line break arrived in a separate data chunk (#9507)
+* Tolerate slightly malformed SmartStart QR codes (fixes an issue with Heatit Z-TRM6) (#9449)
+* Work around an SDK issue that could lead to an NVM restore erasing the flash page after the NVM (#9473)
+* NVM adapters now return `false` from `has()` for deleted objects (#9488)
+* Restart OTW firmware uploads after a timeout (#9484)
+* Resend OTW firmware blocks when the bootloader does not ACK them (#9483)
+* Cancel a failed OTW transfer before leaving the bootloader (#9482)
+* `addAssociations` now respects `multiChannel` flag if the association group is defined on endpoints 0 in the configuration file (#9479)
+
+### Config file changes
+* Add Boundary siren, contact and motion sensors (#9359)
+* Add eZLO Flood Sensor config (#9361)
+* Allow manual entry for LED intensity parameters for Inovelli LZW30 (#7037)
+* Add Jasco 76595 / ZWN3019 toggle dimmer (#9499)
+* Add Fakro ARZ Z-Wave Solar (non-Z-Wave+) (#9407)
+* Add Monster Cable IWS1000S (#9469)
+* Idle water leak notification on Ecolink FLF-ZWAVE5 when the probe dries (#9345)
+* Add productId `0xfe0e` to Minoston MP21ZP (#8506)
+* Add MH3901-Z hardware revision 0x3902 (#9476)
+* Label endpoints of multi-channel devices for child-device grouping (#9478)
+* Label Zooz ZEN14 endpoints for child-device grouping (#9475)
+* Label Aeotec DSC11 endpoints for child devices (#9471)
+
+### Changes under the hood
+* For Claude users, the `zwave-dev` MCP server should not be automatically enabled in the repository (#9493)
+* Add a mock Gecko bootloader for OTW update tests (#9481)
+
+
 ## 15.32.3 (2026-11-10)
 ### Bugfixes
 * Limit active OTA firmware update transfers to one node at a time
