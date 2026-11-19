@@ -10,8 +10,6 @@ const IS_TEST = getenv("NODE_ENV") === "test" || !!getenv("CI");
 
 export class SerialModeSwitch extends WritableStream<BytesView> {
 	private possiblyCLI = false;
-	// Line breaks and null bytes don't tell the modes apart. They are held back
-	// until the next chunk and passed on together with it.
 	private pending: BytesView | undefined;
 
 	#mode: ZWaveSerialMode | undefined;
@@ -48,6 +46,10 @@ export class SerialModeSwitch extends WritableStream<BytesView> {
 							chunk = Bytes.concat([this.pending, chunk]);
 							this.pending = undefined;
 						}
+						// Some hosts receive the line break in front of the bootloader menu
+						// or the CLI prompt as a chunk of its own. Line breaks and null bytes
+						// don't tell the modes apart, so hold them back and inspect them
+						// together with the next chunk.
 						if (
 							chunk.every(
 								(b) => b === 0x00 || b === 0x0a || b === 0x0d,
