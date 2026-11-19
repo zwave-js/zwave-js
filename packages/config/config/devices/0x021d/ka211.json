@@ -1,8 +1,8 @@
 {
 	"manufacturer": "Shenzhen Kaadas Intelligent Technology Co., Ltd.",
 	"manufacturerId": "0x021d",
-	"label": "Door Lock",
-	"description": "Door Lock",
+	"label": "KA211",
+	"description": "Digital Mortise Door Lock",
 	"devices": [
 		{
 			"productType": "0x0103",
