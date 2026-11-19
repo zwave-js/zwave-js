@@ -34,6 +34,13 @@ export interface MockGeckoBootloaderOptions {
 	appValid?: boolean;
 	/** Ignore CAN and other unknown headers during an upload, like a receiver that is stuck */
 	ignoreCancel?: boolean;
+	/** The application the bootloader starts. Default: "serial-api" */
+	application?: "serial-api" | "cli";
+	/**
+	 * After the application reboots into the bootloader, send the carriage return
+	 * in front of the menu as a chunk of its own, like some USB serial bridges do
+	 */
+	splitMenuAfterReboot?: boolean;
 	/**
 	 * Gets called for every XMODEM block the bootloader receives.
 	 * `attempt` counts how often this block number was received during the current upload, starting at 1.
@@ -170,6 +177,7 @@ export function createMockGeckoBootloader(
 	const attempts = new Map<number, number>();
 	let controller: MockController | undefined;
 	let running = false;
+	let splitNextMenu = false;
 
 	function send(data: string | number[]): void {
 		// The mock must stay silent once the test has destroyed it
@@ -191,9 +199,15 @@ export function createMockGeckoBootloader(
 	}
 
 	function printMenu(): void {
-		send(
-			"\r\nGecko Bootloader v3.00.01\r\n1. upload gbl\r\n2. run\r\n3. ebl info\r\nBL > \0",
-		);
+		const menu =
+			"\r\nGecko Bootloader v3.00.01\r\n1. upload gbl\r\n2. run\r\n3. ebl info\r\nBL > \0";
+		if (splitNextMenu) {
+			splitNextMenu = false;
+			send(menu.slice(0, 1));
+			send(menu.slice(1));
+		} else {
+			send(menu);
+		}
 	}
 
 	function printAborted(errorCode: number): void {
@@ -207,6 +221,10 @@ export function createMockGeckoBootloader(
 		running = false;
 		rx.flush();
 		await delay(10, signal);
+		if (options.application === "cli") {
+			send("\r\n> ");
+			return;
+		}
 		const msg = new SerialAPIStartedRequest({
 			wakeUpReason: SerialAPIWakeUpReason.Reset,
 			watchdogEnabled: false,
@@ -394,6 +412,35 @@ export function createMockGeckoBootloader(
 		running = false;
 	}
 
+	let cliInput = "";
+
+	/** Answers the commands of the end device CLI that the driver uses to detect it and enter the bootloader */
+	function handleCLIInput(data: BytesView): void {
+		cliInput += Bytes.view(data).toString("ascii");
+		let lineEnd: number;
+		while ((lineEnd = cliInput.indexOf("\r\n")) !== -1) {
+			const command = cliInput.slice(0, lineEnd).trim();
+			cliInput = cliInput.slice(lineEnd + 2);
+			switch (command) {
+				case "help":
+					send(
+						"help\r\n  bootloader                    Restart into bootloader\r\n> ",
+					);
+					break;
+				case "bootloader":
+					send("bootloader\r\n[I] Rebooting into bootloader\r\n> ");
+					cliInput = "";
+					state.mode = "bootloader";
+					splitNextMenu = !!options.splitMenuAfterReboot;
+					void run();
+					return;
+				default:
+					send(`${command}\r\n> `);
+					break;
+			}
+		}
+	}
+
 	const behavior: MockControllerBehavior = {
 		onHostData(self, data) {
 			controller = self;
@@ -402,9 +449,14 @@ export function createMockGeckoBootloader(
 				if (!running) void run();
 				return true;
 			}
+			if (options.application === "cli") {
+				handleCLIInput(data);
+				return true;
+			}
 			if (isEnterBootloaderRequest(data)) {
 				send([MessageHeaders.ACK]);
 				state.mode = "bootloader";
+				splitNextMenu = !!options.splitMenuAfterReboot;
 				void run();
 				return true;
 			}
