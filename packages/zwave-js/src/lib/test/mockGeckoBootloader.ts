@@ -25,7 +25,9 @@ export type MockXModemFault =
 	// The bootloader accepts the block, but its ACK and the next NAK never reach the host
 	| "drop-ack-and-nak"
 	// The bootloader takes this long to process the block before it ACKs
-	| { delayAck: number };
+	| { delayAck: number }
+	// The bootloader aborts the upload at this block with a "block error" or "file error" code
+	| { abort: "block" | "file"; errorCode: number };
 
 export interface MockGeckoBootloaderOptions {
 	/** Start in the bootloader instead of the Serial API application */
@@ -196,10 +198,13 @@ export function createMockGeckoBootloader(
 		);
 	}
 
-	function printAborted(errorCode: number): void {
+	function printAborted(
+		errorCode: number,
+		prefix: "block" | "file" = "block",
+	): void {
 		// The real bootloader sends the NUL of the error prefix before the code
 		send("\r\nSerial upload aborted\r\n\0");
-		send(`\r\nblock error 0x\0${hex(errorCode)}\r\n`);
+		send(`\r\n${prefix} error 0x\0${hex(errorCode)}\r\n`);
 	}
 
 	async function startApplication(): Promise<void> {
@@ -265,7 +270,9 @@ export function createMockGeckoBootloader(
 		let dropNextNak = false;
 
 		async function acknowledge(fault: MockXModemFault | undefined) {
-			if (typeof fault === "object") await delay(fault.delayAck, signal);
+			if (typeof fault === "object" && "delayAck" in fault) {
+				await delay(fault.delayAck, signal);
+			}
 			if (fault === "drop-ack-and-nak") {
 				dropNextNak = true;
 			} else if (fault !== "drop-ack") {
@@ -351,6 +358,14 @@ export function createMockGeckoBootloader(
 			if (CRC16_CCITT(data, 0x0000) !== crc) {
 				sendFlowControl(XModemMessageHeaders.NAK);
 				continue;
+			}
+
+			if (typeof fault === "object" && "abort" in fault) {
+				sendFlowControl(XModemMessageHeaders.CAN);
+				rx.flush();
+				await delay(10, signal);
+				printAborted(fault.errorCode, fault.abort);
+				return;
 			}
 
 			started = true;
