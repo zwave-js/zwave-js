@@ -1,0 +1,156 @@
+{
+	"manufacturer": "eZLO",
+	"manufacturerId": "0x025b",
+	"label": "Flood Sensor",
+	"description": "Z-Wave Plus Flood and Temperature Sensor",
+	"devices": [
+		{
+			"productType": "0x0201",
+			"productId": "0x000f"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "14",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Basic Set",
+			"description": "Sends BASIC SET commands to nodes associated with group 2."
+		},
+		{
+			"#": "15",
+			"label": "Basic Set Value",
+			"description": "Reverses the BASIC SET value sent to nodes associated with group 2 when the flooding alarm is triggered or canceled.",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Normal",
+					"value": 0
+				},
+				{
+					"label": "Reversed",
+					"value": 1
+				}
+			]
+		},
+		{
+			"#": "16",
+			"$purpose": "calibration.temperature",
+			"label": "Temperature Offset",
+			"description": "0 applies no offset; 1-180 subtracts value × 0.1°F; 181-360 adds (value - 180) × 0.1°F.",
+			"valueSize": 2,
+			"unit": "0.1 °F",
+			"minValue": 0,
+			"maxValue": 360,
+			"defaultValue": 0
+		},
+		{
+			"#": "17",
+			"label": "Flooding Alarm Resend Interval",
+			"valueSize": 1,
+			"unit": "minutes",
+			"minValue": 0,
+			"maxValue": 240,
+			"defaultValue": 5,
+			"unsigned": true
+		},
+		{
+			"#": "18",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Product Moved / Tamper Alarm",
+			"description": "Sends a BASIC SET command to Group 2 associated nodes when the 'Tampering, product moved' event is triggered.",
+			"defaultValue": 1
+		},
+		{
+			"#": "19",
+			"$purpose": "reporting_interval.temperature",
+			"label": "Temperature Report Interval",
+			"valueSize": 1,
+			"unit": "10 minutes",
+			"minValue": 3,
+			"maxValue": 240,
+			"defaultValue": 144,
+			"unsigned": true
+		},
+		{
+			"#": "20",
+			"label": "High Temperature Alarm Threshold",
+			"valueSize": 2,
+			"unit": "0.1 °F",
+			"minValue": -670,
+			"maxValue": 2570,
+			"defaultValue": 1040
+		},
+		{
+			"#": "21",
+			"$purpose": "reporting_threshold.temperature",
+			"label": "Temperature Report Change Threshold",
+			"valueSize": 1,
+			"unit": "0.1 °F",
+			"minValue": 0,
+			"maxValue": 180,
+			"defaultValue": 18,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "22",
+			"label": "Low Temperature Alarm Threshold",
+			"valueSize": 2,
+			"unit": "0.1 °F",
+			"minValue": -670,
+			"maxValue": 2570,
+			"defaultValue": 320
+		},
+		{
+			"#": "24",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Alarm LED",
+			"defaultValue": 1
+		},
+		{
+			"#": "32",
+			"$purpose": "reporting_threshold.low_battery",
+			"label": "Low Battery Alarm Threshold",
+			"valueSize": 1,
+			"unit": "%",
+			"minValue": 10,
+			"maxValue": 50,
+			"defaultValue": 20
+		},
+		{
+			"#": "33",
+			"$purpose": "reporting_interval.battery",
+			"label": "Battery Report Interval",
+			"valueSize": 1,
+			"unit": "hours",
+			"minValue": 0,
+			"maxValue": 168,
+			"defaultValue": 4,
+			"unsigned": true,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
+		}
+	],
+	"metadata": {
+		"wakeup": "Open the sensor cover. Press the Z-Wave button once.",
+		"inclusion": "Open the sensor cover. Quickly click the Z-Wave button three times. The LED blinks blue and then stays solid blue for 2 seconds when the inclusion succeeded.",
+		"exclusion": "Open the sensor cover. Quickly click the Z-Wave button three times. The LED stays solid blue for 2 seconds when the exclusion succeeded.",
+		"reset": "Open the sensor cover. Press and hold the Z-Wave button for more than 20 seconds.",
+		"manual": "https://support.ezlo.com/hc/en-us/articles/27965179608220-Ezlo-Z-Wave-Flood-Sensor-Installation-Manual"
+	}
+}
