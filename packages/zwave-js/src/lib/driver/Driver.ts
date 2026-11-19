@@ -5179,11 +5179,10 @@ export class Driver
 		// The predicate does not check for complete commands or encapsulation,
 		// which is good enough to correlate a partial report with its request
 		const request = getInnermostCommandClass(currentMessage.command);
+		const response = getInnermostCommandClass(command);
 		if (
-			!request.isExpectedCCResponse(
-				this,
-				getInnermostCommandClass(command),
-			)
+			request.endpointIndex !== response.endpointIndex
+			|| !request.isExpectedCCResponse(this, response)
 		) {
 			return;
 		}
