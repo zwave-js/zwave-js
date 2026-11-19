@@ -11,6 +11,10 @@
 	"users": {
 		"authorized": ["AlCalzone", "robertsLando", "blhoward2"]
 	},
+	"escalate": {
+		"bugCategorySlugs": ["request-support-investigate-issue"],
+		"enhancementCategorySlugs": ["feature-requests", "ideas"]
+	},
 	"issues": {
 		"docsFeedbackTitle": "📊 Docs answer bot feedback"
 	},

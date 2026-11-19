@@ -24,10 +24,16 @@ const STRING_KEYS = [
 	"evalCases.relatedPostsFile",
 	"redirects.issueTracker",
 ];
-const STRING_ARRAY_KEYS = ["docs.questionCategorySlugs", "users.authorized"];
+const STRING_ARRAY_KEYS = [
+	"docs.questionCategorySlugs",
+	"users.authorized",
+	"escalate.bugCategorySlugs",
+	"escalate.enhancementCategorySlugs",
+];
 // Present in zwave-js-ui (redirects mis-filed issues to the driver
-// repo); absent in zwave-js, which is that repo
-const OPTIONAL_GROUPS = new Set(["redirects"]);
+// repo); absent in zwave-js, which is that repo.
+// A repo without the escalate group gets escalated issues without a label
+const OPTIONAL_GROUPS = new Set(["redirects", "escalate"]);
 
 /**
  * @param {any} obj

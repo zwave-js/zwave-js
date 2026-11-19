@@ -51,4 +51,10 @@ describe("bot config", () => {
 		delete bad.redirects;
 		expect(loadConfig(JSON.stringify(bad)).redirects).toBeUndefined();
 	});
+
+	it("allows the optional escalate group to be absent", () => {
+		const bad = structuredClone(config);
+		delete bad.escalate;
+		expect(loadConfig(JSON.stringify(bad)).escalate).toBeUndefined();
+	});
 });
