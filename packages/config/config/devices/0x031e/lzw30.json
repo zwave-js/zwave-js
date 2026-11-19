@@ -103,54 +103,15 @@
 		},
 		{
 			"#": "6",
-			"label": "LED Indicator Intensity (When on)",
+			"label": "LED Indicator Intensity (When On)",
 			"valueSize": 1,
+			"minValue": 0,
+			"maxValue": 10,
 			"defaultValue": 5,
-			"allowManualEntry": false,
 			"options": [
 				{
 					"label": "Off",
 					"value": 0
-				},
-				{
-					"label": "10 %",
-					"value": 1
-				},
-				{
-					"label": "20 %",
-					"value": 2
-				},
-				{
-					"label": "30 %",
-					"value": 3
-				},
-				{
-					"label": "40 %",
-					"value": 4
-				},
-				{
-					"label": "50 %",
-					"value": 5
-				},
-				{
-					"label": "60 %",
-					"value": 6
-				},
-				{
-					"label": "70 %",
-					"value": 7
-				},
-				{
-					"label": "80 %",
-					"value": 8
-				},
-				{
-					"label": "90%",
-					"value": 9
-				},
-				{
-					"label": "100 %",
-					"value": 10
 				}
 			]
 		},
@@ -158,52 +119,13 @@
 			"#": "7",
 			"label": "LED Indicator Intensity (When Off)",
 			"valueSize": 1,
-			"defaultValue": 2,
-			"allowManualEntry": false,
+			"minValue": 0,
+			"maxValue": 10,
+			"defaultValue": 1,
 			"options": [
 				{
 					"label": "Off",
 					"value": 0
-				},
-				{
-					"label": "10 %",
-					"value": 1
-				},
-				{
-					"label": "20 %",
-					"value": 2
-				},
-				{
-					"label": "30 %",
-					"value": 3
-				},
-				{
-					"label": "40 %",
-					"value": 4
-				},
-				{
-					"label": "50 %",
-					"value": 5
-				},
-				{
-					"label": "60 %",
-					"value": 6
-				},
-				{
-					"label": "70 %",
-					"value": 7
-				},
-				{
-					"label": "80 %",
-					"value": 8
-				},
-				{
-					"label": "90 %",
-					"value": 9
-				},
-				{
-					"label": "100 %",
-					"value": 10
 				}
 			]
 		},
