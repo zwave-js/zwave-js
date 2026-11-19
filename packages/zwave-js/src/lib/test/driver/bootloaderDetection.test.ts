@@ -4,6 +4,10 @@ import { wait } from "alcalzone-shared/async";
 
 import { DriverMode } from "../../driver/DriverMode.js";
 import { integrationTest } from "../integrationTestSuite.js";
+import {
+	type MockGeckoBootloader,
+	createMockGeckoBootloader,
+} from "../mockGeckoBootloader.js";
 
 integrationTest("The bootloader is detected when received in smaller chunks", {
 	// Reproduction for issue #7316
@@ -44,3 +48,34 @@ BL >\0`,
 		t.expect(driver.mode).toBe(DriverMode.Bootloader);
 	},
 });
+
+let bootloader: MockGeckoBootloader;
+integrationTest(
+	"The bootloader is detected after the CLI reboots into it and the menu starts with a separate carriage return",
+	{
+		// debug: true,
+
+		additionalDriverOptions: {
+			bootloaderMode: "stay",
+		},
+
+		async customSetup(driver, mockController) {
+			bootloader = createMockGeckoBootloader({
+				startInBootloader: true,
+				application: "cli",
+				splitMenuAfterReboot: true,
+			});
+			mockController.defineBehavior(bootloader.behavior);
+		},
+
+		testBody: async (t, driver) => {
+			t.onTestFinished(() => bootloader.destroy());
+
+			await driver.leaveBootloader();
+			t.expect(driver.mode).toBe(DriverMode.CLI);
+
+			await driver.enterBootloader();
+			t.expect(driver.mode).toBe(DriverMode.Bootloader);
+		},
+	},
+);
