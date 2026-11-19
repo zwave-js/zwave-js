@@ -8847,11 +8847,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				// The soft reset that follows a successful restore re-enables the radio
 				rfRestored = true;
 
-				// After restoring an NVM backup, the controller's capabilities may have changed.
-				// Also, we could be talking to different nodes than the cache file contains.
-				// Reset all info about all nodes, so they get re-interviewed.
-				self._nodes.clear();
-
 				yield* waitFor(self.driver.softResetAndRestart(thisTask));
 			},
 			cleanup: async () => {
@@ -8937,10 +8932,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				// The controller must be reset before the radio is turned on again.
 				// Until then, it still runs with the state of the previous NVM and may write it back to the restored one.
 				rfRestored = true;
-
-				// The restored NVM may contain different nodes than the cache file
-				self._nodes.forEach((node) => node.destroy());
-				self._nodes.clear();
 
 				yield* waitFor(self.driver.softResetAndRestart(thisTask));
 
