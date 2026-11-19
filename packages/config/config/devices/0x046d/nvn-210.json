@@ -15,46 +15,47 @@
 	},
 	"paramInformation": [
 		{
-			"#": "3",
-			"$import": "~/templates/master_template.json#led_indicator_four_options",
-			"defaultValue": 1
+			"#": "2",
+			"$import": "~/templates/master_template.json#led_indicator_four_options"
 		},
 		{
-			"#": "16",
-			"$import": "templates/novon_template.json#switch_mode"
+			"#": "4",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_off_timer"
 		},
 		{
-			"#": "30",
-			"$import": "~/templates/master_template.json#minimum_dim_level_1-99"
+			"#": "6",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_on_timer"
 		},
 		{
-			"#": "31",
-			"$import": "~/templates/master_template.json#maximum_dim_level_1-99"
+			"#": "7",
+			"$import": "~/0x0312/templates/minoston_template.json#night_light_set"
 		},
 		{
-			"#": "32",
-			"$import": "~/templates/master_template.json#default_dim_level_0-99",
-			"label": "Starting Brightness Level",
-			"defaultValue": 0
+			"#": "8",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		},
 		{
-			"#": "39",
-			"$import": "~/templates/master_template.json#state_after_power_failure_prev_off_on"
+			"#": "9",
+			"$import": "templates/novon_template.json#dim_speed_on_off"
 		},
 		{
-			"#": "41",
-			"$import": "templates/novon_template.json#indicator_brightness",
-			"label": "LED Brightness"
+			"#": "10",
+			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_dimmer"
 		},
 		{
-			"#": "84",
-			"$import": "templates/novon_template.json#factory_reset"
+			"#": "11",
+			"$import": "~/templates/master_template.json#minimum_dim_level_0-99",
+			"defaultValue": 10
+		},
+		{
+			"#": "12",
+			"$import": "~/templates/master_template.json#maximum_dim_level_0-99"
 		}
 	],
 	"metadata": {
-		"inclusion": "Tap the button once.",
-		"exclusion": "Tap the button once.",
-		"reset": "1. Unplug the device.\n2. Press and hold the button.\n3. Plug the device back in and keep holding the button for 3 seconds.",
+		"inclusion": "Tap the button three times quickly.",
+		"exclusion": "Tap the button three times quickly.",
+		"reset": "Tap the button twice quickly, then hold it for at least 10 seconds.",
 		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80719/NVN-210UserManual.pdf"
 	}
 }
