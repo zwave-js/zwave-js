@@ -10,6 +10,9 @@ const IS_TEST = getenv("NODE_ENV") === "test" || !!getenv("CI");
 
 export class SerialModeSwitch extends WritableStream<BytesView> {
 	private possiblyCLI = false;
+	// Line breaks and null bytes don't tell the modes apart. They are held back
+	// until the next chunk and passed on together with it.
+	private pending: BytesView | undefined;
 
 	#mode: ZWaveSerialMode | undefined;
 	public get mode(): ZWaveSerialMode | undefined {
@@ -18,6 +21,7 @@ export class SerialModeSwitch extends WritableStream<BytesView> {
 	public set mode(mode: ZWaveSerialMode | undefined) {
 		this.#mode = mode;
 		this.possiblyCLI = false;
+		this.pending = undefined;
 	}
 
 	// The output sides of the stream
@@ -40,6 +44,18 @@ export class SerialModeSwitch extends WritableStream<BytesView> {
 						// The CLI answers a NAK with a NAK, but this could also be the Serial API being unable to read a frame
 						this.possiblyCLI = true;
 					} else {
+						if (this.pending) {
+							chunk = Bytes.concat([this.pending, chunk]);
+							this.pending = undefined;
+						}
+						if (
+							chunk.every(
+								(b) => b === 0x00 || b === 0x0a || b === 0x0d,
+							)
+						) {
+							this.pending = chunk;
+							return;
+						}
 						const buffer = Bytes.view(chunk);
 						// If we haven't figured out the startup mode yet,
 						// inspect the chunk to see if it contains the bootloader preamble
