@@ -18,7 +18,7 @@ If not, start a discussion in the [Request support / investigate issue](https://
 
 ## Do you want to propose a new feature?
 
-Start a discussion in the [Feature requests](https://github.com/zwave-js/zwave-js/discussions/new?category=feature-requests) category and fill out the form. For complicated features or ones that need some brainstorming, you can join us on [Discord](https://discord.gg/mcJGf2UmBE) and discuss there.
+Start a discussion in the [Feature requests](https://github.com/zwave-js/zwave-js/discussions/new?category=feature-requests) category and fill out the form. For complicated features or ones that need some brainstorming, you can join us on [Discord](https://discord.gg/HFqcyFNfWd) and discuss there.
 
 ## Do you want to contribute device configuration files?
 
