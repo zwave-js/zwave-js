@@ -33,6 +33,12 @@
 			allowedVersions: "<21",
 		},
 		{
+			// Switch the @tsconfig base by hand when the minimum supported Node.js version changes
+			matchPackageNames: ["@tsconfig/node**"],
+			matchUpdateTypes: ["replacement"],
+			enabled: false,
+		},
+		{
 			// All gh-aw pins move in one PR so the recompiled workflows match
 			matchDepNames: ["github/gh-aw"],
 			groupName: "gh-aw",
