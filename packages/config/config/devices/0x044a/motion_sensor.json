@@ -20,6 +20,7 @@
 		},
 		{
 			"#": "2",
+			"$purpose": "motion_retrigger_interval",
 			"label": "Motion Retrigger Delay",
 			"valueSize": 4,
 			"unit": "seconds",
@@ -37,7 +38,7 @@
 			"#": "11",
 			"$purpose": "motion_sensitivity.inverted",
 			"label": "Motion Detection Threshold",
-			"description": "Lower thresholds increase sensitivity. Apply using parameter 19, then reset parameter 19 to 0.",
+			"description": "Lower thresholds increase sensitivity. Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 255,
@@ -46,6 +47,7 @@
 		{
 			"#": "12",
 			"label": "Blind Time",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"unit": "0.1 seconds",
 			"allowed": [
@@ -59,6 +61,7 @@
 		{
 			"#": "13",
 			"label": "Pulse Count",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"minValue": 1,
 			"maxValue": 4,
@@ -67,6 +70,7 @@
 		{
 			"#": "14",
 			"label": "Pulse Counting Window",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"allowed": [
 				{
@@ -78,8 +82,9 @@
 		},
 		{
 			"#": "15",
+			// The values are undocumented, so this parameter has no options
 			"label": "Operation Mode",
-			"description": "Numeric modes are not explained in the available manufacturer documentation.",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 2,
@@ -87,8 +92,9 @@
 		},
 		{
 			"#": "16",
+			// The values are undocumented, so this parameter has no options
 			"label": "Signal Source",
-			"description": "Numeric source selections are not explained in the available manufacturer documentation.",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 1,
@@ -96,8 +102,9 @@
 		},
 		{
 			"#": "17",
+			// The values are undocumented, so this parameter has no options
 			"label": "High-Pass Filter Frequency",
-			"description": "Numeric frequency selections are not explained in the available manufacturer documentation.",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 1,
@@ -105,8 +112,9 @@
 		},
 		{
 			"#": "18",
+			// The values are undocumented, so this parameter has no options
 			"label": "Pulse Detection Mode",
-			"description": "Numeric modes are not explained in the available manufacturer documentation.",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"minValue": 0,
 			"maxValue": 1,
@@ -116,13 +124,5 @@
 			"#": "19",
 			"$import": "templates/boundary_template.json#apply"
 		}
-	],
-	"metadata": {
-		"comments": [
-			{
-				"level": "info",
-				"text": "After changing PIR sensor configuration, write parameter 19 to 1 and then reset it to 0. Settings are delivered when the battery-powered device wakes up."
-			}
-		]
-	}
+	]
 }

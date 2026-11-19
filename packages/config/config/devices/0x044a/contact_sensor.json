@@ -21,6 +21,7 @@
 		{
 			"#": "11",
 			"label": "Magnetic Field Threshold",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"unit": "0.01 mT",
 			"minValue": 8,
@@ -30,6 +31,7 @@
 		{
 			"#": "12",
 			"label": "Magnetic Field Hysteresis",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"unit": "0.01 mT",
 			"minValue": 4,
@@ -40,6 +42,7 @@
 			"#": "13",
 			"$import": "~/templates/master_template.json#base_options_nounit",
 			"label": "Magnetic Field Polarity",
+			"description": "Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"options": [
 				{
@@ -77,13 +80,5 @@
 			"#": "19",
 			"$import": "templates/boundary_template.json#apply"
 		}
-	],
-	"metadata": {
-		"comments": [
-			{
-				"level": "info",
-				"text": "After changing magnetic sensor configuration, write parameter 19 to 1 and then reset it to 0. Settings are delivered when the battery-powered device wakes up."
-			}
-		]
-	}
+	]
 }

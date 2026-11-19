@@ -83,18 +83,20 @@
 			"#": "14",
 			"$import": "templates/boundary_template.json#led_time",
 			"label": "LED First Off Time",
+			"description": "Alternates with the second off time. Apply by setting parameter 19 to 1, then back to 0.",
 			"defaultValue": 11
 		},
 		{
 			"#": "15",
 			"$import": "templates/boundary_template.json#led_time",
 			"label": "LED Second Off Time",
+			"description": "Alternates with the first off time. Apply by setting parameter 19 to 1, then back to 0.",
 			"defaultValue": 11
 		},
 		{
 			"#": "16",
 			"label": "LED Maximum Intensity",
-			"description": "PWM duty cycle is value / 15. Apply using parameter 19, then reset parameter 19 to 0.",
+			"description": "PWM duty cycle is value / 15. Apply by setting parameter 19 to 1, then back to 0.",
 			"valueSize": 4,
 			"minValue": 1,
 			"maxValue": 15,
@@ -130,10 +132,6 @@
 			{
 				"level": "info",
 				"text": "Temperature may require periodic polling; an hourly temperature-only refresh was verified on firmware 1.8.0."
-			},
-			{
-				"level": "info",
-				"text": "The LED timing options use the TCA6507 nominal timing codes. The first and second off times alternate between pulses."
 			}
 		]
 	}
