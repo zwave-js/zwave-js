@@ -1,0 +1,148 @@
+{
+	"manufacturer": "McoHome Technology Co., Ltd.",
+	"manufacturerId": "0x015f",
+	"label": "MH-S311-SL",
+	"description": "Non-Neutral Touch Panel Switch 1 Button",
+	"devices": [
+		{
+			"productType": "0x0004",
+			"productId": "0x7103"
+		}
+	],
+	"firmwareVersion": {
+		"min": "0.0",
+		"max": "255.255"
+	},
+	"paramInformation": [
+		{
+			"#": "4",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Local Control",
+			"defaultValue": 0
+		},
+		{
+			"#": "5",
+			"$import": "~/templates/master_template.json#base_enable_disable_inverted",
+			"label": "Remote Control",
+			"defaultValue": 0
+		},
+		{
+			"#": "6",
+			"label": "All Keys Output Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click to switch on/off",
+					"value": 0
+				},
+				{
+					"label": "Click to turn on, auto off after param 11 duration",
+					"value": 1
+				},
+				{
+					"label": "Click to turn off, auto on after param 11 duration",
+					"value": 2
+				},
+				{
+					"label": "Hold >3s for on until released",
+					"value": 3
+				},
+				{
+					"label": "Hold >3s to switch on/off",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "7",
+			"label": "Key 1 Output Mode",
+			"valueSize": 1,
+			"defaultValue": 0,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Single click to switch on/off",
+					"value": 0
+				},
+				{
+					"label": "Click to turn on, auto off after param 12 duration",
+					"value": 1
+				},
+				{
+					"label": "Click to turn off, auto on after param 12 duration",
+					"value": 2
+				},
+				{
+					"label": "Hold >3s for on until released",
+					"value": 3
+				},
+				{
+					"label": "Hold >3s to switch on/off",
+					"value": 4
+				}
+			]
+		},
+		{
+			"#": "11",
+			"label": "All Keys Timer Duration",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "12",
+			"label": "Key 1 Timer Duration",
+			"valueSize": 2,
+			"unit": "seconds",
+			"minValue": 0,
+			"maxValue": 32767,
+			"defaultValue": 0,
+			"options": [
+				{
+					"label": "Infinite",
+					"value": 0
+				}
+			]
+		},
+		{
+			"#": "50[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Scene IDs 1-10"
+		},
+		{
+			"#": "51[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Scene IDs 1-5"
+		},
+		{
+			"#": "52[0x01]",
+			"$import": "~/templates/master_template.json#base_enable_disable",
+			"label": "Respond to Scene IDs 5-10"
+		},
+		{
+			"#": "255",
+			"$import": "templates/mcohome_template.json#factory_reset",
+			"writeOnly": true
+		}
+	],
+	"compat": {
+		// The device only has a single (unnecessary) endpoint, but it cannot be configured
+		// to report to the root endpoint. So we need to preserve it.
+		"preserveEndpoints": [1]
+	},
+	"metadata": {
+		"inclusion": "Press any key 3 times quickly. The indicator light keeps flashing until the inclusion is complete. If it does not flash, the inclusion failed.",
+		"exclusion": "Press any key 3 times quickly. The indicator light keeps flashing until the exclusion is complete. If it does not flash, the exclusion failed.",
+		"reset": "Press any key 20 times quickly."
+	}
+}
