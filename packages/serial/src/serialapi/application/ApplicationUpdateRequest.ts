@@ -4,6 +4,7 @@ import {
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type NodeUpdatePayload,
+	encodeNodeID,
 	encodeNodeUpdatePayload,
 	getCCName,
 	logList,
@@ -75,6 +76,13 @@ export class ApplicationUpdateRequest extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): ApplicationUpdateRequest {
+		// Subclasses that inherit this method receive the payload without the update type byte
+		if (this !== ApplicationUpdateRequest) {
+			const ret = new this({});
+			ret.payload = raw.payload;
+			return ret;
+		}
+
 		const updateType: ApplicationUpdateTypes = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
@@ -153,6 +161,11 @@ export class ApplicationUpdateRequestNodeInfoRequestFailed
 {
 	isOK(): boolean {
 		return false;
+	}
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([encodeNodeID(0, ctx.nodeIdType), [0]]);
+		return super.serialize(ctx);
 	}
 }
 

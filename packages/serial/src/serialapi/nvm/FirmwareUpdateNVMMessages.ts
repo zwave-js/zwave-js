@@ -87,6 +87,13 @@ export class FirmwareUpdateNVMRequest extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): FirmwareUpdateNVMRequest {
+		// Subclasses that inherit this method receive the payload without the command byte
+		if (this !== FirmwareUpdateNVMRequest) {
+			const ret = new this({});
+			ret.payload = raw.payload;
+			return ret;
+		}
+
 		const command: FirmwareUpdateNVMCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
@@ -144,6 +151,13 @@ export class FirmwareUpdateNVMResponse extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): FirmwareUpdateNVMResponse {
+		// Subclasses that inherit this method receive the payload without the command byte
+		if (this !== FirmwareUpdateNVMResponse) {
+			const ret = new this({});
+			ret.payload = raw.payload;
+			return ret;
+		}
+
 		const command: FirmwareUpdateNVMCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 

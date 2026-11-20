@@ -103,6 +103,13 @@ export class SetupRadioRequest extends RCPMessage {
 		raw: RCPMessageRaw,
 		ctx: RCPMessageParsingContext,
 	): SetupRadioRequest {
+		// Subclasses that inherit this method receive the payload without the command byte
+		if (this !== SetupRadioRequest) {
+			const ret = new this({});
+			ret.payload = raw.payload;
+			return ret;
+		}
+
 		const command: SetupRadioCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
@@ -157,6 +164,13 @@ export class SetupRadioResponse extends RCPMessage {
 		raw: RCPMessageRaw,
 		ctx: RCPMessageParsingContext,
 	): SetupRadioResponse {
+		// Subclasses that inherit this method receive the payload without the command byte
+		if (this !== SetupRadioResponse) {
+			const ret = new this({});
+			ret.payload = raw.payload;
+			return ret;
+		}
+
 		const command: SetupRadioCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 

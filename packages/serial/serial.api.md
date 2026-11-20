@@ -373,6 +373,8 @@ export class ApplicationUpdateRequestNodeInfoReceived extends ApplicationUpdateR
 export class ApplicationUpdateRequestNodeInfoRequestFailed extends ApplicationUpdateRequest implements SuccessIndicator_2 {
     // (undocumented)
     isOK(): boolean;
+    // (undocumented)
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ApplicationUpdateRequestNodeRemoved" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)

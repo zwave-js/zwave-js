@@ -100,6 +100,13 @@ export class SerialAPISetupRequest extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): SerialAPISetupRequest {
+		// Subclasses that inherit this method receive the payload without the command byte
+		if (this !== SerialAPISetupRequest) {
+			const ret = new this({});
+			ret.payload = raw.payload;
+			return ret;
+		}
+
 		const command: SerialAPISetupCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
@@ -154,6 +161,13 @@ export class SerialAPISetupResponse extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): SerialAPISetupResponse {
+		// Subclasses that inherit this method receive the payload without the command byte
+		if (this !== SerialAPISetupResponse) {
+			const ret = new this({});
+			ret.payload = raw.payload;
+			return ret;
+		}
+
 		const command: SerialAPISetupCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
