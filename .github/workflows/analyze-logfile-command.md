@@ -66,8 +66,8 @@ steps:
     url: ${{ steps.parse_command.outputs.url }}
 description: Analyze a Z-Wave JS logfile on demand via /analyze-logfile <url>
 engine: copilot
-model: claude-opus-4.8
-source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@6d806c00d2a4195612805eca122f019f223fba5d
+model: claude-opus-5.5
+source: zwave-js/bot-workflows/workflows/analyze-logfile-command.md@7c71282e0ee344aab53c832d6ec228058e828efa
 timeout-minutes: 30
 ---
 # Z-Wave JS Logfile Analysis

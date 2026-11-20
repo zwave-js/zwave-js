@@ -38,22 +38,22 @@
     "zwave-js/bot-workflows/actions/download-logfile@v1": {
       "repo": "zwave-js/bot-workflows/actions/download-logfile",
       "version": "v1",
-      "sha": "6d806c00d2a4195612805eca122f019f223fba5d"
+      "sha": "7c71282e0ee344aab53c832d6ec228058e828efa"
     },
     "zwave-js/bot-workflows/actions/report-index-status@v1": {
       "repo": "zwave-js/bot-workflows/actions/report-index-status",
       "version": "v1",
-      "sha": "6d806c00d2a4195612805eca122f019f223fba5d"
+      "sha": "7c71282e0ee344aab53c832d6ec228058e828efa"
     },
     "zwave-js/bot-workflows/actions/restore-bot-index@v1": {
       "repo": "zwave-js/bot-workflows/actions/restore-bot-index",
       "version": "v1",
-      "sha": "6d806c00d2a4195612805eca122f019f223fba5d"
+      "sha": "7c71282e0ee344aab53c832d6ec228058e828efa"
     },
     "zwave-js/bot-workflows/actions/setup-bot@v1": {
       "repo": "zwave-js/bot-workflows/actions/setup-bot",
       "version": "v1",
-      "sha": "6d806c00d2a4195612805eca122f019f223fba5d"
+      "sha": "7c71282e0ee344aab53c832d6ec228058e828efa"
     }
   },
   "containers": {

@@ -123,9 +123,9 @@ steps:
       );
 description: Automatically analyze Z-Wave JS logfiles posted in new discussions
 engine: copilot
-model: claude-opus-4.8
+model: claude-opus-5.5
 runs-on-slim: ubuntu-latest
-source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@6d806c00d2a4195612805eca122f019f223fba5d
+source: zwave-js/bot-workflows/workflows/analyze-logfile-auto.md@7c71282e0ee344aab53c832d6ec228058e828efa
 timeout-minutes: 30
 ---
 # Z-Wave JS Logfile Analysis
