@@ -9552,14 +9552,9 @@ ${handlers.length} left`,
 	> {
 		const maxAttempts = this.options.attempts.firmwareUpdateOTW;
 		let result!: OTWFirmwareUpdateResult;
-		// Read the manufacturer ID before entering the bootloader destroys the controller instance.
-		// The manufacturer ID is unknown when the driver started in bootloader mode.
-		const isZWA2 = this._controller?.manufacturerId === 0x0466;
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-			result = yield* waitFor(
-				this.firmwareUpdateOTW700Internal(data, isZWA2),
-			);
+			result = yield* waitFor(this.firmwareUpdateOTW700Internal(data));
 			if (result.success) break;
 
 			// The bootloader rejects images that fail verification. Restarting the
@@ -9606,7 +9601,6 @@ ${handlers.length} left`,
 
 	private async firmwareUpdateOTW700Internal(
 		data: BytesView,
-		isZWA2: boolean,
 	): Promise<OTWFirmwareUpdateResult> {
 		// Whether the bootloader may still be waiting for XMODEM data
 		let uploadInProgress = false;
@@ -9762,7 +9756,6 @@ ${handlers.length} left`,
 						explanation = explainBootloaderError(
 							errorMatch[1] as "block" | "file",
 							errorCode,
-							isZWA2,
 						);
 						if (explanation) message += ` ${explanation}`;
 					}

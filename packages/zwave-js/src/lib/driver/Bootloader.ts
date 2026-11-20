@@ -104,7 +104,6 @@ export class Bootloader {
 export function explainBootloaderError(
 	kind: "block" | "file",
 	errorCode: number,
-	isZWA2: boolean,
 ): string | undefined {
 	// The mapping follows btl_comm_xmodem_common.c from Simplicity SDK 2024.12.2.
 	// Parser results without their own code are reported as 0x18.
@@ -133,11 +132,7 @@ export function explainBootloaderError(
 		case 0x43:
 			return "The firmware file failed its checksum. It is corrupt or incomplete.";
 		case 0x44:
-			// The ZWA-2 Toolbox reports this code as a blank bootloader encryption key
-			if (isZWA2) {
-				return "The bootloader encryption key of this ZWA-2 is probably missing. Restore it with the ZWA-2 Toolbox: https://home-assistant.github.io/zwa2-toolbox/";
-			}
-			return "The bootloader found data it cannot parse. For an encrypted file, the file was encrypted with a key that does not match this controller.";
+			return "The bootloader found data it cannot parse. For an encrypted file, the file was encrypted with a key that does not match this controller, or the controller's encryption key is blank.";
 		case 0x45:
 			return "The signature of the firmware file does not match the signing key of this controller. The file is not meant for this controller.";
 		case 0x4f:
