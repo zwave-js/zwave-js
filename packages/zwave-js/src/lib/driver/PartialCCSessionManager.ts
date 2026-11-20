@@ -80,6 +80,7 @@ export class PartialCCSessionManager {
 		const remaining = command.getRemainingSegments() ?? 0;
 		const key = JSON.stringify({
 			nodeId: command.nodeId,
+			endpointIndex: command.endpointIndex,
 			ccId: command.ccId,
 			ccCommand: command.ccCommand,
 			...sessionId,
