@@ -104,10 +104,28 @@ export type SetValueImplementationHooksFactory = (
 /**
  * A generic options bag for the `setValue` API.
  * Each implementation will choose the options that are relevant for it, so you can use the same options everywhere.
+ *
+ * `transmitOptions` overrides the transmit options for the resulting command.
+ *
+ * - On multicast, `ACK` requests per-node confirmation: the firmware follows
+ *   the multicast frame with a singlecast frame to each target. `AutoRoute` and
+ *   `Explore` only apply to those singlecast follow-ups (500 Series APG
+ *   INS13954-13 §4.3.3.4), and routed NPDUs are singlecast-only (Network Layer
+ *   spec NWK:000A.1). Without ACK the multicast frame is unrouted and `0x24` is
+ *   effectively `0x00`, so only directly reachable nodes receive it and the
+ *   controller gets no per-node confirmation — optimistic value updates are
+ *   still applied to every target even if some missed the frame.
+ * - For S2 groups the driver performs its own singlecast follow-ups (for MPAN
+ *   resync) regardless of `transmitOptions`, so dropping ACK gives little
+ *   speedup there.
+ * - On singlecast, omitting ACK disables acknowledgements and retries. For a
+ *   secure (S0/S2) singlecast, ACK is always forced back on.
+ * - Broadcast is covered too, since `VirtualNode` serves both multicast and
+ *   broadcast.
  * @publicAPI
  */
 export type SetValueAPIOptions = Partial<ValueChangeOptions>
-	& Pick<SendCommandOptions, "onProgress">;
+	& Pick<SendCommandOptions, "onProgress" | "transmitOptions">;
 
 /** Used to identify the method on the CC API class that handles polling values from nodes */
 export const POLL_VALUE: unique symbol = Symbol.for("CCAPI_POLL_VALUE");
