@@ -169,6 +169,8 @@ import {
 	SendDataRequest,
 	SendTestFrameRequest,
 	SendTestFrameTransmitReport,
+	SerialAPISetup_SetNodeIDTypeRequest,
+	SerialAPISetup_SetNodeIDTypeResponse,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
@@ -984,6 +986,21 @@ export class Driver
 		this.immediateQueue = new TransactionQueue({
 			name: "immediate",
 			mayStartNextTransaction: (t) => {
+				// A soft reset restores the node ID type before it unpauses the queue or marks the controller as ready.
+				// This request must pass the unresponsive, jammed and paused restrictions below.
+				if (t.message instanceof SerialAPISetup_SetNodeIDTypeRequest) {
+					return true;
+				}
+
+				// The queue stays paused for the whole soft reset, so the reset and the readiness probe must pass it.
+				// This must come before the jammed check, because jam recovery soft resets while the controller is jammed.
+				if (this.queuePaused && this.isSoftResetting) {
+					return (
+						t.message instanceof SoftResetRequest
+						|| t.message instanceof GetControllerVersionRequest
+					);
+				}
+
 				// While the controller is unresponsive, only soft resetting is allowed.
 				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
 				// allow that too.
@@ -3584,6 +3601,9 @@ export class Driver
 
 		try {
 			this.isSoftResetting = true;
+			// Hold back all other commands until the node ID type is restored,
+			// because they are serialized with it
+			this.pauseSendQueue();
 			await this.sendMessage(new SoftResetRequest(), {
 				supportCheck: false,
 				pauseSendThread: true,
@@ -3596,6 +3616,7 @@ export class Driver
 			// Don't continue if the controller is unresponsive
 			if (isMissingControllerACK(e)) {
 				this.isSoftResetting = false;
+				this.unpauseSendQueue();
 				throw e;
 			}
 		}
@@ -3634,8 +3655,10 @@ export class Driver
 				void this._controller?.startWatchdog();
 			}
 
-			// If desired, re-configure the controller to use 16 bit node IDs
-			void this._controller?.trySetNodeIDType(NodeIDType.Long);
+			// Some controllers keep using 16 bit node IDs after a soft reset.
+			// Restore the node ID type before anything else is sent, because
+			// all following commands are serialized with it.
+			await this._controller?.trySetNodeIDType(NodeIDType.Long);
 
 			// Resume sending
 			this.unpauseSendQueue();
@@ -3752,14 +3775,17 @@ export class Driver
 		// We don't need to use any specific command here. However we're going to use this one in the interview
 		// anyways, so we might aswell use it here too
 		const pollController = async () => {
+			// A soft reset keeps the queue paused until the node ID type is restored.
+			// The immediate queue lets the probe through anyway.
+			const keepPaused = this.isSoftResetting && this.queuePaused;
 			try {
 				// And resume sending - this requires us to unpause the send thread
-				this.unpauseSendQueue();
+				if (!keepPaused) this.unpauseSendQueue();
 				await this.sendMessage(new GetControllerVersionRequest(), {
 					supportCheck: false,
 					priority: MessagePriority.ControllerImmediate,
 				});
-				this.pauseSendQueue();
+				if (!keepPaused) this.pauseSendQueue();
 				this.controllerLog.print("Serial API responded");
 				return true;
 			} catch {
@@ -7161,6 +7187,15 @@ ${handlers.length} left`,
 						msg,
 						transactionSource,
 					);
+					// Update the node ID type before the next queued command is serialized
+					if (
+						this._controller
+						&& msg instanceof SerialAPISetup_SetNodeIDTypeRequest
+						&& ret instanceof SerialAPISetup_SetNodeIDTypeResponse
+						&& ret.success
+					) {
+						this._controller.nodeIdType = msg.nodeIdType;
+					}
 					result.resolve(ret);
 				} catch (e) {
 					if (
