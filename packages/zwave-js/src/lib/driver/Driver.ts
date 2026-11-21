@@ -256,7 +256,7 @@ import {
 	sendStatistics,
 } from "../telemetry/statistics.js";
 
-import { Bootloader } from "./Bootloader.js";
+import { Bootloader, explainBootloaderError } from "./Bootloader.js";
 import { DriverMode } from "./DriverMode.js";
 import { EndDeviceCLI } from "./EndDeviceCLI.js";
 import {
@@ -9744,15 +9744,19 @@ ${handlers.length} left`,
 
 				let message = `OTW update was aborted by the bootloader.`;
 				let errorCode: number | undefined;
+				let explanation: string | undefined;
 				if (error) {
 					message += ` ${error.message}`;
-					// Parse error code from the message
 					const errorMatch = error.message.match(
-						/error 0x([0-9a-fA-F]+)/,
+						/(block|file) error 0x([0-9a-fA-F]+)/,
 					);
 					if (errorMatch) {
-						const errorCodeStr = errorMatch[1];
-						errorCode = parseInt(errorCodeStr, 16);
+						errorCode = parseInt(errorMatch[2], 16);
+						explanation = explainBootloaderError(
+							errorMatch[1] as "block" | "file",
+							errorCode,
+						);
+						if (explanation) message += ` ${explanation}`;
 					}
 				}
 				this.controllerLog.print(message, "error");
@@ -9761,6 +9765,7 @@ ${handlers.length} left`,
 					success: false,
 					status: OTWFirmwareUpdateStatus.Error_Aborted,
 					errorCode,
+					message: explanation,
 				};
 				return result;
 			} else {

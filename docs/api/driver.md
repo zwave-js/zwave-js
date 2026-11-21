@@ -334,6 +334,8 @@ interface OTWFirmwareUpdateResult {
 	status: OTWFirmwareUpdateStatus;
 	/** The bootloader error code, if available when the update fails */
 	errorCode?: number;
+	/** Explains the bootloader error code, if it is known */
+	message?: string;
 }
 ```
 
@@ -506,6 +508,8 @@ interface OTWFirmwareUpdateResult {
 	status: OTWFirmwareUpdateStatus;
 	/** The bootloader error code, if available when the update fails */
 	errorCode?: number;
+	/** Explains the bootloader error code, if it is known */
+	message?: string;
 }
 ```
 
