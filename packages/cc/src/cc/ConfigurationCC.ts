@@ -2304,6 +2304,7 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 			(_, i) => firstParameter + i,
 		);
 		if (resetToDefault) {
+			// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- parameters are validated to be non-empty and consecutive
 			return new this({
 				nodeId: ctx.sourceNodeId,
 				parameters,
@@ -2314,6 +2315,7 @@ export class ConfigurationCCBulkSet extends ConfigurationCC {
 		const values = parameters.map((_, i) =>
 			raw.payload.readIntBE(4 + i * valueSize, valueSize),
 		);
+		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- parameters are validated to be non-empty and consecutive
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameters,
@@ -2644,6 +2646,7 @@ export class ConfigurationCCBulkGet extends ConfigurationCC {
 		const firstParameter = raw.payload.readUInt16BE(0);
 		const numParams = raw.payload[2];
 		validatePayload(numParams > 0, firstParameter + numParams <= 0x10000);
+		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- parameters are validated to be non-empty and consecutive
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameters: Array.from(
@@ -3090,6 +3093,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 
 		if (valueSize === 0 && raw.payload.length < 5) {
 			nextParameter = 0;
+			// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- min, max and default values are not needed for a value size of 0
 			return new this({
 				nodeId: ctx.sourceNodeId,
 				parameter,
@@ -3108,6 +3112,8 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 		let defaultValue: MaybeNotKnown<number>;
 
 		if (valueSize > 0) {
+			// The constructor requires min, max and default values, which cannot be parsed for reserved formats
+			validatePayload(valueFormat <= ConfigValueFormat.BitField);
 			if (valueFormat === ConfigValueFormat.BitField) {
 				minValue = 0;
 			} else {
@@ -3146,6 +3152,7 @@ export class ConfigurationCCPropertiesReport extends ConfigurationCC {
 			noBulkSupport = !!(options2 & 0b10);
 		}
 
+		// oxlint-disable-next-line @zwave-js/no-unexpected-parse-errors -- min, max and default values are always parsed for non-zero value sizes
 		return new this({
 			nodeId: ctx.sourceNodeId,
 			parameter,

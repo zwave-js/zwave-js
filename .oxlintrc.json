@@ -291,6 +291,25 @@
 			}
 		},
 		{
+			// Code that parses untrusted data must only throw ZWaveErrors with codes
+			// that the receive path handles by dropping the message
+			"files": [
+				"packages/cc/src/**/*.ts",
+				"packages/core/src/**/*.ts",
+				"packages/serial/src/**/*.ts",
+				"packages/zwave-js/src/lib/zniffer/**/*.ts"
+			],
+			"rules": {
+				"@zwave-js/no-unexpected-parse-errors": "error"
+			}
+		},
+		{
+			"files": ["**/*.test.ts"],
+			"rules": {
+				"@zwave-js/no-unexpected-parse-errors": "off"
+			}
+		},
+		{
 			"files": ["packages/cc/src/**/*.ts"],
 			"rules": {
 				"@zwave-js/consistent-cc-classes": "error",
