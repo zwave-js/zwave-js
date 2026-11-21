@@ -5765,7 +5765,7 @@ export interface ZWaveMPDURawOptions {
 
 // Warnings were encountered during analysis:
 //
-// src/qr/definitions.ts:62:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
+// src/qr/definitions.ts:61:2 - (ae-unresolved-link) The @link reference could not be resolved: The package "@zwave-js/core" does not have an export "requestedSecurityClasses"
 // src/security/Manager2.ts:67:79 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/security/Manager2.ts:67:98 - (tsdoc-escape-greater-than) The ">" character should be escaped using a backslash to avoid confusion with an HTML tag
 // src/util/misc.ts:23:4 - (tsdoc-param-tag-missing-hyphen) The @param block should be followed by a parameter name and then a hyphen
