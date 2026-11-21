@@ -1365,10 +1365,12 @@ export abstract class FirmwareUpdateMixin
 					message: `Received Firmware Update Get for an out-of-bounds fragment. Forcing the node to abort...`,
 					direction: "inbound",
 				});
-				await this.sendCorruptedFirmwareUpdateReport(
-					fragmentRequest.reportNumber,
-					randomBytes(fragmentSize),
-					nonSecureTransfer,
+				yield* waitFor(
+					this.sendCorruptedFirmwareUpdateReport(
+						fragmentRequest.reportNumber,
+						randomBytes(fragmentSize),
+						nonSecureTransfer,
+					),
 				);
 				if (this.status === NodeStatus.Asleep) {
 					return NODE_ASLEEP_RESULT;
@@ -1395,10 +1397,12 @@ export abstract class FirmwareUpdateMixin
 				);
 
 				if (abortContext.abort) {
-					await this.sendCorruptedFirmwareUpdateReport(
-						fragmentRequest.reportNumber,
-						randomBytes(fragment.length),
-						nonSecureTransfer,
+					yield* waitFor(
+						this.sendCorruptedFirmwareUpdateReport(
+							fragmentRequest.reportNumber,
+							randomBytes(fragment.length),
+							nonSecureTransfer,
+						),
 					);
 					if (this.status === NodeStatus.Asleep) {
 						return NODE_ASLEEP_RESULT;
@@ -1422,13 +1426,15 @@ export abstract class FirmwareUpdateMixin
 					const isLast = num === numFragments;
 
 					try {
-						await this.commandClasses["Firmware Update Meta Data"]
-							.withOptions({
-								// Only encapsulate if the transfer is secure
-								autoEncapsulate: !nonSecureTransfer,
-								tag: "firmware-update-ota",
-							})
-							.sendFirmwareFragment(num, isLast, fragment);
+						yield* waitFor(
+							this.commandClasses["Firmware Update Meta Data"]
+								.withOptions({
+									// Only encapsulate if the transfer is secure
+									autoEncapsulate: !nonSecureTransfer,
+									tag: "firmware-update-ota",
+								})
+								.sendFirmwareFragment(num, isLast, fragment),
+						);
 
 						onProgress(num, numFragments);
 
