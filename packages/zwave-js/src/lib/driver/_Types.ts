@@ -1,3 +1,5 @@
+import type { OTWFirmwareUpdateTarget } from "@zwave-js/serial/serialapi";
+
 export interface OTWFirmwareUpdateProgress {
 	/** How many fragments of the firmware update have been transmitted. Together with `totalFragments` this can be used to display progress. */
 	sentFragments: number;
@@ -23,6 +25,18 @@ export enum OTWFirmwareUpdateStatus {
 export interface OTWFirmwareUpdateResult {
 	success: boolean;
 	status: OTWFirmwareUpdateStatus;
-	/** The bootloader error code, if available when the update fails */
+	/**
+	 * The error code reported by the bootloader or by the Z-Wave module, if available when the update fails.
+	 * For updates through the Firmware Update Serial API command, this is a `FirmwareUpdateCommandStatus`.
+	 */
 	errorCode?: number;
+}
+
+export interface OTWFirmwareUpdateOptions {
+	/**
+	 * Which part of the Z-Wave module's software the file updates. Default: `OTWFirmwareUpdateTarget.Firmware`.
+	 * The module can't tell from the encrypted file, so it must be specified.
+	 * Only used when the module supports the Firmware Update Serial API command (0x3E).
+	 */
+	target?: OTWFirmwareUpdateTarget;
 }

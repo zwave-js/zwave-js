@@ -24,8 +24,10 @@ export type {
 	PartialZWaveOptions,
 	ZWaveOptions,
 } from "./lib/driver/ZWaveOptions.js";
+export { OTWFirmwareUpdateTarget } from "@zwave-js/serial/serialapi";
 export { OTWFirmwareUpdateStatus } from "./lib/driver/_Types.js";
 export type {
+	OTWFirmwareUpdateOptions,
 	OTWFirmwareUpdateProgress,
 	OTWFirmwareUpdateResult,
 } from "./lib/driver/_Types.js";

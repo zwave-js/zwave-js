@@ -82,6 +82,13 @@ export interface ZWaveOptions {
 		serialAPIStarted: number; // [1000...30000], default: 5000 ms
 
 		/**
+		 * How long to wait for the Z-Wave module to start its application after an OTW firmware update.
+		 * This includes the time a bootloader with a storage slot needs to verify and install the update.
+		 * It also limits the wait when entering the bootloader installs a pending update.
+		 */
+		firmwareUpdateInstall: number; // [1000...600000], default: 60000 ms
+
+		/**
 		 * The minimum time to wait before and between automatic polling of nodes.
 		 * This should not be too low to avoid congesting the Z-Wave network.
 		 */
