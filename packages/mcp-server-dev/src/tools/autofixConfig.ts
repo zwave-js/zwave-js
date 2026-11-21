@@ -5,6 +5,7 @@ import { clearTemplateCache } from "@zwave-js/config";
 import spawn from "nano-spawn";
 import type { ASTNode } from "vscode-json-languageservice";
 
+import type { Checkout } from "../checkout.js";
 import {
 	type ObjectPropertyASTNode,
 	tryExpandPropertyRange,
@@ -12,8 +13,7 @@ import {
 import { parseConfigDocument } from "../configDoc/configDocument.js";
 import { DiagnosticType } from "../configDoc/diagnostics.js";
 import { generateImportOverrideDiagnostics } from "../configDoc/importOverrideDiagnostics.js";
-import { DEVICES_DIR, REPO_ROOT, fs } from "../configEnv.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 export const TOOL_NAME = "autofix_config";
 
@@ -60,7 +60,10 @@ interface AutofixConfigArgs {
  * remaining error (these are typically produced by the custom @zwave-js/...
  * rules). Returns a human-readable description of each applied suggestion.
  */
-async function applyEslintFixes(filename: string): Promise<string[]> {
+async function applyEslintFixes(
+	checkout: Checkout,
+	filename: string,
+): Promise<string[]> {
 	let eslintResult;
 	try {
 		// ESLint already writes its own auto-fixes to disk here
@@ -78,7 +81,7 @@ async function applyEslintFixes(filename: string): Promise<string[]> {
 				filename,
 			],
 			{
-				cwd: REPO_ROOT,
+				cwd: checkout.root,
 				stdio: "pipe",
 			},
 		);
@@ -146,12 +149,20 @@ async function applyEslintFixes(filename: string): Promise<string[]> {
  *
  * @param filename Absolute path to the device config file to fix
  */
-async function removeUnnecessaryOverrides(filename: string): Promise<number> {
+async function removeUnnecessaryOverrides(
+	checkout: Checkout,
+	filename: string,
+): Promise<number> {
 	let text = await readFile(filename, "utf8");
 
 	// Read templates fresh from disk, then resolve the whole file once
 	clearTemplateCache();
-	const doc = await parseConfigDocument(fs, filename, DEVICES_DIR, text);
+	const doc = await parseConfigDocument(
+		checkout.fs,
+		filename,
+		checkout.devicesDir,
+		text,
+	);
 
 	// Collect the text range to delete for each unnecessary override. The
 	// diagnostic only ever flags direct param properties that follow their
@@ -195,10 +206,15 @@ async function removeUnnecessaryOverrides(filename: string): Promise<number> {
  * @param filename Absolute path to the device config file to check
  */
 async function remainingImportOverrideIssues(
+	checkout: Checkout,
 	filename: string,
 ): Promise<string[]> {
 	clearTemplateCache();
-	const doc = await parseConfigDocument(fs, filename, DEVICES_DIR);
+	const doc = await parseConfigDocument(
+		checkout.fs,
+		filename,
+		checkout.devicesDir,
+	);
 	const issues: { message: string; line: number; column: number }[] = [];
 
 	for (const diag of generateImportOverrideDiagnostics(doc)) {
@@ -220,6 +236,7 @@ async function remainingImportOverrideIssues(
 
 async function handleAutofixConfig(
 	args: AutofixConfigArgs,
+	{ checkout }: ToolContext,
 ): Promise<CallToolResult> {
 	const { filename } = args;
 
@@ -234,7 +251,7 @@ async function handleAutofixConfig(
 
 	let eslintFixes: string[];
 	try {
-		eslintFixes = await applyEslintFixes(filename);
+		eslintFixes = await applyEslintFixes(checkout, filename);
 	} catch (error: any) {
 		return {
 			content: [{ type: "text", text: String(error.message ?? error) }],
@@ -245,8 +262,11 @@ async function handleAutofixConfig(
 	let removedOverrides: number;
 	let remainingIssues: string[];
 	try {
-		removedOverrides = await removeUnnecessaryOverrides(filename);
-		remainingIssues = await remainingImportOverrideIssues(filename);
+		removedOverrides = await removeUnnecessaryOverrides(checkout, filename);
+		remainingIssues = await remainingImportOverrideIssues(
+			checkout,
+			filename,
+		);
 	} catch (error: any) {
 		return {
 			content: [

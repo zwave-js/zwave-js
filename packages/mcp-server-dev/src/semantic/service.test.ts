@@ -2,16 +2,21 @@ import { join } from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { DEVICES_DIR } from "../configEnv.js";
+import type { Checkout } from "../checkout.js";
 
 import { SemanticSearchService } from "./service.js";
 import type { ParameterCorpusRecord } from "./types.js";
+
+const checkout = {
+	root: "/repo",
+	devicesDir: "/repo/packages/config/config/devices",
+} as Checkout;
 
 function partialParam(valueBitMask: number): ParameterCorpusRecord {
 	return {
 		kind: "parameter",
 		id: `test.json#31[${valueBitMask}]:0`,
-		file: join(DEVICES_DIR, "test.json"),
+		file: join(checkout.devicesDir, "test.json"),
 		relativeFile: "test.json",
 		line: 1,
 		parameterNumber: 31,
@@ -48,16 +53,23 @@ vi.mock("../tools/resolveParam.js", () => ({
 describe("SemanticSearchService", () => {
 	it("requires a bit mask when a parameter has multiple partial definitions", async () => {
 		const service = new SemanticSearchService();
-		const filename = join(DEVICES_DIR, "test.json");
+		const filename = join(checkout.devicesDir, "test.json");
 
 		await expect(
-			service.findSimilar(filename, 31, undefined, undefined, 1),
+			service.findSimilar(
+				checkout,
+				filename,
+				31,
+				undefined,
+				undefined,
+				1,
+			),
 		).rejects.toMatchObject({
 			code: "ambiguous_parameter",
 			message: expect.stringContaining("valueBitMask"),
 		});
 		await expect(
-			service.findSimilar(filename, 31, undefined, "1.0", 1),
+			service.findSimilar(checkout, filename, 31, undefined, "1.0", 1),
 		).rejects.toMatchObject({
 			code: "ambiguous_parameter",
 			message: expect.stringContaining("valueBitMask"),

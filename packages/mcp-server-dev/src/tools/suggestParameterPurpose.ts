@@ -1,7 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import type { SemanticSearchService } from "../semantic/service.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 import { clampLimit, invalidArgument, jsonResult } from "./results.js";
 import { handleSemanticError } from "./semanticErrors.js";
@@ -25,6 +25,7 @@ export function createSuggestParameterPurposeTool(
 ): ToolHandler<SuggestParameterPurposeArgs> {
 	async function handle(
 		args: SuggestParameterPurposeArgs = {},
+		{ checkout }: ToolContext,
 	): Promise<CallToolResult> {
 		const hasQuery =
 			typeof args.query === "string" && args.query.trim().length > 0;
@@ -41,8 +42,13 @@ export function createSuggestParameterPurposeTool(
 		try {
 			const limit = clampLimit(args.limit, DEFAULT_LIMIT, MAX_LIMIT);
 			const result = hasQuery
-				? await service.suggestPurposesForText(args.query!, limit)
+				? await service.suggestPurposesForText(
+						checkout,
+						args.query!,
+						limit,
+					)
 				: await service.suggestPurposesForParameter(
+						checkout,
 						args.filename!,
 						args.parameter!,
 						args.valueBitMask,
