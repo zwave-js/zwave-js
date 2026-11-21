@@ -291,6 +291,24 @@
 			}
 		},
 		{
+			// Code that parses untrusted data must not read out of bounds
+			"files": [
+				"packages/cc/src/**/*.ts",
+				"packages/core/src/**/*.ts",
+				"packages/serial/src/**/*.ts",
+				"packages/zwave-js/src/lib/zniffer/**/*.ts"
+			],
+			"rules": {
+				"@zwave-js/no-unchecked-bytes-reads": "error"
+			}
+		},
+		{
+			"files": ["**/*.test.ts"],
+			"rules": {
+				"@zwave-js/no-unchecked-bytes-reads": "off"
+			}
+		},
+		{
 			"files": ["packages/cc/src/**/*.ts"],
 			"rules": {
 				"@zwave-js/consistent-cc-classes": "error",
