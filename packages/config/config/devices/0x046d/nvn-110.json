@@ -15,62 +15,47 @@
 	},
 	"paramInformation": [
 		{
-			"#": "3",
+			"#": "1",
+			"$import": "templates/novon_template.json#paddle_function"
+		},
+		{
+			"#": "2",
 			"$import": "~/templates/master_template.json#led_indicator_four_options"
 		},
 		{
 			"#": "4",
-			"$import": "~/templates/master_template.json#orientation"
+			"$import": "~/0x0312/templates/minoston_template.json#auto_off_timer"
 		},
 		{
-			"#": "5",
-			"$import": "templates/novon_template.json#three_way_type"
+			"#": "6",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_on_timer"
 		},
 		{
-			"#": "16",
-			"$import": "templates/novon_template.json#switch_mode"
+			"#": "8",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		},
 		{
-			"#": "19",
-			"$import": "templates/novon_template.json#alternate_exclusion"
+			"#": "9",
+			"$import": "templates/novon_template.json#dim_speed_on_off"
 		},
 		{
-			"#": "30",
-			"$import": "~/templates/master_template.json#minimum_dim_level_1-99"
+			"#": "10",
+			"$import": "~/0x0312/templates/minoston_template.json#dim_speed_dimmer"
 		},
 		{
-			"#": "31",
-			"$import": "~/templates/master_template.json#maximum_dim_level_1-99"
+			"#": "11",
+			"$import": "~/templates/master_template.json#minimum_dim_level_0-99",
+			"defaultValue": 10
 		},
 		{
-			"#": "32",
-			"$import": "~/templates/master_template.json#default_dim_level_0-99",
-			"label": "Starting Brightness Level",
-			"defaultValue": 0
-		},
-		{
-			"#": "34",
-			"$import": "templates/novon_template.json#led_color"
-		},
-		{
-			"#": "35",
-			"$import": "templates/novon_template.json#intensity_1-7",
-			"label": "LED Intensity"
-		},
-		{
-			"#": "36",
-			"$import": "templates/novon_template.json#intensity_1-7",
-			"label": "Guide Light Intensity"
-		},
-		{
-			"#": "84",
-			"$import": "templates/novon_template.json#factory_reset"
+			"#": "12",
+			"$import": "~/templates/master_template.json#maximum_dim_level_0-99"
 		}
 	],
 	"metadata": {
-		"inclusion": "Press the upper or lower paddle once.",
-		"exclusion": "Press the upper or lower paddle once.",
-		"reset": "1. Pull the air gap switch.\n2. Press and hold the bottom paddle.\n3. Push the air gap switch back in while holding the bottom paddle.\n4. Keep holding the bottom paddle for 10 seconds. The LED flashes each of the eight colors once, then stops.",
+		"inclusion": "Tap the top paddle three times quickly.",
+		"exclusion": "Tap the bottom paddle three times quickly.",
+		"reset": "Tap the bottom paddle twice quickly, then hold it for at least 10 seconds. The LED flashes purple, then lights solid purple for 2 seconds to confirm.",
 		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80710/2BSVZ-NVN-110UserManual.pdf"
 	}
 }

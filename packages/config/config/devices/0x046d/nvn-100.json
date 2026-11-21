@@ -15,59 +15,30 @@
 	},
 	"paramInformation": [
 		{
-			"#": "3",
+			"#": "1",
+			"$import": "templates/novon_template.json#paddle_function"
+		},
+		{
+			"#": "2",
 			"$import": "~/templates/master_template.json#led_indicator_four_options"
 		},
 		{
 			"#": "4",
-			"$import": "~/templates/master_template.json#orientation"
+			"$import": "~/0x0312/templates/minoston_template.json#auto_off_timer"
 		},
 		{
-			"#": "5",
-			"$import": "templates/novon_template.json#three_way_type"
+			"#": "6",
+			"$import": "~/0x0312/templates/minoston_template.json#auto_on_timer"
 		},
 		{
-			"#": "19",
-			"$import": "templates/novon_template.json#alternate_exclusion"
-		},
-		{
-			"#": "34",
-			"$import": "templates/novon_template.json#led_color"
-		},
-		{
-			"#": "35",
-			"$import": "templates/novon_template.json#intensity_1-7",
-			"label": "LED Intensity"
-		},
-		{
-			"#": "36",
-			"$import": "templates/novon_template.json#intensity_1-7",
-			"label": "Guide Light Intensity"
-		},
-		{
-			"#": "39",
-			"$import": "~/templates/master_template.json#base_options_nounit",
-			"label": "Manual Relay Control",
-			"options": [
-				{
-					"label": "Paddle controls the relay",
-					"value": 0
-				},
-				{
-					"label": "Paddle disabled, output always on",
-					"value": 1
-				}
-			]
-		},
-		{
-			"#": "84",
-			"$import": "templates/novon_template.json#factory_reset"
+			"#": "8",
+			"$import": "~/templates/master_template.json#state_after_power_failure_off_on_prev"
 		}
 	],
 	"metadata": {
-		"inclusion": "Tap the upper or lower paddle once.",
-		"exclusion": "Tap the upper or lower paddle once.",
-		"reset": "1. Pull the air gap switch.\n2. Press and hold the bottom paddle.\n3. Push the air gap switch back in while holding the bottom paddle.\n4. Keep holding the bottom paddle for 10 seconds. The LED flashes each of the eight colors once, then stops.",
+		"inclusion": "Tap the top or bottom paddle three times quickly.",
+		"exclusion": "Tap the top or bottom paddle three times quickly.",
+		"reset": "Tap a paddle twice, then press and hold it for more than 10 seconds until the LED flashes purple. The LED lights solid purple for 2 seconds to confirm.",
 		"manual": "https://products.z-wavealliance.org/wp-content/uploads/products/80711/NVN-100-V2UserManual.pdf"
 	}
 }
