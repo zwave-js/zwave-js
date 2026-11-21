@@ -5,17 +5,17 @@ import {
 	mergeLogDict,
 	validatePayload,
 } from "@zwave-js/core";
-import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
-	type MessageConstructor,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
 	MessageType,
 	expectedResponse,
+	getMessageSubType,
+	messageSubType,
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
@@ -34,31 +34,6 @@ export enum FirmwareUpdateNVMCommand {
 	IsValidCRC16 = 0x04,
 	Write = 0x05,
 }
-
-// We need to define the decorators for Requests and Responses separately
-const {
-	decorator: subCommandRequest,
-	lookupConstructor: getSubCommandRequestConstructor,
-	lookupValue: getSubCommandForRequest,
-} = createSimpleReflectionDecorator<
-	typeof FirmwareUpdateNVMRequest,
-	[command: FirmwareUpdateNVMCommand],
-	MessageConstructor<FirmwareUpdateNVMRequest>
->({
-	name: "subCommandRequest",
-});
-
-const {
-	decorator: subCommandResponse,
-	lookupConstructor: getSubCommandResponseConstructor,
-	lookupValue: getSubCommandForResponse,
-} = createSimpleReflectionDecorator<
-	typeof FirmwareUpdateNVMResponse,
-	[command: FirmwareUpdateNVMCommand],
-	MessageConstructor<FirmwareUpdateNVMResponse>
->({
-	name: "subCommandResponse",
-});
 
 function testResponseForFirmwareUpdateNVMRequest(
 	sent: Message,
@@ -80,35 +55,15 @@ export class FirmwareUpdateNVMRequest extends Message {
 		options: FirmwareUpdateNVMRequestOptions & MessageBaseOptions = {},
 	) {
 		super(options);
-		this.command = options.command ?? getSubCommandForRequest(this)!;
+		this.command = options.command ?? getMessageSubType(this)!;
 	}
 
 	public static from(
 		raw: MessageRaw,
-		ctx: MessageParsingContext,
+		_ctx: MessageParsingContext,
 	): FirmwareUpdateNVMRequest {
-		// Subclasses that inherit this method receive the payload without the command byte
-		if (this !== FirmwareUpdateNVMRequest) {
-			const ret = new this({});
-			ret.payload = raw.payload;
-			return ret;
-		}
-
-		const command: FirmwareUpdateNVMCommand = raw.payload[0];
-		const payload = raw.payload.subarray(1);
-
-		const CommandConstructor = getSubCommandRequestConstructor(command);
-		if (CommandConstructor) {
-			return CommandConstructor.from(
-				raw.withPayload(payload),
-				ctx,
-			) as FirmwareUpdateNVMRequest;
-		}
-
-		const ret = new FirmwareUpdateNVMRequest({
-			command,
-		});
-		ret.payload = payload;
+		const ret = new this({ command: raw.subType });
+		ret.payload = raw.payload;
 		return ret;
 	}
 
@@ -144,35 +99,15 @@ export class FirmwareUpdateNVMResponse extends Message {
 		options: FirmwareUpdateNVMResponseOptions & MessageBaseOptions,
 	) {
 		super(options);
-		this.command = options.command ?? getSubCommandForResponse(this)!;
+		this.command = options.command ?? getMessageSubType(this)!;
 	}
 
 	public static from(
 		raw: MessageRaw,
-		ctx: MessageParsingContext,
+		_ctx: MessageParsingContext,
 	): FirmwareUpdateNVMResponse {
-		// Subclasses that inherit this method receive the payload without the command byte
-		if (this !== FirmwareUpdateNVMResponse) {
-			const ret = new this({});
-			ret.payload = raw.payload;
-			return ret;
-		}
-
-		const command: FirmwareUpdateNVMCommand = raw.payload[0];
-		const payload = raw.payload.subarray(1);
-
-		const CommandConstructor = getSubCommandResponseConstructor(command);
-		if (CommandConstructor) {
-			return CommandConstructor.from(
-				raw.withPayload(payload),
-				ctx,
-			) as FirmwareUpdateNVMResponse;
-		}
-
-		const ret = new FirmwareUpdateNVMResponse({
-			command,
-		});
-		ret.payload = payload;
+		const ret = new this({ command: raw.subType });
+		ret.payload = raw.payload;
 		return ret;
 	}
 
@@ -194,14 +129,14 @@ export class FirmwareUpdateNVMResponse extends Message {
 
 // =============================================================================
 
-@subCommandRequest(FirmwareUpdateNVMCommand.Init)
+@messageSubType(FirmwareUpdateNVMCommand.Init)
 export class FirmwareUpdateNVM_InitRequest extends FirmwareUpdateNVMRequest {}
 
 export interface FirmwareUpdateNVM_InitResponseOptions {
 	supported: boolean;
 }
 
-@subCommandResponse(FirmwareUpdateNVMCommand.Init)
+@messageSubType(FirmwareUpdateNVMCommand.Init)
 export class FirmwareUpdateNVM_InitResponse extends FirmwareUpdateNVMResponse {
 	public constructor(
 		options: FirmwareUpdateNVM_InitResponseOptions & MessageBaseOptions,
@@ -242,7 +177,7 @@ export interface FirmwareUpdateNVM_SetNewImageRequestOptions {
 	newImage: boolean;
 }
 
-@subCommandRequest(FirmwareUpdateNVMCommand.SetNewImage)
+@messageSubType(FirmwareUpdateNVMCommand.SetNewImage)
 export class FirmwareUpdateNVM_SetNewImageRequest extends FirmwareUpdateNVMRequest {
 	public constructor(
 		options: FirmwareUpdateNVM_SetNewImageRequestOptions
@@ -288,7 +223,7 @@ export interface FirmwareUpdateNVM_SetNewImageResponseOptions {
 	changed: boolean;
 }
 
-@subCommandResponse(FirmwareUpdateNVMCommand.SetNewImage)
+@messageSubType(FirmwareUpdateNVMCommand.SetNewImage)
 export class FirmwareUpdateNVM_SetNewImageResponse extends FirmwareUpdateNVMResponse {
 	public constructor(
 		options: FirmwareUpdateNVM_SetNewImageResponseOptions
@@ -326,14 +261,14 @@ export class FirmwareUpdateNVM_SetNewImageResponse extends FirmwareUpdateNVMResp
 
 // =============================================================================
 
-@subCommandRequest(FirmwareUpdateNVMCommand.GetNewImage)
+@messageSubType(FirmwareUpdateNVMCommand.GetNewImage)
 export class FirmwareUpdateNVM_GetNewImageRequest extends FirmwareUpdateNVMRequest {}
 
 export interface FirmwareUpdateNVM_GetNewImageResponseOptions {
 	newImage: boolean;
 }
 
-@subCommandResponse(FirmwareUpdateNVMCommand.GetNewImage)
+@messageSubType(FirmwareUpdateNVMCommand.GetNewImage)
 export class FirmwareUpdateNVM_GetNewImageResponse extends FirmwareUpdateNVMResponse {
 	public constructor(
 		options: FirmwareUpdateNVM_GetNewImageResponseOptions
@@ -377,7 +312,7 @@ export interface FirmwareUpdateNVM_UpdateCRC16RequestOptions {
 	blockLength: number;
 }
 
-@subCommandRequest(FirmwareUpdateNVMCommand.UpdateCRC16)
+@messageSubType(FirmwareUpdateNVMCommand.UpdateCRC16)
 export class FirmwareUpdateNVM_UpdateCRC16Request extends FirmwareUpdateNVMRequest {
 	public constructor(
 		options: FirmwareUpdateNVM_UpdateCRC16RequestOptions
@@ -442,7 +377,7 @@ export interface FirmwareUpdateNVM_UpdateCRC16ResponseOptions {
 	crc16: number;
 }
 
-@subCommandResponse(FirmwareUpdateNVMCommand.UpdateCRC16)
+@messageSubType(FirmwareUpdateNVMCommand.UpdateCRC16)
 export class FirmwareUpdateNVM_UpdateCRC16Response extends FirmwareUpdateNVMResponse {
 	public constructor(
 		options: FirmwareUpdateNVM_UpdateCRC16ResponseOptions
@@ -481,7 +416,7 @@ export class FirmwareUpdateNVM_UpdateCRC16Response extends FirmwareUpdateNVMResp
 
 // =============================================================================
 
-@subCommandRequest(FirmwareUpdateNVMCommand.IsValidCRC16)
+@messageSubType(FirmwareUpdateNVMCommand.IsValidCRC16)
 export class FirmwareUpdateNVM_IsValidCRC16Request extends FirmwareUpdateNVMRequest {
 	public override getResponseTimeout(): number | undefined {
 		// Computing the CRC-16 of a couple hundred KB can take a while on slow sticks
@@ -493,7 +428,7 @@ export interface FirmwareUpdateNVM_IsValidCRC16ResponseOptions {
 	isValid: boolean;
 }
 
-@subCommandResponse(FirmwareUpdateNVMCommand.IsValidCRC16)
+@messageSubType(FirmwareUpdateNVMCommand.IsValidCRC16)
 export class FirmwareUpdateNVM_IsValidCRC16Response extends FirmwareUpdateNVMResponse {
 	public constructor(
 		options: FirmwareUpdateNVM_IsValidCRC16ResponseOptions
@@ -537,7 +472,7 @@ export interface FirmwareUpdateNVM_WriteRequestOptions {
 	buffer: BytesView;
 }
 
-@subCommandRequest(FirmwareUpdateNVMCommand.Write)
+@messageSubType(FirmwareUpdateNVMCommand.Write)
 export class FirmwareUpdateNVM_WriteRequest extends FirmwareUpdateNVMRequest {
 	public constructor(
 		options: FirmwareUpdateNVM_WriteRequestOptions & MessageBaseOptions,
@@ -596,7 +531,7 @@ export interface FirmwareUpdateNVM_WriteResponseOptions {
 	overwritten: boolean;
 }
 
-@subCommandResponse(FirmwareUpdateNVMCommand.Write)
+@messageSubType(FirmwareUpdateNVMCommand.Write)
 export class FirmwareUpdateNVM_WriteResponse extends FirmwareUpdateNVMResponse {
 	public constructor(
 		options: FirmwareUpdateNVM_WriteResponseOptions & MessageBaseOptions,

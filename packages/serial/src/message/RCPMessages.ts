@@ -59,6 +59,8 @@ export class RCPMessageRaw {
 		public readonly type: RCPMessageType,
 		public readonly functionType: RCPFunctionType,
 		public readonly payload: Bytes,
+		/** The first payload byte, if it selects the subclass. It is then removed from `payload`. */
+		public readonly subType?: number,
 	) {}
 
 	public static parse(data: BytesView): RCPMessageRaw {
@@ -101,10 +103,6 @@ export class RCPMessageRaw {
 		const payload = Bytes.view(data.subarray(4, 4 + payloadLength));
 
 		return new RCPMessageRaw(type, functionType, payload);
-	}
-
-	public withPayload(payload: Bytes): RCPMessageRaw {
-		return new RCPMessageRaw(this.type, this.functionType, payload);
 	}
 }
 
@@ -152,8 +150,23 @@ export class RCPMessage {
 
 		const Constructor =
 			getRCPMessageConstructor(raw.type, raw.functionType) ?? RCPMessage;
+		if (!hasRCPMessageSubTypes(raw.type, raw.functionType)) {
+			return Constructor.from(raw, ctx);
+		}
 
-		return Constructor.from(raw, ctx);
+		const subType = raw.payload[0];
+		const SubConstructor =
+			getRCPMessageSubTypeConstructor(raw.type, raw.functionType, subType)
+			?? Constructor;
+		return SubConstructor.from(
+			new RCPMessageRaw(
+				raw.type,
+				raw.functionType,
+				raw.payload.subarray(1),
+				subType,
+			),
+			ctx,
+		);
 	}
 
 	/** Creates an instance of the message that is serialized in the given buffer */
@@ -447,6 +460,69 @@ function getRCPMessageConstructor(
 ): RCPMessageConstructor<RCPMessage> | undefined {
 	return rcpMessageTypesDecorator.lookupConstructorByKey(
 		getMessageTypeMapKey(messageType, functionType),
+	);
+}
+
+function getMessageSubTypeMapKey(
+	messageType: RCPMessageType,
+	functionType: RCPFunctionType,
+	subType: number,
+): string {
+	return JSON.stringify({ messageType, functionType, subType });
+}
+
+const rcpMessageTypesWithSubTypes = new Set<string>();
+
+const rcpMessageSubTypeDecorator = createReflectionDecorator<
+	typeof RCPMessage,
+	[subType: number],
+	number,
+	RCPMessageConstructor<RCPMessage>
+>({
+	name: "rcpMessageSubType",
+	valueFromArgs: (subType) => subType,
+	constructorLookupKey(target, subType) {
+		// The message and function type are inherited from the decorated base class
+		const { messageType, functionType } =
+			rcpMessageTypesDecorator.lookupValueStatic(target)!;
+		rcpMessageTypesWithSubTypes.add(
+			getMessageTypeMapKey(messageType, functionType),
+		);
+		return getMessageSubTypeMapKey(messageType, functionType, subType);
+	},
+});
+
+/**
+ * Defines which value of the first payload byte a subclass of an RCP message handles.
+ * The base class must be decorated with `@rcpMessageTypes`.
+ */
+export const rcpMessageSubType = rcpMessageSubTypeDecorator.decorator;
+
+/**
+ * Retrieves the sub type defined for an RCP message class
+ */
+export function getRCPMessageSubType<T extends RCPMessage>(
+	messageClass: T,
+): number | undefined {
+	return rcpMessageSubTypeDecorator.lookupValue(messageClass);
+}
+
+function hasRCPMessageSubTypes(
+	messageType: RCPMessageType,
+	functionType: RCPFunctionType,
+): boolean {
+	return rcpMessageTypesWithSubTypes.has(
+		getMessageTypeMapKey(messageType, functionType),
+	);
+}
+
+function getRCPMessageSubTypeConstructor(
+	messageType: RCPMessageType,
+	functionType: RCPFunctionType,
+	subType: number,
+): RCPMessageConstructor<RCPMessage> | undefined {
+	return rcpMessageSubTypeDecorator.lookupConstructorByKey(
+		getMessageSubTypeMapKey(messageType, functionType, subType),
 	);
 }
 

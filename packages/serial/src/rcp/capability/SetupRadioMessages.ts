@@ -4,7 +4,6 @@ import {
 	type MessageOrCCLogEntry,
 	type ProtocolDataRate,
 	RFRegion,
-	createSimpleReflectionDecorator,
 	logBuffer,
 	logList,
 	mergeLogDict,
@@ -18,11 +17,12 @@ import { RCPFunctionType, RCPMessageType } from "../../message/Constants.js";
 import {
 	RCPMessage,
 	type RCPMessageBaseOptions,
-	type RCPMessageConstructor,
 	type RCPMessageEncodingContext,
 	type RCPMessageParsingContext,
 	type RCPMessageRaw,
 	expectedRCPResponse,
+	getRCPMessageSubType,
+	rcpMessageSubType,
 	rcpMessageTypes,
 } from "../../message/RCPMessages.js";
 import type { SuccessIndicator } from "../../message/SuccessIndicator.js";
@@ -52,31 +52,6 @@ function formatChannelInfo(channel: ChannelInfo): string {
 	return `channel ${channel.channel} (${frequency} MHz): ${dataRate}`;
 }
 
-// We need to define the decorators for Requests and Responses separately
-const {
-	decorator: subCommandRequest,
-	lookupConstructor: getSubCommandRequestConstructor,
-	lookupValue: getSubCommandForRequest,
-} = createSimpleReflectionDecorator<
-	typeof SetupRadioRequest,
-	[command: SetupRadioCommand],
-	RCPMessageConstructor<SetupRadioRequest>
->({
-	name: "subCommandRequest",
-});
-
-const {
-	decorator: subCommandResponse,
-	lookupConstructor: getSubCommandResponseConstructor,
-	lookupValue: getSubCommandForResponse,
-} = createSimpleReflectionDecorator<
-	typeof SetupRadioResponse,
-	[command: SetupRadioCommand],
-	RCPMessageConstructor<SetupRadioResponse>
->({
-	name: "subCommandResponse",
-});
-
 function testResponseForSetupRadioRequest(
 	sent: RCPMessage,
 	received: RCPMessage,
@@ -96,35 +71,15 @@ export class SetupRadioRequest extends RCPMessage {
 		options: SetupRadioRequestOptions & RCPMessageBaseOptions = {},
 	) {
 		super(options);
-		this.command = options.command ?? getSubCommandForRequest(this)!;
+		this.command = options.command ?? getRCPMessageSubType(this)!;
 	}
 
 	public static from(
 		raw: RCPMessageRaw,
-		ctx: RCPMessageParsingContext,
+		_ctx: RCPMessageParsingContext,
 	): SetupRadioRequest {
-		// Subclasses that inherit this method receive the payload without the command byte
-		if (this !== SetupRadioRequest) {
-			const ret = new this({});
-			ret.payload = raw.payload;
-			return ret;
-		}
-
-		const command: SetupRadioCommand = raw.payload[0];
-		const payload = raw.payload.subarray(1);
-
-		const CommandConstructor = getSubCommandRequestConstructor(command);
-		if (CommandConstructor) {
-			return CommandConstructor.from(
-				raw.withPayload(payload),
-				ctx,
-			) as SetupRadioRequest;
-		}
-
-		const ret = new SetupRadioRequest({
-			command,
-		});
-		ret.payload = payload;
+		const ret = new this({ command: raw.subType });
+		ret.payload = raw.payload;
 		return ret;
 	}
 
@@ -157,35 +112,15 @@ export class SetupRadioResponse extends RCPMessage {
 		options: SetupRadioResponseOptions & RCPMessageBaseOptions,
 	) {
 		super(options);
-		this.command = options.command ?? getSubCommandForResponse(this)!;
+		this.command = options.command ?? getRCPMessageSubType(this)!;
 	}
 
 	public static from(
 		raw: RCPMessageRaw,
-		ctx: RCPMessageParsingContext,
+		_ctx: RCPMessageParsingContext,
 	): SetupRadioResponse {
-		// Subclasses that inherit this method receive the payload without the command byte
-		if (this !== SetupRadioResponse) {
-			const ret = new this({});
-			ret.payload = raw.payload;
-			return ret;
-		}
-
-		const command: SetupRadioCommand = raw.payload[0];
-		const payload = raw.payload.subarray(1);
-
-		const CommandConstructor = getSubCommandResponseConstructor(command);
-		if (CommandConstructor) {
-			return CommandConstructor.from(
-				raw.withPayload(payload),
-				ctx,
-			) as SetupRadioResponse;
-		}
-
-		const ret = new SetupRadioResponse({
-			command,
-		});
-		ret.payload = payload;
+		const ret = new this({ command: raw.subType });
+		ret.payload = raw.payload;
 		return ret;
 	}
 
@@ -204,7 +139,7 @@ export class SetupRadioResponse extends RCPMessage {
 
 // =============================================================================
 
-@subCommandRequest(SetupRadioCommand.GetRegion)
+@rcpMessageSubType(SetupRadioCommand.GetRegion)
 export class SetupRadio_GetRegionRequest extends SetupRadioRequest {}
 
 export interface SetupRadio_GetRegionResponseOptions {
@@ -213,7 +148,7 @@ export interface SetupRadio_GetRegionResponseOptions {
 	channels: ChannelInfo[];
 }
 
-@subCommandResponse(SetupRadioCommand.GetRegion)
+@rcpMessageSubType(SetupRadioCommand.GetRegion)
 export class SetupRadio_GetRegionResponse extends SetupRadioResponse {
 	public constructor(
 		options: SetupRadio_GetRegionResponseOptions & RCPMessageBaseOptions,
@@ -279,7 +214,7 @@ export interface SetupRadio_SetRegionOptions {
 	channelConfig: ChannelConfiguration;
 }
 
-@subCommandRequest(SetupRadioCommand.SetRegion)
+@rcpMessageSubType(SetupRadioCommand.SetRegion)
 export class SetupRadio_SetRegionRequest extends SetupRadioRequest {
 	public constructor(
 		options: SetupRadio_SetRegionOptions & RCPMessageBaseOptions,
@@ -337,7 +272,7 @@ export type SetupRadio_SetRegionResponseOptions =
 			channels: ChannelInfo[];
 	  };
 
-@subCommandResponse(SetupRadioCommand.SetRegion)
+@rcpMessageSubType(SetupRadioCommand.SetRegion)
 export class SetupRadio_SetRegionResponse
 	extends SetupRadioResponse
 	implements SuccessIndicator
@@ -405,7 +340,7 @@ export class SetupRadio_SetRegionResponse
 
 // =============================================================================
 
-@subCommandRequest(SetupRadioCommand.GetTxPowerRange)
+@rcpMessageSubType(SetupRadioCommand.GetTxPowerRange)
 export class SetupRadio_GetTxPowerRangeRequest extends SetupRadioRequest {}
 
 export interface SetupRadio_GetTxPowerRangeResponseOptions {
@@ -413,7 +348,7 @@ export interface SetupRadio_GetTxPowerRangeResponseOptions {
 	maxTxPower: number;
 }
 
-@subCommandResponse(SetupRadioCommand.GetTxPowerRange)
+@rcpMessageSubType(SetupRadioCommand.GetTxPowerRange)
 export class SetupRadio_GetTxPowerRangeResponse extends SetupRadioResponse {
 	public constructor(
 		options: SetupRadio_GetTxPowerRangeResponseOptions
@@ -459,14 +394,14 @@ export class SetupRadio_GetTxPowerRangeResponse extends SetupRadioResponse {
 
 // =============================================================================
 
-@subCommandRequest(SetupRadioCommand.GetCapabilities)
+@rcpMessageSubType(SetupRadioCommand.GetCapabilities)
 export class SetupRadio_GetCapabilitiesRequest extends SetupRadioRequest {}
 
 export interface SetupRadio_GetCapabilitiesResponseOptions {
 	capabilities: RadioCapability[];
 }
 
-@subCommandResponse(SetupRadioCommand.GetCapabilities)
+@rcpMessageSubType(SetupRadioCommand.GetCapabilities)
 export class SetupRadio_GetCapabilitiesResponse extends SetupRadioResponse {
 	public constructor(
 		options: SetupRadio_GetCapabilitiesResponseOptions

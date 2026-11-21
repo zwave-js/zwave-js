@@ -11,18 +11,18 @@ import {
 	sdkVersionLt,
 	validatePayload,
 } from "@zwave-js/core";
-import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
-	type MessageConstructor,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
 	MessageType,
 	type SuccessIndicator,
 	expectedResponse,
+	getMessageSubType,
+	messageSubType,
 	messageTypes,
 	priority,
 } from "@zwave-js/serial";
@@ -48,31 +48,6 @@ export enum SerialAPISetupCommand {
 	GetRegionInfo = 0x16,
 }
 
-// We need to define the decorators for Requests and Responses separately
-const {
-	decorator: subCommandRequest,
-	lookupConstructor: getSubCommandRequestConstructor,
-	lookupValue: getSubCommandForRequest,
-} = createSimpleReflectionDecorator<
-	typeof SerialAPISetupRequest,
-	[command: SerialAPISetupCommand],
-	MessageConstructor<SerialAPISetupRequest>
->({
-	name: "subCommandRequest",
-});
-
-const {
-	decorator: subCommandResponse,
-	lookupConstructor: getSubCommandResponseConstructor,
-	lookupValue: getSubCommandForResponse,
-} = createSimpleReflectionDecorator<
-	typeof SerialAPISetupResponse,
-	[command: SerialAPISetupCommand],
-	MessageConstructor<SerialAPISetupResponse>
->({
-	name: "subCommandResponse",
-});
-
 function testResponseForSerialAPISetupRequest(
 	sent: Message,
 	received: Message,
@@ -93,35 +68,15 @@ export class SerialAPISetupRequest extends Message {
 		options: SerialAPISetupRequestOptions & MessageBaseOptions = {},
 	) {
 		super(options);
-		this.command = options.command ?? getSubCommandForRequest(this)!;
+		this.command = options.command ?? getMessageSubType(this)!;
 	}
 
 	public static from(
 		raw: MessageRaw,
-		ctx: MessageParsingContext,
+		_ctx: MessageParsingContext,
 	): SerialAPISetupRequest {
-		// Subclasses that inherit this method receive the payload without the command byte
-		if (this !== SerialAPISetupRequest) {
-			const ret = new this({});
-			ret.payload = raw.payload;
-			return ret;
-		}
-
-		const command: SerialAPISetupCommand = raw.payload[0];
-		const payload = raw.payload.subarray(1);
-
-		const CommandConstructor = getSubCommandRequestConstructor(command);
-		if (CommandConstructor) {
-			return CommandConstructor.from(
-				raw.withPayload(payload),
-				ctx,
-			) as SerialAPISetupRequest;
-		}
-
-		const ret = new SerialAPISetupRequest({
-			command,
-		});
-		ret.payload = payload;
+		const ret = new this({ command: raw.subType });
+		ret.payload = raw.payload;
 		return ret;
 	}
 
@@ -154,35 +109,15 @@ export class SerialAPISetupResponse extends Message {
 		options: SerialAPISetupResponseOptions & MessageBaseOptions,
 	) {
 		super(options);
-		this.command = options.command ?? getSubCommandForResponse(this)!;
+		this.command = options.command ?? getMessageSubType(this)!;
 	}
 
 	public static from(
 		raw: MessageRaw,
-		ctx: MessageParsingContext,
+		_ctx: MessageParsingContext,
 	): SerialAPISetupResponse {
-		// Subclasses that inherit this method receive the payload without the command byte
-		if (this !== SerialAPISetupResponse) {
-			const ret = new this({});
-			ret.payload = raw.payload;
-			return ret;
-		}
-
-		const command: SerialAPISetupCommand = raw.payload[0];
-		const payload = raw.payload.subarray(1);
-
-		const CommandConstructor = getSubCommandResponseConstructor(command);
-		if (CommandConstructor) {
-			return CommandConstructor.from(
-				raw.withPayload(payload),
-				ctx,
-			) as SerialAPISetupResponse;
-		}
-
-		const ret = new SerialAPISetupResponse({
-			command,
-		});
-		ret.payload = payload;
+		const ret = new this({ command: raw.subType });
+		ret.payload = raw.payload;
 		return ret;
 	}
 
@@ -203,7 +138,7 @@ export interface SerialAPISetup_CommandUnsupportedResponseOptions {
 	command: SerialAPISetupCommand;
 }
 
-@subCommandResponse(0x00)
+@messageSubType(0x00)
 export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_CommandUnsupportedResponseOptions
@@ -240,14 +175,14 @@ export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupRes
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetSupportedCommands)
+@messageSubType(SerialAPISetupCommand.GetSupportedCommands)
 export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetSupportedCommandsResponseOptions {
 	supportedCommands: SerialAPISetupCommand[];
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetSupportedCommands)
+@messageSubType(SerialAPISetupCommand.GetSupportedCommands)
 export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetSupportedCommandsResponseOptions
@@ -318,7 +253,7 @@ export interface SerialAPISetup_SetTXStatusReportOptions {
 	enabled: boolean;
 }
 
-@subCommandRequest(SerialAPISetupCommand.SetTxStatusReport)
+@messageSubType(SerialAPISetupCommand.SetTxStatusReport)
 export class SerialAPISetup_SetTXStatusReportRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetTXStatusReportOptions & MessageBaseOptions,
@@ -362,7 +297,7 @@ export interface SerialAPISetup_SetTXStatusReportResponseOptions {
 	success: boolean;
 }
 
-@subCommandResponse(SerialAPISetupCommand.SetTxStatusReport)
+@messageSubType(SerialAPISetupCommand.SetTxStatusReport)
 export class SerialAPISetup_SetTXStatusReportResponse
 	extends SerialAPISetupResponse
 	implements SuccessIndicator
@@ -410,7 +345,7 @@ export interface SerialAPISetup_SetNodeIDTypeOptions {
 	nodeIdType: NodeIDType;
 }
 
-@subCommandRequest(SerialAPISetupCommand.SetNodeIDType)
+@messageSubType(SerialAPISetupCommand.SetNodeIDType)
 export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetNodeIDTypeOptions & MessageBaseOptions,
@@ -456,7 +391,7 @@ export interface SerialAPISetup_SetNodeIDTypeResponseOptions {
 	success: boolean;
 }
 
-@subCommandResponse(SerialAPISetupCommand.SetNodeIDType)
+@messageSubType(SerialAPISetupCommand.SetNodeIDType)
 export class SerialAPISetup_SetNodeIDTypeResponse
 	extends SerialAPISetupResponse
 	implements SuccessIndicator
@@ -500,14 +435,14 @@ export class SerialAPISetup_SetNodeIDTypeResponse
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetRFRegion)
+@messageSubType(SerialAPISetupCommand.GetRFRegion)
 export class SerialAPISetup_GetRFRegionRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetRFRegionResponseOptions {
 	region: RFRegion;
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetRFRegion)
+@messageSubType(SerialAPISetupCommand.GetRFRegion)
 export class SerialAPISetup_GetRFRegionResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetRFRegionResponseOptions & MessageBaseOptions,
@@ -547,7 +482,7 @@ export interface SerialAPISetup_SetRFRegionOptions {
 	region: RFRegion;
 }
 
-@subCommandRequest(SerialAPISetupCommand.SetRFRegion)
+@messageSubType(SerialAPISetupCommand.SetRFRegion)
 export class SerialAPISetup_SetRFRegionRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetRFRegionOptions & MessageBaseOptions,
@@ -590,7 +525,7 @@ export interface SerialAPISetup_SetRFRegionResponseOptions {
 	success: boolean;
 }
 
-@subCommandResponse(SerialAPISetupCommand.SetRFRegion)
+@messageSubType(SerialAPISetupCommand.SetRFRegion)
 export class SerialAPISetup_SetRFRegionResponse
 	extends SerialAPISetupResponse
 	implements SuccessIndicator
@@ -633,7 +568,7 @@ export class SerialAPISetup_SetRFRegionResponse
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetPowerlevel)
+@messageSubType(SerialAPISetupCommand.GetPowerlevel)
 export class SerialAPISetup_GetPowerlevelRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetPowerlevelResponseOptions {
@@ -641,7 +576,7 @@ export interface SerialAPISetup_GetPowerlevelResponseOptions {
 	measured0dBm: number;
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetPowerlevel)
+@messageSubType(SerialAPISetupCommand.GetPowerlevel)
 export class SerialAPISetup_GetPowerlevelResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetPowerlevelResponseOptions
@@ -692,7 +627,7 @@ export interface SerialAPISetup_SetPowerlevelOptions {
 	measured0dBm: number;
 }
 
-@subCommandRequest(SerialAPISetupCommand.SetPowerlevel)
+@messageSubType(SerialAPISetupCommand.SetPowerlevel)
 export class SerialAPISetup_SetPowerlevelRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetPowerlevelOptions & MessageBaseOptions,
@@ -756,7 +691,7 @@ export interface SerialAPISetup_SetPowerlevelResponseOptions {
 	success: boolean;
 }
 
-@subCommandResponse(SerialAPISetupCommand.SetPowerlevel)
+@messageSubType(SerialAPISetupCommand.SetPowerlevel)
 export class SerialAPISetup_SetPowerlevelResponse
 	extends SerialAPISetupResponse
 	implements SuccessIndicator
@@ -800,7 +735,7 @@ export class SerialAPISetup_SetPowerlevelResponse
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetPowerlevel16Bit)
+@messageSubType(SerialAPISetupCommand.GetPowerlevel16Bit)
 export class SerialAPISetup_GetPowerlevel16BitRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetPowerlevel16BitResponseOptions {
@@ -808,7 +743,7 @@ export interface SerialAPISetup_GetPowerlevel16BitResponseOptions {
 	measured0dBm: number;
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetPowerlevel16Bit)
+@messageSubType(SerialAPISetupCommand.GetPowerlevel16Bit)
 export class SerialAPISetup_GetPowerlevel16BitResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetPowerlevel16BitResponseOptions
@@ -859,7 +794,7 @@ export interface SerialAPISetup_SetPowerlevel16BitOptions {
 	measured0dBm: number;
 }
 
-@subCommandRequest(SerialAPISetupCommand.SetPowerlevel16Bit)
+@messageSubType(SerialAPISetupCommand.SetPowerlevel16Bit)
 export class SerialAPISetup_SetPowerlevel16BitRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetPowerlevel16BitOptions & MessageBaseOptions,
@@ -923,7 +858,7 @@ export interface SerialAPISetup_SetPowerlevel16BitResponseOptions {
 	success: boolean;
 }
 
-@subCommandResponse(SerialAPISetupCommand.SetPowerlevel16Bit)
+@messageSubType(SerialAPISetupCommand.SetPowerlevel16Bit)
 export class SerialAPISetup_SetPowerlevel16BitResponse
 	extends SerialAPISetupResponse
 	implements SuccessIndicator
@@ -967,14 +902,14 @@ export class SerialAPISetup_SetPowerlevel16BitResponse
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetLongRangeMaximumTxPower)
+@messageSubType(SerialAPISetupCommand.GetLongRangeMaximumTxPower)
 export class SerialAPISetup_GetLongRangeMaximumTxPowerRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetLongRangeMaximumTxPowerResponseOptions {
 	limit: number;
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetLongRangeMaximumTxPower)
+@messageSubType(SerialAPISetupCommand.GetLongRangeMaximumTxPower)
 export class SerialAPISetup_GetLongRangeMaximumTxPowerResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetLongRangeMaximumTxPowerResponseOptions
@@ -1018,7 +953,7 @@ export interface SerialAPISetup_SetLongRangeMaximumTxPowerOptions {
 	limit: number;
 }
 
-@subCommandRequest(SerialAPISetupCommand.SetLongRangeMaximumTxPower)
+@messageSubType(SerialAPISetupCommand.SetLongRangeMaximumTxPower)
 export class SerialAPISetup_SetLongRangeMaximumTxPowerRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_SetLongRangeMaximumTxPowerOptions
@@ -1075,7 +1010,7 @@ export interface SerialAPISetup_SetLongRangeMaximumTxPowerResponseOptions {
 	success: boolean;
 }
 
-@subCommandResponse(SerialAPISetupCommand.SetLongRangeMaximumTxPower)
+@messageSubType(SerialAPISetupCommand.SetLongRangeMaximumTxPower)
 export class SerialAPISetup_SetLongRangeMaximumTxPowerResponse
 	extends SerialAPISetupResponse
 	implements SuccessIndicator
@@ -1119,14 +1054,14 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerResponse
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetMaximumPayloadSize)
+@messageSubType(SerialAPISetupCommand.GetMaximumPayloadSize)
 export class SerialAPISetup_GetMaximumPayloadSizeRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetMaximumPayloadSizeResponseOptions {
 	maxPayloadSize: number;
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetMaximumPayloadSize)
+@messageSubType(SerialAPISetupCommand.GetMaximumPayloadSize)
 export class SerialAPISetup_GetMaximumPayloadSizeResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetMaximumPayloadSizeResponseOptions
@@ -1163,14 +1098,14 @@ export class SerialAPISetup_GetMaximumPayloadSizeResponse extends SerialAPISetup
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetLongRangeMaximumPayloadSize)
+@messageSubType(SerialAPISetupCommand.GetLongRangeMaximumPayloadSize)
 export class SerialAPISetup_GetLongRangeMaximumPayloadSizeRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetLongRangeMaximumPayloadSizeResponseOptions {
 	maxPayloadSize: number;
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetLongRangeMaximumPayloadSize)
+@messageSubType(SerialAPISetupCommand.GetLongRangeMaximumPayloadSize)
 export class SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetLongRangeMaximumPayloadSizeResponseOptions
@@ -1207,14 +1142,14 @@ export class SerialAPISetup_GetLongRangeMaximumPayloadSizeResponse extends Seria
 
 // =============================================================================
 
-@subCommandRequest(SerialAPISetupCommand.GetSupportedRegions)
+@messageSubType(SerialAPISetupCommand.GetSupportedRegions)
 export class SerialAPISetup_GetSupportedRegionsRequest extends SerialAPISetupRequest {}
 
 export interface SerialAPISetup_GetSupportedRegionsResponseOptions {
 	supportedRegions: RFRegion[];
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetSupportedRegions)
+@messageSubType(SerialAPISetupCommand.GetSupportedRegions)
 export class SerialAPISetup_GetSupportedRegionsResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetSupportedRegionsResponseOptions
@@ -1249,7 +1184,7 @@ export interface SerialAPISetup_GetRegionInfoOptions {
 	region: RFRegion;
 }
 
-@subCommandRequest(SerialAPISetupCommand.GetRegionInfo)
+@messageSubType(SerialAPISetupCommand.GetRegionInfo)
 export class SerialAPISetup_GetRegionInfoRequest extends SerialAPISetupRequest {
 	public constructor(
 		options: SerialAPISetup_GetRegionInfoOptions & MessageBaseOptions,
@@ -1295,7 +1230,7 @@ export interface SerialAPISetup_GetRegionInfoResponseOptions {
 	includesRegion?: RFRegion;
 }
 
-@subCommandResponse(SerialAPISetupCommand.GetRegionInfo)
+@messageSubType(SerialAPISetupCommand.GetRegionInfo)
 export class SerialAPISetup_GetRegionInfoResponse extends SerialAPISetupResponse {
 	public constructor(
 		options: SerialAPISetup_GetRegionInfoResponseOptions

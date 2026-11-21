@@ -103,6 +103,8 @@ export class MessageRaw {
 		public readonly type: MessageType,
 		public readonly functionType: FunctionType,
 		public readonly payload: Bytes,
+		/** The first payload byte, if it selects the subclass. It is then removed from `payload`. */
+		public readonly subType?: number,
 	) {}
 
 	public static parse(data: BytesView): MessageRaw {
@@ -145,10 +147,6 @@ export class MessageRaw {
 		const payload = Bytes.view(data.subarray(4, 4 + payloadLength));
 
 		return new MessageRaw(type, functionType, payload);
-	}
-
-	public withPayload(payload: Bytes): MessageRaw {
-		return new MessageRaw(this.type, this.functionType, payload);
 	}
 }
 
@@ -195,8 +193,23 @@ export class Message {
 
 		const Constructor =
 			getMessageConstructor(raw.type, raw.functionType) ?? Message;
+		if (!hasMessageSubTypes(raw.type, raw.functionType)) {
+			return Constructor.from(raw, ctx);
+		}
 
-		return Constructor.from(raw, ctx);
+		const subType = raw.payload[0];
+		const SubConstructor =
+			getMessageSubTypeConstructor(raw.type, raw.functionType, subType)
+			?? Constructor;
+		return SubConstructor.from(
+			new MessageRaw(
+				raw.type,
+				raw.functionType,
+				raw.payload.subarray(1),
+				subType,
+			),
+			ctx,
+		);
 	}
 
 	/** Creates an instance of the message that is serialized in the given buffer */
@@ -561,6 +574,67 @@ function getMessageConstructor(
 ): MessageConstructor<Message> | undefined {
 	return messageTypesDecorator.lookupConstructorByKey(
 		getMessageTypeMapKey(messageType, functionType),
+	);
+}
+
+function getMessageSubTypeMapKey(
+	messageType: MessageType,
+	functionType: FunctionType,
+	subType: number,
+): string {
+	return JSON.stringify({ messageType, functionType, subType });
+}
+
+const messageTypesWithSubTypes = new Set<string>();
+
+const messageSubTypeDecorator = createReflectionDecorator<
+	typeof Message,
+	[subType: number],
+	number,
+	MessageConstructor<Message>
+>({
+	name: "messageSubType",
+	valueFromArgs: (subType) => subType,
+	constructorLookupKey(target, subType) {
+		// The message and function type are inherited from the decorated base class
+		const { messageType, functionType } =
+			messageTypesDecorator.lookupValueStatic(target)!;
+		messageTypesWithSubTypes.add(
+			getMessageTypeMapKey(messageType, functionType),
+		);
+		return getMessageSubTypeMapKey(messageType, functionType, subType);
+	},
+});
+
+/**
+ * Defines which value of the first payload byte a subclass of a Z-Wave message handles.
+ * The base class must be decorated with `@messageTypes`.
+ */
+export const messageSubType = messageSubTypeDecorator.decorator;
+
+/**
+ * Retrieves the sub type defined for a Z-Wave message class
+ */
+export function getMessageSubType(messageClass: Message): number | undefined {
+	return messageSubTypeDecorator.lookupValue(messageClass);
+}
+
+function hasMessageSubTypes(
+	messageType: MessageType,
+	functionType: FunctionType,
+): boolean {
+	return messageTypesWithSubTypes.has(
+		getMessageTypeMapKey(messageType, functionType),
+	);
+}
+
+function getMessageSubTypeConstructor(
+	messageType: MessageType,
+	functionType: FunctionType,
+	subType: number,
+): MessageConstructor<Message> | undefined {
+	return messageSubTypeDecorator.lookupConstructorByKey(
+		getMessageSubTypeMapKey(messageType, functionType, subType),
 	);
 }
 
