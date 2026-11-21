@@ -1555,6 +1555,37 @@ where
 
 The CCs that use this event bring specialized versions of the callback and arguments.
 
+#### `Basic Window Covering CC`
+
+uses the following signature
+
+<!-- #import ZWaveNotificationCallbackParams_BasicWindowCoveringCC from "zwave-js" -->
+
+```ts
+type ZWaveNotificationCallbackParams_BasicWindowCoveringCC = [
+	endpoint: Endpoint,
+	ccId: (typeof CommandClasses)["Basic Window Covering"],
+	args: ZWaveNotificationCallbackArgs_BasicWindowCoveringCC,
+];
+```
+
+where the argument object has the type
+
+<!-- #import ZWaveNotificationCallbackArgs_BasicWindowCoveringCC from "zwave-js" -->
+
+```ts
+interface ZWaveNotificationCallbackArgs_BasicWindowCoveringCC {
+	/** The numeric identifier for the event type */
+	eventType:
+		| BasicWindowCoveringCommand.StartLevelChange
+		| BasicWindowCoveringCommand.StopLevelChange;
+	/** A human-readable label for the event type */
+	eventTypeLabel: string;
+	/** The direction of the level change */
+	direction?: string;
+}
+```
+
 #### `Battery CC`
 
 uses the following signature

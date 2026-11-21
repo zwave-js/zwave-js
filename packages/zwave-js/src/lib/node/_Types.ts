@@ -1,4 +1,5 @@
 import type {
+	BasicWindowCoveringCommand,
 	BatteryReplacementStatus,
 	EntryControlDataTypes,
 	EntryControlEventTypes,
@@ -127,6 +128,29 @@ export type ZWaveNotificationCallbackParams_MultilevelSwitchCC = [
 	args: ZWaveNotificationCallbackArgs_MultilevelSwitchCC,
 ];
 
+/**
+ * This is emitted when a start or stop event is received
+ */
+export interface ZWaveNotificationCallbackArgs_BasicWindowCoveringCC {
+	/** The numeric identifier for the event type */
+	eventType:
+		| BasicWindowCoveringCommand.StartLevelChange
+		| BasicWindowCoveringCommand.StopLevelChange;
+	/** A human-readable label for the event type */
+	eventTypeLabel: string;
+	/** The direction of the level change */
+	direction?: string;
+}
+
+/**
+ * Parameter types for the Basic Window Covering CC specific version of ZWaveNotificationCallback
+ */
+export type ZWaveNotificationCallbackParams_BasicWindowCoveringCC = [
+	endpoint: Endpoint,
+	ccId: (typeof CommandClasses)["Basic Window Covering"],
+	args: ZWaveNotificationCallbackArgs_BasicWindowCoveringCC,
+];
+
 export interface ZWaveNotificationCallbackArgs_NotificationCC {
 	/** The numeric identifier for the notification type */
 	type: number;
@@ -230,6 +254,7 @@ export type ZWaveNotificationCallback = (
 		| ZWaveNotificationCallbackParams_EntryControlCC
 		| ZWaveNotificationCallbackParams_PowerlevelCC
 		| ZWaveNotificationCallbackParams_MultilevelSwitchCC
+		| ZWaveNotificationCallbackParams_BasicWindowCoveringCC
 		| ZWaveNotificationCallbackParams_BatteryCC
 ) => void;
 
