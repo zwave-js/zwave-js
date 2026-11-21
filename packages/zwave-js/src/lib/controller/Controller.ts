@@ -8847,11 +8847,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				// The soft reset that follows a successful restore re-enables the radio
 				rfRestored = true;
 
-				// After restoring an NVM backup, the controller's capabilities may have changed.
-				// Also, we could be talking to different nodes than the cache file contains.
-				// Reset all info about all nodes, so they get re-interviewed.
-				self._nodes.clear();
-
 				yield* waitFor(self.driver.softResetAndRestart(thisTask));
 			},
 			cleanup: async () => {
@@ -8864,7 +8859,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	}
 
 	/**
-	 * Restores an NVM backup that was created with `backupNVMRaw`. The Z-Wave radio is turned off/on automatically.
+	 * Restores an NVM backup that was created with `backupNVMRaw`. The Z-Wave radio is turned off automatically.
+	 * Afterwards, the controller is soft-reset to activate the restored NVM.
 	 *
 	 * **WARNING:** The given buffer is NOT checked for compatibility with the current stick. To have Z-Wave JS do that, use the {@link restoreNVM} method instead.
 	 *
@@ -8879,35 +8875,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		await this.driver.scheduler.queueTask(
 			this.getRestoreNVMRawTask(nvmData, onProgress),
 		);
-
-		// After a restored NVM backup, the controller's capabilities may have changed.
-		// Normally we'd only need to soft reset the stick, but we also need to re-interview the controller and potentially all nodes.
-		// Just forcing a restart of the driver seems easier.
-
-		// if (this.driver.options.enableSoftReset) {
-		// 	this.driver.controllerLog.print(
-		// 		"Activating restored NVM backup...",
-		// 	);
-		// 	await this.driver.softReset();
-		// } else {
-		// 	this.driver.controllerLog.print(
-		// 		"Soft reset not enabled, cannot automatically activate restored NVM backup!",
-		// 		"warn",
-		// 	);
-		// }
-
-		this.driver.controllerLog.print(
-			"Restarting driver to activate restored NVM backup...",
-		);
-
-		this.driver.emit(
-			"error",
-			new ZWaveError(
-				"Activating the NVM backup requires a driver restart!",
-				ZWaveErrorCodes.Driver_Failed,
-			),
-		);
-		await this.driver.destroy();
 	}
 
 	private getRestoreNVMRawTask(
@@ -8924,7 +8891,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			group: { id: "controller-exclusive" },
 			// The radio is off during the restore, so other tasks cannot communicate anyways
 			interrupt: TaskInterruptBehavior.Forbidden,
-			task: async function* restoreNVMRawTask() {
+			task: async function* restoreNVMRawTask(thisTask) {
 				self.driver.controllerLog.print("Restoring NVM...");
 
 				// Turn Z-Wave radio off to avoid having the protocol write to the NVM while dumping it
@@ -8934,6 +8901,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 						ZWaveErrorCodes.Controller_ResponseNOK,
 					);
 				}
+
+				// Disable watchdog to prevent resets during NVM access
+				yield* waitFor(self.stopWatchdog());
 
 				try {
 					if (self.sdkVersionGte("7.0")) {
@@ -8945,12 +8915,25 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 							self.restoreNVMRaw500(nvmData, onProgress),
 						);
 					}
-					self.driver.controllerLog.print("NVM backup restored");
-				} finally {
-					// Whatever happens, turn Z-Wave radio back on
+					self.driver.controllerLog.print(
+						"NVM backup restored. Restarting to activate the restored backup...",
+					);
+				} catch (e) {
+					// If the process fails, at least turn the Z-Wave radio back on
 					yield* waitFor(self.toggleRF(true));
 					rfRestored = true;
+					// Without the soft reset, nothing else turns the watchdog back on
+					if (self.driver.options.features.watchdog) {
+						yield* waitFor(self.startWatchdog());
+					}
+					throw e;
 				}
+
+				// The controller must be reset before the radio is turned on again.
+				// Until then, it still runs with the state of the previous NVM and may write it back to the restored one.
+				rfRestored = true;
+
+				yield* waitFor(self.driver.softResetAndRestart(thisTask));
 
 				// TODO: You can also get away with eliding all the 0xff pages. The NVR also holds the page size of the NVM (NVMP),
 				// so you can figure out which pages you don't have to save or restore. If you do this, you need to make sure to issue a
