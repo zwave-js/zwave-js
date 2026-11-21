@@ -95,6 +95,7 @@
 			"#": "2",
 			"label": "Analog Gas/Heat/Water Port Resolution",
 			"valueSize": 4,
+			"unit": "pulses/(m³ or MJ)",
 			"minValue": 120,
 			"maxValue": 40000,
 			"defaultValue": 400
@@ -124,6 +125,7 @@
 			"#": "4",
 			"label": "Analog Electricity Port Resolution",
 			"valueSize": 4,
+			"unit": "pulses/kWh",
 			"minValue": 120,
 			"maxValue": 40000,
 			"defaultValue": 400
@@ -153,6 +155,7 @@
 			"#": "6",
 			"label": "Laser Sensor Resolution",
 			"valueSize": 4,
+			"unit": "pulses/kWh",
 			"minValue": 120,
 			"maxValue": 40000,
 			"defaultValue": 400
