@@ -5,7 +5,15 @@
 	"description": "Digital Mortise Door Lock",
 	"devices": [
 		{
+			"productType": "0x0003",
+			"productId": "0x00c8"
+		},
+		{
 			"productType": "0x0103",
+			"productId": "0x00c8"
+		},
+		{
+			"productType": "0x0203",
 			"productId": "0x00c8"
 		}
 	],
