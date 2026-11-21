@@ -17,6 +17,9 @@ import {
 	nvm500ToJSON,
 	nvmToJSON,
 } from "./convert.js";
+import { NVM3 } from "./lib/NVM3.js";
+import { NVMMemoryIO } from "./lib/io/NVMMemoryIO.js";
+import { ApplicationVersionFile800 } from "./lib/nvm3/files/VersionFiles.js";
 import type { NVM500JSON } from "./nvm500/NVMParser.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -225,6 +228,36 @@ test("700 to 700 migration shortcut", async (t) => {
 	const converted = await migrateNVM(nvmSource, nvmTarget);
 
 	bufferEquals(t.expect, converted, nvmSource);
+});
+
+test("700 to 800 migration uses the SDK file formats when the target has a vendor-specific application version", async (t) => {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+
+	const nvmSource = await fsp.readFile(
+		path.join(fixturesDir, "ctrlr_backup_700_7.12.bin"),
+	);
+	const nvmTarget = new Uint8Array(
+		await fsp.readFile(
+			path.join(fixturesDir, "ctrlr_backup_800_7.23.0.bin"),
+		),
+	);
+	const targetNVM3 = new NVM3(new NVMMemoryIO(nvmTarget));
+	await targetNVM3.init();
+	const { key, data } = new ApplicationVersionFile800({
+		format: 0,
+		major: 3,
+		minor: 0,
+		patch: 1,
+		fileVersion: "7.23.0",
+	}).serialize();
+	await targetNVM3.set(key, data);
+
+	const converted = await migrateNVM(nvmSource, nvmTarget);
+	const convertedJSON = await nvmToJSON(converted);
+
+	t.expect(convertedJSON.format).toBe(5);
+	t.expect(convertedJSON.controller.applicationVersion).toBe("3.0.1");
+	t.expect(convertedJSON.controller.rfConfig?.nodeIdType).not.toBeNull();
 });
 
 test("700 to 700 migration repairs the application node listening flag", async (t) => {

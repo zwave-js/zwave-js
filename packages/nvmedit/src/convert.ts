@@ -23,6 +23,8 @@ import {
 } from "@zwave-js/shared";
 import { isObject } from "alcalzone-shared/typeguards";
 import type { SemVer } from "semver";
+import semverCoerce from "semver/functions/coerce.js";
+import semverGt from "semver/functions/gt.js";
 import semverGte from "semver/functions/gte.js";
 import semverLt from "semver/functions/lt.js";
 import semverLte from "semver/functions/lte.js";
@@ -258,6 +260,11 @@ export interface MigrateNVMOptions {
 	preserveRoutes?: boolean;
 	/** Whether the neighbor table will be preserved */
 	preserveNeighbors?: boolean;
+	/**
+	 * The Z-Wave SDK version of the target controller. It determines the file formats.
+	 * If omitted, it is inferred from the target NVM.
+	 */
+	targetSDKVersion?: string;
 }
 
 export function nodeHasInfo(node: NVMJSONNode): node is NVMJSONNodeWithInfo {
@@ -1399,9 +1406,15 @@ export async function nvm500ToJSON(
 	};
 }
 
+/**
+ * Converts the given JSON to a 700/800 series NVM.
+ * @param targetSDKVersion The Z-Wave SDK version of the target controller. It determines the file formats.
+ * @param applicationVersion A firmware-specific application version to write to the NVM. Defaults to the SDK version.
+ */
 export async function jsonToNVM(
 	json: NVMJSON,
 	targetSDKVersion: string,
+	applicationVersion?: string,
 ): Promise<BytesView> {
 	const parsedVersion = semverParse(targetSDKVersion);
 	if (!parsedVersion) {
@@ -1433,10 +1446,19 @@ export async function jsonToNVM(
 
 	// We currently support application version migrations up to:
 	const HIGHEST_SUPPORTED_SDK_VERSION = "7.21.0";
-	// For all higher ones, set the highest version we support and let the controller handle the migration itself
-	if (semverLte(targetSDKVersion, HIGHEST_SUPPORTED_SDK_VERSION)) {
+	if (applicationVersion) {
+		const parsedApplicationVersion = semverParse(applicationVersion);
+		if (!parsedApplicationVersion) {
+			throw new ZWaveError(
+				`Invalid application version: ${applicationVersion}`,
+				ZWaveErrorCodes.Argument_Invalid,
+			);
+		}
+		targetApplicationVersion = parsedApplicationVersion;
+	} else if (semverLte(targetSDKVersion, HIGHEST_SUPPORTED_SDK_VERSION)) {
 		targetApplicationVersion = semverParse(targetSDKVersion)!;
 	} else {
+		// For all higher ones, set the highest version we support and let the controller handle the migration itself
 		targetApplicationVersion = semverParse(HIGHEST_SUPPORTED_SDK_VERSION)!;
 	}
 
@@ -2259,6 +2281,19 @@ export async function migrateNVM(
 	source.json.controller.applicationVersion =
 		target.json.controller.applicationVersion;
 
+	let targetSDKVersion: string | undefined;
+	let targetApplicationVersion: string | undefined;
+	if (target.type === 700) {
+		targetSDKVersion =
+			semverCoerce(options.targetSDKVersion)?.format()
+			?? (await inferSDKVersion(targetNVM, target.json));
+		// Some firmwares use their own versioning scheme for the application version
+		if (!isSDKVersion(target.json.controller.applicationVersion)) {
+			targetApplicationVersion =
+				target.json.controller.applicationVersion;
+		}
+	}
+
 	// Remove information we do not want to preserve
 	if (!preserveApplicationData) {
 		source.json.controller.applicationData = undefined;
@@ -2309,8 +2344,7 @@ export async function migrateNVM(
 		// The target is a different series, try to preserve the RF config of the target stick
 		json.controller.rfConfig = target.json.controller.rfConfig;
 		normalizeControllerNodeInfo(json);
-		// 700 series distinguishes the NVM format by the application version
-		return jsonToNVM(json, target.json.controller.applicationVersion);
+		return jsonToNVM(json, targetSDKVersion!, targetApplicationVersion);
 	} else if (source.type === 700 && target.type === 500) {
 		// We need to downgrade the source to 500 series
 		const json: Required<NVM500JSON> = {
@@ -2327,9 +2361,60 @@ export async function migrateNVM(
 			meta: (target.json as NVMJSONWithMeta).meta,
 		};
 		normalizeControllerNodeInfo(json);
-		// 700 series distinguishes the NVM format by the application version
-		return jsonToNVM(json, target.json.controller.applicationVersion);
+		return jsonToNVM(json, targetSDKVersion!, targetApplicationVersion);
 	}
+}
+
+/** The first SDK version that uses each protocol file format */
+const PROTOCOL_FILE_FORMAT_SDK_VERSIONS = [
+	"7.0.0",
+	"7.11.0",
+	"7.12.0",
+	"7.15.3",
+	"7.17.0",
+	"7.19.0",
+];
+
+function isSDKVersion(version: string): boolean {
+	const parsed = semverParse(version);
+	return !!parsed && parsed.major >= 7 && parsed.major < 255;
+}
+
+/**
+ * Returns the lowest SDK version that matches the file formats in the given NVM.
+ * Every SDK version in that range writes the same file formats.
+ */
+async function inferSDKVersion(
+	buffer: BytesView,
+	json: NVMJSONWithMeta,
+): Promise<string> {
+	// Each fingerprint is a lower bound. Files written by an older zwave-js may have
+	// an outdated format, so the highest bound wins.
+	const lowerBounds: string[] = [
+		json.controller.protocolVersion,
+		PROTOCOL_FILE_FORMAT_SDK_VERSIONS[json.format] ?? "7.0.0",
+	];
+	if (
+		isSDKVersion(json.controller.applicationVersion)
+		&& !hasShiftedAppVersion800File(json)
+	) {
+		lowerBounds.push(json.controller.applicationVersion);
+	}
+
+	const nvm3 = new NVM3(new NVMMemoryIO(buffer));
+	await nvm3.init();
+	const rfConfigLength = (await nvm3.get(ApplicationRFConfigFileID))?.length;
+	if (rfConfigLength === 9) {
+		lowerBounds.push("7.21.0");
+	} else if (rfConfigLength === 8) {
+		lowerBounds.push("7.18.1");
+	} else if (rfConfigLength === 6) {
+		lowerBounds.push("7.15.3");
+	}
+
+	return lowerBounds
+		.map((v) => semverCoerce(v)?.format() ?? "7.0.0")
+		.reduce((max, v) => (semverGt(v, max) ? v : max));
 }
 
 /**

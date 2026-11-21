@@ -5,7 +5,6 @@ import {
 	ZWaveErrorCodes,
 } from "@zwave-js/core";
 import { type AllOrNone, Bytes, getEnumMemberName } from "@zwave-js/shared";
-import semverGte from "semver/functions/gte.js";
 import semverLt from "semver/functions/lt.js";
 
 import type { NVM3Object } from "../object.js";
@@ -40,6 +39,7 @@ export class ApplicationRFConfigFile extends NVMFile {
 	) {
 		super(options);
 		if (gotDeserializationOptions(options)) {
+			this.serializedLength = this.payload.length;
 			if (this.payload.length === 3 || this.payload.length === 6) {
 				this.rfRegion = this.payload[0];
 				this.txPower = this.payload.readInt8(1) / 10;
@@ -84,33 +84,38 @@ export class ApplicationRFConfigFile extends NVMFile {
 	public maxTXPower?: number;
 	public nodeIdType?: NodeIDType;
 
+	// The firmware only accepts the layout of its own SDK version.
+	// A parsed file keeps its length because the application version is not always the SDK version.
+	private serializedLength?: number;
+
 	public serialize(): NVM3Object & { data: Bytes } {
-		if (semverLt(this.fileVersion, "7.18.1")) {
-			this.payload = new Bytes(
-				semverGte(this.fileVersion, "7.15.3") ? 6 : 3,
-			).fill(0);
-			this.payload[0] = this.rfRegion;
+		const length =
+			this.serializedLength
+			?? (semverLt(this.fileVersion, "7.15.3")
+				? 3
+				: semverLt(this.fileVersion, "7.18.1")
+					? 6
+					: semverLt(this.fileVersion, "7.21.0")
+						? 8
+						: 9);
+
+		this.payload = new Bytes(length).fill(0);
+		this.payload[0] = this.rfRegion;
+		if (length <= 6) {
 			this.payload.writeIntLE(this.txPower * 10, 1, 1);
 			this.payload.writeIntLE(this.measured0dBm * 10, 2, 1);
-			if (semverGte(this.fileVersion, "7.15.3")) {
+			if (length === 6) {
 				this.payload[3] = this.enablePTI ?? 0;
 				this.payload.writeInt16LE((this.maxTXPower ?? 0) * 10, 4);
 			}
-		} else if (semverLt(this.fileVersion, "7.21.0")) {
-			this.payload = new Bytes(8).fill(0);
-			this.payload[0] = this.rfRegion;
-			this.payload.writeInt16LE(this.txPower * 10, 1);
-			this.payload.writeInt16LE(this.measured0dBm * 10, 3);
-			this.payload[5] = this.enablePTI ?? 0;
-			this.payload.writeInt16LE((this.maxTXPower ?? 0) * 10, 6);
 		} else {
-			this.payload = new Bytes(9).fill(0);
-			this.payload[0] = this.rfRegion;
 			this.payload.writeInt16LE(this.txPower * 10, 1);
 			this.payload.writeInt16LE(this.measured0dBm * 10, 3);
 			this.payload[5] = this.enablePTI ?? 0;
 			this.payload.writeInt16LE((this.maxTXPower ?? 0) * 10, 6);
-			this.payload[8] = this.nodeIdType ?? NodeIDType.Short;
+			if (length === 9) {
+				this.payload[8] = this.nodeIdType ?? NodeIDType.Short;
+			}
 		}
 		return super.serialize();
 	}
