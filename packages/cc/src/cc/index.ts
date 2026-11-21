@@ -753,6 +753,53 @@ export {
 	MeterCCReset,
 };
 export type {
+	MeterTableMonitorCCTablePointAdmNoReportOptions,
+	MeterTableMonitorCCTableIdReportOptions,
+	MeterTableMonitorCCTableCapabilityReportOptions,
+	MeterTableMonitorCCCurrentDataReportOptions,
+	MeterTableMonitorCCCurrentDataGetOptions,
+} from "./MeterTableMonitorCC.js";
+import {
+	MeterTableMonitorCCValues,
+	MeterTableMonitorCC,
+	MeterTableMonitorCCTablePointAdmNoReport,
+	MeterTableMonitorCCTablePointAdmNoGet,
+	MeterTableMonitorCCTableIdReport,
+	MeterTableMonitorCCTableIdGet,
+	MeterTableMonitorCCTableCapabilityReport,
+	MeterTableMonitorCCTableCapabilityGet,
+	MeterTableMonitorCCCurrentDataReport,
+	MeterTableMonitorCCCurrentDataGet,
+} from "./MeterTableMonitorCC.js";
+export {
+	MeterTableMonitorCCValues,
+	MeterTableMonitorCC,
+	MeterTableMonitorCCTablePointAdmNoReport,
+	MeterTableMonitorCCTablePointAdmNoGet,
+	MeterTableMonitorCCTableIdReport,
+	MeterTableMonitorCCTableIdGet,
+	MeterTableMonitorCCTableCapabilityReport,
+	MeterTableMonitorCCTableCapabilityGet,
+	MeterTableMonitorCCCurrentDataReport,
+	MeterTableMonitorCCCurrentDataGet,
+};
+export type {
+	MeterTablePushConfigurationCCReportOptions,
+	MeterTablePushConfigurationCCSetOptions,
+} from "./MeterTablePushConfigurationCC.js";
+import {
+	MeterTablePushConfigurationCC,
+	MeterTablePushConfigurationCCReport,
+	MeterTablePushConfigurationCCGet,
+	MeterTablePushConfigurationCCSet,
+} from "./MeterTablePushConfigurationCC.js";
+export {
+	MeterTablePushConfigurationCC,
+	MeterTablePushConfigurationCCReport,
+	MeterTablePushConfigurationCCGet,
+	MeterTablePushConfigurationCCSet,
+};
+export type {
 	MultiChannelAssociationCCSetOptions,
 	MultiChannelAssociationCCRemoveOptions,
 	MultiChannelAssociationCCReportOptions,
@@ -2083,6 +2130,20 @@ export function registerCCs(): void {
 	void MeterCCSupportedReport;
 	void MeterCCSupportedGet;
 	void MeterCCReset;
+	void MeterTableMonitorCCValues;
+	void MeterTableMonitorCC;
+	void MeterTableMonitorCCTablePointAdmNoReport;
+	void MeterTableMonitorCCTablePointAdmNoGet;
+	void MeterTableMonitorCCTableIdReport;
+	void MeterTableMonitorCCTableIdGet;
+	void MeterTableMonitorCCTableCapabilityReport;
+	void MeterTableMonitorCCTableCapabilityGet;
+	void MeterTableMonitorCCCurrentDataReport;
+	void MeterTableMonitorCCCurrentDataGet;
+	void MeterTablePushConfigurationCC;
+	void MeterTablePushConfigurationCCReport;
+	void MeterTablePushConfigurationCCGet;
+	void MeterTablePushConfigurationCCSet;
 	void MultiChannelAssociationCCValues;
 	void MultiChannelAssociationCC;
 	void MultiChannelAssociationCCSet;

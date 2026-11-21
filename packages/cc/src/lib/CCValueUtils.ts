@@ -1,4 +1,5 @@
 import {
+	type MeterTableRateType,
 	type RateType,
 	SwitchType,
 	type ValveId,
@@ -81,6 +82,17 @@ export function meterTypesToPropertyKey(
 	scale: number,
 ): number {
 	return (meterType << 16) | (scale << 8) | rateType;
+}
+
+/** Encodes the meter type, rate type and dataset of a Meter Table Monitor value */
+export function meterTablePropertyKey(
+	meterType: number,
+	rateType: MeterTableRateType,
+	dataset: number,
+): number {
+	return (
+		((meterType & 0xff) << 16) | ((rateType & 0xff) << 8) | (dataset & 0xff)
+	);
 }
 
 export function irrigationValveIdToMetadataPrefix(valveId: ValveId): string {
