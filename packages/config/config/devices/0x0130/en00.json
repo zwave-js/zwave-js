@@ -13,10 +13,62 @@
 		"min": "0.0",
 		"max": "255.255"
 	},
+	"endpoints": {
+		"0": {
+			"associations": {
+				"1": {
+					"label": "Lifeline",
+					"maxNodes": 1,
+					"isLifeline": true
+				}
+			}
+		},
+		"1": {
+			"label": "Gas"
+		},
+		"2": {
+			"label": "Electricity import (analog sensor)"
+		},
+		"3": {
+			"label": "Electricity export (analog sensor)"
+		},
+		"4": {
+			"label": "Electricity import tariff 2 (P1)"
+		},
+		"5": {
+			"label": "Electricity export tariff 2 (P1)"
+		},
+		"6": {
+			"label": "Electricity import tariff 1 (P1)"
+		},
+		"7": {
+			"label": "Electricity export tariff 1 (P1)"
+		},
+		"8": {
+			"label": "Heat"
+		},
+		"9": {
+			"label": "Water"
+		}
+	},
+	"endpointGroups": {
+		"1": {
+			"label": "Gas/Heat/Water Port",
+			"endpoints": [1, 8, 9]
+		},
+		"2": {
+			"label": "Analog Sensor",
+			"endpoints": [2, 3]
+		},
+		"3": {
+			"label": "P1",
+			"endpoints": [4, 5, 6, 7]
+		}
+	},
 	"paramInformation": [
 		{
 			"#": "1",
-			"label": "Analog Gas/heat Port Mode",
+			"label": "Analog Gas/Heat/Water Port Mode",
 			"valueSize": 1,
 			"defaultValue": 1,
 			"allowManualEntry": false,
@@ -32,13 +84,18 @@
 				{
 					"label": "Heat enabled",
 					"value": 2
+				},
+				{
+					"label": "Water enabled",
+					"value": 3
 				}
 			]
 		},
 		{
 			"#": "2",
-			"label": "Analog Gas/heat Port Resolution",
+			"label": "Analog Gas/Heat/Water Port Resolution",
 			"valueSize": 4,
+			"unit": "pulses/(m³ or MJ)",
 			"minValue": 120,
 			"maxValue": 40000,
 			"defaultValue": 400
@@ -68,6 +125,7 @@
 			"#": "4",
 			"label": "Analog Electricity Port Resolution",
 			"valueSize": 4,
+			"unit": "pulses/kWh",
 			"minValue": 120,
 			"maxValue": 40000,
 			"defaultValue": 400
@@ -76,9 +134,31 @@
 			"#": "5",
 			"label": "Digital Port Mode",
 			"valueSize": 1,
-			"minValue": 0,
-			"maxValue": 2,
-			"defaultValue": 2
+			"defaultValue": 2,
+			"allowManualEntry": false,
+			"options": [
+				{
+					"label": "Disabled",
+					"value": 0
+				},
+				{
+					"label": "P1 smart meter",
+					"value": 1
+				},
+				{
+					"label": "Laser sensor",
+					"value": 2
+				}
+			]
+		},
+		{
+			"#": "6",
+			"label": "Laser Sensor Resolution",
+			"valueSize": 4,
+			"unit": "pulses/kWh",
+			"minValue": 120,
+			"maxValue": 40000,
+			"defaultValue": 400
 		},
 		{
 			"#": "255",
