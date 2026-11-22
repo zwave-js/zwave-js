@@ -129,6 +129,6 @@
 		"$import": "templates/wave_template.json#default_metadata"
 	},
 	"compat": {
-	  "mapBasicSet": "event"
+		"mapBasicSet": "event"
 	}
 }
