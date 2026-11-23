@@ -1,10 +1,11 @@
 # Check whether the resulting squash-commit will be semantic
 semanticSquash: true
 
-# Configure closing stale issues
+# Configure closing stale issues and discussions
 stale:
   # Which job name triggers the stale action
   jobName: stale
+  discussions: true
   actions:
     - action: close
       afterDays: 3 # How long issues with these labels may stay open
@@ -21,6 +22,11 @@ stale:
         Closing for housekeeping purposes... 🧹
 
         Feel free to reopen if the issue persists.
+      discussionComment: |
+        This discussion has not seen any recent activity and was marked as "${label}".
+        Closing for housekeeping purposes... 🧹
+
+        If the problem persists, let us know, and we'll reopen the discussion.
 
     # Wait 7 days for info, then mark as stale
     - action: label
@@ -45,6 +51,9 @@ stale:
       comment: |
         Sorry, we cannot act on issues where the issue template is not filled out completely 😕.
         Please fill out the entire template or the issue will be closed soon.
+      discussionComment: |
+        Sorry, we cannot act on discussions where the form is not filled out completely 😕.
+        Please fill out the entire form or the discussion will be closed soon.
 
 # Configure auto-labeling
 autoLabel:
