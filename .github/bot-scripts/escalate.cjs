@@ -36,6 +36,9 @@ async function main(param) {
 			repository(owner: $owner, name: $repo) {
 				discussion(number: $number) {
 					closed
+					category {
+						isAnswerable
+					}
 				}
 			}
 		}
@@ -125,21 +128,23 @@ ${analysisContent}`,
 		const escalationCommentId =
 			escalationCommentResponse.addDiscussionComment.comment.id;
 
-		// Mark the escalation comment as an answer
-		await github.graphql(
-			`
-			mutation markDiscussionCommentAsAnswer($id: ID!) {
-				markDiscussionCommentAsAnswer(input: {id: $id}) {
-					discussion {
-						id
+		// GitHub accepts an answer only in a category that supports answers
+		if (discussionResponse.repository.discussion.category?.isAnswerable) {
+			await github.graphql(
+				`
+				mutation markDiscussionCommentAsAnswer($id: ID!) {
+					markDiscussionCommentAsAnswer(input: {id: $id}) {
+						discussion {
+							id
+						}
 					}
 				}
-			}
-			`,
-			{
-				id: escalationCommentId,
-			},
-		);
+				`,
+				{
+					id: escalationCommentId,
+				},
+			);
+		}
 
 		// Close the discussion as resolved
 		await github.graphql(
