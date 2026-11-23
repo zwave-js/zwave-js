@@ -1,5 +1,6 @@
 import {
 	ControllerStatus,
+	MessagePriority,
 	NodeStatus,
 	TransmitStatus,
 	ZWaveErrorCodes,
@@ -8,6 +9,7 @@ import {
 } from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
 import {
+	GetControllerVersionRequest,
 	SendDataAbort,
 	SendDataRequest,
 	SendDataRequestTransmitReport,
@@ -411,6 +413,179 @@ integrationTestMulti(
 
 			// But commands to node 3 should still continue afterwards
 			t.expect(await node3.ping()).toBe(true);
+		},
+	},
+);
+
+function createFailingSendDataBehavior(
+	shouldFailFor: (msg: SendDataRequest) => boolean,
+): MockControllerBehavior {
+	return {
+		async onHostMessage(controller, msg) {
+			if (msg instanceof SendDataRequest) {
+				if (!shouldFailFor(msg)) {
+					// Defer to the default behavior
+					return false;
+				}
+
+				controller.state.set(
+					MockControllerStateKeys.CommunicationState,
+					MockControllerCommunicationState.Sending,
+				);
+
+				await controller.sendMessageToHost(
+					new SendDataResponse({ wasSent: true }),
+				);
+
+				await wait(50);
+
+				controller.state.set(
+					MockControllerStateKeys.CommunicationState,
+					MockControllerCommunicationState.Idle,
+				);
+
+				await controller.sendMessageToHost(
+					new SendDataRequestTransmitReport({
+						callbackId: msg.callbackId!,
+						transmitStatus: TransmitStatus.Fail,
+						txReport: {
+							txTicks: 0,
+							routeSpeed: 0 as any,
+							routingAttempts: 0,
+							ackRSSI: 0,
+						},
+					}),
+				);
+
+				return true;
+			} else if (msg instanceof SendDataAbort) {
+				controller.state.set(
+					MockControllerStateKeys.CommunicationState,
+					MockControllerCommunicationState.Idle,
+				);
+			}
+		},
+	};
+}
+
+integrationTest.sequential(
+	"Jam recovery finishes when the controller does not send SerialAPIStarted after the soft reset",
+	{
+		controllerCapabilities: controllerCapabilitiesNoBridge,
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+			timeouts: {
+				serialAPIStarted: 1000,
+			},
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			controller.defineBehavior(
+				createFailingSendDataBehavior(() => shouldFail),
+			);
+			controller.defineBehavior({
+				onHostMessage(controller, msg) {
+					if (shouldFail && msg instanceof SoftResetRequest) {
+						shouldFail = false;
+						// Swallow the request, so no SerialAPIStarted is sent
+						return true;
+					}
+				},
+			});
+		},
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			driver.options.timeouts.retryJammed = 100;
+
+			shouldFail = true;
+
+			const promise = node.ping();
+			await Promise.race([promise, wait(10000)]);
+
+			mockController.assertReceivedHostMessage(
+				(msg) => msg.functionType === FunctionType.SoftReset,
+			);
+			// The driver must check whether the controller responds after the soft reset
+			mockController.assertReceivedHostMessage(
+				(msg) => msg instanceof GetControllerVersionRequest,
+			);
+
+			t.expect(await promise).toBe(true);
+			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+		},
+	},
+);
+
+integrationTestMulti(
+	"After a successful jam recovery, commands with Immediate priority are sent again",
+	{
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+		},
+
+		controllerCapabilities: controllerCapabilitiesNoBridge,
+
+		nodeCapabilities: [
+			{
+				id: 2,
+				capabilities: {
+					isListening: true,
+				},
+			},
+			{
+				id: 3,
+				capabilities: {
+					isListening: true,
+				},
+			},
+		],
+
+		customSetup: async (driver, controller, mockNodes) => {
+			// Commands to node 2 keep failing after the soft reset
+			controller.defineBehavior(
+				createFailingSendDataBehavior((msg) => msg.getNodeId() === 2),
+			);
+		},
+		testBody: async (t, driver, nodes, mockController, mockNodes) => {
+			const [node2, node3] = nodes;
+			node2.markAsAlive();
+			node3.markAsAlive();
+
+			driver.options.timeouts.retryJammed = 100;
+
+			const failed = assertZWaveError(
+				t.expect,
+				() =>
+					node2.commandClasses.Basic.withOptions({
+						priority: MessagePriority.Immediate,
+					}).set(99),
+				{
+					errorCode: ZWaveErrorCodes.Controller_MessageDropped,
+				},
+			);
+			await Promise.race([failed, wait(10000)]);
+
+			mockController.assertReceivedHostMessage(
+				(msg) => msg.functionType === FunctionType.SoftReset,
+			);
+			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+
+			mockController.clearReceivedHostMessages();
+			const sent = node3.commandClasses.Basic.withOptions({
+				priority: MessagePriority.Immediate,
+			}).set(50);
+			await Promise.race([sent, wait(2000)]);
+			mockController.assertReceivedHostMessage(
+				(msg) => msg instanceof SendDataRequest,
+			);
+
+			await failed;
+			await sent;
 		},
 	},
 );

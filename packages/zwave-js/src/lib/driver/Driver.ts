@@ -984,19 +984,17 @@ export class Driver
 		this.immediateQueue = new TransactionQueue({
 			name: "immediate",
 			mayStartNextTransaction: (t) => {
-				// While the controller is unresponsive, only soft resetting is allowed.
+				// While the controller is unresponsive or jammed, only soft resetting is allowed.
 				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
 				// allow that too.
-				if (this.controller.status === ControllerStatus.Unresponsive) {
+				if (
+					this.controller.status === ControllerStatus.Unresponsive
+					|| this.controller.status === ControllerStatus.Jammed
+				) {
 					return (
 						t.message instanceof SoftResetRequest
 						|| t.message instanceof GetControllerVersionRequest
 					);
-				}
-
-				// While the controller is jammed, only soft resetting is allowed
-				if (this.controller.status === ControllerStatus.Jammed) {
-					return t.message instanceof SoftResetRequest;
 				}
 
 				// All other messages on the immediate queue may always be sent as long as the controller is ready to send
@@ -5065,6 +5063,10 @@ export class Driver
 				void this.softReset()
 					.then(() => {
 						// The controller responded. It is no longer unresponsive.
+						this._recoveryPhase =
+							ControllerRecoveryPhase.JammedAfterReset;
+						// The immediate queue only sends soft resets while the status is Jammed
+						this._controller?.setStatus(ControllerStatus.Ready);
 
 						// Re-queue the transaction, so it can get handled next.
 						// Its message generator may have finished, so reset that too.
@@ -5072,9 +5074,6 @@ export class Driver
 						this.getQueueForTransaction(transaction).add(
 							transaction.clone(),
 						);
-
-						this._recoveryPhase =
-							ControllerRecoveryPhase.JammedAfterReset;
 					})
 					.catch(() => {
 						// Soft-reset failed. Just reject the transaction
@@ -7033,7 +7032,11 @@ ${handlers.length} left`,
 
 								continue attemptMessage;
 							} else {
-								// Reject the transaction so we can attempt to recover
+								// Reject the transaction so we can attempt to recover.
+								// The status must be Jammed so handleJammedController also handles a failed retry after the soft reset.
+								this.controller.setStatus(
+									ControllerStatus.Jammed,
+								);
 								throw new ZWaveError(
 									`Failed to send the command after ${jammedAttempts} attempts`,
 									ZWaveErrorCodes.Controller_MessageDropped,
