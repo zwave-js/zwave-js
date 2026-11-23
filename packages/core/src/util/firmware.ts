@@ -4,7 +4,7 @@ import {
 	getErrorMessage,
 	isUint8Array,
 } from "@zwave-js/shared";
-import { unzipSync } from "fflate";
+import { type Unzipped, unzipSync } from "fflate";
 // This package has an incorrect type declaration
 import MemoryMap_ from "nrf-intel-hex";
 
@@ -94,18 +94,24 @@ export function tryUnzipFirmwareFile(zipData: BytesView):
 	// exhaust the memory. The result is only usable if exactly one file matches anyways,
 	// so only the first match is inflated.
 	let numMatches = 0;
-	const unzipped = unzipSync(zipData, {
-		filter: (file) => {
-			if (
-				!/\.(hex|exe|ex_|ota|otz|hec|gbl|bin)$/.test(file.name)
-				|| file.originalSize > MAX_FIRMWARE_SIZE
-			) {
-				return false;
-			}
-			numMatches++;
-			return numMatches === 1;
-		},
-	});
+	let unzipped: Unzipped;
+	try {
+		unzipped = unzipSync(zipData, {
+			filter: (file) => {
+				if (
+					!/\.(hex|exe|ex_|ota|otz|hec|gbl|bin)$/.test(file.name)
+					|| file.originalSize > MAX_FIRMWARE_SIZE
+				) {
+					return false;
+				}
+				numMatches++;
+				return numMatches === 1;
+			},
+		});
+	} catch {
+		// Callers pass raw firmware files here too and fall back to guessFirmwareFileFormat
+		return;
+	}
 	if (numMatches === 1 && Object.keys(unzipped).length === 1) {
 		// Exactly one file was extracted, inspect that
 		const filename = Object.keys(unzipped)[0];
