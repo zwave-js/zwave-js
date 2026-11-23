@@ -5,14 +5,17 @@
 	"description": "Digital Mortise Door Lock",
 	"devices": [
 		{
+			// EU version
 			"productType": "0x0003",
 			"productId": "0x00c7"
 		},
 		{
+			// US version
 			"productType": "0x0103",
 			"productId": "0x00c7"
 		},
 		{
+			// AU/NZ version
 			"productType": "0x0203",
 			"productId": "0x00c7"
 		}
