@@ -8519,7 +8519,12 @@ ${handlers.length} left`,
 			// 700/800 series controllers can be jammed due to a bug,
 			// which a soft-reset is supposed to work around
 			isSendData(transaction.message)
-			&& this.controller.status === ControllerStatus.Jammed
+			&& (this.controller.status === ControllerStatus.Jammed
+				// The retry after a recovery fails without marking the controller as jammed again
+				|| (this._recoveryPhase
+					=== ControllerRecoveryPhase.JammedAfterReset
+					&& error.code === ZWaveErrorCodes.Controller_MessageDropped
+					&& isTransmitReport(error.context)))
 		) {
 			if (this.handleJammedController(transaction, error)) return;
 		} else if (
