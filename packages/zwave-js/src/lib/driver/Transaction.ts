@@ -257,6 +257,11 @@ export class Transaction implements Comparable<Transaction> {
 		this._stack = (tmp as any).stack.replace(/^Error:?\s*\n/, "");
 	}
 
+	/** Identifies the command across the re-queued clones of this transaction */
+	public get identity(): object {
+		return this.lifecycle;
+	}
+
 	/** Creates a copy of this transaction that shares its lifecycle. */
 	public clone(): Transaction {
 		const ret = new Transaction(this.driver, this.options, this.lifecycle);

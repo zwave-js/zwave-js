@@ -635,6 +635,88 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
+	"A retry after a jam recovery that is re-queued before it is sent still gets only one attempt",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			// Re-queue the retry right after the recovery queued it, like a queue reduction does
+			const queue = driver["queue"];
+			const add = queue.add.bind(queue);
+			let requeued = false;
+			queue.add = (...items) => {
+				if (requeued || countSoftResets(mockController) === 0) {
+					add(...items);
+					return;
+				}
+				requeued = true;
+				// The retry must still be queued when it is reduced
+				queue.pause();
+				add(...items);
+				void driver["reduceQueues"]((transaction) =>
+					items.includes(transaction)
+						? { type: "requeue" }
+						: { type: "keep" },
+				);
+				queue.unpause();
+			};
+
+			softResetsWithoutEffect = 1;
+			shouldFail = true;
+			t.expect(await node.ping()).toBe(false);
+			t.expect(requeued).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(1);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A command that is still retrying a jam when a recovery fails does not start a second soft reset",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			// The soft reset outlasts the delay between jam attempts.
+			// So the immediate command's last attempt waits for the reset and is sent before the retry.
+			const slowSoftReset: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (msg instanceof SoftResetRequest) await wait(1500);
+					return false;
+				},
+			};
+			mockController.defineBehavior(slowSoftReset);
+
+			// Let one soft reset not help
+			softResetsWithoutEffect = 1;
+			shouldFail = true;
+			// The normal command runs out of jam attempts first and starts the recovery
+			const normal = node.ping();
+			// Send an immediate command while the normal one is still between its jam attempts
+			await wait(500);
+			const immediate = driver.sendCommand(
+				new NoOperationCC({ nodeId: node.id }),
+				{ priority: MessagePriority.Immediate },
+			);
+			// The immediate command fails before the assertion runs
+			immediate.catch(() => {});
+
+			// Both commands fail, after only one soft reset
+			t.expect(await normal).toBe(false);
+			await t.expect(immediate).rejects.toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageDropped,
+			});
+			t.expect(countSoftResets(mockController)).toBe(1);
+		},
+	},
+);
+
+integrationTest.sequential(
 	"A successful transmission ends the cooldown after a failed jam recovery",
 	{
 		// debug: true,

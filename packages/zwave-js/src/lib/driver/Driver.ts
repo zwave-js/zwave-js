@@ -1286,8 +1286,10 @@ export class Driver
 
 	/** The running recovery of a jammed controller. A jam detected meanwhile joins it. */
 	private jamRecovery: Promise<void> | undefined;
-	/** Transactions that are retried after a jam recovery */
-	private jamRecoveryRetries = new WeakSet<Transaction>();
+	/** Commands that are retried after a jam recovery, by their transaction identity */
+	private jamRecoveryRetries = new WeakSet<object>();
+	/** How many jam recoveries completed */
+	private jamRecoveriesCompleted = 0;
 	/** Until when no jam recovery may start, because the last one did not help */
 	private jamRecoveryBlockedUntil = 0;
 
@@ -5450,7 +5452,7 @@ export class Driver
 			return true;
 		}
 
-		if (this.jamRecoveryRetries.has(transaction)) {
+		if (this.jamRecoveryRetries.has(transaction.identity)) {
 			// Transmits still fail after restarting the controller. Maybe this isn't actually
 			// the controller being jammed. Give up on this command.
 			this.jamRecoveryBlockedUntil =
@@ -5472,9 +5474,10 @@ export class Driver
 				// Re-queue the transaction, so it can get handled next.
 				// Its message generator may have finished, so reset that too.
 				transaction.reset();
-				const retry = transaction.clone();
-				this.jamRecoveryRetries.add(retry);
-				this.getQueueForTransaction(transaction).add(retry);
+				this.jamRecoveryRetries.add(transaction.identity);
+				this.getQueueForTransaction(transaction).add(
+					transaction.clone(),
+				);
 			},
 			(e) => {
 				if (this.wasDestroyed) {
@@ -5509,6 +5512,7 @@ export class Driver
 				await this.softReset();
 				// softReset() resolves after it destroyed the driver because the Serial API did not respond
 				this.lifetime.signal.throwIfAborted();
+				this.jamRecoveriesCompleted++;
 			} finally {
 				this.jamRecovery = undefined;
 			}
@@ -7395,7 +7399,9 @@ ${handlers.length} left`,
 		transaction.start();
 		transaction.setProgress({ state: TransactionState.Active });
 
-		const maxJammedAttempts = this.jamRecoveryRetries.has(transaction)
+		const maxJammedAttempts = this.jamRecoveryRetries.has(
+			transaction.identity,
+		)
 			? // After attempting soft-reset, only try sending once
 				1
 			: this.options.attempts.sendDataJammed;
@@ -7408,6 +7414,7 @@ ${handlers.length} left`,
 			let commandAttempts = 0; // The command was not acknowledged
 			// Captured once per message, because a reset during a retry delay clears it
 			const run = transaction.parts.self;
+			const jamRecoveriesBefore = this.jamRecoveriesCompleted;
 			attemptMessage: for (let attemptNumber = 1; ; attemptNumber++) {
 				try {
 					prevResult = await this.queueSerialAPICommand(
@@ -7443,6 +7450,15 @@ ${handlers.length} left`,
 
 								continue attemptMessage;
 							} else {
+								// A recovery during these attempts did not help either
+								if (
+									this.jamRecoveriesCompleted
+									!== jamRecoveriesBefore
+								) {
+									this.jamRecoveryRetries.add(
+										transaction.identity,
+									);
+								}
 								// Reject the transaction so we can attempt to recover
 								throw new ZWaveError(
 									`Failed to send the command after ${jammedAttempts} attempts`,
@@ -7461,6 +7477,7 @@ ${handlers.length} left`,
 						}
 						// and a possible jam recovery helped
 						this.jamRecoveryBlockedUntil = 0;
+						this.jamRecoveryRetries.delete(transaction.identity);
 
 						if (!prevResult.isOK()) {
 							throw new ZWaveError(
@@ -8980,6 +8997,10 @@ ${handlers.length} left`,
 			return;
 		}
 
+		const isJam = isSendData(transaction.message) && isJamFailure(error);
+		// A retry after a jam recovery that fails for another reason is handled like any other command
+		if (!isJam) this.jamRecoveryRetries.delete(transaction.identity);
+
 		// The message cannot be serialized, e.g. because the node ID does not fit the node ID type.
 		// A controller recovery cannot help with that.
 		if (error.code === ZWaveErrorCodes.Argument_Invalid) {
@@ -8992,12 +9013,9 @@ ${handlers.length} left`,
 			if (this.handleMissingNodeACK(transaction as any, error)) return;
 		} else if (isMissingControllerACK(error)) {
 			if (this.handleMissingControllerACK(transaction, error)) return;
-		} else if (
+		} else if (isJam) {
 			// 700/800 series controllers can be jammed due to a bug,
 			// which a soft-reset is supposed to work around
-			isSendData(transaction.message)
-			&& isJamFailure(error)
-		) {
 			if (this.handleJammedController(transaction, error)) return;
 		} else if (
 			isSendData(transaction.message)
