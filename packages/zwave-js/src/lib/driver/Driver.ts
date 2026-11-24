@@ -1255,6 +1255,8 @@ export class Driver
 
 	private _recoveryPhase: ControllerRecoveryPhase =
 		ControllerRecoveryPhase.None;
+	/** The transaction that is retried after soft-resetting a jammed controller */
+	private _jammedRetryTransaction: Transaction | undefined;
 
 	private _securityManager: SecurityManager | undefined;
 	/**
@@ -5072,9 +5074,9 @@ export class Driver
 						// Re-queue the transaction, so it can get handled next.
 						// Its message generator may have finished, so reset that too.
 						transaction.reset();
-						this.getQueueForTransaction(transaction).add(
-							transaction.clone(),
-						);
+						const retry = transaction.clone();
+						this._jammedRetryTransaction = retry;
+						this.getQueueForTransaction(transaction).add(retry);
 
 						this._recoveryPhase =
 							ControllerRecoveryPhase.JammedAfterReset;
@@ -6979,6 +6981,17 @@ ${handlers.length} left`,
 			// Otherwise, it will get considered the active transaction and cause an unnecessary SendDataAbort
 			if (error) {
 				this.handleFailedTransaction(transaction, error);
+			}
+
+			// End the jammed controller recovery when its retry ends, whatever the outcome
+			if (transaction === this._jammedRetryTransaction) {
+				this._jammedRetryTransaction = undefined;
+				if (
+					this._recoveryPhase
+					=== ControllerRecoveryPhase.JammedAfterReset
+				) {
+					this._recoveryPhase = ControllerRecoveryPhase.None;
+				}
 			}
 
 			setIdleTimer = setImmediate(() => {

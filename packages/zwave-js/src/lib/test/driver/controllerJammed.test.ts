@@ -419,6 +419,9 @@ integrationTestMulti(
 );
 
 let softResetsWithoutEffect = 0;
+// Number of SendData requests the controller cannot queue after the next soft reset
+let queueFullAfterSoftReset = 0;
+let queueFullResponses = 0;
 
 // Fails every SendData with txTicks = 0 while shouldFail is set. A soft reset clears the jam.
 const jamUntilSoftReset: MockControllerBehavior = {
@@ -429,8 +432,17 @@ const jamUntilSoftReset: MockControllerBehavior = {
 			} else {
 				shouldFail = false;
 			}
+			queueFullResponses = queueFullAfterSoftReset;
+			queueFullAfterSoftReset = 0;
 			return false;
 		} else if (msg instanceof SendDataRequest) {
+			if (queueFullResponses > 0) {
+				queueFullResponses--;
+				await controller.sendMessageToHost(
+					new SendDataResponse({ wasSent: false }),
+				);
+				return true;
+			}
 			if (!shouldFail) return false;
 
 			controller.state.set(
@@ -605,6 +617,45 @@ integrationTest.sequential(
 			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
 
 			// The controller is still jammed. The next command must start a new recovery
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets()).toBe(2);
+			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"When the retry after recovering a jammed controller cannot be queued, the next jam is recovered again",
+	{
+		// debug: true,
+
+		controllerCapabilities: controllerCapabilitiesNoBridge,
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			controller.defineBehavior(jamUntilSoftReset);
+		},
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			const countSoftResets = () =>
+				mockController.receivedHostMessages.filter(
+					(msg) => msg.functionType === FunctionType.SoftReset,
+				).length;
+
+			// After the soft reset, the controller rejects all attempts of the retry
+			queueFullAfterSoftReset = 3;
+			shouldFail = true;
+			t.expect(await node.ping()).toBe(false);
+			t.expect(countSoftResets()).toBe(1);
+
+			// The next jam must start a new recovery
+			shouldFail = true;
 			t.expect(await node.ping()).toBe(true);
 			t.expect(countSoftResets()).toBe(2);
 			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
