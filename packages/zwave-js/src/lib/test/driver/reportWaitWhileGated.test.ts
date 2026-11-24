@@ -163,3 +163,49 @@ integrationTest.sequential(
 		},
 	},
 );
+
+integrationTest.sequential(
+	"Destroying the driver while a Get waits for its report rejects it with Driver_Destroyed right away",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [CommandClasses.Basic],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation, so the deadline is far away
+			driver.options.timeouts.report = 5000;
+			// Let the node never answer the Get
+			const receivedGet = createDeferredPromise<void>();
+			const noReport: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof BasicCCGet) {
+						receivedGet.resolve();
+						return { action: "stop" };
+					}
+				},
+			};
+			mockNode.defineBehavior(noReport);
+
+			// Send the Get and let its transmission finish
+			const getPromise = node.commandClasses.Basic.get();
+			// The Get is rejected during destroy(), before the assertion runs
+			getPromise.catch(() => {});
+			await receivedGet;
+			await wait(100);
+
+			// Destroy the driver while the Get waits for its report
+			await driver.destroy();
+			// The Get must fail with Driver_Destroyed before the report timeout
+			const result = await Promise.race([
+				getPromise.then(
+					() => "resolved",
+					(e: { code?: number }) => e.code,
+				),
+				wait(1000).then(() => "still pending"),
+			]);
+			t.expect(result).toBe(ZWaveErrorCodes.Driver_Destroyed);
+		},
+	},
+);

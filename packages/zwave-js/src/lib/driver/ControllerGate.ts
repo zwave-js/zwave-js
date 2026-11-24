@@ -29,6 +29,16 @@ export class ControllerGate {
 	private waiters: DeferredPromise<ControllerGateLease>[] = [];
 	private sealedReason: Error | undefined;
 	private openWaiters: DeferredPromise<void>[] = [];
+	private sealedSignal = createDeferredPromise<never>();
+
+	public constructor() {
+		this.sealedSignal.catch(() => {});
+	}
+
+	/** Rejects with the reason when the gate is sealed */
+	public whenSealed(): Promise<never> {
+		return this.sealedSignal;
+	}
 	private _closedPeriods = 0;
 
 	/** How often the gate was closed. A handoff to the next operation does not start a new period. */
@@ -103,5 +113,6 @@ export class ControllerGate {
 		const openWaiters = this.openWaiters;
 		this.openWaiters = [];
 		for (const waiter of openWaiters) waiter.reject(reason);
+		this.sealedSignal.reject(reason);
 	}
 }

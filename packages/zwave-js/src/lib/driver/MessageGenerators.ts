@@ -156,7 +156,7 @@ export async function waitForNodeUpdate<T extends Message>(
 	let onDeadline: (() => void) | undefined;
 	const startDeadline = () => {
 		deadline?.clear();
-		deadline = setTimer(() => onDeadline?.(), timeoutMs);
+		deadline = setTimer(() => onDeadline?.(), timeoutMs).unref();
 	};
 	// A partial response gives the node the full time again, like the timeout of waitForMessage()
 	const refreshPredicate = (received: Message) => {
@@ -182,7 +182,12 @@ export async function waitForNodeUpdate<T extends Message>(
 				onDeadline = () => resolve(undefined);
 			});
 			startDeadline();
-			received = await Promise.race([response, timedOut]);
+			// When the gate is sealed, its reason ends the wait
+			received = await Promise.race([
+				response,
+				timedOut,
+				gate.whenSealed(),
+			]);
 			deadline?.clear();
 			if (received) break;
 
@@ -199,7 +204,6 @@ export async function waitForNodeUpdate<T extends Message>(
 				);
 			}
 
-			// When the gate is sealed, its reason ends the wait
 			// Wait until the gate opens
 			received = await Promise.race([
 				response,
