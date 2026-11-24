@@ -5,6 +5,10 @@ import {
 	SendDataBridgeRequest,
 	SendDataRequest,
 	SerialAPISetupCommand,
+	SerialAPISetup_CommandUnsupportedResponse,
+	SerialAPISetup_SetLongRangeMaximumTxPowerRequest,
+	SerialAPISetup_SetPowerlevel16BitRequest,
+	SerialAPISetup_SetPowerlevelRequest,
 	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
 import {
@@ -113,6 +117,24 @@ integrationTest(
 			t.expect(mockController.parsingContext.nodeIdType).toBe(
 				NodeIDType.Short,
 			);
+
+			for (const request of [
+				new SerialAPISetup_SetPowerlevelRequest({
+					powerlevel: 0,
+					measured0dBm: 0,
+				}),
+				new SerialAPISetup_SetPowerlevel16BitRequest({
+					powerlevel: 0,
+					measured0dBm: 0,
+				}),
+				new SerialAPISetup_SetLongRangeMaximumTxPowerRequest({
+					limit: 0,
+				}),
+			]) {
+				t.expect(await driver.sendMessage(request)).toBeInstanceOf(
+					SerialAPISetup_CommandUnsupportedResponse,
+				);
+			}
 		},
 	},
 );

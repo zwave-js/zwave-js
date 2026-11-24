@@ -263,6 +263,19 @@ export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRe
 
 export interface SerialAPISetup_GetSupportedCommandsResponseOptions {
 	supportedCommands: SerialAPISetupCommand[];
+	/** The SDK version of the sender. Determines the layout of the extended bitmask when serializing */
+	sdkVersion?: string;
+}
+
+function getSupportedCommandsBitMaskStart(
+	sdkVersion: string | undefined,
+): SerialAPISetupCommand {
+	// According to the Host API specification, the first bit (bit 0) should be GetSupportedCommands
+	// However, in Z-Wave SDK < 7.19.1, the entire bitmask is shifted by 1 bit and
+	// GetSupportedCommands is encoded in the second bit (bit 1)
+	return sdkVersionLt(sdkVersion, "7.19.1")
+		? SerialAPISetupCommand.Unsupported
+		: SerialAPISetupCommand.GetSupportedCommands;
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetSupportedCommands)
@@ -273,6 +286,7 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 	) {
 		super(options);
 		this.supportedCommands = options.supportedCommands;
+		this.sdkVersion = options.sdkVersion;
 	}
 
 	public static from(
@@ -286,12 +300,7 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 			// Parse it as a bitmask
 			supportedCommands = parseBitMask(
 				raw.payload.subarray(1),
-				// According to the Host API specification, the first bit (bit 0) should be GetSupportedCommands
-				// However, in Z-Wave SDK < 7.19.1, the entire bitmask is shifted by 1 bit and
-				// GetSupportedCommands is encoded in the second bit (bit 1)
-				sdkVersionLt(ctx.sdkVersion, "7.19.1")
-					? SerialAPISetupCommand.Unsupported
-					: SerialAPISetupCommand.GetSupportedCommands,
+				getSupportedCommandsBitMaskStart(ctx.sdkVersion),
 			);
 		} else {
 			// This module only uses the single byte power-of-2 bitmask. Decode it manually
@@ -320,26 +329,21 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 
 	public readonly supportedCommands: SerialAPISetupCommand[];
 
+	public readonly sdkVersion: string | undefined;
+
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		let legacyBitMask = 0;
 		for (const cmd of this.supportedCommands) {
 			if (legacySupportedCommands.includes(cmd)) legacyBitMask |= cmd;
 		}
-		const extended = this.supportedCommands.some(
-			(cmd) => !legacySupportedCommands.includes(cmd),
-		);
-		// The extended bitmask layout depends on the SDK version, which
-		// is unknown here. Use it only when the single byte cannot hold all commands.
-		this.payload = extended
-			? Bytes.concat([
-					[legacyBitMask],
-					encodeBitMask(
-						this.supportedCommands,
-						undefined,
-						SerialAPISetupCommand.GetSupportedCommands,
-					),
-				])
-			: Bytes.from([legacyBitMask]);
+		this.payload = Bytes.concat([
+			[legacyBitMask],
+			encodeBitMask(
+				this.supportedCommands,
+				undefined,
+				getSupportedCommandsBitMaskStart(this.sdkVersion),
+			),
+		]);
 
 		return super.serialize(ctx);
 	}
@@ -754,15 +758,15 @@ export class SerialAPISetup_SetPowerlevelRequest extends SerialAPISetupRequest {
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetPowerlevelRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SerialAPISetup_SetPowerlevelRequest({});
+		validatePayload(raw.payload.length >= 2);
+		const payload = Bytes.view(raw.payload);
+		return new this({
+			powerlevel: payload.readInt8(0) / 10,
+			measured0dBm: payload.readInt8(1) / 10,
+		});
 	}
 
 	public powerlevel: number;
@@ -921,15 +925,15 @@ export class SerialAPISetup_SetPowerlevel16BitRequest extends SerialAPISetupRequ
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetPowerlevel16BitRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SerialAPISetup_SetPowerlevel16BitRequest({});
+		validatePayload(raw.payload.length >= 4);
+		const payload = Bytes.view(raw.payload);
+		return new this({
+			powerlevel: payload.readInt16BE(0) / 10,
+			measured0dBm: payload.readInt16BE(2) / 10,
+		});
 	}
 
 	public powerlevel: number;
@@ -1075,15 +1079,13 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerRequest extends SerialAPIS
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetLongRangeMaximumTxPowerRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
-
-		// return new SerialAPISetup_SetLongRangeMaximumTxPowerRequest({});
+		validatePayload(raw.payload.length >= 2);
+		return new this({
+			limit: Bytes.view(raw.payload).readInt16BE(0) / 10,
+		});
 	}
 
 	/** The maximum LR TX power in dBm */
