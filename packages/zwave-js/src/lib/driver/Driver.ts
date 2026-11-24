@@ -1011,6 +1011,8 @@ export class Driver
 			mayStartNextTransaction: (t) => this.mayStartTransaction(t),
 		});
 
+		// Unpause because ensureSerialAPI can leave the previous queues paused
+		this.queuePaused = false;
 		this._queueIdle = false;
 
 		// Start draining the queues
@@ -3618,6 +3620,7 @@ export class Driver
 					"The Serial API did not respond after soft-reset",
 				);
 			} else {
+				this.isSoftResetting = false;
 				throw new ZWaveError(
 					"The Serial API did not respond after soft-reset",
 					ZWaveErrorCodes.Driver_Failed,
@@ -5075,6 +5078,8 @@ export class Driver
 
 						this._recoveryPhase =
 							ControllerRecoveryPhase.JammedAfterReset;
+						// Clear the jammed status because the immediate queue only sends soft resets while jammed
+						this._controller?.setStatus(ControllerStatus.Ready);
 					})
 					.catch(() => {
 						// Soft-reset failed. Just reject the transaction

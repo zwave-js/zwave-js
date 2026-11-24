@@ -1,5 +1,7 @@
+import { NoOperationCC } from "@zwave-js/cc";
 import {
 	ControllerStatus,
+	MessagePriority,
 	NodeStatus,
 	TransmitStatus,
 	ZWaveErrorCodes,
@@ -8,6 +10,7 @@ import {
 } from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
 import {
+	GetControllerVersionRequest,
 	SendDataAbort,
 	SendDataRequest,
 	SendDataRequestTransmitReport,
@@ -411,6 +414,155 @@ integrationTestMulti(
 
 			// But commands to node 3 should still continue afterwards
 			t.expect(await node3.ping()).toBe(true);
+		},
+	},
+);
+
+// Fails every SendData with txTicks = 0 while shouldFail is set. A soft reset clears the jam.
+const jamUntilSoftReset: MockControllerBehavior = {
+	async onHostMessage(controller, msg) {
+		if (msg instanceof SoftResetRequest) {
+			shouldFail = false;
+			return false;
+		} else if (msg instanceof SendDataRequest) {
+			if (!shouldFail) return false;
+
+			controller.state.set(
+				MockControllerStateKeys.CommunicationState,
+				MockControllerCommunicationState.Sending,
+			);
+			await controller.sendMessageToHost(
+				new SendDataResponse({ wasSent: true }),
+			);
+			await wait(100);
+			controller.state.set(
+				MockControllerStateKeys.CommunicationState,
+				MockControllerCommunicationState.Idle,
+			);
+			await controller.sendMessageToHost(
+				new SendDataRequestTransmitReport({
+					callbackId: msg.callbackId!,
+					transmitStatus: TransmitStatus.Fail,
+					txReport: {
+						txTicks: 0,
+						routeSpeed: 0 as any,
+						routingAttempts: 0,
+						ackRSSI: 0,
+					},
+				}),
+			);
+			return true;
+		} else if (msg instanceof SendDataAbort) {
+			controller.state.set(
+				MockControllerStateKeys.CommunicationState,
+				MockControllerCommunicationState.Idle,
+			);
+		}
+	},
+};
+
+integrationTest.sequential(
+	"After recovering a jammed controller, commands on the immediate queue are sent again",
+	{
+		// debug: true,
+
+		controllerCapabilities: controllerCapabilitiesNoBridge,
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			controller.defineBehavior(jamUntilSoftReset);
+		},
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			const statusChanges: ControllerStatus[] = [];
+			driver.controller.on("status changed", (status) => {
+				statusChanges.push(status);
+			});
+
+			const immediatePing = () =>
+				driver.sendCommand(new NoOperationCC({ nodeId: node.id }), {
+					priority: MessagePriority.Immediate,
+				});
+
+			shouldFail = true;
+			const promise = immediatePing();
+			await wait(500);
+			t.expect(driver.controller.status).toBe(ControllerStatus.Jammed);
+
+			// No other traffic follows, so only the re-queued command can
+			// clear the jammed status
+			const timedOut = Symbol("timeout");
+			const result = await Promise.race([
+				promise.then(() => "sent"),
+				wait(10000).then(() => timedOut),
+			]);
+			t.expect(result).toBe("sent");
+
+			mockController.assertReceivedHostMessage(
+				(msg) => msg.functionType === FunctionType.SoftReset,
+			);
+			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+			t.expect(statusChanges).toStrictEqual([
+				ControllerStatus.Jammed,
+				ControllerStatus.Ready,
+			]);
+
+			// The immediate queue keeps working
+			await immediatePing();
+		},
+	},
+);
+
+let swallowSoftReset = false;
+
+integrationTest.sequential(
+	"softResetAndRestart re-interviews the controller when it does not send SerialAPIStarted",
+	{
+		// debug: true,
+
+		additionalDriverOptions: {
+			timeouts: {
+				serialAPIStarted: 1000,
+			},
+		},
+
+		customSetup: async (driver, controller, mockNode) => {
+			const noSerialAPIStarted: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (swallowSoftReset && msg instanceof SoftResetRequest) {
+						swallowSoftReset = false;
+						return true;
+					}
+				},
+			};
+			controller.defineBehavior(noSerialAPIStarted);
+		},
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			swallowSoftReset = true;
+			mockController.clearReceivedHostMessages();
+
+			const driverReady = new Promise<void>((resolve) => {
+				driver.once("driver ready", () => resolve());
+			});
+			await driver.softResetAndRestart();
+
+			const timedOut = Symbol("timeout");
+			const result = await Promise.race([
+				driverReady.then(() => "ready"),
+				wait(20000).then(() => timedOut),
+			]);
+			t.expect(result).toBe("ready");
+
+			// The driver had to poll the controller to detect that it restarted
+			mockController.assertReceivedHostMessage(
+				(msg) => msg instanceof GetControllerVersionRequest,
+			);
 		},
 	},
 );
