@@ -1052,6 +1052,12 @@ export class Driver
 	}
 
 	private controllerGate = new ControllerGate();
+
+	/** @internal The gate of the current controller instance */
+	public getControllerGate(): ControllerGate {
+		return this.controllerGate;
+	}
+
 	/** Used to immediately abort ongoing Serial API commands */
 	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
 	/** Whether the active Serial API command waits for its ACK */

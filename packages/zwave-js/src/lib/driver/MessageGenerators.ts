@@ -142,20 +142,43 @@ export async function waitForNodeUpdate<T extends Message>(
 	msg: Message,
 	timeoutMs: number,
 ): Promise<T> {
+	const gate = driver.getControllerGate();
 	let received: Message;
-	try {
-		received = await driver.waitForMessage(
-			(received) =>
-				msg.isExpectedNodeUpdate(driver, received)
-				|| !!getTryAgainLater(msg, received),
-			timeoutMs,
-			(received) => maybePartialNodeUpdate(driver, msg, received),
-		);
-	} catch {
-		throw new ZWaveError(
-			`Timed out while waiting for a response from the node`,
-			ZWaveErrorCodes.Controller_NodeTimeout,
-		);
+	while (true) {
+		// Wait for the response or the deadline
+		const closedPeriods = gate.closedPeriods;
+		const closedAtStart = gate.isClosed;
+		try {
+			received = await driver.waitForMessage(
+				(received) =>
+					msg.isExpectedNodeUpdate(driver, received)
+					|| !!getTryAgainLater(msg, received),
+				timeoutMs,
+				(received) => maybePartialNodeUpdate(driver, msg, received),
+			);
+			break;
+		} catch {
+			// The node may need a reply from the driver first, like a nonce, which waits while the gate is closed.
+			// Give the node the full time again once the gate is open.
+			const wasClosed =
+				closedAtStart
+				|| gate.isClosed
+				|| gate.closedPeriods !== closedPeriods;
+			// The wait ends without a second try when the gate is destroyed
+			if (
+				wasClosed
+				&& (await gate.whenOpen().then(
+					() => true,
+					() => false,
+				))
+			) {
+				continue;
+			}
+			throw new ZWaveError(
+				`Timed out while waiting for a response from the node`,
+				ZWaveErrorCodes.Controller_NodeTimeout,
+			);
+		}
 	}
 	const busy = getTryAgainLater(msg, received);
 	if (busy) {
