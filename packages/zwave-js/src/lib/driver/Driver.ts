@@ -1054,6 +1054,8 @@ export class Driver
 	private controllerGate = new ControllerGate();
 	/** Used to immediately abort ongoing Serial API commands */
 	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
+	/** Whether the active Serial API command waits for its ACK */
+	private activeCommandAwaitsACK = false;
 
 	private initSerialAPIQueue(): void {
 		// Reuse the queue that was used by the bootloader probe
@@ -3634,16 +3636,26 @@ export class Driver
 			signal.throwIfAborted();
 			// Abort the command that is active now, so it does not run during the exclusive access.
 			// Its transaction is re-queued.
+			const abortedWhileAwaitingACK = this.activeCommandAwaitsACK;
 			this.abortSerialAPICommand?.reject(
 				new ZWaveError(
 					"Another operation has exclusive access to the controller",
 					ZWaveErrorCodes.Controller_Reset,
 				),
 			);
-			// Its ACK must not be taken for the ACK of the first command sent with exclusive access
-			await abortableStep(
-				signal,
-				() => this.pendingSendDataAbort ?? Promise.resolve(),
+			// Wait for a late ACK and pending SendDataAborts
+			// A late ACK for the aborted command or a pending SendDataAbort must not be taken
+			// for the ACK of the first command sent with exclusive access
+			if (abortedWhileAwaitingACK) {
+				await abortableStep(signal, () =>
+					this.waitForMessageHeader(
+						() => true,
+						this.options.timeouts.ack,
+					).then(noop, noop),
+				);
+			}
+			await abortableStep(signal, () =>
+				Promise.all(this.pendingSendDataAborts),
 			);
 
 			// Run the work with exclusive access
@@ -3675,7 +3687,10 @@ export class Driver
 		for (let attempt = 1; ; attempt++) {
 			try {
 				return await abortableStep(signal, () =>
-					this.queueSerialAPICommand(msg, undefined, true, signal),
+					this.queueSerialAPICommand(msg, undefined, {
+						exclusive: true,
+						signal,
+					}),
 				);
 			} catch (e) {
 				if (
@@ -4159,9 +4174,8 @@ export class Driver
 		this.lifetime.abort(destroyed);
 		await Promise.all(this.activeExclusiveAccesses);
 
-		// First stop the scheduler, all queues and close the serial port, so nothing happens anymore
-		await this._scheduler.stop();
-
+		// Then stop all queues and the scheduler and close the serial port, so nothing happens anymore.
+		// The queues go first, because the closed gate would keep back the commands a task waits for.
 		await this.destroyTransactionQueues(
 			"driver instance destroyed",
 			ZWaveErrorCodes.Driver_Destroyed,
@@ -4171,6 +4185,8 @@ export class Driver
 			"driver instance destroyed",
 			ZWaveErrorCodes.Driver_Destroyed,
 		);
+
+		await this._scheduler.stop();
 
 		if (this.serial != undefined) {
 			// Avoid spewing errors if the port was in the middle of receiving something
@@ -4329,7 +4345,11 @@ export class Driver
 			) {
 				// A disconnection while soft resetting is to be expected.
 				// The soft reset method will handle reopening
-				if (this.isSoftResetting || this._isOpeningSerialPort) {
+				if (
+					this.isSoftResetting
+					|| this._isOpeningSerialPort
+					|| this.wasDestroyed
+				) {
 					return;
 				}
 
@@ -7227,9 +7247,14 @@ ${handlers.length} left`,
 			let commandAttempts = 0; // The command was not acknowledged
 			attemptMessage: for (let attemptNumber = 1; ; attemptNumber++) {
 				try {
+					const run = transaction.parts.self;
 					prevResult = await this.queueSerialAPICommand(
 						msg,
 						transaction.stack,
+						{
+							// The transaction may end or be reset while its command waits at the Serial API queue
+							isStale: () => transaction.parts.self !== run,
+						},
 					);
 					if (isTransmitReport(prevResult)) {
 						// Figure out if the controller is jammed. If it is, wait a second and try again.
@@ -7380,6 +7405,12 @@ ${handlers.length} left`,
 
 			// Attempt the command multiple times if necessary
 			attempts: for (let attempt = 1; ; attempt++) {
+				// The transaction loop ends quietly for a command of a transaction that ended or was reset
+				if (item.isStale?.()) {
+					result.resolve(undefined);
+					this._currentSerialAPICommandPromise = undefined;
+					break attempts;
+				}
 				// Checked before every attempt, because the gate can close during a retry backoff
 				const blocked = this.getSerialAPICommandBlocker(item, queue);
 				if (blocked) {
@@ -7455,8 +7486,10 @@ ${handlers.length} left`,
 	private queueSerialAPICommand(
 		msg: Message,
 		transactionSource?: string,
-		exclusive?: boolean,
-		signal?: AbortSignal,
+		options: Pick<
+			SerialAPIQueueItem,
+			"exclusive" | "signal" | "isStale"
+		> = {},
 	): Promise<Message | undefined> {
 		if (this.serialAPIQueue.isEnded) {
 			return Promise.reject(
@@ -7473,8 +7506,7 @@ ${handlers.length} left`,
 			msg,
 			transactionSource,
 			result,
-			exclusive,
-			signal,
+			...options,
 			[Symbol.dispose]: () => {
 				// Is called when the queue is aborted. Must not use a code that
 				// isTransmissionError() accepts, or callers will retry against a
@@ -7546,8 +7578,11 @@ ${handlers.length} left`,
 
 		const machine = createSerialAPICommandMachine(msg);
 		this.abortSerialAPICommand = createDeferredPromise();
+		let aborted: Error | undefined;
 		// Avoid an unhandled rejection when destroying the driver while not actively waiting
-		this.abortSerialAPICommand.catch(() => {});
+		this.abortSerialAPICommand.catch((e: Error) => {
+			aborted = e;
+		});
 		const abortController = new AbortController();
 
 		let nextInput: SerialAPICommandMachineInput<Message> | undefined = {
@@ -7594,12 +7629,15 @@ ${handlers.length} left`,
 						const data = await msg.serialize(
 							this.getEncodingContext(),
 						);
+						// Another operation can take exclusive access while the message is serialized
+						if (aborted) throw aborted;
 						await this.writeSerial(data);
 						nextInput = { value: "message sent" };
 						break;
 					}
 
 					case "waitingForACK": {
+						this.activeCommandAwaitsACK = true;
 						const controlFlow = await Promise.race([
 							this.abortSerialAPICommand?.catch(
 								(e) => e as Error,
@@ -7610,6 +7648,7 @@ ${handlers.length} left`,
 								abortController.signal,
 							).catch(() => "timeout" as const),
 						]);
+						this.activeCommandAwaitsACK = false;
 
 						if (controlFlow instanceof Error) {
 							// The command was aborted from the outside
@@ -7742,6 +7781,7 @@ ${handlers.length} left`,
 			}
 		} finally {
 			this.abortSerialAPICommand = undefined;
+			this.activeCommandAwaitsACK = false;
 		}
 	}
 
@@ -8471,22 +8511,17 @@ ${handlers.length} left`,
 		});
 	}
 
-	/** A SendDataAbort that waits for its ACK. A holder must not send while it is pending. */
-	private pendingSendDataAbort: Promise<void> | undefined;
+	/** SendDataAborts that wait for their ACK. An operation with exclusive access must not send while one is pending. */
+	private pendingSendDataAborts = new Set<Promise<void>>();
 
 	private async abortSendData(): Promise<void> {
-		// While the gate is closed, no SendData of a transaction is active.
+		// During exclusive access, no SendData of a transaction is active.
 		// An abort would compete with the command of that access for the controller's ACK.
 		if (this.controllerGate.isClosed) return;
 		const abort = this.writeSendDataAbort();
-		this.pendingSendDataAbort = abort;
-		try {
-			await abort;
-		} finally {
-			if (this.pendingSendDataAbort === abort) {
-				this.pendingSendDataAbort = undefined;
-			}
-		}
+		this.pendingSendDataAborts.add(abort);
+		await abort;
+		this.pendingSendDataAborts.delete(abort);
 	}
 
 	private async writeSendDataAbort(): Promise<void> {

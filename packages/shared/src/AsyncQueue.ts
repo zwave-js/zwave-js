@@ -102,7 +102,7 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 				if (index !== -1) {
 					// Return the first item that may be taken
 					[value] = this.backlog.splice(index, 1);
-				} else if (!this.ended) {
+				} else if (!this.ended || this.backlog.length > 0) {
 					// Otherwise create a new promise and add it to the pending list
 					const promise = createDeferredPromise<T | undefined>();
 					this.listeners.push(promise);

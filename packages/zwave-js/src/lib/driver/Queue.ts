@@ -150,4 +150,6 @@ export interface SerialAPIQueueItem extends Disposable {
 	exclusive?: boolean;
 	/** The signal of that operation. The command is not sent once it is aborted. */
 	signal?: AbortSignal;
+	/** Whether the transaction that sent this command ended or was reset. Then the command is not sent. */
+	isStale?: () => boolean;
 }

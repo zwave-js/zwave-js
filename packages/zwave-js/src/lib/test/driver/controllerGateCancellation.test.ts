@@ -15,12 +15,14 @@ import {
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
+import { abortable } from "@zwave-js/shared";
 import type { MockControllerBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 
 import { determineNIF } from "../../controller/NodeInformationFrame.js";
 import { ControllerGate } from "../../driver/ControllerGate.js";
+import { TaskPriority } from "../../driver/Task.js";
 import { integrationTest } from "../integrationTestSuite.js";
 import {
 	type MockGeckoBootloader,
@@ -466,6 +468,122 @@ integrationTest.sequential(
 				wait(500).then(() => "still running"),
 			]);
 			t.expect(result).toBe(ZWaveErrorCodes.Driver_Destroyed);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A command whose transaction expired during another operation's exclusive access is not sent",
+	{
+		// debug: true,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Take exclusive access until the test releases it
+			const release = createDeferredPromise<void>();
+			const access = driver.withExclusiveControllerAccess(
+				(send, signal) => abortable(release, signal),
+			);
+			// Send a command that expires after 300 ms
+			mockController.clearReceivedHostMessages();
+
+			const result = driver
+				.sendMessage(
+					new SendDataRequest({
+						command: new NoOperationCC({ nodeId: node.id }),
+					}),
+					{ expire: 300 },
+				)
+				.catch((e: ZWaveError) => e);
+			// Let the command expire, then end the exclusive access
+			await wait(600);
+			release.resolve();
+			await access;
+			// The command must fail as expired and never reach the controller
+			await wait(300);
+
+			t.expect(await result).toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageExpired,
+			});
+			t.expect(mockController.receivedHostMessages.some(isSendData)).toBe(
+				false,
+			);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A late ACK for an aborted command does not count as the ACK of the soft reset",
+	{
+		// debug: true,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.ack = 400;
+			driver.options.attempts.controller = 1;
+
+			// The controller acknowledges the SendData late and never the soft reset
+			mockController.autoAckHostMessages = false;
+			let isFirstSendData = true;
+			const lateACK: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (isSendData(msg) && isFirstSendData) {
+						isFirstSendData = false;
+						setTimeout(() => controller.ackHostMessage(), 200);
+						return true;
+					}
+					if (msg instanceof SoftResetRequest) return true;
+					controller.ackHostMessage();
+					return false;
+				},
+			};
+			mockController.defineBehavior(lateACK);
+
+			// Ping the node and wait until its SendData is sent
+			void node.ping().catch(() => {});
+			await mockController.expectHostMessage(isSendData);
+
+			// The late ACK must not count for the soft reset, so the reset times out
+			await assertZWaveError(t.expect, () => driver.softReset(), {
+				errorCode: ZWaveErrorCodes.Controller_Timeout,
+			});
+		},
+	},
+);
+
+integrationTest.sequential(
+	"Destroying the driver does not wait for a task whose command waits for exclusive access to end",
+	{
+		// debug: true,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Take exclusive access until the driver is destroyed
+			const release = createDeferredPromise<void>();
+			void driver
+				.withExclusiveControllerAccess((send, signal) =>
+					abortable(release, signal),
+				)
+				.catch(() => {});
+			// Queue a task whose command waits for the exclusive access to end
+			void driver.scheduler
+				.queueTask({
+					priority: TaskPriority.Normal,
+					// The step itself must wait for the command, so the task does not yield
+					// oxlint-disable-next-line require-yield
+					task: async function* () {
+						await driver.sendMessage(
+							new SendDataRequest({
+								command: new NoOperationCC({ nodeId: node.id }),
+							}),
+						);
+					},
+				})
+				.catch(() => {});
+			// Destroying the driver must not wait for that task
+			await wait(100);
+
+			const start = Date.now();
+			await driver.destroy();
+			t.expect(Date.now() - start).toBeLessThan(1000);
 		},
 	},
 );

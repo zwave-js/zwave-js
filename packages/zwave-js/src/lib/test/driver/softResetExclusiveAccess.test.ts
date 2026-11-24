@@ -1,5 +1,4 @@
 import { NoOperationCC } from "@zwave-js/cc";
-import { BasicCCGet, BasicCCReport } from "@zwave-js/cc/BasicCC";
 import {
 	MessagePriority,
 	ZWaveErrorCodes,
