@@ -515,10 +515,9 @@ integrationTest.sequential(
 
 			// No other traffic follows, so only the re-queued command can
 			// clear the jammed status
-			const timedOut = Symbol("timeout");
 			const result = await Promise.race([
 				promise.then(() => "sent"),
-				wait(10000).then(() => timedOut),
+				wait(10000).then(() => "timeout"),
 			]);
 			t.expect(result).toBe("sent");
 
@@ -570,10 +569,9 @@ integrationTest.sequential(
 			});
 			await driver.softResetAndRestart();
 
-			const timedOut = Symbol("timeout");
 			const result = await Promise.race([
 				driverReady.then(() => "ready"),
-				wait(20000).then(() => timedOut),
+				wait(20000).then(() => "timeout"),
 			]);
 			t.expect(result).toBe("ready");
 
