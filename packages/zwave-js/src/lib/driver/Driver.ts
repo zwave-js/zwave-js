@@ -3651,6 +3651,7 @@ export class Driver
 					this.waitForMessageHeader(
 						() => true,
 						this.options.timeouts.ack,
+						signal,
 					).then(noop, noop),
 				);
 			}
@@ -7245,9 +7246,10 @@ ${handlers.length} left`,
 			let jammedAttempts = 0; // SendData failed with status Fail
 			let queueAttempts = 0; // SendData returned a negative response
 			let commandAttempts = 0; // The command was not acknowledged
+			// Captured once per message, because a reset during a retry delay clears it
+			const run = transaction.parts.self;
 			attemptMessage: for (let attemptNumber = 1; ; attemptNumber++) {
 				try {
-					const run = transaction.parts.self;
 					prevResult = await this.queueSerialAPICommand(
 						msg,
 						transaction.stack,

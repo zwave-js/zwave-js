@@ -1,6 +1,7 @@
 import { NoOperationCC } from "@zwave-js/cc";
 import {
 	ControllerStatus,
+	TransmitStatus,
 	ZWaveError,
 	ZWaveErrorCodes,
 	assertZWaveError,
@@ -10,6 +11,8 @@ import {
 	GetControllerVersionRequest,
 	SendDataAbort,
 	SendDataBridgeRequest,
+	SendDataBridgeRequestTransmitReport,
+	SendDataBridgeResponse,
 	SendDataRequest,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
@@ -584,6 +587,67 @@ integrationTest.sequential(
 			const start = Date.now();
 			await driver.destroy();
 			t.expect(Date.now() - start).toBeLessThan(1000);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A command whose transaction expired during a retry delay is not sent again",
+	{
+		// debug: true,
+
+		additionalDriverOptions: {
+			testingHooks: {
+				skipNodeInterview: true,
+			},
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			// The first transmission fails as if the controller is jammed, so the driver waits before it retries
+			let isFirstSendData = true;
+			const jamOnce: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (!isSendData(msg) || !isFirstSendData) return;
+					isFirstSendData = false;
+					const send = msg as SendDataBridgeRequest;
+					await controller.sendMessageToHost(
+						new SendDataBridgeResponse({ wasSent: true }),
+					);
+					await controller.sendMessageToHost(
+						new SendDataBridgeRequestTransmitReport({
+							callbackId: send.callbackId!,
+							transmitStatus: TransmitStatus.Fail,
+							txReport: {
+								txTicks: 0,
+								routeSpeed: 0 as any,
+								routingAttempts: 0,
+								ackRSSI: 0,
+							},
+						}),
+					);
+					return true;
+				},
+			};
+			mockController.defineBehavior(jamOnce);
+			// Send a command that expires after 300 ms
+			mockController.clearReceivedHostMessages();
+
+			const result = driver
+				.sendCommand(new NoOperationCC({ nodeId: node.id }), {
+					expire: 300,
+				})
+				.catch((e: ZWaveError) => e);
+			// The retry delay after a jam is 1 second
+			await wait(1500);
+
+			// The command must fail as expired without being sent again
+			t.expect(await result).toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageExpired,
+			});
+			t.expect(
+				mockController.receivedHostMessages.filter(isSendData),
+			).toHaveLength(1);
 		},
 	},
 );
