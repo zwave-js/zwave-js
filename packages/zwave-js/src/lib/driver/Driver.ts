@@ -752,6 +752,17 @@ const enum ControllerRecoveryPhase {
 	CallbackTimeoutAfterReset,
 }
 
+/** Whether the controller could not transmit a command at all, because it is jammed */
+function isJamFailure(error: ZWaveError): boolean {
+	return (
+		error.code === ZWaveErrorCodes.Controller_MessageDropped
+		&& isTransmitReport(error.context)
+		&& error.context.transmitStatus === TransmitStatus.Fail
+		&& "txReport" in error.context
+		&& error.context.txReport?.txTicks === 0
+	);
+}
+
 /** How long the driver does not soft-reset a jammed controller again after a recovery did not help */
 const JAM_RECOVERY_COOLDOWN_MS = 5 * 60_000;
 
@@ -1275,8 +1286,8 @@ export class Driver
 
 	/** The running recovery of a jammed controller. A jam detected meanwhile joins it. */
 	private jamRecovery: Promise<void> | undefined;
-	/** Whether a jam recovery finished and no transmission succeeded since */
-	private jamRecoveredWithoutSuccess = false;
+	/** Transactions that are retried after a jam recovery */
+	private jamRecoveryRetries = new WeakSet<Transaction>();
 	/** Until when no jam recovery may start, because the last one did not help */
 	private jamRecoveryBlockedUntil = 0;
 
@@ -3860,6 +3871,8 @@ export class Driver
 				}
 
 				await this.restoreControllerStateAfterReset(send, signal);
+				// After a completed reset, a jam may be recovered again
+				this.jamRecoveryBlockedUntil = 0;
 				return true;
 			},
 			{ resetsController: true },
@@ -5414,10 +5427,7 @@ export class Driver
 		if (!this._controller || !this.mayRecoverUnresponsiveController()) {
 			return false;
 		}
-		if (this._controller.status !== ControllerStatus.Jammed) {
-			// Not sure what to do here
-			return false;
-		}
+		this._controller.setStatus(ControllerStatus.Jammed);
 
 		const giveUp = (message: string): void => {
 			this.driverLog.print(message, "warn");
@@ -5440,14 +5450,11 @@ export class Driver
 			return true;
 		}
 
-		if (this.jamRecoveredWithoutSuccess) {
+		if (this.jamRecoveryRetries.has(transaction)) {
 			// Transmits still fail after restarting the controller. Maybe this isn't actually
 			// the controller being jammed. Give up on this command.
-			this.jamRecoveredWithoutSuccess = false;
-			if (isTransmitReport(error.context)) {
-				this.jamRecoveryBlockedUntil =
-					Date.now() + JAM_RECOVERY_COOLDOWN_MS;
-			}
+			this.jamRecoveryBlockedUntil =
+				Date.now() + JAM_RECOVERY_COOLDOWN_MS;
 			giveUp(
 				"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
 			);
@@ -5465,9 +5472,9 @@ export class Driver
 				// Re-queue the transaction, so it can get handled next.
 				// Its message generator may have finished, so reset that too.
 				transaction.reset();
-				this.getQueueForTransaction(transaction).add(
-					transaction.clone(),
-				);
+				const retry = transaction.clone();
+				this.jamRecoveryRetries.add(retry);
+				this.getQueueForTransaction(transaction).add(retry);
 			},
 			(e) => {
 				if (this.wasDestroyed) {
@@ -5492,9 +5499,16 @@ export class Driver
 					"Attempting to recover jammed controller...",
 					"warn",
 				);
+				// A completed recovery of a missing callback is over. Its phase must not apply to later callbacks.
+				if (
+					this._recoveryPhase
+					=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
+				) {
+					this._recoveryPhase = ControllerRecoveryPhase.None;
+				}
 				await this.softReset();
-				// The controller stays jammed until a transmission succeeds
-				this.jamRecoveredWithoutSuccess = true;
+				// softReset() resolves after it destroyed the driver because the Serial API did not respond
+				this.lifetime.signal.throwIfAborted();
 			} finally {
 				this.jamRecovery = undefined;
 			}
@@ -7381,7 +7395,7 @@ ${handlers.length} left`,
 		transaction.start();
 		transaction.setProgress({ state: TransactionState.Active });
 
-		const maxJammedAttempts = this.jamRecoveredWithoutSuccess
+		const maxJammedAttempts = this.jamRecoveryRetries.has(transaction)
 			? // After attempting soft-reset, only try sending once
 				1
 			: this.options.attempts.sendDataJammed;
@@ -7446,7 +7460,6 @@ ${handlers.length} left`,
 							this.controller.setStatus(ControllerStatus.Ready);
 						}
 						// and a possible jam recovery helped
-						this.jamRecoveredWithoutSuccess = false;
 						this.jamRecoveryBlockedUntil = 0;
 
 						if (!prevResult.isOK()) {
@@ -8983,7 +8996,7 @@ ${handlers.length} left`,
 			// 700/800 series controllers can be jammed due to a bug,
 			// which a soft-reset is supposed to work around
 			isSendData(transaction.message)
-			&& this.controller.status === ControllerStatus.Jammed
+			&& isJamFailure(error)
 		) {
 			if (this.handleJammedController(transaction, error)) return;
 		} else if (

@@ -786,3 +786,138 @@ integrationTest.sequential(
 		},
 	},
 );
+
+integrationTest.sequential(
+	"A jam is recovered even when another transmission set the status to Ready in the meantime",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			// Like a successful transmission of another command right before the last jammed attempt
+			let jammedSendData = 0;
+			const readyBeforeLastAttempt: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (shouldFail && msg instanceof SendDataRequest) {
+						jammedSendData++;
+						if (
+							jammedSendData
+							=== driver.options.attempts.sendDataJammed
+						) {
+							driver.controller.setStatus(ControllerStatus.Ready);
+						}
+					}
+					return false;
+				},
+			};
+			mockController.defineBehavior(readyBeforeLastAttempt);
+
+			// Jam the controller until the soft reset
+			shouldFail = true;
+			// The ping succeeds after one soft reset
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(1);
+		},
+	},
+);
+
+let mode: "normal" | "noCallback" | "jam" = "normal";
+// Leaves the callback out or jams, depending on the mode. Each soft reset moves on to the next mode.
+const callbackThenJam: MockControllerBehavior = {
+	async onHostMessage(controller, msg) {
+		if (msg instanceof SoftResetRequest) {
+			mode = mode === "noCallback" ? "jam" : "normal";
+			return false;
+		}
+		if (!(msg instanceof SendDataRequest) || mode === "normal") return;
+
+		await controller.sendMessageToHost(
+			new SendDataResponse({ wasSent: true }),
+		);
+		if (mode === "noCallback") return true;
+
+		await wait(100);
+		await controller.sendMessageToHost(
+			new SendDataRequestTransmitReport({
+				callbackId: msg.callbackId!,
+				transmitStatus: TransmitStatus.Fail,
+				txReport: {
+					txTicks: 0,
+					routeSpeed: 0 as any,
+					routingAttempts: 0,
+					ackRSSI: 0,
+				},
+			}),
+		);
+		return true;
+	},
+};
+
+integrationTest.sequential(
+	"A missing callback after a jam recovery that followed a callback recovery is recovered again",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		customSetup: async (driver, controller) => {
+			controller.defineBehavior(callbackThenJam);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			node.markAsAlive();
+			// Watch whether a node is marked as dead
+			const nodeDead = sinon.spy();
+			node.on("dead", nodeDead);
+
+			// The callback goes missing, the retry after that recovery jams, and the next retry works
+			mode = "noCallback";
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(2);
+
+			// A later missing callback is a new problem, so the driver recovers again
+			mode = "noCallback";
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(4);
+			// No node may be blamed for the missing callbacks
+			sinon.assert.notCalled(nodeDead);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A missing callback while the controller counts as jammed is handled as a missing callback",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		customSetup: async (driver, controller) => {
+			controller.defineBehavior(callbackThenJam);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			node.markAsAlive();
+
+			// Mark the controller as jammed and let the next callback go missing
+			driver.controller.setStatus(ControllerStatus.Jammed);
+			mode = "noCallback";
+			// Ping the node and wait until the recovery soft-resets the controller
+			const ping = node.ping();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 5000 },
+			);
+			// The callback recovery remembers that it reset the controller
+			await wait(200);
+			t.expect(driver["_recoveryPhase"]).not.toBe(0);
+			await ping;
+		},
+	},
+);
