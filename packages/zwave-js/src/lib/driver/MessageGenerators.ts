@@ -30,6 +30,7 @@ import {
 	TransportServiceTimeouts,
 } from "@zwave-js/cc/TransportServiceCC";
 import {
+	type CCId,
 	CommandClasses,
 	EncapsulationFlags,
 	type GetNode,
@@ -59,6 +60,7 @@ import {
 import { type BytesView, getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 
+import { abortable } from "./ControllerGate.js";
 import type { Driver } from "./Driver.js";
 import type { MessageGenerator } from "./Transaction.js";
 
@@ -993,21 +995,80 @@ export const secureMessageGeneratorS2Multicast: MessageGeneratorImplementation<
 	}
 };
 
+/**
+ * Returns a view of the driver whose waits for messages and commands end with the abort reason
+ * once `signal` is aborted. Aborted waits must not take messages that a new run of the transaction waits for.
+ */
+function stopWaitingOnAbort(driver: Driver, signal: AbortSignal): Driver {
+	const overrides: Record<string, unknown> = {
+		waitForMessage: (
+			predicate: (msg: Message) => boolean,
+			timeout?: number,
+			refreshPredicate?: (msg: Message) => boolean,
+		) =>
+			abortable(
+				driver.waitForMessage(
+					predicate,
+					timeout,
+					refreshPredicate,
+					signal,
+				),
+				signal,
+			),
+		waitForCommand: (
+			predicate: (cc: CCId) => boolean,
+			timeout?: number,
+			abortSignal?: AbortSignal,
+			options?: Parameters<Driver["waitForCommand"]>[3],
+		) =>
+			abortable(
+				driver.waitForCommand(
+					predicate,
+					timeout,
+					abortSignal
+						? AbortSignal.any([signal, abortSignal])
+						: signal,
+					options,
+				),
+				signal,
+			),
+	};
+	return new Proxy(driver, {
+		get(target, prop) {
+			if (typeof prop === "string" && prop in overrides) {
+				return overrides[prop];
+			}
+			const value = Reflect.get(target, prop, target);
+			return typeof value === "function" ? value.bind(target) : value;
+		},
+	});
+}
+
 export function createMessageGenerator(
 	driver: Driver,
 	ctx: CCEncodingContext,
 	msg: Message,
 	onMessageSent: (msg: Message, result: Message | undefined) => void,
 ): MessageGenerator {
+	let runAbort: AbortController | undefined;
 	const generator: MessageGenerator = {
 		parent: undefined as any, // The transaction will set this field on creation
 		current: undefined,
 		self: undefined,
 		reset: () => {
+			runAbort?.abort(
+				new ZWaveError(
+					"The transaction was reset",
+					ZWaveErrorCodes.Controller_Reset,
+				),
+			);
+			runAbort = undefined;
 			generator.current = undefined;
 			generator.self = undefined;
 		},
 		start: () => {
+			runAbort = new AbortController();
+			const runDriver = stopWaitingOnAbort(driver, runAbort.signal);
 			async function* gen() {
 				// Determine which message generator implementation should be used
 				let implementation: MessageGeneratorImplementation<Message> =
@@ -1038,9 +1099,14 @@ export function createMessageGenerator(
 					}
 				}
 
+				// A reset generator was abandoned by the driver while it was waiting.
+				// It must not touch the transaction anymore, because a new run may already use it.
+				const self = generator.self;
+				const isAbandoned = () => generator.self !== self;
+
 				// Step through the generator so we can easily cancel it and don't
 				// accidentally forget to unset this.current at the end
-				const gen = implementation(driver, ctx, msg, onMessageSent);
+				const gen = implementation(runDriver, ctx, msg, onMessageSent);
 				let sendResult: Message | undefined;
 				let result: Message | undefined;
 				while (true) {
@@ -1048,6 +1114,7 @@ export function createMessageGenerator(
 					// generated or returned message in `value`. When `done` is true, `value` contains the returned result of the message generator
 					try {
 						const { value, done } = await gen.next(sendResult!);
+						if (isAbandoned()) return;
 						if (done) {
 							result = value;
 							break;
@@ -1057,6 +1124,7 @@ export function createMessageGenerator(
 						generator.current = value;
 						sendResult = yield generator.current;
 					} catch (e) {
+						if (isAbandoned()) return;
 						if (isNodeBusyError(e)) {
 							// The driver decides whether to send the command again
 							generator.reset();

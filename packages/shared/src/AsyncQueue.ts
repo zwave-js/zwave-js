@@ -48,6 +48,11 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 	// Whether the queue was ended
 	private ended = false;
 
+	/** Whether the queue was ended. Items added afterwards are dropped. */
+	public get isEnded(): boolean {
+		return this.ended;
+	}
+
 	/** Ends the queue after it has been drained */
 	public end(): void {
 		this.ended = true;

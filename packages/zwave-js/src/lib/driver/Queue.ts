@@ -164,4 +164,6 @@ export interface SerialAPIQueueItem extends Disposable {
 	msg: Message;
 	transactionSource?: string;
 	result: DeferredPromise<Message | undefined>;
+	/** Whether the operation with exclusive access to the controller sent this command */
+	exclusive?: boolean;
 }

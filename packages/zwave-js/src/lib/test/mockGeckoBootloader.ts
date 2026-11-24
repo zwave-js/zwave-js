@@ -38,6 +38,8 @@ export interface MockGeckoBootloaderOptions {
 	ignoreCancel?: boolean;
 	/** The application the bootloader starts. Default: "serial-api" */
 	application?: "serial-api" | "cli";
+	/** Whether the Serial API application sends `SerialAPIStarted` when it starts. Default: true */
+	sendsSerialAPIStarted?: boolean;
 	/**
 	 * After the application reboots into the bootloader, send the carriage return
 	 * in front of the menu as a chunk of its own, like some USB serial bridges do
@@ -230,6 +232,7 @@ export function createMockGeckoBootloader(
 			send("\r\n> ");
 			return;
 		}
+		if (options.sendsSerialAPIStarted === false) return;
 		const msg = new SerialAPIStartedRequest({
 			wakeUpReason: SerialAPIWakeUpReason.Reset,
 			watchdogEnabled: false,

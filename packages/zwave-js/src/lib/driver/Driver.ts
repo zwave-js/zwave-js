@@ -190,6 +190,7 @@ import {
 	type Interval,
 	type Timer,
 	TypedEventTarget,
+	abortable,
 	areUint8ArraysEqual,
 	buffer2hex,
 	cloneDeep,
@@ -927,8 +928,9 @@ export class Driver
 	private getEncodingContext(): MessageEncodingContext & CCEncodingContext {
 		return {
 			...this.messageEncodingContext,
-			ownNodeId: this.controller.ownNodeId!,
-			homeId: this.controller.homeId!,
+			// There is no controller instance while probing the Serial API after leaving the bootloader
+			ownNodeId: this._controller?.ownNodeId ?? 0, // Unspecified node ID
+			homeId: this._controller?.homeId ?? 0x55555555, // Invalid home ID
 			nodeIdType: this._controller?.nodeIdType ?? NodeIDType.Short,
 			sdkVersion: this._controller?.sdkVersion,
 		};
@@ -1049,6 +1051,8 @@ export class Driver
 	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
 
 	private initSerialAPIQueue(): void {
+		// Reuse the queue that was used by the bootloader probe
+		if (this.serialAPIQueue && !this.serialAPIQueue.isEnded) return;
 		this.serialAPIQueue = new AsyncQueue();
 
 		// Start draining the queue
@@ -2094,6 +2098,7 @@ export class Driver
 			.on("inclusion state changed", () => this.triggerQueues());
 
 		// Create and start all queues after creating the controller instance
+		this.controllerGate = new ControllerGate();
 		this.initTransactionQueues();
 		this.initSerialAPIQueue();
 
@@ -3572,18 +3577,23 @@ export class Driver
 	/**
 	 * @internal
 	 * Runs `fn` with exclusive access to the controller. Neither transaction queue starts
-	 * a new transaction until `fn` has settled. `fn` must send its commands with `send`
+	 * a new transaction until `fn` has settled. Active transactions are stopped and re-queued
+	 * where they would otherwise wait for a node or send another command.
+	 * `fn` must send its commands with `send`, stop when `signal` is aborted
 	 * and must not request exclusive access again.
 	 */
 	public async withExclusiveControllerAccess<T>(
-		fn: (send: SendExclusive) => Promise<T>,
+		fn: (send: SendExclusive, signal: AbortSignal) => Promise<T>,
 		options: {
 			/** Abort the active Serial API command. Its transaction gets re-queued */
 			abortActiveCommand?: boolean;
+			/** Keep the gate closed afterwards, because the controller instance is destroyed next */
+			keepClosed?: boolean;
 		} = {},
 	): Promise<T> {
 		const lease = await this.controllerGate.close();
 		try {
+			lease.signal.throwIfAborted();
 			if (options.abortActiveCommand) {
 				this.abortSerialAPICommand?.reject(
 					new ZWaveError(
@@ -3592,27 +3602,35 @@ export class Driver
 					),
 				);
 			}
-
-			const run = async () => {
-				// The queues might not have been initialized yet
-				await Promise.all(
+			// The queues might not have been initialized yet
+			await abortable(
+				Promise.all(
 					this.queues.filter((q) => !!q).map((q) => q.waitForIdle()),
-				);
-				return fn((msg) => this.sendExclusive(msg));
-			};
-			// Commands sent after the controller instance was destroyed never settle
-			return await Promise.race([run(), lease.destroyed]);
+				),
+				lease.signal,
+			);
+
+			return await fn(
+				(msg) => this.sendExclusive(msg, lease.signal),
+				lease.signal,
+			);
 		} finally {
-			lease.release();
+			// Cleared before the release, so it does not clear the state of the next reset
+			if (options.resetsController) this.isSoftResetting = false;
+			if (!options.keepClosed) lease.release();
 			this.triggerQueues();
 		}
 	}
 
 	/** Sends a message through the Serial API queue, bypassing the transaction queues */
-	private async sendExclusive(msg: Message): Promise<Message | undefined> {
+	private async sendExclusive(
+		msg: Message,
+		signal?: AbortSignal,
+	): Promise<Message | undefined> {
 		for (let attempt = 1; ; attempt++) {
+			signal?.throwIfAborted();
 			try {
-				return await this.queueSerialAPICommand(msg);
+				return await this.queueSerialAPICommand(msg, undefined, true);
 			} catch (e) {
 				if (
 					isMissingControllerACK(e)
@@ -3626,25 +3644,46 @@ export class Driver
 	}
 
 	private waitForSerialAPIStarted(
-		timeout: number,
+		timeout?: number,
+		signal?: AbortSignal,
 	): Promise<SerialAPIStartedRequest | false> {
-		return this.waitForMessage<SerialAPIStartedRequest>(
-			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
-			timeout,
+		// An aborted wait entry is removed without settling the promise
+		return abortable(
+			this.waitForMessage<SerialAPIStartedRequest>(
+				(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+				timeout,
+				undefined,
+				signal,
+			),
+			signal,
 		).catch(() => false as const);
 	}
 
 	/**
 	 * Sends the soft reset command. Must be called with exclusive access to the controller.
-	 * The returned promise for the `SerialAPIStarted` notification starts listening before the command is sent.
+	 * The returned `serialAPIStarted` promise listens for the restart notification from before
+	 * the command is sent until 1.5 seconds after sending it ended, also when sending failed.
 	 */
-	private async sendSoftReset(send: SendExclusive): Promise<{
+	private async sendSoftReset(
+		send: SendExclusive,
+		signal: AbortSignal,
+	): Promise<{
 		serialAPIStarted: Promise<SerialAPIStartedRequest | false>;
+		error?: unknown;
 	}> {
 		this.controllerLog.print("Performing soft reset...");
 
 		// Listen before sending, because the notification can arrive before the ACK is handled
-		const serialAPIStarted = this.waitForSerialAPIStarted(1500);
+		const stopListening = new AbortController();
+		const onAbort = () => stopListening.abort();
+		signal.addEventListener("abort", onAbort, { once: true });
+		const serialAPIStarted = this.waitForSerialAPIStarted(
+			undefined,
+			stopListening.signal,
+		).finally(() => signal.removeEventListener("abort", onAbort));
+
+		// Send the reset
+		let error: unknown;
 		try {
 			await send(new SoftResetRequest());
 		} catch (e) {
@@ -3652,22 +3691,26 @@ export class Driver
 				`Soft reset failed: ${getErrorMessage(e)}`,
 				"error",
 			);
-			throw e;
+			error = e;
 		}
-		return { serialAPIStarted };
+		setTimer(() => stopListening.abort(), 1500).unref();
+		return { serialAPIStarted, error };
 	}
 
 	private async softResetInternal(destroyOnError: boolean): Promise<void> {
 		const serialAPIResponds = await this.withExclusiveControllerAccess(
-			async (send) => {
-				let serialAPIStarted:
-					| Promise<SerialAPIStartedRequest | false>
-					| undefined;
-				try {
-					({ serialAPIStarted } = await this.sendSoftReset(send));
-				} catch (e) {
-					// Don't continue if the controller is unresponsive
-					if (isMissingControllerACK(e)) throw e;
+			async (send, signal) => {
+				const { serialAPIStarted, error } = await this.sendSoftReset(
+					send,
+					signal,
+				);
+				// Don't continue if the controller is unresponsive,
+				// unless it restarted although its ACK got lost
+				if (
+					isMissingControllerACK(error)
+					&& !(await serialAPIStarted)
+				) {
+					throw error;
 				}
 
 				if (this._controller) {
@@ -3680,7 +3723,13 @@ export class Driver
 				}
 
 				// Make sure we're able to communicate with the controller again
-				if (!(await this.ensureSerialAPI(serialAPIStarted))) {
+				if (
+					!(await this.ensureSerialAPI({
+						serialAPIStarted,
+						send,
+						signal,
+					}))
+				) {
 					return false;
 				}
 
@@ -3728,20 +3777,21 @@ export class Driver
 	public async softResetAndRestart(callingTask?: TaskHandle): Promise<void> {
 		// Reset the controller and wait for the Serial API
 		const serialAPIResponds = await this.withExclusiveControllerAccess(
-			async (send) => {
-				let serialAPIStarted:
-					| Promise<SerialAPIStartedRequest | false>
-					| undefined;
-				try {
-					({ serialAPIStarted } = await this.sendSoftReset(send));
-				} catch {
-					// Already logged
-				}
+			async (send, signal) => {
+				const { serialAPIStarted } = await this.sendSoftReset(
+					send,
+					signal,
+				);
 
 				// Make sure we're able to communicate with the controller again
-				return this.ensureSerialAPI(serialAPIStarted);
+				return this.ensureSerialAPI({ serialAPIStarted, send, signal });
 			},
-			{ abortActiveCommand: true, resetsController: true },
+			// Commands queued for the old controller instance must not be sent to the reset controller
+			{
+				abortActiveCommand: true,
+				keepClosed: true,
+				resetsController: true,
+			},
 		);
 
 		// Give up when the Serial API does not come back
@@ -3778,18 +3828,24 @@ export class Driver
 
 	/**
 	 * Waits until the Serial API can be used again after a reset.
-	 * @param serialAPIStarted A promise for the `SerialAPIStarted` notification, which resolves to `false` after 1.5 seconds without it
+	 * @param options.serialAPIStarted A promise for the `SerialAPIStarted` notification, which resolves to `false` after 1.5 seconds without it
+	 * @param options.send Sends the probe
+	 * @param options.signal Stops waiting when aborted
 	 */
-	private async ensureSerialAPI(
-		serialAPIStarted: Promise<
-			SerialAPIStartedRequest | false
-		> = this.waitForSerialAPIStarted(1500),
-	): Promise<boolean> {
+	private async ensureSerialAPI(options: {
+		serialAPIStarted?: Promise<SerialAPIStartedRequest | false>;
+		send: SendExclusive;
+		signal?: AbortSignal;
+	}): Promise<boolean> {
+		const { send, signal } = options;
+		const serialAPIStarted =
+			options.serialAPIStarted
+			?? this.waitForSerialAPIStarted(1500, signal);
 		// Wait 1.5 seconds after reset to ensure that the module is ready for communication again
 		// Z-Wave 700 sticks are relatively fast, so we also wait for the Serial API started command
 		// to bail early
 		this.controllerLog.print("Waiting for the controller to reconnect...");
-		let waitResult = await serialAPIStarted;
+		let waitResult = await abortable(serialAPIStarted, signal);
 
 		if (waitResult) {
 			// Serial API did start
@@ -3815,7 +3871,9 @@ export class Driver
 		this.controllerLog.print("Waiting for the Serial API to start...");
 		waitResult = await this.waitForSerialAPIStarted(
 			this._options.timeouts.serialAPIStarted,
+			signal,
 		);
+		signal?.throwIfAborted();
 
 		if (waitResult) {
 			// Serial API did start, maybe do something with the information?
@@ -3835,10 +3893,11 @@ export class Driver
 		// anyways, so we might aswell use it here too
 		const pollController = async () => {
 			try {
-				await this.sendExclusive(new GetControllerVersionRequest());
+				await send(new GetControllerVersionRequest());
 				this.controllerLog.print("Serial API responded");
 				return true;
 			} catch {
+				signal?.throwIfAborted();
 				return false;
 			}
 		};
@@ -3848,7 +3907,7 @@ export class Driver
 			this.controllerLog.print(
 				`Serial API did not respond, trying again in ${backoff} seconds...`,
 			);
-			await wait(backoff * 1000);
+			await abortable(wait(backoff * 1000, true), signal);
 			if (await pollController()) return true;
 		}
 
@@ -7080,6 +7139,32 @@ ${handlers.length} left`,
 		}
 	}
 
+	/**
+	 * Gets the next message of a transaction. A step that waits for a node is stopped with `Controller_Reset`
+	 * when the controller gate closes, because the node might wait for a reply from the closed queues.
+	 */
+	private generateNextMessage(
+		transaction: Transaction,
+		prevResult: Message | undefined,
+	): Promise<Message | undefined> {
+		const step = transaction.generateNextMessage(prevResult);
+		if (!transaction.parts.current?.expectsNodeUpdate(this)) return step;
+
+		// The transaction is reset and re-queued, so the result of the interrupted step is not needed
+		step.catch(noop);
+		return Promise.race([
+			step,
+			this.controllerGate.whenClosed().then(() => {
+				throw new ZWaveError(
+					"Another operation has exclusive access to the controller",
+					ZWaveErrorCodes.Controller_Reset,
+					undefined,
+					transaction.stack,
+				);
+			}),
+		]);
+	}
+
 	/** Steps through the message generator of a transaction. Throws an error if the transaction should fail. */
 	private async executeTransaction(transaction: Transaction): Promise<void> {
 		let prevResult: Message | undefined;
@@ -7095,7 +7180,9 @@ ${handlers.length} left`,
 				: this.options.attempts.sendDataJammed;
 
 		// Step through the transaction as long as it gives us a next message
-		while ((msg = await transaction.generateNextMessage(prevResult))) {
+		while (
+			(msg = await this.generateNextMessage(transaction, prevResult))
+		) {
 			// Keep track of how often the controller failed to send a command, to prevent ending up in an infinite loop
 			let jammedAttempts = 0; // SendData failed with status Fail
 			let queueAttempts = 0; // SendData returned a negative response
@@ -7250,6 +7337,19 @@ ${handlers.length} left`,
 	private async drainSerialAPIQueue(): Promise<void> {
 		for await (const item of this.serialAPIQueue) {
 			const { msg, transactionSource, result } = item;
+			if (!item.exclusive && this.controllerGate.isClosed) {
+				// Commands of transactions that were waiting here when the gate closed
+				// must not be sent. Their transactions are re-queued.
+				result.reject(
+					new ZWaveError(
+						"Another operation has exclusive access to the controller",
+						ZWaveErrorCodes.Controller_Reset,
+						undefined,
+						transactionSource,
+					),
+				);
+				continue;
+			}
 			this._currentSerialAPICommandPromise = result;
 
 			// Attempt the command multiple times if necessary
@@ -7297,12 +7397,24 @@ ${handlers.length} left`,
 	private queueSerialAPICommand(
 		msg: Message,
 		transactionSource?: string,
+		exclusive?: boolean,
 	): Promise<Message | undefined> {
+		if (this.serialAPIQueue.isEnded) {
+			return Promise.reject(
+				new ZWaveError(
+					"The Serial API queue no longer accepts commands",
+					ZWaveErrorCodes.Driver_TaskRemoved,
+					undefined,
+					transactionSource,
+				),
+			);
+		}
 		const result = createDeferredPromise<Message | undefined>();
 		this.serialAPIQueue.add({
 			msg,
 			transactionSource,
 			result,
+			exclusive,
 			[Symbol.dispose]: () => {
 				// Is called when the queue is aborted. Must not use a code that
 				// isTransmissionError() accepts, or callers will retry against a
@@ -10034,7 +10146,20 @@ ${handlers.length} left`,
 			return;
 		}
 
-		await this.ensureSerialAPI();
+		// Entering the bootloader ended the Serial API queue. The probe starts the one the next controller instance uses.
+		this.initSerialAPIQueue();
+		const serialAPIResponds = await this.ensureSerialAPI({
+			send: (msg) => this.sendExclusive(msg),
+		});
+		if (serialAPIResponds) {
+			await this.initializeControllerAndNodes();
+		} else {
+			// End the queue, because no controller instance will use it
+			this.destroySerialAPIQueue(
+				"The Serial API did not respond after leaving the bootloader",
+				ZWaveErrorCodes.Driver_Failed,
+			);
+		}
 	}
 
 	private serialport_onBootloaderData(data: BootloaderChunk): void {

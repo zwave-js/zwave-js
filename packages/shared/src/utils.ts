@@ -252,3 +252,19 @@ export function evalOrStatic<T>(
 	// @ts-expect-error https://github.com/microsoft/TypeScript/issues/61337
 	return typeof fnOrConst === "function" ? fnOrConst(...args) : fnOrConst;
 }
+
+/** Settles like `promise`, but rejects with the abort reason as soon as `signal` is aborted */
+export function abortable<T>(
+	promise: Promise<T>,
+	signal: AbortSignal | undefined,
+): Promise<T> {
+	if (!signal) return promise;
+	if (signal.aborted) return Promise.reject(signal.reason);
+	return new Promise<T>((resolve, reject) => {
+		const onAbort = () => reject(signal.reason);
+		signal.addEventListener("abort", onAbort, { once: true });
+		promise
+			.then(resolve, reject)
+			.finally(() => signal.removeEventListener("abort", onAbort));
+	});
+}

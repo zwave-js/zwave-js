@@ -1,4 +1,5 @@
 import type { Message } from "@zwave-js/serial";
+import { abortable } from "@zwave-js/shared";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
@@ -7,64 +8,85 @@ import {
 /** Sends a message to the controller during exclusive access, bypassing the transaction queues */
 export type SendExclusive = (msg: Message) => Promise<Message | undefined>;
 
+export interface ControllerGateLease {
+	/** Aborted when the gate is sealed while this lease is active */
+	readonly signal: AbortSignal;
+	/** Passes the gate to the next waiting operation or opens it. Calling it more than once has no effect. */
+	release(): void;
+}
+
 /**
  * Grants exclusive access to the controller to one operation at a time.
  * While the gate is closed, the transaction queues must not start new transactions.
+ *
+ * A released gate passes directly to the next waiting operation and only opens when nobody waits.
+ * Each controller instance has its own gate. Sealing it aborts the current lease,
+ * rejects everyone waiting and keeps the gate closed for good.
  */
-export interface ControllerGateLease {
-	/** Opens the gate again. Calling it more than once has no effect. */
-	release(): void;
-	/** Rejects when the gate is sealed before it was released */
-	destroyed: Promise<never>;
-}
-
 export class ControllerGate {
-	private closed = false;
-	private lease:
-		| (ControllerGateLease & { reject(e: Error): void })
+	private current:
+		| (ControllerGateLease & { abort(e: Error): void })
 		| undefined;
-	private waiters: DeferredPromise<void>[] = [];
+	private waiters: DeferredPromise<ControllerGateLease>[] = [];
+	private sealedReason: Error | undefined;
+	private closedSignal = createDeferredPromise<void>();
 
 	public get isClosed(): boolean {
-		return this.closed;
+		return !!this.current || !!this.sealedReason;
+	}
+
+	/** Resolves when the gate is closed, immediately if it already is */
+	public whenClosed(): Promise<void> {
+		return this.closedSignal;
 	}
 
 	/**
-	 * Waits until the gate is open, then closes it.
-	 * Rejects if the gate is sealed while waiting.
+	 * Waits until the gate is free, then closes it.
+	 * Rejects if the gate is sealed before that.
 	 */
-	public async close(): Promise<ControllerGateLease> {
-		while (this.closed) {
-			const waiter = createDeferredPromise<void>();
-			this.waiters.push(waiter);
-			await waiter;
-		}
-		this.closed = true;
+	public close(): Promise<ControllerGateLease> {
+		if (this.sealedReason) return Promise.reject(this.sealedReason);
+		if (!this.current) return Promise.resolve(this.grant());
 
-		const destroyed = createDeferredPromise<never>();
-		// Nobody might be waiting for this
-		destroyed.catch(() => {});
-		const lease = {
-			release: () => {
-				if (this.lease !== lease) return;
-				this.lease = undefined;
-				this.closed = false;
-				this.waiters.shift()?.resolve();
-			},
-			destroyed,
-			reject: (e: Error) => destroyed.reject(e),
-		};
-		this.lease = lease;
+		const lease = createDeferredPromise<ControllerGateLease>();
+		this.waiters.push(lease);
 		return lease;
 	}
 
-	/** Opens the gate and rejects the current lease and all callers waiting to close it */
+	/**
+	 * Creates the lease for the next operation and makes it the current one.
+	 * Releasing the lease passes the gate to the next waiting operation, or opens it when nobody waits.
+	 */
+	private grant(): ControllerGateLease {
+		const abortController = new AbortController();
+		const lease = {
+			signal: abortController.signal,
+			release: () => {
+				if (this.current !== lease) return;
+				const next = this.waiters.shift();
+				if (next) {
+					next.resolve(this.grant());
+				} else {
+					this.current = undefined;
+					this.closedSignal = createDeferredPromise();
+				}
+			},
+			abort: (e: Error) => abortController.abort(e),
+		};
+		this.current = lease;
+		this.closedSignal.resolve();
+		return lease;
+	}
+
+	/** Aborts the current lease, rejects everyone waiting and keeps the gate closed */
 	public seal(reason: Error): void {
-		this.lease?.reject(reason);
-		this.lease = undefined;
-		this.closed = false;
+		if (this.sealedReason) return;
+		this.sealedReason = reason;
+		this.current?.abort(reason);
+		this.current = undefined;
 		const waiters = this.waiters;
 		this.waiters = [];
-		for (const waiter of waiters) waiter.reject(reason);
+		for (const lease of waiters) lease.reject(reason);
+		this.closedSignal.resolve();
 	}
 }

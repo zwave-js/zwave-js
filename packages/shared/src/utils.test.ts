@@ -1,6 +1,7 @@
 import { test } from "vitest";
 
 import {
+	abortable,
 	cloneDeep,
 	discreteBinarySearch,
 	discreteLinearSearch,
@@ -253,4 +254,16 @@ test("mergeDeep -> replaces arrays instead of merging them", (t) => {
 	t.expect(mergeDeep({ a: [1, 2, 3] }, { a: [4] }).a).toStrictEqual([
 		1, 2, 3,
 	]);
+});
+
+test("abortable() resolves with the value while the signal is not aborted", async (t) => {
+	const controller = new AbortController();
+	t.expect(await abortable(Promise.resolve(1), controller.signal)).toBe(1);
+});
+
+test("abortable() rejects with the abort reason when the signal is aborted first", async (t) => {
+	const controller = new AbortController();
+	const pending = abortable(new Promise(() => {}), controller.signal);
+	controller.abort(new Error("stop"));
+	await t.expect(pending).rejects.toThrow("stop");
 });
