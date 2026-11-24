@@ -366,3 +366,26 @@ integrationTest(
 		},
 	},
 );
+
+integrationTest(
+	"The driver uses 16-bit node IDs when the controller can switch, even without Long Range support",
+	{
+		// debug: true,
+
+		controllerCapabilities: {
+			...controllerCapabilities("Z-Wave 7.19.3"),
+			supportsLongRange: false,
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The controller has no Long Range support, but uses 16-bit node IDs after startup
+			t.expect(driver.controller.supportsLongRange).toBe(false);
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
+			t.expect(mockController.parsingContext.nodeIdType).toBe(
+				NodeIDType.Long,
+			);
+			// Commands reach their node
+			t.expect(await node.ping()).toBe(true);
+		},
+	},
+);

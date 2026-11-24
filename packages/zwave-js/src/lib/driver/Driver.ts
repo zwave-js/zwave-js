@@ -2163,13 +2163,9 @@ export class Driver
 					.lrNodeIds;
 			}
 
-			// If the controller supports ZWLR in the current region, switch to
-			// 16-bit node IDs. Otherwise, make sure that it is actually using 8-bit node IDs.
-			await this.controller.trySetNodeIDType(
-				this.controller.supportsLongRange
-					? NodeIDType.Long
-					: NodeIDType.Short,
-			);
+			// Use 16-bit node IDs whenever the controller can switch, so the node ID type
+			// does not depend on the RF region. Controllers that cannot switch use 8-bit node IDs.
+			await this.controller.trySetNodeIDType(NodeIDType.Long);
 
 			// Now that we know the node ID type, we can identify the controller
 			await this.controller.identify();
