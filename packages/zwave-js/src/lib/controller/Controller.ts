@@ -6395,18 +6395,40 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			// SetPriorityRoute is missing the result byte when used with 16-bit node IDs.
 			// So we temporarily switch back to 8-bit node IDs for this message
 			const nodeIdType = this._nodeIdType;
-			if (nodeIdType === NodeIDType.Long) {
-				await this.trySetNodeIDTypeInternal(NodeIDType.Short, send);
+			if (
+				nodeIdType === NodeIDType.Long
+				&& !(await this.trySetNodeIDTypeInternal(
+					NodeIDType.Short,
+					send,
+				))
+			) {
+				throw new ZWaveError(
+					`The controller rejected the switch to 8-bit node IDs, which this command needs`,
+					ZWaveErrorCodes.Controller_CommandError,
+				);
 			}
+
+			let result: boolean | undefined;
+			let error: unknown;
 			try {
-				const result = (await send(request)) as Message
-					& SuccessIndicator;
-				return result.isOK();
-			} finally {
-				if (this._nodeIdType !== nodeIdType) {
-					await this.trySetNodeIDTypeInternal(nodeIdType, send);
-				}
+				result = (
+					(await send(request)) as Message & SuccessIndicator
+				).isOK();
+			} catch (e) {
+				error = e;
 			}
+
+			if (
+				this._nodeIdType !== nodeIdType
+				&& !(await this.trySetNodeIDTypeInternal(nodeIdType, send))
+			) {
+				throw new ZWaveError(
+					`The controller rejected the switch back to 16-bit node IDs`,
+					ZWaveErrorCodes.Controller_CommandError,
+				);
+			}
+			if (error) throw error;
+			return result!;
 		});
 	}
 
@@ -7793,22 +7815,11 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	 * Like {@link trySetNodeIDType}, but uses the given function to send the request.
 	 * Must be called with exclusive access to the controller.
 	 */
-	public async trySetNodeIDTypeInternal(
+	public trySetNodeIDTypeInternal(
 		nodeIdType: NodeIDType,
 		send: SendExclusive,
 	): Promise<boolean> {
-		if (
-			this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.SetNodeIDType,
-			)
-		) {
-			try {
-				return await this.setNodeIDType(nodeIdType, send);
-			} catch {
-				// ignore
-			}
-		}
-		return false;
+		return this.driver.switchNodeIdType(nodeIdType, send);
 	}
 
 	/**

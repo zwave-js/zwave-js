@@ -405,15 +405,16 @@ integrationTest(
 		controllerCapabilities: controllerCapabilities("Z-Wave 7.19.3"),
 
 		customSetup: async (driver, mockController) => {
-			let failedOnce = false;
+			// Reject all attempts of the startup switch
+			let rejected = 0;
 			const failFirstLong: MockControllerBehavior = {
 				async onHostMessage(controller, msg) {
 					if (
 						msg instanceof SerialAPISetup_SetNodeIDTypeRequest
 						&& msg.nodeIdType === NodeIDType.Long
-						&& !failedOnce
+						&& rejected < 3
 					) {
-						failedOnce = true;
+						rejected++;
 						await controller.sendMessageToHost(
 							new SerialAPISetup_SetNodeIDTypeResponse({
 								success: false,
