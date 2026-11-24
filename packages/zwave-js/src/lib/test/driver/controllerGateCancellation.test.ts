@@ -1,30 +1,31 @@
-import { CommandClass, NoOperationCC } from "@zwave-js/cc";
-import { TransportServiceCCSubsequentSegment } from "@zwave-js/cc/TransportServiceCC";
+import { NoOperationCC } from "@zwave-js/cc";
 import {
-	CommandClasses,
+	ControllerStatus,
+	ZWaveError,
 	ZWaveErrorCodes,
 	assertZWaveError,
 } from "@zwave-js/core";
 import { MessageHeaders } from "@zwave-js/serial";
 import {
 	GetControllerVersionRequest,
+	SendDataAbort,
 	SendDataBridgeRequest,
 	SendDataRequest,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
-import {
-	type MockControllerBehavior,
-	MockZWaveFrameType,
-	ccCaps,
-} from "@zwave-js/testing";
+import type { MockControllerBehavior } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 
 import { determineNIF } from "../../controller/NodeInformationFrame.js";
 import { ControllerGate } from "../../driver/ControllerGate.js";
 import { integrationTest } from "../integrationTestSuite.js";
+import {
+	type MockGeckoBootloader,
+	createMockGeckoBootloader,
+} from "../mockGeckoBootloader.js";
 
 function isSendData(msg: unknown): boolean {
 	return (
@@ -301,6 +302,170 @@ integrationTest.sequential(
 			// The driver must close the new port and not use it
 			t.expect(driver["serial"]).not.toBe(newStream);
 			t.expect(closedNewStream).toBe(true);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A soft reset waits until the controller acknowledged a pending SendDataAbort",
+	{
+		// debug: true,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The controller does not acknowledge the abort, so the driver waits 500 ms for it
+			mockController.autoAckHostMessages = false;
+			const ignoreAbort: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (msg instanceof SendDataAbort) return true;
+					controller.ackHostMessage();
+					return false;
+				},
+			};
+			mockController.defineBehavior(ignoreAbort);
+			// Send an abort and soft-reset right after
+			mockController.clearReceivedHostMessages();
+
+			const start = Date.now();
+			void driver["abortSendData"]();
+			await driver.softReset();
+
+			// If the abort took the ACK of the soft reset, the reset would wait for the 1600 ms ACK timeout
+			t.expect(Date.now() - start).toBeLessThan(1200);
+			// The reset command must be sent only once
+			t.expect(
+				mockController.receivedHostMessages.filter(
+					(msg) => msg instanceof SoftResetRequest,
+				),
+			).toHaveLength(1);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"Destroying the driver while a soft reset without ACK waits for SerialAPIStarted rejects the reset with Driver_Destroyed",
+	{
+		// debug: true,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.ack = 200;
+			driver.options.attempts.controller = 1;
+
+			// Let the controller ignore the soft reset, so its ACK times out
+			mockController.autoAckHostMessages = false;
+			const ignoreSoftReset: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (msg instanceof SoftResetRequest) return true;
+					controller.ackHostMessage();
+					return false;
+				},
+			};
+			mockController.defineBehavior(ignoreSoftReset);
+
+			// Soft-reset and wait until the reset command is sent
+			const resetPromise = driver.softReset();
+			// The reset is rejected during destroy(), before the assertion runs
+			resetPromise.catch(() => {});
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+			);
+			// The ACK timed out. The reset now waits up to 1.5 s for SerialAPIStarted.
+			await wait(400);
+
+			// Destroy the driver while the reset waits
+			await driver.destroy();
+			// The reset fails with Driver_Destroyed
+			await assertZWaveError(t.expect, () => resetPromise, {
+				errorCode: ZWaveErrorCodes.Driver_Destroyed,
+			});
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A SendData re-queued after a controller reset is prepared for retransmission",
+	{
+		// debug: true,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Keeps the transaction in the queue
+			driver.controller.setStatus(ControllerStatus.Unresponsive);
+			// Queue a SendData and take its transaction
+			const msg = new SendDataRequest({
+				command: new NoOperationCC({ nodeId: node.id }),
+			});
+			void driver.sendMessage(msg).catch(() => {});
+			const transaction = driver["queue"].find((t) => t.message === msg)!;
+			// Like the bytes of a command the node has already received
+			msg.serializedCC = Uint8Array.from([0x00]);
+
+			// Fail the transaction with the interruption
+			driver["handleFailedTransaction"](
+				transaction,
+				new ZWaveError(
+					"The controller was reset",
+					ZWaveErrorCodes.Controller_Reset,
+				),
+			);
+
+			// The cached frame must be dropped, so the retry gets a new S2 sequence number
+			t.expect(msg.serializedCC).toBeUndefined();
+		},
+	},
+);
+
+let bootloader: MockGeckoBootloader;
+integrationTest.sequential(
+	"Destroying the driver while it probes the Serial API after leaving the bootloader ends the probe",
+	{
+		// debug: true,
+
+		additionalDriverOptions: {
+			bootloaderMode: "stay",
+		},
+
+		customSetup: async (driver, mockController) => {
+			bootloader = createMockGeckoBootloader({
+				startInBootloader: true,
+				sendsSerialAPIStarted: false,
+			});
+			mockController.defineBehavior(bootloader.behavior);
+		},
+
+		testBody: async (t, driver, node, mockController) => {
+			t.onTestFinished(() => bootloader.destroy());
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.serialAPIStarted = 100;
+			driver.options.timeouts.response = 500;
+			// Let the Serial API ignore the probe
+			const ignoreProbe: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					return msg instanceof GetControllerVersionRequest;
+				},
+			};
+			mockController.defineBehavior(ignoreProbe);
+
+			// Leave the bootloader and wait for the first probe
+			const leavePromise = driver.leaveBootloader();
+			leavePromise.catch(() => {});
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof GetControllerVersionRequest,
+				{ timeout: 5000 },
+			);
+			// Now in the 2 second backoff before the next probe
+			await wait(700);
+
+			// Destroy the driver during the backoff
+			await driver.destroy();
+			// Leaving the bootloader must fail with Driver_Destroyed right away
+			const result = await Promise.race([
+				leavePromise.then(
+					() => "resolved",
+					(e: ZWaveError) => e.code,
+				),
+				wait(500).then(() => "still running"),
+			]);
+			t.expect(result).toBe(ZWaveErrorCodes.Driver_Destroyed);
 		},
 	},
 );

@@ -3606,15 +3606,21 @@ export class Driver
 		fn: (send: SendExclusive, signal: AbortSignal) => Promise<T>,
 		options: ExclusiveControllerAccessOptions = {},
 	): Promise<T> {
-		const hold = this.runExclusive(fn, options);
+		return this.trackExclusiveAccess(this.runExclusive(fn, options));
+	}
+
+	/** Exclusive accesses that have not settled yet. The driver waits for them before it is destroyed. */
+	private activeExclusiveAccesses = new Set<Promise<void>>();
+
+	/** Is aborted when the driver is destroyed */
+	private lifetime = new AbortController();
+
+	private trackExclusiveAccess<T>(access: Promise<T>): Promise<T> {
 		const settled = access.then(noop, noop);
 		this.activeExclusiveAccesses.add(settled);
 		void settled.then(() => this.activeExclusiveAccesses.delete(settled));
 		return access;
 	}
-
-	/** Exclusive accesses that have not settled yet. The driver waits for them before it is destroyed. */
-	private activeExclusiveAccesses = new Set<Promise<void>>();
 
 	private async runExclusive<T>(
 		fn: (send: SendExclusive, signal: AbortSignal) => Promise<T>,
@@ -3633,6 +3639,11 @@ export class Driver
 					"Another operation has exclusive access to the controller",
 					ZWaveErrorCodes.Controller_Reset,
 				),
+			);
+			// Its ACK must not be taken for the ACK of the first command sent with exclusive access
+			await abortableStep(
+				signal,
+				() => this.pendingSendDataAbort ?? Promise.resolve(),
 			);
 
 			// Run the work with exclusive access
@@ -3745,13 +3756,15 @@ export class Driver
 	private async softResetInternal(destroyOnError: boolean): Promise<void> {
 		const serialAPIResponds = await this.withExclusiveControllerAccess(
 			async (send, signal) => {
-				const { serialAPIStarted, error } =
-					await this.sendSoftReset(signal);
+				const { serialAPIStarted, error } = await abortableStep(
+					signal,
+					() => this.sendSoftReset(signal),
+				);
 				// Don't continue if the controller is unresponsive,
 				// unless it restarted although its ACK got lost
 				if (
 					isMissingControllerACK(error)
-					&& !(await serialAPIStarted)
+					&& !(await abortableStep(signal, () => serialAPIStarted))
 				) {
 					throw error;
 				}
@@ -3827,7 +3840,9 @@ export class Driver
 		// Reset the controller and wait for the Serial API
 		const serialAPIResponds = await this.withExclusiveControllerAccess(
 			async (send, signal) => {
-				const { serialAPIStarted } = await this.sendSoftReset(signal);
+				const { serialAPIStarted } = await abortableStep(signal, () =>
+					this.sendSoftReset(signal),
+				);
 
 				// Make sure we're able to communicate with the controller again
 				return this.ensureSerialAPI({ serialAPIStarted, send, signal });
@@ -4136,12 +4151,12 @@ export class Driver
 		this.driverLog.print("destroying driver instance...");
 
 		// Stop every operation with exclusive access to the controller before the queues and the serial port go away
-		this.controllerGate.seal(
-			new ZWaveError(
-				"The driver instance was destroyed",
-				ZWaveErrorCodes.Driver_Destroyed,
-			),
+		const destroyed = new ZWaveError(
+			"The driver instance was destroyed",
+			ZWaveErrorCodes.Driver_Destroyed,
 		);
+		this.controllerGate.seal(destroyed);
+		this.lifetime.abort(destroyed);
 		await Promise.all(this.activeExclusiveAccesses);
 
 		// First stop the scheduler, all queues and close the serial port, so nothing happens anymore
@@ -8456,7 +8471,25 @@ ${handlers.length} left`,
 		});
 	}
 
+	/** A SendDataAbort that waits for its ACK. A holder must not send while it is pending. */
+	private pendingSendDataAbort: Promise<void> | undefined;
+
 	private async abortSendData(): Promise<void> {
+		// While the gate is closed, no SendData of a transaction is active.
+		// An abort would compete with the command of that access for the controller's ACK.
+		if (this.controllerGate.isClosed) return;
+		const abort = this.writeSendDataAbort();
+		this.pendingSendDataAbort = abort;
+		try {
+			await abort;
+		} finally {
+			if (this.pendingSendDataAbort === abort) {
+				this.pendingSendDataAbort = undefined;
+			}
+		}
+	}
+
+	private async writeSendDataAbort(): Promise<void> {
 		try {
 			const abort = new SendDataAbort();
 			await this.writeSerial(
@@ -8762,6 +8795,10 @@ ${handlers.length} left`,
 			// Re-queue the transaction, so it can get handled again
 			// Its message generator may have finished, so reset that too.
 			transaction.reset();
+			// The node may have received the command already. It discards a copy with the same S2 sequence number.
+			if (isSendData(transaction.message)) {
+				transaction.message.prepareRetransmission();
+			}
 			this.getQueueForTransaction(transaction).add(transaction.clone());
 			return;
 		}
@@ -10193,9 +10230,14 @@ ${handlers.length} left`,
 
 		// Entering the bootloader ended the Serial API queue. The probe starts the one the next controller instance uses.
 		this.initSerialAPIQueue();
-		const serialAPIResponds = await this.ensureSerialAPI({
-			send: (msg) => this.sendExclusive(msg),
-		});
+		// There is no controller instance and no gate yet. Destroying the driver must abort ensureSerialAPI
+		const signal = this.lifetime.signal;
+		const serialAPIResponds = await this.trackExclusiveAccess(
+			this.ensureSerialAPI({
+				send: (msg) => this.sendExclusive(msg, signal),
+				signal,
+			}),
+		);
 		if (serialAPIResponds) {
 			await this.initializeControllerAndNodes();
 		} else {
