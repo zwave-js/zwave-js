@@ -56,7 +56,12 @@ import {
 	isSendData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
-import { type BytesView, getErrorMessage } from "@zwave-js/shared";
+import {
+	type BytesView,
+	type Timer,
+	getErrorMessage,
+	setTimer,
+} from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 
 import type { Driver } from "./Driver.js";
@@ -146,57 +151,65 @@ export async function waitForNodeUpdate<T extends Message>(
 	const predicate = (received: Message) =>
 		msg.isExpectedNodeUpdate(driver, received)
 		|| !!getTryAgainLater(msg, received);
-	const refreshPredicate = (received: Message) =>
-		maybePartialNodeUpdate(driver, msg, received);
-	let received: Message;
-	while (true) {
-		// Wait for the response or the deadline
-		const closedPeriods = gate.closedPeriods;
-		const closedAtStart = gate.isClosed;
-		const response = await driver
-			.waitForMessage(predicate, timeoutMs, refreshPredicate)
-			.catch(() => undefined);
-		if (response) {
-			received = response;
-			break;
-		}
+	// Set up the deadline
+	let deadline: Timer | undefined;
+	let onDeadline: (() => void) | undefined;
+	const startDeadline = () => {
+		deadline?.clear();
+		deadline = setTimer(() => onDeadline?.(), timeoutMs);
+	};
+	// A partial response gives the node the full time again, like the timeout of waitForMessage()
+	const refreshPredicate = (received: Message) => {
+		const isPartial = maybePartialNodeUpdate(driver, msg, received);
+		if (isPartial) startDeadline();
+		return isPartial;
+	};
+	// One listener for the whole wait, so no response is missed while the gate opens
+	const stopListening = new AbortController();
+	const response = driver.waitForMessage(
+		predicate,
+		undefined,
+		refreshPredicate,
+		stopListening.signal,
+	);
+	let received: Message | undefined;
+	try {
+		while (true) {
+			// Wait for the response or the deadline
+			const closedPeriods = gate.closedPeriods;
+			const closedAtStart = gate.isClosed;
+			const timedOut = new Promise<undefined>((resolve) => {
+				onDeadline = () => resolve(undefined);
+			});
+			startDeadline();
+			received = await Promise.race([response, timedOut]);
+			deadline?.clear();
+			if (received) break;
 
-		// The node may need a reply from the driver first, like a nonce, which waits while the gate is closed.
-		// Give the node the full time again once the gate is open.
-		const wasClosed =
-			closedAtStart
-			|| gate.isClosed
-			|| gate.closedPeriods !== closedPeriods;
-		if (!wasClosed) {
-			throw new ZWaveError(
-				`Timed out while waiting for a response from the node`,
-				ZWaveErrorCodes.Controller_NodeTimeout,
-			);
-		}
+			// The node may need a reply from the driver first, like a nonce, which waits while the gate is closed.
+			// Give the node the full time again once the gate is open.
+			const wasClosed =
+				closedAtStart
+				|| gate.isClosed
+				|| gate.closedPeriods !== closedPeriods;
+			if (!wasClosed) {
+				throw new ZWaveError(
+					`Timed out while waiting for a response from the node`,
+					ZWaveErrorCodes.Controller_NodeTimeout,
+				);
+			}
 
-		// Keep listening while the gate is closed, so a response during the hold is not missed.
-		// When the gate is sealed, its reason ends the wait.
-		const stopListening = new AbortController();
-		try {
-			const early = await Promise.race([
-				driver
-					.waitForMessage(
-						predicate,
-						undefined,
-						refreshPredicate,
-						stopListening.signal,
-						// Wait until the gate opens
-					)
-					.then((received) => ({ received })),
+			// When the gate is sealed, its reason ends the wait
+			// Wait until the gate opens
+			received = await Promise.race([
+				response,
 				gate.whenOpen().then(() => undefined),
 			]);
-			if (early) {
-				received = early.received;
-				break;
-			}
-		} finally {
-			stopListening.abort();
+			if (received) break;
 		}
+	} finally {
+		deadline?.clear();
+		stopListening.abort();
 	}
 	const busy = getTryAgainLater(msg, received);
 	if (busy) {
