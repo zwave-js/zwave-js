@@ -56,7 +56,7 @@ integrationTest.sequential(
 	{
 		...testOptions,
 		testBody: async (t, driver) => {
-			driver["pauseSendQueue"]();
+			await driver["controllerGate"].close("test");
 			const bothQueued = createDeferredPromise<void>();
 			const firstProgress: TransactionState[] = [];
 			const secondProgress: TransactionState[] = [];
@@ -108,7 +108,7 @@ integrationTest.sequential(
 integrationTest.sequential("Node removal rejects deferred transactions", {
 	...testOptions,
 	testBody: async (t, driver, node) => {
-		driver["pauseSendQueue"]();
+		await driver["controllerGate"].close("test");
 		const queued = createDeferredPromise<void>();
 		const command = driver.sendCommand(createGet(), {
 			...commandOptions,
@@ -131,7 +131,7 @@ integrationTest.sequential("Node removal rejects deferred transactions", {
 integrationTest.sequential("Redundant commands join deferred transactions", {
 	...testOptions,
 	testBody: async (t, driver) => {
-		driver["pauseSendQueue"]();
+		await driver["controllerGate"].close("test");
 		const queued = createDeferredPromise<void>();
 		const first = driver.sendCommand(createGet(), {
 			...commandOptions,
@@ -164,7 +164,7 @@ integrationTest.sequential(
 	{
 		...testOptions,
 		testBody: async (t, driver) => {
-			driver["pauseSendQueue"]();
+			await driver["controllerGate"].close("test");
 			const queued = createDeferredPromise<void>();
 			const older = driver.sendCommand(
 				new RelatedBasicCCSet({ nodeId: 2, targetValue: 1 }),

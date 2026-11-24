@@ -264,7 +264,6 @@ export class Transaction implements Comparable<Transaction> {
 			"_stack",
 			"creationTimestamp",
 			"changeNodeStatusOnTimeout",
-			"pauseSendThread",
 			"priority",
 			"tag",
 			"requestWakeUpOnDemand",
@@ -410,9 +409,6 @@ export class Transaction implements Comparable<Transaction> {
 
 	/** Whether the node status should be updated when this transaction times out */
 	public changeNodeStatusOnTimeout: boolean = true;
-
-	/** Whether the send thread MUST be paused after this transaction was handled */
-	public pauseSendThread: boolean = false;
 
 	/** If a Wake Up On Demand should be requested for the target node. */
 	public requestWakeUpOnDemand: boolean = false;

@@ -50,11 +50,6 @@ export interface SendMessageOptions {
 	 * Information used to identify or mark this transaction
 	 */
 	tag?: any;
-	/**
-	 * @internal
-	 * Whether the send thread MUST be paused after this message was handled
-	 */
-	pauseSendThread?: boolean;
 	/** If a Wake Up On Demand should be requested for the target node. */
 	requestWakeUpOnDemand?: boolean;
 	/**

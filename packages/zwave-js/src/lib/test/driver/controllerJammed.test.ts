@@ -641,6 +641,7 @@ integrationTest.sequential(
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			node.markAsAlive();
 
+			// Count the soft resets the controller received
 			const countSoftResets = () =>
 				mockController.receivedHostMessages.filter(
 					(msg) => msg.functionType === FunctionType.SoftReset,

@@ -257,6 +257,7 @@ import {
 } from "../telemetry/statistics.js";
 
 import { Bootloader, explainBootloaderError } from "./Bootloader.js";
+import { ControllerGate, type SendExclusive } from "./ControllerGate.js";
 import { DriverMode } from "./DriverMode.js";
 import { EndDeviceCLI } from "./EndDeviceCLI.js";
 import {
@@ -984,25 +985,10 @@ export class Driver
 	private initTransactionQueues(): void {
 		this.immediateQueue = new TransactionQueue({
 			name: "immediate",
-			mayStartNextTransaction: (t) => {
-				// While the controller is unresponsive, only soft resetting is allowed.
-				// Since we use GetControllerVersionRequest to check if the controller responds after soft-reset,
-				// allow that too.
-				if (this.controller.status === ControllerStatus.Unresponsive) {
-					return (
-						t.message instanceof SoftResetRequest
-						|| t.message instanceof GetControllerVersionRequest
-					);
-				}
-
-				// While the controller is jammed, only soft resetting is allowed
-				if (this.controller.status === ControllerStatus.Jammed) {
-					return t.message instanceof SoftResetRequest;
-				}
-
-				// All other messages on the immediate queue may always be sent as long as the controller is ready to send
+			mayStartNextTransaction: () => {
+				// Messages on the immediate queue may always be sent as long as the controller is ready to send
 				return (
-					!this.queuePaused
+					!this.controllerGate.isClosed
 					&& this.controller.status === ControllerStatus.Ready
 				);
 			},
@@ -1012,8 +998,6 @@ export class Driver
 			mayStartNextTransaction: (t) => this.mayStartTransaction(t),
 		});
 
-		// Unpause because ensureSerialAPI can leave the previous queues paused
-		this.queuePaused = false;
 		this._queueIdle = false;
 
 		// Start draining the queues
@@ -1060,7 +1044,7 @@ export class Driver
 		return this._scheduler;
 	}
 
-	private queuePaused = false;
+	private controllerGate = new ControllerGate();
 	/** Used to immediately abort ongoing Serial API commands */
 	private abortSerialAPICommand: DeferredPromise<Error> | undefined;
 
@@ -3502,7 +3486,8 @@ export class Driver
 		return node.schedulePoll(valueId, options);
 	}
 
-	private isSoftResetting: boolean = false;
+	/** Whether the exclusive access that currently runs resets the controller */
+	private isSoftResetting = false;
 
 	private maySoftReset(): boolean {
 		// 700+ series controllers have no problems with soft reset and MUST even be soft reset in some cases
@@ -3584,38 +3569,128 @@ export class Driver
 		return this.softResetInternal(true);
 	}
 
-	private async softResetInternal(destroyOnError: boolean): Promise<void> {
+	/**
+	 * @internal
+	 * Runs `fn` with exclusive access to the controller. Neither transaction queue starts
+	 * a new transaction until `fn` has settled. `fn` must send its commands with `send`
+	 * and must not request exclusive access again.
+	 */
+	public async withExclusiveControllerAccess<T>(
+		fn: (send: SendExclusive) => Promise<T>,
+		options: {
+			/** Abort the active Serial API command. Its transaction gets re-queued */
+			abortActiveCommand?: boolean;
+		} = {},
+	): Promise<T> {
+		const lease = await this.controllerGate.close();
+		try {
+			if (options.abortActiveCommand) {
+				this.abortSerialAPICommand?.reject(
+					new ZWaveError(
+						"The controller is being reset",
+						ZWaveErrorCodes.Controller_Reset,
+					),
+				);
+			}
+
+			const run = async () => {
+				// The queues might not have been initialized yet
+				await Promise.all(
+					this.queues.filter((q) => !!q).map((q) => q.waitForIdle()),
+				);
+				return fn((msg) => this.sendExclusive(msg));
+			};
+			// Commands sent after the controller instance was destroyed never settle
+			return await Promise.race([run(), lease.destroyed]);
+		} finally {
+			lease.release();
+			this.triggerQueues();
+		}
+	}
+
+	/** Sends a message through the Serial API queue, bypassing the transaction queues */
+	private async sendExclusive(msg: Message): Promise<Message | undefined> {
+		for (let attempt = 1; ; attempt++) {
+			try {
+				return await this.queueSerialAPICommand(msg);
+			} catch (e) {
+				if (
+					isMissingControllerACK(e)
+					&& attempt < this.options.attempts.controller
+				) {
+					continue;
+				}
+				throw e;
+			}
+		}
+	}
+
+	private waitForSerialAPIStarted(
+		timeout: number,
+	): Promise<SerialAPIStartedRequest | false> {
+		return this.waitForMessage<SerialAPIStartedRequest>(
+			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
+			timeout,
+		).catch(() => false as const);
+	}
+
+	/**
+	 * Sends the soft reset command. Must be called with exclusive access to the controller.
+	 * The returned promise for the `SerialAPIStarted` notification starts listening before the command is sent.
+	 */
+	private async sendSoftReset(send: SendExclusive): Promise<{
+		serialAPIStarted: Promise<SerialAPIStartedRequest | false>;
+	}> {
 		this.controllerLog.print("Performing soft reset...");
 
+		// Listen before sending, because the notification can arrive before the ACK is handled
+		const serialAPIStarted = this.waitForSerialAPIStarted(1500);
 		try {
-			this.isSoftResetting = true;
-			await this.sendMessage(new SoftResetRequest(), {
-				supportCheck: false,
-				pauseSendThread: true,
-			});
+			await send(new SoftResetRequest());
 		} catch (e) {
 			this.controllerLog.print(
 				`Soft reset failed: ${getErrorMessage(e)}`,
 				"error",
 			);
-			// Don't continue if the controller is unresponsive
-			if (isMissingControllerACK(e)) {
-				this.isSoftResetting = false;
-				throw e;
-			}
+			throw e;
 		}
+		return { serialAPIStarted };
+	}
 
-		if (this._controller) {
-			// Soft-reset resets the node ID type back to 8 bit
-			this._controller["_nodeIdType"] = NodeIDType.Short;
+	private async softResetInternal(destroyOnError: boolean): Promise<void> {
+		const serialAPIResponds = await this.withExclusiveControllerAccess(
+			async (send) => {
+				let serialAPIStarted:
+					| Promise<SerialAPIStartedRequest | false>
+					| undefined;
+				try {
+					({ serialAPIStarted } = await this.sendSoftReset(send));
+				} catch (e) {
+					// Don't continue if the controller is unresponsive
+					if (isMissingControllerACK(e)) throw e;
+				}
 
-			// Soft-resetting disables any ongoing inclusion, so we need to reset
-			// the state that is tracked in the controller
-			this._controller.setInclusionState(InclusionState.Idle);
-		}
+				if (this._controller) {
+					// Soft-reset resets the node ID type back to 8 bit
+					this._controller["_nodeIdType"] = NodeIDType.Short;
 
-		// Make sure we're able to communicate with the controller again
-		if (!(await this.ensureSerialAPI())) {
+					// Soft-resetting disables any ongoing inclusion, so we need to reset
+					// the state that is tracked in the controller
+					this._controller.setInclusionState(InclusionState.Idle);
+				}
+
+				// Make sure we're able to communicate with the controller again
+				if (!(await this.ensureSerialAPI(serialAPIStarted))) {
+					return false;
+				}
+
+				await this.restoreControllerStateAfterReset(send);
+				return true;
+			},
+			{ abortActiveCommand: true, resetsController: true },
+		);
+
+		if (!serialAPIResponds) {
 			if (destroyOnError) {
 				// Notify applications that the driver failed, so they can
 				// clean up and restart, instead of just disappearing
@@ -3623,29 +3698,27 @@ export class Driver
 					"The Serial API did not respond after soft-reset",
 				);
 			} else {
-				this.isSoftResetting = false;
 				throw new ZWaveError(
 					"The Serial API did not respond after soft-reset",
 					ZWaveErrorCodes.Driver_Failed,
 				);
 			}
 		}
+	}
 
-		this.isSoftResetting = false;
-
+	private async restoreControllerStateAfterReset(
+		send: SendExclusive,
+	): Promise<void> {
 		// This is a bit hacky, but what the heck...
-		if (!this._enteringBootloader) {
-			// Start the watchdog again, unless disabled
-			if (this.options.features.watchdog) {
-				void this._controller?.startWatchdog();
-			}
+		if (this._enteringBootloader || !this._controller) return;
 
-			// If desired, re-configure the controller to use 16 bit node IDs
-			void this._controller?.trySetNodeIDType(NodeIDType.Long);
-
-			// Resume sending
-			this.unpauseSendQueue();
+		// Start the watchdog again, unless disabled
+		if (this.options.features.watchdog) {
+			await this._controller.startWatchdogInternal(send);
 		}
+
+		// If desired, re-configure the controller to use 16 bit node IDs
+		await this._controller.trySetNodeIDTypeInternal(NodeIDType.Long, send);
 	}
 
 	/**
@@ -3653,29 +3726,30 @@ export class Driver
 	 * @param callingTask The task that calls this method. It survives the restart, all other tasks are removed.
 	 */
 	public async softResetAndRestart(callingTask?: TaskHandle): Promise<void> {
-		this.controllerLog.print("Performing soft reset...");
+		// Reset the controller and wait for the Serial API
+		const serialAPIResponds = await this.withExclusiveControllerAccess(
+			async (send) => {
+				let serialAPIStarted:
+					| Promise<SerialAPIStartedRequest | false>
+					| undefined;
+				try {
+					({ serialAPIStarted } = await this.sendSoftReset(send));
+				} catch {
+					// Already logged
+				}
 
-		try {
-			this.isSoftResetting = true;
-			await this.sendMessage(new SoftResetRequest(), {
-				supportCheck: false,
-				pauseSendThread: true,
-			});
-		} catch (e) {
-			this.controllerLog.print(
-				`Soft reset failed: ${getErrorMessage(e)}`,
-				"error",
-			);
-		}
+				// Make sure we're able to communicate with the controller again
+				return this.ensureSerialAPI(serialAPIStarted);
+			},
+			{ abortActiveCommand: true, resetsController: true },
+		);
 
-		// Make sure we're able to communicate with the controller again
-		if (!(await this.ensureSerialAPI())) {
+		// Give up when the Serial API does not come back
+		if (!serialAPIResponds) {
 			await this.destroyWithMessage(
 				"The Serial API did not respond after soft-reset",
 			);
 		}
-
-		this.isSoftResetting = false;
 
 		// Clean up and interview the controller again. Removing a parent would also remove
 		// the calling task, so keep the tasks waiting for it.
@@ -3702,15 +3776,20 @@ export class Driver
 		return this._controllerInterviewed;
 	}
 
-	private async ensureSerialAPI(): Promise<boolean> {
+	/**
+	 * Waits until the Serial API can be used again after a reset.
+	 * @param serialAPIStarted A promise for the `SerialAPIStarted` notification, which resolves to `false` after 1.5 seconds without it
+	 */
+	private async ensureSerialAPI(
+		serialAPIStarted: Promise<
+			SerialAPIStartedRequest | false
+		> = this.waitForSerialAPIStarted(1500),
+	): Promise<boolean> {
 		// Wait 1.5 seconds after reset to ensure that the module is ready for communication again
 		// Z-Wave 700 sticks are relatively fast, so we also wait for the Serial API started command
 		// to bail early
 		this.controllerLog.print("Waiting for the controller to reconnect...");
-		let waitResult = await this.waitForMessage<SerialAPIStartedRequest>(
-			(msg) => msg.functionType === FunctionType.SerialAPIStarted,
-			1500,
-		).catch(() => false as const);
+		let waitResult = await serialAPIStarted;
 
 		if (waitResult) {
 			// Serial API did start
@@ -3734,12 +3813,9 @@ export class Driver
 
 		// Wait the configured amount of time for the Serial API started command to be received
 		this.controllerLog.print("Waiting for the Serial API to start...");
-		waitResult = await this.waitForMessage<SerialAPIStartedRequest>(
-			(msg) => {
-				return msg.functionType === FunctionType.SerialAPIStarted;
-			},
+		waitResult = await this.waitForSerialAPIStarted(
 			this._options.timeouts.serialAPIStarted,
-		).catch(() => false as const);
+		);
 
 		if (waitResult) {
 			// Serial API did start, maybe do something with the information?
@@ -3759,13 +3835,7 @@ export class Driver
 		// anyways, so we might aswell use it here too
 		const pollController = async () => {
 			try {
-				// And resume sending - this requires us to unpause the send thread
-				this.unpauseSendQueue();
-				await this.sendMessage(new GetControllerVersionRequest(), {
-					supportCheck: false,
-					priority: MessagePriority.ControllerImmediate,
-				});
-				this.pauseSendQueue();
+				await this.sendExclusive(new GetControllerVersionRequest());
 				this.controllerLog.print("Serial API responded");
 				return true;
 			} catch {
@@ -4011,7 +4081,14 @@ export class Driver
 
 		this.destroySerialAPIQueue(
 			"The controller instance is being destroyed",
-			ZWaveErrorCodes.Driver_TaskRemoved,
+			ZWaveErrorCodes.Controller_MessageDropped,
+		);
+
+		this.controllerGate.seal(
+			new ZWaveError(
+				"The controller instance is being destroyed",
+				ZWaveErrorCodes.Driver_TaskRemoved,
+			),
 		);
 
 		this.requestHandlers.clear();
@@ -4123,7 +4200,9 @@ export class Driver
 			) {
 				// A disconnection while soft resetting is to be expected.
 				// The soft reset method will handle reopening
-				if (this.isSoftResetting || this._isOpeningSerialPort) return;
+				if (this.isSoftResetting || this._isOpeningSerialPort) {
+					return;
+				}
 
 				void this.handleSerialPortClosedUnexpectedly();
 				return;
@@ -6863,10 +6942,10 @@ ${handlers.length} left`,
 	}
 
 	private mayStartTransaction(transaction: Transaction): boolean {
-		// We may not send anything on the normal queue if the send thread is paused
-		// or the controller is unresponsive
+		// We may not send anything on the normal queue while the controller is held exclusively
+		// or unresponsive
 		if (
-			this.queuePaused
+			this.controllerGate.isClosed
 			|| this.controller.status === ControllerStatus.Unresponsive
 		) {
 			return false;
@@ -7522,7 +7601,6 @@ ${handlers.length} left`,
 		// The driver must handle both transactions the same way
 		if (
 			first.changeNodeStatusOnTimeout !== second.changeNodeStatusOnTimeout
-			|| first.pauseSendThread !== second.pauseSendThread
 			|| first.requestWakeUpOnDemand !== second.requestWakeUpOnDemand
 			|| first.tag !== second.tag
 		) {
@@ -7866,9 +7944,6 @@ ${handlers.length} left`,
 		if (options.changeNodeStatusOnMissingACK != undefined) {
 			transaction.changeNodeStatusOnTimeout =
 				options.changeNodeStatusOnMissingACK;
-		}
-		if (options.pauseSendThread === true) {
-			transaction.pauseSendThread = true;
 		}
 		transaction.requestWakeUpOnDemand = !!options.requestWakeUpOnDemand;
 		transaction.requestStatusUpdates =
@@ -8524,6 +8599,16 @@ ${handlers.length} left`,
 		transaction: Transaction,
 		error: ZWaveError,
 	): void {
+		// This must be checked first, so a transaction aborted by a soft reset cannot start another recovery
+		if (wasControllerReset(error)) {
+			// The controller was reset in the middle of a transaction.
+			// Re-queue the transaction, so it can get handled again
+			// Its message generator may have finished, so reset that too.
+			transaction.reset();
+			this.getQueueForTransaction(transaction).add(transaction.clone());
+			return;
+		}
+
 		// If a node failed to respond in time, it might be sleeping
 		if (this.isMissingNodeACK(transaction, error)) {
 			if (this.handleMissingNodeACK(transaction as any, error)) return;
@@ -8552,13 +8637,6 @@ ${handlers.length} left`,
 				return;
 		} else if (isNodeBusyError(error)) {
 			if (this.handleNodeBusy(transaction, error.context)) return;
-		} else if (wasControllerReset(error)) {
-			// The controller was reset in the middle of a transaction.
-			// Re-queue the transaction, so it can get handled again
-			// Its message generator may have finished, so reset that too.
-			transaction.reset();
-			this.getQueueForTransaction(transaction).add(transaction.clone());
-			return;
 		}
 
 		this.rejectTransaction(transaction, error);
@@ -8746,21 +8824,6 @@ ${handlers.length} left`,
 			}
 			this.requeueTimers.delete(entryNodeId);
 		}
-	}
-
-	/**
-	 * Pauses the send queue, avoiding commands to be sent to the controller
-	 */
-	private pauseSendQueue(): void {
-		this.queuePaused = true;
-	}
-
-	/**
-	 * Unpauses the send queue, allowing commands to be sent to the controller again
-	 */
-	private unpauseSendQueue(): void {
-		this.queuePaused = false;
-		this.triggerQueues();
 	}
 
 	private reduceQueues(reducer: TransactionReducer): Promise<void> {
@@ -9970,9 +10033,6 @@ ${handlers.length} left`,
 			// application failed to start
 			return;
 		}
-
-		// FIXME: Do we need the pause thing still?
-		this.unpauseSendQueue();
 
 		await this.ensureSerialAPI();
 	}
