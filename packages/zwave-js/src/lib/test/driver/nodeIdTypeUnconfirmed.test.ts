@@ -479,3 +479,47 @@ test("When the node ID type cannot be confirmed at startup, the driver reports o
 		await fs.rm(cacheDir, { recursive: true, force: true });
 	}
 });
+
+integrationTest.sequential(
+	"After a soft reset that the controller neither acknowledges nor reports, the driver confirms the node ID type before other commands are sent",
+	{
+		// debug: true,
+
+		controllerCapabilities,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Start with 16-bit node IDs
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.ack = 200;
+			driver.options.attempts.controller = 1;
+
+			// The controller resets and falls back to 8-bit node IDs, but loses the ACK
+			// and sends no SerialAPIStarted
+			mockController.autoAckHostMessages = false;
+			const silentReset: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (msg instanceof SoftResetRequest) {
+						controller.encodingContext.nodeIdType =
+							NodeIDType.Short;
+						controller.parsingContext.nodeIdType = NodeIDType.Short;
+						return true;
+					}
+					controller.ackHostMessage();
+					return false;
+				},
+			};
+			mockController.defineBehavior(silentReset);
+
+			// The reset fails, but the driver confirms the node ID type the controller uses
+			await t.expect(driver.softReset()).rejects.toThrow();
+
+			t.expect(driver.controller.nodeIdType).toBe(
+				mockController.parsingContext.nodeIdType,
+			);
+			// Commands work again
+			mockController.autoAckHostMessages = true;
+			t.expect(await node.ping()).toBe(true);
+		},
+	},
+);

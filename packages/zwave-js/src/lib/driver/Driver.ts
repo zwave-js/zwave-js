@@ -3815,6 +3815,18 @@ export class Driver
 					isMissingControllerACK(error)
 					&& !(await abortableStep(signal, () => serialAPIStarted))
 				) {
+					// The controller may have reset without telling us, so confirm the node ID type
+					const controller = this._controller;
+					if (controller) {
+						controller.nodeIdTypeState.recordPossibleReset(
+							!controller.sdkVersionLt("7.21.0"),
+						);
+						if (!controller.nodeIdTypeState.known) {
+							await abortableStep(signal, () =>
+								this.restoreNodeIdType(send),
+							);
+						}
+					}
 					throw error;
 				}
 

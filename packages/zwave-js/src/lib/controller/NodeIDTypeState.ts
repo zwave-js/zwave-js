@@ -8,6 +8,7 @@ import { NodeIDType, ZWaveErrorCodes, isZWaveError } from "@zwave-js/core";
  *   This includes a command aborted by a controller reset.
  * - CAN, NAK or a missing ACK mean that the controller did not process the command. The state does not change.
  * - A reset below SDK 7.21 makes the type known as 8 bit. From SDK 7.21 on, a reset keeps the state, also an unknown one.
+ * - A soft reset that may or may not have happened makes a 16-bit type unknown below SDK 7.21.
  *
  * While the type is unknown, nothing that contains a node ID may be sent.
  */
@@ -40,6 +41,11 @@ export class NodeIDTypeState {
 				return true;
 		}
 		return false;
+	}
+
+	public recordPossibleReset(keepsNodeIdType: boolean): void {
+		if (keepsNodeIdType || this.type === NodeIDType.Short) return;
+		this.known = false;
 	}
 
 	public recordReset(keepsNodeIdType: boolean): void {
