@@ -1,8 +1,13 @@
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
+import { ZWaveErrorCodes } from "../error/ZWaveError.js";
+import { assertZWaveError } from "../test/assertZWaveError.js";
+
 import { CommandClasses } from "./CommandClasses.js";
+import { NodeIDType } from "./NodeID.js";
 import {
+	encodeNodeID,
 	parseApplicationNodeInformation,
 	parseNodeUpdatePayload,
 } from "./NodeInfo.js";
@@ -80,4 +85,16 @@ test("parseNodeUpdatePayload() parses extended CCs correctly", (t) => {
 		CommandClasses.Supervision,
 		0xfedc,
 	]);
+});
+
+test("encodeNodeID() rejects node IDs above 255 with 8-bit node IDs", (t) => {
+	t.expect(encodeNodeID(255, NodeIDType.Short)).toStrictEqual(
+		Bytes.from([0xff]),
+	);
+	t.expect(encodeNodeID(293, NodeIDType.Long)).toStrictEqual(
+		Bytes.from([0x01, 0x25]),
+	);
+	assertZWaveError(t.expect, () => encodeNodeID(293, NodeIDType.Short), {
+		errorCode: ZWaveErrorCodes.Argument_Invalid,
+	});
 });

@@ -169,6 +169,7 @@ import {
 	SendDataRequest,
 	SendTestFrameRequest,
 	SendTestFrameTransmitReport,
+	SerialAPISetupCommand,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
@@ -3787,10 +3788,8 @@ export class Driver
 					throw error;
 				}
 
+				this.assumeNodeIdTypeAfterReset();
 				if (this._controller) {
-					// Soft-reset resets the node ID type back to 8 bit
-					this._controller["_nodeIdType"] = NodeIDType.Short;
-
 					// Soft-resetting disables any ongoing inclusion, so we need to reset
 					// the state that is tracked in the controller
 					this._controller.setInclusionState(InclusionState.Idle);
@@ -3844,9 +3843,58 @@ export class Driver
 			);
 		}
 
-		// If desired, re-configure the controller to use 16 bit node IDs
-		await abortableStep(signal, () =>
-			controller.trySetNodeIDTypeInternal(NodeIDType.Long, send),
+		await abortableStep(signal, () => this.restoreNodeIdType(send));
+	}
+
+	/** Sets the node ID type the controller uses after a reset, until the driver restores the desired one */
+	private assumeNodeIdTypeAfterReset(): void {
+		// Controllers below SDK 7.21 do not keep the node ID type across resets
+		if (this._controller?.sdkVersionLt("7.21.0")) {
+			this._controller.nodeIdType = NodeIDType.Short;
+		}
+	}
+
+	/**
+	 * Sends the desired node ID type to the controller. Must be called with exclusive access to the controller.
+	 * If this fails, the driver keeps the node ID type from {@link assumeNodeIdTypeAfterReset}.
+	 */
+	private async restoreNodeIdType(send: SendExclusive): Promise<void> {
+		const controller = this._controller;
+		if (
+			!controller?.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.SetNodeIDType,
+			)
+		) {
+			return;
+		}
+
+		const nodeIdType = controller.desiredNodeIdType;
+		const maxAttempts = 3;
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				if (await controller.setNodeIDType(nodeIdType, send)) return;
+			} catch (e) {
+				this.controllerLog.print(
+					`Switching the node ID type failed: ${getErrorMessage(e)}`,
+					"warn",
+				);
+				if (
+					isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.Driver_NotSupported
+				) {
+					break;
+				}
+			}
+		}
+
+		const bits = (type: NodeIDType) => (type === NodeIDType.Short ? 8 : 16);
+		this.controllerLog.print(
+			`Could not switch the controller to ${bits(
+				nodeIdType,
+			)}-bit node IDs, continuing with ${bits(
+				controller.nodeIdType,
+			)}-bit node IDs`,
+			"error",
 		);
 	}
 
@@ -5840,17 +5888,12 @@ export class Driver
 					);
 				}
 
-				// Restart the watchdog unless disabled
-				if (this.options.features.watchdog) {
-					await this._controller?.startWatchdog();
-				}
-
-				if (this._controller?.nodeIdType === NodeIDType.Long) {
-					// We previously used 16 bit node IDs, but the controller was reset.
-					// Remember this and try to go back to 16 bit.
-					this._controller.nodeIdType = NodeIDType.Short;
-					await this._controller.trySetNodeIDType(NodeIDType.Long);
-				}
+				this.assumeNodeIdTypeAfterReset();
+				await this.withExclusiveControllerAccess(
+					"Serial API restart",
+					(send, signal) =>
+						this.restoreControllerStateAfterReset(send, signal),
+				);
 
 				return true; // Don't invoke any more handlers
 			}
@@ -7363,6 +7406,8 @@ ${handlers.length} left`,
 						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
 							|| e.code === ZWaveErrorCodes.Driver_Destroyed
+							// The message cannot be serialized, e.g. because the node ID does not fit the node ID type
+							|| e.code === ZWaveErrorCodes.Argument_Invalid
 						) {
 							// We gave up on this command, so don't retry it
 							throw e;
