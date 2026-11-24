@@ -6333,54 +6333,24 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		repeaters: number[],
 		routeSpeed: ZWaveDataRate,
 	): Promise<boolean> {
-		if (!this.isFunctionSupported(FunctionType.SetPriorityRoute)) {
+		this.driver.controllerLog.print(
+			`Setting priority route to node ${destinationNodeId}...`,
+		);
+		try {
+			return await this.sendSetPriorityRoute(
+				new SetPriorityRouteRequest({
+					destinationNodeId,
+					repeaters,
+					routeSpeed,
+				}),
+			);
+		} catch (e) {
 			this.driver.controllerLog.print(
-				`Setting priority route failed: Your hardware does not support the SetPriorityRoute function`,
+				`Setting priority route failed: ${getErrorMessage(e)}`,
 				"error",
 			);
 			return false;
 		}
-
-		// Nothing else may be sent while the node ID type is switched, because commands for nodes are serialized with it
-		return this.driver.withExclusiveControllerAccess(async (send) => {
-			// 7.xx firmwares (up to at least 7.19.2) have a bug where the response to
-			// SetPriorityRoute is missing the result byte when used with 16-bit node IDs.
-			// So we temporarily switch back to 8-bit node IDs for this message
-			const nodeIdType = this._nodeIdType;
-			if (nodeIdType === NodeIDType.Long) {
-				await this.trySetNodeIDTypeInternal(NodeIDType.Short, send);
-			}
-
-			this.driver.controllerLog.print(
-				`Setting priority route to node ${destinationNodeId}...`,
-			);
-
-			let ret: boolean;
-
-			try {
-				const result = (await send(
-					new SetPriorityRouteRequest({
-						destinationNodeId,
-						repeaters,
-						routeSpeed,
-					}),
-				)) as Message & SuccessIndicator;
-
-				ret = result.isOK();
-			} catch (e) {
-				this.driver.controllerLog.print(
-					`Setting priority route failed: ${getErrorMessage(e)}`,
-					"error",
-				);
-				ret = false;
-			}
-
-			if (this._nodeIdType !== nodeIdType) {
-				await this.trySetNodeIDTypeInternal(nodeIdType, send);
-			}
-
-			return ret;
-		});
 	}
 
 	/**
@@ -6393,18 +6363,13 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		this.driver.controllerLog.print(
 			`Removing priority route to node ${destinationNodeId}...`,
 		);
-
 		try {
-			const result = await this.driver.sendMessage<
-				Message & SuccessIndicator
-			>(
+			return await this.sendSetPriorityRoute(
 				new SetPriorityRouteRequest({
 					destinationNodeId,
 					// no repeaters = remove
 				}),
 			);
-
-			return result.isOK();
 		} catch (e) {
 			this.driver.controllerLog.print(
 				`Removing priority route failed: ${getErrorMessage(e)}`,
@@ -6412,6 +6377,37 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 			return false;
 		}
+	}
+
+	private async sendSetPriorityRoute(
+		request: SetPriorityRouteRequest,
+	): Promise<boolean> {
+		if (!this.isFunctionSupported(FunctionType.SetPriorityRoute)) {
+			throw new ZWaveError(
+				`Your hardware does not support the SetPriorityRoute function`,
+				ZWaveErrorCodes.Driver_NotSupported,
+			);
+		}
+
+		// Nothing else may be sent while the node ID type is switched, because commands for nodes are serialized with it
+		return this.driver.withExclusiveControllerAccess(async (send) => {
+			// 7.xx firmwares (up to at least 7.19.2) have a bug where the response to
+			// SetPriorityRoute is missing the result byte when used with 16-bit node IDs.
+			// So we temporarily switch back to 8-bit node IDs for this message
+			const nodeIdType = this._nodeIdType;
+			if (nodeIdType === NodeIDType.Long) {
+				await this.trySetNodeIDTypeInternal(NodeIDType.Short, send);
+			}
+			try {
+				const result = (await send(request)) as Message
+					& SuccessIndicator;
+				return result.isOK();
+			} finally {
+				if (this._nodeIdType !== nodeIdType) {
+					await this.trySetNodeIDTypeInternal(nodeIdType, send);
+				}
+			}
+		});
 	}
 
 	/**
@@ -7777,13 +7773,19 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		return result.success;
 	}
 
-	public async trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean> {
+	public trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean> {
 		// Nothing else may be sent while the node ID type changes, because commands for nodes are serialized with it
-		const success = await this.driver.withExclusiveControllerAccess(
-			(send) => this.trySetNodeIDTypeInternal(nodeIdType, send),
-		);
-		if (success) this.desiredNodeIdType = nodeIdType;
-		return success;
+		return this.driver.withExclusiveControllerAccess((send) => {
+			// Record the request also when switching fails, so the next reset tries again
+			if (
+				this.isSerialAPISetupCommandSupported(
+					SerialAPISetupCommand.SetNodeIDType,
+				)
+			) {
+				this.desiredNodeIdType = nodeIdType;
+			}
+			return this.trySetNodeIDTypeInternal(nodeIdType, send);
+		});
 	}
 
 	/**

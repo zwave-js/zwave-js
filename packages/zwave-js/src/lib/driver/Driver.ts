@@ -8866,6 +8866,13 @@ ${handlers.length} left`,
 			return;
 		}
 
+		// The message cannot be serialized, e.g. because the node ID does not fit the node ID type.
+		// A controller recovery cannot help with that.
+		if (error.code === ZWaveErrorCodes.Argument_Invalid) {
+			this.rejectTransaction(transaction, error);
+			return;
+		}
+
 		// If a node failed to respond in time, it might be sleeping
 		if (this.isMissingNodeACK(transaction, error)) {
 			if (this.handleMissingNodeACK(transaction as any, error)) return;

@@ -1,5 +1,11 @@
 import { NoOperationCC } from "@zwave-js/cc";
-import { MessagePriority, NodeIDType } from "@zwave-js/core";
+import {
+	ControllerStatus,
+	MessagePriority,
+	NodeIDType,
+	ZWaveErrorCodes,
+	assertZWaveError,
+} from "@zwave-js/core";
 import { FunctionType, type Message } from "@zwave-js/serial";
 import {
 	SendDataAbort,
@@ -20,6 +26,7 @@ import {
 	type MockControllerCapabilities,
 	getDefaultSupportedFunctionTypes,
 } from "@zwave-js/testing";
+import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 
 import {
 	MockControllerCommunicationState,
@@ -85,7 +92,7 @@ function messagesAfterReset(mockController: MockController): Message[] {
 	return messages.slice(resetIndex + 1) as Message[];
 }
 
-integrationTest(
+integrationTest.sequential(
 	"After recovering from a missed SendData callback, the node ID type is restored before the next command is sent",
 	{
 		// debug: true,
@@ -386,6 +393,132 @@ integrationTest(
 			);
 			// Commands reach their node
 			t.expect(await node.ping()).toBe(true);
+		},
+	},
+);
+
+integrationTest(
+	"When switching to 16-bit node IDs fails at startup, the next soft reset tries again",
+	{
+		// debug: true,
+
+		controllerCapabilities: controllerCapabilities("Z-Wave 7.19.3"),
+
+		customSetup: async (driver, mockController) => {
+			let failedOnce = false;
+			const failFirstLong: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (
+						msg instanceof SerialAPISetup_SetNodeIDTypeRequest
+						&& msg.nodeIdType === NodeIDType.Long
+						&& !failedOnce
+					) {
+						failedOnce = true;
+						await controller.sendMessageToHost(
+							new SerialAPISetup_SetNodeIDTypeResponse({
+								success: false,
+							}),
+						);
+						return true;
+					}
+				},
+			};
+			mockController.defineBehavior(failFirstLong);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// The startup switch failed
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Short);
+
+			// The soft reset tries the switch again and succeeds
+			await driver.softReset();
+
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
+			t.expect(await node.ping()).toBe(true);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"An unexpected Serial API restart behind another operation with exclusive access to the controller restores the node ID type before other commands",
+	{
+		// debug: true,
+
+		controllerCapabilities: controllerCapabilities("Z-Wave 7.19.3"),
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
+
+			// Take exclusive access until the test releases it
+			const release = createDeferredPromise<void>();
+			const otherAccess = driver.withExclusiveControllerAccess(
+				() => release,
+			);
+
+			// Simulate a watchdog reset of a controller that loses the node ID type
+			mockController.encodingContext.nodeIdType = NodeIDType.Short;
+			mockController.parsingContext.nodeIdType = NodeIDType.Short;
+			mockController.clearReceivedHostMessages();
+			// Report the restart and queue a ping
+			await mockController.sendMessageToHost(
+				new SerialAPIStartedRequest({
+					wakeUpReason: SerialAPIWakeUpReason.WatchdogReset,
+					watchdogEnabled: false,
+					isListening: true,
+					...determineNIF(),
+					supportsLongRange: false,
+				}),
+			);
+			const pingPromise = node.ping();
+
+			// End the other exclusive access, so the restore and then the ping run
+			release.resolve();
+			await otherAccess;
+			t.expect(await pingPromise).toBe(true);
+
+			// SetNodeIDType must come before the ping
+			const messages = mockController.receivedHostMessages;
+			const setNodeIDTypeIndex = messages.findIndex(
+				(msg) => msg instanceof SerialAPISetup_SetNodeIDTypeRequest,
+			);
+			t.expect(setNodeIDTypeIndex).toBeGreaterThanOrEqual(0);
+			t.expect(setNodeIDTypeIndex).toBeLessThan(
+				messages.findIndex(isSendData),
+			);
+		},
+	},
+);
+
+integrationTest(
+	"A command whose node ID does not fit the node ID type does not trigger a controller recovery",
+	{
+		// debug: true,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Mark the controller as jammed while it uses 8-bit node IDs
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Short);
+			driver.controller.setStatus(ControllerStatus.Jammed);
+			// A command for node 300 cannot be serialized and fails
+			mockController.clearReceivedHostMessages();
+
+			await assertZWaveError(
+				t.expect,
+				() =>
+					driver.sendMessage(
+						new SendDataRequest({
+							command: new NoOperationCC({ nodeId: 300 }),
+						}),
+					),
+				{ errorCode: ZWaveErrorCodes.Argument_Invalid },
+			);
+
+			// The failure must not start a soft reset
+			t.expect(
+				mockController.receivedHostMessages.some(
+					(msg) => msg instanceof SoftResetRequest,
+				),
+			).toBe(false);
+			driver.controller.setStatus(ControllerStatus.Ready);
 		},
 	},
 );
