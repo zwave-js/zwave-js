@@ -94,6 +94,11 @@ export class MockController {
 			ownNodeId: this.ownNodeId,
 			// TODO: LR is not supported in mocks
 			nodeIdType: NodeIDType.Short,
+			// The protocol version of 700 series and newer controllers is their SDK version
+			sdkVersion: this.capabilities.libraryVersion.replace(
+				/^Z-Wave /,
+				"",
+			),
 			hasSecurityClass(
 				nodeId: number,
 				securityClass: SecurityClass,
@@ -148,8 +153,6 @@ export class MockController {
 		};
 		this.parsingContext = {
 			...this.encodingContext,
-			// FIXME: Take from the controller capabilities
-			sdkVersion: undefined,
 			requestStorage,
 		};
 
@@ -541,6 +544,7 @@ export class MockController {
 		if (fromNode) {
 			data = await msg.serialize({
 				nodeIdType: this.encodingContext.nodeIdType,
+				sdkVersion: this.encodingContext.sdkVersion,
 				...fromNode.encodingContext,
 			});
 			// Simulate the frame being transmitted via radio

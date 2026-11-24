@@ -97,7 +97,6 @@ import {
 	MockControllerStateKeys,
 } from "./MockControllerState.js";
 import { determineNIF } from "./NodeInformationFrame.js";
-import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions.js";
 
 function createLazySendDataPayload(
 	controller: MockController,
@@ -239,10 +238,6 @@ const respondToGetSerialApiInitData: MockControllerBehavior = {
 	},
 };
 
-function getMockControllerSDKVersion(controller: MockController): string {
-	return protocolVersionToSDKVersion(controller.capabilities.libraryVersion);
-}
-
 function setMockControllerNodeIdType(
 	controller: MockController,
 	nodeIdType: NodeIDType,
@@ -275,7 +270,6 @@ const respondToSerialAPISetup: MockControllerBehavior = {
 		} else if (msg instanceof SerialAPISetup_GetSupportedCommandsRequest) {
 			ret = new SerialAPISetup_GetSupportedCommandsResponse({
 				supportedCommands,
-				sdkVersion: getMockControllerSDKVersion(controller),
 			});
 		} else if (msg instanceof SerialAPISetup_SetNodeIDTypeRequest) {
 			setMockControllerNodeIdType(controller, msg.nodeIdType);
@@ -293,9 +287,7 @@ const respondToSoftReset: MockControllerBehavior = {
 	onHostMessage(controller, msg) {
 		if (msg instanceof SoftResetRequest) {
 			// SDK 7.21.0 and newer keep the node ID type across resets
-			if (
-				sdkVersionLt(getMockControllerSDKVersion(controller), "7.21.0")
-			) {
+			if (sdkVersionLt(controller.encodingContext.sdkVersion, "7.21.0")) {
 				setMockControllerNodeIdType(controller, NodeIDType.Short);
 			}
 

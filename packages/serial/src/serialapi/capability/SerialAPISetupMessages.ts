@@ -101,10 +101,6 @@ export class SerialAPISetupRequest extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): SerialAPISetupRequest {
-		// Sub command classes without their own parser have no payload.
-		// The sub command was already removed from the payload.
-		if (this !== SerialAPISetupRequest) return new this();
-
 		const command: SerialAPISetupCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
@@ -180,7 +176,10 @@ export class SerialAPISetupResponse extends Message {
 	public command: SerialAPISetupCommand;
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.concat([[this.command], this.payload]);
+		this.payload = Bytes.concat([
+			[getSubCommandForResponse(this) ?? this.command],
+			this.payload,
+		]);
 
 		return super.serialize(ctx);
 	}
@@ -223,13 +222,9 @@ export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupRes
 	}
 
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
-		this.payload = Bytes.from([
-			SerialAPISetupCommand.Unsupported,
-			this.command,
-		]);
+		this.payload = Bytes.from([this.command]);
 
-		// Skip the base class, which would prepend the unsupported command
-		return Message.prototype.serialize.call(this, ctx);
+		return super.serialize(ctx);
 	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
@@ -259,12 +254,17 @@ const legacySupportedCommands: readonly SerialAPISetupCommand[] = [
 ];
 
 @subCommandRequest(SerialAPISetupCommand.GetSupportedCommands)
-export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRequest {}
+export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRequest {
+	public static from(
+		_raw: MessageRaw,
+		_ctx: MessageParsingContext,
+	): SerialAPISetup_GetSupportedCommandsRequest {
+		return new this();
+	}
+}
 
 export interface SerialAPISetup_GetSupportedCommandsResponseOptions {
 	supportedCommands: SerialAPISetupCommand[];
-	/** The SDK version of the sender. Determines the layout of the extended bitmask when serializing */
-	sdkVersion?: string;
 }
 
 function getSupportedCommandsBitMaskStart(
@@ -286,7 +286,6 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 	) {
 		super(options);
 		this.supportedCommands = options.supportedCommands;
-		this.sdkVersion = options.sdkVersion;
 	}
 
 	public static from(
@@ -329,8 +328,6 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 
 	public readonly supportedCommands: SerialAPISetupCommand[];
 
-	public readonly sdkVersion: string | undefined;
-
 	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
 		let legacyBitMask = 0;
 		for (const cmd of this.supportedCommands) {
@@ -341,7 +338,7 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 			encodeBitMask(
 				this.supportedCommands,
 				undefined,
-				getSupportedCommandsBitMaskStart(this.sdkVersion),
+				getSupportedCommandsBitMaskStart(ctx.sdkVersion),
 			),
 		]);
 
@@ -758,15 +755,15 @@ export class SerialAPISetup_SetPowerlevelRequest extends SerialAPISetupRequest {
 	}
 
 	public static from(
-		raw: MessageRaw,
+		_raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetPowerlevelRequest {
-		validatePayload(raw.payload.length >= 2);
-		const payload = Bytes.view(raw.payload);
-		return new this({
-			powerlevel: payload.readInt8(0) / 10,
-			measured0dBm: payload.readInt8(1) / 10,
-		});
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
+		);
+
+		// return new SerialAPISetup_SetPowerlevelRequest({});
 	}
 
 	public powerlevel: number;
@@ -925,15 +922,15 @@ export class SerialAPISetup_SetPowerlevel16BitRequest extends SerialAPISetupRequ
 	}
 
 	public static from(
-		raw: MessageRaw,
+		_raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetPowerlevel16BitRequest {
-		validatePayload(raw.payload.length >= 4);
-		const payload = Bytes.view(raw.payload);
-		return new this({
-			powerlevel: payload.readInt16BE(0) / 10,
-			measured0dBm: payload.readInt16BE(2) / 10,
-		});
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
+		);
+
+		// return new SerialAPISetup_SetPowerlevel16BitRequest({});
 	}
 
 	public powerlevel: number;
@@ -1079,13 +1076,15 @@ export class SerialAPISetup_SetLongRangeMaximumTxPowerRequest extends SerialAPIS
 	}
 
 	public static from(
-		raw: MessageRaw,
+		_raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetLongRangeMaximumTxPowerRequest {
-		validatePayload(raw.payload.length >= 2);
-		return new this({
-			limit: Bytes.view(raw.payload).readInt16BE(0) / 10,
-		});
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
+		);
+
+		// return new SerialAPISetup_SetLongRangeMaximumTxPowerRequest({});
 	}
 
 	/** The maximum LR TX power in dBm */
