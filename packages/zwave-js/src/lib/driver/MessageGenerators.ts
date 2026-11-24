@@ -143,41 +143,59 @@ export async function waitForNodeUpdate<T extends Message>(
 	timeoutMs: number,
 ): Promise<T> {
 	const gate = driver.getControllerGate();
+	const predicate = (received: Message) =>
+		msg.isExpectedNodeUpdate(driver, received)
+		|| !!getTryAgainLater(msg, received);
+	const refreshPredicate = (received: Message) =>
+		maybePartialNodeUpdate(driver, msg, received);
 	let received: Message;
 	while (true) {
 		// Wait for the response or the deadline
 		const closedPeriods = gate.closedPeriods;
 		const closedAtStart = gate.isClosed;
-		try {
-			received = await driver.waitForMessage(
-				(received) =>
-					msg.isExpectedNodeUpdate(driver, received)
-					|| !!getTryAgainLater(msg, received),
-				timeoutMs,
-				(received) => maybePartialNodeUpdate(driver, msg, received),
-			);
+		const response = await driver
+			.waitForMessage(predicate, timeoutMs, refreshPredicate)
+			.catch(() => undefined);
+		if (response) {
+			received = response;
 			break;
-		} catch {
-			// The node may need a reply from the driver first, like a nonce, which waits while the gate is closed.
-			// Give the node the full time again once the gate is open.
-			const wasClosed =
-				closedAtStart
-				|| gate.isClosed
-				|| gate.closedPeriods !== closedPeriods;
-			// The wait ends without a second try when the gate is destroyed
-			if (
-				wasClosed
-				&& (await gate.whenOpen().then(
-					() => true,
-					() => false,
-				))
-			) {
-				continue;
-			}
+		}
+
+		// The node may need a reply from the driver first, like a nonce, which waits while the gate is closed.
+		// Give the node the full time again once the gate is open.
+		const wasClosed =
+			closedAtStart
+			|| gate.isClosed
+			|| gate.closedPeriods !== closedPeriods;
+		if (!wasClosed) {
 			throw new ZWaveError(
 				`Timed out while waiting for a response from the node`,
 				ZWaveErrorCodes.Controller_NodeTimeout,
 			);
+		}
+
+		// Keep listening while the gate is closed, so a response during the hold is not missed.
+		// When the gate is sealed, its reason ends the wait.
+		const stopListening = new AbortController();
+		try {
+			const early = await Promise.race([
+				driver
+					.waitForMessage(
+						predicate,
+						undefined,
+						refreshPredicate,
+						stopListening.signal,
+						// Wait until the gate opens
+					)
+					.then((received) => ({ received })),
+				gate.whenOpen().then(() => undefined),
+			]);
+			if (early) {
+				received = early.received;
+				break;
+			}
+		} finally {
+			stopListening.abort();
 		}
 	}
 	const busy = getTryAgainLater(msg, received);

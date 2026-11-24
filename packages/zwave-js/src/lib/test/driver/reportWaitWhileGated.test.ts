@@ -1,5 +1,6 @@
 import { BasicCCGet, BasicCCReport } from "@zwave-js/cc/BasicCC";
-import { CommandClasses } from "@zwave-js/core";
+import { CommandClasses, ZWaveErrorCodes } from "@zwave-js/core";
+import { abortable } from "@zwave-js/shared";
 import {
 	type MockNodeBehavior,
 	createMockZWaveRequestFrame,
@@ -58,6 +59,107 @@ integrationTest.sequential(
 
 			// The report must still answer the Get
 			t.expect((await getPromise)?.currentValue).toBe(42);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A report that arrives while another operation still has exclusive access to the controller answers the Get",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [CommandClasses.Basic],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Let the node answer only when the test sends its report
+			const receivedGet = createDeferredPromise<void>();
+			const delayReport: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof BasicCCGet) {
+						receivedGet.resolve();
+						return { action: "stop" };
+					}
+				},
+			};
+			mockNode.defineBehavior(delayReport);
+
+			// Send the Get and let its transmission finish
+			const getPromise = node.commandClasses.Basic.get();
+			await receivedGet;
+			await wait(100);
+
+			// Take exclusive access until the test ends it
+			const release = createDeferredPromise<void>();
+			const access = driver.withExclusiveControllerAccess(() => release);
+			// The report timeout of 1 second runs out, then the report arrives during the exclusive access
+			await wait(1200);
+			await mockNode.sendToController(
+				createMockZWaveRequestFrame(
+					new BasicCCReport({
+						nodeId: mockController.ownNodeId,
+						currentValue: 42,
+					}),
+					{ ackRequested: false },
+				),
+			);
+			// End the exclusive access after the report arrived
+			await wait(100);
+			release.resolve();
+			await access;
+
+			// The report must answer the Get
+			t.expect((await getPromise)?.currentValue).toBe(42);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"Destroying the driver while a Get waits for another operation's exclusive access to end rejects it with Driver_Destroyed",
+	{
+		// debug: true,
+
+		nodeCapabilities: {
+			commandClasses: [CommandClasses.Basic],
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Let the node never answer the Get
+			const receivedGet = createDeferredPromise<void>();
+			const noReport: MockNodeBehavior = {
+				handleCC(controller, self, receivedCC) {
+					if (receivedCC instanceof BasicCCGet) {
+						receivedGet.resolve();
+						return { action: "stop" };
+					}
+				},
+			};
+			mockNode.defineBehavior(noReport);
+
+			// Send the Get and let its transmission finish
+			const getPromise = node.commandClasses.Basic.get();
+			// The Get is rejected during destroy(), before the assertion runs
+			getPromise.catch(() => {});
+			await receivedGet;
+			await wait(100);
+
+			// Take exclusive access until the driver is destroyed
+			const release = createDeferredPromise<void>();
+			void driver
+				.withExclusiveControllerAccess((send, signal) =>
+					abortable(release, signal),
+				)
+				.catch(() => {});
+			// The report timeout runs out, so the Get waits for the exclusive access to end
+			await wait(1200);
+
+			// Destroy the driver while the Get waits for the exclusive access to end
+			await driver.destroy();
+			// The Get fails with Driver_Destroyed
+			await t.expect(getPromise).rejects.toMatchObject({
+				code: ZWaveErrorCodes.Driver_Destroyed,
+			});
 		},
 	},
 );
