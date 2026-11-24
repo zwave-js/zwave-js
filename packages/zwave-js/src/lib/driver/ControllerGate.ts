@@ -16,7 +16,7 @@ export interface ControllerGateLease {
 
 /**
  * Grants exclusive access to the controller to one operation at a time.
- * While the gate is closed, the transaction queues must not start new transactions.
+ * While the gate is closed, only the commands of that operation are sent to the controller.
  *
  * A released gate passes directly to the next waiting operation and only opens when nobody waits.
  * Each controller instance has its own gate. Sealing it aborts the current lease,

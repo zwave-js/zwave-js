@@ -62,23 +62,6 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 
 	public finalizeTransaction(): void {
 		this.currentTransaction = undefined;
-		this.resolveIdleWaiters();
-	}
-
-	private idleWaiters: DeferredPromise<void>[] = [];
-
-	/** Resolves when no transaction of this queue is active */
-	public waitForIdle(): Promise<void> {
-		if (!this.currentTransaction) return Promise.resolve();
-		const waiter = createDeferredPromise<void>();
-		this.idleWaiters.push(waiter);
-		return waiter;
-	}
-
-	private resolveIdleWaiters(): void {
-		const waiters = this.idleWaiters;
-		this.idleWaiters = [];
-		for (const waiter of waiters) waiter.resolve();
 	}
 
 	public get length(): number {
@@ -119,7 +102,6 @@ export class TransactionQueue implements AsyncIterable<Transaction> {
 		for (const p of this.listeners) {
 			p.resolve(undefined);
 		}
-		this.resolveIdleWaiters();
 	}
 
 	// Enable iterating the queue using for-await-of

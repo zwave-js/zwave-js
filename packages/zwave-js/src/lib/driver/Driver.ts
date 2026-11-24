@@ -730,8 +730,6 @@ type PrefixedNodeEvents = {
 };
 
 interface ExclusiveControllerAccessOptions {
-	/** Abort the active Serial API command. Its transaction gets re-queued */
-	abortActiveCommand?: boolean;
 	/** Keep the gate closed afterwards, because the controller instance is destroyed next */
 	keepClosed?: boolean;
 	/** The controller resets during the exclusive access, so the serial port may close */
@@ -999,10 +997,7 @@ export class Driver
 			name: "immediate",
 			mayStartNextTransaction: () => {
 				// Messages on the immediate queue may always be sent as long as the controller is ready to send
-				return (
-					!this.controllerGate.isClosed
-					&& this.controller.status === ControllerStatus.Ready
-				);
+				return this.controller.status === ControllerStatus.Ready;
 			},
 		});
 		this.queue = new TransactionQueue({
@@ -1063,7 +1058,11 @@ export class Driver
 	private initSerialAPIQueue(): void {
 		// Reuse the queue that was used by the bootloader probe
 		if (this.serialAPIQueue && !this.serialAPIQueue.isEnded) return;
-		this.serialAPIQueue = new AsyncQueue();
+		// While the gate is closed, only the commands of the exclusive access are sent. All others wait.
+		this.serialAPIQueue = new AsyncQueue({
+			mayTake: (item) =>
+				!!item.exclusive || !this.controllerGate.isClosed,
+		});
 
 		// Start draining the queue
 		void this.drainSerialAPIQueue();
@@ -3598,11 +3597,10 @@ export class Driver
 
 	/**
 	 * @internal
-	 * Runs `fn` with exclusive access to the controller. Neither transaction queue starts
-	 * a new transaction until `fn` has settled. Active transactions are stopped and re-queued
-	 * where they would otherwise wait for a node or send another command.
-	 * `fn` must send its commands with `send`, stop when `signal` is aborted
-	 * and must not request exclusive access again.
+	 * Runs `fn` with exclusive access to the controller. Until `fn` has settled, only the commands
+	 * sent with `send` reach the controller. All other commands wait at the Serial API queue.
+	 * The command that is active when the exclusive access starts is aborted, and its transaction is re-queued.
+	 * `fn` must stop when `signal` is aborted and must not request exclusive access again.
 	 */
 	public withExclusiveControllerAccess<T>(
 		fn: (send: SendExclusive, signal: AbortSignal) => Promise<T>,
@@ -3628,27 +3626,13 @@ export class Driver
 		if (options.resetsController) this.isSoftResetting = true;
 		try {
 			signal.throwIfAborted();
-			if (options.abortActiveCommand) {
-				this.abortSerialAPICommand?.reject(
-					new ZWaveError(
-						"The controller is being reset",
-						ZWaveErrorCodes.Controller_Reset,
-					),
-				);
-			}
-			// The queues might not have been initialized yet
-			const queues = this.queues.filter((q) => !!q);
-			// Active transactions must not wait for anything the closed queues would have to send
-			for (const queue of queues) {
-				queue.currentTransaction?.parts.interrupt(
-					new ZWaveError(
-						"Another operation has exclusive access to the controller",
-						ZWaveErrorCodes.Controller_Reset,
-					),
-				);
-			}
-			await abortableStep(signal, () =>
-				Promise.all(queues.map((q) => q.waitForIdle())),
+			// Abort the command that is active now, so it does not run during the exclusive access.
+			// Its transaction is re-queued.
+			this.abortSerialAPICommand?.reject(
+				new ZWaveError(
+					"Another operation has exclusive access to the controller",
+					ZWaveErrorCodes.Controller_Reset,
+				),
 			);
 
 			// Run the work with exclusive access
@@ -3663,7 +3647,8 @@ export class Driver
 			// Cleared before the release, so it does not clear the state of the next reset
 			if (options.resetsController) this.isSoftResetting = false;
 			if (!options.keepClosed) lease.release();
-			this.triggerQueues();
+			// Send the commands that waited at the Serial API queue
+			this.serialAPIQueue?.trigger();
 		}
 	}
 
@@ -3794,7 +3779,7 @@ export class Driver
 				await this.restoreControllerStateAfterReset(send, signal);
 				return true;
 			},
-			{ abortActiveCommand: true, resetsController: true },
+			{ resetsController: true },
 		);
 
 		if (!serialAPIResponds) {
@@ -3848,11 +3833,7 @@ export class Driver
 				return this.ensureSerialAPI({ serialAPIStarted, send, signal });
 			},
 			// Commands queued for the old controller instance must not be sent to the reset controller
-			{
-				abortActiveCommand: true,
-				keepClosed: true,
-				resetsController: true,
-			},
+			{ keepClosed: true, resetsController: true },
 		);
 
 		// Give up when the Serial API does not come back
@@ -7075,12 +7056,8 @@ ${handlers.length} left`,
 	}
 
 	private mayStartTransaction(transaction: Transaction): boolean {
-		// We may not send anything on the normal queue while the controller is held exclusively
-		// or unresponsive
-		if (
-			this.controllerGate.isClosed
-			|| this.controller.status === ControllerStatus.Unresponsive
-		) {
+		// We may not send anything on the normal queue while the controller is unresponsive
+		if (this.controller.status === ControllerStatus.Unresponsive) {
 			return false;
 		}
 

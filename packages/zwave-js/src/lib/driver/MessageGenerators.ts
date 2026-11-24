@@ -30,7 +30,6 @@ import {
 	TransportServiceTimeouts,
 } from "@zwave-js/cc/TransportServiceCC";
 import {
-	type CCId,
 	CommandClasses,
 	EncapsulationFlags,
 	type GetNode,
@@ -57,10 +56,9 @@ import {
 	isSendData,
 	isTransmitReport,
 } from "@zwave-js/serial/serialapi";
-import { type BytesView, getErrorMessage, noop } from "@zwave-js/shared";
+import { type BytesView, getErrorMessage } from "@zwave-js/shared";
 import { wait } from "alcalzone-shared/async";
 
-import { abortable } from "./ControllerGate.js";
 import type { Driver } from "./Driver.js";
 import type { MessageGenerator } from "./Transaction.js";
 
@@ -995,109 +993,21 @@ export const secureMessageGeneratorS2Multicast: MessageGeneratorImplementation<
 	}
 };
 
-/**
- * Returns a view of the driver for one run of a message generator. Once `signal` is aborted,
- * the run's waits end with the abort reason, its command handlers are removed and it can register nothing new.
- * An aborted run must not take messages that a new run of the transaction waits for.
- */
-function bindToRun(driver: Driver, signal: AbortSignal): Driver {
-	const overrides: Record<string, unknown> = {
-		waitForMessage: (
-			predicate: (msg: Message) => boolean,
-			timeout?: number,
-			refreshPredicate?: (msg: Message) => boolean,
-		) => {
-			if (signal.aborted) return Promise.reject(signal.reason);
-			return abortable(
-				driver.waitForMessage(
-					predicate,
-					timeout,
-					refreshPredicate,
-					signal,
-				),
-				signal,
-			);
-		},
-		waitForCommand: (
-			predicate: (cc: CCId) => boolean,
-			timeout?: number,
-			abortSignal?: AbortSignal,
-			options?: Parameters<Driver["waitForCommand"]>[3],
-		) => {
-			if (signal.aborted) return Promise.reject(signal.reason);
-			return abortable(
-				driver.waitForCommand(
-					predicate,
-					timeout,
-					abortSignal
-						? AbortSignal.any([signal, abortSignal])
-						: signal,
-					options,
-				),
-				signal,
-			);
-		},
-		registerCommandHandler: (
-			predicate: (cc: CCId) => boolean,
-			handler: (cc: CCId) => void,
-		) => {
-			if (signal.aborted) return { unregister: noop };
-			const registration = driver.registerCommandHandler(
-				predicate,
-				handler,
-			);
-			const onAbort = () => registration.unregister();
-			signal.addEventListener("abort", onAbort, { once: true });
-			return {
-				unregister: () => {
-					signal.removeEventListener("abort", onAbort);
-					registration.unregister();
-				},
-			};
-		},
-	};
-	return new Proxy(driver, {
-		get(target, prop) {
-			if (typeof prop === "string" && prop in overrides) {
-				return overrides[prop];
-			}
-			const value = Reflect.get(target, prop, target);
-			return typeof value === "function" ? value.bind(target) : value;
-		},
-	});
-}
-
 export function createMessageGenerator(
 	driver: Driver,
 	ctx: CCEncodingContext,
 	msg: Message,
 	onMessageSent: (msg: Message, result: Message | undefined) => void,
 ): MessageGenerator {
-	let runAbort: AbortController | undefined;
 	const generator: MessageGenerator = {
 		parent: undefined as any, // The transaction will set this field on creation
 		current: undefined,
 		self: undefined,
-		interrupt: (reason) => {
-			runAbort?.abort(reason);
-		},
 		reset: () => {
-			runAbort?.abort(
-				new ZWaveError(
-					"The transaction was reset",
-					ZWaveErrorCodes.Controller_Reset,
-				),
-			);
-			runAbort = undefined;
-			// A run that is suspended at a yield must still run its finally blocks
-			generator.self?.return(undefined).catch(noop);
 			generator.current = undefined;
 			generator.self = undefined;
 		},
 		start: () => {
-			runAbort = new AbortController();
-			const runSignal = runAbort.signal;
-			const runDriver = bindToRun(driver, runSignal);
 			async function* gen() {
 				// Determine which message generator implementation should be used
 				let implementation: MessageGeneratorImplementation<Message> =
@@ -1128,58 +1038,43 @@ export function createMessageGenerator(
 					}
 				}
 
-				// A reset generator was abandoned by the driver while it was waiting.
-				// It must not touch the transaction anymore, because a new run may already use it.
-				const self = generator.self;
-				const isAbandoned = () => generator.self !== self;
-
 				// Step through the generator so we can easily cancel it and don't
 				// accidentally forget to unset this.current at the end
-				const gen = implementation(runDriver, ctx, msg, onMessageSent);
+				const gen = implementation(driver, ctx, msg, onMessageSent);
 				let sendResult: Message | undefined;
 				let result: Message | undefined;
-				try {
-					while (true) {
-						// This call passes the previous send result (if it exists already) to the generator and saves the
-						// generated or returned message in `value`. When `done` is true, `value` contains the returned result of the message generator
-						try {
-							const { value, done } = await gen.next(sendResult!);
-							if (isAbandoned()) return;
-							if (done) {
-								result = value;
-								break;
-							}
-							// An interrupted run sends nothing more. The driver re-queues the transaction.
-							if (runSignal.aborted) throw runSignal.reason;
-
-							// Pass the generated message to the driver and remember the result for the next iteration
-							generator.current = value;
-							sendResult = yield generator.current;
-						} catch (e) {
-							if (isAbandoned()) return;
-							if (runSignal.aborted) throw runSignal.reason;
-							if (isNodeBusyError(e)) {
-								// The driver decides whether to send the command again
-								generator.reset();
-								throw e;
-							} else if (e instanceof Error) {
-								// There was an actual error, reject the transaction
-								generator.parent.settleRejected(e);
-							} else if (isTransmitReport(e) && !e.isOK()) {
-								// The generator was prematurely ended by throwing a NOK transmit report.
-								// The driver may want to retry it, so reset the generator
-								generator.reset();
-								return;
-							} else {
-								// The generator was prematurely ended by throwing a Message
-								generator.parent.settleFulfilled(e as Message);
-							}
+				while (true) {
+					// This call passes the previous send result (if it exists already) to the generator and saves the
+					// generated or returned message in `value`. When `done` is true, `value` contains the returned result of the message generator
+					try {
+						const { value, done } = await gen.next(sendResult!);
+						if (done) {
+							result = value;
 							break;
 						}
+
+						// Pass the generated message to the driver and remember the result for the next iteration
+						generator.current = value;
+						sendResult = yield generator.current;
+					} catch (e) {
+						if (isNodeBusyError(e)) {
+							// The driver decides whether to send the command again
+							generator.reset();
+							throw e;
+						} else if (e instanceof Error) {
+							// There was an actual error, reject the transaction
+							generator.parent.settleRejected(e);
+						} else if (isTransmitReport(e) && !e.isOK()) {
+							// The generator was prematurely ended by throwing a NOK transmit report.
+							// The driver may want to retry it, so reset the generator
+							generator.reset();
+							return;
+						} else {
+							// The generator was prematurely ended by throwing a Message
+							generator.parent.settleFulfilled(e as Message);
+						}
+						break;
 					}
-				} finally {
-					// Run the implementation's finally blocks, e.g. to unregister its command handlers
-					await gen.return(undefined as any).catch(noop);
 				}
 
 				generator.parent.settleFulfilled(result);

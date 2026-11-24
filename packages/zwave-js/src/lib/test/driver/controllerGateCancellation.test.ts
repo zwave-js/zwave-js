@@ -175,56 +175,6 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
-	"A soft reset interrupts a Transport Service transmission and removes its command handler",
-	{
-		// debug: true,
-
-		nodeCapabilities: {
-			commandClasses: [
-				CommandClasses.Basic,
-				ccCaps({
-					ccId: CommandClasses["Transport Service"],
-					isSupported: true,
-					version: 2,
-				}),
-			],
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			const handlersBefore = driver["awaitedCommands"].length;
-
-			// Too large for one frame. The mock node never confirms the segments.
-			const command = new CommandClass({
-				nodeId: node.id,
-				ccId: CommandClasses.Basic,
-				ccCommand: 0x01,
-				payload: new Uint8Array(80),
-			});
-			const sendPromise = driver.sendCommand(command).catch(() => {});
-			await mockNode.expectControllerFrame(
-				(frame) =>
-					frame.type === MockZWaveFrameType.Request
-					&& frame.payload
-						instanceof TransportServiceCCSubsequentSegment
-					&& frame.payload.datagramOffset
-						+ frame.payload.partialDatagram.length
-						=== frame.payload.datagramSize,
-				{ timeout: 1000 },
-			);
-			// After the callback for the last segment, the generator waits for the SegmentComplete
-			await wait(100);
-
-			const start = Date.now();
-			await driver.softReset();
-			t.expect(Date.now() - start).toBeLessThan(500);
-
-			await sendPromise;
-			t.expect(driver["awaitedCommands"]).toHaveLength(handlersBefore);
-		},
-	},
-);
-
-integrationTest.sequential(
 	"Destroying the driver while a soft reset waits for SerialAPIStarted rejects the reset with Driver_Destroyed",
 	{
 		// debug: true,

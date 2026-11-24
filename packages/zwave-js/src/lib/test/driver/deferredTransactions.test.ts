@@ -4,7 +4,11 @@ import {
 	type CommandClass,
 	CommandRelation,
 } from "@zwave-js/cc";
-import { TransactionState, ZWaveErrorCodes } from "@zwave-js/core";
+import {
+	ControllerStatus,
+	TransactionState,
+	ZWaveErrorCodes,
+} from "@zwave-js/core";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
 
 import { RemoveNodeReason } from "../../controller/Inclusion.js";
@@ -56,7 +60,8 @@ integrationTest.sequential(
 	{
 		...testOptions,
 		testBody: async (t, driver) => {
-			await driver["controllerGate"].close("test");
+			// Keep the transactions queued, because the transaction queues do not start transactions while the controller is unresponsive
+			driver.controller.setStatus(ControllerStatus.Unresponsive);
 			const bothQueued = createDeferredPromise<void>();
 			const firstProgress: TransactionState[] = [];
 			const secondProgress: TransactionState[] = [];
@@ -108,7 +113,8 @@ integrationTest.sequential(
 integrationTest.sequential("Node removal rejects deferred transactions", {
 	...testOptions,
 	testBody: async (t, driver, node) => {
-		await driver["controllerGate"].close("test");
+		// Keep the transactions queued, because the transaction queues do not start transactions while the controller is unresponsive
+		driver.controller.setStatus(ControllerStatus.Unresponsive);
 		const queued = createDeferredPromise<void>();
 		const command = driver.sendCommand(createGet(), {
 			...commandOptions,
@@ -131,7 +137,8 @@ integrationTest.sequential("Node removal rejects deferred transactions", {
 integrationTest.sequential("Redundant commands join deferred transactions", {
 	...testOptions,
 	testBody: async (t, driver) => {
-		await driver["controllerGate"].close("test");
+		// Keep the transactions queued, because the transaction queues do not start transactions while the controller is unresponsive
+		driver.controller.setStatus(ControllerStatus.Unresponsive);
 		const queued = createDeferredPromise<void>();
 		const first = driver.sendCommand(createGet(), {
 			...commandOptions,
@@ -164,7 +171,8 @@ integrationTest.sequential(
 	{
 		...testOptions,
 		testBody: async (t, driver) => {
-			await driver["controllerGate"].close("test");
+			// Keep the transactions queued, because the transaction queues do not start transactions while the controller is unresponsive
+			driver.controller.setStatus(ControllerStatus.Unresponsive);
 			const queued = createDeferredPromise<void>();
 			const older = driver.sendCommand(
 				new RelatedBasicCCSet({ nodeId: 2, targetValue: 1 }),

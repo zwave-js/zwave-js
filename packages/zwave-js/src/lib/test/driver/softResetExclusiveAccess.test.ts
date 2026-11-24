@@ -42,7 +42,7 @@ function isRestoreCommand(msg: Message): boolean {
 }
 
 integrationTest.sequential(
-	"A soft reset waits for active transactions and holds back both queues until the controller state is restored",
+	"A soft reset aborts the active command and keeps back all other commands until the controller state is restored",
 	{
 		// debug: true,
 
@@ -57,7 +57,7 @@ integrationTest.sequential(
 		},
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
-			// The first SendData never gets a callback, so its transaction stays active
+			// The first SendData never gets a callback, so it is still active when the reset starts
 			let isFirstSendData = true;
 			const swallowFirstCallback: MockControllerBehavior = {
 				async onHostMessage(controller, msg) {
@@ -76,19 +76,21 @@ integrationTest.sequential(
 			};
 			mockController.defineBehavior(swallowFirstCallback);
 
+			// Ping the node and wait until its SendData is active
 			mockController.clearReceivedHostMessages();
 
 			const normal = node.ping();
 			await mockController.expectHostMessage(
 				(msg) => msg instanceof SendDataBridgeRequest,
 			);
-			// Queued behind the active Serial API command of the ping
+			// Waits at the Serial API queue behind the active command of the ping
 			const immediate = driver.sendMessage(
 				new SendDataRequest({
 					command: new NoOperationCC({ nodeId: node.id }),
 				}),
 				{ priority: MessagePriority.Immediate },
 			);
+			// Soft-reset while the ping is active
 			await wait(50);
 
 			await driver.softReset();
@@ -100,10 +102,12 @@ integrationTest.sequential(
 				{ priority: MessagePriority.Immediate },
 			);
 
+			// All three commands succeed
 			t.expect(await normal).toBe(true);
 			await t.expect(immediate).resolves.toBeDefined();
 			await t.expect(afterReset).resolves.toBeDefined();
 
+			// Find the first command after the restore step
 			const messages = mockController.receivedHostMessages;
 			const resetIndex = messages.findIndex(
 				(msg) => msg instanceof SoftResetRequest,
@@ -126,6 +130,19 @@ integrationTest.sequential(
 			t.expect(
 				afterResetMessages.slice(firstOther).some(isRestoreCommand),
 			).toBe(false);
+			// The aborted command and the one queued later are each sent once, after the restore step
+			const noOperationIndexes = messages
+				.map((msg, index) =>
+					msg instanceof SendDataRequest
+					&& msg.command instanceof NoOperationCC
+						? index
+						: -1,
+				)
+				.filter((index) => index !== -1);
+			t.expect(noOperationIndexes).toHaveLength(2);
+			t.expect(
+				noOperationIndexes.every((index) => index > resetIndex),
+			).toBe(true);
 		},
 	},
 );
@@ -162,60 +179,6 @@ integrationTest.sequential(
 			});
 
 			t.expect(await pingPromise).toBe(true);
-		},
-	},
-);
-
-integrationTest.sequential(
-	"A soft reset interrupts a transaction that waits for a node response and sends it again afterwards",
-	{
-		// debug: true,
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// The node only answers a Get once it received a command from the immediate queue,
-			// like a node that needs a nonce before it can send an encrypted report
-			let pendingGet = false;
-			const receivedGet = createDeferredPromise<void>();
-			const report = () =>
-				new BasicCCReport({
-					nodeId: mockController.ownNodeId,
-					currentValue: 42,
-				});
-			const respondAfterImmediate: MockNodeBehavior = {
-				handleCC(controller, self, receivedCC) {
-					if (receivedCC instanceof BasicCCGet) {
-						receivedGet.resolve();
-						pendingGet = true;
-						return { action: "stop" };
-					} else if (
-						receivedCC instanceof NoOperationCC
-						&& pendingGet
-					) {
-						pendingGet = false;
-						return { action: "sendCC", cc: report() };
-					}
-				},
-			};
-			mockNode.defineBehavior(respondAfterImmediate);
-			// Waiting for the response would take longer than the reset
-			driver.options.timeouts.report = 5000;
-
-			const getPromise = node.commandClasses.Basic.get();
-			await receivedGet;
-			// Let the transmission finish, so the transaction waits for the report
-			await wait(100);
-
-			const resetPromise = driver.softReset();
-			const immediate = driver.sendMessage(
-				new SendDataRequest({
-					command: new NoOperationCC({ nodeId: node.id }),
-				}),
-				{ priority: MessagePriority.Immediate },
-			);
-
-			await resetPromise;
-			await t.expect(immediate).resolves.toBeDefined();
-			t.expect((await getPromise)?.currentValue).toBe(42);
 		},
 	},
 );
