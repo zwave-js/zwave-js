@@ -194,7 +194,7 @@ for (const { libraryVersion, assumed } of [
 	{ libraryVersion: "Z-Wave 7.19.3", assumed: NodeIDType.Short },
 	{ libraryVersion: "Z-Wave 7.21.0", assumed: NodeIDType.Long },
 ]) {
-	integrationTest(
+	integrationTest.sequential(
 		`With SDK ${libraryVersion.slice(7)}, the driver assumes ${
 			assumed === NodeIDType.Short ? 8 : 16
 		}-bit node IDs after a soft reset and restores 16-bit node IDs`,
@@ -233,48 +233,51 @@ for (const { libraryVersion, assumed } of [
 	);
 }
 
-integrationTest("A failed SetNodeIDType after a soft reset is retried", {
-	// debug: true,
+integrationTest.sequential(
+	"A failed SetNodeIDType after a soft reset is retried",
+	{
+		// debug: true,
 
-	controllerCapabilities: controllerCapabilities("Z-Wave 7.19.3"),
+		controllerCapabilities: controllerCapabilities("Z-Wave 7.19.3"),
 
-	testBody: async (t, driver, node, mockController, mockNode) => {
-		// Switch to 16-bit node IDs
-		t.expect(
-			await driver.controller.trySetNodeIDType(NodeIDType.Long),
-		).toBe(true);
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Switch to 16-bit node IDs
+			t.expect(
+				await driver.controller.trySetNodeIDType(NodeIDType.Long),
+			).toBe(true);
 
-		// Let the controller reject the next two SetNodeIDType requests
-		let failures = 2;
-		const failSetNodeIDType: MockControllerBehavior = {
-			async onHostMessage(controller, msg) {
-				if (
-					msg instanceof SerialAPISetup_SetNodeIDTypeRequest
-					&& failures > 0
-				) {
-					failures--;
-					await controller.sendMessageToHost(
-						new SerialAPISetup_SetNodeIDTypeResponse({
-							success: false,
-						}),
-					);
-					return true;
-				}
-			},
-		};
-		mockController.defineBehavior(failSetNodeIDType);
+			// Let the controller reject the next two SetNodeIDType requests
+			let failures = 2;
+			const failSetNodeIDType: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (
+						msg instanceof SerialAPISetup_SetNodeIDTypeRequest
+						&& failures > 0
+					) {
+						failures--;
+						await controller.sendMessageToHost(
+							new SerialAPISetup_SetNodeIDTypeResponse({
+								success: false,
+							}),
+						);
+						return true;
+					}
+				},
+			};
+			mockController.defineBehavior(failSetNodeIDType);
 
-		// Soft-reset, so the driver restores 16-bit node IDs
-		await driver.softReset();
+			// Soft-reset, so the driver restores 16-bit node IDs
+			await driver.softReset();
 
-		// The third attempt succeeds
-		t.expect(failures).toBe(0);
-		t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
-		t.expect(await node.ping()).toBe(true);
+			// The third attempt succeeds
+			t.expect(failures).toBe(0);
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
+			t.expect(await node.ping()).toBe(true);
+		},
 	},
-});
+);
 
-integrationTest(
+integrationTest.sequential(
 	"When SetNodeIDType keeps failing after a soft reset, the driver keeps the node ID type the controller falls back to",
 	{
 		// debug: true,
@@ -318,7 +321,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"After an unexpected Serial API restart, the node ID type is restored before the next command is sent",
 	{
 		// debug: true,
@@ -374,7 +377,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"The driver uses 16-bit node IDs when the controller can switch, even without Long Range support",
 	{
 		// debug: true,
@@ -397,7 +400,7 @@ integrationTest(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"When switching to 16-bit node IDs fails at startup, the next soft reset tries again",
 	{
 		// debug: true,
@@ -490,7 +493,7 @@ integrationTest.sequential(
 	},
 );
 
-integrationTest(
+integrationTest.sequential(
 	"A command whose node ID does not fit the node ID type does not trigger a controller recovery",
 	{
 		// debug: true,

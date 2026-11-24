@@ -1829,6 +1829,8 @@ export class Driver
 			try {
 				await this.initializeControllerAndNodes();
 			} catch (e) {
+				// The failure was already reported
+				if (this.wasDestroyed) return;
 				let message: string;
 				if (
 					isZWaveError(e)
@@ -3676,13 +3678,16 @@ export class Driver
 			);
 			// Make sure we don't return a success result if signal was aborted.
 			signal.throwIfAborted();
+			this.assertNodeIdTypeKnown();
 			return result;
 		} catch (e) {
-			if (isZWaveError(e) && e.context === NODE_ID_TYPE_UNKNOWN) {
+			if (this._controller?.nodeIdTypeState.known === false) {
 				// Frames would be serialized and parsed with the wrong node ID size.
 				// Like a Serial API that stopped responding, this ends the driver.
 				keepClosed = true;
-				void this.destroyWithMessage(e.message);
+				if (!this.wasDestroyed) {
+					void this.destroyWithMessage(getErrorMessage(e));
+				}
 			}
 			throw e;
 		} finally {
@@ -3692,6 +3697,16 @@ export class Driver
 			// Send the commands that waited at the Serial API queue
 			this.serialAPIQueue?.trigger();
 		}
+	}
+
+	/** Throws when the node ID type of the controller is unknown, because nothing with a node ID may be sent then */
+	private assertNodeIdTypeKnown(): void {
+		if (this._controller?.nodeIdTypeState.known !== false) return;
+		throw new ZWaveError(
+			"The node ID type of the controller is unknown",
+			ZWaveErrorCodes.Driver_Failed,
+			NODE_ID_TYPE_UNKNOWN,
+		);
 	}
 
 	/**
@@ -3861,12 +3876,12 @@ export class Driver
 		await abortableStep(signal, () => this.restoreNodeIdType(send));
 	}
 
-	/** Sets the node ID type the controller uses after a reset, until the driver restores the desired one */
+	/** Records the node ID type the controller uses after a reset, until the driver restores the desired one */
 	private assumeNodeIdTypeAfterReset(): void {
 		// Controllers below SDK 7.21 do not keep the node ID type across resets
-		if (this._controller?.sdkVersionLt("7.21.0")) {
-			this._controller.nodeIdType = NodeIDType.Short;
-		}
+		this._controller?.nodeIdTypeState.recordReset(
+			!this._controller.sdkVersionLt("7.21.0"),
+		);
 	}
 
 	/** Sends the desired node ID type to the controller. Must be called with exclusive access to the controller. */
@@ -3913,37 +3928,28 @@ export class Driver
 			return false;
 		}
 
-		let unconfirmed: unknown;
+		// Send the switch up to 3 times
+		const state = controller.nodeIdTypeState;
+		let lastError: unknown;
 		for (let attempt = 1; attempt <= 3; attempt++) {
 			try {
 				if (await controller.setNodeIDType(nodeIdType, send)) {
 					return true;
 				}
-				unconfirmed = undefined;
 			} catch (e) {
 				if (
 					isZWaveError(e)
 					&& e.code === ZWaveErrorCodes.Driver_NotSupported
 				) {
-					return false;
+					break;
 				}
-				// The controller answered that it did not switch
-				if (
-					isZWaveError(e)
-					&& e.code === ZWaveErrorCodes.Controller_ResponseNOK
-				) {
-					this.controllerLog.print(
-						`Switching the node ID type failed: ${getErrorMessage(e)}`,
-						"warn",
-					);
-					unconfirmed = undefined;
-					continue;
-				}
-				// Only a request without an answer leaves the outcome open
+				// Other errors are not about this command and end the attempts
 				if (
 					!isZWaveError(e)
-					|| (e.code !== ZWaveErrorCodes.Controller_Timeout
-						&& e.code !== ZWaveErrorCodes.Controller_MessageDropped)
+					|| (e.code !== ZWaveErrorCodes.Controller_ResponseNOK
+						&& e.code !== ZWaveErrorCodes.Controller_MessageDropped
+						&& e.code !== ZWaveErrorCodes.Controller_Timeout
+						&& e.code !== ZWaveErrorCodes.Controller_Reset)
 				) {
 					throw e;
 				}
@@ -3951,16 +3957,17 @@ export class Driver
 					`Switching the node ID type failed: ${getErrorMessage(e)}`,
 					"warn",
 				);
-				unconfirmed = e;
+				lastError = e;
 			}
 		}
-		if (unconfirmed == undefined) return false;
+		// Report a switch that did not succeed
+		if (state.known) return false;
 
 		throw new ZWaveError(
 			`The controller did not confirm the switch to ${
 				nodeIdType === NodeIDType.Short ? 8 : 16
 			}-bit node IDs, so the node ID type it uses is unknown: ${getErrorMessage(
-				unconfirmed,
+				lastError,
 			)}`,
 			ZWaveErrorCodes.Driver_Failed,
 			NODE_ID_TYPE_UNKNOWN,

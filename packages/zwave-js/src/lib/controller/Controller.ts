@@ -355,6 +355,7 @@ import {
 	type SmartStartProvisioningEntry,
 } from "./Inclusion.js";
 import { SerialNVMIO500, SerialNVMIO700, trimNVMWriteAtEnd } from "./NVMIO.js";
+import { NodeIDTypeState } from "./NodeIDTypeState.js";
 import { determineNIF } from "./NodeInformationFrame.js";
 import {
 	type ControllerProprietary,
@@ -783,14 +784,14 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		return this._nodes;
 	}
 
-	private _nodeIdType: NodeIDType = NodeIDType.Short;
+	private _nodeIdTypeState = new NodeIDTypeState();
 	/** Whether the controller is configured to use 8 or 16 bit node IDs */
 	public get nodeIdType(): NodeIDType {
-		return this._nodeIdType;
+		return this._nodeIdTypeState.type;
 	}
 	/** @internal */
-	public set nodeIdType(value: NodeIDType) {
-		this._nodeIdType = value;
+	public get nodeIdTypeState(): NodeIDTypeState {
+		return this._nodeIdTypeState;
 	}
 
 	/**
@@ -6394,7 +6395,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			// 7.xx firmwares (up to at least 7.19.2) have a bug where the response to
 			// SetPriorityRoute is missing the result byte when used with 16-bit node IDs.
 			// So we temporarily switch back to 8-bit node IDs for this message
-			const nodeIdType = this._nodeIdType;
+			const nodeIdType = this.nodeIdType;
 			if (
 				nodeIdType === NodeIDType.Long
 				&& !(await this.trySetNodeIDTypeInternal(
@@ -6419,7 +6420,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			}
 
 			if (
-				this._nodeIdType !== nodeIdType
+				this.nodeIdType !== nodeIdType
 				&& !(await this.trySetNodeIDTypeInternal(nodeIdType, send))
 			) {
 				throw new ZWaveError(
@@ -7769,13 +7770,19 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			}-bit node IDs...`,
 		);
 
-		const result = (await send(
-			new SerialAPISetup_SetNodeIDTypeRequest({
-				nodeIdType,
-			}),
-		)) as
+		let result:
 			| SerialAPISetup_SetNodeIDTypeResponse
 			| SerialAPISetup_CommandUnsupportedResponse;
+		try {
+			result = (await send(
+				new SerialAPISetup_SetNodeIDTypeRequest({
+					nodeIdType,
+				}),
+			)) as typeof result;
+		} catch (e) {
+			this._nodeIdTypeState.recordError(e);
+			throw e;
+		}
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
 				`Your hardware does not support switching between short and long node IDs!`,
@@ -7788,9 +7795,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				}-bit node IDs ${result.success ? "successful" : "failed"}`,
 			);
 
-			if (result.success) {
-				this._nodeIdType = nodeIdType;
-			}
+			this._nodeIdTypeState.recordResponse(nodeIdType, result.success);
 		}
 		return result.success;
 	}
