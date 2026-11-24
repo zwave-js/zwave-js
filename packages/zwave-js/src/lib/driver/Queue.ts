@@ -166,4 +166,6 @@ export interface SerialAPIQueueItem extends Disposable {
 	result: DeferredPromise<Message | undefined>;
 	/** Whether the operation with exclusive access to the controller sent this command */
 	exclusive?: boolean;
+	/** The signal of that operation. The command is not sent once it is aborted. */
+	signal?: AbortSignal;
 }

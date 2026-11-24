@@ -1,5 +1,4 @@
 import type { Message } from "@zwave-js/serial";
-import { abortable } from "@zwave-js/shared";
 import {
 	type DeferredPromise,
 	createDeferredPromise,
@@ -29,15 +28,9 @@ export class ControllerGate {
 		| undefined;
 	private waiters: DeferredPromise<ControllerGateLease>[] = [];
 	private sealedReason: Error | undefined;
-	private closedSignal = createDeferredPromise<void>();
 
 	public get isClosed(): boolean {
 		return !!this.current || !!this.sealedReason;
-	}
-
-	/** Resolves when the gate is closed, immediately if it already is */
-	public whenClosed(): Promise<void> {
-		return this.closedSignal;
 	}
 
 	/**
@@ -68,13 +61,11 @@ export class ControllerGate {
 					next.resolve(this.grant());
 				} else {
 					this.current = undefined;
-					this.closedSignal = createDeferredPromise();
 				}
 			},
 			abort: (e: Error) => abortController.abort(e),
 		};
 		this.current = lease;
-		this.closedSignal.resolve();
 		return lease;
 	}
 
@@ -87,6 +78,5 @@ export class ControllerGate {
 		const waiters = this.waiters;
 		this.waiters = [];
 		for (const lease of waiters) lease.reject(reason);
-		this.closedSignal.resolve();
 	}
 }

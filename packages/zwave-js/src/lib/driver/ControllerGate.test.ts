@@ -85,25 +85,3 @@ test("A lease handed over right before seal() is aborted", async (t) => {
 	// The lease of the second operation must be aborted
 	t.expect((await second).signal.aborted).toBe(true);
 });
-
-test("whenClosed() resolves once the gate is closed", async (t) => {
-	const gate = new ControllerGate();
-	let resolved = false;
-	void gate.whenClosed().then(() => {
-		resolved = true;
-	});
-	await Promise.resolve();
-	t.expect(resolved).toBe(false);
-
-	const lease = await gate.close();
-	await Promise.resolve();
-	t.expect(resolved).toBe(true);
-
-	lease.release();
-	resolved = false;
-	void gate.whenClosed().then(() => {
-		resolved = true;
-	});
-	await Promise.resolve();
-	t.expect(resolved).toBe(false);
-});

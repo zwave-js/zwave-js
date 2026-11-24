@@ -27,6 +27,11 @@ export interface MessageGenerator {
 	start: () => AsyncGenerator<Message, void, Message>;
 	/** Resets this message generator so it can be started anew */
 	reset: () => void;
+	/**
+	 * Stops the current run at its next wait or message. The run then fails with `reason`.
+	 * Its finally blocks run and its command handlers are removed.
+	 */
+	interrupt: (reason: Error) => void;
 	/** A reference to the currently running message generator if it was already started */
 	self?: ReturnType<MessageGenerator["start"]>;
 	/** A reference to the last generated message, or undefined if the generator wasn't started or has finished */
