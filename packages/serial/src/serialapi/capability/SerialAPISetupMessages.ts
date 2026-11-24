@@ -5,6 +5,7 @@ import {
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
+	encodeBitMask,
 	logBuffer,
 	mergeLogDict,
 	parseBitMask,
@@ -100,6 +101,10 @@ export class SerialAPISetupRequest extends Message {
 		raw: MessageRaw,
 		ctx: MessageParsingContext,
 	): SerialAPISetupRequest {
+		// Sub command classes without their own parser have no payload.
+		// The sub command was already removed from the payload.
+		if (this !== SerialAPISetupRequest) return new this();
+
 		const command: SerialAPISetupCommand = raw.payload[0];
 		const payload = raw.payload.subarray(1);
 
@@ -174,6 +179,12 @@ export class SerialAPISetupResponse extends Message {
 
 	public command: SerialAPISetupCommand;
 
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([[this.command], this.payload]);
+
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(),
@@ -211,6 +222,16 @@ export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupRes
 		});
 	}
 
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([
+			SerialAPISetupCommand.Unsupported,
+			this.command,
+		]);
+
+		// Skip the base class, which would prepend the unsupported command
+		return Message.prototype.serialize.call(this, ctx);
+	}
+
 	public toLogEntry(): MessageOrCCLogEntry {
 		const ret = super.toLogEntry();
 		return {
@@ -225,6 +246,17 @@ export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupRes
 }
 
 // =============================================================================
+
+const legacySupportedCommands: readonly SerialAPISetupCommand[] = [
+	SerialAPISetupCommand.GetSupportedCommands,
+	SerialAPISetupCommand.SetTxStatusReport,
+	SerialAPISetupCommand.SetPowerlevel,
+	SerialAPISetupCommand.GetPowerlevel,
+	SerialAPISetupCommand.GetMaximumPayloadSize,
+	SerialAPISetupCommand.GetRFRegion,
+	SerialAPISetupCommand.SetRFRegion,
+	SerialAPISetupCommand.SetNodeIDType,
+];
 
 @subCommandRequest(SerialAPISetupCommand.GetSupportedCommands)
 export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRequest {}
@@ -264,16 +296,7 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 		} else {
 			// This module only uses the single byte power-of-2 bitmask. Decode it manually
 			supportedCommands = [];
-			for (const cmd of [
-				SerialAPISetupCommand.GetSupportedCommands,
-				SerialAPISetupCommand.SetTxStatusReport,
-				SerialAPISetupCommand.SetPowerlevel,
-				SerialAPISetupCommand.GetPowerlevel,
-				SerialAPISetupCommand.GetMaximumPayloadSize,
-				SerialAPISetupCommand.GetRFRegion,
-				SerialAPISetupCommand.SetRFRegion,
-				SerialAPISetupCommand.SetNodeIDType,
-			] as const) {
+			for (const cmd of legacySupportedCommands) {
 				if (!!(raw.payload[0] & cmd)) supportedCommands.push(cmd);
 			}
 		}
@@ -296,6 +319,30 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 	}
 
 	public readonly supportedCommands: SerialAPISetupCommand[];
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		let legacyBitMask = 0;
+		for (const cmd of this.supportedCommands) {
+			if (legacySupportedCommands.includes(cmd)) legacyBitMask |= cmd;
+		}
+		const extended = this.supportedCommands.some(
+			(cmd) => !legacySupportedCommands.includes(cmd),
+		);
+		// The extended bitmask layout depends on the SDK version, which
+		// is unknown here. Use it only when the single byte cannot hold all commands.
+		this.payload = extended
+			? Bytes.concat([
+					[legacyBitMask],
+					encodeBitMask(
+						this.supportedCommands,
+						undefined,
+						SerialAPISetupCommand.GetSupportedCommands,
+					),
+				])
+			: Bytes.from([legacyBitMask]);
+
+		return super.serialize(ctx);
+	}
 }
 
 // =============================================================================
@@ -406,15 +453,14 @@ export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetNodeIDTypeRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		const nodeIdType: NodeIDType = raw.payload[0];
 
-		// return new SerialAPISetup_SetNodeIDTypeRequest({});
+		return new this({
+			nodeIdType,
+		});
 	}
 
 	public nodeIdType: NodeIDType;
@@ -471,6 +517,12 @@ export class SerialAPISetup_SetNodeIDTypeResponse
 	}
 
 	public readonly success: boolean;
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.success ? 0x01 : 0x00]);
+
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
 		const ret = super.toLogEntry();

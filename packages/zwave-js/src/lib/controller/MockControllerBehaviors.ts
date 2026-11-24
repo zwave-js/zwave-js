@@ -8,6 +8,7 @@ import {
 	ZWaveProtocolCCRequestNodeInformationFrame,
 } from "@zwave-js/cc/ZWaveProtocolCC";
 import {
+	NodeIDType,
 	NodeType,
 	type NodeUpdatePayload,
 	TransmitOptions,
@@ -15,7 +16,9 @@ import {
 	ZWaveDataRate,
 	ZWaveErrorCodes,
 	isZWaveError,
+	sdkVersionLt,
 } from "@zwave-js/core";
+import { FunctionType } from "@zwave-js/serial";
 import {
 	AddNodeStatus,
 	AddNodeToNetworkRequest,
@@ -64,6 +67,14 @@ import {
 	SendDataRequest,
 	SendDataRequestTransmitReport,
 	SendDataResponse,
+	SerialAPISetupCommand,
+	SerialAPISetupRequest,
+	type SerialAPISetupResponse,
+	SerialAPISetup_CommandUnsupportedResponse,
+	SerialAPISetup_GetSupportedCommandsRequest,
+	SerialAPISetup_GetSupportedCommandsResponse,
+	SerialAPISetup_SetNodeIDTypeRequest,
+	SerialAPISetup_SetNodeIDTypeResponse,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
@@ -86,6 +97,7 @@ import {
 	MockControllerStateKeys,
 } from "./MockControllerState.js";
 import { determineNIF } from "./NodeInformationFrame.js";
+import { protocolVersionToSDKVersion } from "./ZWaveSDKVersions.js";
 
 function createLazySendDataPayload(
 	controller: MockController,
@@ -227,9 +239,66 @@ const respondToGetSerialApiInitData: MockControllerBehavior = {
 	},
 };
 
+function setMockControllerNodeIdType(
+	controller: MockController,
+	nodeIdType: NodeIDType,
+): void {
+	controller.encodingContext.nodeIdType = nodeIdType;
+	controller.parsingContext.nodeIdType = nodeIdType;
+}
+
+const respondToSerialAPISetup: MockControllerBehavior = {
+	async onHostMessage(controller, msg) {
+		if (
+			!(msg instanceof SerialAPISetupRequest)
+			|| !controller.capabilities.supportedFunctionTypes.includes(
+				FunctionType.SerialAPISetup,
+			)
+		) {
+			return;
+		}
+
+		const supportedCommands = [
+			SerialAPISetupCommand.GetSupportedCommands,
+			...controller.capabilities.supportedSerialAPISetupCommands,
+		];
+
+		let ret: SerialAPISetupResponse | undefined;
+		if (!supportedCommands.includes(msg.command)) {
+			ret = new SerialAPISetup_CommandUnsupportedResponse({
+				command: msg.command,
+			});
+		} else if (msg instanceof SerialAPISetup_GetSupportedCommandsRequest) {
+			ret = new SerialAPISetup_GetSupportedCommandsResponse({
+				supportedCommands,
+			});
+		} else if (msg instanceof SerialAPISetup_SetNodeIDTypeRequest) {
+			setMockControllerNodeIdType(controller, msg.nodeIdType);
+			ret = new SerialAPISetup_SetNodeIDTypeResponse({ success: true });
+		}
+
+		if (ret) {
+			await controller.sendMessageToHost(ret);
+			return true;
+		}
+	},
+};
+
 const respondToSoftReset: MockControllerBehavior = {
 	onHostMessage(controller, msg) {
 		if (msg instanceof SoftResetRequest) {
+			// SDK 7.21.0 and newer keep the node ID type across resets
+			const sdkVersion = protocolVersionToSDKVersion(
+				controller.capabilities.libraryVersion,
+			);
+			if (sdkVersionLt(sdkVersion, "7.21.0")) {
+				setMockControllerNodeIdType(controller, NodeIDType.Short);
+			}
+
+			if (!controller.capabilities.sendsSerialAPIStartedAfterSoftReset) {
+				return true;
+			}
+
 			const ret = new SerialAPIStartedRequest({
 				wakeUpReason: SerialAPIWakeUpReason.SoftwareReset,
 				watchdogEnabled: controller.capabilities.watchdogEnabled,
@@ -1159,6 +1228,7 @@ export function createDefaultBehaviors(): MockControllerBehavior[] {
 		respondToGetControllerCapabilities,
 		respondToGetSUCNodeId,
 		respondToGetSerialApiInitData,
+		respondToSerialAPISetup,
 		respondToSoftReset,
 		respondToGetNodeProtocolInfo,
 		handleSendData,
