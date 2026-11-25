@@ -750,8 +750,6 @@ const enum ControllerRecoveryPhase {
 	None,
 	ACKTimeout,
 	ACKTimeoutAfterReset,
-	CallbackTimeout,
-	CallbackTimeoutAfterReset,
 }
 
 /** Whether the controller could not transmit a command at all, because it is jammed */
@@ -1305,6 +1303,8 @@ export class Driver
 	private _recoveryPhase: ControllerRecoveryPhase =
 		ControllerRecoveryPhase.None;
 
+	/** Whether a recovery of a missing callback completed. The next missing callback is blamed on the node. */
+	private callbackRecoveryCompleted = false;
 	/** The running recovery of the controller. A failure of any kind detected meanwhile joins it. */
 	private controllerRecovery: Promise<void> | undefined;
 	/** Whether a jam recovery completed and no transmission succeeded since */
@@ -5293,14 +5293,14 @@ export class Driver
 		if (!this._controller || !this.mayRecoverUnresponsiveController()) {
 			return false;
 		}
+		if (this.joinControllerRecovery(transaction, error)) return true;
 
 		if (
 			// The SendData response can time out on older controllers trying to reach a dead node.
 			// In this case, we do not want to reset the controller, but just mark the node as dead.
 			error.context === "response"
 			// Also do this if the callback is timing out even after restarting the controller
-			|| this._recoveryPhase
-				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
+			|| this.callbackRecoveryCompleted
 		) {
 			const node = this.tryGetNode(transaction.message);
 			if (!node) return false; // This should never happen, but whatever
@@ -5354,82 +5354,76 @@ export class Driver
 			}
 
 			// If the controller is still timing out, reset it once more
-			if (
-				this._recoveryPhase
-				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
-			) {
+			if (this.callbackRecoveryCompleted) {
+				this.callbackRecoveryCompleted = false;
 				this.driverLog.print(
 					"Attempting to recover controller again...",
 					"warn",
 				);
-				void this.softResetInternal(true)
-					.catch(() => {
+				void this.runControllerRecovery(async () => {
+					try {
+						await this.softResetInternal(true);
+					} catch {
+						if (this.wasDestroyed) return;
 						this.driverLog.print(
 							"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
 							"warn",
 						);
-					})
-					.finally(() => {
-						this._recoveryPhase = ControllerRecoveryPhase.None;
-						this._controller?.setStatus(ControllerStatus.Ready);
-					});
+					}
+					this._controller?.setStatus(ControllerStatus.Ready);
+				});
 			}
 
 			return handled;
-		} else if (this._controller.status !== ControllerStatus.Unresponsive) {
+		} else if (this.maySoftReset()) {
 			// The controller was responsive before this transaction failed.
-
-			if (this.maySoftReset()) {
-				// Mark it as unresponsive and try to soft-reset it.
-				this.controller.setStatus(ControllerStatus.Unresponsive);
-
-				this._recoveryPhase = ControllerRecoveryPhase.CallbackTimeout;
-
-				this.driverLog.print(
-					"Controller missed Send Data callback. Attempting to recover...",
-					"warn",
-				);
-
-				// Execute the soft-reset asynchronously
-				void this.softResetInternal(true)
-					.then(() => {
-						// The controller responded. It is no longer unresponsive.
-
-						// Re-queue the transaction, so it can get handled next.
-						// Its message generator may have finished, so reset that too.
-						transaction.reset();
-						this.getQueueForTransaction(transaction).add(
-							transaction.clone(),
-						);
-
-						this._controller?.setStatus(ControllerStatus.Ready);
-						this._recoveryPhase =
-							ControllerRecoveryPhase.CallbackTimeoutAfterReset;
-					})
-					.catch(() => {
-						// Soft-reset failed. Just reject the transaction
-						this.rejectTransaction(transaction, error);
-
-						this.driverLog.print(
-							"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
-							"warn",
-						);
-						this._recoveryPhase = ControllerRecoveryPhase.None;
-						this._controller?.setStatus(ControllerStatus.Ready);
-					});
-			} else {
-				this.driverLog.print(
-					"Controller missed Send Data callback. Cannot recover automatically because the soft reset feature is unsupported or disabled. Returning to normal operation and hoping for the best...",
-					"warn",
-				);
-				this.rejectTransaction(transaction, error);
-			}
-
+			// Mark it as unresponsive and try to soft-reset it.
+			this.controller.setStatus(ControllerStatus.Unresponsive);
+			this.driverLog.print(
+				"Controller missed Send Data callback. Attempting to recover...",
+				"warn",
+			);
+			void this.runControllerRecovery(() =>
+				this.recoverMissingCallback(transaction, error),
+			);
 			return true;
 		} else {
-			// Not sure what to do here
-			return false;
+			this.driverLog.print(
+				"Controller missed Send Data callback. Cannot recover automatically because the soft reset feature is unsupported or disabled. Returning to normal operation and hoping for the best...",
+				"warn",
+			);
+			this.rejectTransaction(transaction, error);
+			return true;
 		}
+	}
+
+	/** Soft-resets the controller after it missed a SendData callback, then retries the command */
+	private async recoverMissingCallback(
+		transaction: Transaction,
+		error: ZWaveError,
+	): Promise<void> {
+		try {
+			await this.softResetInternal(true);
+		} catch (e) {
+			if (this.wasDestroyed) {
+				this.rejectTransaction(transaction, e as ZWaveError);
+				return;
+			}
+			this.rejectTransaction(transaction, error);
+			this.driverLog.print(
+				"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+				"warn",
+			);
+			this._controller?.setStatus(ControllerStatus.Ready);
+			return;
+		}
+
+		// Re-queue the transaction, so it can get handled next.
+		// Its message generator may have finished, so reset that too.
+		transaction.reset();
+		this.getQueueForTransaction(transaction).add(transaction.clone());
+		this._controller?.setStatus(ControllerStatus.Ready);
+		this.callbackRecoveryCompleted = true;
 	}
 
 	/**
@@ -5450,12 +5444,7 @@ export class Driver
 			this.driverLog.print(message, "warn");
 			this._controller?.setStatus(ControllerStatus.Ready);
 			// A completed recovery of a missing callback is over. It must not apply to later callbacks.
-			if (
-				this._recoveryPhase
-				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
-			) {
-				this._recoveryPhase = ControllerRecoveryPhase.None;
-			}
+			this.callbackRecoveryCompleted = false;
 		};
 
 		// Give up on controllers that cannot be recovered
@@ -5572,13 +5561,8 @@ export class Driver
 				"Attempting to recover jammed controller...",
 				"warn",
 			);
-			// A completed recovery of a missing callback is over. Its phase must not apply to later callbacks.
-			if (
-				this._recoveryPhase
-				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
-			) {
-				this._recoveryPhase = ControllerRecoveryPhase.None;
-			}
+			// A completed recovery of a missing callback is over. It must not apply to later callbacks.
+			this.callbackRecoveryCompleted = false;
 			await this.softReset();
 			this.jamRecoveryUnconfirmed = true;
 		});

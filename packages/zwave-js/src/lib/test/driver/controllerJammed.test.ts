@@ -1026,10 +1026,12 @@ integrationTest.sequential(
 				(msg) => msg instanceof SoftResetRequest,
 				{ timeout: 5000 },
 			);
-			// The callback recovery remembers that it reset the controller
-			await wait(200);
-			t.expect(driver["_recoveryPhase"]).not.toBe(0);
-			await ping;
+			// The recovery of a missing callback marks the controller as unresponsive
+			t.expect(driver.controller.status).toBe(
+				ControllerStatus.Unresponsive,
+			);
+			// The ping succeeds after the recovery
+			t.expect(await ping).toBe(true);
 		},
 	},
 );
