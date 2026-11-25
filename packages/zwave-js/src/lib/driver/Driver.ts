@@ -3896,11 +3896,6 @@ export class Driver
 
 		// Record what the reset changed
 		this.assumeNodeIdTypeAfterReset();
-		if (this._controller) {
-			// Soft-resetting disables any ongoing inclusion, so we need to reset
-			// the state that is tracked in the controller
-			this._controller.setInclusionState(InclusionState.Idle);
-		}
 
 		// Make sure we're able to communicate with the controller again
 		if (!(await this.ensureSerialAPI({ serialAPIStarted, send, signal }))) {
@@ -3918,6 +3913,10 @@ export class Driver
 		// This is a bit hacky, but what the heck...
 		const controller = this._controller;
 		if (this._enteringBootloader || !controller) return;
+
+		// A reset disables any ongoing inclusion, so we need to reset
+		// the state that is tracked in the controller
+		controller.setInclusionState(InclusionState.Idle);
 
 		// Start the watchdog again, unless disabled
 		if (this.options.features.watchdog) {
@@ -5231,6 +5230,7 @@ export class Driver
 			rejected = true;
 			this.rejectTransaction(transaction, e);
 		};
+		let mayHaveReset = false;
 		let retry: boolean;
 		try {
 			// Reset the controller, or reopen the serial port
@@ -5248,10 +5248,11 @@ export class Driver
 							);
 						} catch (e) {
 							if (!isMissingControllerACK(e)) throw e;
+							mayHaveReset = true;
 						}
 					}
 					reject(error);
-					await this.reopenSerialPort(send, signal);
+					await this.reopenSerialPort(send, signal, mayHaveReset);
 					return false;
 				},
 				{ resetsController: true },
@@ -5266,22 +5267,18 @@ export class Driver
 			throw e;
 		}
 
-		if (retry) {
-			// Re-queue the transaction, so it can get handled next.
-			// Its message generator may have finished, so reset that too.
-			transaction.reset();
-			this.getQueueForTransaction(transaction).add(transaction.clone());
-		}
+		if (retry) this.requeueTransaction(transaction);
 		this._controller?.setStatus(ControllerStatus.Ready);
 	}
 
 	/**
 	 * Reopens the serial port of an unresponsive controller. Must be called with exclusive access to the controller.
-	 * Confirms the node ID type afterwards if it is unknown.
+	 * @param mayHaveReset Whether the controller may have reset without telling us. Its state is then restored like after a soft reset.
 	 */
 	private async reopenSerialPort(
 		send: SendExclusive,
 		signal: AbortSignal,
+		mayHaveReset: boolean,
 	): Promise<void> {
 		this.driverLog.print(
 			"Attempting to recover unresponsive controller by reopening the serial port...",
@@ -5294,12 +5291,11 @@ export class Driver
 		await abortableStep(signal, () => wait(1000, true));
 		await abortableStep(signal, () => this.openSerialport(signal));
 
-		if (this.nodeIdTypeNotKnown) {
-			await abortableStep(signal, () =>
-				this.restoreNodeIdType(send, signal),
-			);
+		if (mayHaveReset) {
+			// This confirms an unknown node ID type, or ends the exclusive access with the type still unknown
+			await this.restoreControllerStateAfterReset(send, signal);
 			this.driverLog.print(
-				"Serial port reopened and node ID type confirmed. Returning to normal operation.",
+				"Serial port reopened and controller state restored. Returning to normal operation.",
 				"warn",
 			);
 		} else {
@@ -5387,7 +5383,6 @@ export class Driver
 
 			// If the controller is still timing out, reset it once more
 			if (this.callbackRecoveryCompleted) {
-				this.callbackRecoveryCompleted = false;
 				this.driverLog.print(
 					"Attempting to recover controller again...",
 					"warn",
@@ -5395,15 +5390,18 @@ export class Driver
 				void this.runControllerRecovery(async () => {
 					try {
 						await this.softResetInternal(true);
-					} catch {
-						if (this.wasDestroyed) return;
-						this.driverLog.print(
-							"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
-							"warn",
-						);
+					} catch (e) {
+						if (!this.wasDestroyed) {
+							this.driverLog.print(
+								"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+								"warn",
+							);
+							this._controller?.setStatus(ControllerStatus.Ready);
+						}
+						throw e;
 					}
 					this._controller?.setStatus(ControllerStatus.Ready);
-				});
+				}).catch(noop);
 			}
 
 			return handled;
@@ -5415,9 +5413,10 @@ export class Driver
 				"Controller missed Send Data callback. Attempting to recover...",
 				"warn",
 			);
+			// Transactions that joined the recovery fail with it
 			void this.runControllerRecovery(() =>
 				this.recoverMissingCallback(transaction, error),
-			);
+			).catch(noop);
 			return true;
 		} else {
 			this.driverLog.print(
@@ -5439,7 +5438,7 @@ export class Driver
 		} catch (e) {
 			if (this.wasDestroyed) {
 				this.rejectTransaction(transaction, e as ZWaveError);
-				return;
+				throw e;
 			}
 			this.rejectTransaction(transaction, error);
 			this.driverLog.print(
@@ -5447,13 +5446,10 @@ export class Driver
 				"warn",
 			);
 			this._controller?.setStatus(ControllerStatus.Ready);
-			return;
+			throw e;
 		}
 
-		// Re-queue the transaction, so it can get handled next.
-		// Its message generator may have finished, so reset that too.
-		transaction.reset();
-		this.getQueueForTransaction(transaction).add(transaction.clone());
+		this.requeueTransaction(transaction);
 		this._controller?.setStatus(ControllerStatus.Ready);
 		this.callbackRecoveryCompleted = true;
 	}
@@ -5524,14 +5520,7 @@ export class Driver
 
 		// Recover the controller and retry the command
 		void this.recoverJammedController().then(
-			() => {
-				// Re-queue the transaction, so it can get handled next.
-				// Its message generator may have finished, so reset that too.
-				transaction.reset();
-				this.getQueueForTransaction(transaction).add(
-					transaction.clone(),
-				);
-			},
+			() => this.requeueTransaction(transaction),
 			(e) => {
 				if (this.wasDestroyed) {
 					this.rejectTransaction(transaction, e as ZWaveError);
@@ -5552,6 +5541,8 @@ export class Driver
 	 * Call it only when {@link joinControllerRecovery} found no running recovery.
 	 */
 	private runControllerRecovery(fn: () => Promise<void>): Promise<void> {
+		// A completed recovery of a missing callback is over once another recovery starts
+		if (!this.controllerRecovery) this.callbackRecoveryCompleted = false;
 		this.controllerRecovery ??= fn().finally(() => {
 			this.controllerRecovery = undefined;
 		});
@@ -5570,12 +5561,7 @@ export class Driver
 		const recovery = this.controllerRecovery;
 		if (!recovery) return false;
 		void recovery.then(
-			() => {
-				transaction.reset();
-				this.getQueueForTransaction(transaction).add(
-					transaction.clone(),
-				);
-			},
+			() => this.requeueTransaction(transaction),
 			(e) => {
 				this.rejectTransaction(
 					transaction,
@@ -5586,6 +5572,17 @@ export class Driver
 		return true;
 	}
 
+	/** Re-queues a failed transaction, so it is sent again */
+	private requeueTransaction(transaction: Transaction): void {
+		// Its message generator may have finished, so reset that too
+		transaction.reset();
+		// The node may have received the command already. It discards a copy with the same S2 sequence number.
+		if (isSendData(transaction.message)) {
+			transaction.message.prepareRetransmission();
+		}
+		this.getQueueForTransaction(transaction).add(transaction.clone());
+	}
+
 	/** Soft-resets a jammed controller */
 	private recoverJammedController(): Promise<void> {
 		return this.runControllerRecovery(async () => {
@@ -5593,8 +5590,6 @@ export class Driver
 				"Attempting to recover jammed controller...",
 				"warn",
 			);
-			// A completed recovery of a missing callback is over. It must not apply to later callbacks.
-			this.callbackRecoveryCompleted = false;
 			await this.softReset();
 			this.jamRecoveryUnconfirmed = true;
 		});
@@ -9059,15 +9054,8 @@ ${handlers.length} left`,
 	): void {
 		// This must be checked first, so a transaction aborted by a soft reset cannot start another recovery
 		if (wasCommandInterrupted(error)) {
-			// The controller was reset or taken for exclusive access in the middle of a transaction.
-			// Re-queue the transaction, so it can get handled again
-			// Its message generator may have finished, so reset that too.
-			transaction.reset();
-			// The node may have received the command already. It discards a copy with the same S2 sequence number.
-			if (isSendData(transaction.message)) {
-				transaction.message.prepareRetransmission();
-			}
-			this.getQueueForTransaction(transaction).add(transaction.clone());
+			// The controller was reset or taken for exclusive access in the middle of a transaction
+			this.requeueTransaction(transaction);
 			return;
 		}
 

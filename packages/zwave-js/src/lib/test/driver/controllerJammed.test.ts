@@ -5,6 +5,7 @@ import {
 	NodeStatus,
 	TransmitStatus,
 	ZWaveErrorCodes,
+	ZWaveError,
 	assertZWaveError,
 	getZWaveChipType,
 	highResTimestamp,
@@ -1129,6 +1130,184 @@ integrationTest.sequential(
 				t.expect(countSoftResets(mockController)).toBe(1);
 			} finally {
 				shouldFail = false;
+			}
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A missing callback after an unresponsive controller recovery that followed a callback recovery is recovered again",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			driver.options.timeouts.ack = 400;
+			node.markAsAlive();
+			// Watch whether a node is marked as dead
+			const nodeDead = sinon.spy();
+			node.on("dead", nodeDead);
+
+			// Let the controller miss one callback or one ACK, until the next soft reset
+			let failure: "none" | "noCallback" | "noAck" = "none";
+			const failOnce: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (msg instanceof SoftResetRequest) {
+						if (failure === "noAck") {
+							// The ACK was not sent, so we need to do it here
+							controller.ackHostMessage();
+							controller.autoAckHostMessages = true;
+						}
+						failure = "none";
+						return false;
+					}
+					if (
+						!(msg instanceof SendDataRequest)
+						|| failure === "none"
+					) {
+						return;
+					}
+					if (failure === "noCallback") {
+						await controller.sendMessageToHost(
+							new SendDataResponse({ wasSent: true }),
+						);
+					}
+					return true;
+				},
+			};
+			mockController.defineBehavior(failOnce);
+
+			// Recover from a missing callback
+			failure = "noCallback";
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(1);
+
+			// Recover from a missing ACK
+			failure = "noAck";
+			mockController.autoAckHostMessages = false;
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(2);
+
+			// The unresponsive controller recovery ended the callback recovery
+			failure = "noCallback";
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(3);
+			// No node may be blamed for the missing callback
+			sinon.assert.notCalled(nodeDead);
+		},
+	},
+);
+
+/** Queues a SendData that does not start, and returns it with its transaction */
+function queueSendData(
+	driver: Parameters<
+		NonNullable<Parameters<typeof integrationTest>[1]["testBody"]>
+	>[1],
+	nodeId: number,
+) {
+	const msg = new SendDataRequest({
+		command: new NoOperationCC({ nodeId }),
+	});
+	const promise = driver.sendMessage(msg);
+	promise.catch(() => {});
+	const transaction = driver["queue"].find((t) => t.message === msg)!;
+	driver["queue"].remove(transaction);
+	return { msg, promise, transaction };
+}
+
+// The error of a SendData whose callback went missing
+const missingCallback = new ZWaveError(
+	"Timeout while waiting for a callback from the controller",
+	ZWaveErrorCodes.Controller_Timeout,
+	"callback",
+);
+
+integrationTest.sequential(
+	"A SendData that fails during a running recovery is encoded anew before it is sent again",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			// Start a jam recovery
+			const recovery = driver["recoverJammedController"]();
+			// Like a SendData whose callback went missing while the recovery started
+			driver.controller.setStatus(ControllerStatus.Unresponsive);
+			const { msg, promise, transaction } = queueSendData(
+				driver,
+				node.id,
+			);
+			// Like the bytes of a command the node has already received
+			msg.serializedCC = Uint8Array.from([0x00]);
+			// Let a SendData whose callback went missing join the recovery
+			driver["handleFailedTransaction"](transaction, missingCallback);
+			// The cached frame stays until the recovery ends and is dropped then
+			t.expect(msg.serializedCC).toBeDefined();
+
+			await recovery;
+			t.expect(msg.serializedCC).toBeUndefined();
+			// The command is sent again and succeeds
+			driver.controller.setStatus(ControllerStatus.Ready);
+			await t.expect(promise).resolves.toBeDefined();
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A command that fails during the recovery of a missing callback fails too when the soft reset fails",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			driver.options.timeouts.ack = 400;
+			node.markAsAlive();
+
+			// The callback goes missing, and the controller neither acknowledges the soft reset nor restarts
+			mockController.capabilities.sendsSerialAPIStartedAfterSoftReset = false;
+			let missCallback = true;
+			const failRecovery: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (!missCallback || !(msg instanceof SendDataRequest)) {
+						return;
+					}
+					missCallback = false;
+					await controller.sendMessageToHost(
+						new SendDataResponse({ wasSent: true }),
+					);
+					controller.autoAckHostMessages = false;
+					return true;
+				},
+			};
+			mockController.defineBehavior(failRecovery);
+
+			// Ping the node and wait until the recovery sends the soft reset
+			const ping = node.ping();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 5000 },
+			);
+			// Let another SendData join the recovery
+			const { promise, transaction } = queueSendData(driver, node.id);
+			driver["handleFailedTransaction"](transaction, missingCallback);
+
+			try {
+				// Both commands fail, the joined one with its own callback timeout
+				t.expect(await ping).toBe(false);
+				await t.expect(promise).rejects.toMatchObject({
+					code: ZWaveErrorCodes.Controller_Timeout,
+					context: "callback",
+				});
+			} finally {
+				mockController.autoAckHostMessages = true;
 			}
 		},
 	},

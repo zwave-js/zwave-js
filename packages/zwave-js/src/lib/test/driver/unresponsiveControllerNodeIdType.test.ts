@@ -22,6 +22,7 @@ import {
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 
+import { InclusionState } from "../../controller/Inclusion.js";
 import { integrationTest } from "../integrationTestSuite.js";
 
 // A controller with the given SDK version that can switch the node ID type
@@ -195,7 +196,7 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
-	"From SDK 7.21 on, an unresponsive controller that reset without acknowledging it is used again after reopening the serial port",
+	"From SDK 7.21 on, the controller state is restored after reopening the serial port when the controller may have reset",
 	{
 		// debug: true,
 		...testOptions,
@@ -204,20 +205,26 @@ integrationTest.sequential(
 		async testBody(t, driver, node, mockController, mockNode, context) {
 			node.markAsAlive();
 			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
+			// A reset ends the inclusion on the controller
+			driver.controller.setInclusionState(InclusionState.Including);
 
 			goSilent(mockController, context.tcpServer!, true);
 			t.expect(await node.ping()).toBe(false);
 			// The recovery ends after the command failed
 			await wait(2000);
 			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+			t.expect(driver.controller.inclusionState).toBe(
+				InclusionState.Idle,
+			);
 
 			t.expect(await node.ping()).toBe(true);
-			// The controller kept the node ID type, so the driver did not need to confirm it
+			// The controller kept the node ID type, which the driver sends again like after any reset
+			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
 			t.expect(
 				messagesAfterReset(mockController).some(
 					(msg) => msg instanceof SerialAPISetup_SetNodeIDTypeRequest,
 				),
-			).toBe(false);
+			).toBe(true);
 		},
 	},
 );
