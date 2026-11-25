@@ -387,37 +387,44 @@ integrationTest.sequential(
 	},
 );
 
-integrationTest.sequential(
-	"A SendData re-queued after a controller reset is prepared for retransmission",
+for (const { cause, code } of [
+	{ cause: "a controller reset", code: ZWaveErrorCodes.Controller_Reset },
 	{
-		// debug: true,
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Keeps the transaction in the queue
-			driver.controller.setStatus(ControllerStatus.Unresponsive);
-			// Queue a SendData and take its transaction
-			const msg = new SendDataRequest({
-				command: new NoOperationCC({ nodeId: node.id }),
-			});
-			void driver.sendMessage(msg).catch(() => {});
-			const transaction = driver["queue"].find((t) => t.message === msg)!;
-			// Like the bytes of a command the node has already received
-			msg.serializedCC = Uint8Array.from([0x00]);
-
-			// Fail the transaction with the interruption
-			driver["handleFailedTransaction"](
-				transaction,
-				new ZWaveError(
-					"The controller was reset",
-					ZWaveErrorCodes.Controller_Reset,
-				),
-			);
-
-			// The cached frame must be dropped, so the retry gets a new S2 sequence number
-			t.expect(msg.serializedCC).toBeUndefined();
-		},
+		cause: "giving way to exclusive access",
+		code: ZWaveErrorCodes.Controller_InExclusiveUse,
 	},
-);
+]) {
+	integrationTest.sequential(
+		`A SendData that is sent again after ${cause} is encoded anew, so the node does not discard it as a duplicate`,
+		{
+			// debug: true,
+
+			testBody: async (t, driver, node, mockController, mockNode) => {
+				// Keeps the transaction in the queue
+				driver.controller.setStatus(ControllerStatus.Unresponsive);
+				// Queue a SendData and take its transaction
+				const msg = new SendDataRequest({
+					command: new NoOperationCC({ nodeId: node.id }),
+				});
+				void driver.sendMessage(msg).catch(() => {});
+				const transaction = driver["queue"].find(
+					(t) => t.message === msg,
+				)!;
+				// Like the bytes of a command the node has already received
+				msg.serializedCC = Uint8Array.from([0x00]);
+
+				// Fail the transaction with the interruption
+				driver["handleFailedTransaction"](
+					transaction,
+					new ZWaveError("The command was interrupted", code),
+				);
+
+				// The cached frame must be dropped, so the retry gets a new S2 sequence number
+				t.expect(msg.serializedCC).toBeUndefined();
+			},
+		},
+	);
+}
 
 let bootloader: MockGeckoBootloader;
 integrationTest.sequential(

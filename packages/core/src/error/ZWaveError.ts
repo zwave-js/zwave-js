@@ -73,6 +73,8 @@ export enum ZWaveErrorCodes {
 
 	/** A newer command superseded this one */
 	Controller_MessageSuperseded,
+	/** The command was not executed because another operation had exclusive access to the controller. The driver sends it again afterwards. */
+	Controller_InExclusiveUse,
 
 	/** Could not fetch some information to determine firmware upgrades from a node */
 	FWUpdateService_MissingInformation = 260,
@@ -314,6 +316,23 @@ export function wasControllerReset(e: unknown): e is ZWaveError & {
 	code: ZWaveErrorCodes.Controller_Reset;
 } {
 	return isZWaveError(e) && e.code === ZWaveErrorCodes.Controller_Reset;
+}
+
+export function wasControllerInExclusiveUse(e: unknown): e is ZWaveError & {
+	code: ZWaveErrorCodes.Controller_InExclusiveUse;
+} {
+	return (
+		isZWaveError(e) && e.code === ZWaveErrorCodes.Controller_InExclusiveUse
+	);
+}
+
+/** Whether a command was interrupted by a controller reset or by an operation with exclusive access to the controller, so it must be sent again */
+export function wasCommandInterrupted(e: unknown): e is ZWaveError & {
+	code:
+		| ZWaveErrorCodes.Controller_Reset
+		| ZWaveErrorCodes.Controller_InExclusiveUse;
+} {
+	return wasControllerReset(e) || wasControllerInExclusiveUse(e);
 }
 
 export function isMissingControllerResponse(e: unknown): e is ZWaveError & {

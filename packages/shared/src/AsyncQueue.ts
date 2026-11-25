@@ -72,8 +72,16 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 		this.ended = true;
 	}
 
-	/** Ends the queue and discards all pending items */
-	public abort(): void {
+	private _abortReason: Error | undefined;
+
+	/** The reason that was passed to {@link abort} */
+	public get abortReason(): Error | undefined {
+		return this._abortReason;
+	}
+
+	/** Ends the queue and discards all pending items. Sets {@link abortReason} before the items are disposed. */
+	public abort(reason?: Error): void {
+		this._abortReason = reason;
 		this.ended = true;
 
 		while (this.backlog.length > 0) {

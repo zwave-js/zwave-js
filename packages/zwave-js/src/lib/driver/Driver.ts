@@ -124,7 +124,7 @@ import {
 	securityClassOrder,
 	serializeCacheValue,
 	timespan,
-	wasControllerReset,
+	wasCommandInterrupted,
 } from "@zwave-js/core";
 import {
 	type BootloaderChunk,
@@ -1070,22 +1070,32 @@ export class Driver
 		void this.drainSerialAPIQueue();
 	}
 
+	/** Creates the error for a command of the ended `queue`, with the stack of the code that sent the command */
+	private serialAPIQueueEndedError(
+		queue: AsyncQueue<SerialAPIQueueItem>,
+		transactionSource: string | undefined,
+	): ZWaveError {
+		const { message, code } = isZWaveError(queue.abortReason)
+			? queue.abortReason
+			: {
+					message: "The Serial API queue was ended",
+					code: ZWaveErrorCodes.Controller_MessageDropped,
+				};
+		return new ZWaveError(message, code, undefined, transactionSource);
+	}
+
 	private destroySerialAPIQueue(
 		reason: string,
-		errorCode?: ZWaveErrorCodes,
+		errorCode: ZWaveErrorCodes = ZWaveErrorCodes.Driver_Destroyed,
 	): void {
 		// The queue might not have been initialized yet
 		if (!this.serialAPIQueue) return;
 
-		this.serialAPIQueue.abort();
+		const error = new ZWaveError(reason, errorCode);
+		this.serialAPIQueue.abort(error);
 
 		// Abort the currently executed serial API command, so the queue does not lock up
-		this.abortSerialAPICommand?.reject(
-			new ZWaveError(
-				reason,
-				errorCode ?? ZWaveErrorCodes.Driver_Destroyed,
-			),
-		);
+		this.abortSerialAPICommand?.reject(error);
 	}
 
 	// Keep track of which queues are currently busy
@@ -3640,7 +3650,7 @@ export class Driver
 			this.abortSerialAPICommand?.reject(
 				new ZWaveError(
 					"Another operation has exclusive access to the controller",
-					ZWaveErrorCodes.Controller_Reset,
+					ZWaveErrorCodes.Controller_InExclusiveUse,
 				),
 			);
 			// Wait for a late ACK and pending SendDataAborts
@@ -7341,8 +7351,8 @@ ${handlers.length} left`,
 								// The controller is unresponsive. Reject the transaction, so we can attempt to recover
 								throw e;
 							}
-						} else if (wasControllerReset(e)) {
-							// The controller was reset unexpectedly. Reject the transaction, so we can attempt to recover
+						} else if (wasCommandInterrupted(e)) {
+							// The controller was reset, or another operation has exclusive access. Reject the transaction, so it is sent again.
 							throw e;
 						} else if (
 							isAnySendDataResponse(e.context)
@@ -7455,18 +7465,13 @@ ${handlers.length} left`,
 	): Error | undefined {
 		if (item.signal?.aborted) return item.signal.reason as Error;
 		if (queue.isEnded) {
-			return new ZWaveError(
-				"The message has been removed from the queue",
-				ZWaveErrorCodes.Driver_TaskRemoved,
-				undefined,
-				item.transactionSource,
-			);
+			return this.serialAPIQueueEndedError(queue, item.transactionSource);
 		}
 		if (!item.exclusive && this.controllerGate.isClosed) {
 			// The transaction of a command rejected here is re-queued
 			return new ZWaveError(
 				"Another operation has exclusive access to the controller",
-				ZWaveErrorCodes.Controller_Reset,
+				ZWaveErrorCodes.Controller_InExclusiveUse,
 				undefined,
 				item.transactionSource,
 			);
@@ -7493,33 +7498,22 @@ ${handlers.length} left`,
 			"exclusive" | "signal" | "isStale"
 		> = {},
 	): Promise<Message | undefined> {
-		if (this.serialAPIQueue.isEnded) {
+		const queue = this.serialAPIQueue;
+		if (queue.isEnded) {
 			return Promise.reject(
-				new ZWaveError(
-					"The Serial API queue no longer accepts commands",
-					ZWaveErrorCodes.Driver_TaskRemoved,
-					undefined,
-					transactionSource,
-				),
+				this.serialAPIQueueEndedError(queue, transactionSource),
 			);
 		}
 		const result = createDeferredPromise<Message | undefined>();
-		this.serialAPIQueue.add({
+		queue.add({
 			msg,
 			transactionSource,
 			result,
 			...options,
+			// Is called when the queue is aborted
 			[Symbol.dispose]: () => {
-				// Is called when the queue is aborted. Must not use a code that
-				// isTransmissionError() accepts, or callers will retry against a
-				// queue that no longer accepts commands.
 				result.reject(
-					new ZWaveError(
-						"The message has been removed from the queue",
-						ZWaveErrorCodes.Driver_TaskRemoved,
-						undefined,
-						transactionSource,
-					),
+					this.serialAPIQueueEndedError(queue, transactionSource),
 				);
 			},
 		});
@@ -8827,8 +8821,8 @@ ${handlers.length} left`,
 		error: ZWaveError,
 	): void {
 		// This must be checked first, so a transaction aborted by a soft reset cannot start another recovery
-		if (wasControllerReset(error)) {
-			// The controller was reset in the middle of a transaction.
+		if (wasCommandInterrupted(error)) {
+			// The controller was reset or taken for exclusive access in the middle of a transaction.
 			// Re-queue the transaction, so it can get handled again
 			// Its message generator may have finished, so reset that too.
 			transaction.reset();
