@@ -746,12 +746,6 @@ interface ExclusiveControllerAccessOptions {
 	lease?: Promise<ControllerGateLease>;
 }
 
-const enum ControllerRecoveryPhase {
-	None,
-	ACKTimeout,
-	ACKTimeoutAfterReset,
-}
-
 /** Whether the controller could not transmit a command at all, because it is jammed */
 function isJamFailure(error: ZWaveError): boolean {
 	return (
@@ -1299,9 +1293,6 @@ export class Driver
 		if (this._controller) return DriverMode.SerialAPI;
 		return DriverMode.Unknown;
 	}
-
-	private _recoveryPhase: ControllerRecoveryPhase =
-		ControllerRecoveryPhase.None;
 
 	/** Whether a recovery of a missing callback completed. The next missing callback is blamed on the node. */
 	private callbackRecoveryCompleted = false;
@@ -3852,49 +3843,17 @@ export class Driver
 	private async softResetInternal(destroyOnError: boolean): Promise<void> {
 		const serialAPIResponds = await this.withExclusiveControllerAccess(
 			async (send, signal) => {
-				const { serialAPIStarted, error } = await abortableStep(
-					signal,
-					() => this.sendSoftReset(signal),
-				);
-				// Don't continue if the controller is unresponsive,
-				// unless it restarted although its ACK got lost
-				if (
-					isMissingControllerACK(error)
-					&& !(await abortableStep(signal, () => serialAPIStarted))
-				) {
+				try {
+					return await this.softResetExclusively(send, signal);
+				} catch (e) {
 					// The controller may have reset without telling us, so confirm the node ID type
-					const controller = this._controller;
-					if (controller) {
-						controller.recordPossibleNodeIdTypeReset();
-						if (controller.nodeIdType === NOT_KNOWN) {
-							await abortableStep(signal, () =>
-								this.restoreNodeIdType(send, signal),
-							);
-						}
+					if (isMissingControllerACK(e) && this.nodeIdTypeNotKnown) {
+						await abortableStep(signal, () =>
+							this.restoreNodeIdType(send, signal),
+						);
 					}
-					throw error;
+					throw e;
 				}
-
-				this.assumeNodeIdTypeAfterReset();
-				if (this._controller) {
-					// Soft-resetting disables any ongoing inclusion, so we need to reset
-					// the state that is tracked in the controller
-					this._controller.setInclusionState(InclusionState.Idle);
-				}
-
-				// Make sure we're able to communicate with the controller again
-				if (
-					!(await this.ensureSerialAPI({
-						serialAPIStarted,
-						send,
-						signal,
-					}))
-				) {
-					return false;
-				}
-
-				await this.restoreControllerStateAfterReset(send, signal);
-				return true;
 			},
 			{ resetsController: true },
 		);
@@ -3908,6 +3867,48 @@ export class Driver
 			}
 			throw new ZWaveError(message, ZWaveErrorCodes.Driver_Failed);
 		}
+	}
+
+	/**
+	 * Soft-resets the controller and restores its state. Must be called with exclusive access to the controller.
+	 * Returns `false` when the Serial API does not respond afterwards.
+	 *
+	 * Throws the missing ACK when the controller neither acknowledged the reset nor restarted.
+	 * The node ID type is then unknown if the controller may have switched to 8-bit node IDs.
+	 */
+	private async softResetExclusively(
+		send: SendExclusive,
+		signal: AbortSignal,
+	): Promise<boolean> {
+		const { serialAPIStarted, error } = await abortableStep(signal, () =>
+			this.sendSoftReset(signal),
+		);
+		// Don't continue if the controller is unresponsive,
+		// unless it restarted although its ACK got lost
+		if (
+			isMissingControllerACK(error)
+			&& !(await abortableStep(signal, () => serialAPIStarted))
+		) {
+			const controller = this._controller;
+			controller?.recordPossibleNodeIdTypeReset();
+			throw error;
+		}
+
+		// Record what the reset changed
+		this.assumeNodeIdTypeAfterReset();
+		if (this._controller) {
+			// Soft-resetting disables any ongoing inclusion, so we need to reset
+			// the state that is tracked in the controller
+			this._controller.setInclusionState(InclusionState.Idle);
+		}
+
+		// Make sure we're able to communicate with the controller again
+		if (!(await this.ensureSerialAPI({ serialAPIStarted, send, signal }))) {
+			return false;
+		}
+
+		await this.restoreControllerStateAfterReset(send, signal);
+		return true;
 	}
 
 	private async restoreControllerStateAfterReset(
@@ -5196,85 +5197,116 @@ export class Driver
 			return false;
 		}
 
-		const recoverByReopeningSerialport = async () => {
-			if (!this.serial || this.wasDestroyed) return;
-			this.driverLog.print(
-				"Attempting to recover unresponsive controller by reopening the serial port...",
-				"warn",
-			);
-			if (this.serial.isOpen) await this.serial.close();
-			await wait(1000);
-			try {
-				await this.openSerialport();
-			} catch (e) {
-				// The serial port cannot be reopened, e.g. because a TCP-based
-				// connection to the controller is gone. The driver cannot
-				// recover from this, so notify applications that it failed,
-				// allowing them to clean up and restart.
-				void this.destroyWithMessage(getErrorMessage(e));
-				return;
-			}
+		if (this.joinControllerRecovery(transaction, error)) return true;
+		// A failed recovery ends the driver
+		void this.runControllerRecovery(() =>
+			this.recoverUnresponsiveController(transaction, error),
+		).catch(noop);
+		return true;
+	}
 
-			this.driverLog.print(
-				"Serial port reopened. Returning to normal operation and hoping for the best...",
-				"warn",
-			);
-
-			// We don't know if this worked
-			// Go back to normal operation and hope for the best.
-			this._controller?.setStatus(ControllerStatus.Ready);
-			this._recoveryPhase = ControllerRecoveryPhase.None;
-		};
-
-		if (
-			(this._controller.status !== ControllerStatus.Unresponsive
-				&& !this.maySoftReset())
-			|| this._recoveryPhase
-				=== ControllerRecoveryPhase.ACKTimeoutAfterReset
-		) {
-			// Either we can/could not do a soft reset or the controller is still timing out afterwards
-			void recoverByReopeningSerialport().catch(noop);
-
-			return true;
-		} else if (this._controller.status !== ControllerStatus.Unresponsive) {
-			// The controller was responsive before this transaction failed.
-			// Mark it as unresponsive and try to soft-reset it.
-			this.controller.setStatus(ControllerStatus.Unresponsive);
-
-			this._recoveryPhase = ControllerRecoveryPhase.ACKTimeout;
-
+	/**
+	 * Soft-resets a controller that did not acknowledge a command and retries the command.
+	 * If the controller does not acknowledge the reset either, the command fails and the serial port is reopened.
+	 */
+	private async recoverUnresponsiveController(
+		transaction: Transaction,
+		error: ZWaveError,
+	): Promise<void> {
+		// Decide whether to soft-reset
+		const softReset =
+			this.maySoftReset()
+			&& !this._controller?.isAnyOTAFirmwareUpdateInProgress();
+		if (softReset) {
+			this._controller?.setStatus(ControllerStatus.Unresponsive);
 			this.driverLog.print(
 				"Attempting to recover unresponsive controller by restarting it...",
 				"warn",
 			);
+		}
 
-			// Execute the soft-reset asynchronously
-			void this.softReset()
-				.then(() => {
-					// The controller responded. It is no longer unresponsive
+		let rejected = false;
+		const reject = (e: ZWaveError) => {
+			if (rejected) return;
+			rejected = true;
+			this.rejectTransaction(transaction, e);
+		};
+		let retry: boolean;
+		try {
+			// Reset the controller, or reopen the serial port
+			// One exclusive access covers the reset and the reopen, so no command is sent before the node ID type is confirmed
+			retry = await this.withExclusiveControllerAccess(
+				async (send, signal) => {
+					if (softReset) {
+						try {
+							if (await this.softResetExclusively(send, signal)) {
+								return true;
+							}
+							throw new ZWaveError(
+								"The Serial API did not respond after soft-reset",
+								ZWaveErrorCodes.Driver_Failed,
+							);
+						} catch (e) {
+							if (!isMissingControllerACK(e)) throw e;
+						}
+					}
+					reject(error);
+					await this.reopenSerialPort(send, signal);
+					return false;
+				},
+				{ resetsController: true },
+			);
+		} catch (e) {
+			reject(this.wasDestroyed ? (e as ZWaveError) : error);
+			if (!this.wasDestroyed) {
+				// The driver cannot recover from this, e.g. because a TCP-based connection to the controller is gone.
+				// Notify applications that it failed, allowing them to clean up and restart.
+				void this.destroyWithMessage(getErrorMessage(e));
+			}
+			throw e;
+		}
 
-					// Re-queue the transaction, so it can get handled next.
-					// Its message generator may have finished, so reset that too.
-					transaction.reset();
-					this.getQueueForTransaction(transaction).add(
-						transaction.clone(),
-					);
+		if (retry) {
+			// Re-queue the transaction, so it can get handled next.
+			// Its message generator may have finished, so reset that too.
+			transaction.reset();
+			this.getQueueForTransaction(transaction).add(transaction.clone());
+		}
+		this._controller?.setStatus(ControllerStatus.Ready);
+	}
 
-					this._controller?.setStatus(ControllerStatus.Ready);
-					this._recoveryPhase = ControllerRecoveryPhase.None;
-				})
-				.catch(() => {
-					// Soft-reset failed. Reject the transaction
-					this.rejectTransaction(transaction, error);
+	/**
+	 * Reopens the serial port of an unresponsive controller. Must be called with exclusive access to the controller.
+	 * Confirms the node ID type afterwards if it is unknown.
+	 */
+	private async reopenSerialPort(
+		send: SendExclusive,
+		signal: AbortSignal,
+	): Promise<void> {
+		this.driverLog.print(
+			"Attempting to recover unresponsive controller by reopening the serial port...",
+			"warn",
+		);
+		// Close the port, wait a second and open it again
+		if (this.serial?.isOpen) {
+			await abortableStep(signal, () => this.serial!.close());
+		}
+		await abortableStep(signal, () => wait(1000, true));
+		await abortableStep(signal, () => this.openSerialport(signal));
 
-					// and reopen the serial port
-					return recoverByReopeningSerialport();
-				});
-
-			return true;
+		if (this.nodeIdTypeNotKnown) {
+			await abortableStep(signal, () =>
+				this.restoreNodeIdType(send, signal),
+			);
+			this.driverLog.print(
+				"Serial port reopened and node ID type confirmed. Returning to normal operation.",
+				"warn",
+			);
 		} else {
-			// Not sure what to do here
-			return false;
+			this.driverLog.print(
+				"Serial port reopened. Returning to normal operation and hoping for the best...",
+				"warn",
+			);
 		}
 	}
 
