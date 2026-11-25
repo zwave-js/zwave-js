@@ -1305,8 +1305,8 @@ export class Driver
 	private _recoveryPhase: ControllerRecoveryPhase =
 		ControllerRecoveryPhase.None;
 
-	/** The running recovery of a jammed controller. A jam detected meanwhile joins it. */
-	private jamRecovery: Promise<void> | undefined;
+	/** The running recovery of the controller. A failure of any kind detected meanwhile joins it. */
+	private controllerRecovery: Promise<void> | undefined;
 	/** Whether a jam recovery completed and no transmission succeeded since */
 	private jamRecoveryUnconfirmed = false;
 	/** How many jam recoveries in a row did not help */
@@ -3900,18 +3900,13 @@ export class Driver
 		);
 
 		if (!serialAPIResponds) {
+			const message = "The Serial API did not respond after soft-reset";
 			if (destroyOnError) {
 				// Notify applications that the driver failed, so they can
 				// clean up and restart, instead of just disappearing
-				await this.destroyWithMessage(
-					"The Serial API did not respond after soft-reset",
-				);
-			} else {
-				throw new ZWaveError(
-					"The Serial API did not respond after soft-reset",
-					ZWaveErrorCodes.Driver_Failed,
-				);
+				await this.destroyWithMessage(message);
 			}
+			throw new ZWaveError(message, ZWaveErrorCodes.Driver_Failed);
 		}
 	}
 
@@ -5448,6 +5443,7 @@ export class Driver
 		if (!this._controller || !this.mayRecoverUnresponsiveController()) {
 			return false;
 		}
+		if (this.joinControllerRecovery(transaction, error)) return true;
 		this._controller.setStatus(ControllerStatus.Jammed);
 
 		const giveUp = (message: string): void => {
@@ -5530,30 +5526,62 @@ export class Driver
 		return true;
 	}
 
-	/** Soft-resets a jammed controller. A jam detected while this runs joins the running recovery. */
-	private recoverJammedController(): Promise<void> {
-		this.jamRecovery ??= (async () => {
-			try {
-				this.driverLog.print(
-					"Attempting to recover jammed controller...",
-					"warn",
+	/**
+	 * Runs a recovery of the controller. Only one recovery runs at a time.
+	 * Call it only when {@link joinControllerRecovery} found no running recovery.
+	 */
+	private runControllerRecovery(fn: () => Promise<void>): Promise<void> {
+		this.controllerRecovery ??= fn().finally(() => {
+			this.controllerRecovery = undefined;
+		});
+		return this.controllerRecovery;
+	}
+
+	/**
+	 * Lets a failed transaction wait for the running recovery of the controller, whatever its kind.
+	 * The recovery resets the controller, so the transaction is re-queued once it succeeded.
+	 * Returns `false` when no recovery runs.
+	 */
+	private joinControllerRecovery(
+		transaction: Transaction,
+		error: ZWaveError,
+	): boolean {
+		const recovery = this.controllerRecovery;
+		if (!recovery) return false;
+		void recovery.then(
+			() => {
+				transaction.reset();
+				this.getQueueForTransaction(transaction).add(
+					transaction.clone(),
 				);
-				// A completed recovery of a missing callback is over. Its phase must not apply to later callbacks.
-				if (
-					this._recoveryPhase
-					=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
-				) {
-					this._recoveryPhase = ControllerRecoveryPhase.None;
-				}
-				await this.softReset();
-				// softReset() resolves after it destroyed the driver because the Serial API did not respond
-				this.lifetime.signal.throwIfAborted();
-				this.jamRecoveryUnconfirmed = true;
-			} finally {
-				this.jamRecovery = undefined;
+			},
+			(e) => {
+				this.rejectTransaction(
+					transaction,
+					this.wasDestroyed ? (e as ZWaveError) : error,
+				);
+			},
+		);
+		return true;
+	}
+
+	/** Soft-resets a jammed controller */
+	private recoverJammedController(): Promise<void> {
+		return this.runControllerRecovery(async () => {
+			this.driverLog.print(
+				"Attempting to recover jammed controller...",
+				"warn",
+			);
+			// A completed recovery of a missing callback is over. Its phase must not apply to later callbacks.
+			if (
+				this._recoveryPhase
+				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
+			) {
+				this._recoveryPhase = ControllerRecoveryPhase.None;
 			}
-		})();
-		return this.jamRecovery;
+			await this.softReset();
+			this.jamRecoveryUnconfirmed = true;
+		});
 	}
 
 	private shouldRequestWakeupOnDemand(node: ZWaveNode): boolean {
