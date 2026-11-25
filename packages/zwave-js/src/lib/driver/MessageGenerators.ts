@@ -893,8 +893,11 @@ export const secureMessageGeneratorS2Multicast: MessageGeneratorImplementation<
 			SupervisionCC.mayUseSupervision(driver, command),
 		);
 
+		// The transmit options override applies to the multicast frame only.
+		// S2 follow-ups are singlecast and rely on ACK/route repair, so keep
+		// the default transmit options for them.
 		const scMsg = driver.createSendDataMessage(command, {
-			transmitOptions: msg.transmitOptions,
+			transmitOptions: TransmitOptions.DEFAULT,
 			maxSendAttempts: msg.maxSendAttempts,
 		});
 		// The outermost command is a Security2CCMessageEncapsulation, we need to set the MGRP extension on this again

@@ -133,6 +133,7 @@ It method takes the following arguments:
 
 The `options` bag contains options that influence the resulting commands, for example a transition duration. Each implementation will choose the options that are relevant for it, so you can use the same options everywhere.
 In addition, the `onProgress` property can be used to get notified when the transaction for this command progresses. For details see [Transaction progress](api/driver.md#transaction-progress).
+The `transmitOptions` property overrides the transmit options for the resulting command (multicast, broadcast or singlecast). On multicast, `ACK` requests per-node confirmation via routed singlecast follow-ups; without ACK the multicast frame is unrouted (`0x24` is effectively `0x00`), only directly reachable nodes receive it, and optimistic value updates still apply even if some nodes miss. Secure (S0/S2) singlecast always keeps ACK.
 
 <!-- TODO: Auto-Expand this type: #import SetValueAPIOptions from "zwave-js" -->
 
@@ -144,6 +145,8 @@ type SetValueAPIOptions = {
 	volume?: number;
 	/** Will be called when the transaction for this message progresses. */
 	onProgress?: TransactionProgressListener;
+	/** Overrides the transmit options for the resulting command. */
+	transmitOptions?: TransmitOptions;
 };
 ```
 
