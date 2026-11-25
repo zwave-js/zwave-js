@@ -18,6 +18,7 @@ import { noForbiddenImports } from "./rules/no-forbidden-imports.js";
 import { noInternalCCTypes } from "./rules/no-internal-cc-types.js";
 import { noMisspelledNames } from "./rules/no-misspelled-names.js";
 import { noSurroundingWhitespace } from "./rules/no-surrounding-whitespace.js";
+import { noUnexpectedParseErrors } from "./rules/no-unexpected-parse-errors.js";
 import { noUnnecessaryBytesFrom } from "./rules/no-unnecessary-bytes-from.js";
 import { noUnnecessaryMinMaxValue } from "./rules/no-unnecessary-min-max-value.js";
 import { noUselessDescription } from "./rules/no-useless-description.js";
@@ -36,6 +37,7 @@ const oxlintCompatibleRules = eslintCompatPlugin({
 		"consistent-cc-value-definitions": consistentCCValueDefinitions,
 		"no-debug-in-tests": noDebugInTests,
 		"no-internal-cc-types": noInternalCCTypes,
+		"no-unexpected-parse-errors": noUnexpectedParseErrors,
 		"no-unnecessary-bytes-from": noUnnecessaryBytesFrom,
 		"no-workspace-self-import": noWorkspaceSelfImport,
 	},
