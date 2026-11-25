@@ -83,6 +83,8 @@ export enum FunctionType {
 
 	ExtendedNVMOperations = 0x3d, // Read and write from/to the external NVM with 32-bit addresses (700+ series)
 
+	FirmwareUpdate = 0x3e, // Upload a firmware or bootloader update into the module's storage and install it
+
 	RemoveSpecificNodeIdFromNetwork = 0x3f, // Trigger removal of a specific node that desires exclusion from the network
 
 	FUNC_ID_ZW_SET_LEARN_NODE_STATE = 0x40, // Not implemented
