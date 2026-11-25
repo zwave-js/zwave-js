@@ -1455,6 +1455,13 @@ integrationTest.sequential(
 				),
 			);
 
+			// Another failure joins the waiting recovery
+			const joined = queueSendData(driver, node.id);
+			driver["handleFailedTransaction"](
+				joined.transaction,
+				missingCallback,
+			);
+
 			// The restart finishes, the driver stays alive, and both commands fail with the cancellation
 			await restart;
 			await ready;
@@ -1462,6 +1469,56 @@ integrationTest.sequential(
 			await t.expect(promise).rejects.toMatchObject({
 				code: ZWaveErrorCodes.Driver_TaskRemoved,
 			});
+			await t.expect(joined.promise).rejects.toMatchObject({
+				code: ZWaveErrorCodes.Driver_TaskRemoved,
+			});
+		},
+	},
+);
+
+integrationTest.sequential(
+	"Commands that wait for a recovery are rejected with the others for their node and not sent afterwards",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			node.markAsAlive();
+			// Let the next callback go missing, so the driver recovers the controller
+			missCallbackOnce(mockController);
+
+			// Ping the node and wait until the recovery sends the soft reset
+			const ping = node.ping();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 5000 },
+			);
+			// Let another SendData join the recovery
+			const { promise, transaction } = queueSendData(driver, node.id);
+			driver["handleFailedTransaction"](transaction, missingCallback);
+
+			// Reject all commands for the node, like after the node was marked as dead
+			await driver.rejectAllTransactionsForNode(node.id);
+			await t.expect(promise).rejects.toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageDropped,
+			});
+			t.expect(await ping).toBe(false);
+
+			// The slowed down soft reset ends and the recovery is over
+			await wait(3000);
+			// No SendData may follow the soft reset
+			const messages = mockController.receivedHostMessages;
+			const resetIndex = messages.findLastIndex(
+				(msg) => msg instanceof SoftResetRequest,
+			);
+			t.expect(
+				messages
+					.slice(resetIndex + 1)
+					.filter((msg) => msg instanceof SendDataRequest),
+			).toHaveLength(0);
 		},
 	},
 );

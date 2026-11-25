@@ -776,6 +776,11 @@ function controllerTransmitted(report: TransmitReport): boolean {
 	return false;
 }
 
+/** Whether a recovery of the controller ended because a new controller instance replaces the current one */
+function isRecoveryCancelled(e: unknown): boolean {
+	return isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_TaskRemoved;
+}
+
 /** How long the driver waits before it soft-resets a jammed controller again, by the number of recoveries that did not help */
 const JAM_RECOVERY_BACKOFF_MS = [15_000, 30_000, 60_000];
 
@@ -1298,6 +1303,8 @@ export class Driver
 	private callbackRecoveryCompleted = false;
 	/** The running recovery of the controller. A failure of any kind detected meanwhile joins it. */
 	private controllerRecovery: Promise<void> | undefined;
+	/** Transactions that wait for the running recovery of the controller, with the error they failed with */
+	private recoveryWaiters = new Map<Transaction, ZWaveError>();
 	/** Whether a jam recovery completed and no transmission succeeded since */
 	private jamRecoveryUnconfirmed = false;
 	/** How many jam recoveries in a row did not help */
@@ -5211,8 +5218,10 @@ export class Driver
 
 		if (this.joinControllerRecovery(transaction, error)) return true;
 		// A failed recovery ends the driver
-		void this.runControllerRecovery(() =>
-			this.recoverUnresponsiveController(transaction, error),
+		void this.runControllerRecovery(
+			() => this.recoverUnresponsiveController(transaction, error),
+			transaction,
+			error,
 		).catch(noop);
 		return true;
 	}
@@ -5237,24 +5246,16 @@ export class Driver
 			);
 		}
 
-		let rejected = false;
-		const reject = (e: ZWaveError) => {
-			if (rejected) return;
-			rejected = true;
-			this.rejectTransaction(transaction, e);
-		};
 		let mayHaveReset = false;
-		let retry: boolean;
 		try {
 			// Reset the controller, or reopen the serial port
 			// One exclusive access covers the reset and the reopen, so no command is sent before the node ID type is confirmed
-			retry = await this.withExclusiveControllerAccess(
+			await this.withExclusiveControllerAccess(
 				async (send, signal) => {
 					if (softReset) {
 						try {
-							if (await this.softResetExclusively(send, signal)) {
-								return true;
-							}
+							if (await this.softResetExclusively(send, signal))
+								return;
 							throw new ZWaveError(
 								"The Serial API did not respond after soft-reset",
 								ZWaveErrorCodes.Driver_Failed,
@@ -5264,27 +5265,20 @@ export class Driver
 							mayHaveReset = true;
 						}
 					}
-					reject(error);
+					// The command is not retried after reopening the serial port
+					this.rejectTransaction(transaction, error);
 					await this.reopenSerialPort(send, signal, mayHaveReset);
-					return false;
 				},
 				{ resetsController: true },
 			);
 		} catch (e) {
-			// A new controller instance replaces this one, so the recovery is no longer needed
-			const cancelled =
-				isZWaveError(e)
-				&& e.code === ZWaveErrorCodes.Driver_TaskRemoved;
-			reject(this.wasDestroyed || cancelled ? (e as ZWaveError) : error);
-			if (!this.wasDestroyed && !cancelled) {
+			if (!this.wasDestroyed && !isRecoveryCancelled(e)) {
 				// The driver cannot recover from this, e.g. because a TCP-based connection to the controller is gone.
 				// Notify applications that it failed, allowing them to clean up and restart.
 				void this.destroyWithMessage(getErrorMessage(e));
 			}
 			throw e;
 		}
-
-		if (retry) this.requeueTransaction(transaction);
 		this._controller?.setStatus(ControllerStatus.Ready);
 	}
 
@@ -5430,9 +5424,10 @@ export class Driver
 				"Controller missed Send Data callback. Attempting to recover...",
 				"warn",
 			);
-			// Transactions that joined the recovery fail with it
-			void this.runControllerRecovery(() =>
-				this.recoverMissingCallback(transaction, error),
+			void this.runControllerRecovery(
+				() => this.recoverMissingCallback(),
+				transaction,
+				error,
 			).catch(noop);
 			return true;
 		} else {
@@ -5445,28 +5440,20 @@ export class Driver
 		}
 	}
 
-	/** Soft-resets the controller after it missed a SendData callback, then retries the command */
-	private async recoverMissingCallback(
-		transaction: Transaction,
-		error: ZWaveError,
-	): Promise<void> {
+	/** Soft-resets the controller after it missed a SendData callback */
+	private async recoverMissingCallback(): Promise<void> {
 		try {
 			await this.softResetInternal(true);
 		} catch (e) {
-			if (this.wasDestroyed) {
-				this.rejectTransaction(transaction, e as ZWaveError);
-				throw e;
+			if (!this.wasDestroyed) {
+				this.driverLog.print(
+					"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+					"warn",
+				);
+				this._controller?.setStatus(ControllerStatus.Ready);
 			}
-			this.rejectTransaction(transaction, error);
-			this.driverLog.print(
-				"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
-				"warn",
-			);
-			this._controller?.setStatus(ControllerStatus.Ready);
 			throw e;
 		}
-
-		this.requeueTransaction(transaction);
 		this._controller?.setStatus(ControllerStatus.Ready);
 		this.callbackRecoveryCompleted = true;
 	}
@@ -5536,60 +5523,113 @@ export class Driver
 		}
 
 		// Recover the controller and retry the command
-		void this.recoverJammedController().then(
-			() => this.requeueTransaction(transaction),
-			(e) => {
-				if (this.wasDestroyed) {
-					this.rejectTransaction(transaction, e as ZWaveError);
-					return;
-				}
-				// Soft-reset failed. Just reject the transaction
-				this.rejectTransaction(transaction, error);
-				giveUp(
-					"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
-				);
-			},
-		);
+		void this.recoverJammedController(transaction, error).catch(() => {
+			if (this.wasDestroyed) return;
+			giveUp(
+				"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+			);
+		});
 		return true;
 	}
 
 	/**
 	 * Runs a recovery of the controller. Only one recovery runs at a time.
 	 * Call it only when {@link joinControllerRecovery} found no running recovery.
+	 * @param transaction The failed transaction that starts the recovery. It waits for the recovery like a joined one.
 	 */
-	private runControllerRecovery(fn: () => Promise<void>): Promise<void> {
+	private runControllerRecovery(
+		fn: () => Promise<void>,
+		transaction?: Transaction,
+		error?: ZWaveError,
+	): Promise<void> {
+		if (transaction && error) this.recoveryWaiters.set(transaction, error);
+		if (this.controllerRecovery) return this.controllerRecovery;
 		// A completed recovery of a missing callback is over once another recovery starts
-		if (!this.controllerRecovery) this.callbackRecoveryCompleted = false;
-		this.controllerRecovery ??= fn().finally(() => {
+		this.callbackRecoveryCompleted = false;
+		// Run the recovery, then settle everything that waited for it
+		const recovery = (async () => {
+			let failure: unknown;
+			try {
+				await fn();
+			} catch (e) {
+				failure = e;
+			}
 			this.controllerRecovery = undefined;
-		});
-		return this.controllerRecovery;
+			this.settleRecoveryWaiters(failure);
+			if (failure) throw failure;
+		})();
+		this.controllerRecovery = recovery;
+		return recovery;
 	}
 
 	/**
 	 * Lets a failed transaction wait for the running recovery of the controller, whatever its kind.
-	 * The recovery resets the controller, so the transaction is re-queued once it succeeded.
 	 * Returns `false` when no recovery runs.
 	 */
 	private joinControllerRecovery(
 		transaction: Transaction,
 		error: ZWaveError,
 	): boolean {
-		const recovery = this.controllerRecovery;
-		if (!recovery) return false;
-		void recovery.then(
-			() => this.requeueTransaction(transaction),
-			(e) => {
-				this.rejectTransaction(
-					transaction,
-					this.wasDestroyed ? (e as ZWaveError) : error,
-				);
-			},
-		);
+		if (!this.controllerRecovery) return false;
+		this.recoveryWaiters.set(transaction, error);
 		return true;
 	}
 
-	/** Re-queues a failed transaction, so it is sent again, unless the driver was destroyed or nobody waits for it anymore */
+	/**
+	 * Settles the transactions that waited for the recovery of the controller.
+	 * They are re-queued after a successful recovery, because it reset the controller.
+	 * A cancelled recovery or a destroyed driver rejects them with that reason, any other failure with their own error.
+	 */
+	private settleRecoveryWaiters(failure: unknown): void {
+		const waiters = [...this.recoveryWaiters];
+		this.recoveryWaiters.clear();
+		for (const [transaction, error] of waiters) {
+			if (!failure) {
+				this.requeueTransaction(transaction);
+			} else if (this.wasDestroyed || isRecoveryCancelled(failure)) {
+				this.rejectTransaction(transaction, failure as ZWaveError);
+			} else {
+				this.rejectTransaction(transaction, error);
+			}
+		}
+	}
+
+	/** Applies a queue reducer to the transactions that wait for the recovery of the controller */
+	private reduceRecoveryWaiters(reducer: TransactionReducer): void {
+		for (const transaction of this.recoveryWaiters.keys()) {
+			const result = reducer(transaction, "queue");
+			switch (result.type) {
+				case "requeue":
+					// The transaction is re-queued after the recovery anyway
+					if (result.priority != undefined) {
+						transaction.priority = result.priority;
+					}
+					if (result.tag != undefined) transaction.tag = result.tag;
+					break;
+				case "defer":
+					// The caller of the reducer takes over the transaction
+					this.recoveryWaiters.delete(transaction);
+					break;
+				case "resolve":
+					this.recoveryWaiters.delete(transaction);
+					this.resolveTransaction(transaction, result.message);
+					break;
+				case "reject":
+					this.rejectTransaction(
+						transaction,
+						new ZWaveError(
+							result.message,
+							result.code,
+							undefined,
+							transaction.stack,
+						),
+					);
+					break;
+			}
+		}
+	}
+
+	/** Re-queues a failed transaction, so it is sent again, unless the driver was destroyed */
 	private requeueTransaction(transaction: Transaction): void {
 		if (this.wasDestroyed) {
 			this.rejectTransaction(
@@ -5597,20 +5637,6 @@ export class Driver
 				new ZWaveError(
 					"The driver instance was destroyed",
 					ZWaveErrorCodes.Driver_Destroyed,
-					undefined,
-					transaction.stack,
-				),
-			);
-			return;
-		}
-		if (transaction.isSettled) return;
-		// The last caller may have stopped waiting, e.g. because the command expired during a recovery
-		if (!transaction.hasAttachments) {
-			this.rejectTransaction(
-				transaction,
-				new ZWaveError(
-					"Nobody waits for the command anymore",
-					ZWaveErrorCodes.Controller_MessageDropped,
 					undefined,
 					transaction.stack,
 				),
@@ -5627,15 +5653,22 @@ export class Driver
 	}
 
 	/** Soft-resets a jammed controller */
-	private recoverJammedController(): Promise<void> {
-		return this.runControllerRecovery(async () => {
-			this.driverLog.print(
-				"Attempting to recover jammed controller...",
-				"warn",
-			);
-			await this.softReset();
-			this.jamRecoveryUnconfirmed = true;
-		});
+	private recoverJammedController(
+		transaction?: Transaction,
+		error?: ZWaveError,
+	): Promise<void> {
+		return this.runControllerRecovery(
+			async () => {
+				this.driverLog.print(
+					"Attempting to recover jammed controller...",
+					"warn",
+				);
+				await this.softReset();
+				this.jamRecoveryUnconfirmed = true;
+			},
+			transaction,
+			error,
+		);
 	}
 
 	private shouldRequestWakeupOnDemand(node: ZWaveNode): boolean {
@@ -9156,6 +9189,7 @@ ${handlers.length} left`,
 		transaction: Transaction,
 		error: ZWaveError,
 	): void {
+		this.recoveryWaiters.delete(transaction);
 		transaction.abort(error);
 	}
 
@@ -9324,6 +9358,7 @@ ${handlers.length} left`,
 	private reduceQueues(reducer: TransactionReducer): Promise<void> {
 		// This function MUST not be async, because this can introduce a
 		// race condition caused by the microtick delay
+		this.reduceRecoveryWaiters(reducer);
 		return Promise.all(
 			this.queues.map((queue) => this.reduceQueue(queue, reducer)),
 		).then(noop);
