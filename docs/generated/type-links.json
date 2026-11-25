@@ -222,6 +222,26 @@
 		"href": "#/api/CCs/Meter?id=meterscale",
 		"definition": "interface MeterScale {\n\treadonly label: string;\n\treadonly unit?: string;\n\treadonly key: number;\n}"
 	},
+	"MeterTablePayMeter": {
+		"href": "#/api/CCs/MeterTableMonitor?id=metertablepaymeter",
+		"definition": "enum MeterTablePayMeter {\n\t\"Credit meter\" = 0x01,\n\t\"Prepayment meter\" = 0x02,\n\t\"Prepayment meter debt\" = 0x03,\n}"
+	},
+	"MeterTablePushConfiguration": {
+		"href": "#/api/CCs/MeterTablePushConfiguration?id=metertablepushconfiguration",
+		"definition": "interface MeterTablePushConfiguration {\n\t/** Which operating status changes are pushed (0-15) */\n\toperatingStatusPushMode: number;\n\tpushStatus: boolean;\n\t/** Bit mask of the datasets that are pushed */\n\tpushDataset: number;\n\tintervalMonths: number;\n\tintervalDays: number;\n\tintervalHours: number;\n\tintervalMinutes: number;\n\tpushNodeId: number;\n}"
+	},
+	"MeterTableRateType": {
+		"href": "#/api/CCs/MeterTableMonitor?id=metertableratetype",
+		"definition": "enum MeterTableRateType {\n\tUnspecified = 0x00,\n\tImport = 0x01,\n\tExport = 0x02,\n\t/** Only in the capability report: the meter measures both directions */\n\t\"Import and export\" = 0x03,\n}"
+	},
+	"MeterTableReading": {
+		"href": "#/api/CCs/MeterTableMonitor?id=metertablereading",
+		"definition": "interface MeterTableReading {\n\t/** Bit number of the dataset this value belongs to */\n\tdataset: number;\n\t/**\n\t * The rate type of the report this value came in. A meter that measures\n\t * both directions can send import and export in one chain of reports.\n\t */\n\trateType: MeterTableRateType;\n\tscale: MeterTableScale;\n\tvalue: number;\n}"
+	},
+	"MeterTableScale": {
+		"href": "#/api/CCs/MeterTableMonitor?id=metertablescale",
+		"definition": "interface MeterTableScale {\n\tkey: number;\n\tunit?: string;\n\tlabel: string;\n}"
+	},
 	"MultiChannelCCDestination": {
 		"href": "#/api/CCs/MultiChannel?id=multichannelccdestination",
 		"definition": "type MultiChannelCCDestination = number | (1 | 2 | 3 | 4 | 5 | 6 | 7)[];"

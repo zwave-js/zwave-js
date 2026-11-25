@@ -15,6 +15,7 @@ import { getEnumMemberName, num2hex } from "@zwave-js/shared";
 import {
 	irrigationValveIdToMetadataPrefix,
 	meterTypesToPropertyKey,
+	meterTablePropertyKey,
 	multilevelSwitchTypeToActions,
 	multilevelSwitchTypeProperties,
 	windowCoveringParameterToMetadataStates,
@@ -42,6 +43,7 @@ import {
 	type ValveId,
 	DeviceIdType,
 	RateType,
+	type MeterTableRateType,
 	SwitchType,
 	LocalProtectionState,
 	RFProtectionState,
@@ -6293,6 +6295,248 @@ export const MeterCCValues = Object.freeze({
 	),
 });
 
+export const MeterTableMonitorCCValues = Object.freeze({
+	meterType: {
+		id: {
+			commandClass: CommandClasses["Meter Table Monitor"],
+			property: "meterType",
+		} as const,
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Meter Table Monitor"],
+				endpoint,
+				property: "meterType",
+			}) as const,
+		is: (valueId: ValueID): boolean => {
+			return (
+				valueId.commandClass === CommandClasses["Meter Table Monitor"]
+				&& valueId.property === "meterType"
+				&& valueId.propertyKey == undefined
+			);
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	rateType: {
+		id: {
+			commandClass: CommandClasses["Meter Table Monitor"],
+			property: "rateType",
+		} as const,
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Meter Table Monitor"],
+				endpoint,
+				property: "rateType",
+			}) as const,
+		is: (valueId: ValueID): boolean => {
+			return (
+				valueId.commandClass === CommandClasses["Meter Table Monitor"]
+				&& valueId.property === "rateType"
+				&& valueId.propertyKey == undefined
+			);
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	payMeter: {
+		id: {
+			commandClass: CommandClasses["Meter Table Monitor"],
+			property: "payMeter",
+		} as const,
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Meter Table Monitor"],
+				endpoint,
+				property: "payMeter",
+			}) as const,
+		is: (valueId: ValueID): boolean => {
+			return (
+				valueId.commandClass === CommandClasses["Meter Table Monitor"]
+				&& valueId.property === "payMeter"
+				&& valueId.propertyKey == undefined
+			);
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	supportedDatasets: {
+		id: {
+			commandClass: CommandClasses["Meter Table Monitor"],
+			property: "supportedDatasets",
+		} as const,
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Meter Table Monitor"],
+				endpoint,
+				property: "supportedDatasets",
+			}) as const,
+		is: (valueId: ValueID): boolean => {
+			return (
+				valueId.commandClass === CommandClasses["Meter Table Monitor"]
+				&& valueId.property === "supportedDatasets"
+				&& valueId.propertyKey == undefined
+			);
+		},
+		get meta() {
+			return ValueMetadata.Any;
+		},
+		options: {
+			internal: true,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	meterId: {
+		id: {
+			commandClass: CommandClasses["Meter Table Monitor"],
+			property: "meterId",
+		} as const,
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Meter Table Monitor"],
+				endpoint,
+				property: "meterId",
+			}) as const,
+		is: (valueId: ValueID): boolean => {
+			return (
+				valueId.commandClass === CommandClasses["Meter Table Monitor"]
+				&& valueId.property === "meterId"
+				&& valueId.propertyKey == undefined
+			);
+		},
+		get meta() {
+			return {
+				...ValueMetadata.ReadOnlyString,
+				label: "Meter ID",
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	pointAdmNumber: {
+		id: {
+			commandClass: CommandClasses["Meter Table Monitor"],
+			property: "pointAdmNumber",
+		} as const,
+		endpoint: (endpoint: number = 0) =>
+			({
+				commandClass: CommandClasses["Meter Table Monitor"],
+				endpoint,
+				property: "pointAdmNumber",
+			}) as const,
+		is: (valueId: ValueID): boolean => {
+			return (
+				valueId.commandClass === CommandClasses["Meter Table Monitor"]
+				&& valueId.property === "pointAdmNumber"
+				&& valueId.propertyKey == undefined
+			);
+		},
+		get meta() {
+			return {
+				...ValueMetadata.ReadOnlyString,
+				label: "Meter point administration number",
+			} as const;
+		},
+		options: {
+			internal: false,
+			minVersion: 1,
+			secret: false,
+			stateful: true,
+			supportsEndpoints: true,
+			autoCreate: true,
+		} as const satisfies CCValueOptions,
+	},
+	value: Object.assign(
+		(meterType: number, rateType: MeterTableRateType, dataset: number) => {
+			const property = "value";
+			const propertyKey = meterTablePropertyKey(
+				meterType,
+				rateType,
+				dataset,
+			);
+
+			return {
+				id: {
+					commandClass: CommandClasses["Meter Table Monitor"],
+					property,
+					propertyKey,
+				} as const,
+				endpoint: (endpoint: number = 0) =>
+					({
+						commandClass: CommandClasses["Meter Table Monitor"],
+						endpoint,
+						property: property,
+						propertyKey: propertyKey,
+					}) as const,
+				get meta() {
+					return {
+						...ValueMetadata.ReadOnlyNumber,
+						label: `Dataset ${dataset}`,
+						// label, unit and the rest of ccSpecific are set when a value
+						// is received
+						ccSpecific: { meterType, rateType, dataset },
+					} as const;
+				},
+			};
+		},
+		{
+			is: (valueId: ValueID): boolean => {
+				return (
+					valueId.commandClass
+						=== CommandClasses["Meter Table Monitor"]
+					&& (({ property, propertyKey }) =>
+						property === "value"
+						&& typeof propertyKey === "number")(valueId)
+				);
+			},
+			options: {
+				internal: false,
+				minVersion: 1,
+				secret: false,
+				stateful: true,
+				supportsEndpoints: true,
+				autoCreate: true,
+			} as const satisfies CCValueOptions,
+		},
+	),
+});
+
 export const MultiChannelAssociationCCValues = Object.freeze({
 	groupCount: {
 		id: {
@@ -11859,6 +12103,7 @@ export const CCValues = {
 	[CommandClasses.Lock]: LockCCValues,
 	[CommandClasses["Manufacturer Specific"]]: ManufacturerSpecificCCValues,
 	[CommandClasses.Meter]: MeterCCValues,
+	[CommandClasses["Meter Table Monitor"]]: MeterTableMonitorCCValues,
 	[CommandClasses["Multi Channel Association"]]:
 		MultiChannelAssociationCCValues,
 	[CommandClasses["Multi Channel"]]: MultiChannelCCValues,

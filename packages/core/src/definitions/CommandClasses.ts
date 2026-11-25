@@ -193,6 +193,7 @@ export const sensorCCs: readonly CommandClasses[] = [
 	CommandClasses["Binary Sensor"],
 	CommandClasses["Energy Production"],
 	CommandClasses.Meter,
+	CommandClasses["Meter Table Monitor"],
 	CommandClasses["Multilevel Sensor"],
 	CommandClasses.Notification, // For pull nodes
 	CommandClasses["Pulse Meter"],

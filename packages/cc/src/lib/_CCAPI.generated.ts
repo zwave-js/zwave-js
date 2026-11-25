@@ -30,6 +30,8 @@ export type CCNameMap = {
 	"Inclusion Controller": (typeof CommandClasses)["Inclusion Controller"];
 	"Manufacturer Proprietary": (typeof CommandClasses)["Manufacturer Proprietary"];
 	"Manufacturer Specific": (typeof CommandClasses)["Manufacturer Specific"];
+	"Meter Table Monitor": (typeof CommandClasses)["Meter Table Monitor"];
+	"Meter Table Push Configuration": (typeof CommandClasses)["Meter Table Push Configuration"];
 	"Multi Channel Association": (typeof CommandClasses)["Multi Channel Association"];
 	"Multi Channel": (typeof CommandClasses)["Multi Channel"];
 	"Multi Command": (typeof CommandClasses)["Multi Command"];
@@ -101,6 +103,8 @@ export interface CCAPIs {
 	"Inclusion Controller": import("../cc/InclusionControllerCC.js").InclusionControllerCCAPI;
 	"Manufacturer Proprietary": import("../cc/ManufacturerProprietaryCC.js").ManufacturerProprietaryCCAPI;
 	"Manufacturer Specific": import("../cc/ManufacturerSpecificCC.js").ManufacturerSpecificCCAPI;
+	"Meter Table Monitor": import("../cc/MeterTableMonitorCC.js").MeterTableMonitorCCAPI;
+	"Meter Table Push Configuration": import("../cc/MeterTablePushConfigurationCC.js").MeterTablePushConfigurationCCAPI;
 	"Multi Channel Association": import("../cc/MultiChannelAssociationCC.js").MultiChannelAssociationCCAPI;
 	"Multi Channel": import("../cc/MultiChannelCC.js").MultiChannelCCAPI;
 	"Multi Command": import("../cc/MultiCommandCC.js").MultiCommandCCAPI;
