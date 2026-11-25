@@ -1207,11 +1207,12 @@ function queueSendData(
 		NonNullable<Parameters<typeof integrationTest>[1]["testBody"]>
 	>[1],
 	nodeId: number,
+	options?: { expire?: number },
 ) {
 	const msg = new SendDataRequest({
 		command: new NoOperationCC({ nodeId }),
 	});
-	const promise = driver.sendMessage(msg);
+	const promise = driver.sendMessage(msg, options);
 	promise.catch(() => {});
 	const transaction = driver["queue"].find((t) => t.message === msg)!;
 	driver["queue"].remove(transaction);
@@ -1309,6 +1310,158 @@ integrationTest.sequential(
 			} finally {
 				mockController.autoAckHostMessages = true;
 			}
+		},
+	},
+);
+
+/** Leaves out the callback of the next SendData and slows down the soft reset after it */
+function missCallbackOnce(mockController: {
+	defineBehavior(...behaviors: MockControllerBehavior[]): void;
+}): void {
+	let missCallback = true;
+	const behavior: MockControllerBehavior = {
+		async onHostMessage(controller, msg) {
+			if (msg instanceof SoftResetRequest) {
+				await wait(1500);
+				return false;
+			}
+			if (!missCallback || !(msg instanceof SendDataRequest)) return;
+			missCallback = false;
+			await controller.sendMessageToHost(
+				new SendDataResponse({ wasSent: true }),
+			);
+			return true;
+		},
+	};
+	mockController.defineBehavior(behavior);
+}
+
+integrationTest.sequential(
+	"A command that waits for a recovery fails with Driver_Destroyed when the driver is destroyed as the recovery ends",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			node.markAsAlive();
+			// Let the next callback go missing, so the driver recovers the controller
+			missCallbackOnce(mockController);
+
+			// Ping the node and wait until the recovery sends the soft reset
+			void node.ping();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 5000 },
+			);
+			// Let another SendData join the recovery
+			const { promise, transaction } = queueSendData(driver, node.id);
+			driver["handleFailedTransaction"](transaction, missingCallback);
+			// An application that destroys the driver when the controller is ready again
+			driver.controller.on("status changed", (status) => {
+				if (status === ControllerStatus.Ready) void driver.destroy();
+			});
+
+			// The joined command must fail with Driver_Destroyed and not stay pending
+			const result = await Promise.race([
+				promise.then(
+					() => "resolved",
+					(e: { code?: number }) => e.code,
+				),
+				wait(5000).then(() => "pending"),
+			]);
+			t.expect(result).toBe(ZWaveErrorCodes.Driver_Destroyed);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A command that expires while it waits for a recovery is not sent again",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			node.markAsAlive();
+			// Let the next callback go missing, so the driver recovers the controller
+			missCallbackOnce(mockController);
+
+			// Ping the node and wait until the recovery sends the soft reset
+			const ping = node.ping();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 5000 },
+			);
+			// Let a command that expires after 500 ms join the recovery
+			const { promise, transaction } = queueSendData(driver, node.id, {
+				expire: 500,
+			});
+			driver["handleFailedTransaction"](transaction, missingCallback);
+
+			// The joined command expires, and the ping succeeds after the recovery
+			await t.expect(promise).rejects.toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageExpired,
+			});
+			t.expect(await ping).toBe(true);
+			await wait(500);
+
+			// Only the command that started the recovery was sent again
+			const messages = mockController.receivedHostMessages;
+			const resetIndex = messages.findLastIndex(
+				(msg) => msg instanceof SoftResetRequest,
+			);
+			t.expect(
+				messages
+					.slice(resetIndex + 1)
+					.filter((msg) => msg instanceof SendDataRequest),
+			).toHaveLength(1);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A recovery that waits for softResetAndRestart() does not destroy the driver when the controller instance is replaced",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			// Restart the driver and wait until the reset command is sent
+			const ready = new Promise<void>((resolve) =>
+				driver.once("driver ready", () => resolve()),
+			);
+
+			const restart = driver.softResetAndRestart();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 5000 },
+			);
+			// Keeps the transaction in the queue
+			driver.controller.setStatus(ControllerStatus.Unresponsive);
+			const { promise, transaction } = queueSendData(driver, node.id);
+			// The recovery waits for the restart to release the controller
+			driver["handleFailedTransaction"](
+				transaction,
+				new ZWaveError(
+					"Timeout while waiting for an ACK from the controller",
+					ZWaveErrorCodes.Controller_Timeout,
+					"ACK",
+				),
+			);
+
+			// The restart finishes, the driver stays alive, and both commands fail with the cancellation
+			await restart;
+			await ready;
+			t.expect(driver["wasDestroyed"]).toBe(false);
+			await t.expect(promise).rejects.toMatchObject({
+				code: ZWaveErrorCodes.Driver_TaskRemoved,
+			});
 		},
 	},
 );

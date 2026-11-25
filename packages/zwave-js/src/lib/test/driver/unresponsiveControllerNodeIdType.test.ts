@@ -196,7 +196,7 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
-	"From SDK 7.21 on, the controller state is restored after reopening the serial port when the controller may have reset",
+	"From SDK 7.21 on, the driver keeps the known node ID type and the inclusion state after reopening the serial port when the reset is not confirmed",
 	{
 		// debug: true,
 		...testOptions,
@@ -204,27 +204,33 @@ integrationTest.sequential(
 
 		async testBody(t, driver, node, mockController, mockNode, context) {
 			node.markAsAlive();
+			// Start with 16-bit node IDs on a controller that keeps them across resets
 			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
-			// A reset ends the inclusion on the controller
+			// The controller may still be including, because the reset may not have happened
 			driver.controller.setInclusionState(InclusionState.Including);
 
+			// Let the controller reset silently, and answer again once the driver reconnects
 			goSilent(mockController, context.tcpServer!, true);
+			// The ping fails and starts the recovery
 			t.expect(await node.ping()).toBe(false);
 			// The recovery ends after the command failed
 			await wait(2000);
+			// The driver returns to normal operation, and the inclusion stays marked active
 			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
 			t.expect(driver.controller.inclusionState).toBe(
-				InclusionState.Idle,
+				InclusionState.Including,
 			);
 
+			// Commands work again
 			t.expect(await node.ping()).toBe(true);
-			// The controller kept the node ID type, which the driver sends again like after any reset
-			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
+			// The controller kept the node ID type, so the driver did not need to confirm it
 			t.expect(
 				messagesAfterReset(mockController).some(
 					(msg) => msg instanceof SerialAPISetup_SetNodeIDTypeRequest,
 				),
-			).toBe(true);
+			).toBe(false);
+			// End the inclusion for the cleanup
+			driver.controller.setInclusionState(InclusionState.Idle);
 		},
 	},
 );

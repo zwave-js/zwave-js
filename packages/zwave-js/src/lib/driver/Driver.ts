@@ -3896,6 +3896,11 @@ export class Driver
 
 		// Record what the reset changed
 		this.assumeNodeIdTypeAfterReset();
+		if (this._controller) {
+			// Soft-resetting disables any ongoing inclusion, so we need to reset
+			// the state that is tracked in the controller
+			this._controller.setInclusionState(InclusionState.Idle);
+		}
 
 		// Make sure we're able to communicate with the controller again
 		if (!(await this.ensureSerialAPI({ serialAPIStarted, send, signal }))) {
@@ -3906,26 +3911,34 @@ export class Driver
 		return true;
 	}
 
+	/**
+	 * Restores the controller state after a reset. Must be called with exclusive access to the controller.
+	 * @param resetConfirmed Whether the controller acknowledged the reset or reported its restart.
+	 * Without a confirmation, only steps that are safe without a reset run.
+	 */
 	private async restoreControllerStateAfterReset(
 		send: SendExclusive,
 		signal: AbortSignal,
+		resetConfirmed: boolean = true,
 	): Promise<void> {
 		// This is a bit hacky, but what the heck...
 		const controller = this._controller;
 		if (this._enteringBootloader || !controller) return;
 
-		// A reset disables any ongoing inclusion, so we need to reset
-		// the state that is tracked in the controller
-		controller.setInclusionState(InclusionState.Idle);
-
-		// Start the watchdog again, unless disabled
+		// Start the watchdog again, unless disabled. Starting a running watchdog does no harm.
 		if (this.options.features.watchdog) {
 			await abortableStep(signal, () =>
 				controller.startWatchdogInternal(send),
 			);
 		}
 
-		await abortableStep(signal, () => this.restoreNodeIdType(send, signal));
+		// Restore the node ID type
+		// A known node ID type stays as it is when the controller did not reset
+		if (resetConfirmed || controller.nodeIdType === NOT_KNOWN) {
+			await abortableStep(signal, () =>
+				this.restoreNodeIdType(send, signal),
+			);
+		}
 	}
 
 	/** Records the node ID type the controller uses after a reset, until the driver restores the desired one */
@@ -5258,8 +5271,12 @@ export class Driver
 				{ resetsController: true },
 			);
 		} catch (e) {
-			reject(this.wasDestroyed ? (e as ZWaveError) : error);
-			if (!this.wasDestroyed) {
+			// A new controller instance replaces this one, so the recovery is no longer needed
+			const cancelled =
+				isZWaveError(e)
+				&& e.code === ZWaveErrorCodes.Driver_TaskRemoved;
+			reject(this.wasDestroyed || cancelled ? (e as ZWaveError) : error);
+			if (!this.wasDestroyed && !cancelled) {
 				// The driver cannot recover from this, e.g. because a TCP-based connection to the controller is gone.
 				// Notify applications that it failed, allowing them to clean up and restart.
 				void this.destroyWithMessage(getErrorMessage(e));
@@ -5293,7 +5310,7 @@ export class Driver
 
 		if (mayHaveReset) {
 			// This confirms an unknown node ID type, or ends the exclusive access with the type still unknown
-			await this.restoreControllerStateAfterReset(send, signal);
+			await this.restoreControllerStateAfterReset(send, signal, false);
 			this.driverLog.print(
 				"Serial port reopened and controller state restored. Returning to normal operation.",
 				"warn",
@@ -5572,8 +5589,34 @@ export class Driver
 		return true;
 	}
 
-	/** Re-queues a failed transaction, so it is sent again */
+	/** Re-queues a failed transaction, so it is sent again, unless the driver was destroyed or nobody waits for it anymore */
 	private requeueTransaction(transaction: Transaction): void {
+		if (this.wasDestroyed) {
+			this.rejectTransaction(
+				transaction,
+				new ZWaveError(
+					"The driver instance was destroyed",
+					ZWaveErrorCodes.Driver_Destroyed,
+					undefined,
+					transaction.stack,
+				),
+			);
+			return;
+		}
+		if (transaction.isSettled) return;
+		// The last caller may have stopped waiting, e.g. because the command expired during a recovery
+		if (!transaction.hasAttachments) {
+			this.rejectTransaction(
+				transaction,
+				new ZWaveError(
+					"Nobody waits for the command anymore",
+					ZWaveErrorCodes.Controller_MessageDropped,
+					undefined,
+					transaction.stack,
+				),
+			);
+			return;
+		}
 		// Its message generator may have finished, so reset that too
 		transaction.reset();
 		// The node may have received the command already. It discards a copy with the same S2 sequence number.
