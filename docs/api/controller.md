@@ -1496,6 +1496,8 @@ enum ControllerStatus {
 
 The status is `ControllerStatus.Ready` by default and should not change unless there is a problem with the controller. Changes to the status are exposed using the [`"status changed"`](#status-changed) event.
 
+`Jammed` means that the controller reported it could not transmit at all. The status stays `Jammed` while the driver recovers the controller and afterwards, until a transmission succeeds or the driver gives up the recovery and returns to `Ready`. `Unresponsive` is set while the driver recovers a controller that did not acknowledge a command or missed a callback.
+
 ### `isRebuildingRoutes`
 
 ```ts
