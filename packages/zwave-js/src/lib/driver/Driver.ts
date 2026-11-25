@@ -763,8 +763,8 @@ function isJamFailure(error: ZWaveError): boolean {
 	);
 }
 
-/** How long the driver does not soft-reset a jammed controller again after a recovery did not help */
-const JAM_RECOVERY_COOLDOWN_MS = 5 * 60_000;
+/** How long the driver waits before it soft-resets a jammed controller again, by the number of recoveries that did not help */
+const JAM_RECOVERY_BACKOFF_MS = [15_000, 30_000, 60_000];
 
 function messageIsPing<T extends Message>(
 	msg: T,
@@ -1286,10 +1286,10 @@ export class Driver
 
 	/** The running recovery of a jammed controller. A jam detected meanwhile joins it. */
 	private jamRecovery: Promise<void> | undefined;
-	/** Commands that are retried after a jam recovery, by their transaction identity */
-	private jamRecoveryRetries = new WeakSet<object>();
-	/** How many jam recoveries completed */
-	private jamRecoveriesCompleted = 0;
+	/** Whether a jam recovery completed and no transmission succeeded since */
+	private jamRecoveryUnconfirmed = false;
+	/** How many jam recoveries in a row did not help */
+	private failedJamRecoveries = 0;
 	/** Until when no jam recovery may start, because the last one did not help */
 	private jamRecoveryBlockedUntil = 0;
 
@@ -3873,8 +3873,6 @@ export class Driver
 				}
 
 				await this.restoreControllerStateAfterReset(send, signal);
-				// After a completed reset, a jam may be recovered again
-				this.jamRecoveryBlockedUntil = 0;
 				return true;
 			},
 			{ resetsController: true },
@@ -5452,13 +5450,24 @@ export class Driver
 			return true;
 		}
 
-		if (this.jamRecoveryRetries.has(transaction.identity)) {
+		// Back off after a recovery that did not help
+		if (this.jamRecoveryUnconfirmed) {
 			// Transmits still fail after restarting the controller. Maybe this isn't actually
 			// the controller being jammed. Give up on this command.
-			this.jamRecoveryBlockedUntil =
-				Date.now() + JAM_RECOVERY_COOLDOWN_MS;
+			this.jamRecoveryUnconfirmed = false;
+			const backoff =
+				JAM_RECOVERY_BACKOFF_MS[
+					Math.min(
+						this.failedJamRecoveries,
+						JAM_RECOVERY_BACKOFF_MS.length - 1,
+					)
+				];
+			this.failedJamRecoveries++;
+			this.jamRecoveryBlockedUntil = Date.now() + backoff;
 			giveUp(
-				"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+				`Automatic controller recovery failed, not trying again for ${
+					backoff / 1000
+				} seconds. Returning to normal operation and hoping for the best.`,
 			);
 			return false;
 		} else if (Date.now() < this.jamRecoveryBlockedUntil) {
@@ -5474,7 +5483,6 @@ export class Driver
 				// Re-queue the transaction, so it can get handled next.
 				// Its message generator may have finished, so reset that too.
 				transaction.reset();
-				this.jamRecoveryRetries.add(transaction.identity);
 				this.getQueueForTransaction(transaction).add(
 					transaction.clone(),
 				);
@@ -5512,7 +5520,7 @@ export class Driver
 				await this.softReset();
 				// softReset() resolves after it destroyed the driver because the Serial API did not respond
 				this.lifetime.signal.throwIfAborted();
-				this.jamRecoveriesCompleted++;
+				this.jamRecoveryUnconfirmed = true;
 			} finally {
 				this.jamRecovery = undefined;
 			}
@@ -7399,9 +7407,7 @@ ${handlers.length} left`,
 		transaction.start();
 		transaction.setProgress({ state: TransactionState.Active });
 
-		const maxJammedAttempts = this.jamRecoveryRetries.has(
-			transaction.identity,
-		)
+		const maxJammedAttempts = this.jamRecoveryUnconfirmed
 			? // After attempting soft-reset, only try sending once
 				1
 			: this.options.attempts.sendDataJammed;
@@ -7414,7 +7420,6 @@ ${handlers.length} left`,
 			let commandAttempts = 0; // The command was not acknowledged
 			// Captured once per message, because a reset during a retry delay clears it
 			const run = transaction.parts.self;
-			const jamRecoveriesBefore = this.jamRecoveriesCompleted;
 			attemptMessage: for (let attemptNumber = 1; ; attemptNumber++) {
 				try {
 					prevResult = await this.queueSerialAPICommand(
@@ -7450,15 +7455,6 @@ ${handlers.length} left`,
 
 								continue attemptMessage;
 							} else {
-								// A recovery during these attempts did not help either
-								if (
-									this.jamRecoveriesCompleted
-									!== jamRecoveriesBefore
-								) {
-									this.jamRecoveryRetries.add(
-										transaction.identity,
-									);
-								}
 								// Reject the transaction so we can attempt to recover
 								throw new ZWaveError(
 									`Failed to send the command after ${jammedAttempts} attempts`,
@@ -7476,8 +7472,9 @@ ${handlers.length} left`,
 							this.controller.setStatus(ControllerStatus.Ready);
 						}
 						// and a possible jam recovery helped
+						this.jamRecoveryUnconfirmed = false;
+						this.failedJamRecoveries = 0;
 						this.jamRecoveryBlockedUntil = 0;
-						this.jamRecoveryRetries.delete(transaction.identity);
 
 						if (!prevResult.isOK()) {
 							throw new ZWaveError(
@@ -8997,10 +8994,6 @@ ${handlers.length} left`,
 			return;
 		}
 
-		const isJam = isSendData(transaction.message) && isJamFailure(error);
-		// A retry after a jam recovery that fails for another reason is handled like any other command
-		if (!isJam) this.jamRecoveryRetries.delete(transaction.identity);
-
 		// The message cannot be serialized, e.g. because the node ID does not fit the node ID type.
 		// A controller recovery cannot help with that.
 		if (error.code === ZWaveErrorCodes.Argument_Invalid) {
@@ -9013,9 +9006,12 @@ ${handlers.length} left`,
 			if (this.handleMissingNodeACK(transaction as any, error)) return;
 		} else if (isMissingControllerACK(error)) {
 			if (this.handleMissingControllerACK(transaction, error)) return;
-		} else if (isJam) {
+		} else if (
 			// 700/800 series controllers can be jammed due to a bug,
 			// which a soft-reset is supposed to work around
+			isSendData(transaction.message)
+			&& isJamFailure(error)
+		) {
 			if (this.handleJammedController(transaction, error)) return;
 		} else if (
 			isSendData(transaction.message)

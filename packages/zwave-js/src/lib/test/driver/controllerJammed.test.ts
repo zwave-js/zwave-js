@@ -25,6 +25,7 @@ import {
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import sinon from "sinon";
+import { vi } from "vitest";
 
 import {
 	MockControllerCommunicationState,
@@ -596,6 +597,11 @@ const jamTestOptions = {
 	},
 };
 
+// Fakes only the clock, so the test can jump over the waiting time between jam recoveries
+function useFakeClock(): void {
+	vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true });
+}
+
 // Counts the soft resets the controller received
 function countSoftResets(mockController: {
 	receivedHostMessages: readonly { functionType: FunctionType }[];
@@ -606,69 +612,43 @@ function countSoftResets(mockController: {
 }
 
 integrationTest.sequential(
-	"When a command still fails after recovering a jammed controller, the driver gives up and does not reset again during the cooldown",
+	"After jam recoveries that did not help, the driver waits 15 s, 30 s, then 1 min before it recovers again",
 	{
 		// debug: true,
 		...jamTestOptions,
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			node.markAsAlive();
+			// Circumvent the options validation, so the jam attempts are quick
+			driver.options.timeouts.retryJammed = 100;
+			useFakeClock();
+			try {
+				// Let the controller stay jammed through 5 soft resets
+				softResetsWithoutEffect = 5;
+				shouldFail = true;
+				// The first recovery does not help, so the driver gives up and returns to Ready
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(1);
+				t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
 
-			// The first soft reset does not clear the jam, so the driver gives up on the command
-			softResetsWithoutEffect = 1;
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(false);
-			t.expect(countSoftResets(mockController)).toBe(1);
-			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+				let failedAt = Date.now();
+				let resets = 1;
+				for (const backoff of [15_000, 30_000, 60_000, 60_000]) {
+					// Within the waiting time, a jam fails without a reset
+					vi.setSystemTime(failedAt + backoff - 2000);
+					t.expect(await node.ping()).toBe(false);
+					t.expect(countSoftResets(mockController)).toBe(resets);
 
-			// The controller is still jammed. Within the cooldown, the next jam fails without a reset
-			t.expect(await node.ping()).toBe(false);
-			t.expect(countSoftResets(mockController)).toBe(1);
-
-			// Once the cooldown is over, the next jam starts a new recovery
-			driver["jamRecoveryBlockedUntil"] = Date.now() - 1;
-			t.expect(await node.ping()).toBe(true);
-			t.expect(countSoftResets(mockController)).toBe(2);
-			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
-		},
-	},
-);
-
-integrationTest.sequential(
-	"A retry after a jam recovery that is re-queued before it is sent still gets only one attempt",
-	{
-		// debug: true,
-		...jamTestOptions,
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			node.markAsAlive();
-
-			// Re-queue the retry right after the recovery queued it, like a queue reduction does
-			const queue = driver["queue"];
-			const add = queue.add.bind(queue);
-			let requeued = false;
-			queue.add = (...items) => {
-				if (requeued || countSoftResets(mockController) === 0) {
-					add(...items);
-					return;
+					// After it, the next jam is recovered, which does not help either
+					vi.setSystemTime(failedAt + backoff + 1000);
+					t.expect(await node.ping()).toBe(false);
+					t.expect(countSoftResets(mockController)).toBe(++resets);
+					failedAt = Date.now();
 				}
-				requeued = true;
-				// The retry must still be queued when it is reduced
-				queue.pause();
-				add(...items);
-				void driver["reduceQueues"]((transaction) =>
-					items.includes(transaction)
-						? { type: "requeue" }
-						: { type: "keep" },
-				);
-				queue.unpause();
-			};
-
-			softResetsWithoutEffect = 1;
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(false);
-			t.expect(requeued).toBe(true);
-			t.expect(countSoftResets(mockController)).toBe(1);
+			} finally {
+				shouldFail = false;
+				vi.useRealTimers();
+			}
 		},
 	},
 );
@@ -717,27 +697,47 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
-	"A successful transmission ends the cooldown after a failed jam recovery",
+	"A successful transmission resets the waiting time after failed jam recoveries to 15 s",
 	{
 		// debug: true,
 		...jamTestOptions,
 
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			node.markAsAlive();
+			// Circumvent the options validation, so the jam attempts are quick
+			driver.options.timeouts.retryJammed = 100;
+			useFakeClock();
+			try {
+				// Let the controller stay jammed through 3 soft resets
+				softResetsWithoutEffect = 3;
+				shouldFail = true;
+				// Fail two recoveries, so the next waiting time would be 1 min
+				t.expect(await node.ping()).toBe(false);
+				vi.setSystemTime(Date.now() + 16_000);
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(2);
 
-			softResetsWithoutEffect = 1;
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(false);
-			t.expect(countSoftResets(mockController)).toBe(1);
+				// The jam clears on its own, and a transmission succeeds
+				shouldFail = false;
+				t.expect(await node.ping()).toBe(true);
 
-			// The jam clears on its own, and a transmission succeeds
-			shouldFail = false;
-			t.expect(await node.ping()).toBe(true);
+				// The next jam is recovered right away
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(3);
+				const failedAt = Date.now();
 
-			// The next jam is recovered right away
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(true);
-			t.expect(countSoftResets(mockController)).toBe(2);
+				// The waiting time starts at 15 s again
+				vi.setSystemTime(failedAt + 13_000);
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(3);
+				vi.setSystemTime(failedAt + 16_000);
+				t.expect(await node.ping()).toBe(true);
+				t.expect(countSoftResets(mockController)).toBe(4);
+			} finally {
+				shouldFail = false;
+				vi.useRealTimers();
+			}
 		},
 	},
 );
@@ -830,7 +830,7 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
-	"When the retry after recovering a jammed controller cannot be queued, the next jam is recovered again",
+	"When the retry after recovering a jammed controller cannot be queued, the next jam is recovered after the waiting time",
 	{
 		// debug: true,
 
@@ -860,9 +860,19 @@ integrationTest.sequential(
 			t.expect(await node.ping()).toBe(false);
 			t.expect(countSoftResets()).toBe(1);
 
-			// The next jam must start a new recovery
+			// No transmission succeeded after the recovery. So the next jam fails without a reset.
 			shouldFail = true;
-			t.expect(await node.ping()).toBe(true);
+			t.expect(await node.ping()).toBe(false);
+			t.expect(countSoftResets()).toBe(1);
+
+			// After the waiting time, the next jam starts a new recovery
+			useFakeClock();
+			try {
+				vi.setSystemTime(Date.now() + 16_000);
+				t.expect(await node.ping()).toBe(true);
+			} finally {
+				vi.useRealTimers();
+			}
 			t.expect(countSoftResets()).toBe(2);
 			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
 		},
