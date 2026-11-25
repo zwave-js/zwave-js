@@ -8089,10 +8089,7 @@ ${handlers.length} left`,
 	}
 
 	private getQueueForTransaction(t: Transaction): TransactionQueue {
-		if (
-			t.priority === MessagePriority.Immediate
-			|| t.priority === MessagePriority.ControllerImmediate
-		) {
+		if (t.priority === MessagePriority.Immediate) {
 			return this.immediateQueue;
 		} else {
 			return this.queue;

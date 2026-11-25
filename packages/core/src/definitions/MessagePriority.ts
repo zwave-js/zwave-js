@@ -1,11 +1,9 @@
 /** The priority of messages, sorted from high (0) to low (>0) */
 
 export enum MessagePriority {
-	// High-priority controller commands that must be handled before all other commands.
-	// We use this priority to decide which messages go onto the immediate queue.
-	ControllerImmediate = 0,
+	// The values must not change, because applications may store or send them as numbers.
 	// Controller commands finish quickly and should be preferred over node queries
-	Controller,
+	Controller = 1,
 	// Some node commands like nonces, responses to Supervision and Transport Service
 	// need to be handled before all node commands.
 	// We use this priority to decide which messages go onto the immediate queue.
