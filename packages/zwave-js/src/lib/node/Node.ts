@@ -47,6 +47,7 @@ import {
 	AssociationGroupInfoCCNameGet,
 } from "@zwave-js/cc/AssociationGroupInfoCC";
 import { BasicCC } from "@zwave-js/cc/BasicCC";
+import { BasicWindowCoveringCC } from "@zwave-js/cc/BasicWindowCoveringCC";
 import { BinarySwitchCCSet } from "@zwave-js/cc/BinarySwitchCC";
 import { CentralSceneCCNotification } from "@zwave-js/cc/CentralSceneCC";
 import { ClockCCReport } from "@zwave-js/cc/ClockCC";
@@ -202,6 +203,7 @@ import {
 	getBasicMappingTarget,
 	handleBasicCommand,
 } from "./CCHandlers/BasicCC.js";
+import { handleBasicWindowCoveringCommand } from "./CCHandlers/BasicWindowCoveringCC.js";
 import { handleBatteryReport } from "./CCHandlers/BatteryCC.js";
 import { handleBinarySwitchCommand } from "./CCHandlers/BinarySwitchCC.js";
 import {
@@ -2768,6 +2770,8 @@ protocol version:      ${this.protocolVersion}`;
 			return handleBasicCommand(this.driver, this, command);
 		} else if (command instanceof MultilevelSwitchCC) {
 			return handleMultilevelSwitchCommand(this.driver, this, command);
+		} else if (command instanceof BasicWindowCoveringCC) {
+			return handleBasicWindowCoveringCommand(this.driver, this, command);
 		} else if (command instanceof BinarySwitchCCSet) {
 			return handleBinarySwitchCommand(this.driver, this, command);
 		} else if (command instanceof ThermostatModeCCSet) {
