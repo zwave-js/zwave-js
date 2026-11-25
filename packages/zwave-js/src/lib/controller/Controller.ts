@@ -52,6 +52,7 @@ import {
 	MAX_NODES,
 	type MaybeNotKnown,
 	type MaybeUnknown,
+	MessagePriority,
 	NODE_ID_BROADCAST,
 	NODE_ID_BROADCAST_LR,
 	NOT_KNOWN,
@@ -7725,6 +7726,10 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			new SerialAPISetup_SetNodeIDTypeRequest({
 				nodeIdType,
 			}),
+			{
+				// Commands for nodes depend on the node ID type, so it must be set first
+				priority: MessagePriority.ControllerImmediate,
+			},
 		);
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
@@ -7737,10 +7742,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					nodeIdType === NodeIDType.Short ? 8 : 16
 				}-bit node IDs ${result.success ? "successful" : "failed"}`,
 			);
-
-			if (result.success) {
-				this._nodeIdType = nodeIdType;
-			}
 		}
 		return result.success;
 	}
