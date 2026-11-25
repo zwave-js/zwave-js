@@ -228,9 +228,15 @@
 			"label": "Temperature Reporting Change Threshold",
 			"valueSize": 2,
 			"unit": "°F",
-			"minValue": 1,
+			"minValue": 0,
 			"maxValue": 144,
-			"defaultValue": 1
+			"defaultValue": 1,
+			"options": [
+				{
+					"label": "Disable",
+					"value": 0
+				}
+			]
 		},
 		{
 			"#": "184",
