@@ -126,6 +126,7 @@ import {
 	serializeCacheValue,
 	timespan,
 	wasCommandInterrupted,
+	highResTimestamp,
 } from "@zwave-js/core";
 import {
 	type BootloaderChunk,
@@ -165,6 +166,7 @@ import {
 	SendDataAbort,
 	SendDataBridgeRequest,
 	type SendDataMessage,
+	type TransmitReport,
 	SendDataMulticastBridgeRequest,
 	SendDataMulticastRequest,
 	SendDataRequest,
@@ -763,6 +765,25 @@ function isJamFailure(error: ZWaveError): boolean {
 	);
 }
 
+/**
+ * Whether the controller transmitted the command, also when the node did not acknowledge it.
+ * A `Fail` status counts only with transmit ticks, because the controller reports it in some cases after transmitting.
+ */
+function controllerTransmitted(report: TransmitReport): boolean {
+	switch (report.transmitStatus) {
+		case TransmitStatus.OK:
+		case TransmitStatus.NoAck:
+			return true;
+		case TransmitStatus.Fail:
+			return (
+				"txReport" in report
+				&& report.txReport != undefined
+				&& report.txReport.txTicks > 0
+			);
+	}
+	return false;
+}
+
 /** How long the driver waits before it soft-resets a jammed controller again, by the number of recoveries that did not help */
 const JAM_RECOVERY_BACKOFF_MS = [15_000, 30_000, 60_000];
 
@@ -1290,7 +1311,7 @@ export class Driver
 	private jamRecoveryUnconfirmed = false;
 	/** How many jam recoveries in a row did not help */
 	private failedJamRecoveries = 0;
-	/** Until when no jam recovery may start, because the last one did not help */
+	/** Until when no jam recovery may start, because the last one did not help. A {@link highResTimestamp} in nanoseconds. */
 	private jamRecoveryBlockedUntil = 0;
 
 	private _securityManager: SecurityManager | undefined;
@@ -5432,6 +5453,13 @@ export class Driver
 		const giveUp = (message: string): void => {
 			this.driverLog.print(message, "warn");
 			this._controller?.setStatus(ControllerStatus.Ready);
+			// A completed recovery of a missing callback is over. It must not apply to later callbacks.
+			if (
+				this._recoveryPhase
+				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
+			) {
+				this._recoveryPhase = ControllerRecoveryPhase.None;
+			}
 		};
 
 		// Give up on controllers that cannot be recovered
@@ -5463,14 +5491,14 @@ export class Driver
 					)
 				];
 			this.failedJamRecoveries++;
-			this.jamRecoveryBlockedUntil = Date.now() + backoff;
+			this.jamRecoveryBlockedUntil = highResTimestamp() + backoff * 1e6;
 			giveUp(
 				`Automatic controller recovery failed, not trying again for ${
 					backoff / 1000
 				} seconds. Returning to normal operation and hoping for the best.`,
 			);
 			return false;
-		} else if (Date.now() < this.jamRecoveryBlockedUntil) {
+		} else if (highResTimestamp() < this.jamRecoveryBlockedUntil) {
 			giveUp(
 				"The last automatic controller recovery did not help, not trying again yet. Returning to normal operation and hoping for the best.",
 			);
@@ -7465,16 +7493,21 @@ ${handlers.length} left`,
 							}
 						}
 
-						// A command could be sent, so the controller is no longer jammed
-						if (
-							this.controller.status === ControllerStatus.Jammed
-						) {
-							this.controller.setStatus(ControllerStatus.Ready);
+						if (controllerTransmitted(prevResult)) {
+							// The controller is no longer jammed
+							if (
+								this.controller.status
+								=== ControllerStatus.Jammed
+							) {
+								this.controller.setStatus(
+									ControllerStatus.Ready,
+								);
+							}
+							// and a possible jam recovery helped
+							this.jamRecoveryUnconfirmed = false;
+							this.failedJamRecoveries = 0;
+							this.jamRecoveryBlockedUntil = 0;
 						}
-						// and a possible jam recovery helped
-						this.jamRecoveryUnconfirmed = false;
-						this.failedJamRecoveries = 0;
-						this.jamRecoveryBlockedUntil = 0;
 
 						if (!prevResult.isOK()) {
 							throw new ZWaveError(

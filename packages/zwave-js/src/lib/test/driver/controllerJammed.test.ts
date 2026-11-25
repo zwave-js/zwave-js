@@ -7,6 +7,7 @@ import {
 	ZWaveErrorCodes,
 	assertZWaveError,
 	getZWaveChipType,
+	highResTimestamp,
 } from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
 import {
@@ -597,9 +598,19 @@ const jamTestOptions = {
 	},
 };
 
-// Fakes only the clock, so the test can jump over the waiting time between jam recoveries
+// Fakes only the monotonic clock, so the test can jump over the waiting time between jam recoveries
 function useFakeClock(): void {
-	vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true });
+	vi.useFakeTimers({ toFake: ["hrtime"], shouldAdvanceTime: true });
+}
+
+/** Returns the monotonic time in milliseconds */
+function now(): number {
+	return highResTimestamp() / 1e6;
+}
+
+/** Moves the fake monotonic clock forward to the given time in milliseconds */
+function jumpTo(time: number): void {
+	vi.advanceTimersByTime(Math.max(0, time - now()));
 }
 
 // Counts the soft resets the controller received
@@ -631,19 +642,20 @@ integrationTest.sequential(
 				t.expect(countSoftResets(mockController)).toBe(1);
 				t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
 
-				let failedAt = Date.now();
+				// Check each waiting time from the moment the last recovery failed
+				let failedAt = now();
 				let resets = 1;
 				for (const backoff of [15_000, 30_000, 60_000, 60_000]) {
 					// Within the waiting time, a jam fails without a reset
-					vi.setSystemTime(failedAt + backoff - 2000);
+					jumpTo(failedAt + backoff - 2000);
 					t.expect(await node.ping()).toBe(false);
 					t.expect(countSoftResets(mockController)).toBe(resets);
 
 					// After it, the next jam is recovered, which does not help either
-					vi.setSystemTime(failedAt + backoff + 1000);
+					jumpTo(failedAt + backoff + 1000);
 					t.expect(await node.ping()).toBe(false);
 					t.expect(countSoftResets(mockController)).toBe(++resets);
-					failedAt = Date.now();
+					failedAt = now();
 				}
 			} finally {
 				shouldFail = false;
@@ -713,7 +725,7 @@ integrationTest.sequential(
 				shouldFail = true;
 				// Fail two recoveries, so the next waiting time would be 1 min
 				t.expect(await node.ping()).toBe(false);
-				vi.setSystemTime(Date.now() + 16_000);
+				jumpTo(now() + 16_000);
 				t.expect(await node.ping()).toBe(false);
 				t.expect(countSoftResets(mockController)).toBe(2);
 
@@ -725,13 +737,13 @@ integrationTest.sequential(
 				shouldFail = true;
 				t.expect(await node.ping()).toBe(false);
 				t.expect(countSoftResets(mockController)).toBe(3);
-				const failedAt = Date.now();
+				const failedAt = now();
 
 				// The waiting time starts at 15 s again
-				vi.setSystemTime(failedAt + 13_000);
+				jumpTo(failedAt + 13_000);
 				t.expect(await node.ping()).toBe(false);
 				t.expect(countSoftResets(mockController)).toBe(3);
-				vi.setSystemTime(failedAt + 16_000);
+				jumpTo(failedAt + 16_000);
 				t.expect(await node.ping()).toBe(true);
 				t.expect(countSoftResets(mockController)).toBe(4);
 			} finally {
@@ -854,21 +866,22 @@ integrationTest.sequential(
 					(msg) => msg.functionType === FunctionType.SoftReset,
 				).length;
 
-			// After the soft reset, the controller rejects all attempts of the retry
-			queueFullAfterSoftReset = 3;
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(false);
-			t.expect(countSoftResets()).toBe(1);
-
-			// No transmission succeeded after the recovery. So the next jam fails without a reset.
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(false);
-			t.expect(countSoftResets()).toBe(1);
-
-			// After the waiting time, the next jam starts a new recovery
+			// The waiting time must be set with the fake clock
 			useFakeClock();
 			try {
-				vi.setSystemTime(Date.now() + 16_000);
+				// After the soft reset, the controller rejects all attempts of the retry
+				queueFullAfterSoftReset = 3;
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets()).toBe(1);
+
+				// No transmission succeeded after the recovery. So the next jam fails without a reset.
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets()).toBe(1);
+
+				// After the waiting time, the next jam starts a new recovery
+				jumpTo(now() + 16_000);
 				t.expect(await node.ping()).toBe(true);
 			} finally {
 				vi.useRealTimers();
@@ -915,12 +928,19 @@ integrationTest.sequential(
 	},
 );
 
-let mode: "normal" | "noCallback" | "jam" = "normal";
+type Mode = "normal" | "noCallback" | "jam";
+let mode: Mode = "normal";
+// The modes after the next soft resets. Without them, a missing callback is followed by a jam, and a jam by normal operation.
+let modesAfterSoftReset: Mode[] | undefined;
 // Leaves the callback out or jams, depending on the mode. Each soft reset moves on to the next mode.
 const callbackThenJam: MockControllerBehavior = {
 	async onHostMessage(controller, msg) {
 		if (msg instanceof SoftResetRequest) {
-			mode = mode === "noCallback" ? "jam" : "normal";
+			if (modesAfterSoftReset) {
+				mode = modesAfterSoftReset.shift() ?? "normal";
+			} else {
+				mode = mode === "noCallback" ? "jam" : "normal";
+			}
 			return false;
 		}
 		if (!(msg instanceof SendDataRequest) || mode === "normal") return;
@@ -1010,6 +1030,104 @@ integrationTest.sequential(
 			await wait(200);
 			t.expect(driver["_recoveryPhase"]).not.toBe(0);
 			await ping;
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A missing callback after a jam the driver gave up on is recovered again",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		customSetup: async (driver, controller) => {
+			controller.defineBehavior(callbackThenJam);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			driver.options.timeouts.retryJammed = 100;
+			node.markAsAlive();
+			// Watch whether a node is marked as dead
+			const nodeDead = sinon.spy();
+			node.on("dead", nodeDead);
+
+			try {
+				// The retry after the jam recovery loses its callback.
+				// The retry after that recovery jams, and the driver gives up.
+				mode = "jam";
+				modesAfterSoftReset = ["noCallback", "jam"];
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(2);
+
+				// A transmission succeeds
+				mode = "normal";
+				t.expect(await node.ping()).toBe(true);
+
+				// A later missing callback is a new problem, so the driver recovers again
+				mode = "noCallback";
+				t.expect(await node.ping()).toBe(true);
+				t.expect(countSoftResets(mockController)).toBe(3);
+				// No node may be blamed for the missing callback
+				sinon.assert.notCalled(nodeDead);
+			} finally {
+				mode = "normal";
+				modesAfterSoftReset = undefined;
+			}
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A NotIdle transmit report does not end the waiting time after a failed jam recovery",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			// Circumvent the options validation, so the jam attempts are quick
+			driver.options.timeouts.retryJammed = 100;
+
+			// Let the controller answer with NotIdle while the flag is set
+			let notIdle = false;
+			const reportNotIdle: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (!notIdle || !(msg instanceof SendDataRequest)) return;
+					await controller.sendMessageToHost(
+						new SendDataResponse({ wasSent: true }),
+					);
+					await controller.sendMessageToHost(
+						new SendDataRequestTransmitReport({
+							callbackId: msg.callbackId!,
+							transmitStatus: TransmitStatus.NotIdle,
+						}),
+					);
+					return true;
+				},
+			};
+			mockController.defineBehavior(reportNotIdle);
+
+			try {
+				// Let one recovery not help, so the waiting time starts
+				softResetsWithoutEffect = 1;
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(1);
+
+				// The controller is busy and does not transmit
+				notIdle = true;
+				t.expect(await node.ping()).toBe(false);
+				notIdle = false;
+
+				// The waiting time still runs, so the next jam fails without a reset
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(1);
+			} finally {
+				shouldFail = false;
+			}
 		},
 	},
 );
