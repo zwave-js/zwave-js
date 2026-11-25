@@ -45,14 +45,14 @@ import {
 	SwitchType,
 	LocalProtectionState,
 	RFProtectionState,
-	ScheduleEntryLockScheduleKind,
+	type ScheduleEntryLockScheduleKind,
 	ThermostatFanMode,
 	ThermostatFanState,
 	ThermostatMode,
 	ThermostatOperatingState,
 	ThermostatSetpointType,
-	UserCredentialType,
-	UserCredentialKeyLockerEntryType,
+	type UserCredentialType,
+	type UserCredentialKeyLockerEntryType,
 	WindowCoveringParameter,
 } from "../lib/_Types.js";
 
