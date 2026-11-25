@@ -37,6 +37,9 @@ export function gunzipSync(
 	const view = Bytes.view(data);
 	let memberOutputStart = 0;
 	const checkMemberLength = (memberEnd: number) => {
+		if (memberEnd < 4 || memberEnd > data.length) {
+			throw new Error("Invalid gzip data");
+		}
 		const expectedLength = view.readUInt32LE(memberEnd - 4);
 		if (
 			(outputLength - memberOutputStart) % 0x1_0000_0000
