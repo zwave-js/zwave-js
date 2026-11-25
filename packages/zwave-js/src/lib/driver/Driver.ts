@@ -1011,6 +1011,8 @@ export class Driver
 			mayStartNextTransaction: (t) => this.mayStartTransaction(t),
 		});
 
+		// Unpause because ensureSerialAPI can leave the previous queues paused
+		this.queuePaused = false;
 		this._queueIdle = false;
 
 		// Start draining the queues
@@ -1253,6 +1255,8 @@ export class Driver
 
 	private _recoveryPhase: ControllerRecoveryPhase =
 		ControllerRecoveryPhase.None;
+	/** The transaction that is retried after soft-resetting a jammed controller */
+	private _jammedRetryTransaction: Transaction | undefined;
 
 	private _securityManager: SecurityManager | undefined;
 	/**
@@ -3618,6 +3622,7 @@ export class Driver
 					"The Serial API did not respond after soft-reset",
 				);
 			} else {
+				this.isSoftResetting = false;
 				throw new ZWaveError(
 					"The Serial API did not respond after soft-reset",
 					ZWaveErrorCodes.Driver_Failed,
@@ -5069,12 +5074,14 @@ export class Driver
 						// Re-queue the transaction, so it can get handled next.
 						// Its message generator may have finished, so reset that too.
 						transaction.reset();
-						this.getQueueForTransaction(transaction).add(
-							transaction.clone(),
-						);
+						const retry = transaction.clone();
+						this._jammedRetryTransaction = retry;
+						this.getQueueForTransaction(transaction).add(retry);
 
 						this._recoveryPhase =
 							ControllerRecoveryPhase.JammedAfterReset;
+						// Clear the jammed status because the immediate queue only sends soft resets while jammed
+						this._controller?.setStatus(ControllerStatus.Ready);
 					})
 					.catch(() => {
 						// Soft-reset failed. Just reject the transaction
@@ -6976,6 +6983,17 @@ ${handlers.length} left`,
 				this.handleFailedTransaction(transaction, error);
 			}
 
+			// End the jammed controller recovery when its retry ends, whatever the outcome
+			if (transaction === this._jammedRetryTransaction) {
+				this._jammedRetryTransaction = undefined;
+				if (
+					this._recoveryPhase
+					=== ControllerRecoveryPhase.JammedAfterReset
+				) {
+					this._recoveryPhase = ControllerRecoveryPhase.None;
+				}
+			}
+
 			setIdleTimer = setImmediate(() => {
 				this.markQueueBusy(queue, false);
 			});
@@ -8514,7 +8532,12 @@ ${handlers.length} left`,
 			// 700/800 series controllers can be jammed due to a bug,
 			// which a soft-reset is supposed to work around
 			isSendData(transaction.message)
-			&& this.controller.status === ControllerStatus.Jammed
+			&& (this.controller.status === ControllerStatus.Jammed
+				// The retry after a recovery fails without marking the controller as jammed again
+				|| (this._recoveryPhase
+					=== ControllerRecoveryPhase.JammedAfterReset
+					&& error.code === ZWaveErrorCodes.Controller_MessageDropped
+					&& isTransmitReport(error.context)))
 		) {
 			if (this.handleJammedController(transaction, error)) return;
 		} else if (
