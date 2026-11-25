@@ -2,7 +2,10 @@ import { Message } from "@zwave-js/serial";
 import { Bytes } from "@zwave-js/shared";
 import { test } from "vitest";
 
-import { SerialAPISetup_GetSupportedCommandsResponse } from "./SerialAPISetupMessages.js";
+import {
+	SerialAPISetup_GetPowerlevelRequest,
+	SerialAPISetup_GetSupportedCommandsResponse,
+} from "./SerialAPISetupMessages.js";
 
 test("GetSupportedCommandsResponse with extended bitmask parses correctly (pre-7.19.1 encoding)", async (t) => {
 	const data = Bytes.from(
@@ -38,4 +41,13 @@ test("GetSupportedCommandsResponse with extended bitmask parses correctly (post-
 	t.expect(supported).toStrictEqual([
 		0x01, 0x02, 0x04, 0x08, 0x10, 0x11, 0x20, 0x40, 0x80,
 	]);
+});
+
+test("Request subclasses without their own from() are parsed as that subclass", async (t) => {
+	const data = await new SerialAPISetup_GetPowerlevelRequest().serialize(
+		{} as any,
+	);
+	const msg = Message.parse(data, {} as any);
+	t.expect(msg).toBeInstanceOf(SerialAPISetup_GetPowerlevelRequest);
+	t.expect(msg.payload).toStrictEqual(new Bytes());
 });

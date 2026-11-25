@@ -348,7 +348,7 @@ export enum ApplicationCommandStatusFlags {
 export class ApplicationUpdateRequest extends Message_2 {
     constructor(options?: ApplicationUpdateRequestOptions & MessageBaseOptions_2);
     // (undocumented)
-    static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): ApplicationUpdateRequest;
+    static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): ApplicationUpdateRequest;
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -373,6 +373,8 @@ export class ApplicationUpdateRequestNodeInfoReceived extends ApplicationUpdateR
 export class ApplicationUpdateRequestNodeInfoRequestFailed extends ApplicationUpdateRequest implements SuccessIndicator_2 {
     // (undocumented)
     isOK(): boolean;
+    // (undocumented)
+    serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
 }
 
 // Warning: (ae-missing-release-tag) "ApplicationUpdateRequestNodeRemoved" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
@@ -1855,7 +1857,7 @@ export class FirmwareUpdateNVMRequest extends Message_2 {
     // (undocumented)
     command: FirmwareUpdateNVMCommand;
     // (undocumented)
-    static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): FirmwareUpdateNVMRequest;
+    static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): FirmwareUpdateNVMRequest;
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -1878,7 +1880,7 @@ export class FirmwareUpdateNVMResponse extends Message_2 {
     // (undocumented)
     command: FirmwareUpdateNVMCommand;
     // (undocumented)
-    static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): FirmwareUpdateNVMResponse;
+    static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): FirmwareUpdateNVMResponse;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -2532,6 +2534,11 @@ export interface GetLongRangeNodesResponseOptions {
     segmentNumber: number;
 }
 
+// Warning: (ae-missing-release-tag) "getMessageSubType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getMessageSubType(messageClass: Message): number | undefined;
+
 // Warning: (ae-missing-release-tag) "getMessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
 // @public
@@ -2734,6 +2741,11 @@ export function getRCPFunctionType<T extends RCPMessage>(messageClass: T): RCPFu
 //
 // @public
 export function getRCPFunctionTypeStatic<T extends RCPMessageConstructor<RCPMessage>>(classConstructor: T): RCPFunctionType | undefined;
+
+// Warning: (ae-missing-release-tag) "getRCPMessageSubType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export function getRCPMessageSubType<T extends RCPMessage>(messageClass: T): number | undefined;
 
 // Warning: (ae-missing-release-tag) "getRCPMessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3281,18 +3293,23 @@ export interface MessageParsingContext extends HostIDs, GetDeviceConfig {
 //
 // @public (undocumented)
 export class MessageRaw {
-    constructor(type: MessageType, functionType: FunctionType, payload: Bytes);
+    constructor(type: MessageType, functionType: FunctionType, payload: Bytes,
+    subType?: number | undefined);
     // (undocumented)
     readonly functionType: FunctionType;
     // (undocumented)
     static parse(data: BytesView): MessageRaw;
     // (undocumented)
     readonly payload: Bytes;
+    readonly subType?: number | undefined;
     // (undocumented)
     readonly type: MessageType;
-    // (undocumented)
-    withPayload(payload: Bytes): MessageRaw;
 }
+
+// Warning: (ae-missing-release-tag) "messageSubType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const messageSubType: <TTarget extends typeof Message>(subType: number) => TypedClassDecorator<TTarget>;
 
 // Warning: (ae-missing-release-tag) "MessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -3673,18 +3690,23 @@ export interface RCPMessageParsingContext {
 //
 // @public (undocumented)
 export class RCPMessageRaw {
-    constructor(type: RCPMessageType, functionType: RCPFunctionType, payload: Bytes);
+    constructor(type: RCPMessageType, functionType: RCPFunctionType, payload: Bytes,
+    subType?: number | undefined);
     // (undocumented)
     readonly functionType: RCPFunctionType;
     // (undocumented)
     static parse(data: BytesView): RCPMessageRaw;
     // (undocumented)
     readonly payload: Bytes;
+    readonly subType?: number | undefined;
     // (undocumented)
     readonly type: RCPMessageType;
-    // (undocumented)
-    withPayload(payload: Bytes): RCPMessageRaw;
 }
+
+// Warning: (ae-missing-release-tag) "rcpMessageSubType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
+//
+// @public
+export const rcpMessageSubType: <TTarget extends typeof RCPMessage>(subType: number) => TypedClassDecorator<TTarget>;
 
 // Warning: (ae-missing-release-tag) "RCPMessageType" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
@@ -5344,7 +5366,7 @@ export class SerialAPISetupRequest extends Message_2 {
     // (undocumented)
     command: SerialAPISetupCommand;
     // (undocumented)
-    static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): SerialAPISetupRequest;
+    static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): SerialAPISetupRequest;
     // (undocumented)
     serialize(ctx: MessageEncodingContext_2): Promise<Bytes>;
     // (undocumented)
@@ -5367,7 +5389,7 @@ export class SerialAPISetupResponse extends Message_2 {
     // (undocumented)
     command: SerialAPISetupCommand;
     // (undocumented)
-    static from(raw: MessageRaw_2, ctx: MessageParsingContext_2): SerialAPISetupResponse;
+    static from(raw: MessageRaw_2, _ctx: MessageParsingContext_2): SerialAPISetupResponse;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }
@@ -6082,7 +6104,7 @@ export class SetupRadioRequest extends RCPMessage {
     // (undocumented)
     command: SetupRadioCommand;
     // (undocumented)
-    static from(raw: RCPMessageRaw, ctx: RCPMessageParsingContext): SetupRadioRequest;
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): SetupRadioRequest;
     // (undocumented)
     serialize(ctx: RCPMessageEncodingContext): Promise<Bytes>;
     // (undocumented)
@@ -6105,7 +6127,7 @@ export class SetupRadioResponse extends RCPMessage {
     // (undocumented)
     command: SetupRadioCommand;
     // (undocumented)
-    static from(raw: RCPMessageRaw, ctx: RCPMessageParsingContext): SetupRadioResponse;
+    static from(raw: RCPMessageRaw, _ctx: RCPMessageParsingContext): SetupRadioResponse;
     // (undocumented)
     toLogEntry(): MessageOrCCLogEntry;
 }

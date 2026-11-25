@@ -4,6 +4,7 @@ import {
 	type MessageOrCCLogEntry,
 	type MessageRecord,
 	type NodeUpdatePayload,
+	encodeNodeID,
 	encodeNodeUpdatePayload,
 	getCCName,
 	logList,
@@ -11,17 +12,17 @@ import {
 	parseNodeID,
 	parseNodeUpdatePayload,
 } from "@zwave-js/core";
-import { createSimpleReflectionDecorator } from "@zwave-js/core/reflection";
 import {
 	FunctionType,
 	Message,
 	type MessageBaseOptions,
-	type MessageConstructor,
 	type MessageEncodingContext,
 	type MessageParsingContext,
 	type MessageRaw,
 	MessageType,
 	type SuccessIndicator,
+	getMessageSubType,
+	messageSubType,
 	messageTypes,
 } from "@zwave-js/serial";
 import {
@@ -44,18 +45,6 @@ export enum ApplicationUpdateTypes {
 	SUC_IdChanged = 0x10,
 }
 
-const {
-	decorator: applicationUpdateType,
-	lookupConstructor: getApplicationUpdateRequestConstructor,
-	lookupValue: getApplicationUpdateType,
-} = createSimpleReflectionDecorator<
-	typeof ApplicationUpdateRequest,
-	[updateType: ApplicationUpdateTypes],
-	MessageConstructor<ApplicationUpdateRequest>
->({
-	name: "applicationUpdateType",
-});
-
 export interface ApplicationUpdateRequestOptions {
 	updateType?: ApplicationUpdateTypes;
 }
@@ -68,29 +57,15 @@ export class ApplicationUpdateRequest extends Message {
 	) {
 		super(options);
 
-		this.updateType = options.updateType ?? getApplicationUpdateType(this)!;
+		this.updateType = options.updateType ?? getMessageSubType(this)!;
 	}
 
 	public static from(
 		raw: MessageRaw,
-		ctx: MessageParsingContext,
+		_ctx: MessageParsingContext,
 	): ApplicationUpdateRequest {
-		const updateType: ApplicationUpdateTypes = raw.payload[0];
-		const payload = raw.payload.subarray(1);
-
-		const CommandConstructor =
-			getApplicationUpdateRequestConstructor(updateType);
-		if (CommandConstructor) {
-			return CommandConstructor.from(
-				raw.withPayload(payload),
-				ctx,
-			) as ApplicationUpdateRequest;
-		}
-
-		const ret = new ApplicationUpdateRequest({
-			updateType,
-		});
-		ret.payload = payload;
+		const ret = new this({ updateType: raw.subType });
+		ret.payload = raw.payload;
 		return ret;
 	}
 
@@ -143,10 +118,10 @@ export class ApplicationUpdateRequestWithNodeInfo extends ApplicationUpdateReque
 	}
 }
 
-@applicationUpdateType(ApplicationUpdateTypes.NodeInfo_Received)
+@messageSubType(ApplicationUpdateTypes.NodeInfo_Received)
 export class ApplicationUpdateRequestNodeInfoReceived extends ApplicationUpdateRequestWithNodeInfo {}
 
-@applicationUpdateType(ApplicationUpdateTypes.NodeInfo_RequestFailed)
+@messageSubType(ApplicationUpdateTypes.NodeInfo_RequestFailed)
 export class ApplicationUpdateRequestNodeInfoRequestFailed
 	extends ApplicationUpdateRequest
 	implements SuccessIndicator
@@ -154,16 +129,21 @@ export class ApplicationUpdateRequestNodeInfoRequestFailed
 	isOK(): boolean {
 		return false;
 	}
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([encodeNodeID(0, ctx.nodeIdType), [0]]);
+		return super.serialize(ctx);
+	}
 }
 
-@applicationUpdateType(ApplicationUpdateTypes.Node_Added)
+@messageSubType(ApplicationUpdateTypes.Node_Added)
 export class ApplicationUpdateRequestNodeAdded extends ApplicationUpdateRequestWithNodeInfo {}
 
 export interface ApplicationUpdateRequestNodeRemovedOptions {
 	nodeId: number;
 }
 
-@applicationUpdateType(ApplicationUpdateTypes.Node_Removed)
+@messageSubType(ApplicationUpdateTypes.Node_Removed)
 export class ApplicationUpdateRequestNodeRemoved extends ApplicationUpdateRequest {
 	public constructor(
 		options: ApplicationUpdateRequestNodeRemovedOptions
@@ -276,19 +256,17 @@ class ApplicationUpdateRequestSmartStartHomeIDReceivedBase extends ApplicationUp
 	}
 }
 
-@applicationUpdateType(ApplicationUpdateTypes.SmartStart_HomeId_Received)
+@messageSubType(ApplicationUpdateTypes.SmartStart_HomeId_Received)
 export class ApplicationUpdateRequestSmartStartHomeIDReceived extends ApplicationUpdateRequestSmartStartHomeIDReceivedBase {}
 
-@applicationUpdateType(
-	ApplicationUpdateTypes.SmartStart_LongRange_HomeId_Received,
-)
+@messageSubType(ApplicationUpdateTypes.SmartStart_LongRange_HomeId_Received)
 export class ApplicationUpdateRequestSmartStartLongRangeHomeIDReceived extends ApplicationUpdateRequestSmartStartHomeIDReceivedBase {}
 
 export interface ApplicationUpdateRequestSUCIdChangedOptions {
 	sucNodeID: number;
 }
 
-@applicationUpdateType(ApplicationUpdateTypes.SUC_IdChanged)
+@messageSubType(ApplicationUpdateTypes.SUC_IdChanged)
 export class ApplicationUpdateRequestSUCIdChanged extends ApplicationUpdateRequest {
 	public constructor(
 		options: ApplicationUpdateRequestSUCIdChangedOptions
