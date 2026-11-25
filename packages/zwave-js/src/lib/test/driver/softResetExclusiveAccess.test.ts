@@ -22,6 +22,7 @@ import {
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import { createDeferredPromise } from "alcalzone-shared/deferred-promise";
+import { vi } from "vitest";
 
 import { ControllerGate } from "../../driver/ControllerGate.js";
 import { DriverMode } from "../../driver/DriverMode.js";
@@ -304,6 +305,57 @@ integrationTest.sequential(
 
 			// The gate must still be closed at that point
 			t.expect(gateClosedOnDestroy).toStrictEqual([true]);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"softResetAndRestart() rejects when the Serial API does not come back after the reset",
+	{
+		// debug: true,
+
+		additionalDriverOptions: {
+			timeouts: {
+				// Shorten the timeouts to speed up the test
+				ack: 400,
+			},
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Simulate a controller that answers nothing after the reset
+			const ignoreCommands: MockControllerBehavior = {
+				onHostMessage() {
+					return true;
+				},
+			};
+			mockController.defineBehavior(ignoreCommands);
+			mockController.autoAckHostMessages = false;
+
+			// Jump over the waits between the polls of the Serial API
+			vi.useFakeTimers({
+				toFake: ["setTimeout", "clearTimeout"],
+				shouldAdvanceTime: true,
+			});
+			try {
+				// Restart and move the fake clock forward until the restart ends
+				const result = driver.softResetAndRestart().then(
+					() => "resolved",
+					(e: { code?: number }) => e.code,
+				);
+				for (let i = 0; i < 30; i++) {
+					const outcome = await Promise.race([
+						result,
+						vi.advanceTimersByTimeAsync(5000).then(() => undefined),
+					]);
+					if (outcome !== undefined) break;
+				}
+
+				// The restart fails, and the driver is destroyed
+				t.expect(await result).toBe(ZWaveErrorCodes.Driver_Failed);
+				t.expect(driver["wasDestroyed"]).toBe(true);
+			} finally {
+				vi.useRealTimers();
+			}
 		},
 	},
 );

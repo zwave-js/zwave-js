@@ -4043,9 +4043,9 @@ export class Driver
 
 		// Give up when the Serial API does not come back
 		if (!serialAPIResponds) {
-			await this.destroyWithMessage(
-				"The Serial API did not respond after soft-reset",
-			);
+			const message = "The Serial API did not respond after soft-reset";
+			await this.destroyWithMessage(message);
+			throw new ZWaveError(message, ZWaveErrorCodes.Driver_Failed);
 		}
 
 		// Clean up and interview the controller again. Removing a parent would also remove
