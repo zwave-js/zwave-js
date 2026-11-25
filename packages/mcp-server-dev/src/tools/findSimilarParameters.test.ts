@@ -1,11 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { Checkout } from "../checkout.js";
 import {
 	SemanticSearchError,
 	type SemanticSearchService,
 } from "../semantic/service.js";
 
 import { createFindSimilarParametersTool } from "./findSimilarParameters.js";
+
+const checkout = { root: "/repo" } as Checkout;
+const context = { checkout };
 
 function fakeService(
 	overrides: Partial<SemanticSearchService> = {},
@@ -29,7 +33,7 @@ describe("createFindSimilarParametersTool", () => {
 	it("rejects a missing filename without calling the service", async () => {
 		const service = fakeService();
 		const tool = createFindSimilarParametersTool(service);
-		const result = await tool.handler(undefined as any);
+		const result = await tool.handler(undefined as any, context);
 		expect(result.isError).toBe(true);
 		expect(JSON.stringify(result.content)).toContain("filename");
 		expect(service.findSimilar).not.toHaveBeenCalled();
@@ -39,14 +43,17 @@ describe("createFindSimilarParametersTool", () => {
 		const service = fakeService();
 		const tool = createFindSimilarParametersTool(service);
 
-		let result = await tool.handler({ filename: "/a/b.json" });
+		let result = await tool.handler({ filename: "/a/b.json" }, context);
 		expect(result.isError).toBe(true);
 		expect(service.findSimilar).not.toHaveBeenCalled();
 
-		result = await tool.handler({
-			filename: "/a/b.json",
-			parameter: "1",
-		} as any);
+		result = await tool.handler(
+			{
+				filename: "/a/b.json",
+				parameter: "1",
+			} as any,
+			context,
+		);
 		expect(result.isError).toBe(true);
 		expect(service.findSimilar).not.toHaveBeenCalled();
 	});
@@ -55,8 +62,9 @@ describe("createFindSimilarParametersTool", () => {
 		const service = fakeService();
 		const tool = createFindSimilarParametersTool(service);
 
-		await tool.handler({ filename: "/a/b.json", parameter: 5 });
+		await tool.handler({ filename: "/a/b.json", parameter: 5 }, context);
 		expect(service.findSimilar).toHaveBeenLastCalledWith(
+			checkout,
 			"/a/b.json",
 			5,
 			undefined,
@@ -64,12 +72,16 @@ describe("createFindSimilarParametersTool", () => {
 			10,
 		);
 
-		await tool.handler({
-			filename: "/a/b.json",
-			parameter: 5,
-			limit: 500,
-		});
+		await tool.handler(
+			{
+				filename: "/a/b.json",
+				parameter: 5,
+				limit: 500,
+			},
+			context,
+		);
 		expect(service.findSimilar).toHaveBeenLastCalledWith(
+			checkout,
 			"/a/b.json",
 			5,
 			undefined,
@@ -81,13 +93,17 @@ describe("createFindSimilarParametersTool", () => {
 	it("passes valueBitMask and firmwareVersion through to the service", async () => {
 		const service = fakeService();
 		const tool = createFindSimilarParametersTool(service);
-		await tool.handler({
-			filename: "/a/b.json",
-			parameter: 5,
-			valueBitMask: 0xff,
-			firmwareVersion: "1.5",
-		});
+		await tool.handler(
+			{
+				filename: "/a/b.json",
+				parameter: 5,
+				valueBitMask: 0xff,
+				firmwareVersion: "1.5",
+			},
+			context,
+		);
 		expect(service.findSimilar).toHaveBeenCalledWith(
+			checkout,
 			"/a/b.json",
 			5,
 			0xff,
@@ -106,10 +122,13 @@ describe("createFindSimilarParametersTool", () => {
 			}),
 		});
 		const tool = createFindSimilarParametersTool(service);
-		const result = await tool.handler({
-			filename: "/a/b.json",
-			parameter: 5,
-		});
+		const result = await tool.handler(
+			{
+				filename: "/a/b.json",
+				parameter: 5,
+			},
+			context,
+		);
 		expect(result.isError).toBeFalsy();
 		expect(JSON.stringify(result.content)).toContain("p1");
 	});
@@ -126,10 +145,13 @@ describe("createFindSimilarParametersTool", () => {
 				),
 		});
 		const tool = createFindSimilarParametersTool(service);
-		const result = await tool.handler({
-			filename: "/a/b.json",
-			parameter: 5,
-		});
+		const result = await tool.handler(
+			{
+				filename: "/a/b.json",
+				parameter: 5,
+			},
+			context,
+		);
 		expect(result.isError).toBe(true);
 		expect(JSON.stringify(result.content)).toContain("ambiguous_parameter");
 	});

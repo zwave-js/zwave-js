@@ -18,7 +18,7 @@ import {
 import PQueue from "p-queue";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { DEVICES_DIR, fs } from "../configEnv.js";
+import type { Checkout } from "../checkout.js";
 
 import { semanticHash } from "./hash.js";
 import type {
@@ -32,9 +32,11 @@ import type {
 	TemplateCorpusRecord,
 } from "./types.js";
 
-/** Lists all `.json` files below the devices directory, relative to it */
-export async function listConfigFiles(): Promise<string[]> {
-	const relativeFiles = await readdir(DEVICES_DIR, { recursive: true });
+/** Lists all `.json` files below the checkout's devices directory, relative to it */
+export async function listConfigFiles(checkout: Checkout): Promise<string[]> {
+	const relativeFiles = await readdir(checkout.devicesDir, {
+		recursive: true,
+	});
 	return relativeFiles.filter((f) => f.endsWith(".json")).toSorted();
 }
 
@@ -193,12 +195,17 @@ function lineAtLocation(parsed: ParsedFile, path: (string | number)[]): number {
 
 /** Resolves `$import` templates, converting failures into a corpus warning */
 async function tryResolveTemplates(
+	checkout: Checkout,
 	parsed: ParsedFile,
 	file: string,
 	warnings: CorpusWarning[],
 ): Promise<Record<string, unknown> | undefined> {
 	try {
-		return await readJsonWithTemplate(fs, file, DEVICES_DIR);
+		return await readJsonWithTemplate(
+			checkout.fs,
+			file,
+			checkout.devicesDir,
+		);
 	} catch (error) {
 		warnings.push({
 			file: parsed.relativeFile,
@@ -235,6 +242,7 @@ function extractDeviceContext(raw: Record<string, unknown>): DeviceContext {
 }
 
 async function buildParameterRecords(
+	checkout: Checkout,
 	parsed: ParsedFile,
 	file: string,
 	warnings: CorpusWarning[],
@@ -247,7 +255,12 @@ async function buildParameterRecords(
 
 	const device = extractDeviceContext(raw);
 
-	const resolved = await tryResolveTemplates(parsed, file, warnings);
+	const resolved = await tryResolveTemplates(
+		checkout,
+		parsed,
+		file,
+		warnings,
+	);
 	if (!resolved) return [];
 
 	const rawParams = raw.paramInformation as unknown[];
@@ -310,10 +323,10 @@ async function buildParameterRecords(
 				hashIndex >= 0 ? rawImport.slice(hashIndex + 1) : undefined;
 			try {
 				templateFile = await resolveImportPath(
-					fs,
+					checkout.fs,
 					file,
 					rawImport,
-					DEVICES_DIR,
+					checkout.devicesDir,
 				);
 			} catch (error) {
 				warnings.push({
@@ -356,6 +369,7 @@ async function buildParameterRecords(
 }
 
 async function buildTemplateRecords(
+	checkout: Checkout,
 	parsed: ParsedFile,
 	file: string,
 	warnings: CorpusWarning[],
@@ -363,7 +377,12 @@ async function buildTemplateRecords(
 	const raw = parsed.raw;
 	if (!isPlainObject(raw)) return [];
 
-	const resolved = await tryResolveTemplates(parsed, file, warnings);
+	const resolved = await tryResolveTemplates(
+		checkout,
+		parsed,
+		file,
+		warnings,
+	);
 	if (!resolved) return [];
 
 	const importSpecifierBase = `~/${toPosixPath(parsed.relativeFile)}`;
@@ -426,6 +445,7 @@ function looksLikeParameterDefinition(
 }
 
 async function tallyTemplateReferences(
+	checkout: Checkout,
 	templates: TemplateCorpusRecord[],
 	importUsages: { contextFile: string; specifier: string }[],
 ): Promise<void> {
@@ -442,10 +462,10 @@ async function tallyTemplateReferences(
 		let promise = resolved.get(cacheKey);
 		if (!promise) {
 			promise = resolveImportPath(
-				fs,
+				checkout.fs,
 				contextFile,
 				specifier,
-				DEVICES_DIR,
+				checkout.devicesDir,
 			).catch(() => undefined);
 			resolved.set(cacheKey, promise);
 		}
@@ -467,16 +487,16 @@ async function tallyTemplateReferences(
 }
 
 /**
- * Scans every device config and template file under `DEVICES_DIR`, resolving
+ * Scans every device config and template file of a checkout, resolving
  * `$import`s to build a flat, normalized corpus of parameter and template
  * records suitable for embedding and lexical/structural search. Individual
  * unresolvable/malformed files are skipped with a warning collected in the
  * result; the whole corpus is only aborted on unexpected (non-file-scoped)
  * errors.
  */
-export async function buildCorpus(): Promise<Corpus> {
+export async function buildCorpus(checkout: Checkout): Promise<Corpus> {
 	clearTemplateCache();
-	const files = await listConfigFiles();
+	const files = await listConfigFiles(checkout);
 	const warnings: CorpusWarning[] = [];
 	const parameters: ParameterCorpusRecord[] = [];
 	const templates: TemplateCorpusRecord[] = [];
@@ -485,7 +505,7 @@ export async function buildCorpus(): Promise<Corpus> {
 	const queue = new PQueue({ concurrency: 32 });
 	await queue.addAll(
 		files.map((relativeFile) => async () => {
-			const file = join(DEVICES_DIR, relativeFile);
+			const file = join(checkout.devicesDir, relativeFile);
 			let parsed: ParsedFile | { error: string };
 			try {
 				parsed = await parseFile(file, relativeFile);
@@ -504,6 +524,7 @@ export async function buildCorpus(): Promise<Corpus> {
 			try {
 				if (isTemplateFile(relativeFile)) {
 					const records = await buildTemplateRecords(
+						checkout,
 						parsed,
 						file,
 						warnings,
@@ -511,6 +532,7 @@ export async function buildCorpus(): Promise<Corpus> {
 					templates.push(...records);
 				} else {
 					const records = await buildParameterRecords(
+						checkout,
 						parsed,
 						file,
 						warnings,
@@ -529,7 +551,7 @@ export async function buildCorpus(): Promise<Corpus> {
 		}),
 	);
 
-	await tallyTemplateReferences(templates, importUsages);
+	await tallyTemplateReferences(checkout, templates, importUsages);
 
 	parameters.sort((a, b) => a.id.localeCompare(b.id));
 	templates.sort((a, b) => a.id.localeCompare(b.id));

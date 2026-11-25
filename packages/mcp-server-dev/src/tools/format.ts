@@ -1,15 +1,17 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import spawn from "nano-spawn";
 
-import { REPO_ROOT } from "../configEnv.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 export const TOOL_NAME = "format";
 
-async function handleFormat(): Promise<CallToolResult> {
+async function handleFormat(
+	_args: unknown,
+	{ checkout }: ToolContext,
+): Promise<CallToolResult> {
 	try {
 		const result = await spawn("yarn", ["fmt"], {
-			cwd: REPO_ROOT,
+			cwd: checkout.root,
 			stdio: "pipe",
 		});
 

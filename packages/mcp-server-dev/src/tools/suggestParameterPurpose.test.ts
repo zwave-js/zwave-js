@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { Checkout } from "../checkout.js";
 import type { SemanticSearchService } from "../semantic/service.js";
 
 import { createSuggestParameterPurposeTool } from "./suggestParameterPurpose.js";
+
+const checkout = { root: "/repo" } as Checkout;
+const context = { checkout };
 
 function fakeService(): SemanticSearchService {
 	return {
@@ -23,14 +27,19 @@ describe("createSuggestParameterPurposeTool", () => {
 	it("requires exactly one query mode", async () => {
 		const service = fakeService();
 		const tool = createSuggestParameterPurposeTool(service);
-		expect((await tool.handler(undefined as any)).isError).toBe(true);
+		expect((await tool.handler(undefined as any, context)).isError).toBe(
+			true,
+		);
 		expect(
 			(
-				await tool.handler({
-					query: "timer",
-					filename: "/device.json",
-					parameter: 1,
-				} as any)
+				await tool.handler(
+					{
+						query: "timer",
+						filename: "/device.json",
+						parameter: 1,
+					} as any,
+					context,
+				)
 			).isError,
 		).toBe(true);
 	});
@@ -38,8 +47,9 @@ describe("createSuggestParameterPurposeTool", () => {
 	it("uses free text and clamps the result limit", async () => {
 		const service = fakeService();
 		const tool = createSuggestParameterPurposeTool(service);
-		await tool.handler({ query: "automatic shutoff", limit: 100 });
+		await tool.handler({ query: "automatic shutoff", limit: 100 }, context);
 		expect(service.suggestPurposesForText).toHaveBeenCalledWith(
+			checkout,
 			"automatic shutoff",
 			20,
 		);
@@ -48,13 +58,17 @@ describe("createSuggestParameterPurposeTool", () => {
 	it("resolves a concrete parameter query", async () => {
 		const service = fakeService();
 		const tool = createSuggestParameterPurposeTool(service);
-		await tool.handler({
-			filename: "/device.json",
-			parameter: 7,
-			valueBitMask: 255,
-			firmwareVersion: "1.2",
-		});
+		await tool.handler(
+			{
+				filename: "/device.json",
+				parameter: 7,
+				valueBitMask: 255,
+				firmwareVersion: "1.2",
+			},
+			context,
+		);
 		expect(service.suggestPurposesForParameter).toHaveBeenCalledWith(
+			checkout,
 			"/device.json",
 			7,
 			255,

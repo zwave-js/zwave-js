@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { join, normalize, resolve } from "node:path";
+import { join, normalize } from "node:path";
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { clearTemplateCache, resolveImportPath } from "@zwave-js/config";
@@ -10,9 +10,8 @@ import {
 	nodeIsPropertyNameOrValue,
 } from "../configDoc/astUtils.js";
 import { parseSymbols } from "../configDoc/configDocument.js";
-import { DEVICES_DIR, fs } from "../configEnv.js";
 import { listConfigFiles } from "../semantic/corpus.js";
-import type { ToolHandler } from "../types.js";
+import type { ToolContext, ToolHandler } from "../types.js";
 
 import { errorResult, textResult } from "./results.js";
 
@@ -25,6 +24,7 @@ interface FindTemplateReferencesArgs {
 
 async function handleFindTemplateReferences(
 	args: FindTemplateReferencesArgs,
+	{ checkout }: ToolContext,
 ): Promise<CallToolResult> {
 	const { templateName } = args;
 	if (!args.templateFile) {
@@ -33,13 +33,13 @@ async function handleFindTemplateReferences(
 	if (!templateName) {
 		return errorResult("Error: templateName argument is required");
 	}
-	const templateFile = normalize(resolve(args.templateFile));
+	const templateFile = args.templateFile;
 
 	clearTemplateCache();
 
 	try {
-		const files = (await listConfigFiles()).map((f) =>
-			join(DEVICES_DIR, f),
+		const files = (await listConfigFiles(checkout)).map((f) =>
+			join(checkout.devicesDir, f),
 		);
 		const refs: { file: string; line: number; column: number }[] = [];
 
@@ -70,10 +70,10 @@ async function handleFindTemplateReferences(
 
 					// ...and the import must resolve to the template file
 					const target = await resolveImportPath(
-						fs,
+						checkout.fs,
 						file,
 						value,
-						DEVICES_DIR,
+						checkout.devicesDir,
 					);
 					if (!target || normalize(target) !== templateFile) continue;
 
