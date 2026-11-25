@@ -8795,7 +8795,10 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 					}
 
 					convertedNVM = yield* waitFor(
-						migrateNVM(nvmData, targetNVM, migrateOptions),
+						migrateNVM(nvmData, targetNVM, {
+							...migrateOptions,
+							targetSDKVersion: self.sdkVersion,
+						}),
 					);
 				} catch (e) {
 					// If the process fails, at least turn the Z-Wave radio back on
