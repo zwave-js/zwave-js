@@ -68,6 +68,7 @@ export interface MessageEncodingContext
 		GetDeviceConfig {
 	/** How many bytes a node ID occupies in serial API commands */
 	nodeIdType: NodeIDType;
+	sdkVersion: string | undefined;
 
 	getHighestSecurityClass(nodeId: number): MaybeNotKnown<SecurityClass>;
 

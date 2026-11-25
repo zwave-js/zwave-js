@@ -920,7 +920,7 @@ export class Driver
 
 	private messageEncodingContext: Omit<
 		MessageEncodingContext,
-		keyof HostIDs | "nodeIdType"
+		keyof HostIDs | "nodeIdType" | "sdkVersion"
 	>;
 
 	private getEncodingContext(): MessageEncodingContext & CCEncodingContext {
@@ -929,6 +929,7 @@ export class Driver
 			ownNodeId: this.controller.ownNodeId!,
 			homeId: this.controller.homeId!,
 			nodeIdType: this._controller?.nodeIdType ?? NodeIDType.Short,
+			sdkVersion: this._controller?.sdkVersion,
 		};
 	}
 

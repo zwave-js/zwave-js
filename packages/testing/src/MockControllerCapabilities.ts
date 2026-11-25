@@ -1,5 +1,6 @@
 import { type ZWaveApiVersion, ZWaveLibraryTypes } from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
+import type { SerialAPISetupCommand } from "@zwave-js/serial/serialapi";
 
 export interface MockControllerCapabilities {
 	firmwareVersion: string;
@@ -7,6 +8,8 @@ export interface MockControllerCapabilities {
 	productType: number;
 	productId: number;
 	supportedFunctionTypes: FunctionType[];
+	/** Only used when `supportedFunctionTypes` includes `SerialAPISetup` */
+	supportedSerialAPISetupCommands: SerialAPISetupCommand[];
 
 	zwaveApiVersion: ZWaveApiVersion;
 	controllerType: ZWaveLibraryTypes;
@@ -30,6 +33,9 @@ export interface MockControllerCapabilities {
 
 	supportsLongRange: boolean;
 	watchdogEnabled: boolean;
+
+	/** Whether the controller sends `SerialAPIStarted` after a soft reset */
+	sendsSerialAPIStartedAfterSoftReset: boolean;
 }
 
 export function getDefaultSupportedFunctionTypes(): FunctionType[] {
@@ -58,6 +64,7 @@ export function getDefaultMockControllerCapabilities(): MockControllerCapabiliti
 		productType: 0xffff,
 		productId: 0xfffe,
 		supportedFunctionTypes: getDefaultSupportedFunctionTypes(),
+		supportedSerialAPISetupCommands: [],
 
 		controllerType: ZWaveLibraryTypes["Static Controller"],
 		libraryVersion: "Z-Wave 7.17.99",
@@ -83,5 +90,7 @@ export function getDefaultMockControllerCapabilities(): MockControllerCapabiliti
 
 		supportsLongRange: false,
 		watchdogEnabled: false,
+
+		sendsSerialAPIStartedAfterSoftReset: true,
 	};
 }

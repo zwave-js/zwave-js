@@ -5,6 +5,7 @@ import {
 	RFRegion,
 	ZWaveError,
 	ZWaveErrorCodes,
+	encodeBitMask,
 	logBuffer,
 	mergeLogDict,
 	parseBitMask,
@@ -174,6 +175,15 @@ export class SerialAPISetupResponse extends Message {
 
 	public command: SerialAPISetupCommand;
 
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.concat([
+			[getSubCommandForResponse(this) ?? this.command],
+			this.payload,
+		]);
+
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(): MessageOrCCLogEntry {
 		return {
 			...super.toLogEntry(),
@@ -211,6 +221,12 @@ export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupRes
 		});
 	}
 
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.command]);
+
+		return super.serialize(ctx);
+	}
+
 	public toLogEntry(): MessageOrCCLogEntry {
 		const ret = super.toLogEntry();
 		return {
@@ -226,11 +242,40 @@ export class SerialAPISetup_CommandUnsupportedResponse extends SerialAPISetupRes
 
 // =============================================================================
 
+const legacySupportedCommands: readonly SerialAPISetupCommand[] = [
+	SerialAPISetupCommand.GetSupportedCommands,
+	SerialAPISetupCommand.SetTxStatusReport,
+	SerialAPISetupCommand.SetPowerlevel,
+	SerialAPISetupCommand.GetPowerlevel,
+	SerialAPISetupCommand.GetMaximumPayloadSize,
+	SerialAPISetupCommand.GetRFRegion,
+	SerialAPISetupCommand.SetRFRegion,
+	SerialAPISetupCommand.SetNodeIDType,
+];
+
 @subCommandRequest(SerialAPISetupCommand.GetSupportedCommands)
-export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRequest {}
+export class SerialAPISetup_GetSupportedCommandsRequest extends SerialAPISetupRequest {
+	public static from(
+		_raw: MessageRaw,
+		_ctx: MessageParsingContext,
+	): SerialAPISetup_GetSupportedCommandsRequest {
+		return new this();
+	}
+}
 
 export interface SerialAPISetup_GetSupportedCommandsResponseOptions {
 	supportedCommands: SerialAPISetupCommand[];
+}
+
+function getSupportedCommandsBitMaskStart(
+	sdkVersion: string | undefined,
+): SerialAPISetupCommand {
+	// According to the Host API specification, the first bit (bit 0) should be GetSupportedCommands
+	// However, in Z-Wave SDK < 7.19.1, the entire bitmask is shifted by 1 bit and
+	// GetSupportedCommands is encoded in the second bit (bit 1)
+	return sdkVersionLt(sdkVersion, "7.19.1")
+		? SerialAPISetupCommand.Unsupported
+		: SerialAPISetupCommand.GetSupportedCommands;
 }
 
 @subCommandResponse(SerialAPISetupCommand.GetSupportedCommands)
@@ -254,26 +299,12 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 			// Parse it as a bitmask
 			supportedCommands = parseBitMask(
 				raw.payload.subarray(1),
-				// According to the Host API specification, the first bit (bit 0) should be GetSupportedCommands
-				// However, in Z-Wave SDK < 7.19.1, the entire bitmask is shifted by 1 bit and
-				// GetSupportedCommands is encoded in the second bit (bit 1)
-				sdkVersionLt(ctx.sdkVersion, "7.19.1")
-					? SerialAPISetupCommand.Unsupported
-					: SerialAPISetupCommand.GetSupportedCommands,
+				getSupportedCommandsBitMaskStart(ctx.sdkVersion),
 			);
 		} else {
 			// This module only uses the single byte power-of-2 bitmask. Decode it manually
 			supportedCommands = [];
-			for (const cmd of [
-				SerialAPISetupCommand.GetSupportedCommands,
-				SerialAPISetupCommand.SetTxStatusReport,
-				SerialAPISetupCommand.SetPowerlevel,
-				SerialAPISetupCommand.GetPowerlevel,
-				SerialAPISetupCommand.GetMaximumPayloadSize,
-				SerialAPISetupCommand.GetRFRegion,
-				SerialAPISetupCommand.SetRFRegion,
-				SerialAPISetupCommand.SetNodeIDType,
-			] as const) {
+			for (const cmd of legacySupportedCommands) {
 				if (!!(raw.payload[0] & cmd)) supportedCommands.push(cmd);
 			}
 		}
@@ -296,6 +327,23 @@ export class SerialAPISetup_GetSupportedCommandsResponse extends SerialAPISetupR
 	}
 
 	public readonly supportedCommands: SerialAPISetupCommand[];
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		let legacyBitMask = 0;
+		for (const cmd of this.supportedCommands) {
+			if (legacySupportedCommands.includes(cmd)) legacyBitMask |= cmd;
+		}
+		this.payload = Bytes.concat([
+			[legacyBitMask],
+			encodeBitMask(
+				this.supportedCommands,
+				undefined,
+				getSupportedCommandsBitMaskStart(ctx.sdkVersion),
+			),
+		]);
+
+		return super.serialize(ctx);
+	}
 }
 
 // =============================================================================
@@ -406,15 +454,14 @@ export class SerialAPISetup_SetNodeIDTypeRequest extends SerialAPISetupRequest {
 	}
 
 	public static from(
-		_raw: MessageRaw,
+		raw: MessageRaw,
 		_ctx: MessageParsingContext,
 	): SerialAPISetup_SetNodeIDTypeRequest {
-		throw new ZWaveError(
-			`${this.name}: deserialization not implemented`,
-			ZWaveErrorCodes.Deserialization_NotImplemented,
-		);
+		const nodeIdType: NodeIDType = raw.payload[0];
 
-		// return new SerialAPISetup_SetNodeIDTypeRequest({});
+		return new this({
+			nodeIdType,
+		});
 	}
 
 	public nodeIdType: NodeIDType;
@@ -471,6 +518,12 @@ export class SerialAPISetup_SetNodeIDTypeResponse
 	}
 
 	public readonly success: boolean;
+
+	public serialize(ctx: MessageEncodingContext): Promise<Bytes> {
+		this.payload = Bytes.from([this.success ? 0x01 : 0x00]);
+
+		return super.serialize(ctx);
+	}
 
 	public toLogEntry(): MessageOrCCLogEntry {
 		const ret = super.toLogEntry();
