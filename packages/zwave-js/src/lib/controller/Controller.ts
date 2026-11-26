@@ -6357,24 +6357,41 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		repeaters: number[],
 		routeSpeed: ZWaveDataRate,
 	): Promise<boolean> {
+		// 7.xx firmwares (up to at least 7.19.2) have a bug where the response to
+		// SetPriorityRoute is missing the result byte when used with 16-bit node IDs.
+		// So we temporarily switch back to 8-bit node IDs for this message
+		await this.trySetNodeIDType(NodeIDType.Short);
+
 		this.driver.controllerLog.print(
 			`Setting priority route to node ${destinationNodeId}...`,
 		);
+
+		let ret: boolean;
+
 		try {
-			return await this.sendSetPriorityRoute(
+			const result = await this.driver.sendMessage<
+				Message & SuccessIndicator
+			>(
 				new SetPriorityRouteRequest({
 					destinationNodeId,
 					repeaters,
 					routeSpeed,
 				}),
 			);
+
+			ret = result.isOK();
 		} catch (e) {
 			this.driver.controllerLog.print(
 				`Setting priority route failed: ${getErrorMessage(e)}`,
 				"error",
 			);
-			return false;
+			ret = false;
 		}
+
+		// Switch back to 16-bit node IDs
+		await this.trySetNodeIDType(NodeIDType.Long);
+
+		return ret;
 	}
 
 	/**
@@ -6387,13 +6404,18 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		this.driver.controllerLog.print(
 			`Removing priority route to node ${destinationNodeId}...`,
 		);
+
 		try {
-			return await this.sendSetPriorityRoute(
+			const result = await this.driver.sendMessage<
+				Message & SuccessIndicator
+			>(
 				new SetPriorityRouteRequest({
 					destinationNodeId,
 					// no repeaters = remove
 				}),
 			);
+
+			return result.isOK();
 		} catch (e) {
 			this.driver.controllerLog.print(
 				`Removing priority route failed: ${getErrorMessage(e)}`,
@@ -6401,60 +6423,6 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			);
 			return false;
 		}
-	}
-
-	private async sendSetPriorityRoute(
-		request: SetPriorityRouteRequest,
-	): Promise<boolean> {
-		if (!this.isFunctionSupported(FunctionType.SetPriorityRoute)) {
-			throw new ZWaveError(
-				`Your hardware does not support the SetPriorityRoute function`,
-				ZWaveErrorCodes.Driver_NotSupported,
-			);
-		}
-
-		// Nothing else may be sent while the node ID type is switched, because commands for nodes are serialized with it
-		return this.driver.withExclusiveControllerAccess(async (send) => {
-			// 7.xx firmwares (up to at least 7.19.2) have a bug where the response to
-			// SetPriorityRoute is missing the result byte when used with 16-bit node IDs.
-			// So we temporarily switch back to 8-bit node IDs for this message
-			// Exclusive access starts with a known node ID type
-			const nodeIdType = this.nodeIdType ?? NodeIDType.Short;
-			if (
-				nodeIdType === NodeIDType.Long
-				&& !(await this.trySetNodeIDTypeInternal(
-					NodeIDType.Short,
-					send,
-				))
-			) {
-				throw new ZWaveError(
-					`The controller rejected the switch to 8-bit node IDs, which this command needs`,
-					ZWaveErrorCodes.Controller_CommandError,
-				);
-			}
-
-			let result: boolean | undefined;
-			let error: unknown;
-			try {
-				result = (
-					(await send(request)) as Message & SuccessIndicator
-				).isOK();
-			} catch (e) {
-				error = e;
-			}
-
-			if (
-				this.nodeIdType !== nodeIdType
-				&& !(await this.trySetNodeIDTypeInternal(nodeIdType, send))
-			) {
-				throw new ZWaveError(
-					`The controller rejected the switch back to 16-bit node IDs`,
-					ZWaveErrorCodes.Controller_CommandError,
-				);
-			}
-			if (error) throw error;
-			return result!;
-		});
 	}
 
 	/**

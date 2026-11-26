@@ -3,13 +3,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { NodeIDType, ZWaveDataRate, encodeNodeID } from "@zwave-js/core";
-import {
-	FunctionType,
-	Message,
-	MessageHeaders,
-	MessageType,
-} from "@zwave-js/serial";
+import { NodeIDType } from "@zwave-js/core";
+import { FunctionType, type Message, MessageHeaders } from "@zwave-js/serial";
 import {
 	SendDataBridgeRequest,
 	SendDataRequest,
@@ -18,10 +13,8 @@ import {
 	SerialAPISetup_SetNodeIDTypeResponse,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
-	SetPriorityRouteRequest,
 	SoftResetRequest,
 } from "@zwave-js/serial/serialapi";
-import { Bytes } from "@zwave-js/shared";
 import {
 	type MockControllerBehavior,
 	type MockControllerCapabilities,
@@ -34,57 +27,15 @@ import { determineNIF } from "../../controller/NodeInformationFrame.js";
 import { integrationTest } from "../integrationTestSuite.js";
 import { prepareDriver, prepareMocks } from "../integrationTestSuiteShared.js";
 
-// A controller below SDK 7.21 that can switch the node ID type and set priority routes
+// A controller below SDK 7.21 that can switch the node ID type
 const controllerCapabilities: Partial<MockControllerCapabilities> = {
 	libraryVersion: "Z-Wave 7.19.3",
 	supportedFunctionTypes: [
 		...getDefaultSupportedFunctionTypes(),
 		FunctionType.SerialAPISetup,
-		FunctionType.SetPriorityRoute,
 	],
 	supportedSerialAPISetupCommands: [SerialAPISetupCommand.SetNodeIDType],
 };
-
-// Like 7.xx firmwares, the response is missing the result byte with 16-bit node IDs
-const acceptPriorityRoute: MockControllerBehavior = {
-	async onHostMessage(controller, msg) {
-		if (!(msg instanceof SetPriorityRouteRequest)) return;
-		const nodeIdType = controller.parsingContext.nodeIdType;
-		const nodeId = encodeNodeID(msg.destinationNodeId, nodeIdType);
-		await controller.sendMessageToHost(
-			new Message({
-				type: MessageType.Response,
-				functionType: FunctionType.SetPriorityRoute,
-				payload:
-					nodeIdType === NodeIDType.Long
-						? nodeId
-						: Bytes.concat([nodeId, [0x01]]),
-			}),
-		);
-		return true;
-	},
-};
-
-// Lets the controller reject the SetNodeIDType requests that match the predicate
-function rejectSetNodeIDType(
-	predicate: (msg: SerialAPISetup_SetNodeIDTypeRequest) => boolean,
-): MockControllerBehavior {
-	return {
-		async onHostMessage(controller, msg) {
-			if (
-				msg instanceof SerialAPISetup_SetNodeIDTypeRequest
-				&& predicate(msg)
-			) {
-				await controller.sendMessageToHost(
-					new SerialAPISetup_SetNodeIDTypeResponse({
-						success: false,
-					}),
-				);
-				return true;
-			}
-		},
-	};
-}
 
 integrationTest.sequential(
 	"When the node ID type cannot be confirmed after a soft reset, the driver sends no node traffic and fails",
@@ -133,88 +84,6 @@ integrationTest.sequential(
 							|| msg instanceof SendDataBridgeRequest,
 					),
 			).toBe(false);
-		},
-	},
-);
-
-integrationTest.sequential(
-	"When the controller rejects the temporary switch to 8-bit node IDs, no priority route is sent",
-	{
-		// debug: true,
-
-		controllerCapabilities,
-
-		customSetup: async (driver, mockController) => {
-			mockController.defineBehavior(acceptPriorityRoute);
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Let the controller reject the switch to 8-bit node IDs
-			mockController.defineBehavior(
-				rejectSetNodeIDType(
-					(msg) => msg.nodeIdType === NodeIDType.Short,
-				),
-			);
-			// Setting the priority route fails
-			mockController.clearReceivedHostMessages();
-
-			t.expect(
-				await driver.controller.setPriorityRoute(
-					node.id,
-					[],
-					ZWaveDataRate["100k"],
-				),
-			).toBe(false);
-			// The route command must not be sent, and the node ID type stays 16 bit
-			t.expect(
-				mockController.receivedHostMessages.some(
-					(msg) => msg instanceof SetPriorityRouteRequest,
-				),
-			).toBe(false);
-			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Long);
-		},
-	},
-);
-
-integrationTest.sequential(
-	"When the controller rejects the switch back to 16-bit node IDs, setting the priority route fails",
-	{
-		// debug: true,
-
-		controllerCapabilities,
-
-		customSetup: async (driver, mockController) => {
-			mockController.defineBehavior(acceptPriorityRoute);
-		},
-
-		testBody: async (t, driver, node, mockController, mockNode) => {
-			// Record the route command and reject the switch back to 16 bit after it
-			let sentRoute = false;
-			const recordRoute: MockControllerBehavior = {
-				onHostMessage(controller, msg) {
-					if (msg instanceof SetPriorityRouteRequest)
-						sentRoute = true;
-					return false;
-				},
-			};
-			mockController.defineBehavior(
-				recordRoute,
-				rejectSetNodeIDType(
-					(msg) => sentRoute && msg.nodeIdType === NodeIDType.Long,
-				),
-			);
-
-			// Setting the priority route fails
-			t.expect(
-				await driver.controller.setPriorityRoute(
-					node.id,
-					[],
-					ZWaveDataRate["100k"],
-				),
-			).toBe(false);
-			// The route command was sent, and the driver keeps the 8-bit node IDs the controller uses
-			t.expect(sentRoute).toBe(true);
-			t.expect(driver.controller.nodeIdType).toBe(NodeIDType.Short);
 		},
 	},
 );
