@@ -776,11 +776,6 @@ function controllerTransmitted(report: TransmitReport): boolean {
 	return false;
 }
 
-/** Whether a recovery of the controller ended because a new controller instance replaces the current one */
-function isRecoveryCancelled(e: unknown): boolean {
-	return isZWaveError(e) && e.code === ZWaveErrorCodes.Driver_TaskRemoved;
-}
-
 /** How long the driver waits before it soft-resets a jammed controller again, by the number of recoveries that did not help */
 const JAM_RECOVERY_BACKOFF_MS = [15_000, 30_000, 60_000];
 
@@ -5234,6 +5229,7 @@ export class Driver
 		transaction: Transaction,
 		error: ZWaveError,
 	): Promise<void> {
+		const gate = this.controllerGate;
 		// Decide whether to soft-reset
 		const softReset =
 			this.maySoftReset()
@@ -5272,7 +5268,8 @@ export class Driver
 				{ resetsController: true },
 			);
 		} catch (e) {
-			if (!this.wasDestroyed && !isRecoveryCancelled(e)) {
+			// A sealed gate means that a new controller instance replaces this one
+			if (!this.wasDestroyed && !gate.isSealed) {
 				// The driver cannot recover from this, e.g. because a TCP-based connection to the controller is gone.
 				// Notify applications that it failed, allowing them to clean up and restart.
 				void this.destroyWithMessage(getErrorMessage(e));
@@ -5547,6 +5544,7 @@ export class Driver
 		// A completed recovery of a missing callback is over once another recovery starts
 		this.callbackRecoveryCompleted = false;
 		// Run the recovery, then settle everything that waited for it
+		const gate = this.controllerGate;
 		const recovery = (async () => {
 			let failure: unknown;
 			try {
@@ -5555,7 +5553,8 @@ export class Driver
 				failure = e;
 			}
 			this.controllerRecovery = undefined;
-			this.settleRecoveryWaiters(failure);
+			// A sealed gate means that a new controller instance replaces this one
+			this.settleRecoveryWaiters(failure, !!failure && gate.isSealed);
 			if (failure) throw failure;
 		})();
 		this.controllerRecovery = recovery;
@@ -5580,13 +5579,13 @@ export class Driver
 	 * They are re-queued after a successful recovery, because it reset the controller.
 	 * A cancelled recovery or a destroyed driver rejects them with that reason, any other failure with their own error.
 	 */
-	private settleRecoveryWaiters(failure: unknown): void {
+	private settleRecoveryWaiters(failure: unknown, cancelled: boolean): void {
 		const waiters = [...this.recoveryWaiters];
 		this.recoveryWaiters.clear();
 		for (const [transaction, error] of waiters) {
 			if (!failure) {
 				this.requeueTransaction(transaction);
-			} else if (this.wasDestroyed || isRecoveryCancelled(failure)) {
+			} else if (this.wasDestroyed || cancelled) {
 				this.rejectTransaction(transaction, failure as ZWaveError);
 			} else {
 				this.rejectTransaction(transaction, error);

@@ -1467,10 +1467,10 @@ integrationTest.sequential(
 			await ready;
 			t.expect(driver["wasDestroyed"]).toBe(false);
 			await t.expect(promise).rejects.toMatchObject({
-				code: ZWaveErrorCodes.Driver_TaskRemoved,
+				code: ZWaveErrorCodes.Controller_MessageDropped,
 			});
 			await t.expect(joined.promise).rejects.toMatchObject({
-				code: ZWaveErrorCodes.Driver_TaskRemoved,
+				code: ZWaveErrorCodes.Controller_MessageDropped,
 			});
 		},
 	},
