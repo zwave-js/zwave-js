@@ -3895,14 +3895,15 @@ export class Driver
 	/** Sends the desired node ID type to the controller. Must be called with exclusive access to the controller. */
 	private async restoreNodeIdType(send: SendExclusive): Promise<void> {
 		const controller = this._controller;
-		if (!controller) return;
-		const nodeIdType = controller.desiredNodeIdType;
 		if (
-			!(await this.switchNodeIdType(nodeIdType, send))
-			&& controller.isSerialAPISetupCommandSupported(
+			!controller?.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.SetNodeIDType,
 			)
 		) {
+			return;
+		}
+		const nodeIdType = controller.desiredNodeIdType;
+		if (!(await this.switchNodeIdType(nodeIdType, send))) {
 			const bits = (type: NodeIDType) =>
 				type === NodeIDType.Short ? 8 : 16;
 			this.controllerLog.print(
@@ -3916,8 +3917,8 @@ export class Driver
 
 	/**
 	 * @internal
-	 * Switches the node ID type of the controller. Must be called with exclusive access to the controller.
-	 * Returns `true` when the controller confirmed the switch, `false` when it rejected it or cannot switch.
+	 * Switches the node ID type of a controller that supports `SetNodeIDType`. Must be called with exclusive access to the controller.
+	 * Returns `true` when the controller confirmed the switch, `false` when it rejected it.
 	 * A rejected switch leaves the node ID type unchanged.
 	 *
 	 * Throws when no attempt was answered, because the controller may then use either node ID type.
@@ -3928,13 +3929,7 @@ export class Driver
 		send: SendExclusive,
 	): Promise<boolean> {
 		const controller = this._controller;
-		if (
-			!controller?.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.SetNodeIDType,
-			)
-		) {
-			return false;
-		}
+		if (!controller) return false;
 
 		// Send the switch up to 3 times
 		let lastError: unknown;
