@@ -83,6 +83,7 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type MulticastDestination,
+	NOT_KNOWN,
 	NUM_NODEMASK_BYTES,
 	NodeIDType,
 	RFRegion,
@@ -742,9 +743,6 @@ interface ExclusiveControllerAccessOptions {
 	/** A lease that was already requested for this exclusive access */
 	lease?: Promise<ControllerGateLease>;
 }
-
-/** Marks the error when the node ID type of the controller could not be confirmed */
-const NODE_ID_TYPE_UNKNOWN = "node ID type unknown";
 
 const enum ControllerRecoveryPhase {
 	None,
@@ -3681,7 +3679,7 @@ export class Driver
 			this.assertNodeIdTypeKnown();
 			return result;
 		} catch (e) {
-			if (this._controller?.nodeIdTypeState.known === false) {
+			if (this.nodeIdTypeNotKnown) {
 				// Frames would be serialized and parsed with the wrong node ID size.
 				// Like a Serial API that stopped responding, this ends the driver.
 				keepClosed = true;
@@ -3699,13 +3697,16 @@ export class Driver
 		}
 	}
 
-	/** Throws when the node ID type of the controller is unknown, because nothing with a node ID may be sent then */
+	private get nodeIdTypeNotKnown(): boolean {
+		return !!this._controller && this._controller.nodeIdType === NOT_KNOWN;
+	}
+
+	/** Throws when the node ID type of the controller is not known, because nothing with a node ID may be sent then */
 	private assertNodeIdTypeKnown(): void {
-		if (this._controller?.nodeIdTypeState.known !== false) return;
+		if (!this.nodeIdTypeNotKnown) return;
 		throw new ZWaveError(
-			"The node ID type of the controller is unknown",
+			"The driver cannot continue, because the node ID type of the controller is not known",
 			ZWaveErrorCodes.Driver_Failed,
-			NODE_ID_TYPE_UNKNOWN,
 		);
 	}
 
@@ -3818,10 +3819,8 @@ export class Driver
 					// The controller may have reset without telling us, so confirm the node ID type
 					const controller = this._controller;
 					if (controller) {
-						controller.nodeIdTypeState.recordPossibleReset(
-							!controller.sdkVersionLt("7.21.0"),
-						);
-						if (!controller.nodeIdTypeState.known) {
+						controller.recordPossibleNodeIdTypeReset();
+						if (controller.nodeIdType === NOT_KNOWN) {
 							await abortableStep(signal, () =>
 								this.restoreNodeIdType(send),
 							);
@@ -3890,10 +3889,7 @@ export class Driver
 
 	/** Records the node ID type the controller uses after a reset, until the driver restores the desired one */
 	private assumeNodeIdTypeAfterReset(): void {
-		// Controllers below SDK 7.21 do not keep the node ID type across resets
-		this._controller?.nodeIdTypeState.recordReset(
-			!this._controller.sdkVersionLt("7.21.0"),
-		);
+		this._controller?.recordNodeIdTypeReset();
 	}
 
 	/** Sends the desired node ID type to the controller. Must be called with exclusive access to the controller. */
@@ -3911,7 +3907,7 @@ export class Driver
 				type === NodeIDType.Short ? 8 : 16;
 			this.controllerLog.print(
 				`The controller rejected ${bits(nodeIdType)}-bit node IDs, continuing with ${bits(
-					controller.nodeIdType,
+					controller.nodeIdType ?? NodeIDType.Short,
 				)}-bit node IDs`,
 				"error",
 			);
@@ -3941,7 +3937,6 @@ export class Driver
 		}
 
 		// Send the switch up to 3 times
-		const state = controller.nodeIdTypeState;
 		let lastError: unknown;
 		for (let attempt = 1; attempt <= 3; attempt++) {
 			try {
@@ -3973,16 +3968,13 @@ export class Driver
 			}
 		}
 		// Report a switch that did not succeed
-		if (state.known) return false;
+		if (controller.nodeIdType !== NOT_KNOWN) return false;
 
 		throw new ZWaveError(
-			`The controller did not confirm the switch to ${
+			`Failed to configure the controller to use ${
 				nodeIdType === NodeIDType.Short ? 8 : 16
-			}-bit node IDs, so the node ID type it uses is unknown: ${getErrorMessage(
-				lastError,
-			)}`,
+			} bit node IDs: ${getErrorMessage(lastError)}`,
 			ZWaveErrorCodes.Driver_Failed,
-			NODE_ID_TYPE_UNKNOWN,
 		);
 	}
 

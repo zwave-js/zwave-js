@@ -277,7 +277,7 @@ function sentNodeTrafficAfterReset(
 }
 
 integrationTest.sequential(
-	"When a switch got no response and later ones are rejected, the node ID type stays unknown and the driver fails",
+	"When SetNodeIDType gets no response and later attempts are rejected, the driver fails without sending node commands",
 	{
 		// debug: true,
 
@@ -371,7 +371,7 @@ integrationTest.sequential(
 );
 
 integrationTest.sequential(
-	"A restart that interrupts an applied switch leaves the node ID type unknown until a switch is confirmed",
+	"When the controller restarts during SetNodeIDType and rejects later attempts, the driver fails without sending node commands",
 	{
 		// debug: true,
 

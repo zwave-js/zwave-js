@@ -106,6 +106,7 @@ import {
 	sdkVersionLte,
 	securityClassIsS2,
 	securityClassOrder,
+	wasControllerReset,
 } from "@zwave-js/core";
 import {
 	BufferedNVMReader,
@@ -355,7 +356,6 @@ import {
 	type SmartStartProvisioningEntry,
 } from "./Inclusion.js";
 import { SerialNVMIO500, SerialNVMIO700, trimNVMWriteAtEnd } from "./NVMIO.js";
-import { NodeIDTypeState } from "./NodeIDTypeState.js";
 import { determineNIF } from "./NodeInformationFrame.js";
 import {
 	type ControllerProprietary,
@@ -784,14 +784,37 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		return this._nodes;
 	}
 
-	private _nodeIdTypeState = new NodeIDTypeState();
-	/** Whether the controller is configured to use 8 or 16 bit node IDs */
-	public get nodeIdType(): NodeIDType {
-		return this._nodeIdTypeState.type;
+	/**
+	 * The node ID type the controller uses. The rules:
+	 * - A successful response to `SetNodeIDType` sets the requested type.
+	 * - A response that rejects the switch keeps the previous value. A type that is not known stays not known.
+	 * - A `SetNodeIDType` that was sent but got no response makes the type not known, because the controller may have switched.
+	 *   This includes a command aborted by a controller reset.
+	 * - CAN, NAK or a missing ACK mean that the controller did not process the command. The value does not change.
+	 * - A reset below SDK 7.21 sets 8-bit node IDs. From SDK 7.21 on, a reset keeps the value, also one that is not known.
+	 * - A soft reset that may or may not have happened makes a 16-bit type not known below SDK 7.21.
+	 *
+	 * While the type is not known, nothing that contains a node ID may be sent.
+	 */
+	private _nodeIdType: MaybeNotKnown<NodeIDType> = NodeIDType.Short;
+	/** Whether the controller is configured to use 8 or 16 bit node IDs, or `NOT_KNOWN` while the driver cannot tell */
+	public get nodeIdType(): MaybeNotKnown<NodeIDType> {
+		return this._nodeIdType;
 	}
-	/** @internal */
-	public get nodeIdTypeState(): NodeIDTypeState {
-		return this._nodeIdTypeState;
+
+	/** @internal Records a reset of the controller */
+	public recordNodeIdTypeReset(): void {
+		if (this.sdkVersionLt("7.21.0")) this._nodeIdType = NodeIDType.Short;
+	}
+
+	/** @internal Records a soft reset that may or may not have happened */
+	public recordPossibleNodeIdTypeReset(): void {
+		if (
+			this.sdkVersionLt("7.21.0")
+			&& this._nodeIdType === NodeIDType.Long
+		) {
+			this._nodeIdType = NOT_KNOWN;
+		}
 	}
 
 	/**
@@ -6395,7 +6418,8 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			// 7.xx firmwares (up to at least 7.19.2) have a bug where the response to
 			// SetPriorityRoute is missing the result byte when used with 16-bit node IDs.
 			// So we temporarily switch back to 8-bit node IDs for this message
-			const nodeIdType = this.nodeIdType;
+			// Exclusive access starts with a known node ID type
+			const nodeIdType = this.nodeIdType ?? NodeIDType.Short;
 			if (
 				nodeIdType === NodeIDType.Long
 				&& !(await this.trySetNodeIDTypeInternal(
@@ -7780,7 +7804,14 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				}),
 			)) as typeof result;
 		} catch (e) {
-			this._nodeIdTypeState.recordError(e);
+			if (
+				(isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.Controller_Timeout
+					&& e.context !== "ACK")
+				|| wasControllerReset(e)
+			) {
+				this._nodeIdType = NOT_KNOWN;
+			}
 			throw e;
 		}
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
@@ -7795,7 +7826,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				}-bit node IDs ${result.success ? "successful" : "failed"}`,
 			);
 
-			this._nodeIdTypeState.recordResponse(nodeIdType, result.success);
+			if (result.success) this._nodeIdType = nodeIdType;
 		}
 		return result.success;
 	}

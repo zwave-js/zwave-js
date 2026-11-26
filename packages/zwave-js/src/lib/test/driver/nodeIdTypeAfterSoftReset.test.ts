@@ -63,11 +63,14 @@ function isSendData(
  */
 function recordAfterReset(
 	mockController: MockController,
-	getDriverNodeIdType: () => NodeIDType,
-): { destinations: (number | undefined)[]; driverNodeIdTypes: NodeIDType[] } {
+	getDriverNodeIdType: () => NodeIDType | undefined,
+): {
+	destinations: (number | undefined)[];
+	driverNodeIdTypes: (NodeIDType | undefined)[];
+} {
 	const ret = {
 		destinations: [] as (number | undefined)[],
-		driverNodeIdTypes: [] as NodeIDType[],
+		driverNodeIdTypes: [] as (NodeIDType | undefined)[],
 	};
 	const behavior: MockControllerBehavior = {
 		onHostMessage(controller, msg) {
