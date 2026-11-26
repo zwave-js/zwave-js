@@ -9,7 +9,6 @@ import {
 	ZWaveErrorCodes,
 	encodeNodeID,
 	parseNodeID,
-	validatePayload,
 } from "@zwave-js/core";
 import {
 	FunctionType,
@@ -65,24 +64,15 @@ export class SetPriorityRouteRequest extends Message {
 	}
 
 	public static from(
-		raw: MessageRaw,
-		ctx: MessageParsingContext,
+		_raw: MessageRaw,
+		_ctx: MessageParsingContext,
 	): SetPriorityRouteRequest {
-		const { nodeId: destinationNodeId, bytesRead } = parseNodeID(
-			raw.payload,
-			ctx.nodeIdType,
-			0,
+		throw new ZWaveError(
+			`${this.name}: deserialization not implemented`,
+			ZWaveErrorCodes.Deserialization_NotImplemented,
 		);
-		if (raw.payload.length <= bytesRead) {
-			return new this({ destinationNodeId });
-		}
 
-		validatePayload(raw.payload.length >= bytesRead + 5);
-		const repeaters = [
-			...raw.payload.subarray(bytesRead, bytesRead + 4),
-		].filter((id) => id !== 0);
-		const routeSpeed: ZWaveDataRate = raw.payload[bytesRead + 4];
-		return new this({ destinationNodeId, repeaters, routeSpeed });
+		// return new SetPriorityRouteRequest({});
 	}
 
 	public destinationNodeId: number;
