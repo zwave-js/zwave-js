@@ -4232,7 +4232,7 @@ export class Driver
 
 		await this.destroyTransactionQueues(
 			"The controller instance is being destroyed",
-			ZWaveErrorCodes.Driver_TaskRemoved,
+			ZWaveErrorCodes.Controller_MessageDropped,
 		);
 
 		this.destroySerialAPIQueue(
@@ -4243,7 +4243,7 @@ export class Driver
 		this.controllerGate.seal(
 			new ZWaveError(
 				"The controller instance is being destroyed",
-				ZWaveErrorCodes.Driver_TaskRemoved,
+				ZWaveErrorCodes.Controller_MessageDropped,
 			),
 		);
 
@@ -7370,7 +7370,6 @@ ${handlers.length} left`,
 							throw e;
 						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
-							|| e.code === ZWaveErrorCodes.Driver_TaskRemoved
 							|| e.code === ZWaveErrorCodes.Driver_Destroyed
 						) {
 							// We gave up on this command, so don't retry it
