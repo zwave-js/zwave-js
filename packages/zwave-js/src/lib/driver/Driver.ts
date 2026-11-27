@@ -1015,13 +1015,9 @@ export class Driver
 
 	private async destroyTransactionQueues(
 		reason: string,
-		errorCode?: ZWaveErrorCodes,
+		errorCode: ZWaveErrorCodes,
 	): Promise<void> {
-		this.clearDeferredTransactions(
-			undefined,
-			reason,
-			errorCode ?? ZWaveErrorCodes.Driver_TaskRemoved,
-		);
+		this.clearDeferredTransactions(undefined, reason, errorCode);
 
 		// Clear the poll delay timer
 		this._pollDelayTimer?.clear();
@@ -1034,11 +1030,7 @@ export class Driver
 
 		// Reject pending transactions, but not during integration tests
 		if (getenv("NODE_ENV") !== "test") {
-			await this.rejectTransactions(
-				(_t) => true,
-				reason,
-				errorCode ?? ZWaveErrorCodes.Driver_TaskRemoved,
-			);
+			await this.rejectTransactions((_t) => true, reason, errorCode);
 		}
 
 		for (const queue of this.queues) {
