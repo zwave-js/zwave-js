@@ -3,20 +3,34 @@ import {
 	createDeferredPromise,
 } from "alcalzone-shared/deferred-promise";
 
+export interface AsyncQueueOptions<T> {
+	/** Whether an item may be returned from the queue or not. */
+	mayTake?: (item: T) => boolean;
+}
+
 export class AsyncQueue<T> implements AsyncIterable<T> {
+	public constructor(options?: AsyncQueueOptions<T>) {
+		this.mayTake = options?.mayTake ?? (() => true);
+	}
+
+	private mayTake: (item: T) => boolean;
+
 	/** Adds one or more items onto the queue */
 	public add(...items: T[]): void {
 		if (items.length === 0 || this.ended) return;
 
-		// Resolve any pending promises first
-		while (items.length > 0 && this.listeners.length > 0) {
-			const promise = this.listeners.shift()!;
-			const item = items.shift()!;
-			promise.resolve(item);
-		}
-
-		// Add the remaining items to the backlog
 		this.backlog.push(...items);
+		this.trigger();
+	}
+
+	/** Hands the items that may be taken now to the pending consumers. Items that may not be taken stay in the queue until this is called again. */
+	public trigger(): void {
+		while (this.listeners.length > 0) {
+			const index = this.backlog.findIndex(this.mayTake);
+			if (index === -1) return;
+			const [item] = this.backlog.splice(index, 1);
+			this.listeners.shift()!.resolve(item);
+		}
 	}
 
 	/**
@@ -48,13 +62,26 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 	// Whether the queue was ended
 	private ended = false;
 
+	/** Whether the queue was ended. Items added afterwards are dropped. */
+	public get isEnded(): boolean {
+		return this.ended;
+	}
+
 	/** Ends the queue after it has been drained */
 	public end(): void {
 		this.ended = true;
 	}
 
-	/** Ends the queue and discards all pending items */
-	public abort(): void {
+	private _abortReason: Error | undefined;
+
+	/** The reason that was passed to {@link abort} */
+	public get abortReason(): Error | undefined {
+		return this._abortReason;
+	}
+
+	/** Ends the queue and discards all pending items. Sets {@link abortReason} before the items are disposed. */
+	public abort(reason?: Error): void {
+		this._abortReason = reason;
 		this.ended = true;
 
 		while (this.backlog.length > 0) {
@@ -79,10 +106,11 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
 			next: async (): Promise<IteratorResult<T>> => {
 				let value: T | undefined;
 
-				if (this.backlog.length > 0) {
-					// If there are items in the backlog, return the first one
-					value = this.backlog.shift();
-				} else if (!this.ended) {
+				const index = this.backlog.findIndex(this.mayTake);
+				if (index !== -1) {
+					// Return the first item that may be taken
+					[value] = this.backlog.splice(index, 1);
+				} else if (!this.ended || this.backlog.length > 0) {
 					// Otherwise create a new promise and add it to the pending list
 					const promise = createDeferredPromise<T | undefined>();
 					this.listeners.push(promise);

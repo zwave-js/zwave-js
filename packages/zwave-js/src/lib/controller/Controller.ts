@@ -307,6 +307,7 @@ import {
 } from "alcalzone-shared/deferred-promise";
 import { isObject } from "alcalzone-shared/typeguards";
 
+import type { SendExclusive } from "../driver/ControllerGate.js";
 import type { Driver } from "../driver/Driver.js";
 import { cacheKeyUtils, cacheKeys } from "../driver/NetworkCache.js";
 import type { StatisticsEventCallbacks } from "../driver/Statistics.js";
@@ -2054,7 +2055,17 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	 * Starts the hardware watchdog on supporting 700+ series controllers.
 	 * Returns whether the operation was successful.
 	 */
-	public async startWatchdog(): Promise<boolean> {
+	public startWatchdog(): Promise<boolean> {
+		return this.startWatchdogInternal((msg) =>
+			this.driver.sendMessage(msg),
+		);
+	}
+
+	/**
+	 * @internal
+	 * Starts the hardware watchdog using the given function to send the request
+	 */
+	public async startWatchdogInternal(send: SendExclusive): Promise<boolean> {
 		if (
 			this.sdkVersionGte("7.0")
 			&& this.isFunctionSupported(FunctionType.StartWatchdog)
@@ -2063,7 +2074,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				this.driver.controllerLog.print(
 					"Starting hardware watchdog...",
 				);
-				await this.driver.sendMessage(new StartWatchdogRequest());
+				await send(new StartWatchdogRequest());
 
 				return true;
 			} catch (e) {
@@ -7711,21 +7722,23 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	 * @internal
 	 * Configure whether the Z-Wave API should use short (8 bit) or long (16 bit) Node IDs
 	 */
-	public async setNodeIDType(nodeIdType: NodeIDType): Promise<boolean> {
+	public async setNodeIDType(
+		nodeIdType: NodeIDType,
+		send: SendExclusive,
+	): Promise<boolean> {
 		this.driver.controllerLog.print(
 			`Switching serial API to ${
 				nodeIdType === NodeIDType.Short ? 8 : 16
 			}-bit node IDs...`,
 		);
 
-		const result = await this.driver.sendMessage<
-			| SerialAPISetup_SetNodeIDTypeResponse
-			| SerialAPISetup_CommandUnsupportedResponse
-		>(
+		const result = (await send(
 			new SerialAPISetup_SetNodeIDTypeRequest({
 				nodeIdType,
 			}),
-		);
+		)) as
+			| SerialAPISetup_SetNodeIDTypeResponse
+			| SerialAPISetup_CommandUnsupportedResponse;
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
 				`Your hardware does not support switching between short and long node IDs!`,
@@ -7745,14 +7758,27 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		return result.success;
 	}
 
-	public async trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean> {
+	public trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean> {
+		return this.trySetNodeIDTypeInternal(nodeIdType, (msg) =>
+			this.driver.sendMessage(msg),
+		);
+	}
+
+	/**
+	 * @internal
+	 * Like {@link trySetNodeIDType}, but uses the given function to send the request
+	 */
+	public async trySetNodeIDTypeInternal(
+		nodeIdType: NodeIDType,
+		send: SendExclusive,
+	): Promise<boolean> {
 		if (
 			this.isSerialAPISetupCommandSupported(
 				SerialAPISetupCommand.SetNodeIDType,
 			)
 		) {
 			try {
-				return await this.setNodeIDType(nodeIdType);
+				return await this.setNodeIDType(nodeIdType, send);
 			} catch {
 				// ignore
 			}

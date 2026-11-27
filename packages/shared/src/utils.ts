@@ -252,3 +252,36 @@ export function evalOrStatic<T>(
 	// @ts-expect-error https://github.com/microsoft/TypeScript/issues/61337
 	return typeof fnOrConst === "function" ? fnOrConst(...args) : fnOrConst;
 }
+
+/** Settles like `promise`, but rejects with the abort reason as soon as `signal` is aborted */
+export function abortable<T>(
+	promise: Promise<T>,
+	signal: AbortSignal | undefined,
+): Promise<T> {
+	if (!signal) return promise;
+	if (signal.aborted) return Promise.reject(signal.reason);
+	return new Promise<T>((resolve, reject) => {
+		const onAbort = () => reject(signal.reason);
+		signal.addEventListener("abort", onAbort, { once: true });
+		promise
+			.then(resolve, reject)
+			.finally(() => signal.removeEventListener("abort", onAbort));
+	});
+}
+
+/**
+ * Calls `fn` and returns its result.
+ * When `signal` is already aborted, rejects with the abort reason without calling `fn`.
+ * When `signal` is aborted while `fn` runs, rejects with the abort reason and drops the result of `fn`.
+ */
+export async function abortableStep<T>(
+	signal: AbortSignal | undefined,
+	fn: () => Promise<T>,
+): Promise<T> {
+	// Do not start the step after an abort
+	signal?.throwIfAborted();
+	const result = await abortable(fn(), signal);
+	// Drop the result of a step that ended after an abort
+	signal?.throwIfAborted();
+	return result;
+}
