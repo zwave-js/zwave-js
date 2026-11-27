@@ -28,6 +28,32 @@ export class ControllerGate {
 		| undefined;
 	private waiters: DeferredPromise<ControllerGateLease>[] = [];
 	private sealedReason: Error | undefined;
+	private openWaiters: DeferredPromise<void>[] = [];
+	private sealedSignal = createDeferredPromise<never>();
+
+	public constructor() {
+		this.sealedSignal.catch(() => {});
+	}
+
+	/** Rejects with the reason when the gate is sealed */
+	public whenSealed(): Promise<never> {
+		return this.sealedSignal;
+	}
+	private _closedPeriods = 0;
+
+	/** How often the gate was closed. A handoff to the next operation does not start a new period. */
+	public get closedPeriods(): number {
+		return this._closedPeriods;
+	}
+
+	/** Resolves when the gate is open. Rejects when the gate is sealed. */
+	public whenOpen(): Promise<void> {
+		if (this.sealedReason) return Promise.reject(this.sealedReason);
+		if (!this.current) return Promise.resolve();
+		const waiter = createDeferredPromise<void>();
+		this.openWaiters.push(waiter);
+		return waiter;
+	}
 
 	public get isClosed(): boolean {
 		return !!this.current || !!this.sealedReason;
@@ -39,7 +65,10 @@ export class ControllerGate {
 	 */
 	public close(): Promise<ControllerGateLease> {
 		if (this.sealedReason) return Promise.reject(this.sealedReason);
-		if (!this.current) return Promise.resolve(this.grant());
+		if (!this.current) {
+			this._closedPeriods++;
+			return Promise.resolve(this.grant());
+		}
 
 		const lease = createDeferredPromise<ControllerGateLease>();
 		this.waiters.push(lease);
@@ -61,6 +90,9 @@ export class ControllerGate {
 					next.resolve(this.grant());
 				} else {
 					this.current = undefined;
+					const waiters = this.openWaiters;
+					this.openWaiters = [];
+					for (const waiter of waiters) waiter.resolve();
 				}
 			},
 			abort: (e: Error) => abortController.abort(e),
@@ -78,5 +110,9 @@ export class ControllerGate {
 		const waiters = this.waiters;
 		this.waiters = [];
 		for (const lease of waiters) lease.reject(reason);
+		const openWaiters = this.openWaiters;
+		this.openWaiters = [];
+		for (const waiter of openWaiters) waiter.reject(reason);
+		this.sealedSignal.reject(reason);
 	}
 }
