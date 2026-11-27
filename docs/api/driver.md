@@ -126,7 +126,7 @@ async softReset(): Promise<void>
 async trySoftReset(): Promise<void>
 ```
 
-Instruct the controller to soft-reset (restart). The returned Promise will resolve after the controller has restarted and can be used again.
+Instruct the controller to soft-reset (restart). The returned Promise will resolve after the controller has restarted and can be used again. If the Serial API does not respond after the reset, the driver emits an `"error"` event and destroys itself, and the returned Promise rejects with the error code `Driver_Failed`.
 
 > [!NOTE] Soft-reset may cause problems in Docker containers with certain Z-Wave sticks if they disconnect and reconnect too quickly so that the stick's address changes. Therefore, soft-reset may be disabled by setting the ZWAVEJS_DISABLE_SOFT_RESET environment variable. It is also possible to workaround this issue with more advanced udev configurations.
 
@@ -640,11 +640,9 @@ The message priority must one of the following enum values, which are sorted fro
 
 ```ts
 enum MessagePriority {
-	// High-priority controller commands that must be handled before all other commands.
-	// We use this priority to decide which messages go onto the immediate queue.
-	ControllerImmediate = 0,
+	// The values must not change, because applications may store or send them as numbers.
 	// Controller commands finish quickly and should be preferred over node queries
-	Controller,
+	Controller = 1,
 	// Some node commands like nonces, responses to Supervision and Transport Service
 	// need to be handled before all node commands.
 	// We use this priority to decide which messages go onto the immediate queue.
