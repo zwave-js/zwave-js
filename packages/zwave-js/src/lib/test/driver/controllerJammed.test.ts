@@ -7,6 +7,7 @@ import {
 	ZWaveErrorCodes,
 	assertZWaveError,
 	getZWaveChipType,
+	highResTimestamp,
 } from "@zwave-js/core";
 import { FunctionType } from "@zwave-js/serial";
 import {
@@ -25,6 +26,7 @@ import {
 } from "@zwave-js/testing";
 import { wait } from "alcalzone-shared/async";
 import sinon from "sinon";
+import { vi } from "vitest";
 
 import {
 	MockControllerCommunicationState,
@@ -583,47 +585,264 @@ integrationTest.sequential(
 	},
 );
 
+// A controller without the Bridge API that stays jammed until a soft reset
+const jamTestOptions = {
+	controllerCapabilities: controllerCapabilitiesNoBridge,
+	additionalDriverOptions: {
+		testingHooks: {
+			skipNodeInterview: true,
+		},
+	},
+	customSetup: async (driver: any, controller: any) => {
+		controller.defineBehavior(jamUntilSoftReset);
+	},
+};
+
+// Fakes only the monotonic clock, so the test can jump over the waiting time between jam recoveries
+function useFakeClock(): void {
+	vi.useFakeTimers({ toFake: ["hrtime"], shouldAdvanceTime: true });
+}
+
+/** Returns the monotonic time in milliseconds */
+function now(): number {
+	return highResTimestamp() / 1e6;
+}
+
+/** Moves the fake monotonic clock forward to the given time in milliseconds */
+function jumpTo(time: number): void {
+	vi.advanceTimersByTime(Math.max(0, time - now()));
+}
+
+// Counts the soft resets the controller received
+function countSoftResets(mockController: {
+	receivedHostMessages: readonly { functionType: FunctionType }[];
+}): number {
+	return mockController.receivedHostMessages.filter(
+		(msg) => msg.functionType === FunctionType.SoftReset,
+	).length;
+}
+
 integrationTest.sequential(
-	"When a command still fails after recovering a jammed controller, the next jam is recovered again",
+	"After jam recoveries that did not help, the driver waits 15 s, 30 s, then 1 min before it recovers again",
 	{
 		// debug: true,
+		...jamTestOptions,
 
-		controllerCapabilities: controllerCapabilitiesNoBridge,
-
-		additionalDriverOptions: {
-			testingHooks: {
-				skipNodeInterview: true,
-			},
-		},
-
-		customSetup: async (driver, controller, mockNode) => {
-			controller.defineBehavior(jamUntilSoftReset);
-		},
 		testBody: async (t, driver, node, mockController, mockNode) => {
 			node.markAsAlive();
+			// Circumvent the options validation, so the jam attempts are quick
+			driver.options.timeouts.retryJammed = 100;
+			useFakeClock();
+			try {
+				// Let the controller stay jammed through 5 soft resets
+				softResetsWithoutEffect = 5;
+				shouldFail = true;
+				// The first recovery does not help, so the driver gives up and returns to Ready
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(1);
+				t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
 
-			const countSoftResets = () =>
-				mockController.receivedHostMessages.filter(
-					(msg) => msg.functionType === FunctionType.SoftReset,
-				).length;
+				// Check each waiting time from the moment the last recovery failed
+				let failedAt = now();
+				let resets = 1;
+				for (const backoff of [15_000, 30_000, 60_000, 60_000]) {
+					// Within the waiting time, a jam fails without a reset
+					jumpTo(failedAt + backoff - 2000);
+					t.expect(await node.ping()).toBe(false);
+					t.expect(countSoftResets(mockController)).toBe(resets);
 
-			// The first soft reset does not clear the jam, so the driver gives up on the command
-			softResetsWithoutEffect = 1;
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(false);
-			t.expect(countSoftResets()).toBe(1);
-			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
-
-			// The controller is still jammed. The next command must start a new recovery
-			t.expect(await node.ping()).toBe(true);
-			t.expect(countSoftResets()).toBe(2);
-			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+					// After it, the next jam is recovered, which does not help either
+					jumpTo(failedAt + backoff + 1000);
+					t.expect(await node.ping()).toBe(false);
+					t.expect(countSoftResets(mockController)).toBe(++resets);
+					failedAt = now();
+				}
+			} finally {
+				shouldFail = false;
+				vi.useRealTimers();
+			}
 		},
 	},
 );
 
 integrationTest.sequential(
-	"When the retry after recovering a jammed controller cannot be queued, the next jam is recovered again",
+	"A command that is still retrying a jam when a recovery fails does not start a second soft reset",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			// The soft reset outlasts the delay between jam attempts.
+			// So the immediate command's last attempt waits for the reset and is sent before the retry.
+			const slowSoftReset: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (msg instanceof SoftResetRequest) await wait(1500);
+					return false;
+				},
+			};
+			mockController.defineBehavior(slowSoftReset);
+
+			// Let one soft reset not help
+			softResetsWithoutEffect = 1;
+			shouldFail = true;
+			// The normal command runs out of jam attempts first and starts the recovery
+			const normal = node.ping();
+			// Send an immediate command while the normal one is still between its jam attempts
+			await wait(500);
+			const immediate = driver.sendCommand(
+				new NoOperationCC({ nodeId: node.id }),
+				{ priority: MessagePriority.Immediate },
+			);
+			// The immediate command fails before the assertion runs
+			immediate.catch(() => {});
+
+			// Both commands fail, after only one soft reset
+			t.expect(await normal).toBe(false);
+			await t.expect(immediate).rejects.toMatchObject({
+				code: ZWaveErrorCodes.Controller_MessageDropped,
+			});
+			t.expect(countSoftResets(mockController)).toBe(1);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A successful transmission resets the waiting time after failed jam recoveries to 15 s",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			// Circumvent the options validation, so the jam attempts are quick
+			driver.options.timeouts.retryJammed = 100;
+			useFakeClock();
+			try {
+				// Let the controller stay jammed through 3 soft resets
+				softResetsWithoutEffect = 3;
+				shouldFail = true;
+				// Fail two recoveries, so the next waiting time would be 1 min
+				t.expect(await node.ping()).toBe(false);
+				jumpTo(now() + 16_000);
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(2);
+
+				// The jam clears on its own, and a transmission succeeds
+				shouldFail = false;
+				t.expect(await node.ping()).toBe(true);
+
+				// The next jam is recovered right away
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(3);
+				const failedAt = now();
+
+				// The waiting time starts at 15 s again
+				jumpTo(failedAt + 13_000);
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(3);
+				jumpTo(failedAt + 16_000);
+				t.expect(await node.ping()).toBe(true);
+				t.expect(countSoftResets(mockController)).toBe(4);
+			} finally {
+				shouldFail = false;
+				vi.useRealTimers();
+			}
+		},
+	},
+);
+
+integrationTest.sequential(
+	"The controller stays jammed after the soft reset until a transmission succeeds",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			// Record the controller status when the first command after the soft reset is sent
+			const statusAtRetry: ControllerStatus[] = [];
+			let afterReset = false;
+			const recordStatus: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (msg instanceof SoftResetRequest) {
+						afterReset = true;
+					} else if (afterReset && msg instanceof SendDataRequest) {
+						afterReset = false;
+						statusAtRetry.push(driver.controller.status);
+					}
+					return false;
+				},
+			};
+			mockController.defineBehavior(recordStatus);
+
+			// Jam the controller until the soft reset
+			shouldFail = true;
+			t.expect(await node.ping()).toBe(true);
+
+			// The status is still Jammed at the retry and Ready after it succeeded
+			t.expect(statusAtRetry).toStrictEqual([ControllerStatus.Jammed]);
+			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+		},
+	},
+);
+
+integrationTest.sequential("Two jammed commands cause one soft reset", {
+	// debug: true,
+	...jamTestOptions,
+
+	testBody: async (t, driver, node, mockController, mockNode) => {
+		node.markAsAlive();
+
+		// Jam the controller until the soft reset, and send a normal and an immediate command
+		shouldFail = true;
+		const normal = node.ping();
+		const immediate = driver.sendCommand(
+			new NoOperationCC({ nodeId: node.id }),
+			{ priority: MessagePriority.Immediate },
+		);
+
+		// Both commands succeed after one soft reset
+		t.expect(await normal).toBe(true);
+		await t.expect(immediate).resolves.toBeUndefined();
+		t.expect(countSoftResets(mockController)).toBe(1);
+	},
+});
+
+integrationTest.sequential(
+	"Destroying the driver while it recovers a jammed controller ends the recovery",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			// The recovery then waits for the Serial API to start
+			mockController.capabilities.sendsSerialAPIStartedAfterSoftReset = false;
+
+			// Jam the controller and wait until the recovery sends the soft reset
+			shouldFail = true;
+			const ping = node.ping();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 10000 },
+			);
+
+			// Destroy the driver while the recovery waits for the restart
+			const start = Date.now();
+			await driver.destroy();
+			t.expect(Date.now() - start).toBeLessThan(1000);
+			// The ping reports the failure instead of hanging
+			t.expect(await ping).toBe(false);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"When the retry after recovering a jammed controller cannot be queued, the next jam is recovered after the waiting time",
 	{
 		// debug: true,
 
@@ -647,17 +866,268 @@ integrationTest.sequential(
 					(msg) => msg.functionType === FunctionType.SoftReset,
 				).length;
 
-			// After the soft reset, the controller rejects all attempts of the retry
-			queueFullAfterSoftReset = 3;
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(false);
-			t.expect(countSoftResets()).toBe(1);
+			// The waiting time must be set with the fake clock
+			useFakeClock();
+			try {
+				// After the soft reset, the controller rejects all attempts of the retry
+				queueFullAfterSoftReset = 3;
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets()).toBe(1);
 
-			// The next jam must start a new recovery
-			shouldFail = true;
-			t.expect(await node.ping()).toBe(true);
+				// No transmission succeeded after the recovery. So the next jam fails without a reset.
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets()).toBe(1);
+
+				// After the waiting time, the next jam starts a new recovery
+				jumpTo(now() + 16_000);
+				t.expect(await node.ping()).toBe(true);
+			} finally {
+				vi.useRealTimers();
+			}
 			t.expect(countSoftResets()).toBe(2);
 			t.expect(driver.controller.status).toBe(ControllerStatus.Ready);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A jam is recovered even when another transmission set the status to Ready in the meantime",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+
+			// Like a successful transmission of another command right before the last jammed attempt
+			let jammedSendData = 0;
+			const readyBeforeLastAttempt: MockControllerBehavior = {
+				onHostMessage(controller, msg) {
+					if (shouldFail && msg instanceof SendDataRequest) {
+						jammedSendData++;
+						if (
+							jammedSendData
+							=== driver.options.attempts.sendDataJammed
+						) {
+							driver.controller.setStatus(ControllerStatus.Ready);
+						}
+					}
+					return false;
+				},
+			};
+			mockController.defineBehavior(readyBeforeLastAttempt);
+
+			// Jam the controller until the soft reset
+			shouldFail = true;
+			// The ping succeeds after one soft reset
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(1);
+		},
+	},
+);
+
+type Mode = "normal" | "noCallback" | "jam";
+let mode: Mode = "normal";
+// The modes after the next soft resets. Without them, a missing callback is followed by a jam, and a jam by normal operation.
+let modesAfterSoftReset: Mode[] | undefined;
+// Leaves the callback out or jams, depending on the mode. Each soft reset moves on to the next mode.
+const callbackThenJam: MockControllerBehavior = {
+	async onHostMessage(controller, msg) {
+		if (msg instanceof SoftResetRequest) {
+			if (modesAfterSoftReset) {
+				mode = modesAfterSoftReset.shift() ?? "normal";
+			} else {
+				mode = mode === "noCallback" ? "jam" : "normal";
+			}
+			return false;
+		}
+		if (!(msg instanceof SendDataRequest) || mode === "normal") return;
+
+		await controller.sendMessageToHost(
+			new SendDataResponse({ wasSent: true }),
+		);
+		if (mode === "noCallback") return true;
+
+		await wait(100);
+		await controller.sendMessageToHost(
+			new SendDataRequestTransmitReport({
+				callbackId: msg.callbackId!,
+				transmitStatus: TransmitStatus.Fail,
+				txReport: {
+					txTicks: 0,
+					routeSpeed: 0 as any,
+					routingAttempts: 0,
+					ackRSSI: 0,
+				},
+			}),
+		);
+		return true;
+	},
+};
+
+integrationTest.sequential(
+	"A missing callback after a jam recovery that followed a callback recovery is recovered again",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		customSetup: async (driver, controller) => {
+			controller.defineBehavior(callbackThenJam);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			node.markAsAlive();
+			// Watch whether a node is marked as dead
+			const nodeDead = sinon.spy();
+			node.on("dead", nodeDead);
+
+			// The callback goes missing, the retry after that recovery jams, and the next retry works
+			mode = "noCallback";
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(2);
+
+			// A later missing callback is a new problem, so the driver recovers again
+			mode = "noCallback";
+			t.expect(await node.ping()).toBe(true);
+			t.expect(countSoftResets(mockController)).toBe(4);
+			// No node may be blamed for the missing callbacks
+			sinon.assert.notCalled(nodeDead);
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A missing callback while the controller counts as jammed is handled as a missing callback",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		customSetup: async (driver, controller) => {
+			controller.defineBehavior(callbackThenJam);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			node.markAsAlive();
+
+			// Mark the controller as jammed and let the next callback go missing
+			driver.controller.setStatus(ControllerStatus.Jammed);
+			mode = "noCallback";
+			// Ping the node and wait until the recovery soft-resets the controller
+			const ping = node.ping();
+			await mockController.expectHostMessage(
+				(msg) => msg instanceof SoftResetRequest,
+				{ timeout: 5000 },
+			);
+			// The callback recovery remembers that it reset the controller
+			await wait(200);
+			t.expect(driver["_recoveryPhase"]).not.toBe(0);
+			await ping;
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A missing callback after a jam the driver gave up on is recovered again",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		customSetup: async (driver, controller) => {
+			controller.defineBehavior(callbackThenJam);
+		},
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			// Circumvent the options validation so the test doesn't take forever
+			driver.options.timeouts.sendDataAbort = 1000;
+			driver.options.timeouts.sendDataCallback = 1500;
+			driver.options.timeouts.retryJammed = 100;
+			node.markAsAlive();
+			// Watch whether a node is marked as dead
+			const nodeDead = sinon.spy();
+			node.on("dead", nodeDead);
+
+			try {
+				// The retry after the jam recovery loses its callback.
+				// The retry after that recovery jams, and the driver gives up.
+				mode = "jam";
+				modesAfterSoftReset = ["noCallback", "jam"];
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(2);
+
+				// A transmission succeeds
+				mode = "normal";
+				t.expect(await node.ping()).toBe(true);
+
+				// A later missing callback is a new problem, so the driver recovers again
+				mode = "noCallback";
+				t.expect(await node.ping()).toBe(true);
+				t.expect(countSoftResets(mockController)).toBe(3);
+				// No node may be blamed for the missing callback
+				sinon.assert.notCalled(nodeDead);
+			} finally {
+				mode = "normal";
+				modesAfterSoftReset = undefined;
+			}
+		},
+	},
+);
+
+integrationTest.sequential(
+	"A NotIdle transmit report does not end the waiting time after a failed jam recovery",
+	{
+		// debug: true,
+		...jamTestOptions,
+
+		testBody: async (t, driver, node, mockController, mockNode) => {
+			node.markAsAlive();
+			// Circumvent the options validation, so the jam attempts are quick
+			driver.options.timeouts.retryJammed = 100;
+
+			// Let the controller answer with NotIdle while the flag is set
+			let notIdle = false;
+			const reportNotIdle: MockControllerBehavior = {
+				async onHostMessage(controller, msg) {
+					if (!notIdle || !(msg instanceof SendDataRequest)) return;
+					await controller.sendMessageToHost(
+						new SendDataResponse({ wasSent: true }),
+					);
+					await controller.sendMessageToHost(
+						new SendDataRequestTransmitReport({
+							callbackId: msg.callbackId!,
+							transmitStatus: TransmitStatus.NotIdle,
+						}),
+					);
+					return true;
+				},
+			};
+			mockController.defineBehavior(reportNotIdle);
+
+			try {
+				// Let one recovery not help, so the waiting time starts
+				softResetsWithoutEffect = 1;
+				shouldFail = true;
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(1);
+
+				// The controller is busy and does not transmit
+				notIdle = true;
+				t.expect(await node.ping()).toBe(false);
+				notIdle = false;
+
+				// The waiting time still runs, so the next jam fails without a reset
+				t.expect(await node.ping()).toBe(false);
+				t.expect(countSoftResets(mockController)).toBe(1);
+			} finally {
+				shouldFail = false;
+			}
 		},
 	},
 );
