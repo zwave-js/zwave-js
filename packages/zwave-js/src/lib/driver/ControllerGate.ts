@@ -55,6 +55,10 @@ export class ControllerGate {
 		return waiter;
 	}
 
+	public get isSealed(): boolean {
+		return !!this.sealedReason;
+	}
+
 	public get isClosed(): boolean {
 		return !!this.current || !!this.sealedReason;
 	}

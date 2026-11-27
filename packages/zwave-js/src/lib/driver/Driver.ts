@@ -746,14 +746,6 @@ interface ExclusiveControllerAccessOptions {
 	lease?: Promise<ControllerGateLease>;
 }
 
-const enum ControllerRecoveryPhase {
-	None,
-	ACKTimeout,
-	ACKTimeoutAfterReset,
-	CallbackTimeout,
-	CallbackTimeoutAfterReset,
-}
-
 /** Whether the controller could not transmit a command at all, because it is jammed */
 function isJamFailure(error: ZWaveError): boolean {
 	return (
@@ -1302,11 +1294,12 @@ export class Driver
 		return DriverMode.Unknown;
 	}
 
-	private _recoveryPhase: ControllerRecoveryPhase =
-		ControllerRecoveryPhase.None;
-
-	/** The running recovery of a jammed controller. A jam detected meanwhile joins it. */
-	private jamRecovery: Promise<void> | undefined;
+	/** Whether a recovery of a missing callback completed. The next missing callback is blamed on the node. */
+	private callbackRecoveryCompleted = false;
+	/** The running recovery of the controller. A failure of any kind detected meanwhile joins it. */
+	private controllerRecovery: Promise<void> | undefined;
+	/** Transactions that wait for the running recovery of the controller, with the error they failed with */
+	private recoveryWaiters = new Map<Transaction, ZWaveError>();
 	/** Whether a jam recovery completed and no transmission succeeded since */
 	private jamRecoveryUnconfirmed = false;
 	/** How many jam recoveries in a row did not help */
@@ -3852,85 +3845,102 @@ export class Driver
 	private async softResetInternal(destroyOnError: boolean): Promise<void> {
 		const serialAPIResponds = await this.withExclusiveControllerAccess(
 			async (send, signal) => {
-				const { serialAPIStarted, error } = await abortableStep(
-					signal,
-					() => this.sendSoftReset(signal),
-				);
-				// Don't continue if the controller is unresponsive,
-				// unless it restarted although its ACK got lost
-				if (
-					isMissingControllerACK(error)
-					&& !(await abortableStep(signal, () => serialAPIStarted))
-				) {
+				try {
+					return await this.softResetExclusively(send, signal);
+				} catch (e) {
 					// The controller may have reset without telling us, so confirm the node ID type
-					const controller = this._controller;
-					if (controller) {
-						controller.recordPossibleNodeIdTypeReset();
-						if (controller.nodeIdType === NOT_KNOWN) {
-							await abortableStep(signal, () =>
-								this.restoreNodeIdType(send, signal),
-							);
-						}
+					if (isMissingControllerACK(e) && this.nodeIdTypeNotKnown) {
+						await abortableStep(signal, () =>
+							this.restoreNodeIdType(send, signal),
+						);
 					}
-					throw error;
+					throw e;
 				}
-
-				this.assumeNodeIdTypeAfterReset();
-				if (this._controller) {
-					// Soft-resetting disables any ongoing inclusion, so we need to reset
-					// the state that is tracked in the controller
-					this._controller.setInclusionState(InclusionState.Idle);
-				}
-
-				// Make sure we're able to communicate with the controller again
-				if (
-					!(await this.ensureSerialAPI({
-						serialAPIStarted,
-						send,
-						signal,
-					}))
-				) {
-					return false;
-				}
-
-				await this.restoreControllerStateAfterReset(send, signal);
-				return true;
 			},
 			{ resetsController: true },
 		);
 
 		if (!serialAPIResponds) {
+			const message = "The Serial API did not respond after soft-reset";
 			if (destroyOnError) {
 				// Notify applications that the driver failed, so they can
 				// clean up and restart, instead of just disappearing
-				await this.destroyWithMessage(
-					"The Serial API did not respond after soft-reset",
-				);
-			} else {
-				throw new ZWaveError(
-					"The Serial API did not respond after soft-reset",
-					ZWaveErrorCodes.Driver_Failed,
-				);
+				await this.destroyWithMessage(message);
 			}
+			throw new ZWaveError(message, ZWaveErrorCodes.Driver_Failed);
 		}
 	}
 
+	/**
+	 * Soft-resets the controller and restores its state. Must be called with exclusive access to the controller.
+	 * Returns `false` when the Serial API does not respond afterwards.
+	 *
+	 * Throws the missing ACK when the controller neither acknowledged the reset nor restarted.
+	 * The node ID type is then unknown if the controller may have switched to 8-bit node IDs.
+	 */
+	private async softResetExclusively(
+		send: SendExclusive,
+		signal: AbortSignal,
+	): Promise<boolean> {
+		const { serialAPIStarted, error } = await abortableStep(signal, () =>
+			this.sendSoftReset(signal),
+		);
+		// Don't continue if the controller is unresponsive,
+		// unless it restarted although its ACK got lost
+		if (
+			isMissingControllerACK(error)
+			&& !(await abortableStep(signal, () => serialAPIStarted))
+		) {
+			const controller = this._controller;
+			controller?.recordPossibleNodeIdTypeReset();
+			throw error;
+		}
+
+		// Record what the reset changed
+		this.assumeNodeIdTypeAfterReset();
+		if (this._controller) {
+			// Soft-resetting disables any ongoing inclusion, so we need to reset
+			// the state that is tracked in the controller
+			this._controller.setInclusionState(InclusionState.Idle);
+		}
+
+		// Make sure we're able to communicate with the controller again
+		if (!(await this.ensureSerialAPI({ serialAPIStarted, send, signal }))) {
+			return false;
+		}
+
+		await this.restoreControllerStateAfterReset(send, signal);
+		return true;
+	}
+
+	/**
+	 * Restores the controller state after a reset. Must be called with exclusive access to the controller.
+	 * @param resetConfirmed Whether the controller acknowledged the reset or reported its restart.
+	 * Without a confirmation, only steps that are safe without a reset run.
+	 */
 	private async restoreControllerStateAfterReset(
 		send: SendExclusive,
 		signal: AbortSignal,
+		resetConfirmed: boolean = true,
 	): Promise<void> {
 		// This is a bit hacky, but what the heck...
 		const controller = this._controller;
 		if (this._enteringBootloader || !controller) return;
 
-		// Start the watchdog again, unless disabled
+		// Start the watchdog again, unless disabled. Starting a running watchdog does no harm.
 		if (this.options.features.watchdog) {
 			await abortableStep(signal, () =>
 				controller.startWatchdogInternal(send),
 			);
 		}
 
-		await abortableStep(signal, () => this.restoreNodeIdType(send, signal));
+		// Restore the node ID type
+		// A known node ID type stays as it is when the controller did not reset
+		if (resetConfirmed || controller.nodeIdType === NOT_KNOWN) {
+			await abortableStep(signal, () =>
+				this.restoreNodeIdType(send, signal),
+			);
+		}
 	}
 
 	/** Records the node ID type the controller uses after a reset, until the driver restores the desired one */
@@ -4047,9 +4057,9 @@ export class Driver
 
 		// Give up when the Serial API does not come back
 		if (!serialAPIResponds) {
-			await this.destroyWithMessage(
-				"The Serial API did not respond after soft-reset",
-			);
+			const message = "The Serial API did not respond after soft-reset";
+			await this.destroyWithMessage(message);
+			throw new ZWaveError(message, ZWaveErrorCodes.Driver_Failed);
 		}
 
 		// Clean up and interview the controller again. Removing a parent would also remove
@@ -5201,85 +5211,106 @@ export class Driver
 			return false;
 		}
 
-		const recoverByReopeningSerialport = async () => {
-			if (!this.serial || this.wasDestroyed) return;
-			this.driverLog.print(
-				"Attempting to recover unresponsive controller by reopening the serial port...",
-				"warn",
-			);
-			if (this.serial.isOpen) await this.serial.close();
-			await wait(1000);
-			try {
-				await this.openSerialport();
-			} catch (e) {
-				// The serial port cannot be reopened, e.g. because a TCP-based
-				// connection to the controller is gone. The driver cannot
-				// recover from this, so notify applications that it failed,
-				// allowing them to clean up and restart.
-				void this.destroyWithMessage(getErrorMessage(e));
-				return;
-			}
+		if (this.joinControllerRecovery(transaction, error)) return true;
+		// A failed recovery ends the driver
+		void this.runControllerRecovery(
+			() => this.recoverUnresponsiveController(transaction, error),
+			transaction,
+			error,
+		).catch(noop);
+		return true;
+	}
 
-			this.driverLog.print(
-				"Serial port reopened. Returning to normal operation and hoping for the best...",
-				"warn",
-			);
-
-			// We don't know if this worked
-			// Go back to normal operation and hope for the best.
-			this._controller?.setStatus(ControllerStatus.Ready);
-			this._recoveryPhase = ControllerRecoveryPhase.None;
-		};
-
-		if (
-			(this._controller.status !== ControllerStatus.Unresponsive
-				&& !this.maySoftReset())
-			|| this._recoveryPhase
-				=== ControllerRecoveryPhase.ACKTimeoutAfterReset
-		) {
-			// Either we can/could not do a soft reset or the controller is still timing out afterwards
-			void recoverByReopeningSerialport().catch(noop);
-
-			return true;
-		} else if (this._controller.status !== ControllerStatus.Unresponsive) {
-			// The controller was responsive before this transaction failed.
-			// Mark it as unresponsive and try to soft-reset it.
-			this.controller.setStatus(ControllerStatus.Unresponsive);
-
-			this._recoveryPhase = ControllerRecoveryPhase.ACKTimeout;
-
+	/**
+	 * Soft-resets a controller that did not acknowledge a command and retries the command.
+	 * If the controller does not acknowledge the reset either, the command fails and the serial port is reopened.
+	 */
+	private async recoverUnresponsiveController(
+		transaction: Transaction,
+		error: ZWaveError,
+	): Promise<void> {
+		const gate = this.controllerGate;
+		// Decide whether to soft-reset
+		const softReset =
+			this.maySoftReset()
+			&& !this._controller?.isAnyOTAFirmwareUpdateInProgress();
+		if (softReset) {
+			this._controller?.setStatus(ControllerStatus.Unresponsive);
 			this.driverLog.print(
 				"Attempting to recover unresponsive controller by restarting it...",
 				"warn",
 			);
+		}
 
-			// Execute the soft-reset asynchronously
-			void this.softReset()
-				.then(() => {
-					// The controller responded. It is no longer unresponsive
-
-					// Re-queue the transaction, so it can get handled next.
-					// Its message generator may have finished, so reset that too.
-					transaction.reset();
-					this.getQueueForTransaction(transaction).add(
-						transaction.clone(),
-					);
-
-					this._controller?.setStatus(ControllerStatus.Ready);
-					this._recoveryPhase = ControllerRecoveryPhase.None;
-				})
-				.catch(() => {
-					// Soft-reset failed. Reject the transaction
+		let mayHaveReset = false;
+		try {
+			// Reset the controller, or reopen the serial port
+			// One exclusive access covers the reset and the reopen, so no command is sent before the node ID type is confirmed
+			await this.withExclusiveControllerAccess(
+				async (send, signal) => {
+					if (softReset) {
+						try {
+							if (await this.softResetExclusively(send, signal))
+								return;
+							throw new ZWaveError(
+								"The Serial API did not respond after soft-reset",
+								ZWaveErrorCodes.Driver_Failed,
+							);
+						} catch (e) {
+							if (!isMissingControllerACK(e)) throw e;
+							mayHaveReset = true;
+						}
+					}
+					// The command is not retried after reopening the serial port
 					this.rejectTransaction(transaction, error);
+					await this.reopenSerialPort(send, signal, mayHaveReset);
+				},
+				{ resetsController: true },
+			);
+		} catch (e) {
+			// A sealed gate means that a new controller instance replaces this one
+			if (!this.wasDestroyed && !gate.isSealed) {
+				// The driver cannot recover from this, e.g. because a TCP-based connection to the controller is gone.
+				// Notify applications that it failed, allowing them to clean up and restart.
+				void this.destroyWithMessage(getErrorMessage(e));
+			}
+			throw e;
+		}
+		this._controller?.setStatus(ControllerStatus.Ready);
+	}
 
-					// and reopen the serial port
-					return recoverByReopeningSerialport();
-				});
+	/**
+	 * Reopens the serial port of an unresponsive controller. Must be called with exclusive access to the controller.
+	 * @param mayHaveReset Whether the controller may have reset without telling us. Its state is then restored like after a soft reset.
+	 */
+	private async reopenSerialPort(
+		send: SendExclusive,
+		signal: AbortSignal,
+		mayHaveReset: boolean,
+	): Promise<void> {
+		this.driverLog.print(
+			"Attempting to recover unresponsive controller by reopening the serial port...",
+			"warn",
+		);
+		// Close the port, wait a second and open it again
+		if (this.serial?.isOpen) {
+			await abortableStep(signal, () => this.serial!.close());
+		}
+		await abortableStep(signal, () => wait(1000, true));
+		await abortableStep(signal, () => this.openSerialport(signal));
 
-			return true;
+		if (mayHaveReset) {
+			// This confirms an unknown node ID type, or ends the exclusive access with the type still unknown
+			await this.restoreControllerStateAfterReset(send, signal, false);
+			this.driverLog.print(
+				"Serial port reopened and controller state restored. Returning to normal operation.",
+				"warn",
+			);
 		} else {
-			// Not sure what to do here
-			return false;
+			this.driverLog.print(
+				"Serial port reopened. Returning to normal operation and hoping for the best...",
+				"warn",
+			);
 		}
 	}
 
@@ -5298,14 +5329,14 @@ export class Driver
 		if (!this._controller || !this.mayRecoverUnresponsiveController()) {
 			return false;
 		}
+		if (this.joinControllerRecovery(transaction, error)) return true;
 
 		if (
 			// The SendData response can time out on older controllers trying to reach a dead node.
 			// In this case, we do not want to reset the controller, but just mark the node as dead.
 			error.context === "response"
 			// Also do this if the callback is timing out even after restarting the controller
-			|| this._recoveryPhase
-				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
+			|| this.callbackRecoveryCompleted
 		) {
 			const node = this.tryGetNode(transaction.message);
 			if (!node) return false; // This should never happen, but whatever
@@ -5359,82 +5390,69 @@ export class Driver
 			}
 
 			// If the controller is still timing out, reset it once more
-			if (
-				this._recoveryPhase
-				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
-			) {
+			if (this.callbackRecoveryCompleted) {
 				this.driverLog.print(
 					"Attempting to recover controller again...",
 					"warn",
 				);
-				void this.softResetInternal(true)
-					.catch(() => {
-						this.driverLog.print(
-							"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
-							"warn",
-						);
-					})
-					.finally(() => {
-						this._recoveryPhase = ControllerRecoveryPhase.None;
-						this._controller?.setStatus(ControllerStatus.Ready);
-					});
+				void this.runControllerRecovery(async () => {
+					try {
+						await this.softResetInternal(true);
+					} catch (e) {
+						if (!this.wasDestroyed) {
+							this.driverLog.print(
+								"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+								"warn",
+							);
+							this._controller?.setStatus(ControllerStatus.Ready);
+						}
+						throw e;
+					}
+					this._controller?.setStatus(ControllerStatus.Ready);
+				}).catch(noop);
 			}
 
 			return handled;
-		} else if (this._controller.status !== ControllerStatus.Unresponsive) {
+		} else if (this.maySoftReset()) {
 			// The controller was responsive before this transaction failed.
-
-			if (this.maySoftReset()) {
-				// Mark it as unresponsive and try to soft-reset it.
-				this.controller.setStatus(ControllerStatus.Unresponsive);
-
-				this._recoveryPhase = ControllerRecoveryPhase.CallbackTimeout;
-
-				this.driverLog.print(
-					"Controller missed Send Data callback. Attempting to recover...",
-					"warn",
-				);
-
-				// Execute the soft-reset asynchronously
-				void this.softResetInternal(true)
-					.then(() => {
-						// The controller responded. It is no longer unresponsive.
-
-						// Re-queue the transaction, so it can get handled next.
-						// Its message generator may have finished, so reset that too.
-						transaction.reset();
-						this.getQueueForTransaction(transaction).add(
-							transaction.clone(),
-						);
-
-						this._controller?.setStatus(ControllerStatus.Ready);
-						this._recoveryPhase =
-							ControllerRecoveryPhase.CallbackTimeoutAfterReset;
-					})
-					.catch(() => {
-						// Soft-reset failed. Just reject the transaction
-						this.rejectTransaction(transaction, error);
-
-						this.driverLog.print(
-							"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
-							"warn",
-						);
-						this._recoveryPhase = ControllerRecoveryPhase.None;
-						this._controller?.setStatus(ControllerStatus.Ready);
-					});
-			} else {
-				this.driverLog.print(
-					"Controller missed Send Data callback. Cannot recover automatically because the soft reset feature is unsupported or disabled. Returning to normal operation and hoping for the best...",
-					"warn",
-				);
-				this.rejectTransaction(transaction, error);
-			}
-
+			// Mark it as unresponsive and try to soft-reset it.
+			this.controller.setStatus(ControllerStatus.Unresponsive);
+			this.driverLog.print(
+				"Controller missed Send Data callback. Attempting to recover...",
+				"warn",
+			);
+			void this.runControllerRecovery(
+				() => this.recoverMissingCallback(),
+				transaction,
+				error,
+			).catch(noop);
 			return true;
 		} else {
-			// Not sure what to do here
-			return false;
+			this.driverLog.print(
+				"Controller missed Send Data callback. Cannot recover automatically because the soft reset feature is unsupported or disabled. Returning to normal operation and hoping for the best...",
+				"warn",
+			);
+			this.rejectTransaction(transaction, error);
+			return true;
 		}
+	}
+
+	/** Soft-resets the controller after it missed a SendData callback */
+	private async recoverMissingCallback(): Promise<void> {
+		try {
+			await this.softResetInternal(true);
+		} catch (e) {
+			if (!this.wasDestroyed) {
+				this.driverLog.print(
+					"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+					"warn",
+				);
+				this._controller?.setStatus(ControllerStatus.Ready);
+			}
+			throw e;
+		}
+		this._controller?.setStatus(ControllerStatus.Ready);
+		this.callbackRecoveryCompleted = true;
 	}
 
 	/**
@@ -5448,18 +5466,14 @@ export class Driver
 		if (!this._controller || !this.mayRecoverUnresponsiveController()) {
 			return false;
 		}
+		if (this.joinControllerRecovery(transaction, error)) return true;
 		this._controller.setStatus(ControllerStatus.Jammed);
 
 		const giveUp = (message: string): void => {
 			this.driverLog.print(message, "warn");
 			this._controller?.setStatus(ControllerStatus.Ready);
 			// A completed recovery of a missing callback is over. It must not apply to later callbacks.
-			if (
-				this._recoveryPhase
-				=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
-			) {
-				this._recoveryPhase = ControllerRecoveryPhase.None;
-			}
+			this.callbackRecoveryCompleted = false;
 		};
 
 		// Give up on controllers that cannot be recovered
@@ -5506,54 +5520,154 @@ export class Driver
 		}
 
 		// Recover the controller and retry the command
-		void this.recoverJammedController().then(
-			() => {
-				// Re-queue the transaction, so it can get handled next.
-				// Its message generator may have finished, so reset that too.
-				transaction.reset();
-				this.getQueueForTransaction(transaction).add(
-					transaction.clone(),
-				);
-			},
-			(e) => {
-				if (this.wasDestroyed) {
-					this.rejectTransaction(transaction, e as ZWaveError);
-					return;
-				}
-				// Soft-reset failed. Just reject the transaction
-				this.rejectTransaction(transaction, error);
-				giveUp(
-					"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
-				);
-			},
-		);
+		void this.recoverJammedController(transaction, error).catch(() => {
+			if (this.wasDestroyed) return;
+			giveUp(
+				"Automatic controller recovery failed. Returning to normal operation and hoping for the best.",
+			);
+		});
 		return true;
 	}
 
-	/** Soft-resets a jammed controller. A jam detected while this runs joins the running recovery. */
-	private recoverJammedController(): Promise<void> {
-		this.jamRecovery ??= (async () => {
+	/**
+	 * Runs a recovery of the controller. Only one recovery runs at a time.
+	 * Call it only when {@link joinControllerRecovery} found no running recovery.
+	 * @param transaction The failed transaction that starts the recovery. It waits for the recovery like a joined one.
+	 */
+	private runControllerRecovery(
+		fn: () => Promise<void>,
+		transaction?: Transaction,
+		error?: ZWaveError,
+	): Promise<void> {
+		if (transaction && error) this.recoveryWaiters.set(transaction, error);
+		if (this.controllerRecovery) return this.controllerRecovery;
+		// A completed recovery of a missing callback is over once another recovery starts
+		this.callbackRecoveryCompleted = false;
+		// Run the recovery, then settle everything that waited for it
+		const gate = this.controllerGate;
+		const recovery = (async () => {
+			let failure: unknown;
 			try {
+				await fn();
+			} catch (e) {
+				failure = e;
+			}
+			this.controllerRecovery = undefined;
+			// A sealed gate means that a new controller instance replaces this one
+			this.settleRecoveryWaiters(failure, !!failure && gate.isSealed);
+			if (failure) throw failure;
+		})();
+		this.controllerRecovery = recovery;
+		return recovery;
+	}
+
+	/**
+	 * Lets a failed transaction wait for the running recovery of the controller, whatever its kind.
+	 * Returns `false` when no recovery runs.
+	 */
+	private joinControllerRecovery(
+		transaction: Transaction,
+		error: ZWaveError,
+	): boolean {
+		if (!this.controllerRecovery) return false;
+		this.recoveryWaiters.set(transaction, error);
+		return true;
+	}
+
+	/**
+	 * Settles the transactions that waited for the recovery of the controller.
+	 * They are re-queued after a successful recovery, because it reset the controller.
+	 * A cancelled recovery or a destroyed driver rejects them with that reason, any other failure with their own error.
+	 */
+	private settleRecoveryWaiters(failure: unknown, cancelled: boolean): void {
+		const waiters = [...this.recoveryWaiters];
+		this.recoveryWaiters.clear();
+		for (const [transaction, error] of waiters) {
+			if (!failure) {
+				this.requeueTransaction(transaction);
+			} else if (this.wasDestroyed || cancelled) {
+				this.rejectTransaction(transaction, failure as ZWaveError);
+			} else {
+				this.rejectTransaction(transaction, error);
+			}
+		}
+	}
+
+	/** Applies a queue reducer to the transactions that wait for the recovery of the controller */
+	private reduceRecoveryWaiters(reducer: TransactionReducer): void {
+		for (const transaction of this.recoveryWaiters.keys()) {
+			const result = reducer(transaction, "queue");
+			switch (result.type) {
+				case "requeue":
+					// The transaction is re-queued after the recovery anyway
+					if (result.priority != undefined) {
+						transaction.priority = result.priority;
+					}
+					if (result.tag != undefined) transaction.tag = result.tag;
+					break;
+				case "defer":
+					// The caller of the reducer takes over the transaction
+					this.recoveryWaiters.delete(transaction);
+					break;
+				case "resolve":
+					this.recoveryWaiters.delete(transaction);
+					this.resolveTransaction(transaction, result.message);
+					break;
+				case "reject":
+					this.rejectTransaction(
+						transaction,
+						new ZWaveError(
+							result.message,
+							result.code,
+							undefined,
+							transaction.stack,
+						),
+					);
+					break;
+			}
+		}
+	}
+
+	/** Re-queues a failed transaction, so it is sent again, unless the driver was destroyed */
+	private requeueTransaction(transaction: Transaction): void {
+		if (this.wasDestroyed) {
+			this.rejectTransaction(
+				transaction,
+				new ZWaveError(
+					"The driver instance was destroyed",
+					ZWaveErrorCodes.Driver_Destroyed,
+					undefined,
+					transaction.stack,
+				),
+			);
+			return;
+		}
+		// Its message generator may have finished, so reset that too
+		transaction.reset();
+		// The node may have received the command already. It discards a copy with the same S2 sequence number.
+		if (isSendData(transaction.message)) {
+			transaction.message.prepareRetransmission();
+		}
+		this.getQueueForTransaction(transaction).add(transaction.clone());
+	}
+
+	/** Soft-resets a jammed controller */
+	private recoverJammedController(
+		transaction?: Transaction,
+		error?: ZWaveError,
+	): Promise<void> {
+		return this.runControllerRecovery(
+			async () => {
 				this.driverLog.print(
 					"Attempting to recover jammed controller...",
 					"warn",
 				);
-				// A completed recovery of a missing callback is over. Its phase must not apply to later callbacks.
-				if (
-					this._recoveryPhase
-					=== ControllerRecoveryPhase.CallbackTimeoutAfterReset
-				) {
-					this._recoveryPhase = ControllerRecoveryPhase.None;
-				}
 				await this.softReset();
-				// softReset() resolves after it destroyed the driver because the Serial API did not respond
-				this.lifetime.signal.throwIfAborted();
 				this.jamRecoveryUnconfirmed = true;
-			} finally {
-				this.jamRecovery = undefined;
-			}
-		})();
-		return this.jamRecovery;
+			},
+			transaction,
+			error,
+		);
 	}
 
 	private shouldRequestWakeupOnDemand(node: ZWaveNode): boolean {
@@ -9015,15 +9129,8 @@ ${handlers.length} left`,
 	): void {
 		// This must be checked first, so a transaction aborted by a soft reset cannot start another recovery
 		if (wasCommandInterrupted(error)) {
-			// The controller was reset or taken for exclusive access in the middle of a transaction.
-			// Re-queue the transaction, so it can get handled again
-			// Its message generator may have finished, so reset that too.
-			transaction.reset();
-			// The node may have received the command already. It discards a copy with the same S2 sequence number.
-			if (isSendData(transaction.message)) {
-				transaction.message.prepareRetransmission();
-			}
-			this.getQueueForTransaction(transaction).add(transaction.clone());
+			// The controller was reset or taken for exclusive access in the middle of a transaction
+			this.requeueTransaction(transaction);
 			return;
 		}
 
@@ -9081,6 +9188,7 @@ ${handlers.length} left`,
 		transaction: Transaction,
 		error: ZWaveError,
 	): void {
+		this.recoveryWaiters.delete(transaction);
 		transaction.abort(error);
 	}
 
@@ -9249,6 +9357,7 @@ ${handlers.length} left`,
 	private reduceQueues(reducer: TransactionReducer): Promise<void> {
 		// This function MUST not be async, because this can introduce a
 		// race condition caused by the microtick delay
+		this.reduceRecoveryWaiters(reducer);
 		return Promise.all(
 			this.queues.map((queue) => this.reduceQueue(queue, reducer)),
 		).then(noop);
