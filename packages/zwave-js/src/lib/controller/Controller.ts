@@ -106,6 +106,7 @@ import {
 	sdkVersionLte,
 	securityClassIsS2,
 	securityClassOrder,
+	wasControllerReset,
 } from "@zwave-js/core";
 import {
 	BufferedNVMReader,
@@ -783,15 +784,44 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 		return this._nodes;
 	}
 
-	private _nodeIdType: NodeIDType = NodeIDType.Short;
-	/** Whether the controller is configured to use 8 or 16 bit node IDs */
-	public get nodeIdType(): NodeIDType {
+	/**
+	 * The node ID type the controller uses. The rules:
+	 * - A successful response to `SetNodeIDType` sets the requested type.
+	 * - A response that rejects the switch keeps the previous value. A type that is not known stays not known.
+	 * - A `SetNodeIDType` that was sent but got no response makes the type not known, because the controller may have switched.
+	 *   This includes a command aborted by a controller reset.
+	 * - CAN, NAK or a missing ACK mean that the controller did not process the command. The value does not change.
+	 * - A reset below SDK 7.21 sets 8-bit node IDs. From SDK 7.21 on, a reset keeps the value, also one that is not known.
+	 * - A soft reset that may or may not have happened makes a 16-bit type not known below SDK 7.21.
+	 *
+	 * While the type is not known, nothing that contains a node ID may be sent.
+	 */
+	private _nodeIdType: MaybeNotKnown<NodeIDType> = NodeIDType.Short;
+	/** Whether the controller is configured to use 8 or 16 bit node IDs, or `NOT_KNOWN` while the driver cannot tell */
+	public get nodeIdType(): MaybeNotKnown<NodeIDType> {
 		return this._nodeIdType;
 	}
-	/** @internal */
-	public set nodeIdType(value: NodeIDType) {
-		this._nodeIdType = value;
+
+	/** @internal Records a reset of the controller */
+	public recordNodeIdTypeReset(): void {
+		if (this.sdkVersionLt("7.21.0")) this._nodeIdType = NodeIDType.Short;
 	}
+
+	/** @internal Records a soft reset that may or may not have happened */
+	public recordPossibleNodeIdTypeReset(): void {
+		if (
+			this.sdkVersionLt("7.21.0")
+			&& this._nodeIdType === NodeIDType.Long
+		) {
+			this._nodeIdType = NOT_KNOWN;
+		}
+	}
+
+	/**
+	 * @internal
+	 * The node ID type the driver restores after the controller was reset
+	 */
+	public desiredNodeIdType: NodeIDType = NodeIDType.Short;
 
 	/** Returns the node with the given DSK */
 	public getNodeByDSK(dsk: BytesView | string): ZWaveNode | undefined {
@@ -7732,13 +7762,26 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			}-bit node IDs...`,
 		);
 
-		const result = (await send(
-			new SerialAPISetup_SetNodeIDTypeRequest({
-				nodeIdType,
-			}),
-		)) as
+		let result:
 			| SerialAPISetup_SetNodeIDTypeResponse
 			| SerialAPISetup_CommandUnsupportedResponse;
+		try {
+			result = (await send(
+				new SerialAPISetup_SetNodeIDTypeRequest({
+					nodeIdType,
+				}),
+			)) as typeof result;
+		} catch (e) {
+			if (
+				(isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.Controller_Timeout
+					&& e.context !== "ACK")
+				|| wasControllerReset(e)
+			) {
+				this._nodeIdType = NOT_KNOWN;
+			}
+			throw e;
+		}
 		if (result instanceof SerialAPISetup_CommandUnsupportedResponse) {
 			throw new ZWaveError(
 				`Your hardware does not support switching between short and long node IDs!`,
@@ -7751,39 +7794,38 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 				}-bit node IDs ${result.success ? "successful" : "failed"}`,
 			);
 
-			if (result.success) {
-				this._nodeIdType = nodeIdType;
-			}
+			if (result.success) this._nodeIdType = nodeIdType;
 		}
 		return result.success;
 	}
 
 	public trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean> {
-		return this.trySetNodeIDTypeInternal(nodeIdType, (msg) =>
-			this.driver.sendMessage(msg),
-		);
+		// Nothing else may be sent while the node ID type changes, because commands for nodes are serialized with it
+		return this.driver.withExclusiveControllerAccess((send, signal) => {
+			if (
+				!this.isSerialAPISetupCommandSupported(
+					SerialAPISetupCommand.SetNodeIDType,
+				)
+			) {
+				return Promise.resolve(false);
+			}
+			// Record the request also when switching fails, so the next reset tries again
+			this.desiredNodeIdType = nodeIdType;
+			return this.trySetNodeIDTypeInternal(nodeIdType, send, signal);
+		});
 	}
 
 	/**
 	 * @internal
-	 * Like {@link trySetNodeIDType}, but uses the given function to send the request
+	 * Like {@link trySetNodeIDType}, but uses the given function to send the request.
+	 * Must be called with exclusive access to the controller, and only when it supports `SetNodeIDType`.
 	 */
-	public async trySetNodeIDTypeInternal(
+	public trySetNodeIDTypeInternal(
 		nodeIdType: NodeIDType,
 		send: SendExclusive,
+		signal: AbortSignal,
 	): Promise<boolean> {
-		if (
-			this.isSerialAPISetupCommandSupported(
-				SerialAPISetupCommand.SetNodeIDType,
-			)
-		) {
-			try {
-				return await this.setNodeIDType(nodeIdType, send);
-			} catch {
-				// ignore
-			}
-		}
-		return false;
+		return this.driver.switchNodeIdType(nodeIdType, send, signal);
 	}
 
 	/**

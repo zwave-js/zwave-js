@@ -1,5 +1,6 @@
 import { Bytes, type BytesView, sum } from "@zwave-js/shared";
 
+import { ZWaveError, ZWaveErrorCodes } from "../error/ZWaveError.js";
 import type { BasicDeviceClass } from "../registries/DeviceClasses.js";
 import { validatePayload } from "../util/misc.js";
 
@@ -454,6 +455,12 @@ export function encodeNodeID(
 	nodeId: number,
 	type: NodeIDType = NodeIDType.Short,
 ): Bytes {
+	if (type === NodeIDType.Short && nodeId > 0xff) {
+		throw new ZWaveError(
+			`Node ID ${nodeId} cannot be encoded with 8-bit node IDs`,
+			ZWaveErrorCodes.Argument_Invalid,
+		);
+	}
 	const ret = new Bytes(type);
 	ret.writeUIntBE(nodeId, 0, type);
 	return ret;

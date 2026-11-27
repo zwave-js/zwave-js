@@ -83,6 +83,7 @@ import {
 	MessagePriority,
 	type MessageRecord,
 	type MulticastDestination,
+	NOT_KNOWN,
 	NUM_NODEMASK_BYTES,
 	NodeIDType,
 	RFRegion,
@@ -169,6 +170,7 @@ import {
 	SendDataRequest,
 	SendTestFrameRequest,
 	SendTestFrameTransmitReport,
+	SerialAPISetupCommand,
 	SerialAPIStartedRequest,
 	SerialAPIWakeUpReason,
 	SoftResetRequest,
@@ -259,7 +261,11 @@ import {
 } from "../telemetry/statistics.js";
 
 import { Bootloader, explainBootloaderError } from "./Bootloader.js";
-import { ControllerGate, type SendExclusive } from "./ControllerGate.js";
+import {
+	ControllerGate,
+	type ControllerGateLease,
+	type SendExclusive,
+} from "./ControllerGate.js";
 import { DriverMode } from "./DriverMode.js";
 import { EndDeviceCLI } from "./EndDeviceCLI.js";
 import {
@@ -734,6 +740,8 @@ interface ExclusiveControllerAccessOptions {
 	keepClosed?: boolean;
 	/** The controller resets during the exclusive access, so the serial port may close */
 	resetsController?: boolean;
+	/** A lease that was already requested for this exclusive access */
+	lease?: Promise<ControllerGateLease>;
 }
 
 const enum ControllerRecoveryPhase {
@@ -1819,6 +1827,8 @@ export class Driver
 			try {
 				await this.initializeControllerAndNodes();
 			} catch (e) {
+				// The failure was already reported
+				if (this.wasDestroyed) return;
 				let message: string;
 				if (
 					isZWaveError(e)
@@ -2162,13 +2172,9 @@ export class Driver
 					.lrNodeIds;
 			}
 
-			// If the controller supports ZWLR in the current region, switch to
-			// 16-bit node IDs. Otherwise, make sure that it is actually using 8-bit node IDs.
-			await this.controller.trySetNodeIDType(
-				this.controller.supportsLongRange
-					? NodeIDType.Long
-					: NodeIDType.Short,
-			);
+			// Use 16-bit node IDs whenever the controller can switch, so the node ID type
+			// does not depend on the RF region. Controllers that cannot switch use 8-bit node IDs.
+			await this.controller.trySetNodeIDType(NodeIDType.Long);
 
 			// Now that we know the node ID type, we can identify the controller
 			await this.controller.identify();
@@ -3630,10 +3636,12 @@ export class Driver
 		fn: (send: SendExclusive, signal: AbortSignal) => Promise<T>,
 		options: ExclusiveControllerAccessOptions,
 	): Promise<T> {
-		const lease = await this.controllerGate.close();
+		// Wait for the gate
+		const lease = await (options.lease ?? this.controllerGate.close());
 		const { signal } = lease;
 		// Set only while the gate is ours, so a reset that waits for it cannot set it early
 		if (options.resetsController) this.isSoftResetting = true;
+		let keepClosed = !!options.keepClosed;
 		try {
 			signal.throwIfAborted();
 			// Abort the command that is active now, so it does not run during the exclusive access.
@@ -3668,14 +3676,38 @@ export class Driver
 			);
 			// Make sure we don't return a success result if signal was aborted.
 			signal.throwIfAborted();
+			this.assertNodeIdTypeKnown();
 			return result;
+		} catch (e) {
+			if (this.nodeIdTypeNotKnown) {
+				// Frames would be serialized and parsed with the wrong node ID size.
+				// Like a Serial API that stopped responding, this ends the driver.
+				keepClosed = true;
+				if (!this.wasDestroyed) {
+					void this.destroyWithMessage(getErrorMessage(e));
+				}
+			}
+			throw e;
 		} finally {
 			// Cleared before the release, so it does not clear the state of the next reset
 			if (options.resetsController) this.isSoftResetting = false;
-			if (!options.keepClosed) lease.release();
+			if (!keepClosed) lease.release();
 			// Send the commands that waited at the Serial API queue
 			this.serialAPIQueue?.trigger();
 		}
+	}
+
+	private get nodeIdTypeNotKnown(): boolean {
+		return !!this._controller && this._controller.nodeIdType === NOT_KNOWN;
+	}
+
+	/** Throws when the node ID type of the controller is not known, because nothing with a node ID may be sent then */
+	private assertNodeIdTypeKnown(): void {
+		if (!this.nodeIdTypeNotKnown) return;
+		throw new ZWaveError(
+			"The driver cannot continue, because the node ID type of the controller is not known",
+			ZWaveErrorCodes.Driver_Failed,
+		);
 	}
 
 	/**
@@ -3784,13 +3816,21 @@ export class Driver
 					isMissingControllerACK(error)
 					&& !(await abortableStep(signal, () => serialAPIStarted))
 				) {
+					// The controller may have reset without telling us, so confirm the node ID type
+					const controller = this._controller;
+					if (controller) {
+						controller.recordPossibleNodeIdTypeReset();
+						if (controller.nodeIdType === NOT_KNOWN) {
+							await abortableStep(signal, () =>
+								this.restoreNodeIdType(send, signal),
+							);
+						}
+					}
 					throw error;
 				}
 
+				this.assumeNodeIdTypeAfterReset();
 				if (this._controller) {
-					// Soft-reset resets the node ID type back to 8 bit
-					this._controller["_nodeIdType"] = NodeIDType.Short;
-
 					// Soft-resetting disables any ongoing inclusion, so we need to reset
 					// the state that is tracked in the controller
 					this._controller.setInclusionState(InclusionState.Idle);
@@ -3844,9 +3884,99 @@ export class Driver
 			);
 		}
 
-		// If desired, re-configure the controller to use 16 bit node IDs
-		await abortableStep(signal, () =>
-			controller.trySetNodeIDTypeInternal(NodeIDType.Long, send),
+		await abortableStep(signal, () => this.restoreNodeIdType(send, signal));
+	}
+
+	/** Records the node ID type the controller uses after a reset, until the driver restores the desired one */
+	private assumeNodeIdTypeAfterReset(): void {
+		this._controller?.recordNodeIdTypeReset();
+	}
+
+	/** Sends the desired node ID type to the controller. Must be called with exclusive access to the controller. */
+	private async restoreNodeIdType(
+		send: SendExclusive,
+		signal: AbortSignal,
+	): Promise<void> {
+		const controller = this._controller;
+		if (
+			!controller?.isSerialAPISetupCommandSupported(
+				SerialAPISetupCommand.SetNodeIDType,
+			)
+		) {
+			return;
+		}
+		const nodeIdType = controller.desiredNodeIdType;
+		if (!(await this.switchNodeIdType(nodeIdType, send, signal))) {
+			const bits = (type: NodeIDType) =>
+				type === NodeIDType.Short ? 8 : 16;
+			this.controllerLog.print(
+				`The controller rejected ${bits(nodeIdType)}-bit node IDs, continuing with ${bits(
+					controller.nodeIdType ?? NodeIDType.Short,
+				)}-bit node IDs`,
+				"error",
+			);
+		}
+	}
+
+	/**
+	 * @internal
+	 * Switches the node ID type of a controller that supports `SetNodeIDType`. Must be called with exclusive access to the controller.
+	 * Returns `true` when the controller confirmed the switch, `false` when it rejected it.
+	 * A rejected switch leaves the node ID type unchanged.
+	 *
+	 * Throws when no attempt was answered, because the controller may then use either node ID type.
+	 * The exclusive access then ends the driver.
+	 * Throws the abort reason of `signal` when the exclusive access is canceled.
+	 */
+	public async switchNodeIdType(
+		nodeIdType: NodeIDType,
+		send: SendExclusive,
+		signal: AbortSignal,
+	): Promise<boolean> {
+		const controller = this._controller;
+		if (!controller) return false;
+
+		// Send the switch up to 3 times
+		let lastError: unknown;
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			try {
+				if (await controller.setNodeIDType(nodeIdType, send)) {
+					return true;
+				}
+			} catch (e) {
+				// The exclusive access was canceled, e.g. because a new controller instance replaces this one
+				signal.throwIfAborted();
+				if (
+					isZWaveError(e)
+					&& e.code === ZWaveErrorCodes.Driver_NotSupported
+				) {
+					break;
+				}
+				// Other errors are not about this command and end the attempts
+				if (
+					!isZWaveError(e)
+					|| (e.code !== ZWaveErrorCodes.Controller_ResponseNOK
+						&& e.code !== ZWaveErrorCodes.Controller_MessageDropped
+						&& e.code !== ZWaveErrorCodes.Controller_Timeout
+						&& e.code !== ZWaveErrorCodes.Controller_Reset)
+				) {
+					throw e;
+				}
+				this.controllerLog.print(
+					`Switching the node ID type failed: ${getErrorMessage(e)}`,
+					"warn",
+				);
+				lastError = e;
+			}
+		}
+		// Report a switch that did not succeed
+		if (controller.nodeIdType !== NOT_KNOWN) return false;
+
+		throw new ZWaveError(
+			`Failed to configure the controller to use ${
+				nodeIdType === NodeIDType.Short ? 8 : 16
+			} bit node IDs: ${getErrorMessage(lastError)}`,
+			ZWaveErrorCodes.Driver_Failed,
 		);
 	}
 
@@ -4434,6 +4564,12 @@ export class Driver
 			// Parse the message while remembering potential decoding errors in embedded CCs
 			// This way we can log the invalid CC contents
 			msg = Message.parse(data, this.getMessageParsingContext());
+			if (
+				this.isSerialAPIReset(msg)
+				&& !this.awaitedMessages.some((entry) => entry.predicate(msg!))
+			) {
+				this.handleSerialAPIStartedUnexpectedly();
+			}
 
 			// Parse embedded CCs
 			if (isCommandRequest(msg) && containsSerializedCC(msg)) {
@@ -5801,62 +5937,59 @@ export class Driver
 		}
 	}
 
-	/**
-	 * Is called when the Serial API restart unexpectedly.
-	 */
-	private async handleSerialAPIStartedUnexpectedly(
-		msg: SerialAPIStartedRequest,
-	): Promise<boolean> {
-		// Normally, the soft reset command includes waiting for this message.
-		// If we end up here, it is unexpected.
-
+	/** Whether the Serial API was reset, so its node ID type may have changed */
+	private isSerialAPIReset(msg: Message): msg is SerialAPIStartedRequest {
+		if (!(msg instanceof SerialAPIStartedRequest)) return false;
 		switch (msg.wakeUpReason) {
-			// All wakeup reasons that indicate a reset of the Serial API
-			// need to be handled here, so we interpret node IDs correctly.
 			case SerialAPIWakeUpReason.Reset:
 			case SerialAPIWakeUpReason.WatchdogReset:
 			case SerialAPIWakeUpReason.SoftwareReset:
 			case SerialAPIWakeUpReason.PowerUp:
 			case SerialAPIWakeUpReason.EmergencyWatchdogReset:
-			case SerialAPIWakeUpReason.BrownoutCircuit: {
-				// The Serial API restarted unexpectedly
-				this.controllerLog.print(
-					`Serial API restarted unexpectedly.`,
-					"warn",
-				);
+			case SerialAPIWakeUpReason.BrownoutCircuit:
+				return true;
+		}
+		return false;
+	}
 
-				// In this situation, we may be executing a Serial API command, which will never complete.
-				// Abort it, so it can be retried
-				if (this.abortSerialAPICommand) {
-					this.controllerLog.print(
-						`Currently active command will be retried...`,
-						"warn",
-					);
-					this.abortSerialAPICommand.reject(
-						new ZWaveError(
-							"The Serial API restarted unexpectedly",
-							ZWaveErrorCodes.Controller_Reset,
-						),
-					);
-				}
+	/**
+	 * Is called when the Serial API restarted unexpectedly, synchronously after the notification was decoded.
+	 * It must close the gate before anything else can be serialized with the old node ID type.
+	 */
+	private handleSerialAPIStartedUnexpectedly(): void {
+		this.controllerLog.print(`Serial API restarted unexpectedly.`, "warn");
 
-				// Restart the watchdog unless disabled
-				if (this.options.features.watchdog) {
-					await this._controller?.startWatchdog();
-				}
-
-				if (this._controller?.nodeIdType === NodeIDType.Long) {
-					// We previously used 16 bit node IDs, but the controller was reset.
-					// Remember this and try to go back to 16 bit.
-					this._controller.nodeIdType = NodeIDType.Short;
-					await this._controller.trySetNodeIDType(NodeIDType.Long);
-				}
-
-				return true; // Don't invoke any more handlers
-			}
+		// In this situation, we may be executing a Serial API command, which will never complete.
+		// Abort it, so it can be retried
+		if (this.abortSerialAPICommand) {
+			this.controllerLog.print(
+				`Currently active command will be retried...`,
+				"warn",
+			);
+			this.abortSerialAPICommand.reject(
+				new ZWaveError(
+					"The Serial API restarted unexpectedly",
+					ZWaveErrorCodes.Controller_Reset,
+				),
+			);
 		}
 
-		return false; // Not handled
+		// Restore the controller state with exclusive access
+		this.assumeNodeIdTypeAfterReset();
+		// An open gate is closed right here. Otherwise, the restart waits for the current exclusive access to end.
+		const lease = this.controllerGate.close();
+		this.withExclusiveControllerAccess(
+			(send, signal) =>
+				this.restoreControllerStateAfterReset(send, signal),
+			{ lease },
+		).catch((e) => {
+			this.controllerLog.print(
+				`Restoring the controller state after the restart failed: ${getErrorMessage(
+					e,
+				)}`,
+				"error",
+			);
+		});
 	}
 
 	/**
@@ -6451,9 +6584,8 @@ ${handlers.length} left`,
 			this.ensureReady(true);
 			return this.controller.handleApplicationUpdateRequest(msg);
 		} else if (msg instanceof SerialAPIStartedRequest) {
-			if (await this.handleSerialAPIStartedUnexpectedly(msg)) {
-				return;
-			}
+			// Handled as soon as it was decoded
+			if (this.isSerialAPIReset(msg)) return;
 		} else {
 			if (
 				msg.functionType >= FunctionType.Proprietary_F0
@@ -7363,6 +7495,8 @@ ${handlers.length} left`,
 						} else if (
 							e.code === ZWaveErrorCodes.Controller_MessageDropped
 							|| e.code === ZWaveErrorCodes.Driver_Destroyed
+							// The message cannot be serialized, e.g. because the node ID does not fit the node ID type
+							|| e.code === ZWaveErrorCodes.Argument_Invalid
 						) {
 							// We gave up on this command, so don't retry it
 							throw e;
@@ -8822,6 +8956,13 @@ ${handlers.length} left`,
 				transaction.message.prepareRetransmission();
 			}
 			this.getQueueForTransaction(transaction).add(transaction.clone());
+			return;
+		}
+
+		// The message cannot be serialized, e.g. because the node ID does not fit the node ID type.
+		// A controller recovery cannot help with that.
+		if (error.code === ZWaveErrorCodes.Argument_Invalid) {
+			this.rejectTransaction(transaction, error);
 			return;
 		}
 
