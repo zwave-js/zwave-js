@@ -3822,7 +3822,7 @@ export class Driver
 						controller.recordPossibleNodeIdTypeReset();
 						if (controller.nodeIdType === NOT_KNOWN) {
 							await abortableStep(signal, () =>
-								this.restoreNodeIdType(send),
+								this.restoreNodeIdType(send, signal),
 							);
 						}
 					}
@@ -3884,7 +3884,7 @@ export class Driver
 			);
 		}
 
-		await abortableStep(signal, () => this.restoreNodeIdType(send));
+		await abortableStep(signal, () => this.restoreNodeIdType(send, signal));
 	}
 
 	/** Records the node ID type the controller uses after a reset, until the driver restores the desired one */
@@ -3893,7 +3893,10 @@ export class Driver
 	}
 
 	/** Sends the desired node ID type to the controller. Must be called with exclusive access to the controller. */
-	private async restoreNodeIdType(send: SendExclusive): Promise<void> {
+	private async restoreNodeIdType(
+		send: SendExclusive,
+		signal: AbortSignal,
+	): Promise<void> {
 		const controller = this._controller;
 		if (
 			!controller?.isSerialAPISetupCommandSupported(
@@ -3903,7 +3906,7 @@ export class Driver
 			return;
 		}
 		const nodeIdType = controller.desiredNodeIdType;
-		if (!(await this.switchNodeIdType(nodeIdType, send))) {
+		if (!(await this.switchNodeIdType(nodeIdType, send, signal))) {
 			const bits = (type: NodeIDType) =>
 				type === NodeIDType.Short ? 8 : 16;
 			this.controllerLog.print(
@@ -3923,10 +3926,12 @@ export class Driver
 	 *
 	 * Throws when no attempt was answered, because the controller may then use either node ID type.
 	 * The exclusive access then ends the driver.
+	 * Throws the abort reason of `signal` when the exclusive access is canceled.
 	 */
 	public async switchNodeIdType(
 		nodeIdType: NodeIDType,
 		send: SendExclusive,
+		signal: AbortSignal,
 	): Promise<boolean> {
 		const controller = this._controller;
 		if (!controller) return false;
@@ -3939,6 +3944,8 @@ export class Driver
 					return true;
 				}
 			} catch (e) {
+				// The exclusive access was canceled, e.g. because a new controller instance replaces this one
+				signal.throwIfAborted();
 				if (
 					isZWaveError(e)
 					&& e.code === ZWaveErrorCodes.Driver_NotSupported

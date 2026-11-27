@@ -7801,7 +7801,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 
 	public trySetNodeIDType(nodeIdType: NodeIDType): Promise<boolean> {
 		// Nothing else may be sent while the node ID type changes, because commands for nodes are serialized with it
-		return this.driver.withExclusiveControllerAccess((send) => {
+		return this.driver.withExclusiveControllerAccess((send, signal) => {
 			if (
 				!this.isSerialAPISetupCommandSupported(
 					SerialAPISetupCommand.SetNodeIDType,
@@ -7811,7 +7811,7 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 			}
 			// Record the request also when switching fails, so the next reset tries again
 			this.desiredNodeIdType = nodeIdType;
-			return this.trySetNodeIDTypeInternal(nodeIdType, send);
+			return this.trySetNodeIDTypeInternal(nodeIdType, send, signal);
 		});
 	}
 
@@ -7823,8 +7823,9 @@ export class ZWaveController extends TypedEventTarget<ControllerEventCallbacks> 
 	public trySetNodeIDTypeInternal(
 		nodeIdType: NodeIDType,
 		send: SendExclusive,
+		signal: AbortSignal,
 	): Promise<boolean> {
-		return this.driver.switchNodeIdType(nodeIdType, send);
+		return this.driver.switchNodeIdType(nodeIdType, send, signal);
 	}
 
 	/**
