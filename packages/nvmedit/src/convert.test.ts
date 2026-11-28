@@ -2,10 +2,12 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { ZWaveErrorCodes } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
 import { cloneDeep, readJSON } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
 
+import { MAX_PROTOCOL_FILE_FORMAT } from "./consts.js";
 import {
 	type MigrateNVMOptions,
 	type NVMJSON,
@@ -17,6 +19,9 @@ import {
 	nvm500ToJSON,
 	nvmToJSON,
 } from "./convert.js";
+import { NVM3 } from "./lib/NVM3.js";
+import { NVMMemoryIO } from "./lib/io/NVMMemoryIO.js";
+import { ProtocolVersionFile } from "./lib/nvm3/files/VersionFiles.js";
 import type { NVM500JSON } from "./nvm500/NVMParser.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -225,6 +230,109 @@ test("700 to 700 migration shortcut", async (t) => {
 	const converted = await migrateNVM(nvmSource, nvmTarget);
 
 	bufferEquals(t.expect, converted, nvmSource);
+});
+
+test("migration passes through an NVM that neither parser supports, when the target is also unsupported", async (t) => {
+	const nvm = createUnsupported500NVM();
+	await t.expect(nvmToJSON(nvm)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_InvalidFormat,
+	});
+	await t.expect(nvm500ToJSON(nvm)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+
+	const converted = await migrateNVM(nvm, nvm.slice());
+
+	bufferEquals(t.expect, converted, nvm);
+});
+
+// Stands in for a pre-6.61 500 series NVM, which no NVM 500 parser implementation matches.
+// The last byte keeps the image from being fully erased.
+function createUnsupported500NVM(size: number = 0x40000): Uint8Array {
+	const nvm = new Uint8Array(size).fill(0xff);
+	nvm[nvm.length - 1] = 0x00;
+	return nvm;
+}
+
+test("migration rejects passing through an unsupported 500 series NVM with a different size", async (t) => {
+	const source = createUnsupported500NVM();
+	const target = new Uint8Array(0x20000).fill(0xff);
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+});
+
+test("migration rejects passing through an erased NVM", async (t) => {
+	const source = new Uint8Array(0x40000).fill(0xff);
+	const target = createUnsupported500NVM();
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_InvalidFormat,
+	});
+});
+
+test("migration rejects passing through an all-zero NVM", async (t) => {
+	const source = new Uint8Array(0x40000);
+	const target = createUnsupported500NVM();
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_InvalidFormat,
+	});
+});
+
+test("migration rejects passing through an unsupported 500 series NVM when not everything is preserved", async (t) => {
+	const source = createUnsupported500NVM();
+
+	await t
+		.expect(migrateNVM(source, source.slice(), { preserveRoutes: false }))
+		.rejects.toMatchObject({
+			code: ZWaveErrorCodes.NVM_NotSupported,
+		});
+});
+
+async function createUnsupported700NVM(): Promise<Uint8Array> {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+	const nvm = new Uint8Array(
+		await fsp.readFile(
+			path.join(fixturesDir, "ctrlr_backup_700_7.19.0.bin"),
+		),
+	);
+	const { key, data } = new ProtocolVersionFile({
+		format: MAX_PROTOCOL_FILE_FORMAT + 1,
+		major: 7,
+		minor: 99,
+		patch: 0,
+		fileVersion: "7.99.0",
+	}).serialize();
+	await new NVM3(new NVMMemoryIO(nvm)).set(key, data);
+	return nvm;
+}
+
+test("migration rejects restoring an unsupported 700 series NVM onto an unsupported 500 series NVM", async (t) => {
+	const source = await createUnsupported700NVM();
+	await t.expect(nvmToJSON(source)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+	const target = new Uint8Array(0x40000).fill(0xff);
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+});
+
+test("migration rejects restoring an unsupported 500 series NVM onto an unsupported 700 series NVM", async (t) => {
+	const target = await createUnsupported700NVM();
+	await t.expect(nvmToJSON(target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+	// The same size keeps the size check from rejecting the migration first
+	const source = createUnsupported500NVM(target.length);
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+		message: t.expect.stringContaining("different unsupported formats"),
+	});
 });
 
 test("700 to 700 migration repairs the application node listening flag", async (t) => {

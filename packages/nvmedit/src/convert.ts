@@ -218,6 +218,8 @@ type ParsedNVM =
 	  }
 	| {
 			type: "unknown";
+			/** A 500 series NVM from an SDK before 6.61, which no parser supports */
+			legacy500?: boolean;
 	  };
 
 /**
@@ -2090,6 +2092,21 @@ export function json700To500(json: NVMJSON): NVM500JSON {
 	return ret;
 }
 
+async function parseNVM500(nvm: BytesView): Promise<ParsedNVM> {
+	try {
+		return {
+			type: 500,
+			json: await nvm500ToJSON(nvm),
+		};
+	} catch (e) {
+		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_NotSupported) {
+			// No 500 series parser matches, which is the case for NVMs from SDKs before 6.61
+			return { type: "unknown", legacy500: true };
+		}
+		throw e;
+	}
+}
+
 /** Converts the given source NVM into a format that is compatible with the given target NVM */
 export async function migrateNVM(
 	sourceNVM: BytesView,
@@ -2110,10 +2127,7 @@ export async function migrateNVM(
 	} catch (e) {
 		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
 			// This is not a 700 series NVM, maybe it is a 500 series one?
-			source = {
-				type: 500,
-				json: await nvm500ToJSON(sourceNVM),
-			};
+			source = await parseNVM500(sourceNVM);
 		} else if (
 			isZWaveError(e)
 			&& e.code === ZWaveErrorCodes.NVM_NotSupported
@@ -2137,10 +2151,7 @@ export async function migrateNVM(
 	} catch (e) {
 		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
 			// This is not a 700 series NVM, maybe it is a 500 series one?
-			target = {
-				type: 500,
-				json: await nvm500ToJSON(targetNVM),
-			};
+			target = await parseNVM500(targetNVM);
 		} else if (
 			isZWaveError(e)
 			&& e.code === ZWaveErrorCodes.NVM_NotSupported
@@ -2236,6 +2247,37 @@ export async function migrateNVM(
 			ZWaveErrorCodes.NVM_NotSupported,
 		);
 	} else if (source.type === "unknown" && target.type === "unknown") {
+		if (!!source.legacy500 !== !!target.legacy500) {
+			// A pre-6.61 500 series NVM is only compatible with another one, and we cannot convert it
+			throw new ZWaveError(
+				"The source and target NVMs have different unsupported formats, which cannot be converted!",
+				ZWaveErrorCodes.NVM_NotSupported,
+			);
+		}
+		if (source.legacy500) {
+			// The source is written to the controller as is, so it must be a complete backup that contains data
+			if (sourceNVM.length !== targetNVM.length) {
+				throw new ZWaveError(
+					"The source and target NVMs have different sizes, which cannot be converted!",
+					ZWaveErrorCodes.NVM_NotSupported,
+				);
+			}
+			if (
+				sourceNVM.every((byte) => byte === 0xff)
+				|| sourceNVM.every((byte) => byte === 0x00)
+			) {
+				throw new ZWaveError(
+					"The source NVM is empty and contains no data!",
+					ZWaveErrorCodes.NVM_InvalidFormat,
+				);
+			}
+			if (!preserveAll) {
+				throw new ZWaveError(
+					"The source NVM has an unsupported format, which can only be restored completely!",
+					ZWaveErrorCodes.NVM_NotSupported,
+				);
+			}
+		}
 		// ...both are an unsupported format, meaning pre-6.61 SDK, which we cannot convert
 		return sourceNVM;
 	}
