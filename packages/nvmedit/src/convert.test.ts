@@ -233,8 +233,7 @@ test("700 to 700 migration shortcut", async (t) => {
 });
 
 test("migration passes through an NVM that neither parser supports, when the target is also unsupported", async (t) => {
-	// Stands in for a pre-6.61 500 series NVM, which no NVM 500 parser implementation matches
-	const nvm = new Uint8Array(0x40000).fill(0xff);
+	const nvm = createUnsupported500NVM();
 	await t.expect(nvmToJSON(nvm)).rejects.toMatchObject({
 		code: ZWaveErrorCodes.NVM_InvalidFormat,
 	});
@@ -245,6 +244,42 @@ test("migration passes through an NVM that neither parser supports, when the tar
 	const converted = await migrateNVM(nvm, nvm.slice());
 
 	bufferEquals(t.expect, converted, nvm);
+});
+
+// Stands in for a pre-6.61 500 series NVM, which no NVM 500 parser implementation matches.
+// The last byte keeps the image from being fully erased.
+function createUnsupported500NVM(): Uint8Array {
+	const nvm = new Uint8Array(0x40000).fill(0xff);
+	nvm[nvm.length - 1] = 0x00;
+	return nvm;
+}
+
+test("migration rejects passing through an unsupported 500 series NVM with a different size", async (t) => {
+	const source = createUnsupported500NVM();
+	const target = new Uint8Array(0x20000).fill(0xff);
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+});
+
+test("migration rejects passing through an erased NVM", async (t) => {
+	const source = new Uint8Array(0x40000).fill(0xff);
+	const target = createUnsupported500NVM();
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_InvalidFormat,
+	});
+});
+
+test("migration rejects passing through an unsupported 500 series NVM when not everything is preserved", async (t) => {
+	const source = createUnsupported500NVM();
+
+	await t
+		.expect(migrateNVM(source, source.slice(), { preserveRoutes: false }))
+		.rejects.toMatchObject({
+			code: ZWaveErrorCodes.NVM_NotSupported,
+		});
 });
 
 async function createUnsupported700NVM(): Promise<Uint8Array> {

@@ -2254,6 +2254,27 @@ export async function migrateNVM(
 				ZWaveErrorCodes.NVM_NotSupported,
 			);
 		}
+		if (source.legacy500) {
+			// The source is written to the controller as is, so it must be a complete backup that contains data
+			if (sourceNVM.length !== targetNVM.length) {
+				throw new ZWaveError(
+					"The source and target NVMs have different sizes, which cannot be converted!",
+					ZWaveErrorCodes.NVM_NotSupported,
+				);
+			}
+			if (sourceNVM.every((byte) => byte === 0xff)) {
+				throw new ZWaveError(
+					"The source NVM is erased and contains no data!",
+					ZWaveErrorCodes.NVM_InvalidFormat,
+				);
+			}
+			if (!preserveAll) {
+				throw new ZWaveError(
+					"The source NVM has an unsupported format, which can only be restored completely!",
+					ZWaveErrorCodes.NVM_NotSupported,
+				);
+			}
+		}
 		// ...both are an unsupported format, meaning pre-6.61 SDK, which we cannot convert
 		return sourceNVM;
 	}
