@@ -2262,9 +2262,12 @@ export async function migrateNVM(
 					ZWaveErrorCodes.NVM_NotSupported,
 				);
 			}
-			if (sourceNVM.every((byte) => byte === 0xff)) {
+			if (
+				sourceNVM.every((byte) => byte === 0xff)
+				|| sourceNVM.every((byte) => byte === 0x00)
+			) {
 				throw new ZWaveError(
-					"The source NVM is erased and contains no data!",
+					"The source NVM is empty and contains no data!",
 					ZWaveErrorCodes.NVM_InvalidFormat,
 				);
 			}
