@@ -7,6 +7,7 @@ import { fs } from "@zwave-js/core/bindings/fs/node";
 import { cloneDeep, readJSON } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
 
+import { MAX_PROTOCOL_FILE_FORMAT } from "./consts.js";
 import {
 	type MigrateNVMOptions,
 	type NVMJSON,
@@ -18,6 +19,9 @@ import {
 	nvm500ToJSON,
 	nvmToJSON,
 } from "./convert.js";
+import { NVM3 } from "./lib/NVM3.js";
+import { NVMMemoryIO } from "./lib/io/NVMMemoryIO.js";
+import { ProtocolVersionFile } from "./lib/nvm3/files/VersionFiles.js";
 import type { NVM500JSON } from "./nvm500/NVMParser.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -241,6 +245,48 @@ test("migration passes through an NVM that neither parser supports, when the tar
 	const converted = await migrateNVM(nvm, nvm.slice());
 
 	bufferEquals(t.expect, converted, nvm);
+});
+
+async function createUnsupported700NVM(): Promise<Uint8Array> {
+	const fixturesDir = path.join(__dirname, "../test/fixtures/nvm_700_binary");
+	const nvm = new Uint8Array(
+		await fsp.readFile(
+			path.join(fixturesDir, "ctrlr_backup_700_7.19.0.bin"),
+		),
+	);
+	const { key, data } = new ProtocolVersionFile({
+		format: MAX_PROTOCOL_FILE_FORMAT + 1,
+		major: 7,
+		minor: 99,
+		patch: 0,
+		fileVersion: "7.99.0",
+	}).serialize();
+	await new NVM3(new NVMMemoryIO(nvm)).set(key, data);
+	return nvm;
+}
+
+test("migration rejects restoring an unsupported 700 series NVM onto an unsupported 500 series NVM", async (t) => {
+	const source = await createUnsupported700NVM();
+	await t.expect(nvmToJSON(source)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+	const target = new Uint8Array(0x40000).fill(0xff);
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+});
+
+test("migration rejects restoring an unsupported 500 series NVM onto an unsupported 700 series NVM", async (t) => {
+	const source = new Uint8Array(0x40000).fill(0xff);
+	const target = await createUnsupported700NVM();
+	await t.expect(nvmToJSON(target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+
+	await t.expect(migrateNVM(source, target)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
 });
 
 test("700 to 700 migration repairs the application node listening flag", async (t) => {

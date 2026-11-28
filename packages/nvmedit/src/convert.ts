@@ -218,6 +218,8 @@ type ParsedNVM =
 	  }
 	| {
 			type: "unknown";
+			/** A 500 series NVM from an SDK before 6.61, which no parser supports */
+			legacy500?: boolean;
 	  };
 
 /**
@@ -2099,7 +2101,7 @@ async function parseNVM500(nvm: BytesView): Promise<ParsedNVM> {
 	} catch (e) {
 		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_NotSupported) {
 			// No 500 series parser matches, which is the case for NVMs from SDKs before 6.61
-			return { type: "unknown" };
+			return { type: "unknown", legacy500: true };
 		}
 		throw e;
 	}
@@ -2245,6 +2247,13 @@ export async function migrateNVM(
 			ZWaveErrorCodes.NVM_NotSupported,
 		);
 	} else if (source.type === "unknown" && target.type === "unknown") {
+		if (!!source.legacy500 !== !!target.legacy500) {
+			// A pre-6.61 500 series NVM is only compatible with another one, and we cannot convert it
+			throw new ZWaveError(
+				"The source and target NVMs have different unsupported formats, which cannot be converted!",
+				ZWaveErrorCodes.NVM_NotSupported,
+			);
+		}
 		// ...both are an unsupported format, meaning pre-6.61 SDK, which we cannot convert
 		return sourceNVM;
 	}
