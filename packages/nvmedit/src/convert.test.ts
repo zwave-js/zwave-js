@@ -2,6 +2,7 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { ZWaveErrorCodes } from "@zwave-js/core";
 import { fs } from "@zwave-js/core/bindings/fs/node";
 import { cloneDeep, readJSON } from "@zwave-js/shared";
 import { type ExpectStatic, test } from "vitest";
@@ -225,6 +226,21 @@ test("700 to 700 migration shortcut", async (t) => {
 	const converted = await migrateNVM(nvmSource, nvmTarget);
 
 	bufferEquals(t.expect, converted, nvmSource);
+});
+
+test("migration passes through an NVM that neither parser supports, when the target is also unsupported", async (t) => {
+	// Stands in for a pre-6.61 500 series NVM, which no NVM 500 parser implementation matches
+	const nvm = new Uint8Array(0x40000).fill(0xff);
+	await t.expect(nvmToJSON(nvm)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_InvalidFormat,
+	});
+	await t.expect(nvm500ToJSON(nvm)).rejects.toMatchObject({
+		code: ZWaveErrorCodes.NVM_NotSupported,
+	});
+
+	const converted = await migrateNVM(nvm, nvm.slice());
+
+	bufferEquals(t.expect, converted, nvm);
 });
 
 test("700 to 700 migration repairs the application node listening flag", async (t) => {

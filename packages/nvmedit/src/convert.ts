@@ -2090,6 +2090,21 @@ export function json700To500(json: NVMJSON): NVM500JSON {
 	return ret;
 }
 
+async function parseNVM500(nvm: BytesView): Promise<ParsedNVM> {
+	try {
+		return {
+			type: 500,
+			json: await nvm500ToJSON(nvm),
+		};
+	} catch (e) {
+		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_NotSupported) {
+			// No 500 series parser matches, which is the case for NVMs from SDKs before 6.61
+			return { type: "unknown" };
+		}
+		throw e;
+	}
+}
+
 /** Converts the given source NVM into a format that is compatible with the given target NVM */
 export async function migrateNVM(
 	sourceNVM: BytesView,
@@ -2110,10 +2125,7 @@ export async function migrateNVM(
 	} catch (e) {
 		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
 			// This is not a 700 series NVM, maybe it is a 500 series one?
-			source = {
-				type: 500,
-				json: await nvm500ToJSON(sourceNVM),
-			};
+			source = await parseNVM500(sourceNVM);
 		} else if (
 			isZWaveError(e)
 			&& e.code === ZWaveErrorCodes.NVM_NotSupported
@@ -2137,10 +2149,7 @@ export async function migrateNVM(
 	} catch (e) {
 		if (isZWaveError(e) && e.code === ZWaveErrorCodes.NVM_InvalidFormat) {
 			// This is not a 700 series NVM, maybe it is a 500 series one?
-			target = {
-				type: 500,
-				json: await nvm500ToJSON(targetNVM),
-			};
+			target = await parseNVM500(targetNVM);
 		} else if (
 			isZWaveError(e)
 			&& e.code === ZWaveErrorCodes.NVM_NotSupported
